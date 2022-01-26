@@ -12,6 +12,7 @@ import {
   Contract,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -22,9 +23,9 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 interface StreamRegistryInterface extends ethers.utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
+    "ENScreateStreamCallback(address,string,string,string)": FunctionFragment;
     "MAX_INT()": FunctionFragment;
     "TRUSTED_ROLE()": FunctionFragment;
-    "_trustedForwarder()": FunctionFragment;
     "addressToString(address)": FunctionFragment;
     "createStream(string,string)": FunctionFragment;
     "createStreamWithENS(string,string,string)": FunctionFragment;
@@ -35,6 +36,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "getPermissionsForUser(string,address)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "getStreamMetadata(string)": FunctionFragment;
+    "getTrustedRole()": FunctionFragment;
     "grantPermission(string,address,uint8)": FunctionFragment;
     "grantPublicPermission(string,uint8)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
@@ -42,12 +44,14 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "hasPermission(string,address,uint8)": FunctionFragment;
     "hasPublicPermission(string,uint8)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "initialize(address,address)": FunctionFragment;
     "isTrustedForwarder(address)": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeAllPermissionsForUser(string,address)": FunctionFragment;
     "revokePermission(string,address,uint8)": FunctionFragment;
     "revokePublicPermission(string,uint8)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
+    "setEnsCache(address)": FunctionFragment;
     "setExpirationTime(string,address,uint8,uint256)": FunctionFragment;
     "setPermissions(string,address[],tuple[])": FunctionFragment;
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
@@ -58,22 +62,25 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "transferAllPermissionsToUser(string,address)": FunctionFragment;
     "transferPermissionToUser(string,address,uint8)": FunctionFragment;
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
-    "trustedSetStream(string,string)": FunctionFragment;
+    "trustedSetStreamMetadata(string,string)": FunctionFragment;
+    "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
     "trustedSetStreams(string[],address[],string[],tuple[])": FunctionFragment;
     "updateStreamMetadata(string,string)": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "DEFAULT_ADMIN_ROLE",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "ENScreateStreamCallback",
+    values: [string, string, string, string]
+  ): string;
   encodeFunctionData(functionFragment: "MAX_INT", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "TRUSTED_ROLE",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "_trustedForwarder",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -114,6 +121,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "getTrustedRole",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "grantPermission",
     values: [string, string, BigNumberish]
   ): string;
@@ -142,6 +153,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     values: [BytesLike, string]
   ): string;
   encodeFunctionData(
+    functionFragment: "initialize",
+    values: [string, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "isTrustedForwarder",
     values: [string]
   ): string;
@@ -165,6 +180,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     functionFragment: "revokeRole",
     values: [BytesLike, string]
   ): string;
+  encodeFunctionData(functionFragment: "setEnsCache", values: [string]): string;
   encodeFunctionData(
     functionFragment: "setExpirationTime",
     values: [string, string, BigNumberish, BigNumberish]
@@ -232,8 +248,21 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "trustedSetStream",
+    functionFragment: "trustedSetStreamMetadata",
     values: [string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "trustedSetStreamWithPermission",
+    values: [
+      string,
+      string,
+      string,
+      boolean,
+      boolean,
+      BigNumberish,
+      BigNumberish,
+      boolean
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "trustedSetStreams",
@@ -254,18 +283,23 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     functionFragment: "updateStreamMetadata",
     values: [string, string]
   ): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "ENScreateStreamCallback",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "MAX_INT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "TRUSTED_ROLE",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "_trustedForwarder",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -306,6 +340,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getTrustedRole",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "grantPermission",
     data: BytesLike
   ): Result;
@@ -327,6 +365,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isTrustedForwarder",
     data: BytesLike
@@ -348,6 +387,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setEnsCache",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setExpirationTime",
     data: BytesLike
@@ -389,7 +432,11 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "trustedSetStream",
+    functionFragment: "trustedSetStreamMetadata",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "trustedSetStreamWithPermission",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -400,8 +447,15 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     functionFragment: "updateStreamMetadata",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
     "PermissionUpdated(string,address,bool,bool,uint256,uint256,bool)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
@@ -409,8 +463,11 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "StreamCreated(string,string)": EventFragment;
     "StreamDeleted(string)": EventFragment;
     "StreamUpdated(string,string)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "PermissionUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
@@ -418,6 +475,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "StreamCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StreamDeleted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StreamUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class StreamRegistry extends Contract {
@@ -468,6 +526,22 @@ export class StreamRegistry extends Contract {
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
 
+    ENScreateStreamCallback(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "ENScreateStreamCallback(address,string,string,string)"(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     MAX_INT(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "MAX_INT()"(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -475,10 +549,6 @@ export class StreamRegistry extends Contract {
     TRUSTED_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     "TRUSTED_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
-
-    _trustedForwarder(overrides?: CallOverrides): Promise<[string]>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<[string]>;
 
     addressToString(
       _address: string,
@@ -658,6 +728,10 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<[string] & { des: string }>;
 
+    getTrustedRole(overrides?: CallOverrides): Promise<[string]>;
+
+    "getTrustedRole()"(overrides?: CallOverrides): Promise<[string]>;
+
     grantPermission(
       streamId: string,
       user: string,
@@ -748,6 +822,18 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    initialize(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address,address)"(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     isTrustedForwarder(
       forwarder: string,
       overrides?: CallOverrides
@@ -817,6 +903,16 @@ export class StreamRegistry extends Contract {
     "revokeRole(bytes32,address)"(
       role: BytesLike,
       account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setEnsCache(
+      ensCacheAddr: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setEnsCache(address)"(
+      ensCacheAddr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -994,15 +1090,39 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    trustedSetStream(
+    trustedSetStreamMetadata(
       streamId: string,
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "trustedSetStream(string,string)"(
+    "trustedSetStreamMetadata(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    trustedSetStreamWithPermission(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)"(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -1045,11 +1165,49 @@ export class StreamRegistry extends Contract {
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
   "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
+  ENScreateStreamCallback(
+    requestorAddress: string,
+    ensName: string,
+    streamIdPath: string,
+    metadataJsonString: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "ENScreateStreamCallback(address,string,string,string)"(
+    requestorAddress: string,
+    ensName: string,
+    streamIdPath: string,
+    metadataJsonString: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   MAX_INT(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1058,10 +1216,6 @@ export class StreamRegistry extends Contract {
   TRUSTED_ROLE(overrides?: CallOverrides): Promise<string>;
 
   "TRUSTED_ROLE()"(overrides?: CallOverrides): Promise<string>;
-
-  _trustedForwarder(overrides?: CallOverrides): Promise<string>;
-
-  "_trustedForwarder()"(overrides?: CallOverrides): Promise<string>;
 
   addressToString(_address: string, overrides?: CallOverrides): Promise<string>;
 
@@ -1198,6 +1352,10 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<string>;
 
+  getTrustedRole(overrides?: CallOverrides): Promise<string>;
+
+  "getTrustedRole()"(overrides?: CallOverrides): Promise<string>;
+
   grantPermission(
     streamId: string,
     user: string,
@@ -1288,6 +1446,18 @@ export class StreamRegistry extends Contract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  initialize(
+    ensCacheAddr: string,
+    trustedForwarderAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address,address)"(
+    ensCacheAddr: string,
+    trustedForwarderAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   isTrustedForwarder(
     forwarder: string,
     overrides?: CallOverrides
@@ -1357,6 +1527,16 @@ export class StreamRegistry extends Contract {
   "revokeRole(bytes32,address)"(
     role: BytesLike,
     account: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setEnsCache(
+    ensCacheAddr: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setEnsCache(address)"(
+    ensCacheAddr: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1531,15 +1711,39 @@ export class StreamRegistry extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  trustedSetStream(
+  trustedSetStreamMetadata(
     streamId: string,
     metadata: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "trustedSetStream(string,string)"(
+  "trustedSetStreamMetadata(string,string)"(
     streamId: string,
     metadata: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  trustedSetStreamWithPermission(
+    streamId: string,
+    metadata: string,
+    user: string,
+    canEdit: boolean,
+    deletePerm: boolean,
+    publishExpiration: BigNumberish,
+    subscribeExpiration: BigNumberish,
+    canGrant: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)"(
+    streamId: string,
+    metadata: string,
+    user: string,
+    canEdit: boolean,
+    deletePerm: boolean,
+    publishExpiration: BigNumberish,
+    subscribeExpiration: BigNumberish,
+    canGrant: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1583,10 +1787,48 @@ export class StreamRegistry extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
+    ENScreateStreamCallback(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "ENScreateStreamCallback(address,string,string,string)"(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     MAX_INT(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1595,10 +1837,6 @@ export class StreamRegistry extends Contract {
     TRUSTED_ROLE(overrides?: CallOverrides): Promise<string>;
 
     "TRUSTED_ROLE()"(overrides?: CallOverrides): Promise<string>;
-
-    _trustedForwarder(overrides?: CallOverrides): Promise<string>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<string>;
 
     addressToString(
       _address: string,
@@ -1735,6 +1973,10 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<string>;
 
+    getTrustedRole(overrides?: CallOverrides): Promise<string>;
+
+    "getTrustedRole()"(overrides?: CallOverrides): Promise<string>;
+
     grantPermission(
       streamId: string,
       user: string,
@@ -1825,6 +2067,18 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    initialize(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "initialize(address,address)"(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     isTrustedForwarder(
       forwarder: string,
       overrides?: CallOverrides
@@ -1894,6 +2148,13 @@ export class StreamRegistry extends Contract {
     "revokeRole(bytes32,address)"(
       role: BytesLike,
       account: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setEnsCache(ensCacheAddr: string, overrides?: CallOverrides): Promise<void>;
+
+    "setEnsCache(address)"(
+      ensCacheAddr: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2071,15 +2332,39 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    trustedSetStream(
+    trustedSetStreamMetadata(
       streamId: string,
       metadata: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "trustedSetStream(string,string)"(
+    "trustedSetStreamMetadata(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    trustedSetStreamWithPermission(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)"(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2122,9 +2407,43 @@ export class StreamRegistry extends Contract {
       metadata: string,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
     PermissionUpdated(
       streamId: null,
       user: null,
@@ -2184,12 +2503,32 @@ export class StreamRegistry extends Contract {
       id: null,
       metadata: null
     ): TypedEventFilter<[string, string], { id: string; metadata: string }>;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ENScreateStreamCallback(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "ENScreateStreamCallback(address,string,string,string)"(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     MAX_INT(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -2198,10 +2537,6 @@ export class StreamRegistry extends Contract {
     TRUSTED_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "TRUSTED_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    _trustedForwarder(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "_trustedForwarder()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     addressToString(
       _address: string,
@@ -2312,6 +2647,10 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getTrustedRole(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "getTrustedRole()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     grantPermission(
       streamId: string,
       user: string,
@@ -2402,6 +2741,18 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    initialize(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address,address)"(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     isTrustedForwarder(
       forwarder: string,
       overrides?: CallOverrides
@@ -2471,6 +2822,16 @@ export class StreamRegistry extends Contract {
     "revokeRole(bytes32,address)"(
       role: BytesLike,
       account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setEnsCache(
+      ensCacheAddr: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setEnsCache(address)"(
+      ensCacheAddr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -2632,15 +2993,39 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    trustedSetStream(
+    trustedSetStreamMetadata(
       streamId: string,
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "trustedSetStream(string,string)"(
+    "trustedSetStreamMetadata(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    trustedSetStreamWithPermission(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)"(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -2683,6 +3068,28 @@ export class StreamRegistry extends Contract {
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -2694,6 +3101,22 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    ENScreateStreamCallback(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "ENScreateStreamCallback(address,string,string,string)"(
+      requestorAddress: string,
+      ensName: string,
+      streamIdPath: string,
+      metadataJsonString: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     MAX_INT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "MAX_INT()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -2701,12 +3124,6 @@ export class StreamRegistry extends Contract {
     TRUSTED_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "TRUSTED_ROLE()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    _trustedForwarder(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    "_trustedForwarder()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     addressToString(
       _address: string,
@@ -2820,6 +3237,12 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    getTrustedRole(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "getTrustedRole()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     grantPermission(
       streamId: string,
       user: string,
@@ -2910,6 +3333,18 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    initialize(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address,address)"(
+      ensCacheAddr: string,
+      trustedForwarderAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     isTrustedForwarder(
       forwarder: string,
       overrides?: CallOverrides
@@ -2979,6 +3414,16 @@ export class StreamRegistry extends Contract {
     "revokeRole(bytes32,address)"(
       role: BytesLike,
       account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setEnsCache(
+      ensCacheAddr: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setEnsCache(address)"(
+      ensCacheAddr: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -3140,15 +3585,39 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    trustedSetStream(
+    trustedSetStreamMetadata(
       streamId: string,
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "trustedSetStream(string,string)"(
+    "trustedSetStreamMetadata(string,string)"(
       streamId: string,
       metadata: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    trustedSetStreamWithPermission(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)"(
+      streamId: string,
+      metadata: string,
+      user: string,
+      canEdit: boolean,
+      deletePerm: boolean,
+      publishExpiration: BigNumberish,
+      subscribeExpiration: BigNumberish,
+      canGrant: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -3190,6 +3659,28 @@ export class StreamRegistry extends Contract {
       streamId: string,
       metadata: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

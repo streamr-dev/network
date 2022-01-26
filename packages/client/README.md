@@ -339,10 +339,9 @@ All the below functions return a Promise which gets resolved with the result.
 | Name                                                | Description                                                                                                                                          |
 | :-------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
 | getStream(streamId)                                 | Fetches a stream object from the API.                                                                                                                |
-| listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).                     |
-| getStreamByName(name)                               | Fetches a stream which exactly matches the given name.                                                                                               |
+| searchStreams(term)                                 | Fetches an array of stream objects      |
 | createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). If you specify `id`, it can be a full streamId or a path (e.g. `/foo/bar` will create a stream with id `<your-ethereum-address>/foo/bar` if you have authenticated with a private key)|
-| getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
+| getOrCreateStream(properties)                       | Gets a stream with the id given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
 
 ### Stream object

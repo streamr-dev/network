@@ -164,9 +164,9 @@ describe(wait, () => {
         // use performance.now instead of Date.now
         // Date.now may not be accurate enough for low wait values e.g. 10ms
         const start = performance.now()
-        await wait(10)
+        await wait(20)
         const end = performance.now()
-        expect(end - start).toBeGreaterThanOrEqual(10)
+        expect(end - start).toBeGreaterThanOrEqual(20)
     })
 })
 

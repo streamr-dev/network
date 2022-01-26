@@ -8,7 +8,7 @@ program
     .description('stream subcommands')
     .command('subscribe', 'subscribe to a stream')
     .command('publish', 'publish to a stream')
-    .command('list', 'fetch a list of streams')
+    .command('search', 'search for streams')
     .command('show', 'info about a stream')
     .command("create", "create a new stream")
     .command('resend', 'request resend of a stream')

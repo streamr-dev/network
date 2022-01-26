@@ -12,6 +12,7 @@ import {
   Contract,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -27,6 +28,7 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
     "getNodeByNumber(uint256)": FunctionFragment;
     "getNodes()": FunctionFragment;
     "headNode()": FunctionFragment;
+    "initialize(address,bool,address[],string[])": FunctionFragment;
     "kickOut(address)": FunctionFragment;
     "nodeCount()": FunctionFragment;
     "nodes(address)": FunctionFragment;
@@ -38,6 +40,8 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
     "setRequiresWhitelist(bool)": FunctionFragment;
     "tailNode()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
     "whitelist(address)": FunctionFragment;
     "whitelistApproveNode(address)": FunctionFragment;
     "whitelistRejectNode(address)": FunctionFragment;
@@ -58,6 +62,10 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "getNodes", values?: undefined): string;
   encodeFunctionData(functionFragment: "headNode", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values: [string, boolean, string[], string[]]
+  ): string;
   encodeFunctionData(functionFragment: "kickOut", values: [string]): string;
   encodeFunctionData(functionFragment: "nodeCount", values?: undefined): string;
   encodeFunctionData(functionFragment: "nodes", values: [string]): string;
@@ -84,6 +92,11 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "whitelist", values: [string]): string;
   encodeFunctionData(
     functionFragment: "whitelistApproveNode",
@@ -109,6 +122,7 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "getNodes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "headNode", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "kickOut", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nodeCount", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nodes", data: BytesLike): Result;
@@ -135,6 +149,11 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "whitelist", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "whitelistApproveNode",
@@ -146,20 +165,26 @@ interface NodeRegistryInterface extends ethers.utils.Interface {
   ): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
     "NodeRemoved(address)": EventFragment;
     "NodeUpdated(address,string,uint256,uint256)": EventFragment;
     "NodeWhitelistApproved(address)": EventFragment;
     "NodeWhitelistRejected(address)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "RequiresWhitelistChanged(bool)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NodeRemoved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NodeUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NodeWhitelistApproved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NodeWhitelistRejected"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RequiresWhitelistChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class NodeRegistry extends Contract {
@@ -308,6 +333,22 @@ export class NodeRegistry extends Contract {
 
     "headNode()"(overrides?: CallOverrides): Promise<[string]>;
 
+    initialize(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address,bool,address[],string[])"(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     kickOut(
       nodeAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -424,6 +465,28 @@ export class NodeRegistry extends Contract {
     "transferOwnership(address)"(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     whitelist(arg0: string, overrides?: CallOverrides): Promise<[number]>;
@@ -544,6 +607,22 @@ export class NodeRegistry extends Contract {
 
   "headNode()"(overrides?: CallOverrides): Promise<string>;
 
+  initialize(
+    owner: string,
+    requiresWhitelist_: boolean,
+    initialNodes: string[],
+    initialMetadata: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address,bool,address[],string[])"(
+    owner: string,
+    requiresWhitelist_: boolean,
+    initialNodes: string[],
+    initialMetadata: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   kickOut(
     nodeAddress: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -660,6 +739,28 @@ export class NodeRegistry extends Contract {
   "transferOwnership(address)"(
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   whitelist(arg0: string, overrides?: CallOverrides): Promise<number>;
@@ -780,6 +881,22 @@ export class NodeRegistry extends Contract {
 
     "headNode()"(overrides?: CallOverrides): Promise<string>;
 
+    initialize(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "initialize(address,bool,address[],string[])"(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     kickOut(nodeAddress: string, overrides?: CallOverrides): Promise<void>;
 
     "kickOut(address)"(
@@ -884,6 +1001,28 @@ export class NodeRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     whitelist(arg0: string, overrides?: CallOverrides): Promise<number>;
 
     "whitelist(address)"(
@@ -913,6 +1052,18 @@ export class NodeRegistry extends Contract {
   };
 
   filters: {
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
     NodeRemoved(
       nodeAddress: string | null
     ): TypedEventFilter<[string], { nodeAddress: string }>;
@@ -951,6 +1102,10 @@ export class NodeRegistry extends Contract {
     RequiresWhitelistChanged(
       value: boolean | null
     ): TypedEventFilter<[boolean], { value: boolean }>;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
@@ -1000,6 +1155,22 @@ export class NodeRegistry extends Contract {
     headNode(overrides?: CallOverrides): Promise<BigNumber>;
 
     "headNode()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    initialize(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address,bool,address[],string[])"(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     kickOut(
       nodeAddress: string,
@@ -1080,6 +1251,28 @@ export class NodeRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     whitelist(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     "whitelist(address)"(
@@ -1158,6 +1351,22 @@ export class NodeRegistry extends Contract {
     headNode(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "headNode()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    initialize(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address,bool,address[],string[])"(
+      owner: string,
+      requiresWhitelist_: boolean,
+      initialNodes: string[],
+      initialMetadata: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     kickOut(
       nodeAddress: string,
@@ -1241,6 +1450,28 @@ export class NodeRegistry extends Contract {
     "transferOwnership(address)"(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     whitelist(

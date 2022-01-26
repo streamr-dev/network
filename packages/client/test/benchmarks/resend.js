@@ -119,13 +119,9 @@ async function run() {
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: false,
         }),
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: true,
         })
     ])
 

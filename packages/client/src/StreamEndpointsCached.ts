@@ -1,13 +1,13 @@
 /**
  * Cached Subset of StreamEndpoints.
  */
-import { SPID, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-
 import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { CacheConfig, Config } from './Config'
 import { StreamRegistry } from './StreamRegistry'
+import { StreamPermission } from './Stream'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -30,8 +30,7 @@ export class StreamEndpointsCached implements Context {
 
     getStream = CacheAsyncFn(this.getStreamPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey: ([maybeStreamId]: any) => {
-            const { streamId } = SPID.parse(maybeStreamId)
+        cacheKey: ([streamId]: any) => {
             // see clearStream
             return `${streamId}${SEPARATOR}`
         }
@@ -43,8 +42,7 @@ export class StreamEndpointsCached implements Context {
 
     getStreamValidationInfo = CacheAsyncFn(this.getStreamValidationInfoPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey: ([maybeStreamId]: any) => {
-            const { streamId } = SPID.parse(maybeStreamId)
+        cacheKey: ([streamId]: any) => {
             return `${streamId}${SEPARATOR}`
         }
     })
@@ -55,8 +53,7 @@ export class StreamEndpointsCached implements Context {
 
     isStreamPublisher = CacheAsyncFn(this.isStreamPublisherPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey([maybeStreamId, ethAddress]: any) {
-            const { streamId } = SPID.parse(maybeStreamId)
+        cacheKey([streamId, ethAddress]: any) {
             return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
         }
     })
@@ -67,9 +64,19 @@ export class StreamEndpointsCached implements Context {
 
     isStreamSubscriber = CacheAsyncFn(this.isStreamSubscriberPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey([maybeStreamId, ethAddress]: any) {
-            const { streamId } = SPID.parse(maybeStreamId)
+        cacheKey([streamId, ethAddress]: any) {
             return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
+        }
+    })
+
+    async isPublicSubscriptionStream(streamId: StreamID) {
+        return this.streamRegistry.hasPublicPermission(streamId, StreamPermission.SUBSCRIBE)
+    }
+
+    isPublic = CacheAsyncFn(this.isPublicSubscriptionStream.bind(this), {
+        ...this.cacheOptions,
+        cacheKey([streamId]): any {
+            return ['PublicSubscribe', streamId].join(SEPARATOR)
         }
     })
 

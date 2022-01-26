@@ -2,6 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsStrin
 
 import MessageRef from './MessageRef'
 import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
@@ -50,6 +51,10 @@ export default class MessageID {
         ] = arr
 
         return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+    }
+
+    getStreamPartID(): StreamPartID {
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 
     serialize(): string {

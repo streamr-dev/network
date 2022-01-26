@@ -5,13 +5,13 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
-import { MaybeAsync } from '../src/types'
+import { MaybeAsync, StreamDefinition } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from '../src/ConfigTest'
 
@@ -171,7 +171,12 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
         id: createRelativeTestStreamId(module),
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(stream.id) }, 20000, 500)
+    await until(
+        async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
+        20000,
+        500,
+        () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
+    )
     return stream
 }
 
@@ -233,7 +238,7 @@ export class LeaksDetector {
         'rovider/formatter',
     ])
 
-    private counter = CounterId(this.id)
+    private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
     add(name: string, obj: any) {
         if (!obj || typeof obj !== 'object') { return }
@@ -445,21 +450,28 @@ type PublishTestMessageOptions = PublishManyOpts & {
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(client: StreamrClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
+export function publishTestMessagesGenerator(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    maxMessages = 5,
+    opts: PublishTestMessageOptions = {}
+) {
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
-    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
     }
     return pipeline
 }
 
-export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
+export function getPublishTestStreamMessages(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    defaultOpts: PublishTestMessageOptions = {}
+) {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
@@ -476,7 +488,7 @@ export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDL
         client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
-        const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
+        const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         client.onDestroy(() => {
             publishStream.return()
         })
@@ -514,9 +526,12 @@ export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDL
     }
 }
 
-export function getPublishTestMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
-    const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
+export function getPublishTestMessages(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    defaultOpts: PublishTestMessageOptions = {}
+) {
+    const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())

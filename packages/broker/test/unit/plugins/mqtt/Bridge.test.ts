@@ -1,4 +1,5 @@
-import { StreamrClient } from 'streamr-client'
+import { StreamrClient, Subscription } from 'streamr-client'
+import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { Bridge } from '../../../../src/plugins/mqtt/Bridge'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 
@@ -24,11 +25,11 @@ describe('MQTT Bridge', () => {
 
         let bridge: Bridge
         let streamrClient: Partial<StreamrClient>
-        let subscription: any
+        let subscription: Pick<Subscription, 'streamPartId'|'unsubscribe'>
 
         beforeEach(() => {
             subscription = {
-                streamId: MOCK_STREAM_ID,
+                streamPartId: toStreamPartID(toStreamID(MOCK_STREAM_ID), 0),
                 unsubscribe: jest.fn().mockResolvedValue(undefined)
             }
             streamrClient = {
