@@ -71,7 +71,7 @@
     "pino-pretty": "^5.0.2",
     "qs": "^6.10.1",
     "split2": "^3.2.2",
-    "streamr-client": "^6.0.0-alpha.24",
+    "streamr-client": "^6.0.0-alpha.25",
     "streamr-client-protocol": "^11.0.0",
     "streamr-network": "^32.0.0",
     "streamr-test-utils": "^2.0.0",
