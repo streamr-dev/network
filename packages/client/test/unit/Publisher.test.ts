@@ -4,7 +4,6 @@ import { toStreamID } from 'streamr-client-protocol'
 import BrubeckNode from '../../src/BrubeckNode'
 import Publisher from '../../src/Publisher'
 import { initContainer } from '../../src'
-import Ethereum from '../../src/Ethereum'
 import { StreamRegistry } from '../../src/StreamRegistry'
 import { BrubeckContainer } from '../../src/Container'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
@@ -18,12 +17,6 @@ const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 const createMockContainer = (
     brubeckNode: Pick<BrubeckNode, 'publishToNode'>,
 ) => {
-    const ethereum = {
-        isAuthenticated: jest.fn().mockReturnValue(true),
-        getAddress: jest.fn().mockResolvedValue(AUTHENTICATED_USER),
-        canEncrypt: jest.fn(),
-        getStreamRegistryChainProvider: jest.fn()
-    }
     const { childContainer } = initContainer({
         auth: {
             privateKey: PRIVATE_KEY
@@ -33,7 +26,6 @@ const createMockContainer = (
     return childContainer
         .registerInstance(StreamRegistry, streamRegistry as any)
         .registerInstance(BrubeckNode, brubeckNode)
-        .registerInstance(Ethereum, ethereum as any)
         .registerInstance(BrubeckContainer, childContainer)
 }
 

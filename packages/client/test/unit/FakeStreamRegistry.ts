@@ -1,6 +1,6 @@
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { DependencyContainer } from 'tsyringe'
-import { NotFoundError, Stream } from '../../src'
+import { NotFoundError, Stream, StreamPermission } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'
 
 export class FakeStreamRegistry implements Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> {
@@ -32,5 +32,10 @@ export class FakeStreamRegistry implements Pick<StreamRegistry, 'getStream' | 'i
     async isStreamPublisher(streamId: string, userAddress: EthereumAddress): Promise<boolean> {
         return ((toStreamID(streamId) === this.streamId)
             && (userAddress.toLowerCase() === this.publisher.toLowerCase()))
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async hasPublicPermission(_streamIdOrPath: string, _permission: StreamPermission): Promise<boolean> {
+        return false
     }
 }
