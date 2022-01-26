@@ -140,7 +140,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
                 }
             })
             const resBody = await res.json()
-            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.block}`)
+            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.latestBlock}`)
             if (resBody.alert) {
                 logger.info(resBody.alert)
             }
