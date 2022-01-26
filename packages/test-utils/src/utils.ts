@@ -282,6 +282,7 @@ export class KeyServer {
     public static readonly KEY_SERVER_PORT = 45454
     private readonly server: http.Server
 
+    /* eslint-disable no-console */
     constructor() {
         const app = express()
         app.use(cors())
@@ -303,7 +304,11 @@ export class KeyServer {
                 c = 11
             }
         })
+        console.info(`starting up keyserver on port ${KeyServer.KEY_SERVER_PORT}...`)
         this.server = app.listen(KeyServer.KEY_SERVER_PORT)
+            .on('listening', () => {
+                console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
+            })
     }
 
     destroy(): Promise<unknown> {
