@@ -8,7 +8,7 @@ import { createClientCommand } from '../src/command'
 
 const publishStream = (
     stream: string,
-    partitionKey: string | undefined,
+    partitionKeyField: string | undefined,
     client: StreamrClient
 ): Writable => {
     const writable = new Writable({
@@ -27,8 +27,8 @@ const publishStream = (
                 done(e)
                 return
             }
-            // @ts-expect-error TODO: the last argument here looks wrong, should be just `partitionKey`?
-            client.publish(stream, json, Date.now(), json[partitionKey]).then(
+            const partitionKey = (partitionKeyField !== undefined) ? json[partitionKeyField] : undefined
+            client.publish(stream, json, Date.now(), partitionKey).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -38,7 +38,7 @@ const publishStream = (
 }
 
 createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
-    const ps = publishStream(streamId, options.partitionKey, client)
+    const ps = publishStream(streamId, options.partitionKeyField, client)
     return new Promise((resolve, reject) => {
         process.stdin
             .pipe(es.split())
@@ -58,5 +58,5 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
 })
     .arguments('<streamId>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line')
-    .option('-k, --partition-key <string>', 'field name in each message to use for assigning the message to a stream partition')
+    .option('-k, --partition-key-field <string>', 'field name in each message to use for assigning the message to a stream partition')
     .parseAsync()
