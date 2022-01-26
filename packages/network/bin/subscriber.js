@@ -39,7 +39,7 @@ const subscriber = createNetworkNode({
 logger.info('started subscriber id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, metrics: %s',
     id, name, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().metrics)
 subscriber.start()
-program.opts().streamIds.forEach((stream) => subscriber.subscribe(stream, 0))
+program.opts().streamIds.forEach((stream) => subscriber.subscribe(stream))
 
 let messageNo = 0
 let lastReported = 0
