@@ -119,7 +119,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
-          sh packages/broker/bin/kill-all.sh
+          sh ../broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -164,7 +164,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
-          sh packages/broker/bin/kill-all.sh
+          sh ../broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -217,6 +217,6 @@ jobs:
         with:
           name: client-benchmarks
           path: |
-              sh packages/broker/bin/kill-all.sh
+              sh ../broker/bin/kill-all.sh
               packages/client/benchmark-publish.txt
               packages/client/benchmark-subscribe.txt

@@ -119,7 +119,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
-          sh packages/broker/bin/kill-all.sh
+          sh ../broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -163,7 +163,7 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
-          sh packages/broker/bin/kill-all.sh
+          sh ../broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
 
@@ -208,6 +208,6 @@ jobs:
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
-          sh packages/broker/bin/kill-all.sh
+          sh ../broker/bin/kill-all.sh
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
