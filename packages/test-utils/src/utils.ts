@@ -278,11 +278,11 @@ export const toReadableStream = (...args: unknown[]): Readable => {
  * Used to spin up an HTTP server used by integration tests to fetch private keys having non-zero ERC-20 token
  * balances in streamr-docker-dev environment.
  */
+/* eslint-disable no-console */
 export class KeyServer {
     public static readonly KEY_SERVER_PORT = 45454
     private readonly server: http.Server
 
-    /* eslint-disable no-console */
     constructor() {
         const app = express()
         app.use(cors())
@@ -317,6 +317,7 @@ export class KeyServer {
                 if (err) {
                     reject(err)
                 } else {
+                    console.info(`closed keyserver on port ${KeyServer.KEY_SERVER_PORT}`)
                     resolve(true)
                 }
             })
