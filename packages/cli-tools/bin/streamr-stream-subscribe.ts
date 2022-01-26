@@ -7,7 +7,7 @@ import { createFnParseInt } from '../src/common'
 createClientCommand(async (client: StreamrClient, streamId: string, options: any) => {
     await client.subscribe({
         streamId,
-        streamPartition: options.partition,
+        partition: options.partition,
     }, (message) => console.info(JSON.stringify(message)))
 }, {
     autoDestroyClient: false,

@@ -1,17 +1,13 @@
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator, { StreamMetadata } from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
-export * from "./SPID"
 import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
 import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
-import {
-    StreamID,
-    toStreamID,
-    StreamIDUtils
-} from "./StreamID"
-import { EthereumAddress } from "./types"
+import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
+import { StreamPartID, toStreamPartID, StreamPartIDUtils } from "./StreamPartID"
+import { EthereumAddress, ENSName } from "./types"
 
 export {
     OrderingUtil,
@@ -29,7 +25,11 @@ export {
     parseAddressFromNodeId,
     keyToArrayIndex,
     toStreamID,
+    toStreamPartID,
     StreamID,
     StreamIDUtils,
-    EthereumAddress
+    StreamPartID,
+    StreamPartIDUtils,
+    EthereumAddress,
+    ENSName
 }

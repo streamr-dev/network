@@ -1,7 +1,7 @@
 import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
-import { SPID } from 'streamr-client-protocol'
+import { toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(50000)
 
@@ -87,7 +87,7 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.hasOutOnlyConnection(new SPID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
             .toEqual(true)
     }, 15000)
 
@@ -103,7 +103,7 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.hasOutOnlyConnection(new SPID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
             .toEqual(true)
 
         await publishingClient.removePublishProxy(stream, proxyNodeId1)
@@ -112,7 +112,7 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.isSetUp(new SPID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
             .toEqual(false)
     }, 15000)
 
@@ -132,13 +132,13 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.hasOutOnlyConnection(new SPID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
             .toEqual(true)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.hasOutOnlyConnection(new SPID(stream.streamId, 0), proxyNodeId2))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId2))
             .toEqual(true)
 
         await publishingClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
@@ -147,13 +147,13 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.isSetUp(new SPID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
             .toEqual(false)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streams.isSetUp(new SPID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
             .toEqual(false)
 
     }, 15000)

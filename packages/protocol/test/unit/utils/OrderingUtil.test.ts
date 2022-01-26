@@ -31,7 +31,7 @@ describe('OrderingUtil', () => {
             assert.deepStrictEqual(streamMessage.serialize(), msg.serialize())
             done()
         }
-        util = new OrderingUtil(toStreamID('streamId'), 0, handler, () => {})
+        util = new OrderingUtil(handler, () => {})
         util.add(msg)
     })
     it('calls the gap handler if a gap is detected', (done) => {
@@ -43,7 +43,7 @@ describe('OrderingUtil', () => {
             assert.equal(publisherId, 'publisherId')
             done()
         }
-        util = new OrderingUtil(toStreamID('streamId'), 0, () => {}, gapHandler, 50, 50)
+        util = new OrderingUtil( () => {}, gapHandler, 50, 50)
         const msg1 = msg
         const msg4 = createMsg(4, undefined, 3)
         util.add(msg1)
@@ -53,7 +53,7 @@ describe('OrderingUtil', () => {
         const gapHandler = () => {
             throw new Error('The gap handler should not be called.')
         }
-        util = new OrderingUtil(toStreamID('streamId'), 0, () => {}, gapHandler, 5000, 5000)
+        util = new OrderingUtil(() => {}, gapHandler, 5000, 5000)
         const msg1 = msg
         const msg2 = createMsg(2, undefined, 1)
         const msg3 = createMsg(3, undefined, 2)
@@ -86,7 +86,7 @@ describe('OrderingUtil', () => {
         const received1: StreamMessage[] = []
         const received2: StreamMessage[] = []
         const received3: StreamMessage[] = []
-        util = new OrderingUtil(toStreamID('streamId'), 0, (m) => {
+        util = new OrderingUtil((m) => {
             if (m.getPublisherId() === 'publisherId1') {
                 received1.push(m)
             } else if (m.getPublisherId() === 'publisherId2') {

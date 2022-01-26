@@ -88,10 +88,10 @@ describe('NodeMetrics', () => {
     it('should retrieve the a `sec` metrics', async () => {
         const messageQueue = new Queue<any>()
 
-        const streamId = `${streamIdPrefix}sec`
-        const streamPartition = keyToArrayIndex(NUM_OF_PARTITIONS, metricsGeneratingBroker.getNodeId().toLowerCase())
+        const id = `${streamIdPrefix}sec`
+        const partition = keyToArrayIndex(NUM_OF_PARTITIONS, metricsGeneratingBroker.getNodeId().toLowerCase())
 
-        await client2.subscribe({ streamId, streamPartition }, (content: any) => {
+        await client2.subscribe({ id, partition }, (content: any) => {
             messageQueue.push({ content })
         })
 

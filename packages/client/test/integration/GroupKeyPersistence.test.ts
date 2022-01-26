@@ -18,7 +18,7 @@ describeRepeats('Group Key Persistence', () => {
 
     const createClient = getCreateClient()
 
-    describe('with requireEncryptedData true', () => {
+    describe('with encrypted streams', () => {
         let stream: Stream
 
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
@@ -28,7 +28,6 @@ describeRepeats('Group Key Persistence', () => {
             ])
 
             stream = await createTestStream(client, module, {
-                requireEncryptedData: true,
                 ...streamOpts,
             })
             const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
@@ -334,7 +333,7 @@ describeRepeats('Group Key Persistence', () => {
         })
     })
 
-    describe('with requireEncryptedData = false', () => {
+    describe('with unencrypted data (public subscribe)', () => {
         const NUM_STREAMS = 5
         const streams: Stream[] = []
 
@@ -347,9 +346,8 @@ describeRepeats('Group Key Persistence', () => {
             })
             for (let i = 0; i < NUM_STREAMS; i++) {
                 // eslint-disable-next-line no-await-in-loop
-                const stream = await createTestStream(publisher, module, {
-                    requireEncryptedData: false,
-                })
+                const stream = await createTestStream(publisher, module)
+                await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
                 streams.push(stream)
             }
         }, 2 * TIMEOUT)

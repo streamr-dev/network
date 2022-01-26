@@ -18,19 +18,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
-
-// TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinitionOptions = {
-    streamId?: string,
-    streamPartition?: number,
-    id?: string,
-    partition?: number,
-    stream?: StreamrStream|string
-}
-
-export type StreamPartDefinition = string | StreamPartDefinitionOptions
-
-export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
+import { DEFAULT_PARTITION } from './StreamIDBuilder'
 
 export interface StreamPermissions {
     canEdit: boolean
@@ -50,14 +38,12 @@ export enum StreamPermission {
 
 export interface StreamProperties {
     id: string
-    name?: string
     description?: string
     config?: {
         fields: Field[];
     }
     partitions?: number
     requireSignedData?: boolean
-    requireEncryptedData?: boolean
     storageDays?: number
     inactivityThresholdHours?: number
 }
@@ -95,15 +81,11 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 class StreamrStream implements StreamMetadata {
     streamId: StreamID
     id: StreamID
-    // @ts-expect-error
-    name: string
     description?: string
     config: {
         fields: Field[];
     } = { fields: [] }
     partitions!: number
-    /** @internal */
-    requireEncryptedData!: boolean
     requireSignedData!: boolean
     storageDays?: number
     inactivityThresholdHours?: number
@@ -348,7 +330,7 @@ class StreamrStream implements StreamMetadata {
     async detectFields() {
         // Get last message of the stream to be used for field detecting
         const sub = await this._resends.resend({
-            streamId: this.id,
+            id: this.id,
             resend: {
                 last: 1,
             },
@@ -401,7 +383,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     private static async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
-        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/${DEFAULT_PARTITION}`
         const response = await fetch(url)
         if (response.status === 200) {
             return true

@@ -29,7 +29,7 @@ export default class GroupKeyStoreFactory implements Context {
         this.getStore = CacheAsyncFn(this.getNewStore.bind(this), {
             ...cacheConfig,
             cacheKey([streamId]) {
-                return streamId // TODO: spid.key?
+                return streamId
             }
         })
         this.initialGroupKeys = encryptionConfig.groupKeys

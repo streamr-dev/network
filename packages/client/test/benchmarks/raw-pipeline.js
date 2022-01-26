@@ -97,7 +97,7 @@ async function run() {
         node.unsubscribe = () => {}
         const startTime = Date.now()
         try {
-            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6))
+            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.id.slice(0, 6))
             const published = await client.collectMessages(client.publishFrom(stream, (async function* Generate() {
                 for (let i = 0; i < batchSize; i++) {
                     yield Msg(payloadBytes)
@@ -105,7 +105,7 @@ async function run() {
             }())), batchSize)
             return published
         } finally {
-            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6), Date.now() - startTime)
+            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.id.slice(0, 6), Date.now() - startTime)
         }
     }
 
@@ -171,13 +171,9 @@ async function run() {
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: false,
         }),
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: true,
         })
     ])
 

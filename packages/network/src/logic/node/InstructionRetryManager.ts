@@ -1,10 +1,9 @@
-import { SPIDKey } from 'streamr-client-protocol'
-import { TrackerLayer } from "streamr-client-protocol"
+import { StreamPartID, InstructionMessage } from "streamr-client-protocol"
 import { Logger } from "../../helpers/Logger"
 import { TrackerId } from '../tracker/Tracker'
 
 type HandleFn = (
-    instructionMessage: TrackerLayer.InstructionMessage,
+    instructionMessage: InstructionMessage,
     trackerId: TrackerId,
     reattempt: boolean
 ) => Promise<void>
@@ -14,7 +13,7 @@ export class InstructionRetryManager {
     private readonly handleFn: HandleFn
     private readonly intervalInMs: number
     private readonly statusSendCounterLimit: number
-    private instructionRetryIntervals: Record<SPIDKey, {
+    private instructionRetryIntervals: Record<StreamPartID, {
         interval: NodeJS.Timeout,
         counter: number,
     }>
@@ -29,15 +28,15 @@ export class InstructionRetryManager {
         this.stopped = false
     }
 
-    add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId): void {
+    add(instructionMessage: InstructionMessage, trackerId: TrackerId): void {
         if (this.stopped) {
             return
         }
-        const spidKey = instructionMessage.getSPID().toKey()
-        if (this.instructionRetryIntervals[spidKey]) {
-            clearTimeout(this.instructionRetryIntervals[spidKey].interval)
+        const streamPartId = instructionMessage.getStreamPartID()
+        if (this.instructionRetryIntervals[streamPartId]) {
+            clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
         }
-        this.instructionRetryIntervals[spidKey] = {
+        this.instructionRetryIntervals[streamPartId] = {
             interval: setTimeout(() =>
                 this.retryFunction(instructionMessage, trackerId)
             , this.intervalInMs),
@@ -45,40 +44,40 @@ export class InstructionRetryManager {
         }
     }
 
-    async retryFunction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId): Promise<void> {
+    async retryFunction(instructionMessage: InstructionMessage, trackerId: TrackerId): Promise<void> {
         if (this.stopped) {
             return
         }
-        const spidKey = instructionMessage.getSPID().toKey()
+        const streamPartId = instructionMessage.getStreamPartID()
         try {
             // First and every nth instruction retries will always send status messages to tracker
-            await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[spidKey].counter !== 0)
+            await this.handleFn(instructionMessage, trackerId, this.instructionRetryIntervals[streamPartId].counter !== 0)
         } catch (err) {
             this.logger.warn('instruction retry threw %s', err)
         }
         // Check that stream has not been removed
-        if (this.instructionRetryIntervals[spidKey]) {
-            if (this.instructionRetryIntervals[spidKey].counter >= this.statusSendCounterLimit) {
-                this.instructionRetryIntervals[spidKey].counter = 0
+        if (this.instructionRetryIntervals[streamPartId]) {
+            if (this.instructionRetryIntervals[streamPartId].counter >= this.statusSendCounterLimit) {
+                this.instructionRetryIntervals[streamPartId].counter = 0
             } else {
-                this.instructionRetryIntervals[spidKey].counter += 1
+                this.instructionRetryIntervals[streamPartId].counter += 1
             }
 
-            clearTimeout(this.instructionRetryIntervals[spidKey].interval)
-            this.instructionRetryIntervals[spidKey].interval = setTimeout(() =>
+            clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
+            this.instructionRetryIntervals[streamPartId].interval = setTimeout(() =>
                 this.retryFunction(instructionMessage, trackerId)
             , this.intervalInMs)
         }
     }
 
-    removeStream(spidKey: SPIDKey): void {
+    removeStreamPart(streamPartId: StreamPartID): void {
         if (this.stopped) {
             return
         }
-        if (spidKey in this.instructionRetryIntervals) {
-            clearTimeout(this.instructionRetryIntervals[spidKey].interval)
-            delete this.instructionRetryIntervals[spidKey]
-            this.logger.debug('stream %s successfully removed', spidKey)
+        if (streamPartId in this.instructionRetryIntervals) {
+            clearTimeout(this.instructionRetryIntervals[streamPartId].interval)
+            delete this.instructionRetryIntervals[streamPartId]
+            this.logger.debug('stream part %s successfully removed', streamPartId)
         }
     }
 
