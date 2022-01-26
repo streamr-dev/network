@@ -38,7 +38,6 @@ export enum StreamPermission {
 
 export interface StreamProperties {
     id: string
-    name?: string
     description?: string
     config?: {
         fields: Field[];
@@ -82,8 +81,6 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 class StreamrStream implements StreamMetadata {
     streamId: StreamID
     id: StreamID
-    // @ts-expect-error
-    name: string
     description?: string
     config: {
         fields: Field[];

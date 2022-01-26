@@ -1,17 +1,15 @@
 import { Wallet } from 'ethers'
 import { v4 as uuid } from 'uuid'
 
-import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 import { SearchStreamsOptions } from '../../src/StreamRegistry'
-import { StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
+import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(40000)
-
-const getName = () => uid('test-stream/slashes')
 
 /**
  * These tests should be run in sequential order!
@@ -37,7 +35,6 @@ describe('StreamEndpoints', () => {
 
     beforeAll(async () => {
         createdStream = await createTestStream(client, module, {
-            name: getName(),
             requireSignedData: true
         })
         const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
@@ -54,16 +51,14 @@ describe('StreamEndpoints', () => {
 
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
-            const name = getName()
-            const id = await createRelativeTestStreamId(module)
+            const path = await createRelativeTestStreamId(module)
             const stream = await client.createStream({
-                id,
-                name,
+                id: path,
                 requireSignedData: true
             })
             await until(async () => { return client.streamExistsOnTheGraph(stream.streamId) }, 100000, 1000)
-            expect(stream.id).toBeTruthy()
-            return expect(stream.name).toBe(name)
+            expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
+            expect(stream.requireSignedData).toBe(true)
         })
 
         it('valid id', async () => {
@@ -152,7 +147,6 @@ describe('StreamEndpoints', () => {
                 id: createdStream.id,
             })
             expect(existingStream.id).toBe(createdStream.id)
-            return expect(existingStream.name).toBe(createdStream.name)
         })
 
         it('new Stream by id', async () => {
@@ -160,7 +154,7 @@ describe('StreamEndpoints', () => {
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
-            return expect(newStream.id).toEqual(newId)
+            expect(newStream.id).toEqual(newId)
         })
 
         it('new Stream by path', async () => {
@@ -331,18 +325,16 @@ describe('StreamEndpoints', () => {
     })
 
     describe('Stream.update', () => {
-        it('can change stream name', async () => {
-            createdStream.name = 'Newname'
+        it('can change stream description', async () => {
+            createdStream.description = `description-${Date.now()}`
             await createdStream.update()
             await until(async () => {
                 try {
-                    return (await client.getStream(createdStream.id)).name === createdStream.name
+                    return (await client.getStream(createdStream.id)).description === createdStream.description
                 } catch (err) {
                     return false
                 }
             }, 100000, 1000)
-            const stream = await client.getStream(createdStream.id)
-            return expect(stream.name).toEqual(createdStream.name)
         })
     })
 
@@ -632,7 +624,7 @@ describe('StreamEndpoints', () => {
 
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
-            const props = { id: await createRelativeTestStreamId(module), name: '' }
+            const props = { id: await createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await until(() => client.streamExistsOnTheGraph(stream.id), 100000, 1000)
             await stream.delete()
