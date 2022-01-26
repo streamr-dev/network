@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Breaking) Rename `--config` argument to `--stream-config` in `stream create`
 - (Breaking) Remove `stream list` command
 - Add `stream search` command
+- (Breaking) Rename `--partition-key` argument to `--partition-key-field` in `stream publish`
 - Bump dependency streamr-client to 6.1.0
 - Bump dependency commander to 8.3.0
 
