@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+const { toStreamPartID } = require('streamr-client-protocol')
+
 const { spawn } = require('child_process')
 const path = require('path')
 
@@ -20,7 +22,7 @@ const startingDebugPort = 9200
 const streams = []
 
 for (let i = 0; i < parseInt(program.opts().streams, 10); i++) {
-    streams.push(`stream-${i}#0`)
+    streams.push(toStreamPartID(`stream-${i}`, 0))
 }
 
 let debug = false
