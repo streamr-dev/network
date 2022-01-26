@@ -112,7 +112,10 @@ export default class PublishPipeline implements Context, Stoppable {
             const { streamDefinition, ...options } = publishMetadata
             try {
                 const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
-                options.partitionKey ??= partition // TODO: add runtime check for both partitionKey AND partition set?
+                if ((partition !== undefined) && (options.partitionKey !== undefined)) {
+                    throw new Error('Invalid combination of "partition" and "partitionKey"')
+                }
+                options.partitionKey ??= partition
                 const streamMessage = await this.messageCreator.create(streamId, options)
                 yield [streamMessage, defer]
             } catch (err) {
