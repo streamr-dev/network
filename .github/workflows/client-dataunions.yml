@@ -25,6 +25,8 @@ defaults:
 
 jobs:
   data-unions-integration:
+    # temporary disabling of DU tests
+    if: ${{ false }}
     name: DataUnions Integration Test
     runs-on: ubuntu-latest
     env:
