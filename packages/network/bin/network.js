@@ -20,7 +20,7 @@ const startingDebugPort = 9200
 const streams = []
 
 for (let i = 0; i < parseInt(program.opts().streams, 10); i++) {
-    streams.push(`stream-${i}`)
+    streams.push(`stream-${i}#0`)
 }
 
 let debug = false
