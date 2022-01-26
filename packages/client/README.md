@@ -8,20 +8,24 @@
   Streamr JavaScript Client
 </h1>
 
-![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/streamr-client-javascript/Test%20Build/master)
-[![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
-[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
+[![Build status](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
+![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
+[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
+## Important information
+
+The current stable version of the Streamr Client is `5.x` (at the time of writing, December 2021) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-alpha.19](https://www.npmjs.com/package/streamr-client/v/6.0.0-alpha.19) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-alpha.19` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
+
 ----
 
-## TOC
+## Table of contents
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -92,6 +96,7 @@ const stream = await client.createStream({
 console.log(`Stream ${stream.id} has been created!`)
 
 // Optional: to enable historical data resends, add the stream to a storage node
+const { StorageNode, StreamrClient } = require('streamr-client').StreamrClient
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
 
 // Do something with the stream, for example call stream.publish(message)
@@ -191,7 +196,7 @@ To extract the session token from an authenticated client:
 const bearerToken = await client.session.getSessionToken()
 ```
 
-Then for example, 
+Then for example,
 ```js
     axios({
         headers: {
@@ -321,6 +326,12 @@ sub.on('resent', () => {
 })
 ```
 
+### Storage
+
+You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice. By default storage is not enabled on streams.
+
+`await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)`
+
 ## Stream API
 
 All the below functions return a Promise which gets resolved with the result.
@@ -328,10 +339,9 @@ All the below functions return a Promise which gets resolved with the result.
 | Name                                                | Description                                                                                                                                          |
 | :-------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
 | getStream(streamId)                                 | Fetches a stream object from the API.                                                                                                                |
-| listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).                     |
-| getStreamByName(name)                               | Fetches a stream which exactly matches the given name.                                                                                               |
+| searchStreams(term)                                 | Fetches an array of stream objects      |
 | createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). If you specify `id`, it can be a full streamId or a path (e.g. `/foo/bar` will create a stream with id `<your-ethereum-address>/foo/bar` if you have authenticated with a private key)|
-| getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
+| getOrCreateStream(properties)                       | Gets a stream with the id given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
 
 ### Stream object
@@ -473,7 +483,7 @@ These are available for everyone and anyone, to query publicly available info fr
 | Name                                                       | Returns                                        | Description                             |
 | :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
 | getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
-| getMemberStats(memberAddress)                              | {earnings, proof, ...}                         | Get member's stats                      |
+| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
 | getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
 | getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
 | getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |
@@ -499,7 +509,7 @@ The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAl
 | waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
 | pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
 | retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
-| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    | 
+| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    |
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
 but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
@@ -515,7 +525,7 @@ The use cases corresponding to the different combinations of the boolean flags:
 | `true`      | `true`  | Transaction receipt | *(default)* Self-service bridge to mainnet, client pays for mainnet gas |
 | `true`      | `false` | Transaction receipt | Self-service bridge to mainnet (but **skip** the wait that double-checks the withdraw succeeded and tokens arrived to destination) |
 | `false`     | `true`  | `null`              | Someone else pays for the mainnet gas automatically, e.g. the bridge operator (in this case the transaction receipt can't be returned) |
-| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first | 
+| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first |
 
 ### Deployment options
 
@@ -550,7 +560,7 @@ const dataUnion = await client.deployDataUnion({
 `dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed.
 Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means
 a Data Union deployed by a particular address with particular "name" will have a predictable address.
-            
+
 ## Utility functions
 
 | Name                                    | Returns                 |   Description    |
@@ -658,6 +668,28 @@ await Promise.all([2, 3, 4].map(async (partition) => {
     }, handler)
 }))
 ```
+
+## Proxy publishing
+
+In some cases the client might be interested in publishing data without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
+
+Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
+
+```js
+// Open publish proxy to a node on stream
+await publishingClient.setPublishProxy(stream, 'proxyNodeId')
+
+// Open publish proxy to multiple nodes on stream
+await publishingClient.setPublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+
+// Remove publish proxy to a node on stream
+await publishingClient.removePublishProxy(stream, proxyNodeId1)
+
+// Remove publish proxy to multiple nodes on stream
+await publishingClient.removePublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+```
+
+IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
 
 ## Logging
 

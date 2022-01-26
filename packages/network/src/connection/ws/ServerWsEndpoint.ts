@@ -54,14 +54,14 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         }).on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
             const handshakeUUID = v4()
 
-            ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
-
             this.handshakeTimeoutRefs[handshakeUUID] = setTimeout(() => {
                 ws.close(DisconnectionCode.FAILED_HANDSHAKE, `Handshake not received from connection behind UUID ${handshakeUUID}`)
                 this.logger.warn(`Handshake not received from connection behind UUID ${handshakeUUID}`)
                 ws.terminate()
                 delete this.handshakeTimeoutRefs[handshakeUUID]
             }, this.handshakeTimer)
+
+            ws.send(JSON.stringify({ uuid: handshakeUUID, peerId: this.peerInfo.peerId }))
 
             const duplexStream = WebSocket.createWebSocketStream(ws, {
                 decodeStrings: false

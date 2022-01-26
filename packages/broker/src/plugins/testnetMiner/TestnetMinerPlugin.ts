@@ -5,9 +5,10 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
-import { fetchOrThrow } from '../../helpers/fetch'
+import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
 import { Schema } from 'ajv'
+import { StreamID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
@@ -39,25 +40,26 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    metrics: Metrics
+    metrics?: Metrics
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
-    streamId: string
+    streamId: StreamID
 
     constructor(options: PluginOptions) {
         super(options)
         if (this.streamrClient === undefined) {
             throw new Error('StreamrClient is not available')
         }
-        this.metrics = this.metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
-        this.streamId = this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)]
+        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        this.metrics = metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.latencyPoller = await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
         }, LATENCY_POLL_INTERVAL, true)
@@ -78,7 +80,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
-        this.metrics.set(METRIC_LATEST_CODE, Date.now())
+        this.metrics!.set(METRIC_LATEST_CODE, Date.now())
         const peers = this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
@@ -86,7 +88,8 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private async subscriptionIntervalFn(): Promise<void> {
-        if (this.streamrClient && this.streamrClient.getSubscriptions(this.streamId).length === 0) {
+        const isAlreadySubscribed = (await this.streamrClient!.getSubscriptions(this.streamId)).length > 0
+        if (!isAlreadySubscribed) {
             try {
                 await this.subscribe()
             } catch (err) {
@@ -110,7 +113,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
     }
 
     private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStream(this.streamId, REWARD_STREAM_PARTITION)
+        const neighbors = this.networkNode.getNeighborsForStreamPart(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
             rtt: this.networkNode.getRtt(nodeId)

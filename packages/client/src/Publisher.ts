@@ -1,12 +1,12 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage, SPID, SIDLike } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from './utils'
 import { inspect } from './utils/log'
-import { Context } from './utils/Context'
+import { Context, ContextError } from './utils/Context'
 import { CancelableGenerator, ICancelable } from './utils/iterators'
 
 import { StreamEndpoints } from './StreamEndpoints'
@@ -15,6 +15,8 @@ import { Stoppable } from './utils/Stoppable'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
+import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamDefinition } from './types'
 
 export type { PublishMetadata }
 
@@ -35,6 +37,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         private pipeline: PublishPipeline,
         private node: BrubeckNode,
         private validator: Validator,
+        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
     ) {
@@ -50,31 +53,29 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     async publish<T>(
-        streamObjectOrId: SIDLike,
+        streamDefinition: StreamDefinition,
         content: T,
         timestamp: string | number | Date = Date.now(),
         partitionKey?: string | number
     ): Promise<StreamMessage<T>> {
-        return this.publishMessage<T>(streamObjectOrId, {
+        return this.publishMessage<T>(streamDefinition, {
             content,
             timestamp,
             partitionKey,
         })
     }
 
-    async publishMessage<T>(streamObjectOrId: SIDLike, {
+    async publishMessage<T>(streamDefinition: StreamDefinition, {
         content,
         timestamp = Date.now(),
         partitionKey
     }: PublishMetadata<T>): Promise<StreamMessage<T>> {
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const { streamId, streamPartition } = SPID.parse(streamObjectOrId)
-
         return this.pipeline.publish({
-            streamId,
+            streamDefinition,
             content,
             timestamp: timestampAsNumber,
-            partitionKey: partitionKey != null ? partitionKey : streamPartition,
+            partitionKey,
         })
     }
 
@@ -110,24 +111,26 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return msgs
     }
 
-    async* publishFrom<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<T>) {
+    /** @internal */
+    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
             for await (const msg of items) {
-                yield await this.publish(streamObjectOrId, msg)
+                yield await this.publish(streamDefinition, msg)
             }
         } finally {
             this.inProgress.delete(items)
         }
     }
 
-    async* publishFromMetadata<T>(streamObjectOrId: SIDLike, seq: AsyncIterable<PublishMetadata<T>>) {
+    /** @internal */
+    async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
             for await (const msg of items) {
-                yield await this.publishMessage(streamObjectOrId, msg)
+                yield await this.publishMessage(streamDefinition, msg)
             }
         } finally {
             this.inProgress.delete(items)
@@ -136,7 +139,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     async waitForStorage(streamMessage: StreamMessage, {
         interval = 500,
-        timeout = 20000,
+        timeout = 30000,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature
@@ -147,8 +150,9 @@ export default class BrubeckPublisher implements Context, Stoppable {
         count?: number
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}) {
-
-        const { spid } = streamMessage
+        if (!streamMessage) {
+            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
+        }
 
         /* eslint-disable no-await-in-loop */
         const start = Date.now()
@@ -170,7 +174,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
                 throw err
             }
 
-            last = await this.streamEndpoints.getStreamLast(spid, count)
+            last = await this.streamEndpoints.getStreamLast(streamMessage.getStreamPartID(), count)
 
             for (const lastMsg of last) {
                 if (messageMatchFn(streamMessage, lastMsg)) {
@@ -196,6 +200,30 @@ export default class BrubeckPublisher implements Context, Stoppable {
 
     stopKeyExchange() {
         return this.keyExchange.stop()
+    }
+
+    async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId)
+    }
+
+    async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId)
+    }
+
+    async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await Promise.allSettled([
+            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId))
+        ])
+    }
+
+    async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await Promise.allSettled([
+            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId))
+        ])
     }
 
     async start() {

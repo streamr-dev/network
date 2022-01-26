@@ -2,7 +2,7 @@
  * Makes OrderingUtil more compatible with use in pipeline.
  */
 import { injectable } from 'tsyringe'
-import { OrderingUtil, StreamMessage, SPID, MessageRef } from 'streamr-client-protocol'
+import { OrderingUtil, StreamMessage, StreamPartID, MessageRef } from 'streamr-client-protocol'
 
 import { PushBuffer } from './utils/PushBuffer'
 import { Context } from './utils/Context'
@@ -34,7 +34,7 @@ export default class OrderMessages<T> implements Context {
         private options: SubscribeConfig,
         context: Context,
         private resends: Resends,
-        private spid: SPID,
+        private readonly streamPartId: StreamPartID,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -48,8 +48,6 @@ export default class OrderMessages<T> implements Context {
         this.enabled = !!(gapFill && maxGapRequests)
         this.orderMessages = orderMessages
         this.orderingUtil = new OrderingUtil(
-            spid.streamId,
-            spid.streamPartition,
             this.onOrdered,
             this.onGap,
             gapFillTimeout,
@@ -66,13 +64,13 @@ export default class OrderMessages<T> implements Context {
     async onGap(from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) {
         if (this.done || !this.enabled) { return }
         this.debug('gap %o', {
-            spid: this.spid, publisherId, msgChainId, from, to,
+            streamPartId: this.streamPartId, publisherId, msgChainId, from, to,
         })
 
         let resendMessageStream!: MessageStream<T>
 
         try {
-            resendMessageStream = await this.resends.range(this.spid, {
+            resendMessageStream = await this.resends.range(this.streamPartId, {
                 fromTimestamp: from.timestamp,
                 toTimestamp: to.timestamp,
                 fromSequenceNumber: from.sequenceNumber,

@@ -1,7 +1,11 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
-import { StorageNode } from '../../src/StorageNode'
+
+import { Wallet } from 'ethers'
+import { storageNodeTestConfig } from './devEnvironment'
+
+jest.setTimeout(30000)
 
 describe('Stream', () => {
     let client: StreamrClient
@@ -9,11 +13,12 @@ describe('Stream', () => {
 
     const createClient = getCreateClient()
     beforeEach(async () => {
-        client = createClient()
+        client = await createClient()
         await client.connect()
 
         stream = await createTestStream(client, module)
-        await stream.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
+        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
+        await stream.addToStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('detectFields()', () => {

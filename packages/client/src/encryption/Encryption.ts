@@ -2,13 +2,29 @@ import crypto from 'crypto'
 import { O } from 'ts-toolbelt'
 import { promisify } from 'util'
 
-// this is shimmed out for actual browser build allows us to run tests in node against browser API
-import { Crypto } from 'node-webcrypto-ossl'
 import { arrayify, hexlify } from '@ethersproject/bytes'
 import { StreamMessage, EncryptedGroupKey, StreamMessageError, ValidationError } from 'streamr-client-protocol'
 
 import { uuid } from '../utils'
 import { inspect } from '../utils/log'
+
+const { webcrypto } = crypto
+
+// @ts-expect-error webcrypto.subtle does not currently exist in node types
+if (typeof window === 'undefined' && !webcrypto?.subtle) {
+    const url = 'https://nodejs.org/api/webcrypto.html'
+    throw new Error(`Node WebCrypto support required. Please update to Node 16+. ${url}`)
+}
+
+function getSubtle() {
+    // @ts-expect-error webcrypto.subtle does not currently exist in node types
+    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
+    if (!subtle) {
+        const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
+        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
+    }
+    return subtle
+}
 
 export class StreamMessageProcessingError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
@@ -193,9 +209,8 @@ function btoa(str: string | Uint8Array) {
 }
 
 async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}) {
-    const WebCrypto = new Crypto()
     const keyType = isPrivate ? 'pkcs8' : 'spki'
-    const exported = await WebCrypto.subtle.exportKey(keyType, key)
+    const exported = await getSubtle().exportKey(keyType, key)
     const exportedAsString = ab2str(exported)
     const exportedAsBase64 = btoa(exportedAsString)
     const TYPE = isPrivate ? 'PRIVATE' : 'PUBLIC'
@@ -422,8 +437,7 @@ export default class EncryptionUtil extends EncryptionUtilBase {
     }
 
     async _keyPairBrowser() {
-        const WebCrypto = new Crypto()
-        const { publicKey, privateKey } = await WebCrypto.subtle.generateKey({
+        const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
             publicExponent: new Uint8Array([1, 0, 1]), // 65537

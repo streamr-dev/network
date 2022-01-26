@@ -50,9 +50,6 @@ To subscribe to a private stream and authenticate with an Ethereum private key:
 streamr stream subscribe streamId --private-key <key>
 ```
 
-Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment. Alternatively, you can give `--ws-url <url>` and `--http-url <url>` to connect to any custom network.
-
-
 ###  publish
 Used to publish events to a stream from stdin line-by-line. Each line should be a valid JSON object.
 
@@ -60,8 +57,6 @@ Example of use:
 ```
 streamr stream publish <streamId> --private-key <key>
 ```
-
-Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
 
 
 ### generate
@@ -116,8 +111,28 @@ To fetch data between two date-times
 streamr stream resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> --private-key <key>
 ```
 
-Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
+#### Configuration
 
+User can specify environment and authentication details with the following command line arguments:
+- `--private-key <key>`, e.g. `--private-key 0x1234567890123456789012345678901234567890123456789012345678901234`
+- `--config <file>`, e.g. `--config foobar.json`
+- `--dev` use the pre-defined [development environment](https://github.com/streamr-dev/streamr-docker-dev)
+
+The `--config` argument tries to read a configuration file from the current working directory (either without a file extension, or with `.json` extension added). It also tries to read it from `~/.streamr/config/${id}.json` dotfile.
+
+If no `--config` argument is specified, default settings are read from `~/.streamr/config/default.json`, if that file exists.
+
+The configuration file is a JSON. It has one root-level property `client`, which contains any configuration properties for the [streamr-client-javascript](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/) client. Example:
+```
+{
+    "client": {
+        "auth": {
+            "privateKey": ...
+        },
+        "publishWithSignature": "always"
+    }
+}
+```
 
 ### Examples: Piping with subscribe and publish
 
@@ -157,13 +172,8 @@ the real-time events.
 streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --dev <streamId> --private-key <key>
 ```
 
-And the same for staging environment:
-```
-streamr stream subscribe streamr.eth/demos/helsinki-trams | streamr stream publish --stg <streamId> --private-key <key>
-```
-
 ## Develop
-This project is a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript),
+This project is a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/),
 which does the heavy lifting, while this project concentrates on CLI concerns: parsing and
 passing arguments, stdin/stdout, errors, and so forth.
 

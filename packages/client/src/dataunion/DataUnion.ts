@@ -7,7 +7,6 @@ import { AddressZero } from '@ethersproject/constants'
 import type { Overrides as EthersOptions } from '@ethersproject/contracts'
 import type { Signer } from '@ethersproject/abstract-signer'
 
-import { EthereumAddress } from '../types'
 import { Debug } from '../utils/log'
 import { sleep, until } from '../utils'
 
@@ -15,6 +14,7 @@ import Contracts from './Contracts'
 import { erc20AllowanceAbi } from './abi'
 
 import DataUnionAPI from './index'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
@@ -186,7 +186,7 @@ export class DataUnion {
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllTx(sendToMainnet: boolean = true): Promise<ContractTransaction> {
-        const signer = await this.client.ethereum.getSidechainSigner()
+        const signer = await this.client.ethereum.getDataUnionChainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
 
@@ -227,7 +227,7 @@ export class DataUnion {
      * @returns await on call .wait to actually send the tx
      */
     private async getWithdrawAllToTx(recipientAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<ContractTransaction> {
-        const signer = await this.client.ethereum.getSidechainSigner()
+        const signer = await this.client.ethereum.getDataUnionChainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const withdrawable = await duSidechain.getWithdrawableEarnings(address)
@@ -703,7 +703,12 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _setBinanceDepositAddressFromSignature(from: EthereumAddress, binanceRecipient: EthereumAddress, signature: BytesLike, client: DataUnionAPI) {
+    static async _setBinanceDepositAddressFromSignature(
+        from: EthereumAddress,
+        binanceRecipient: EthereumAddress,
+        signature: BytesLike,
+        client: DataUnionAPI
+    ) {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
@@ -820,7 +825,12 @@ export class DataUnion {
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000, ethersOptions: EthersOptions = {}) {
+    async transportMessage(
+        messageHash: AmbMessageHash,
+        pollingIntervalMs: number = 1000,
+        retryTimeoutMs: number = 300000,
+        ethersOptions: EthersOptions = {}
+    ) {
         const helper = this.getContracts()
         const [sidechainAmb, mainnetAmb] = await Promise.all([
             helper.getSidechainAmb(),

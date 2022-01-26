@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { Logger } = require('../dist/helpers/Logger')
+const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode } = require('../dist/composition')
-const { MetricsContext } = require('../dist/helpers/MetricsContext')
-const { Event: NodeEvent } = require('../dist/logic/Node')
+const { createNetworkNode } = require('../dist/src/composition')
+const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
+const { Event: NodeEvent } = require('../dist/src/logic/node/Node')
 
 program
     .version(CURRENT_VERSION)
@@ -39,7 +39,7 @@ const subscriber = createNetworkNode({
 logger.info('started subscriber id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, metrics: %s',
     id, name, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().metrics)
 subscriber.start()
-program.opts().streamIds.forEach((stream) => subscriber.subscribe(stream, 0))
+program.opts().streamIds.forEach((stream) => subscriber.subscribe(stream))
 
 let messageNo = 0
 let lastReported = 0

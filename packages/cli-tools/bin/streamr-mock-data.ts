@@ -7,4 +7,4 @@ program
     .usage('<command> [<args>]')
     .description('mock-data subcommands')
     .command('generate', 'generate JSON data')
-    .parse(process.argv)
+    .parse()

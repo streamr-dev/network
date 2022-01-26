@@ -4,6 +4,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
+import { toStreamID } from "streamr-client-protocol"
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -20,7 +21,14 @@ function buildMsg(
     content: any = {}
 ) {
     return new Protocol.StreamMessage({
-        messageId: new Protocol.MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        messageId: new Protocol.MessageID(
+            toStreamID(streamId),
+            streamPartition,
+            timestamp,
+            sequenceNumber,
+            publisherId,
+            msgChainId
+        ),
         content: JSON.stringify(content)
     })
 }

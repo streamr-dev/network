@@ -1,20 +1,25 @@
-import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../utils/validations'
 
 import MessageRef from './MessageRef'
+import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { StreamPartID, toStreamPartID } from "../../utils/StreamPartID"
 export type MessageIDArray = [string, number, number, number, string, string]
 export default class MessageID {
 
-    streamId: string
+    streamId: StreamID
     streamPartition: number
     timestamp: number
     sequenceNumber: number
     publisherId: string
     msgChainId: string
 
-    constructor(streamId: string, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
+    constructor(streamId: StreamID, streamPartition: number, timestamp: number, sequenceNumber: number, publisherId: string, msgChainId: string) {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsNotNegativeInteger('timestamp', timestamp)
+        validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
+        validateIsString('publisherId', publisherId)
+        validateIsString('msgChainId', msgChainId)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
@@ -45,7 +50,11 @@ export default class MessageID {
             msgChainId,
         ] = arr
 
-        return new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+        return new MessageID(toStreamID(streamId), streamPartition, timestamp, sequenceNumber, publisherId, msgChainId)
+    }
+
+    getStreamPartID(): StreamPartID {
+        return toStreamPartID(this.streamId, this.streamPartition)
     }
 
     serialize(): string {
@@ -57,6 +66,6 @@ export default class MessageID {
     }
 
     clone(): MessageID {
-        return new MessageID(...this.toArray())
+        return new MessageID(...this.toArray() as [StreamID, number, number, number, string, string])
     }
 }

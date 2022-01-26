@@ -4,16 +4,16 @@
  * TODO: Disolve ConfigBase.
  */
 import 'reflect-metadata'
-import Config, { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
+import Config from './ConfigBase'
 import cloneDeep from 'lodash/cloneDeep'
 import merge from 'lodash/merge'
-import { NetworkNodeOptions } from 'streamr-network'
-import { NodeRegistryOptions } from './StorageNodeRegistry'
-import { InspectOptions } from 'util'
-import { StorageNode } from './StorageNode'
+import type { NetworkNodeOptions } from 'streamr-network'
+import type { InspectOptions } from 'util'
+import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
+import type { NodeRegistryOptions } from './NodeRegistry'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
-    network?: Partial<NetworkNodeOptions>
+    network?: Omit<Partial<NetworkNodeOptions>, 'metricsContext'>
     storageNodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
@@ -68,10 +68,10 @@ const BRUBECK_CLIENT_DEFAULTS = {
             maxStringLength: 512
         }
     },
-    storageNodeRegistry: [{
-        address: StorageNode.STREAMR_GERMANY,
-        url: 'https://testnet2.streamr.network:8001',
-    }],
+    storageNodeRegistry: {
+        contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
+        jsonRpcProvider: 'http://127.0.0.1:8546',
+    },
     network: {
         trackers: [
             {
@@ -124,9 +124,12 @@ const BRUBECK_CLIENT_DEFAULTS = {
                 ws: 'wss://testnet4.streamr.network:30405',
                 http: 'https://testnet4.streamr.network:30405'
             }
-        ]
+        ],
+        acceptProxyConnections: false
     },
 }
+
+export { BRUBECK_CLIENT_DEFAULTS as DEFAULTS }
 
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
     const clonedConfig = cloneDeep(config)
@@ -142,9 +145,5 @@ export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubec
         debug: merge(defaults.debug || {}, clonedConfig.debug),
     }
 
-    // pass supplied metricsContext by reference
-    if (config.network?.metricsContext) {
-        result.network.metricsContext = config.network.metricsContext
-    }
     return result
 }

@@ -1,13 +1,31 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
-const { humanize } = require('debug')
 const bytes = require('bytes')
+const fetch = require('node-fetch')
+const { KeyServer } = require('streamr-test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
+
+const keyserver = new KeyServer()
+
+async function getPrivateKey() {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
+}
+
+async function createClient(opts) {
+    return new StreamrClient({
+        ...clientOptions,
+        ...opts,
+        auth: {
+            privateKey: await getPrivateKey()
+        }
+    })
+}
 
 function randomString(bytes) {
     let buffer = randomBytes(bytes)
@@ -36,17 +54,9 @@ const Msg = (bytes) => {
     }
 }
 
-function createClient(opts) {
-    return new StreamrClient({
-        ...clientOptions,
-        ...opts,
-    })
-}
-
 async function setupClientAndStream(clientOpts, streamOpts) {
-    const client = createClient(clientOpts)
+    const client = await createClient(clientOpts)
     await client.connect()
-    await client.session.getSessionToken()
 
     const stream = await client.createStream({
         id: `/test-stream-raw/${process.pid}`,
@@ -87,7 +97,7 @@ async function run() {
         node.unsubscribe = () => {}
         const startTime = Date.now()
         try {
-            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6))
+            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.id.slice(0, 6))
             const published = await client.collectMessages(client.publishFrom(stream, (async function* Generate() {
                 for (let i = 0; i < batchSize; i++) {
                     yield Msg(payloadBytes)
@@ -95,7 +105,7 @@ async function run() {
             }())), batchSize)
             return published
         } finally {
-            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6), Date.now() - startTime)
+            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.id.slice(0, 6), Date.now() - startTime)
         }
     }
 
@@ -161,13 +171,9 @@ async function run() {
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: false,
         }),
         setup({
             publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: true,
         })
     ])
 
@@ -214,6 +220,10 @@ async function run() {
 
     suite.on('cycle', (event) => {
         log(toStringBench(event.target))
+    })
+
+    suite.on('complete', () => {
+        keyserver.destroy()
     })
 
     log('starting')

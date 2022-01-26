@@ -1,6 +1,6 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { StreamMessage, SPID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { NetworkNode } from 'streamr-network'
 
 import { Scaffold, instanceId, until } from './utils'
@@ -22,7 +22,7 @@ import BrubeckNode from './BrubeckNode'
 export default class SubscriptionSession<T> implements Context, Stoppable {
     id
     debug
-    spid: SPID
+    public readonly streamPartId: StreamPartID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
@@ -32,14 +32,18 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     node
     onRetired = Signal.once()
 
-    constructor(context: Context, spid: SPID, @inject(BrubeckContainer) container: DependencyContainer) {
+    constructor(
+        context: Context,
+        streamPartId: StreamPartID,
+        @inject(BrubeckContainer) container: DependencyContainer
+    ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        this.spid = spid
+        this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.spid, this, container)
+        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
             .onError(this.onError)
             .pipe(this.distributeMessage)
             .onBeforeFinally(async () => {
@@ -79,7 +83,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
             return
         }
 
-        if (!msg.spid.equals(this.spid)) {
+        if (msg.getStreamPartID() !== this.streamPartId) {
             return
         }
 
@@ -90,8 +94,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('subscribe')
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        const { streamId, streamPartition } = this.spid
-        node.subscribe(streamId, streamPartition)
+        node.subscribe(this.streamPartId)
         return node
     }
 
@@ -101,8 +104,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
         node.removeMessageListener(this.onMessageInput)
-        const { streamId, streamPartition } = this.spid
-        node.subscribe(streamId, streamPartition)
+        node.unsubscribe(this.streamPartId)
     }
 
     updateNodeSubscriptions = (() => {
@@ -144,13 +146,11 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     }
 
     async waitForNeighbours(numNeighbours = 1, timeout = 10000) {
-        const { streamId, streamPartition } = this.spid
-
         return until(async () => {
             if (!this.shouldBeSubscribed()) { return true } // abort
             const node = await this.node.getNode()
             if (!this.shouldBeSubscribed()) { return true } // abort
-            return node.getNeighborsForStream(streamId, streamPartition).length >= numNeighbours
+            return node.getNeighborsForStreamPart(this.streamPartId).length >= numNeighbours
         }, timeout)
     }
 

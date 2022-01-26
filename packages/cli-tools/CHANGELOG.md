@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Add permission commands: `stream grant-permission` and `stream revoke-permission`
 - Remove `typescript` and `ts-node` as run-time dependencies
-- Remove `--msg-chain-id` parameter from `stream resend from`
-- (Breaking) `streamr stream create` argument is a stream ID, not a name
+- (Breaking) Remove `--msg-chain-id` parameter from `stream resend from`
+- (Breaking) `stream create` argument is a stream ID, not a name
 - Support path notation when defining a stream ID
+- (Breaking) Remove `misc get-session-token` command
+- (Breaking) Change permission names and arguments:
+  - renamed `--operation` to `--permission` in `stream list`
+  - the data format of `permissions` returned by `--include-permissions` of `stream show` 
+  - enum values updated for all commands: `subscribe`, `publish`, `edit`, `delete` and `grant`
+- (Breaking) Remove `lastUpdated` and `name` columns from `stream list` output
+- (Breaking) Modify configuration management:
+  - can read config from `~/.streamr/config/default.json`
+  - `--config` argument added
+  - `--stg`, `--http-url` and `--ws-url` arguments removed
+- (Breaking) Rename `--config` argument to `--stream-config` in `stream create`
+- (Breaking) Remove `stream list` command
+- Add `stream search` command
+- Bump dependency streamr-client to 6.1.0
+- Bump dependency commander to 8.3.0
 
 ## [5.0.0] - 2021-05-05
 ### Added

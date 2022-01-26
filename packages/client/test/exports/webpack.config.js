@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            modules: [path.resolve('./node_modules'), path.resolve('./tests/'), path.resolve('../../node_modules')],
+            modules: [path.resolve('./node_modules'), path.resolve('./tests/'), ...require.resolve.paths('')],
             extensions: ['.json', '.js', '.ts', '.mjs'],
         },
     }

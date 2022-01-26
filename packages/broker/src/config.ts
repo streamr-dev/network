@@ -1,30 +1,14 @@
-import { Protocol } from 'streamr-network'
+import { BrubeckClientConfig } from 'streamr-client'
+import { SmartContractRecord } from 'streamr-client-protocol'
+import path from 'path'
+import * as os from 'os'
 
 export interface NetworkSmartContract {
     contractAddress: string
     jsonRpcProvider: string
 }
 
-export type TrackerRegistryItem = Protocol.SmartContractRecord
-
-export interface TurnConfig {
-    url: string,
-    username: string,
-    password: string
-}
-
-export interface NetworkConfig {
-    name: string,
-    trackers: TrackerRegistryItem[] | NetworkSmartContract,
-    stun: string | null,
-    turn: TurnConfig | null
-    location: {
-        latitude: number,
-        longitude: number,
-        country: string,
-        city: string
-    } | null
-}
+export type TrackerRegistryItem = SmartContractRecord
 
 export interface HttpServerConfig {
     port: number,
@@ -32,25 +16,18 @@ export interface HttpServerConfig {
     certFileName: string | null
 }
 
-export interface StorageNodeRegistryItem {
-    address: string
-    url: string
-}
-
-export interface StorageNodeConfig {
-    registry: StorageNodeRegistryItem[] | NetworkSmartContract
-}
-
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
+export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
+
 export interface Config {
-    ethereumPrivateKey: string
-    generateSessionId: boolean
-    network: NetworkConfig,
-    streamrUrl: string,
-    streamrAddress: string,
-    storageNodeConfig: StorageNodeConfig,
+    client: ClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig
+}
+
+export const getDefaultFile = (): string => {
+    const relativePath = '.streamr/config/default.json'
+    return path.join(os.homedir(), relativePath)
 }

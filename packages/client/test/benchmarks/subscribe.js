@@ -1,8 +1,12 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
+const fetch = require('node-fetch')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
+const { KeyServer } = require('streamr-test-utils')
+
+const keyserver = new KeyServer()
 
 const { ConfigTest: clientOptions } = StreamrClient
 // note this is not the number of messages, just the start number
@@ -14,17 +18,24 @@ const Msg = () => {
     }
 }
 
-function createClient(opts) {
+async function getPrivateKey() {
+    const response = await fetch('http://localhost:45454/key')
+    return response.text()
+}
+
+async function createClient(opts) {
     return new StreamrClient({
         ...clientOptions,
         ...opts,
+        auth: {
+            privateKey: await getPrivateKey()
+        }
     })
 }
 
 async function setupClientAndStream(clientOpts, streamOpts) {
-    const client = createClient(clientOpts)
+    const client = await createClient(clientOpts)
     await client.connect()
-    await client.session.getSessionToken()
 
     const stream = await client.createStream({
         id: `/test-stream-subscribe/${process.pid}`,
@@ -135,6 +146,7 @@ async function run() {
     })
 
     suite.on('complete', async () => {
+        keyserver.destroy()
         log('Disconnecting clients')
         const tasks = [
             client1.disconnect(),

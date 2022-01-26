@@ -1,14 +1,14 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "6.0.0-alpha.0",
+  "version": "5.0.1",
   "description": "Command line tools for Streamr.",
   "bin": {
     "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
-    "eslint": "eslint .",
-    "prepare": "eslint . && tsc",
-    "build": "tsc",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepare": "npm run eslint && npm run build",
+    "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,22 +29,25 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
-    "commander": "^7.2.0",
+    "commander": "^8.3.0",
     "easy-table": "^1.1.1",
-    "ethers": "^5.3.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "6.0.0-alpha.17"
+    "lodash": "^4.17.21",
+    "streamr-client": "^6.0.0-alpha.23",
+    "streamr-client-protocol": "^10.0.0",
+    "streamr-test-utils": "^2.0.0"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^27.0.1",
-    "@typescript-eslint/eslint-plugin": "^4.31.2",
-    "@typescript-eslint/parser": "^4.31.2",
+    "@types/jest": "^27.0.2",
+    "@types/lodash": "^4.14.175",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^7.32.0",
     "eslint-config-streamr-ts": "^4.0.1",
     "eslint-plugin-promise": "^5.1.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.5.2"
   }
 }

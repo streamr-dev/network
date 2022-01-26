@@ -15,4 +15,3 @@ coverage
 tsconfig.json
 tsconfig-build.json
 tsconfig-build.tsbuildinfo
-/dist/package.json

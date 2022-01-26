@@ -1,11 +1,10 @@
 import { Wallet } from 'ethers'
-import { writeFileSync, mkdtempSync, existsSync } from 'fs'
+import { mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import {
     PROMPTS,
     DEFAULT_CONFIG_PORTS,
-    selectStoragePathPrompt,
     createStorageFile,
     getConfig,
     getPrivateKey,
@@ -14,12 +13,14 @@ import {
 } from '../../src/ConfigWizard'
 import { readFileSync } from 'fs'
 
+const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
+
 const createMockLogger = () => {
     const messages: string[] = []
     return {
         info: (message: string) => messages.push(message),
-        warn: console.log,
-        error: console.log,
+        warn: console.warn,
+        error: console.error,
         messages
     }
 }
@@ -78,42 +79,6 @@ describe('ConfigWizard', () => {
         })
     })
 
-    describe('storagePrompt validation', () => {
-        let tmpDataDir: string
-
-        beforeAll(() => {
-            tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-        })
-
-        it ('happy path', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            expect(validate(validPath)).toBe(true)
-        })
-
-        it ('happy path with overwrite destination', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const validPath = tmpDataDir + '/test-config.json'
-            writeFileSync(validPath, JSON.stringify({}))
-            const answers: any = {}
-            const isValid = validate(validPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(true)
-            expect(answers.fileExists).toBe(true)
-        })
-
-        it ('invalid path provided', () => {
-            const validate = selectStoragePathPrompt.validate!
-            const invalidPath = `/invalid-path/${Date.now()}`
-            const answers: any = {}
-            const isValid = validate(invalidPath, answers)
-            expect(isValid).toBe(true)
-            expect(answers.parentDirExists).toBe(false)
-            expect(answers.fileExists).toBe(false)
-
-        })
-    })
-
     describe('createStorageFile', () => {
         const CONFIG: any = {}
         let tmpDataDir: string
@@ -122,35 +87,21 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create parent dir when doesn\'t exist', async () => {
-            const parentDirPath = tmpDataDir + '/newdir/'
-            const configPath = parentDirPath + 'test-config.json'
+        it ('happy path; create directories if needed', async () => {
+            const dirPath = tmpDataDir + '/newdir1/newdir2/'
+            const configPath = dirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
-                selectStoragePath: configPath,
-                parentDirPath,
-                fileExists: false,
-                parentDirExists: false,
+                storagePath: configPath
             })
             expect(configFileLocation).toBe(configPath)
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
-        it ('should throw when attempting to mkdir on existing path', async () => {
-            const parentDirPath = '/home/'
-            await expect(createStorageFile(CONFIG, {
-                parentDirPath,
-                parentDirExists: false,
-            })).rejects.toThrow()
-        })
-
         it ('should throw when no permissions on path', async () => {
-            const parentDirPath = '/home/'
-            const configPath = parentDirPath + 'test-config.json'
+            const dirPath = '/home/'
+            const configPath = dirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
-                selectStoragePath: configPath,
-                parentDirPath,
-                fileExists: false,
-                parentDirExists: true,
+                storagePath: configPath
             })).rejects.toThrow()
         })
 
@@ -182,7 +133,7 @@ describe('ConfigWizard', () => {
                 selectPlugins:[pluginName],
                 websocketPort: port,
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins[pluginName].port).toBe(numericPort)
         }
 
@@ -201,7 +152,7 @@ describe('ConfigWizard', () => {
                 mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
                 publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.publishHttp).toMatchObject({})
@@ -215,7 +166,7 @@ describe('ConfigWizard', () => {
                 mqttPort: '3171',
                 publishHttpPort: '3172'
             }
-            const config = getConfig(undefined as any, pluginsAnswers)
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
@@ -253,8 +204,7 @@ describe('ConfigWizard', () => {
                     publishHttpPort,
                 }),
                 jest.fn().mockResolvedValue({
-                    parentDirExists: true,
-                    selectStoragePath: configPath
+                    storagePath: configPath
                 }),
                 logger
             )
@@ -268,7 +218,7 @@ describe('ConfigWizard', () => {
             ])
             const fileContent = readFileSync(configPath).toString()
             const config = JSON.parse(fileContent)
-            expect(config.ethereumPrivateKey).toBe(privateKey)
+            expect(config.client.auth.privateKey).toBe(privateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(mqttPort))
             expect(config.httpServer.port).toBe(parseInt(publishHttpPort))

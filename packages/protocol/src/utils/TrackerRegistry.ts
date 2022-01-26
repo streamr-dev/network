@@ -1,12 +1,12 @@
-import { Contract, providers } from 'ethers'
-import { ConnectionInfo } from 'ethers/lib/utils'
+import { Contract } from '@ethersproject/contracts'
+import { JsonRpcProvider } from '@ethersproject/providers'
 
 import { keyToArrayIndex } from './HashUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
-import { SPID } from './SPID'
+import { StreamPartID } from "./StreamPartID"
 
-const { JsonRpcProvider } = providers
+type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
 export type SmartContractRecord = {
     id: string
@@ -24,9 +24,8 @@ export class TrackerRegistry<T extends TrackerInfo> {
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(spid: SPID): T {
-        const key = spid.toKey().replace('#', '::') // TODO temporary backwards compatibility
-        const index = keyToArrayIndex(this.records.length, key)
+    getTracker(streamPartId: StreamPartID): T {
+        const index = keyToArrayIndex(this.records.length, streamPartId)
         return this.records[index]
     }
 
@@ -35,7 +34,7 @@ export class TrackerRegistry<T extends TrackerInfo> {
     }
 }
 
-async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | ConnectionInfo) {
+async function fetchTrackers(contractAddress: string, jsonRpcProvider: ProviderConnectionInfo) {
     const provider = new JsonRpcProvider(jsonRpcProvider)
     // check that provider is connected and has some valid blockNumber
     await provider.getBlockNumber()
@@ -60,7 +59,7 @@ export async function getTrackerRegistryFromContract({
     jsonRpcProvider
 }: {
     contractAddress: string,
-    jsonRpcProvider: string | ConnectionInfo
+    jsonRpcProvider: ProviderConnectionInfo
 }): Promise<TrackerRegistry<SmartContractRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
     const records: SmartContractRecord[] = []

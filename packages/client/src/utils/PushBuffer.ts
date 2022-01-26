@@ -43,8 +43,6 @@ export type IPushBuffer<InType, OutType = InType> = {
  * and will unblock once buffer has been consumed.
  */
 export class PushBuffer<T> implements IPushBuffer<T>, Context {
-    ['constructor']: typeof PushBuffer
-
     static Error = PushBufferError
     id
     debug
@@ -61,8 +59,8 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     protected iterator: AsyncGenerator<T>
     protected isIterating = false
 
-    constructor(bufferSize = DEFAULT_BUFFER_SIZE, { name }: PushBufferOptions = {}) {
-        this.id = instanceId(this, name)
+    constructor(bufferSize = DEFAULT_BUFFER_SIZE, options: PushBufferOptions = {}) {
+        this.id = instanceId(this, options.name)
         this.debug = Debug(this.id)
 
         if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
@@ -124,6 +122,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      */
     async collect(n?: number) {
         if (this.isIterating) {
+            // @ts-expect-error ts can't do this.constructor properly
             throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
         }
         return G.collect(this, n)
@@ -273,6 +272,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
 
     [Symbol.asyncIterator]() {
         if (this.isIterating) {
+            // @ts-expect-error ts can't do this.constructor properly
             throw new this.constructor.Error(this, 'already iterating')
         }
 

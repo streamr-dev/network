@@ -1,7 +1,7 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
-import { SPID, TrackerLayer } from 'streamr-client-protocol'
+import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { toStreamID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -14,17 +14,17 @@ describe('check tracker, nodes and statuses from nodes', () => {
     let node1: NetworkNode
     let node2: NetworkNode
 
-    const s1 = new SPID('stream-1', 0)
+    const streamOne = toStreamID('stream-1')
+    const streamPartOne = toStreamPartID(streamOne, 0)
 
     beforeEach(async () => {
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
                 port: trackerPort
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         // @ts-expect-error private method
         tracker.formAndSendInstructions = () => {}
@@ -39,17 +39,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
             disconnectionWaitTime: 200
         })
 
-        node1.subscribeToStreamIfHaveNotYet(s1)
-        node2.subscribeToStreamIfHaveNotYet(s1)
-
-        node1.start()
-        node2.start()
-
-        await Promise.all([
+        await runAndWaitForEvents([
+            () => {node1.subscribeToStreamIfHaveNotYet(streamPartOne)},
+            () => {node2.subscribeToStreamIfHaveNotYet(streamPartOne)},
+            () => {node1.start()},
+            () => {node2.start()}
+        ], [
             // @ts-expect-error private variable
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED],
             // @ts-expect-error private variable
-            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
+            [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         ])
     })
 
@@ -62,25 +61,25 @@ describe('check tracker, nodes and statuses from nodes', () => {
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
         const trackerInstruction1 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.streamId,
-            streamPartition: s1.streamPartition,
+            streamId: streamOne,
+            streamPartition: 0,
             nodeIds: ['node2', 'unknown'],
             counter: 0
         })
 
         const trackerInstruction2 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: s1.streamId,
-            streamPartition: s1.streamPartition,
+            streamId: streamOne,
+            streamPartition: 0,
             nodeIds: ['node1', 'unknown'],
             counter: 0
         })
 
         await Promise.race([
             // @ts-expect-error private field
-            node1.trackerManager.instructionThrottler.add(trackerInstruction1, 'tracker'),
+            node1.trackerManager.instructionThrottler.add(trackerInstruction1, tracker.getTrackerId()),
             // @ts-expect-error private field
-            node2.trackerManager.instructionThrottler.add(trackerInstruction2, 'tracker')
+            node2.trackerManager.instructionThrottler.add(trackerInstruction2, tracker.getTrackerId())
         ]).catch(() => {})
 
         await Promise.race([
@@ -98,7 +97,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForCondition(() => node1.getNeighbors().length > 0)
         await waitForCondition(() => node2.getNeighbors().length > 0)
 
-        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1#0': {
                 node1: [{neighborId: 'node2', rtt: null}],
                 node2: [{neighborId: 'node1', rtt: null}],

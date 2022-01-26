@@ -1,4 +1,4 @@
-import { SPID, Utils } from 'streamr-client-protocol'
+import { StreamPartID, Utils } from 'streamr-client-protocol'
 import { TrackerInfo } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
@@ -12,37 +12,49 @@ enum ConnectionState {
     ERROR
 }
 
-type GetSPIDsFn = () => Iterable<SPID>
+type getStreamPartsFn = () => Iterable<StreamPartID>
 type ConnectToTrackerFn = (trackerAddress: string, trackerPeerInfo: PeerInfo) => Promise<unknown>
 type DisconnectFromTrackerFn = (trackerId: TrackerId) => void
 
 export class TrackerConnector {
-    private readonly getSPIDs: GetSPIDsFn
+    private readonly getStreamParts: getStreamPartsFn
     private readonly connectToTracker: ConnectToTrackerFn
     private readonly disconnectFromTracker: DisconnectFromTrackerFn
     private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId, ConnectionState>
+    private readonly signallingOnlyTrackers: Set<TrackerId>
 
     constructor(
-        getSPIDs: GetSPIDsFn,
+        getStreamParts: getStreamPartsFn,
         connectToTracker: ConnectToTrackerFn,
         disconnectFromTracker: DisconnectFromTrackerFn,
         trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
         maintenanceInterval: number
     ) {
-        this.getSPIDs = getSPIDs
+        this.getStreamParts = getStreamParts
         this.connectToTracker = connectToTracker
         this.disconnectFromTracker = disconnectFromTracker
         this.trackerRegistry = trackerRegistry
         this.maintenanceInterval = maintenanceInterval
         this.connectionStates = new Map()
+        this.signallingOnlyTrackers = new Set()
     }
 
-    onNewStream(spid: SPID): void {
-        const trackerInfo = this.trackerRegistry.getTracker(spid)
+    onNewStreamPart(streamPartId: StreamPartID): void {
+        const trackerInfo = this.trackerRegistry.getTracker(streamPartId)
         this.connectTo(trackerInfo)
+    }
+
+    async createSignallingOnlyTrackerConnection(trackerId: TrackerId, trackerAddress: string): Promise<void> {
+        this.signallingOnlyTrackers.add(trackerId)
+        await this.connectToTracker(trackerAddress, PeerInfo.newTracker(trackerId))
+        logger.info('Connected to tracker %s for signalling only', NameDirectory.getName(trackerId))
+    }
+
+    removeSignallingOnlyTrackerConnection(trackerId: TrackerId): void {
+        this.signallingOnlyTrackers.delete(trackerId)
     }
 
     start(): void {
@@ -90,8 +102,11 @@ export class TrackerConnector {
     }
 
     private isActiveTracker(trackerId: TrackerId): boolean {
-        for (const { streamId, streamPartition } of this.getSPIDs()) {
-            if (this.trackerRegistry.getTracker(new SPID(streamId, streamPartition)).id === trackerId) {
+        if (this.signallingOnlyTrackers.has(trackerId)) {
+            return true
+        }
+        for (const streamPartId of this.getStreamParts()) {
+            if (this.trackerRegistry.getTracker(streamPartId).id === trackerId) {
                 return true
             }
         }

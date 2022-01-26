@@ -16,8 +16,9 @@ import {
 import { Rtts } from '../identifiers'
 import { MessageQueue } from './MessageQueue'
 import { NameDirectory } from '../NameDirectory'
-import { NegotiatedProtocolVersions } from "./NegotiatedProtocolVersions"
+import { NegotiatedProtocolVersions } from './NegotiatedProtocolVersions'
 import { v4 as uuidv4 } from 'uuid'
+import { getAddressFromIceCandidate, isPrivateIPv4 } from '../helpers/AddressTools'
 
 class WebRtcError extends Error {
     constructor(msg: string) {
@@ -47,7 +48,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
-    private readonly maxMessageSize
+    private readonly disallowPrivateAddresses: boolean
+    private readonly maxMessageSize: number
 
     private statusReportTimer?: NodeJS.Timeout
 
@@ -62,7 +64,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         pingInterval = 5 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
         webrtcDatachannelBufferThresholdHigh = 2 ** 17,
-        maxMessageSize = 1048576
+        webrtcDisallowPrivateAddresses = false,
+        maxMessageSize = 1048576,
     ) {
         super()
         this.peerInfo = peerInfo
@@ -77,6 +80,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.logger = new Logger(module)
         this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
+        this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
 
         rtcSignaller.setOfferListener(async (options: OfferOptions) => {
@@ -167,7 +171,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const connection = this.connectionFactory.createConnection(connectionOptions)
 
         if (connection.isOffering()) {
-            connection.once('localDescription', (type, description) => {            
+            connection.once('localDescription', (type, description) => {
                 this.rtcSignaller.sendRtcOffer(routerId, connection.getPeerId(), connection.getConnectionId(), description)
                 this.attemptProtocolVersionValidation(connection)
             })
@@ -212,18 +216,18 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         connection.on('failed', () => {
             this.metrics.record('failedConnection', 1)
         })
-        
+
         return connection
     }
-    
+
     private onRtcOfferFromSignaller({ routerId, originatorInfo, description, connectionId }: OfferOptions): void {
         const { peerId } = originatorInfo
-        
+
         let connection: WebRtcConnection
-       
+
         if (!this.connections[peerId]) {
             connection = this.createConnection(peerId, routerId,null)
-            
+
             try {
                 connection.connect()
             } catch(e) {
@@ -256,18 +260,30 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
+    isIceCandidateAllowed(candidate: string): boolean {
+        if (this.disallowPrivateAddresses) {
+            const address = getAddressFromIceCandidate(candidate)
+            if (address && isPrivateIPv4(address)) {
+                return false
+            }
+        }
+        return true
+    }
+
     private onIceCandidateFromSignaller({ originatorInfo, candidate, mid, connectionId }: IceCandidateOptions): void {
         const { peerId } = originatorInfo
         const connection = this.connections[peerId]
-        if (!connection) { 
+        if (!connection) {
             this.logger.debug('unexpected iceCandidate from %s: %s (no connection)', peerId, candidate)
         } else if (connection.getConnectionId() !== connectionId) {
             this.logger.debug('unexpected iceCandidate from %s (connectionId mismatch %s !== %s)', peerId, connection.getConnectionId(), connectionId)
         } else {
-            connection.addRemoteCandidate(candidate, mid)
-        } 
+            if (this.isIceCandidateAllowed(candidate)) {
+                connection.addRemoteCandidate(candidate, mid)
+            }
+        }
     }
-    
+
     private onErrorFromSignaller({ targetNode, errorCode }: ErrorOptions): void {
         const error = new WebRtcError(`RTC error ${errorCode} while attempting to signal with node ${targetNode}`)
         const connection = this.connections[targetNode]
@@ -275,11 +291,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         if (connection) {
             connection.close(error)
         }
-    } 
+    }
 
     private onConnectFromSignaller({ originatorInfo, routerId }: ConnectOptions): void {
         const { peerId } = originatorInfo
-
         if (this.connections[peerId]) {
             this.replaceConnection(peerId, routerId, uuidv4())
         } else {
@@ -336,7 +351,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 NameDirectory.getName(targetPeerId),
                 lastState
             )
-            
+
             if (lastState === 'connected') {
                 return Promise.resolve(targetPeerId)
             } else if (deferredConnectionAttempt) {
@@ -345,7 +360,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 throw new Error(`unexpected deferedConnectionAttempt == null ${connection.getPeerId()}`)
             }
         }
-        
+
         const connection = this.createConnection(targetPeerId, routerId, null)
 
         if (connection.isOffering()) {
@@ -354,19 +369,24 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
         this.connections[targetPeerId] = connection
         connection.connect()
-        
+
         if (!trackerInstructed && !connection.isOffering()) {
             // If we are non-offerer and this connection was not instructed by the tracker, we need
             // to let the offering side know about it so it can send us the initial offer message.
-            
+
             this.rtcSignaller.sendRtcConnect(routerId, connection.getPeerId())
         }
 
         const deferredAttempt = connection.getDeferredConnectionAttempt() 
+        
+        if (connection.getLastState() == 'connected') {
+            return targetPeerId
+        }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } else {
-            throw new Error(`disconnected ${connection.getPeerId()}`)
+        } 
+        else { 
+            throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }
 

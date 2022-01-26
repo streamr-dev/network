@@ -2,33 +2,22 @@
  * The client.subscribe() return value.
  * Primary interface for consuming StreamMessages.
  */
-import { SPID, SPIDKeyShape } from 'streamr-client-protocol'
+import { StreamPartID } from 'streamr-client-protocol'
 import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
 
-export type SubscriptionOptions = {
-  streamId: string,
-  streamPartition: number
-}
-
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
-export default class Subscription<T = unknown> extends MessageStream<T> implements SPIDKeyShape {
+export default class Subscription<T = unknown> extends MessageStream<T> {
     context: SubscriptionSession<T>
-    spid: SPID
+    public readonly streamPartId: StreamPartID
     /** prevent buffered data from yielding */
     isUnsubscribed = false
-    streamId
-    streamPartition
-    key
 
     constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
         super(subSession, options)
         this.context = subSession
-        this.spid = subSession.spid
-        this.streamId = this.spid.streamId
-        this.streamPartition = this.spid.streamPartition
-        this.key = this.spid.key
+        this.streamPartId = subSession.streamPartId
         this.onMessage((msg) => {
             this.debug('<< %o', msg)
         })

@@ -1,11 +1,15 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, fastPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
-import { StreamrClient } from 'streamr-client'
-const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
+import { ConfigTest, StreamrClient } from 'streamr-client'
+import { toStreamID } from 'streamr-client-protocol'
+
+jest.setTimeout(30000)
+
+const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
 
@@ -51,9 +55,8 @@ async function storeMockMessages({
     const storePromises = []
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
-
         const msg = new StreamMessage({
-            messageId: new MessageIDStrict(streamId, 0, timestamp, 0, '', ''),
+            messageId: new MessageID(toStreamID(streamId), 0, timestamp, 0, '', ''),
             content: JSON.stringify({})
         })
         storePromises.push(storage.store(msg))
@@ -98,8 +101,9 @@ describe('CassandraNullPayloads', () => {
         const HEALTHY_MESSAGE_COUNT = 9
 
         const streamrClient = new StreamrClient({
+            ...ConfigTest,
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey: await getPrivateKey()
             },
             restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         })

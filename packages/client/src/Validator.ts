@@ -2,7 +2,13 @@
  * Validation Wrapper
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessage, StreamMessageValidator, SigningUtil, StreamMessageError } from 'streamr-client-protocol'
+import {
+    StreamMessage,
+    StreamMessageValidator,
+    SigningUtil,
+    StreamMessageError,
+    StreamID
+} from 'streamr-client-protocol'
 
 import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
 import { Stoppable } from './utils/Stoppable'
@@ -34,13 +40,13 @@ export default class Validator extends StreamMessageValidator implements Stoppab
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
         super({
-            getStream: (streamId: string) => {
-                return streamEndpoints.getStreamValidationInfo(streamId)
+            getStream: (streamId: StreamID) => {
+                return streamEndpoints.getStream(streamId)
             },
-            isPublisher: (publisherId: string, streamId: string) => {
+            isPublisher: (publisherId: string, streamId: StreamID) => {
                 return streamEndpoints.isStreamPublisher(streamId, publisherId)
             },
-            isSubscriber: (ethAddress: string, streamId: string) => {
+            isSubscriber: (ethAddress: string, streamId: StreamID) => {
                 return streamEndpoints.isStreamSubscriber(streamId, ethAddress)
             },
             verify: (address: string, payload: string, signature: string) => {

@@ -4,7 +4,7 @@ import { Logger } from 'streamr-network'
 import { ParsedQs } from 'qs'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
-import { closeWithError } from '../../helpers/closeWebsocket'
+import { closeWithError } from './closeWebsocket'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
@@ -33,8 +33,8 @@ export class PublishConnection implements Connection {
                 const { content, metadata } = payloadFormat.createMessage(payload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
                 streamrClient.publish({
-                    streamId: this.streamId,
-                    streamPartition: this.partition
+                    id: this.streamId,
+                    partition: this.partition
                 }, content, metadata.timestamp, partitionKey)
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws, logger)

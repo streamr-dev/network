@@ -2,12 +2,18 @@
  * Central place to fetch async dependencies and convert message metadata into StreamMessages.
  */
 import { inject, scoped, Lifecycle } from 'tsyringe'
-import { StreamMessage, SPID, StreamMessageEncrypted, StreamMessageSigned } from 'streamr-client-protocol'
+import {
+    StreamMessage,
+    StreamMessageEncrypted,
+    StreamMessageSigned,
+    StreamID,
+    toStreamPartID
+} from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from './utils'
 import { Stoppable } from './utils/Stoppable'
 
-import { getCachedMesssageChain } from './MessageChain'
+import { getCachedMessageChain } from './MessageChain'
 import { Config, CacheConfig } from './Config'
 import Ethereum from './Ethereum'
 import StreamPartitioner from './StreamPartitioner'
@@ -20,7 +26,7 @@ export type MessageCreateOptions<T = unknown> = {
 }
 
 export interface IMessageCreator {
-    create: <T>(streamId: string, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
+    create: <T>(streamId: StreamID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
     stop: () => Promise<void> | void
 }
 
@@ -53,13 +59,13 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
         private ethereum: Ethereum,
         @inject(Config.Cache) private cacheOptions: CacheConfig,
     ) {
-        this.getMsgChain = getCachedMesssageChain(this.cacheOptions)
+        this.getMsgChain = getCachedMessageChain(this.cacheOptions)
 
         // per-stream queue so messages processed in-order
         this.queue = LimitAsyncFnByKey(1)
     }
 
-    async create<T = unknown>(streamId: string, {
+    async create<T = unknown>(streamId: StreamID, {
         content,
         timestamp,
         partitionKey,
@@ -74,11 +80,11 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
                 this.ethereum.getAddress(),
             ])
 
-            const spid = SPID.from({ streamId, streamPartition })
+            const streamPartId = toStreamPartID(streamId, streamPartition)
             const publisherId = publisherIdChecksumCase.toLowerCase()
 
             // chain messages
-            const chain = this.getMsgChain(spid, {
+            const chain = this.getMsgChain(streamPartId, {
                 publisherId, msgChainId
             })
 

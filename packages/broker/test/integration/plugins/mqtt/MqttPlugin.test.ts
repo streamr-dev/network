@@ -5,8 +5,9 @@ import { createMessagingPluginTest } from '../../createMessagingPluginTest'
 import { Queue } from '../../../utils'
 
 const MQTT_PORT = 12430
-const LEGACY_WEBSOCKET_PORT = 12431
 const TRACKER_PORT = 12432
+
+jest.setTimeout(30000)
 
 createMessagingPluginTest('mqtt',
     {
@@ -33,7 +34,6 @@ createMessagingPluginTest('mqtt',
     },
     {
         plugin: MQTT_PORT,
-        legacyWebsocket: LEGACY_WEBSOCKET_PORT,
         tracker: TRACKER_PORT
     },
     module

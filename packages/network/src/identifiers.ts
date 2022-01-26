@@ -1,28 +1,29 @@
-import { SmartContractRecord, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './logic/node/Node'
+import { MetricsContext } from './helpers/MetricsContext'
 
 export interface Rtts {
     [key: string]: number
 }
 
 export interface Location {
-    latitude: number | null
-    longitude: number | null
-    country: string | null
-    city: string | null
+    latitude?: number
+    longitude?: number
+    country?: string
+    city?: string
 }
 
-export interface StreamStatus {
-    id: string
+export interface StreamPartStatus {
+    id: StreamID
     partition: number,
     neighbors: NodeId[]
-    counter: number // TODO this field could be a field of "Status" interface, not this interface?
+    counter: number
 }
 
 export interface Status {
-    stream: StreamStatus
+    streamPart: StreamPartStatus
     rtts: Rtts | null
-    location: Location
+    location?: Location
     started: string
     version?: string
     extra: Record<string, unknown>
@@ -80,3 +81,11 @@ export interface RtcErrorMessage {
 }
 
 export type TrackerInfo = SmartContractRecord
+
+export interface AbstractNodeOptions {
+    id?: NodeId
+    name?: string
+    location?: Location
+    metricsContext?: MetricsContext
+    trackerPingInterval?: number
+}

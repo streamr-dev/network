@@ -2,14 +2,12 @@
  * Endpoints for RESTful data requests
  */
 import express, { Request, Response, Router } from 'express'
-import { Metrics, MetricsContext, Protocol } from 'streamr-network'
-import { Logger } from 'streamr-network'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
-import { AuthenticatedRequest, authenticator } from '../../RequestAuthenticatorMiddleware'
 import { Format, getFormat } from './DataQueryFormat'
 import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
-import { StreamFetcher } from "../../StreamFetcher"
 
 const logger = new Logger(module)
 
@@ -31,7 +29,7 @@ class ResponseTransform extends Transform {
         this.version = version
     }
 
-    _transform(input: Protocol.MessageLayer.StreamMessage, _encoding: string, done: () => void) {
+    _transform(input: StreamMessage, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
@@ -65,7 +63,7 @@ const sendError = (message: string, res: Response) => {
 const createEndpointRoute = (
     name: string,
     router: express.Router,
-    metrics: Metrics, 
+    metrics: Metrics,
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
     router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
@@ -104,17 +102,19 @@ const createEndpointRoute = (
     })
 }
 
-type LastRequest = AuthenticatedRequest<{
+type BaseRequest<Q> = Request<Record<string,any>,any,any,Q,Record<string,any>>
+
+type LastRequest = BaseRequest<{
     count?: string
 }>
 
-type FromRequest = AuthenticatedRequest<{
+type FromRequest = BaseRequest<{
     fromTimestamp?: string
     fromSequenceNumber?: string
     publisherId?: string
 }>
 
-type RangeRequest = AuthenticatedRequest<{
+type RangeRequest = BaseRequest<{
     fromTimestamp?: string
     toTimestamp?: string
     fromSequenceNumber?: string
@@ -125,7 +125,7 @@ type RangeRequest = AuthenticatedRequest<{
     toOffset?: string   // no longer supported
 }>
 
-export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsContext: MetricsContext): Router => {
+export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')
@@ -147,9 +147,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
             } else {
                 next()
             }
-        },
-        // authentication
-        authenticator(streamFetcher, 'stream_subscribe'),
+        }
     )
 
     // eslint-disable-next-line max-len
@@ -181,7 +179,7 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
-                publisherId || null
+                publisherId
             ))
         }
     })
@@ -214,12 +212,11 @@ export const router = (storage: Storage, streamFetcher: StreamFetcher, metricsCo
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
-                (publisherId as string) || null,
-                (msgChainId as string) || null
+                publisherId,
+                msgChainId
             ))
         }
     })
 
     return router
 }
-

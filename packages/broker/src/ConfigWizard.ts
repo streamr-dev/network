@@ -2,20 +2,19 @@ import inquirer from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
-import * as os from 'os'
-import chalk from "chalk"
+import chalk from 'chalk'
 import { v4 as uuid } from 'uuid'
-import { Protocol } from 'streamr-network'
+import * as Protocol from 'streamr-client-protocol'
 
 import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './helpers/config.schema.json'
-import * as LegacyWebsocketConfigSchema from './plugins/legacyWebsocket/config.schema.json'
+import { getDefaultFile } from './config'
 
 const createLogger = () => {
     return {
         info: (...args: any[]) => {
-            console.log(chalk.bgWhite.black(':'), ...args)
+            console.info(chalk.bgWhite.black(':'), ...args)
         },
         error: (...args: any[]) => {
             console.error(chalk.bgRed.black('!'), ...args)
@@ -31,8 +30,7 @@ const generateApiKey = (): string => {
 export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
-    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default,
-    LEGACY_WS: LegacyWebsocketConfigSchema.properties.port.default,
+    HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
 }
 
 const PLUGIN_NAMES: {[pluginName: string]: string} = {
@@ -45,75 +43,74 @@ const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
 const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
-    network: {
-        name: 'miner-node',
-        trackers: [
-            {
-                "id": "0xFBB6066c44bc8132bA794C73f58F391273E3bdA1",
-                "ws": "wss://testnet3.streamr.network:30401",
-                "http": "https://testnet3.streamr.network:30401"
-            },
-            {
-                "id": "0x3D61bFeFA09CEAC1AFceAA50c7d79BE409E1ec24",
-                "ws": "wss://testnet3.streamr.network:30402",
-                "http": "https://testnet3.streamr.network:30402"
-            },
-            {
-                "id": "0xE80FB5322231cBC1e761A0F896Da8E0CA2952A66",
-                "ws": "wss://testnet3.streamr.network:30403",
-                "http": "https://testnet3.streamr.network:30403"
-            },
-            {
-                "id": "0xf626285C6AACDE39ae969B9Be90b1D9855F186e0",
-                "ws": "wss://testnet3.streamr.network:30404",
-                "http": "https://testnet3.streamr.network:30404"
-            },
-            {
-                "id": "0xce88Da7FE0165C8b8586aA0c7C4B26d880068219",
-                "ws": "wss://testnet3.streamr.network:30405",
-                "http": "https://testnet3.streamr.network:30405"
-            },
-            {
-                "id": "0x05e7a0A64f88F84fB1945a225eE48fFC2c48C38E",
-                "ws": "wss://testnet4.streamr.network:30401",
-                "http": "https://testnet4.streamr.network:30401"
-            },
-            {
-                "id": "0xF15784106ACd35b0542309CDF2b35cb5BA642C4F",
-                "ws": "wss://testnet4.streamr.network:30402",
-                "http": "https://testnet4.streamr.network:30402"
-            },
-            {
-                "id": "0x77FA7Af34108abdf8e92B8f4C4AeC7CbfD1d6B09",
-                "ws": "wss://testnet4.streamr.network:30403",
-                "http": "https://testnet4.streamr.network:30403"
-            },
-            {
-                "id": "0x7E83e0bdAF1eF06F31A02f35A07aFB48179E536B",
-                "ws": "wss://testnet4.streamr.network:30404",
-                "http": "https://testnet4.streamr.network:30404"
-            },
-            {
-                "id": "0x2EeF37180691c75858Bf1e781D13ae96943Dd388",
-                "ws": "wss://testnet4.streamr.network:30405",
-                "http": "https://testnet4.streamr.network:30405"
-            }
-        ],
-        location: null,
-        stun: "stun:stun.streamr.network:5349",
-        turn: null
-    },
-    generateSessionId: false,
-    streamrUrl: 'https://streamr.network',
-    streamrAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
-    storageNodeConfig: {
-        registry: [{
+    client: {
+        auth: {
+        },
+        restUrl: 'https://streamr.network/api/v1',
+        network: {
+            name: 'miner-node',
+            trackers: [
+                {
+                    "id": "0xFBB6066c44bc8132bA794C73f58F391273E3bdA1",
+                    "ws": "wss://testnet3.streamr.network:30401",
+                    "http": "https://testnet3.streamr.network:30401"
+                },
+                {
+                    "id": "0x3D61bFeFA09CEAC1AFceAA50c7d79BE409E1ec24",
+                    "ws": "wss://testnet3.streamr.network:30402",
+                    "http": "https://testnet3.streamr.network:30402"
+                },
+                {
+                    "id": "0xE80FB5322231cBC1e761A0F896Da8E0CA2952A66",
+                    "ws": "wss://testnet3.streamr.network:30403",
+                    "http": "https://testnet3.streamr.network:30403"
+                },
+                {
+                    "id": "0xf626285C6AACDE39ae969B9Be90b1D9855F186e0",
+                    "ws": "wss://testnet3.streamr.network:30404",
+                    "http": "https://testnet3.streamr.network:30404"
+                },
+                {
+                    "id": "0xce88Da7FE0165C8b8586aA0c7C4B26d880068219",
+                    "ws": "wss://testnet3.streamr.network:30405",
+                    "http": "https://testnet3.streamr.network:30405"
+                },
+                {
+                    "id": "0x05e7a0A64f88F84fB1945a225eE48fFC2c48C38E",
+                    "ws": "wss://testnet4.streamr.network:30401",
+                    "http": "https://testnet4.streamr.network:30401"
+                },
+                {
+                    "id": "0xF15784106ACd35b0542309CDF2b35cb5BA642C4F",
+                    "ws": "wss://testnet4.streamr.network:30402",
+                    "http": "https://testnet4.streamr.network:30402"
+                },
+                {
+                    "id": "0x77FA7Af34108abdf8e92B8f4C4AeC7CbfD1d6B09",
+                    "ws": "wss://testnet4.streamr.network:30403",
+                    "http": "https://testnet4.streamr.network:30403"
+                },
+                {
+                    "id": "0x7E83e0bdAF1eF06F31A02f35A07aFB48179E536B",
+                    "ws": "wss://testnet4.streamr.network:30404",
+                    "http": "https://testnet4.streamr.network:30404"
+                },
+                {
+                    "id": "0x2EeF37180691c75858Bf1e781D13ae96943Dd388",
+                    "ws": "wss://testnet4.streamr.network:30405",
+                    "http": "https://testnet4.streamr.network:30405"
+                }
+            ],
+            stunUrls: [
+                "stun:stun.streamr.network:5349"
+            ]
+        },
+        storageNodeRegistry: [{
             address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
             url: "https://testnet2.streamr.network:8001"
         }]
     },
     plugins: {
-        legacyWebsocket: {},
         testnetMiner: {
             rewardStreamIds: [
                 'streamr.eth/brubeck-testnet/rewards/5hhb49',
@@ -133,11 +130,7 @@ export const CONFIG_TEMPLATE: any = {
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
             nodeMetrics: {
-                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-                client: {
-                    wsUrl: `ws://127.0.0.1:${DEFAULT_CONFIG_PORTS.LEGACY_WS}/api/v1/ws`,
-                    httpUrl: "https://streamr.network/api/v1",
-                }
+                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916"
             }
         },
     },
@@ -228,29 +221,24 @@ export const PROMPTS = {
     plugins: createPluginPrompts(),
 }
 
-export const selectStoragePathPrompt = {
+export const storagePathPrompts = [{
     type: 'input',
-    name: 'selectStoragePath',
-    message: `Select a path to store the generated config in `,
-    default: path.join(os.homedir(), '.streamr/broker-config.json'),
-    validate: (input: string, answers: inquirer.Answers = {}): string | boolean => {
-        try {
-            const parentDirPath = path.dirname(input)
-
-            answers.parentDirPath = parentDirPath
-            answers.parentDirExists = existsSync(parentDirPath)
-            answers.fileExists = existsSync(input)
-
-            return true
-        } catch (e: any) {
-            return e.message
-        }
-    }
-}
+    name: 'storagePath',
+    message: 'Select a path to store the generated config in',
+    default: getDefaultFile()
+},
+{
+    type: 'confirm',
+    name: 'overwrite',
+    message: (answers: inquirer.Answers): string => `The selected destination ${answers.storagePath} already exists, do you want to overwrite it?`,
+    default: false,
+    when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
+}]
 
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
-    config.ethereumPrivateKey = privateKey
+    config.client.auth.privateKey = privateKey
+    config.client.network.id = new Wallet(privateKey).address
 
     const pluginKeys = Object.keys(PLUGIN_NAMES)
     pluginKeys.forEach((pluginKey) => {
@@ -277,35 +265,25 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
 }
 
 const selectStoragePath = async (): Promise<inquirer.Answers> => {
-    const answers = await inquirer.prompt([selectStoragePathPrompt])
-
-    if (answers.fileExists) {
-        const overwriteAnswers = await inquirer.prompt([
-            {
-                type: 'confirm',
-                name: 'confirmOverwrite',
-                message: `The selected destination ${answers.selectStoragePath} already exists, do you want to overwrite it?`,
-                default: false,
-            }
-        ])
-
-        if (!overwriteAnswers.confirmOverwrite) {
-            return selectStoragePath()
-        }
-    }
-
+    let answers
+    do {
+        answers = await inquirer.prompt(storagePathPrompts)
+    } while (answers.overwrite === false)
     return answers
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
-    if (!answers.parentDirExists) {
-        mkdirSync(answers.parentDirPath)
+    const dirPath = path.dirname(answers.storagePath)
+    const dirExists = existsSync(dirPath)
+    if (!dirExists) {
+        mkdirSync(dirPath, {
+            recursive: true
+        })
     }
-   
-    writeFileSync(answers.selectStoragePath, JSON.stringify(config, null, 2))
-    chmodSync(answers.selectStoragePath, '0600')
-    return answers.selectStoragePath
+    writeFileSync(answers.storagePath, JSON.stringify(config, null, 2))
+    chmodSync(answers.storagePath, '0600')
+    return answers.storagePath
 }
 
 export const getPrivateKey = (answers: inquirer.Answers): string => {

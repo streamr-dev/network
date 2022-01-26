@@ -25,7 +25,7 @@ export enum DisconnectionCode {
 export enum DisconnectionReason {
     GRACEFUL_SHUTDOWN = 'streamr:node:graceful-shutdown',
     DUPLICATE_SOCKET = 'streamr:endpoint:duplicate-connection',
-    NO_SHARED_STREAMS = 'streamr:node:no-shared-streams',
+    NO_SHARED_STREAM_PARTS = 'streamr:node:no-shared-stream-parts',
     DEAD_CONNECTION = 'dead connection',
     INVALID_PROTOCOL_MESSAGE = 'streamr:protocol:invalid-protocol-message'
 }
@@ -171,6 +171,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      */
     protected onNewConnection(connection: C): void {
         if (this.stopped) {
+            connection.close(DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
             return
         }
         const peerInfo = connection.getPeerInfo()

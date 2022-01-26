@@ -39,7 +39,7 @@ describe('Tracker disconnects from node if node sends invalid status data', () =
 
     it('Tracker disconnects from node if node sends invalid status data', async () => {
         const faultyStatus: Partial<Status> = {
-            stream: {
+            streamPart: {
                 counter: 1,
                 // @ts-expect-error string
                 streamKey: 123,

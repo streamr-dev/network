@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer, inject } from 'tsyringe'
 
+import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
@@ -11,9 +12,8 @@ import { BrubeckContainer } from './Container'
 import Publisher from './Publisher'
 import Subscriber from './Subscriber'
 import Resends from './Resends'
-import ResendSubscribe from './ResendSubscribe'
+import ResendSubscribe, { ResendSubscription } from './ResendSubscribe'
 import BrubeckNode from './BrubeckNode'
-import Ethereum from './Ethereum'
 import Session from './Session'
 import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
@@ -21,7 +21,8 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import NodeRegistry, { register as registerNodeRegistry } from './StorageNodeRegistry'
+import { NodeRegistry } from './NodeRegistry'
+import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
 
 let uid: string = process.pid != null
@@ -37,6 +38,7 @@ export interface StreamrClient extends Ethereum,
     Methods<StreamEndpoints>,
     Methods<Omit<Subscriber, 'subscribe'>>,
     Methods<ResendSubscribe>,
+    Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
@@ -66,7 +68,6 @@ class StreamrClientBase implements Context {
         @inject(Config.Root) public options: StrictBrubeckClientConfig,
         public node: BrubeckNode,
         public ethereum: Ethereum,
-        public storageNodeRegistry: NodeRegistry,
         public session: Session,
         public loginEndpoints: LoginEndpoints,
         public streamEndpoints: StreamEndpoints,
@@ -78,13 +79,14 @@ class StreamrClientBase implements Context {
         public groupKeyStore: GroupKeyStoreFactory,
         protected destroySignal: DestroySignal,
         public dataunions: DataUnions,
+        public streamRegistry: StreamRegistry,
+        public nodeRegistry: NodeRegistry
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
         Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
-        Plugin(this, this.storageNodeRegistry)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
@@ -93,6 +95,8 @@ class StreamrClientBase implements Context {
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
         Plugin(this, this.dataunions)
+        Plugin(this, this.streamRegistry)
+        Plugin(this, this.nodeRegistry)
 
         // override subscribe with resendSubscriber's subscribe+resend
         this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
@@ -121,13 +125,20 @@ class StreamrClientBase implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.resends.stop(),
             this.publisher.stop(),
-            this.storageNodeRegistry.stop(),
             this.subscriber.stop(),
         ]
 
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
     })
+
+    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+        Debug.enable(prefix)
+    }
+
+    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+        Debug.disable()
+    }
 }
 
 /**
@@ -139,6 +150,11 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
+    // @ts-expect-error not in types
+    if (!debug.inspectOpts) {
+        // @ts-expect-error not in types
+        debug.inspectOpts = {}
+    }
     // @ts-expect-error not in types
     Object.assign(debug.inspectOpts, {
         // @ts-expect-error not in types
@@ -178,7 +194,6 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
         c.register(token, { useValue })
     })
 
-    registerNodeRegistry(c)
     return {
         config,
         childContainer: c,
@@ -195,7 +210,6 @@ export class StreamrClient extends StreamrClientBase {
             config,
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
-            c.resolve<NodeRegistry>(NodeRegistry as any),
             c.resolve<Session>(Session),
             c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
@@ -207,6 +221,8 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
             c.resolve<DataUnions>(DataUnions),
+            c.resolve<StreamRegistry>(StreamRegistry),
+            c.resolve<NodeRegistry>(NodeRegistry),
         )
     }
 }
@@ -228,4 +244,7 @@ export const Dependencies = {
 }
 
 export { ResendOptionsStrict as ResendOptions } from './Resends'
+
 export { BrubeckClientConfig as StreamrClientOptions } from './Config'
+
+export { ResendSubscription }

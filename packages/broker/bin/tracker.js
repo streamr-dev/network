@@ -30,11 +30,9 @@ if (program.args.length < 2) {
     program.help()
 }
 const privateKey = program.args[0]
-const trackerName = program.args[1]
+const name = program.args[1]
 const wallet = new ethers.Wallet(privateKey)
-const address = wallet ? wallet.address : null
-const id = address || `tracker-${program.opts().port}`
-const name = trackerName || address
+const id = wallet.address
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
     port: Number.parseInt(program.opts().port, 10)
@@ -42,7 +40,7 @@ const listen = program.opts().unixSocket ? program.opts().unixSocket : {
 
 const { slackBotToken, slackChannel } = program.opts()
 let slackbot
-const slackAlertHeader = `Tracker ${trackerName} ${id}`
+const slackAlertHeader = `Tracker ${name} ${id}`
 if (slackBotToken && slackChannel) {
     slackbot = new SlackBot(slackChannel, slackBotToken)
 }

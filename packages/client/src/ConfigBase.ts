@@ -6,16 +6,18 @@
  * TODO: Disolve ConfigBase.
  */
 
-import { BigNumber } from '@ethersproject/bignumber'
-import { isAddress } from '@ethersproject/address'
-import has from 'lodash/has'
-import get from 'lodash/get'
+import type { BigNumber } from '@ethersproject/bignumber'
 import cloneDeep from 'lodash/cloneDeep'
+import Ajv, { ErrorObject } from 'ajv'
+import addFormats from 'ajv-formats'
 
-import { EthereumAddress, Todo } from './types'
+import type { Todo } from './types'
 
-import { AuthConfig, EthereumConfig } from './Ethereum'
-import { EncryptionConfig } from './encryption/KeyExchangeUtils'
+import type { AuthConfig, EthereumConfig } from './Ethereum'
+import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
+
+import CONFIG_SCHEMA from './config.schema.json'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
@@ -43,6 +45,8 @@ export type SubscribeConfig = {
 export type ConnectionConfig = {
     /** Core HTTP API calls go here */
     restUrl: string
+    /** Some TheGraph instance, that indexes the streamr registries */
+    theGraphUrl: string
     /** Automatically connect on first subscribe */
     autoConnect: boolean
     /**  Automatically disconnect on last unsubscribe */
@@ -76,6 +80,11 @@ export type StrictStreamrClientConfig = {
     auth: AuthConfig
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
+    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
+    nodeRegistryChainAddress: EthereumAddress, // this saves sorage nodes with their urls
+    streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
+        // noderegistry contracts and saves what streams are stored by which storagenodes
+    ensCacheChainAddress: EthereumAddress,
     keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
@@ -91,16 +100,7 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataU
     dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
 }>
 
-const validateOverridedEthereumAddresses = (opts: any, propertyPaths: string[]) => {
-    for (const propertyPath of propertyPaths) {
-        if (has(opts, propertyPath)) {
-            const value = get(opts, propertyPath)
-            if (!isAddress(value)) {
-                throw new Error(`${propertyPath} is not a valid Ethereum address`)
-            }
-        }
-    }
-}
+export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
 /**
  * @category Important
@@ -109,8 +109,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    restUrl: 'https://streamr.network/api/v1',
+    restUrl: 'https://streamr.network/api/v1/',
+    theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
+    // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
     autoConnect: true,
@@ -133,27 +135,35 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainnet: undefined, // Default to ethers.js default provider settings
-    sidechain: {
+    mainChainRPC: undefined, // Default to ethers.js default provider settings
+    dataUnionChainRPC: {
         url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
-    binanceRPC: {
+    dataUnionBinanceWithdrawalChainRPC: {
         url: 'https://bsc-dataseed.binance.org/',
         chainId: 56
     },
-    tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
-    tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
-    binanceAdapterAddress: '0x0c1aF6edA561fbDA48E9A7B1Dd46D216F31A97cC',
+    streamRegistryChainRPC: {
+        url: 'https://polygon-rpc.com',
+        chainId: 137
+    },
+    tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
+    tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
+    binanceAdapterAddress: '0x193888692673b5dD46e6BC90bA8cBFeDa515c8C1',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
+    streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
+    nodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
+    streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
+    ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,
-        factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
-        factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
-        templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
-        templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
+        factoryMainnetAddress: '0xE41439BF434F9CfBF0153f5231C205d4ae0C22e3',
+        factorySidechainAddress: '0xFCE1FBFAaE61861B011B379442c8eE1DC868ABd0',
+        templateMainnetAddress: '0x67352e3F7dBA907aF877020aE7E9450C0029C70c',
+        templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
     cache: {
         maxSize: 10000,
@@ -163,23 +173,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
 /** @internal */
 export default function ClientConfig(inputOptions: StreamrClientConfig = {}) {
+    validateConfig(inputOptions)
     const opts = cloneDeep(inputOptions)
     const defaults = cloneDeep(STREAM_CLIENT_DEFAULTS)
-    // validate all Ethereum addresses which are required in StrictStreamrClientConfig: if user
-    // overrides a setting, which has a default value, it must be a non-null valid Ethereum address
-    // TODO could also validate
-    // - other optional Ethereum address (if there will be some)
-    // - other overriden options (e.g. regexp check that "restUrl" is a valid url)
-    validateOverridedEthereumAddresses(opts, [
-        'streamrNodeAddress',
-        'tokenAddress',
-        'tokenSidechainAddress',
-        'dataUnion.factoryMainnetAddress',
-        'dataUnion.factorySidechainAddress',
-        'dataUnion.templateMainnetAddress',
-        'dataUnion.templateSidechainAddress',
-        'storageNode.address'
-    ])
 
     const options: StrictStreamrClientConfig = {
         ...defaults,
@@ -218,4 +214,20 @@ export default function ClientConfig(inputOptions: StreamrClientConfig = {}) {
     }
 
     return options
+}
+
+export const validateConfig = (data: unknown): void|never => {
+    const ajv = new Ajv()
+    addFormats(ajv)
+    ajv.addFormat('ethereum-address', /^0x[a-zA-Z0-9]{40}$/)
+    ajv.addFormat('ethereum-private-key', /^(0x)?[a-zA-Z0-9]{64}$/)
+    if (!ajv.validate(CONFIG_SCHEMA, data)) {
+        throw new Error(ajv.errors!.map((e: ErrorObject) => {
+            let text = ajv.errorsText([e], { dataVar: '' }).trim()
+            if (e.params.additionalProperty) {
+                text += `: ${e.params.additionalProperty}`
+            }
+            return text
+        }).join('\n'))
+    }
 }

@@ -2,15 +2,16 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
+import fetch from 'node-fetch'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { PublishRequest, StreamMessage, SIDLike, SPID } from 'streamr-client-protocol'
+import { StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
 import { Debug, format } from '../src/utils/log'
-import { MaybeAsync } from '../src/types'
+import { MaybeAsync, StreamDefinition } from '../src/types'
 import { StreamProperties } from '../src/Stream'
 import clientOptions from '../src/ConfigTest'
 
@@ -22,6 +23,7 @@ export { clientOptions }
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
+
 export {
     testDebug as Debug
 }
@@ -39,6 +41,24 @@ export function fakePrivateKey() {
 
 export function fakeAddress() {
     return crypto.randomBytes(32).toString('hex').slice(0, 40)
+}
+
+export async function getPrivateKey(timeout = 5000): Promise<string> {
+    const response = await new Promise<ReturnType<typeof fetch>>((resolve, reject) => {
+        const t = setTimeout(() => {
+            reject(new Error(`getPrivateKey timed out after ${timeout}ms.`))
+        }, timeout)
+
+        resolve(fetch('http://localhost:45454/key').finally(() => {
+            clearTimeout(t)
+        }))
+    })
+
+    if (!response.ok) {
+        throw new Error(`getPrivateKey failed ${response.status} ${response.statusText}: ${response.text()}`)
+    }
+
+    return response.text()
 }
 
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
@@ -97,7 +117,7 @@ export function addAfterFn() {
     }
 }
 
-export function Msg<T extends object>(opts?: T) {
+export function Msg<T extends object = object>(opts?: T) {
     return {
         value: uid('msg'),
         ...opts,
@@ -113,23 +133,6 @@ export type CreateMessageOpts = {
     batchIndex: number,
     /** total messages */
     total: number
-}
-
-export type PublishOpts = {
-    testName: string,
-    delay: number
-    timeout: number
-    /** set false to allow gc message content */
-    retainMessages: boolean,
-    waitForLast: boolean
-    waitForLastCount: number
-    waitForLastTimeout: number
-    beforeEach: (m: any) => any
-    afterEach: (msg: any, request: PublishRequest) => Promise<void> | void
-    timestamp: number | (() => number)
-    partitionKey: string
-    createMessage: (opts: CreateMessageOpts) => Promise<any> | any
-    batchSize: number
 }
 
 export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
@@ -163,21 +166,34 @@ export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) 
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
-    return streamrClient.createStream({
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+    const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
     })
+    await until(
+        async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
+        20000,
+        500,
+        () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
+    )
+    return stream
 }
 
 export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: DependencyContainer) => {
     const addAfter = addAfterFn()
 
-    return function createClient(opts = {}, parentContainer?: DependencyContainer) {
+    return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
+        let key
+        if (opts.auth && opts.auth.privateKey) {
+            key = opts.auth.privateKey
+        } else {
+            key = await getPrivateKey()
+        }
         const c = new StreamrClient({
             ...clientOptions,
             auth: {
-                privateKey: fakePrivateKey(),
+                privateKey: key,
             },
             ...defaultOpts,
             ...opts,
@@ -211,20 +227,47 @@ export class LeaksDetector {
     ignoredValues = new WeakSet()
     id = instanceId(this)
     debug = testDebug(this.id)
+    seen = new WeakSet()
+    didGC = false
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([
         '/cachedNode',
+        '/container',
+        '/childContainer',
+        'rovider/formatter',
     ])
 
-    private counter = CounterId(this.id)
+    private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
     add(name: string, obj: any) {
         if (!obj || typeof obj !== 'object') { return }
 
         if (this.ignoredValues.has(obj)) { return }
 
-        this.leakDetectors.set(name, new LeakDetector(obj))
+        this.resetGC()
+        const leaksDetector = new LeakDetector(obj)
+        // @ts-expect-error monkeypatching
+        // eslint-disable-next-line no-underscore-dangle
+        leaksDetector._runGarbageCollector = this.runGarbageCollectorOnce(leaksDetector._runGarbageCollector)
+        this.leakDetectors.set(name, leaksDetector)
+    }
+
+    // returns a monkeypatch for leaksDetector._runGarbageCollector
+    // that avoids running gc for every isLeaking check, only once.
+    private runGarbageCollectorOnce(original: Function) {
+        return (...args: any[]) => {
+            if (this.didGC) {
+                return
+            }
+
+            this.didGC = true
+            original(...args)
+        }
+    }
+
+    resetGC() {
+        this.didGC = false
     }
 
     ignore(obj: any) {
@@ -293,7 +336,6 @@ export class LeaksDetector {
     }
 
     addAll(rootId: string, obj: object) {
-        const seen = new Set()
         this.walk([rootId], obj, (path, value) => {
             if (this.ignoredValues.has(value)) { return false }
             const pathString = path.join('/')
@@ -305,24 +347,27 @@ export class LeaksDetector {
             const paths = this.idToPaths.get(id) || new Set()
             paths.add(pathString)
             this.idToPaths.set(id, paths)
-            if (!seen.has(value)) {
-                seen.add(value)
+            if (!this.seen.has(value)) {
+                this.seen.add(value)
                 this.add(id, value)
             }
             return undefined
         })
     }
 
-    async getLeaks() {
+    async getLeaks(): Promise<Record<string, string>> {
         this.debug('checking for leaks with %d items >>', this.leakDetectors.size)
         await wait(10) // wait a moment for gc to run?
         const outstanding = new Set<string>()
-        const results = (await Promise.all([...this.leakDetectors.entries()].map(async ([key, d]) => {
+        this.resetGC()
+        const tasks = [...this.leakDetectors.entries()].map(async ([key, d]) => {
             outstanding.add(key)
             const isLeaking = await d.isLeaking()
             outstanding.delete(key)
             return isLeaking ? key : undefined
-        }))).filter(Boolean) as string[]
+        })
+        await Promise.allSettled(tasks)
+        const results = (await Promise.all(tasks)).filter(Boolean) as string[]
 
         const leaks = results.reduce((o, id) => Object.assign(o, {
             [id]: [...(this.idToPaths.get(id) || [])],
@@ -337,7 +382,9 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
-            throw new Error(format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks))
+            const msg = format('Leaking %d of %d items: %o', numLeaks, this.leakDetectors.size, leaks)
+            this.clear()
+            throw new Error(msg)
         }
     }
 
@@ -345,12 +392,17 @@ export class LeaksDetector {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
-            throw new Error(format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks))
+            const msg = format('Leaking %d of %d items, including id %s: %o', numLeaks, this.leakDetectors.size, id, leaks)
+            this.clear()
+            throw new Error(msg)
         }
     }
 
     clear() {
+        this.seen = new WeakSet()
+        this.ignoredValues = new WeakSet()
         this.leakDetectors.clear()
+        this.didGC = false
     }
 }
 
@@ -398,21 +450,28 @@ type PublishTestMessageOptions = PublishManyOpts & {
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(client: StreamrClient, stream: SIDLike, maxMessages: number = 5, opts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
+export function publishTestMessagesGenerator(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    maxMessages = 5,
+    opts: PublishTestMessageOptions = {}
+) {
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
-    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(sid, source))
+    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
     }
     return pipeline
 }
 
-export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
+export function getPublishTestStreamMessages(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    defaultOpts: PublishTestMessageOptions = {}
+) {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
@@ -429,7 +488,7 @@ export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDL
         client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
-        const publishStream = publishTestMessagesGenerator(client, sid, maxMessages, options)
+        const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         client.onDestroy(() => {
             publishStream.return()
         })
@@ -467,9 +526,12 @@ export function getPublishTestStreamMessages(client: StreamrClient, stream: SIDL
     }
 }
 
-export function getPublishTestMessages(client: StreamrClient, stream: SIDLike, defaultOpts: PublishTestMessageOptions = {}) {
-    const sid = SPID.parse(stream)
-    const publishTestStreamMessages = getPublishTestStreamMessages(client, sid, defaultOpts)
+export function getPublishTestMessages(
+    client: StreamrClient,
+    streamDefinition: StreamDefinition,
+    defaultOpts: PublishTestMessageOptions = {}
+) {
+    const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())
@@ -484,3 +546,52 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
         })
     }
 }
+
+export async function sleep(ms: number = 0) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
+}
+
+/**
+ * Wait until a condition is true
+ * @param condition - wait until this callback function returns true
+ * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
+ * @param pollingIntervalMs - check condition between so many milliseconds
+ * @param failedMsgFn - append the string return value of this getter function to the error message, if given
+ * @return the (last) truthy value returned by the condition function
+ */
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+    // condition could as well return any instead of boolean, could be convenient
+    // sometimes if waiting until a value is returned. Maybe change if such use
+    // case emerges.
+    const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
+    let isTimedOut = false
+    let t!: ReturnType<typeof setTimeout>
+    if (timeOutMs > 0) {
+        t = setTimeout(() => { isTimedOut = true }, timeOutMs)
+    }
+
+    try {
+        // Promise wrapped condition function works for normal functions just the same as Promises
+        let wasDone = false
+        while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
+            wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
+            if (!wasDone && !isTimedOut) {
+                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+            }
+        }
+
+        if (isTimedOut) {
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
+        }
+
+        return wasDone
+    } finally {
+        clearTimeout(t)
+    }
+}
+

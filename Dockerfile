@@ -1,17 +1,14 @@
-FROM node:16-buster as build
+FROM node:16-bullseye as build
 WORKDIR /usr/src/monorepo
-COPY . .
 RUN npm set unsafe-perm true && \
-	# explicitly use npm v6
-	npm install -g npm@6 && \
-	npm ci && \
-	npm run bootstrap-pkg streamr-broker && \
-	# image contains all packages, remove devDeps to keep image size down
-	npx lerna exec -- npm prune --production && \
-	# restore inter-package symlinks removed by npm prune
-	npx lerna link
+	# explicitly use npm v8
+	npm install -g npm@8 --no-audit
+COPY . .
+RUN npm config set python "$(which python3)" && npm run bootstrap-pkg -- streamr-broker
 
-FROM node:16-buster-slim
+RUN npm run prune-pkg -- streamr-broker
+
+FROM node:16-bullseye-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
@@ -27,4 +24,6 @@ EXPOSE 7170/tcp
 EXPOSE 7171/tcp
 
 WORKDIR /usr/src/monorepo/packages/broker
-CMD ./bin/broker.js # start broker from default config
+
+# start broker from default config
+CMD ["./bin/broker.js"]

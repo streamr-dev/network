@@ -5,6 +5,7 @@ import http from 'http'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 function getHttp(url: string) {
     return new Promise((resolve, reject) => {
@@ -43,45 +44,37 @@ describe('tracker endpoint', () => {
                 hostname: '127.0.0.1',
                 port: trackerPort
             },
-            id: 'tracker',
             attachHttpEndpoints: true
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
             location: {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             }
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            location: {
-                country: 'FI',
-                city: 'Helsinki',
-                latitude: null,
-                longitude: null
-            }
+            location: undefined
         })
         nodeTwo.setExtraMetadata({
             foo: 'bar'
         })
 
-        nodeOne.subscribe('stream-1', 0)
-        nodeTwo.subscribe('stream-1', 0)
+        nodeOne.subscribe(StreamPartIDUtils.parse('stream-1#0'))
+        nodeTwo.subscribe(StreamPartIDUtils.parse('stream-1#0'))
 
-        nodeOne.subscribe('stream-2', 0)
-        nodeOne.subscribe('sandbox/test/stream-3', 0)
+        nodeOne.subscribe(StreamPartIDUtils.parse('stream-2#0'))
+        nodeOne.subscribe(StreamPartIDUtils.parse('sandbox/test/stream-3#0'))
 
         nodeOne.start()
         nodeTwo.start()
 
         // @ts-expect-error private variable
-        await waitForCondition(() => Object.keys(tracker.overlayPerStream).length === 3)
+        await waitForCondition(() => Object.keys(tracker.overlayPerStreamPart).length === 3)
     })
 
     afterAll(async () => {
@@ -288,13 +281,11 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toEqual({
             'node-1': {
                 country: 'CH',
-                city: 'Zug',
-                latitude: null,
-                longitude: null
+                city: 'Zug'
             },
             'node-2': {
-                country: 'FI',
-                city: 'Helsinki',
+                country: null,
+                city: null,
                 latitude: null,
                 longitude: null
             }
@@ -306,9 +297,7 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
             country: 'CH',
-            city: 'Zug',
-            latitude: null,
-            longitude: null
+            city: 'Zug'
         })
     })
 
@@ -321,7 +310,7 @@ describe('tracker endpoint', () => {
     it('/metrics/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metrics/`)
         expect(status).toEqual(200)
-        expect(jsonResult.peerId).toEqual('tracker')
+        expect(jsonResult.peerId).toEqual(tracker.getTrackerId())
         expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
         expect(jsonResult.metrics).not.toBeUndefined()
     })

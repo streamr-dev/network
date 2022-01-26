@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -22,10 +22,9 @@ describe('duplicate message detection and avoidance', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30350
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
         contactNode = createNetworkNode({
             id: 'node-0',
             trackers: [trackerInfo],
@@ -70,11 +69,12 @@ describe('duplicate message detection and avoidance', () => {
             return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)
         }))
         // Become subscribers (one-by-one, for well connected graph)
-        otherNodes[0].subscribe('stream-id', 0)
-        otherNodes[1].subscribe('stream-id', 0)
-        otherNodes[2].subscribe('stream-id', 0)
-        otherNodes[3].subscribe('stream-id', 0)
-        otherNodes[4].subscribe('stream-id', 0)
+        const streamPartId = StreamPartIDUtils.parse('stream-id#0')
+        otherNodes[0].subscribe(streamPartId)
+        otherNodes[1].subscribe(streamPartId)
+        otherNodes[2].subscribe(streamPartId)
+        otherNodes[3].subscribe(streamPartId)
+        otherNodes[4].subscribe(streamPartId)
 
         await allNodesSubscribed
 
@@ -91,13 +91,13 @@ describe('duplicate message detection and avoidance', () => {
 
         // Produce data
         contactNode.publish(new StreamMessage({
-            messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, 'publisher', 'session'),
             content: {
                 hello: 'world'
             },
         }))
         contactNode.publish(new StreamMessage({
-            messageId: new MessageID('stream-id', 0, 120, 0, 'publisher', 'session'),
+            messageId: new MessageID(toStreamID('stream-id'), 0, 120, 0, 'publisher', 'session'),
             content: {
                 hello: 'world'
             },

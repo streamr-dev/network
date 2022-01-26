@@ -1,13 +1,16 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 
-import { MessageLayer, SPIDKey } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartID, toStreamID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
 
 const { StreamMessage, MessageID } = MessageLayer
+
+const streamPartOne = StreamPartIDUtils.parse('s#1')
+const streamPartTwo = StreamPartIDUtils.parse('s#2')
 
 describe('node unsubscribing from a stream', () => {
     let tracker: Tracker
@@ -19,10 +22,9 @@ describe('node unsubscribing from a stream', () => {
             listen: {
                 hostname: '127.0.0.1',
                 port: 30450
-            },
-            id: 'tracker'
+            }
         })
-        const trackerInfo = { id: 'tracker', ws: tracker.getUrl(), http: tracker.getUrl() }
+        const trackerInfo = tracker.getConfigRecord()
 
         nodeA = createNetworkNode({
             id: 'a',
@@ -38,15 +40,15 @@ describe('node unsubscribing from a stream', () => {
         nodeA.start()
         nodeB.start()
 
-        nodeA.subscribe('s', 2)
-        nodeB.subscribe('s', 2)
+        nodeA.subscribe(streamPartTwo)
+        nodeB.subscribe(streamPartTwo)
         await Promise.all([
             waitForEvent(nodeA, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeB, NodeEvent.NODE_SUBSCRIBED),
         ])
 
-        nodeA.subscribe('s', 1)
-        nodeB.subscribe('s', 1)
+        nodeA.subscribe(streamPartOne)
+        nodeB.subscribe(streamPartOne)
         await Promise.all([
             waitForEvent(nodeA, NodeEvent.NODE_SUBSCRIBED),
             waitForEvent(nodeB, NodeEvent.NODE_SUBSCRIBED),
@@ -60,20 +62,20 @@ describe('node unsubscribing from a stream', () => {
     })
 
     test('node still receives data for subscribed streams thru existing connections', async () => {
-        const actual: SPIDKey[] = []
+        const actual: StreamPartID[] = []
         nodeB.addMessageListener((streamMessage) => {
-            actual.push(`${streamMessage.getStreamId()}#${streamMessage.getStreamPartition()}`)
+            actual.push(streamMessage.getStreamPartID())
         })
 
-        nodeB.unsubscribe('s', 2)
+        nodeB.unsubscribe(streamPartTwo)
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID('s', 2, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 2, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID('s', 1, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 1, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)
@@ -81,10 +83,10 @@ describe('node unsubscribing from a stream', () => {
     })
 
     test('connection between nodes is not kept if no shared streams', async () => {
-        nodeB.unsubscribe('s', 2)
+        nodeB.unsubscribe(streamPartTwo)
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
-        nodeA.unsubscribe('s', 1)
+        nodeA.unsubscribe(streamPartOne)
         await waitForEvent(nodeB, NodeEvent.NODE_UNSUBSCRIBED)
 
         const [aEventArgs, bEventArgs] = await Promise.all([

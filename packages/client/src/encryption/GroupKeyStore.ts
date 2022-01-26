@@ -1,26 +1,17 @@
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './Encryption'
-import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import { PersistentStore } from './PersistentStore'
 
-export interface PersistentStore<K, V> {
-    get(key: K): Promise<V | undefined>
-    set(key: K, value: V): Promise<boolean>
-    has(key: K): Promise<boolean>
-    delete(key: K): Promise<boolean>
-    clear(): Promise<boolean>
-    size(): Promise<number>
-    close(): Promise<void>
-    destroy(): Promise<void>
-    exists(): Promise<boolean>
-}
+import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string
 
 type GroupKeyStoreOptions = {
     context: Context,
     clientId: string,
-    streamId: string,
+    streamId: StreamID,
     groupKeys: [GroupKeyId, GroupKey][]
 }
 

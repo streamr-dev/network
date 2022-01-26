@@ -1,4 +1,4 @@
-import { SPID } from 'streamr-client-protocol'
+import { StreamPartID } from 'streamr-client-protocol'
 import { Node, Event as NodeEvent, NodeOptions, NodeId } from './Node'
 import { StreamMessage } from 'streamr-client-protocol'
 
@@ -21,6 +21,14 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
+    async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.openOutgoingStreamConnection(streamPartId, contactNodeId)
+    }
+
+    async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.closeOutgoingStreamConnection(streamPartId, contactNodeId)
+    }
+
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
         this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
@@ -29,16 +37,16 @@ export class NetworkNode extends Node {
         this.off(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
-    subscribe(streamId: string, streamPartition: number): void {
-        this.subscribeToStreamIfHaveNotYet(new SPID(streamId, streamPartition))
+    subscribe(streamPartId: StreamPartID): void {
+        this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
 
-    unsubscribe(streamId: string, streamPartition: number): void {
-        this.unsubscribeFromStream(new SPID(streamId, streamPartition))
+    unsubscribe(streamPartId: StreamPartID): void {
+        this.unsubscribeFromStream(streamPartId)
     }
 
-    getNeighborsForStream(streamId: string, streamPartition: number): ReadonlyArray<NodeId> {
-        return this.streams.getNeighborsForStream(new SPID(streamId, streamPartition))
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<NodeId> {
+        return this.streamPartManager.getNeighborsForStreamPart(streamPartId)
     }
 
     getRtt(nodeId: NodeId): number|undefined {

@@ -94,6 +94,7 @@ export class ConsoleAndPM2Metrics {
     }
 
     stop(): void {
+        io.destroy()
         clearTimeout(this.timeout!)
     }
 
@@ -107,13 +108,9 @@ export class ConsoleAndPM2Metrics {
         // @ts-expect-error not enough typing info available
         const outPerSecond = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].outMessages.rate : 0)
             // @ts-expect-error not enough typing info available
-            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].outMessages.rate : 0)
-            // @ts-expect-error not enough typing info available
             + (report.metrics['broker/http'] ? report.metrics['broker/http'].outMessages.rate : 0)
         // @ts-expect-error not enough typing info available
         const kbOutPerSecond = ((report.metrics['broker/ws'] ? report.metrics['broker/ws'].outBytes.rate : 0)
-            // @ts-expect-error not enough typing info available
-            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].outBytes.rate : 0)
             // @ts-expect-error not enough typing info available
             + (report.metrics['broker/http'] ? report.metrics['broker/http'].outBytes.rate : 0)) / 1000
 
@@ -138,9 +135,7 @@ export class ConsoleAndPM2Metrics {
             meanBatchAge = report.metrics['broker/cassandra'].batchManager.meanBatchAge
         }
 
-        // @ts-expect-error not enough typing info available
         const brokerConnectionCount = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].connections : 0)
-            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].connections : 0)
 
         const networkConnectionCount = report.metrics.WebRtcEndpoint.connections
         // @ts-expect-error not enough typing info available

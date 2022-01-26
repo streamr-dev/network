@@ -162,7 +162,7 @@ export class NodeToTracker extends EventEmitter {
     }
 
     disconnectFromTracker(trackerId: string): void {
-        this.endpoint.close(trackerId, 1000, DisconnectionReason.NO_SHARED_STREAMS)
+        this.endpoint.close(trackerId, 1000, DisconnectionReason.NO_SHARED_STREAM_PARTS)
     }
 
     onPeerConnected(peerInfo: PeerInfo): void {

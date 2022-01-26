@@ -1,22 +1,23 @@
 import { randomBytes } from 'crypto'
 import assert from 'assert'
 
-import { ethers } from 'ethers'
+import { verifyMessage } from '@ethersproject/wallet'
 import Web3EthAccounts from 'web3-eth-accounts'
 import secp256k1 from 'secp256k1'
 
-import StreamMessage from '../../src/protocol/message_layer/StreamMessage'
+import StreamMessage, {
+    ContentType,
+    EncryptionType,
+    StreamMessageType
+} from '../../src/protocol/message_layer/StreamMessage'
 import StreamMessageValidator from '../../src/utils/StreamMessageValidator'
-import '../../src/protocol/message_layer/StreamMessageSerializerV31'
-
-// eslint-disable-next-line max-len
-const streamMessage = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0xD12b87c9325eB36801d6114A0D5334AC2A8D25D8","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x31453f26d0fedbf2101f6a1535c8c1dc1646de809fcde3a1068dfda9e5d2af42105efd40fe26840f1cb1d81a8872180e5ff0b0404234e179bcd413ec2bbb8aa01b"]')
+import '../../src/protocol/message_layer/StreamMessageSerializerV32'
+import { MessageID, MessageRef, SigningUtil, toStreamID } from "../../src"
 
 const mocks = {
     getStream: async () => ({
         partitions: 10,
-        requireSignedData: true,
-        requireEncryptedData: false,
+        requireSignedData: true
     }),
     isPublisher: async () => true,
     isSubscriber: async () => true,
@@ -26,6 +27,38 @@ const mocks = {
 const accounts = new Web3EthAccounts()
 
 describe('validate', () => {
+    let streamMessage: StreamMessage
+    beforeAll(async () => {
+        const address = '0xD5f5382ae72Cd43ca25768943814aA11E586E7F7'
+        const privateKey = 'd1580cbfe3746587c58435f2308a3377d6cda21ab5e1f344c3cfc72dd5dbea6f'
+
+        streamMessage = new StreamMessage({
+            messageId: new MessageID(
+                toStreamID('/foo/bar', address),
+                0,
+                1587141844396,
+                0,
+                address,
+                'k000EDTMtqOTLM8sirFj'
+            ),
+            prevMsgRef: new MessageRef(1587141844312,0),
+            // eslint-disable-next-line max-len
+            content: "{\"eventType\":\"trade\",\"eventTime\":1587141844398,\"symbol\":\"ETHBTC\",\"tradeId\":172530352,\"price\":0.02415,\"quantity\":0.296,\"buyerOrderId\":687544144,\"sellerOrderId\":687544104,\"time\":1587141844396,\"maker\":false,\"ignored\":true}",
+            messageType: StreamMessageType.MESSAGE,
+            contentType: ContentType.JSON,
+            encryptionType: EncryptionType.NONE,
+            groupKeyId: null,
+            newGroupKey: null,
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            signature: null,
+        })
+        // eslint-disable-next-line require-atomic-updates
+        streamMessage.signature = await SigningUtil.sign(
+            streamMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH),
+            privateKey
+        )
+    })
+
     const run = async (functionToTest: () => void, name: string, iterations: number) => {
         const start = Date.now()
 
@@ -47,7 +80,7 @@ describe('validate', () => {
             resultString += `${key} ${Math.round((used[key] as number) / 1024 / 1024 * 100) / 100} MB\n`
             /* eslint-enable no-mixed-operators */
         })
-        console.log(resultString)
+        console.info(resultString)
     }
 
     it('no signature checking at all', async () => {
@@ -59,10 +92,10 @@ describe('validate', () => {
         await run(() => validator.validate(streamMessage), 'no signature checking', 10000)
     })
 
-    it('using ethers.js', async () => {
+    it('using ethers.js verifyMessage', async () => {
         const validator = new StreamMessageValidator({
             verify: async (addr: string, payload: string, signature: string) => {
-                return ethers.utils.verifyMessage(payload, signature).toLowerCase() === addr.toLowerCase()
+                return verifyMessage(payload, signature).toLowerCase() === addr.toLowerCase()
             },
             ...mocks,
         })

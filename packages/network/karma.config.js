@@ -2,7 +2,6 @@ const webpackConfig = require('./webpack.config')
 
 module.exports = function (config) {
     config.set({
-        debugMode: true,
         plugins: [
             'karma-electron',
             'karma-webpack',
@@ -12,22 +11,19 @@ module.exports = function (config) {
         basePath: '.',
         frameworks: ['jasmine'],
         reporters: ['spec'],
-          
         files: [
             './karma-setup.js',
             './test/browser/BrowserWebRtcConnection.test.ts',
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
-            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*|UnixSocketWsServer*).ts/',
-
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts',
+            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts',
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
-            './test/integration/**/!(NodeWebRtcConnection*|tracker-endpoints*|UnixSocketWsServer*).ts/': ['webpack'],
-
-            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*).ts': ['webpack'],
+            './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/': ['webpack'],
+            './test/unit/**/!(LocationManager*|NodeWebRtcConnection*|WebRtcEndpoint*|Speedometer*|deprecated-tracker-status*).ts': ['webpack'],
         },
         customLaunchers: {
             CustomElectron: {
@@ -48,6 +44,9 @@ module.exports = function (config) {
             useIframe: false
         },
         singleRun: true,
-        webpack: webpackConfig('test')
+        webpack: {
+            ...webpackConfig('test'),
+            entry: {}
+        }
     })
 }

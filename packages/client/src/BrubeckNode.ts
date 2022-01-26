@@ -2,15 +2,13 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { Config } from './Config'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
-
-const uid = process.pid != null ? `p${process.pid}` : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
 /**
  * Wrap a network node.
@@ -32,7 +30,7 @@ export default class BrubeckNode implements Context {
         @inject(Config.Network) options: NetworkNodeOptions
     ) {
         this.options = options
-        this.id = instanceId(this, uid)
+        this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy(this.destroy)
     }
@@ -50,8 +48,7 @@ export default class BrubeckNode implements Context {
 
         // generate id if none supplied
         if (id == null || id === '') {
-            const address = await this.ethereum.getAddress()
-            id = `${address}#${uuid()}`
+            id = await this.generateId()
         }
 
         this.debug('initNode', id)
@@ -60,6 +57,7 @@ export default class BrubeckNode implements Context {
             name: id,
             ...options,
             id,
+            metricsContext: new MetricsContext(options.name ?? id)
         })
 
         if (!this.destroySignal.isDestroyed()) {
@@ -67,6 +65,16 @@ export default class BrubeckNode implements Context {
         }
 
         return node
+    }
+
+    private async generateId() {
+        if (this.ethereum.isAuthenticated()) {
+            const address = await this.ethereum.getAddress()
+            return `${address}#${uuid()}`
+            // eslint-disable-next-line no-else-return
+        } else {
+            return Ethereum.generateEthereumAccount().address
+        }
     }
 
     /**
@@ -156,6 +164,30 @@ export default class BrubeckNode implements Context {
             return this.cachedNode.publish(streamMessage)
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
+        }
+    }
+
+    openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): void | Promise<void> {
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return this.startNode().then((node) => {
+                    return node.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+                })
+            }
+            return this.cachedNode.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+        } finally {
+            this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
+        }
+    }
+
+    closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): void {
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return
+            }
+            this.cachedNode.leavePurePublishingStreamPart(streamPartId, nodeId)
+        } finally {
+            this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 }

@@ -1,8 +1,12 @@
+import 'reflect-metadata'
 import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
+import { KeyServer } from 'streamr-test-utils'
 
 const pkg = require('./package.json')
 
 export default async () => {
+    global.__StreamrKeyserver = new KeyServer()
+
     // eslint-disable-next-line
     require('reflect-metadata')
     if (!process.env.GIT_VERSION) {
