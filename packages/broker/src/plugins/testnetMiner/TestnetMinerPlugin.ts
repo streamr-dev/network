@@ -5,6 +5,7 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
+import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
 import { Schema } from 'ajv'
@@ -131,14 +132,18 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             peers
         }
         try {
-            await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/claim`, {
+            const res: Response = await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/claim`, {
                 body: JSON.stringify(body),
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            logger.info('Reward claimed successfully')
+            const resBody = await res.json()
+            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.block}`)
+            if (resBody.alert) {
+                logger.info(resBody.alert)
+            }
         } catch (e) {
             logger.error(`Unable to claim reward: code=${rewardCode}`, e)
         }
