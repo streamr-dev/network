@@ -242,7 +242,7 @@ describe('DataUnion withdraw', () => {
         describe('by admin', () => {
 
             it('to member without signature', async () => {
-                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, _adminClient) => {
                     const du = await memberClient.getDataUnion(dataUnionAddress)
                     return du.withdrawAllToMember(memberWallet.address, options)
                 }, null, false, options)
