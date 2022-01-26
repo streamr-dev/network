@@ -20,13 +20,12 @@ import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
 
 export class FailedToPublishError extends Error {
-    definition: string
-    msg
+    publishMetadata
     reason
-    constructor(definition: StreamDefinition, data: PublishMetadata | StreamMessage, reason?: Error) {
-        super(`Failed to publish to stream ${definition} due to: ${reason && reason.stack ? reason.stack : reason}.`)
-        this.definition = JSON.stringify(definition)
-        this.msg = data
+    constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
+        // eslint-disable-next-line max-len
+        super(`Failed to publish to stream ${JSON.stringify(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        this.publishMetadata = publishMetadata
         this.reason = reason
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -112,7 +111,10 @@ export default class PublishPipeline implements Context, Stoppable {
             const { streamDefinition, ...options } = publishMetadata
             try {
                 const [streamId, partition] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
-                options.partitionKey ??= partition // TODO: add runtime check for both partitionKey AND partition set?
+                if ((partition !== undefined) && (options.partitionKey !== undefined)) {
+                    throw new Error('Invalid combination of "partition" and "partitionKey"')
+                }
+                options.partitionKey ??= partition
                 const streamMessage = await this.messageCreator.create(streamId, options)
                 yield [streamMessage, defer]
             } catch (err) {
@@ -194,7 +196,7 @@ export default class PublishPipeline implements Context, Stoppable {
             await this.streamMessageQueue.push([publishMetadata, defer])
             return await defer
         } catch (err) {
-            const error = new FailedToPublishError(publishMetadata.streamDefinition, publishMetadata, err)
+            const error = new FailedToPublishError(publishMetadata, err)
             defer.reject(error)
             throw error
         } finally {
