@@ -68,7 +68,7 @@ setInterval(() => {
     const msg = 'Hello world, ' + new Date().toLocaleString()
     program.opts().streamIds.forEach((streamId) => {
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, timestamp, sequenceNumber, id, messageChainId),
+            messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
             prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
             content: {
                 msg,
