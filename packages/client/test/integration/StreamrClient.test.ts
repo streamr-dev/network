@@ -5,7 +5,6 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import {
-    uid,
     Msg,
     getPublishTestMessages,
     getCreateClient,
@@ -63,16 +62,13 @@ describeRepeats('StreamrClient', () => {
     const WAIT_TIME = 600
 
     const createStream = async ({ requireSignedData = true, ...opts }: any = {}) => {
-        const name = uid('stream')
         const s = await client.createStream({
             id: createRelativeTestStreamId(module),
-            name,
             requireSignedData,
             ...opts,
         })
         await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
         expect(s.id).toBeTruthy()
-        expect(s.name).toEqual(name)
         expect(s.requireSignedData).toBe(requireSignedData)
         return s
     }
