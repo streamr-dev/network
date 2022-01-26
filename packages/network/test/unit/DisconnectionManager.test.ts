@@ -6,14 +6,14 @@ const TTL = 20
 
 describe(DisconnectionManager, () => {
     let getAllNodes: jest.Mock<NodeId[], []>
-    let hasSharedStreams: jest.Mock<boolean, [NodeId]>
+    let hasSharedStreamParts: jest.Mock<boolean, [NodeId]>
     let disconnect: jest.Mock<void, [NodeId, string]>
     let manager: DisconnectionManager
 
     function setUpManager(disconnectionDelayInMs: number, cleanUpIntervalInMs: number): void {
         manager = new DisconnectionManager({
             getAllNodes,
-            hasSharedStreams,
+            hasSharedStreamParts,
             disconnect,
             disconnectionDelayInMs,
             cleanUpIntervalInMs
@@ -22,7 +22,7 @@ describe(DisconnectionManager, () => {
 
     beforeEach(() => {
         getAllNodes = jest.fn()
-        hasSharedStreams = jest.fn()
+        hasSharedStreamParts = jest.fn()
         disconnect = jest.fn()
     })
 
@@ -56,7 +56,7 @@ describe(DisconnectionManager, () => {
 
         it('disconnects from nodes with which no shared streams', async () => {
             getAllNodes.mockReturnValue(['n1', 'n2', 'n3', 'n4'])
-            hasSharedStreams.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
+            hasSharedStreamParts.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
             await setUpManagerAndRunCleanUpIntervalOnce()
             expect(disconnect).toHaveBeenCalledTimes(2)
             expect(disconnect).toHaveBeenNthCalledWith(1, 'n2', DisconnectionManager.DISCONNECTION_REASON)
@@ -65,7 +65,7 @@ describe(DisconnectionManager, () => {
 
         it('longer scenario', async () => {
             getAllNodes.mockReturnValue(['n1', 'n2', 'n3', 'n4'])
-            hasSharedStreams.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
+            hasSharedStreamParts.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
             setUpManager(1000, TTL)
             manager.start()
 
@@ -77,7 +77,7 @@ describe(DisconnectionManager, () => {
 
             disconnect.mockReset()
             getAllNodes.mockReturnValue(['n1', 'n3', 'n4'])
-            hasSharedStreams.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
+            hasSharedStreamParts.mockImplementation((nodeId) => ['n1', 'n4'].includes(nodeId))
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
@@ -86,7 +86,7 @@ describe(DisconnectionManager, () => {
 
             disconnect.mockReset()
             getAllNodes.mockReturnValue(['n1', 'n4', 'n5', 'n6'])
-            hasSharedStreams.mockImplementation((nodeId) => ['n1', 'n6'].includes(nodeId))
+            hasSharedStreamParts.mockImplementation((nodeId) => ['n1', 'n6'].includes(nodeId))
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
@@ -96,7 +96,7 @@ describe(DisconnectionManager, () => {
 
             disconnect.mockReset()
             getAllNodes.mockReturnValue(['n1', 'n6'])
-            hasSharedStreams.mockImplementation((nodeId) => ['n1'].includes(nodeId))
+            hasSharedStreamParts.mockImplementation((nodeId) => ['n1'].includes(nodeId))
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
@@ -105,7 +105,7 @@ describe(DisconnectionManager, () => {
 
             disconnect.mockReset()
             getAllNodes.mockReturnValue(['n1'])
-            hasSharedStreams.mockImplementation(() => false)
+            hasSharedStreamParts.mockImplementation(() => false)
 
             await wait(TTL + 1)
             expect(disconnect.mock.calls).toEqual([
@@ -120,31 +120,31 @@ describe(DisconnectionManager, () => {
         })
 
         it('executed after TTL if no shared streams then', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(1)
             expect(disconnect).toHaveBeenNthCalledWith(1, 'node', DisconnectionManager.DISCONNECTION_REASON)
         })
 
         it('not executed after TTL if has shared streams by then', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
-            hasSharedStreams.mockReturnValue(true)
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
+            hasSharedStreamParts.mockReturnValue(true)
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
         })
 
         it('not executed after TTL if had shared streams initially', async () => {
-            hasSharedStreams.mockReturnValue(true)
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
-            hasSharedStreams.mockReturnValue(false)
+            hasSharedStreamParts.mockReturnValue(true)
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
+            hasSharedStreamParts.mockReturnValue(false)
             await wait(TTL + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
         })
 
         it('re-scheduling same disconnection causes debounce', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
             await wait(TTL / 2)
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
             await wait((TTL / 2) + 1)
             expect(disconnect).toHaveBeenCalledTimes(0)
             await wait((TTL / 2) + 1)
@@ -153,7 +153,7 @@ describe(DisconnectionManager, () => {
         })
 
         it('not executed after TTL if canceled before', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node')
             await wait(TTL / 2)
             manager.cancelScheduledDisconnection('node')
             await wait((TTL / 2) + 1)
@@ -161,8 +161,8 @@ describe(DisconnectionManager, () => {
         })
 
         it('executed after TTL if canceling other (unrelated) node', async () => {
-            manager.scheduleDisconnectionIfNoSharedStreams('node-1')
-            manager.scheduleDisconnectionIfNoSharedStreams('node-2')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node-1')
+            manager.scheduleDisconnectionIfNoSharedStreamParts('node-2')
             await wait(TTL / 2)
             manager.cancelScheduledDisconnection('node-2')
             await wait((TTL / 2) + 1)

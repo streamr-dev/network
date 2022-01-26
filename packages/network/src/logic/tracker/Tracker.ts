@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { SmartContractRecord, SPID, SPIDKey } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
@@ -8,11 +8,10 @@ import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
-import { Location, Status, StreamStatus } from '../../identifiers'
+import { Location, Status, StreamPartStatus } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
-import { transformIterable } from '../../helpers/transformIterable'
 
 export type TrackerId = string
 
@@ -35,7 +34,7 @@ export interface TrackerOptions {
     topologyStabilization?: TopologyStabilizationOptions
 }
 
-export type OverlayPerStream = Record<SPIDKey,OverlayTopology>
+export type OverlayPerStreamPart = Record<StreamPartID, OverlayTopology>
 
 // nodeId => connected nodeId => rtt
 export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
@@ -49,7 +48,7 @@ export class Tracker extends EventEmitter {
     private readonly trackerServer: TrackerServer
     /** @internal */
     public readonly peerInfo: PeerInfo
-    private readonly overlayPerStream: OverlayPerStream
+    private readonly overlayPerStreamPart: OverlayPerStreamPart
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
@@ -75,7 +74,7 @@ export class Tracker extends EventEmitter {
         this.peerInfo = opts.peerInfo
 
         this.logger = new Logger(module)
-        this.overlayPerStream = {}
+        this.overlayPerStreamPart = {}
         this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
@@ -126,24 +125,23 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        const { stream, rtts, location, extra } = status
         // update RTTs and location
-        if (rtts) {
-            this.overlayConnectionRtts[source] = rtts
+        if (status.rtts) {
+            this.overlayConnectionRtts[source] = status.rtts
         }
         this.locationManager.updateLocation({
             nodeId: source,
-            location,
+            location: status.location,
             address: this.trackerServer.resolveAddress(source),
         })
-        this.extraMetadatas[source] = extra
+        this.extraMetadatas[source] = status.extra
 
-        const spidKey = SPID.toKey(stream.id, stream.partition)
+        const streamPartId = toStreamPartID(status.streamPart.id, status.streamPart.partition)
 
         // update topology
-        this.createTopology(spidKey)
-        this.updateNodeOnStream(source, stream)
-        this.formAndSendInstructions(source, spidKey)
+        this.createTopology(streamPartId)
+        this.updateNodeOnStream(source, status.streamPart)
+        this.formAndSendInstructions(source, streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -160,32 +158,32 @@ export class Tracker extends EventEmitter {
         return this.trackerServer.getUrl()
     }
 
-    private createTopology(spidKey: SPIDKey) {
-        if (this.overlayPerStream[spidKey] == null) {
-            this.overlayPerStream[spidKey] = new OverlayTopology(this.maxNeighborsPerNode)
+    private createTopology(streamPartId: StreamPartID) {
+        if (this.overlayPerStreamPart[streamPartId] == null) {
+            this.overlayPerStreamPart[streamPartId] = new OverlayTopology(this.maxNeighborsPerNode)
         }
     }
 
-    private updateNodeOnStream(node: NodeId, status: StreamStatus): void {
-        const spidKey = SPID.toKey(status.id, status.partition)
+    private updateNodeOnStream(node: NodeId, status: StreamPartStatus): void {
+        const streamPartId = toStreamPartID(status.id, status.partition)
         if (status.counter === COUNTER_UNSUBSCRIBE) {
-            this.leaveAndCheckEmptyOverlay(spidKey, this.overlayPerStream[spidKey], node)
+            this.leaveAndCheckEmptyOverlay(streamPartId, this.overlayPerStreamPart[streamPartId], node)
         } else {
-            this.overlayPerStream[spidKey].update(node, status.neighbors)
+            this.overlayPerStreamPart[streamPartId].update(node, status.neighbors)
         }
     }
 
-    private formAndSendInstructions(node: NodeId, spidKey: SPIDKey, forceGenerate = false): void {
+    private formAndSendInstructions(node: NodeId, streamPartId: StreamPartID, forceGenerate = false): void {
         if (this.stopped) {
             return
         }
-        if (this.overlayPerStream[spidKey]) {
-            const instructions = this.overlayPerStream[spidKey].formInstructions(node, forceGenerate)
+        if (this.overlayPerStreamPart[streamPartId]) {
+            const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
-                const counterValue = this.instructionCounter.setOrIncrement(nodeId, spidKey)
+                const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
                 await this.instructionSender.addInstruction({
                     nodeId,
-                    spidKey,
+                    streamPartId,
                     newNeighbors,
                     counterValue
                 })
@@ -198,28 +196,28 @@ export class Tracker extends EventEmitter {
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]
-        Object.entries(this.overlayPerStream)
-            .forEach(([spidKey, overlayTopology]) => {
-                this.leaveAndCheckEmptyOverlay(spidKey, overlayTopology, node)
+        Object.entries(this.overlayPerStreamPart)
+            .forEach(([streamPartId, overlayTopology]) => {
+                this.leaveAndCheckEmptyOverlay(streamPartId as StreamPartID, overlayTopology, node)
             })
     }
 
-    private leaveAndCheckEmptyOverlay(spidKey: SPIDKey, overlayTopology: OverlayTopology, node: NodeId) {
+    private leaveAndCheckEmptyOverlay(streamPartId: StreamPartID, overlayTopology: OverlayTopology, node: NodeId) {
         const neighbors = overlayTopology.leave(node)
         this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
-            this.instructionCounter.removeStream(spidKey)
-            delete this.overlayPerStream[spidKey]
+            this.instructionCounter.removeStreamPart(streamPartId)
+            delete this.overlayPerStreamPart[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {
-                this.formAndSendInstructions(neighbor, spidKey, true)
+                this.formAndSendInstructions(neighbor, streamPartId, true)
             })
         }
     }
 
-    getSPIDs(): Iterable<SPID> {
-        return transformIterable(Object.keys(this.overlayPerStream), (spidKey) => SPID.from(spidKey))
+    getStreamParts(): Iterable<StreamPartID> {
+        return Object.keys(this.overlayPerStreamPart) as StreamPartID[]
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
@@ -242,8 +240,8 @@ export class Tracker extends EventEmitter {
         return this.overlayConnectionRtts
     }
 
-    getOverlayPerStream(): Readonly<OverlayPerStream> {
-        return this.overlayPerStream
+    getOverlayPerStreamPart(): Readonly<OverlayPerStreamPart> {
+        return this.overlayPerStreamPart
     }
 
     getConfigRecord(): SmartContractRecord {

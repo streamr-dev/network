@@ -110,7 +110,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     restUrl: 'https://streamr.network/api/v1/',
-    theGraphUrl: 'needs chaging once server is up in production',
+    theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
@@ -145,18 +145,18 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         chainId: 56
     },
     streamRegistryChainRPC: {
-        url: 'https://rpc.xdaichain.com/',
-        chainId: 100
+        url: 'https://polygon-rpc.com',
+        chainId: 137
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
     binanceAdapterAddress: '0x193888692673b5dD46e6BC90bA8cBFeDa515c8C1',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
-    streamRegistryChainAddress: '0xa86863053cECFD9f6f861e0Fd39a042238411b75',
-    nodeRegistryChainAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-    streamStorageRegistryChainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
-    ensCacheChainAddress: '',
+    streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
+    nodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
+    streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
+    ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,

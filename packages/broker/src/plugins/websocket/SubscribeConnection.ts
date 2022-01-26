@@ -17,8 +17,8 @@ export class SubscribeConnection implements Connection {
 
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         const streamPartDefitions = (this.partitions !== undefined)
-            ? this.partitions.map((streamPartition: number) => ({ streamId: this.streamId, streamPartition }))
-            : [{ streamId: this.streamId }]
+            ? this.partitions.map((partition: number) => ({ id: this.streamId, partition }))
+            : [{ id: this.streamId }]
         streamPartDefitions.forEach((streamDefinition) => {
             streamrClient.subscribe(streamDefinition, (content: any, metadata: any) => {
                 const payload = payloadFormat.createPayload(content, metadata.messageId)
