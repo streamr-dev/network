@@ -370,12 +370,7 @@ const dataUnion = await client.deployDataUnion()
 
 To get an existing (previously deployed) `DataUnion` instance:
 ```js
-const dataUnion = client.getDataUnion(dataUnionAddress)
-```
-
-Or to verify untrusted (e.g. user) input, use:
-```js
-const dataUnion = await client.safeGetDataUnion(dataUnionAddress)
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 ```
 
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
@@ -450,7 +445,7 @@ const client = new StreamrClient({
     auth: { privateKey },
 })
 
-const dataUnion = client.getDataUnion(dataUnionAddress)
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 ```
 
@@ -463,7 +458,7 @@ const client = new StreamrClient({
     auth: { privateKey },
 })
 
-const dataUnion = client.getDataUnion(dataUnionAddress)
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
 ```
 
@@ -494,7 +489,8 @@ Here's an example how to get a member's withdrawable token balance (in "wei", wh
 ```js
 import { StreamrClient } from 'streamr-client'
 
-const dataUnion = new StreamrClient().getDataUnion(dataUnionAddress)
+const client = new StreamrClient()
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 ```
 

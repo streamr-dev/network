@@ -88,7 +88,7 @@ async function testWithdraw(
             dataUnionVersion: 2
         })
     })
-    const res = await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
+    const res = await dataUnion.join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
     log('Member joined data union %O', res)
 
@@ -136,7 +136,7 @@ async function testWithdraw(
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
 
-    const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
+    const stats = await dataUnion.getMemberStats(memberWallet.address)
     log('Stats: %O', stats)
 
     const getRecipientBalance = async () => (
@@ -222,17 +222,19 @@ describe('DataUnion withdraw', () => {
         describe('by member', () => {
 
             it('to itself', () => {
-                return testWithdraw(async (dataUnionAddress, memberClient) => (
-                    memberClient.getDataUnion(dataUnionAddress).withdrawAll(options)
-                ), null, true, options)
+                return testWithdraw(async (dataUnionAddress, memberClient) => {
+                    const du = await memberClient.getDataUnion(dataUnionAddress)
+                    return du.withdrawAll(options)
+                }, null, true, options)
             }, 3600000)
 
             it('to any address', () => {
                 testWalletId += 1
                 const outsiderWallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${testWalletId}`, providerSidechain)
-                return testWithdraw(async (dataUnionAddress, memberClient) => (
-                    memberClient.getDataUnion(dataUnionAddress).withdrawAllTo(outsiderWallet.address, options)
-                ), outsiderWallet.address, true, options)
+                return testWithdraw(async (dataUnionAddress, memberClient) => {
+                    const du = await memberClient.getDataUnion(dataUnionAddress)
+                    return du.withdrawAllTo(outsiderWallet.address, options)
+                }, outsiderWallet.address, true, options)
             }, 3600000)
 
         })
@@ -240,19 +242,20 @@ describe('DataUnion withdraw', () => {
         describe('by admin', () => {
 
             it('to member without signature', async () => {
-                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => (
-                    adminClient.getDataUnion(dataUnionAddress).withdrawAllToMember(memberWallet.address, options)
-                ), null, false, options)
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet) => {
+                    const du = await memberClient.getDataUnion(dataUnionAddress)
+                    return du.withdrawAllToMember(memberWallet.address, options)
+                }, null, false, options)
             }, 3600000)
 
             it("to anyone with member's signature", async () => {
                 testWalletId += 1
                 const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${testWalletId}`, providerSidechain)
                 return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
-                    const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAllTo(member2Wallet.address)
-                    return adminClient
-                        .getDataUnion(dataUnionAddress)
-                        .withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
+                    const duMember = await memberClient.getDataUnion(dataUnionAddress)
+                    const duAdmin = await adminClient.getDataUnion(dataUnionAddress)
+                    const signature = await duMember.signWithdrawAllTo(member2Wallet.address)
+                    return duAdmin.withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
                 }, member2Wallet.address, false, options)
             }, 3600000)
 
@@ -261,10 +264,10 @@ describe('DataUnion withdraw', () => {
                 const withdrawAmount = parseEther('0.5')
                 const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${testWalletId}`, providerSidechain)
                 return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
-                    const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
-                    return adminClient
-                        .getDataUnion(dataUnionAddress)
-                        .withdrawAmountToSigned(memberWallet.address, member2Wallet.address, withdrawAmount, signature, options)
+                    const duMember = await memberClient.getDataUnion(dataUnionAddress)
+                    const duAdmin = await adminClient.getDataUnion(dataUnionAddress)
+                    const signature = await duMember.signWithdrawAmountTo(member2Wallet.address, withdrawAmount)
+                    return duAdmin.withdrawAmountToSigned(memberWallet.address, member2Wallet.address, withdrawAmount, signature, options)
                 }, member2Wallet.address, false, options, withdrawAmount)
             }, 3600000)
         })
@@ -272,7 +275,7 @@ describe('DataUnion withdraw', () => {
 
     it('Validate address', async () => {
         const client = getRandomClient()
-        const dataUnion = client.getDataUnion(createMockAddress())
+        const dataUnion = await client.getDataUnion(createMockAddress())
         return Promise.all([
             expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
             expectInvalidAddress(() => dataUnion.withdrawAllTo('invalid-address')),
