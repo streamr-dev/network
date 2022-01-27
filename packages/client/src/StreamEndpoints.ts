@@ -85,7 +85,7 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
-        @inject(NodeRegistry) private readonly nodeRegistry: NodeRegistry,
+        @inject(delay(() => NodeRegistry)) private readonly nodeRegistry: NodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
         private readonly ethereum: StreamrEthereum

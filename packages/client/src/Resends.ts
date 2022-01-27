@@ -126,7 +126,7 @@ export default class Resend implements Context {
 
     constructor(
         context: Context,
-        private nodeRegistry: NodeRegistry,
+        @inject(delay(() => NodeRegistry)) private nodeRegistry: NodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         @inject(BrubeckContainer) private container: DependencyContainer
