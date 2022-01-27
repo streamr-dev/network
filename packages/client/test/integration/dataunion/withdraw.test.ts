@@ -201,7 +201,8 @@ providerSidechain.on({
     }
     const hash = keccak256(message)
     const adminClient = new StreamrClient(clientOptions)
-    await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
+    const du = await adminClient.getDataUnion('0x0000000000000000000000000000000000000000')
+    await du.transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)
 })
 
