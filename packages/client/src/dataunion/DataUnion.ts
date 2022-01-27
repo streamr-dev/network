@@ -583,9 +583,11 @@ export class DataUnion {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-        const duMainnet = await this.getContracts().getMainnetContract(this.contractAddress)
-        const tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
+        const duFeeBN = await duSidechain.dataUnionFeeFraction()
+        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOptions)
         return waitForTx(tx)
     }
 
