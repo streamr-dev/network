@@ -80,7 +80,7 @@ export class StreamRegistry implements Context {
     streamRegistryContractReadonly: StreamRegistryContract
     chainProvider: Provider
     chainSigner?: Signer
-    defaultOverrides?: Overrides
+    defaultOverrides: Overrides
 
     constructor(
         context: Context,
@@ -96,7 +96,7 @@ export class StreamRegistry implements Context {
         this.streamRegistryContractReadonly = new Contract(this.config.streamRegistryChainAddress,
             StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
         const chainId = this.config.streamRegistryChainRPC?.chainId
-        this.defaultOverrides = this.config.ethereumNetworks?.find((network) => network.chainId === chainId)?.overrides
+        this.defaultOverrides = this.config.ethereumNetworks?.find((network) => network.chainId === chainId)?.overrides ?? {}
     }
 
     private parseStream(id: StreamID, propsString: string): Stream {
