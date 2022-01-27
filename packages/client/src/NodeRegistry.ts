@@ -24,6 +24,7 @@ export type EthereumStorageEvent = {
     streamId: string,
     nodeAddress: EthereumAddress,
     type: 'added' | 'removed'
+    blockNumber: number
 }
 
 export type NetworkSmartContract = {
@@ -235,11 +236,11 @@ export class NodeRegistry {
     }
 
     async registerStorageEventListener(callback: (arg0: EthereumStorageEvent) => any) {
-        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string) => {
-            callback({ streamId, nodeAddress, type: 'added' })
+        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string, extra: any) => {
+            callback({ streamId, nodeAddress, type: 'added', blockNumber: extra.blockNumber })
         })
-        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string) => {
-            callback({ streamId, nodeAddress, type: 'removed' })
+        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string, extra: any) => {
+            callback({ streamId, nodeAddress, type: 'removed', blockNumber: extra.blockNumber })
         })
     }
 
