@@ -65,4 +65,11 @@ describe(NodeRegistry, () => {
             type: 'removed'
         })
     }, TEST_TIMEOUT)
+
+    it('getStoredStreamsOf', async () => {
+        const result = await listenerClient.getStoredStreamsOf(storageNodeTestConfig.address)
+        expect(result.blockNumber).toBeGreaterThanOrEqual(0)
+        expect(result.streams.length).toBeGreaterThanOrEqual(0)
+        result.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
+    }, TEST_TIMEOUT)
 })
