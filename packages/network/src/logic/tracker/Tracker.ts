@@ -118,6 +118,11 @@ export class Tracker extends EventEmitter {
             return
         }
 
+        // TODO: Testnet (3rd iteration) compatibility, rm when no more testnet nodes
+        if (statusMessage.status.stream !== undefined) {
+            statusMessage.status.streamPart = statusMessage.status.stream
+        }
+
         this.metrics.record('processNodeStatus', 1)
         const status = statusMessage.status as Status
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
