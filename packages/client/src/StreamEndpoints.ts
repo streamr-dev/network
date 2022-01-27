@@ -140,7 +140,7 @@ export class StreamEndpoints implements Context {
     }
 
     async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const streams = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
+        const { streams } = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
 
         const result: StreamPartID[] = []
         streams.forEach((stream: Stream) => {
