@@ -1,19 +1,19 @@
-import { EthereumAddress } from './types'
+import { EthereumAddress, ENSName } from './types'
 
-export type StreamID = string & { readonly __brand: 'streamId' } // Nominal typing
+export type StreamID = string & { readonly __brand: 'streamID' } // Nominal typing
 
 /**
  * Create an instance of `StreamID` from a given string stream id or path.
  *
  * Supported formats:
- *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar'
+ *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar' or 'name.eth/foo/bar'
  *  - path-only format, e.g. , '/foo/bar'
  *  - key-exchange format, e.g., SYSTEM/keyexchange/0x0000000000000000000000000000000000000000
  *  - legacy format, e.g., '7wa7APtlTq6EC5iTCBy6dw'
  *
- *  If `streamIdOrPath` is not in path-only format, `address` can be left undefined.
+ *  If `streamIdOrPath` is not in path-only format, `domain` can be left undefined.
  */
-export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): StreamID {
+export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | ENSName): StreamID | never {
     if (streamIdOrPath.length === 0) {
         throw new Error('stream id may not be empty')
     }
@@ -23,14 +23,14 @@ export function toStreamID(streamIdOrPath: string, address?: EthereumAddress): S
     } else if (StreamIDUtils.isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
         return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
-        if (address === undefined) {
-            throw new Error(`path-only format "${streamIdOrPath}" provided without address`)
+        if (domain === undefined) {
+            throw new Error(`path-only format "${streamIdOrPath}" provided without domain`)
         }
-        return (address.toLowerCase() + streamIdOrPath) as StreamID
+        return (domain.toLowerCase() + streamIdOrPath) as StreamID
     } else {
-        const address = streamIdOrPath.substring(0, firstSlashIdx).toLowerCase()
+        const domain = streamIdOrPath.substring(0, firstSlashIdx).toLowerCase()
         const path = streamIdOrPath.substring(firstSlashIdx)
-        return (address + path) as StreamID
+        return (domain + path) as StreamID
     }
 }
 
@@ -50,17 +50,25 @@ export class StreamIDUtils {
         return streamId.startsWith(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX)
     }
     
-    static getAddress(streamId: StreamID): string | undefined {
-        const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
-        return addressAndPath?.[0]
+    static getDomain(streamId: StreamID): EthereumAddress | ENSName | undefined {
+        const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
+        return domainAndPath?.[0]
+    }
+
+    static isENSName(domain: string): boolean {
+        return domain.indexOf('.') !== -1
+    }
+
+    static isENSAddress(address: string): boolean {
+        return address.indexOf('.') !== -1
     }
     
     static getPath(streamId: StreamID): string | undefined {
-        const addressAndPath = StreamIDUtils.getAddressAndPath(streamId)
-        return addressAndPath?.[1]
+        const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
+        return domainAndPath?.[1]
     }
     
-    static getAddressAndPath(streamId: StreamID): [string, string] | undefined {
+    static getDomainAndPath(streamId: StreamID): [EthereumAddress | ENSName, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
         if (firstSlashIdx !== -1 && !StreamIDUtils.isKeyExchangeStream(streamId)) {
             return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]
@@ -69,8 +77,7 @@ export class StreamIDUtils {
         }
     }
     
-    // TODO: if recipient exists, will it always be an EthereumAddress? Can it be an ENS domain?
-    static getRecipient(streamId: StreamID): string | undefined {
+    static getRecipient(streamId: StreamID): EthereumAddress | undefined {
         if (StreamIDUtils.isKeyExchangeStream(streamId)) {
             return streamId.substring(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX.length)
         }

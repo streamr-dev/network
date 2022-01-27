@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { MessageLayer, SPID, toStreamID } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -43,10 +43,10 @@ describe('optimization: do not propagate to sender', () => {
         await n3.start()
 
         // Become subscribers (one-by-one, for well connected graph)
-        const spid = new SPID('stream-id', 0)
-        n1.subscribe(spid)
-        n2.subscribe(spid)
-        n3.subscribe(spid)
+        const streamPartId = StreamPartIDUtils.parse('stream-id#0')
+        n1.subscribe(streamPartId)
+        n2.subscribe(streamPartId)
+        n3.subscribe(streamPartId)
 
         // Wait for fully-connected network
         await waitForCondition(() => {

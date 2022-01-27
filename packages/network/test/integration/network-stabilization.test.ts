@@ -6,7 +6,7 @@ import { wait } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
-import { SPID } from 'streamr-client-protocol'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 function areEqual(a: any, b: any) {
     try {
@@ -41,7 +41,7 @@ describe('check network stabilization', () => {
                 id: `node-${i}`,
                 trackers: [trackerInfo]
             })
-            node.subscribe(new SPID('stream', 0))
+            node.subscribe(StreamPartIDUtils.parse('stream#0'))
             nodes.push(node)
         }
         nodes.forEach((node) => node.start())
@@ -57,10 +57,10 @@ describe('check network stabilization', () => {
     it('network must become stable in less than 10 seconds',  async () => {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < 10; ++i) {
-                const beforeTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+                const beforeTopology = getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())
                 // eslint-disable-next-line no-await-in-loop
                 await wait(800)
-                const afterTopology = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+                const afterTopology = getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())
                 if (areEqual(beforeTopology, afterTopology)) {
                     resolve(true)
                     return

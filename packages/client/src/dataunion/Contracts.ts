@@ -3,6 +3,7 @@ import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
 import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
+import { parseEther } from '@ethersproject/units'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
 import { Todo } from '../types'
@@ -21,7 +22,7 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
-/* TODO: remove this class and inline its functions into DataUnion.ts */
+/* TODO during ETH-173 refactor: remove this class and inline its functions into DataUnion.ts */
 export default class Contracts {
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
@@ -315,9 +316,13 @@ export default class Contracts {
         if (gasPrice) {
             ethersOptions.gasPrice = gasPrice
         }
+        const duFeeFraction = parseEther('0') // TODO: decide what the default values should be
+        const duBeneficiary = '0x0000000000000000000000000000000000000000' // TODO: decide what the default values should be
         const tx = await factoryMainnet.deployNewDataUnion(
             ownerAddress,
             adminFeeBN,
+            duFeeFraction,
+            duBeneficiary,
             agentAddressList,
             duName,
             ethersOptions

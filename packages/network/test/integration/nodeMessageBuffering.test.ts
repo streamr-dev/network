@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { MessageLayer, SPID, toStreamID } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker, Tracker } from '../../src/composition'
 
@@ -55,7 +55,7 @@ describe('message buffering of Node', () => {
             done()
         })
 
-        destinationNode.subscribe(new SPID('id', 0))
+        destinationNode.subscribe(StreamPartIDUtils.parse('id#0'))
 
         // "Client" pushes data
         sourceNode.publish(new StreamMessage({

@@ -12,13 +12,12 @@ import StreamMessage, {
 } from '../../src/protocol/message_layer/StreamMessage'
 import StreamMessageValidator from '../../src/utils/StreamMessageValidator'
 import '../../src/protocol/message_layer/StreamMessageSerializerV32'
-import { MessageID, MessageRef, SigningUtil, StreamIDUtils } from "../../src"
+import { MessageID, MessageRef, SigningUtil, toStreamID } from "../../src"
 
 const mocks = {
     getStream: async () => ({
         partitions: 10,
-        requireSignedData: true,
-        requireEncryptedData: false,
+        requireSignedData: true
     }),
     isPublisher: async () => true,
     isSubscriber: async () => true,
@@ -35,7 +34,7 @@ describe('validate', () => {
 
         streamMessage = new StreamMessage({
             messageId: new MessageID(
-                StreamIDUtils.toStreamID('/foo/bar', address),
+                toStreamID('/foo/bar', address),
                 0,
                 1587141844396,
                 0,

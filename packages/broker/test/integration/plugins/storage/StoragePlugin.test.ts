@@ -1,11 +1,12 @@
-import { MetricsContext, Protocol } from 'streamr-network'
+import { MetricsContext } from 'streamr-network'
 import { StoragePlugin } from '../../../../src/plugins/storage/StoragePlugin'
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { getPrivateKey, STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { createMockStorageConfig } from './MockStorageConfig'
 import { Wallet } from 'ethers'
+import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 
-const SPIDS: Protocol.SPID[] = [new Protocol.SPID('foo', 0), new Protocol.SPID('bar', 0)]
+const streamParts: StreamPartID[] = [StreamPartIDUtils.parse('foo#0'), StreamPartIDUtils.parse('bar#0')]
 
 const createMockPlugin = async (networkNode: any) => {
     const wallet = new Wallet(await getPrivateKey())
@@ -59,7 +60,7 @@ describe('StoragePlugin', () => {
             subscribe: jest.fn(),
             unsubscribe: jest.fn()
         }
-        storageConfig = createMockStorageConfig(SPIDS)
+        storageConfig = createMockStorageConfig(streamParts)
         storageConfigFactory = jest.spyOn(StorageConfig, 'createInstance')
         storageConfigFactory.mockResolvedValue(storageConfig)
     })
@@ -71,14 +72,14 @@ describe('StoragePlugin', () => {
     test('happy path: start and stop', async () => {
         const plugin = await createMockPlugin(networkNode)
         await plugin.start()
-        expect(networkNode.subscribe).toBeCalledTimes(SPIDS.length)
+        expect(networkNode.subscribe).toBeCalledTimes(streamParts.length)
         expect(networkNode.addMessageListener).toBeCalledTimes(1)
         expect(storageConfig.startAssignmentEventListener).toBeCalledTimes(1)
         expect(storageConfig.startChainEventsListener).toBeCalledTimes(1)
         // @ts-expect-error private field
         const cassandraClose = jest.spyOn(plugin.cassandra!, 'close')
         await plugin.stop()
-        expect(networkNode.unsubscribe).toBeCalledTimes(SPIDS.length)
+        expect(networkNode.unsubscribe).toBeCalledTimes(streamParts.length)
         expect(networkNode.removeMessageListener).toBeCalledTimes(1)
         expect(storageConfig.stopAssignmentEventListener).toBeCalledTimes(1)
         expect(storageConfig.stopChainEventsListener).toBeCalledTimes(1)

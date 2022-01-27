@@ -60,7 +60,7 @@ describe('BucketManager', () => {
 
         const storeBucketsSpy = jest.spyOn(bucketManager, 'storeBuckets' as any)
 
-        expect(Object.values(bucketManager.streams)).toHaveLength(0)
+        expect(Object.values(bucketManager.streamParts)).toHaveLength(0)
         expect(Object.values(bucketManager.buckets)).toHaveLength(0)
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
@@ -104,14 +104,14 @@ describe('BucketManager', () => {
         const timestamp = Date.now()
 
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toEqual(timestamp)
+        expect(bucketManager.streamParts[`${streamId}-0`].minTimestamp).toEqual(timestamp)
 
         await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toBeUndefined()
+        expect(bucketManager.streamParts[`${streamId}-0`].minTimestamp).toBeUndefined()
 
         // future timestamp will give latest not full bucket
         expect(bucketManager.getBucketId(streamId, 0, timestamp + 600)).not.toBeUndefined()
-        expect(bucketManager.streams[`${streamId}-0`].minTimestamp).toBeUndefined()
+        expect(bucketManager.streamParts[`${streamId}-0`].minTimestamp).toBeUndefined()
     })
 
     test('calling getBucketId() with timestamp in the past, will try to find correct bucket and then create buckets in the past', async () => {

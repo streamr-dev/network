@@ -1,6 +1,6 @@
 {
     "name": "streamr-client",
-    "version": "6.1.0-ocr-experimental.20",
+    "version": "6.0.0-alpha.25",
     "description": "JavaScript client library for Streamr",
     "private": true,
     "repository": {
@@ -139,6 +139,7 @@
         "@ethersproject/keccak256": "^5.5.0",
         "@ethersproject/providers": "^5.5.0",
         "@ethersproject/transactions": "^5.5.0",
+        "@ethersproject/units": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
         "@ethersproject/web": "^5.5.0",
         "@types/debug": "^4.1.7",
@@ -161,8 +162,8 @@
         "split2": "^3.2.2",
         "sqlite": "^4.0.23",
         "sqlite3": "^5.0.2",
-        "streamr-client-protocol": "^9.1.2",
-        "streamr-network": "^30.1.1",
+        "streamr-client-protocol": "^11.0.0",
+        "streamr-network": "^32.0.0",
         "ts-toolbelt": "^9.6.0",
         "tsyringe": "^4.6.0",
         "uuid": "^8.3.2"
