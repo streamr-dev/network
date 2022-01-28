@@ -1,8 +1,9 @@
 import { EventEmitter } from 'events'
+
 import { SmartContractRecord, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
-import { TrackerServer, Event as TrackerServerEvent } from '../../protocol/TrackerServer'
+import { Event as TrackerServerEvent, TrackerServer } from '../../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
@@ -12,6 +13,8 @@ import { Location, Status, StreamPartStatus } from '../../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from '../node/Node'
 import { InstructionSender } from './InstructionSender'
+import { StatusValidator } from '../../helpers/SchemaValidators'
+import { DisconnectionCode, DisconnectionReason } from '../../connection/ws/AbstractWsEndpoint'
 
 export type TrackerId = string
 
@@ -56,6 +59,7 @@ export class Tracker extends EventEmitter {
     private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
+    private readonly statusSchemaValidator: StatusValidator
     private stopped = false
 
     constructor(opts: TrackerOptions) {
@@ -80,6 +84,7 @@ export class Tracker extends EventEmitter {
         this.instructionCounter = new InstructionCounter()
         this.extraMetadatas = Object.create(null)
 
+        this.statusSchemaValidator = new StatusValidator()
         this.trackerServer.on(TrackerServerEvent.NODE_CONNECTED, (nodeId) => {
             this.onNodeConnected(nodeId)
         })
@@ -87,7 +92,17 @@ export class Tracker extends EventEmitter {
             this.onNodeDisconnected(nodeId)
         })
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            this.processNodeStatus(statusMessage, nodeId)
+            const valid = this.statusSchemaValidator.validate(statusMessage.status, statusMessage.version)
+            if (valid) {
+                this.processNodeStatus(statusMessage, nodeId)
+            } else {
+                this.logger.warn(`Status message with invalid format received from ${nodeId}`)
+                this.trackerServer.disconnectFromPeer(
+                    nodeId,
+                    DisconnectionCode.INVALID_PROTOCOL_MESSAGE,
+                    DisconnectionReason.INVALID_PROTOCOL_MESSAGE
+                )
+            }
         })
         attachRtcSignalling(this.trackerServer)
 

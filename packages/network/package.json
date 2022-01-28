@@ -46,6 +46,7 @@
   "dependencies": {
     "@types/compression": "^1.7.2",
     "@types/morgan": "^1.9.3",
+    "ajv": "^8.8.2",
     "cancelable-promise": "^3.2.3",
     "commander": "^8.3.0",
     "compression": "^1.7.4",
