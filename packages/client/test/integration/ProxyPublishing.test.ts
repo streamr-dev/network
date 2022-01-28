@@ -98,7 +98,7 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxy(stream, proxyNodeId1)
-        await wait(2000)
+        await wait(1000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
@@ -107,7 +107,6 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
 
         await publishingClient.removePublishProxy(stream, proxyNodeId1)
-        await wait(2500)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
@@ -127,7 +126,7 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
-        await wait(2000)
+        await wait(1000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
@@ -142,7 +141,6 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
 
         await publishingClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
-        await wait(2000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
