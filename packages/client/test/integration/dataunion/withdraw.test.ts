@@ -79,6 +79,7 @@ async function testWithdraw(
             privateKey: memberWallet.privateKey
         }
     })
+    const dataUnionMember = await memberClient.getDataUnion(dataUnion.getAddress())
 
     // product is needed for join requests to analyze the DU version
     const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
@@ -91,9 +92,11 @@ async function testWithdraw(
         }),
         session: adminClient.session,
     })
-    const res = await dataUnion.join(secret)
-    // await adminClient.addMembers([memberWallet.address], { dataUnion })
-    log('Member joined data union %O', res)
+    const res1 = await dataUnion.join(secret)
+    log('Admin joined data union %O', res1)
+    const res2 = await dataUnionMember.join(secret)
+    log('Member joined data union %O', res2)
+
     // @ts-expect-error
     const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
     const mainnetContract = await contracts.getMainnetContract(dataUnion.getAddress())
