@@ -4,7 +4,7 @@ import { MetricsPlugin } from './plugins/metrics/MetricsPlugin'
 import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
 import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
-import { TestnetMinerPlugin } from './plugins/testnetMiner/TestnetMinerPlugin'
+import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
@@ -19,8 +19,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new MqttPlugin(pluginOptions)
         case 'storage':
             return new StoragePlugin(pluginOptions)
-        case 'testnetMiner':
-            return new TestnetMinerPlugin(pluginOptions)
+        case 'brubeckMiner':
+            return new BrubeckMinerPlugin(pluginOptions)
         case 'subscriber':
             return new SubscriberPlugin(pluginOptions)
         default:

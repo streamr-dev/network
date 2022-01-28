@@ -139,8 +139,8 @@ describe('Config', () => {
             const trackers = [
                 {
                     id: '0xFBB6066c44bc8132bA794C73f58F391273E3bdA1',
-                    ws: 'wss://testnet3.streamr.network:30401',
-                    http: 'https://testnet3.streamr.network:30401'
+                    ws: 'wss://brubeck3.streamr.network:30401',
+                    http: 'https://brubeck3.streamr.network:30401'
                 },
             ]
             const clientOverrides = new StreamrClient({
