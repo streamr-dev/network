@@ -51,9 +51,12 @@ describe('DataUnion signature', () => {
         // @ts-expect-error
         const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
         const contractMainnet = await contracts.getMainnetContract(dataUnion.getAddress())
+        const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
         const tokenSidechainAddress = await contractMainnet.tokenSidechain()
-        const sidechainContract = await contracts.getSidechainContract(dataUnion.getAddress())
         const tokenSidechain = new Contract(tokenSidechainAddress, Token.abi, adminWalletSidechain)
+
+        // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
+        const sidechainContract = new Contract(sidechainContractLimited.address, DataUnionSidechain.abi, adminWalletSidechain)
 
         const signature = await memberDataUnion.signWithdrawAllTo(member2Wallet.address)
         const signature2 = await memberDataUnion.signWithdrawAmountTo(member2Wallet.address, parseEther('1'))
