@@ -84,7 +84,8 @@ describe('createNode', () => {
     })
 
     it('getStoredStreamsOf', async () => {
-        const streams: Stream[] = await client.getStoredStreamsOf(nodeAddress)
+        const { streams, blockNumber } = await client.getStoredStreamsOf(nodeAddress)
+        expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.length).toBeGreaterThan(0)
         return expect(streams.find((el) => { return el.id === createdStream.id })).toBeDefined()
     })
