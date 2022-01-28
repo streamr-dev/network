@@ -19,12 +19,12 @@ const NAT_ANALYSIS_TIMEOUT = {
     errorCode: 'NAT_ANALYSIS_TIMEOUT'
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
-const METRIC_CONTEXT_NAME = 'broker/plugin/testnetMiner'
+const METRIC_CONTEXT_NAME = 'broker/plugin/brubeckMiner'
 const METRIC_LATEST_CODE = 'latestCode'
 
 const logger = new Logger(module)
 
-export interface TestnetMinerPluginConfig {
+export interface BrubeckMinerPluginConfig {
     rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
@@ -36,7 +36,7 @@ interface Peer {
     rtt: number|undefined
 }
 
-export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
+export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     latestLatency?: number
     latencyPoller?: { stop: () => void }
@@ -76,7 +76,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
         this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
 
-        logger.info('Testnet miner plugin started')
+        logger.info('Brubeck miner plugin started')
     }
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
