@@ -1,5 +1,5 @@
-import { createTrackerRegistry, getTrackerRegistryFromContract } from '../../src/utils/TrackerRegistry'
-import { StreamPartIDUtils } from "../../src"
+import { getTrackerRegistryFromContract } from '../../src/getTrackerRegistryFromContract'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545`
@@ -76,33 +76,6 @@ describe('TrackerRegistry', () => {
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
             })
-        })
-    })
-
-    describe('createTrackerRegistry', () => {
-        test('creates tracker registry', () => {
-            const trackerRegistry = createTrackerRegistry([{
-                id: '',
-                http: 'http://10.200.10.1:30301',
-                ws: 'ws://10.200.10.1:30301'
-            }, {
-                id: '',
-                http: 'http://10.200.10.1:30302',
-                ws: 'ws://10.200.10.1:30302'
-            }])
-
-            expect(trackerRegistry.getAllTrackers()).toStrictEqual([
-                {
-                    id: '',
-                    http: 'http://10.200.10.1:30301',
-                    ws: 'ws://10.200.10.1:30301'
-                },
-                {
-                    id: '',
-                    http: 'http://10.200.10.1:30302',
-                    ws: 'ws://10.200.10.1:30302'
-                }
-            ])
         })
     })
 })
