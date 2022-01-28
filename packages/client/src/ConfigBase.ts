@@ -169,9 +169,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     ethereumNetworks: [
         {
             chainId: 137,
-            overrides: {
-                gasPrice: '50000000000', // TODO: implement the "estimate x 1.5" logic if possible
-            }
+            gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     ],
 
