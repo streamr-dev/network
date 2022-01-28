@@ -165,6 +165,16 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateMainnetAddress: '0x67352e3F7dBA907aF877020aE7E9450C0029C70c',
         templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
+
+    ethereumNetworks: [
+        {
+            chainId: 137,
+            overrides: {
+                gasPrice: '50000000000', // TODO: implement the "estimate x 1.5" logic if possible
+            }
+        }
+    ],
+
     cache: {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes

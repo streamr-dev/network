@@ -21,7 +21,6 @@ export class TrackerRegistry<T extends TrackerInfo> {
 
     constructor(records: T[]) {
         this.records = records.slice() // copy before mutating
-        this.records.sort()  // TODO does this actually sort anything?
     }
 
     getTracker(streamPartId: StreamPartID): T {

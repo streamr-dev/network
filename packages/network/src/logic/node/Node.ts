@@ -155,7 +155,8 @@ export class Node extends EventEmitter {
                 started: this.started,
                 location: this.peerInfo.location,
                 extra: this.extraMetadata,
-                rtts: includeRtt ? this.nodeToNode.getRtts() : null
+                rtts: includeRtt ? this.nodeToNode.getRtts() : null,
+                version: "brubeck-1.0"
             }),
             {
                 subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
