@@ -7,7 +7,7 @@ describe('StorageNodeRegistry', () => {
 
     test('throw exception if address is wrong (ENS)', async () => {
         await expect(async () => (
-            await getStorageNodeRegistryFromContract({
+            getStorageNodeRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
         )).rejects.toThrow('ENS')
@@ -15,7 +15,7 @@ describe('StorageNodeRegistry', () => {
 
     test('throw exception if address is wrong', async () => {
         await expect(async () => (
-            await getStorageNodeRegistryFromContract({
+            getStorageNodeRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
         )).rejects.toThrow('call revert exception')
@@ -23,7 +23,7 @@ describe('StorageNodeRegistry', () => {
 
     test('throw exception if jsonRpcProvider is wrong', async () => {
         await expect(async () => (
-            await getStorageNodeRegistryFromContract({
+            getStorageNodeRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
         )).rejects.toThrow('could not detect network')

@@ -7,7 +7,7 @@ const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localh
 describe('TrackerRegistry', () => {
     test('throw exception if address is wrong (ENS)', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
         )).rejects.toThrow('ENS')
@@ -15,7 +15,7 @@ describe('TrackerRegistry', () => {
 
     test('throw exception if address is wrong', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
         )).rejects.toThrow('call revert exception')
@@ -23,7 +23,7 @@ describe('TrackerRegistry', () => {
 
     test('throw exception if jsonRpcProvider is wrong', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
         )).rejects.toThrow('could not detect network')
