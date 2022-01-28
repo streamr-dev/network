@@ -43,7 +43,8 @@ describe('DataUnion signature', () => {
                 beneficiaryAddress: dataUnionAddress,
                 type: 'DATAUNION',
                 dataUnionVersion: 2
-            })
+            }),
+            session: adminClient.session,
         })
         await memberDataUnion.join(secret)
 

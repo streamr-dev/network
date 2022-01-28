@@ -88,7 +88,8 @@ async function testWithdraw(
             beneficiaryAddress: dataUnion.getAddress(),
             type: 'DATAUNION',
             dataUnionVersion: 2
-        })
+        }),
+        session: adminClient.session,
     })
     const res = await dataUnion.join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
