@@ -678,7 +678,7 @@ export class DataUnion {
             agentAddressList.push(getAddress(client.options.streamrNodeAddress))
         }
 
-        const contract = await new Contracts(client).deployDataUnion({
+        const { duMainnetAddress, duSidechainAddress } = await new Contracts(client).deployDataUnion({
             ownerAddress,
             agentAddressList,
             duName,
@@ -689,7 +689,7 @@ export class DataUnion {
             confirmations,
             gasPrice
         })
-        return new DataUnion(contract.address, contract.sidechain.address, client)
+        return new DataUnion(duMainnetAddress, duSidechainAddress, client)
     }
 
     /** @internal */
@@ -742,17 +742,6 @@ export class DataUnion {
     }
 
     // Internal functions
-
-    /**
-     * @internal returns the smart contract objects e.g. for testing
-     * TODO: inline into the tests that need it, remove from here
-     */
-    async _getContract() {
-        const ret = await this.getContracts().getMainnetContract(this.contractAddress)
-        // @ts-expect-error
-        ret.sidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return ret
-    }
 
     private getContracts() {
         return new Contracts(this.client)

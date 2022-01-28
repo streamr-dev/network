@@ -4,6 +4,8 @@ import debug from 'debug'
 
 import { getEndpointUrl } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
+import Contracts from '../../../src/dataunion/Contracts'
+import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, providerSidechain } from '../devEnvironment'
@@ -45,10 +47,12 @@ describe('DataUnion signature', () => {
         })
         await memberDataUnion.join(secret)
 
-        // eslint-disable-next-line no-underscore-dangle
-        const contract = await dataUnion._getContract()
-        const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
-        const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+        // @ts-expect-error
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+        const contractMainnet = await contracts.getMainnetContract(dataUnion.getAddress())
+        const tokenSidechainAddress = await contractMainnet.tokenSidechain()
+        const sidechainContract = await contracts.getSidechainContract(dataUnion.getAddress())
+        const tokenSidechain = new Contract(tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
         const signature = await memberDataUnion.signWithdrawAllTo(member2Wallet.address)
         const signature2 = await memberDataUnion.signWithdrawAmountTo(member2Wallet.address, parseEther('1'))

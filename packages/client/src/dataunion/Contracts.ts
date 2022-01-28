@@ -336,9 +336,6 @@ export default class Contracts {
             sidechainPollingIntervalMs
         )
 
-        const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
-        // @ts-expect-error
-        dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, duChainProvider)
-        return dataUnion
+        return { duMainnetAddress, duSidechainAddress }
     }
 }

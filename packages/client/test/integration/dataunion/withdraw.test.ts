@@ -7,6 +7,8 @@ import debug from 'debug'
 
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
+import Contracts from '../../../src/dataunion/Contracts'
+import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
@@ -91,10 +93,15 @@ async function testWithdraw(
     const res = await dataUnion.join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
     log('Member joined data union %O', res)
+    // @ts-expect-error
+    const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+    const mainnetContract = await contracts.getMainnetContract(dataUnion.getAddress())
+    const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
 
-    // eslint-disable-next-line no-underscore-dangle
-    const contract = await dataUnion._getContract()
-    const tokenAddress = await contract.token()
+    // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
+    const sidechainContract = new Contract(sidechainContractLimited.address, DataUnionSidechain.abi, adminWalletSidechain)
+
+    const tokenAddress = await mainnetContract.tokenMainnet()
     log('Token address: %s', tokenAddress)
     const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)
     async function logBalance(owner: string, address: EthereumAddress) {
@@ -103,7 +110,7 @@ async function testWithdraw(
     }
 
     const amount = parseEther('1')
-    const duSidechainEarningsBefore = await contract.sidechain.totalEarnings()
+    const duSidechainEarningsBefore = await sidechainContract.totalEarnings()
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
@@ -115,23 +122,21 @@ async function testWithdraw(
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
 
-    log('DU member count: %d', await contract.sidechain.activeMemberCount())
+    log('DU member count: %d', await sidechainContract.activeMemberCount())
 
     log('Transferred %s tokens, next sending to bridge', formatEther(amount))
-    const tx2 = await contract.sendTokensToBridge()
+    const tx2 = await mainnetContract.sendTokensToBridge()
     const tr2 = await tx2.wait()
     log('sendTokensToBridge returned %O', tr2)
 
-    log('Waiting for the tokens to appear at sidechain %s', contract.sidechain.address)
-    await until(async () => !(await tokenSidechain.balanceOf(contract.sidechain.address)).eq('0'), 300000, 3000)
-    log('Confirmed tokens arrived, DU balance: %s -> %s', duSidechainEarningsBefore, await contract.sidechain.totalEarnings())
+    log('Waiting for the tokens to appear at sidechain %s', sidechainContract.address)
+    await until(async () => !(await tokenSidechain.balanceOf(sidechainContract.address)).eq('0'), 300000, 3000)
+    log('Confirmed tokens arrived, DU balance: %s -> %s', duSidechainEarningsBefore, await sidechainContract.totalEarnings())
 
-    // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
-    const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
     const tx3 = await sidechainContract.refreshRevenue()
     const tr3 = await tx3.wait()
     log('refreshRevenue returned %O', tr3)
-    log('DU sidechain totalEarnings: %O', await contract.sidechain.totalEarnings())
+    log('DU sidechain totalEarnings: %O', await sidechainContract.totalEarnings())
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
