@@ -10,7 +10,7 @@ export class StoragePoller {
     private readonly clusterId: string
     private readonly pollInterval: number
     private readonly streamrClient: StreamrClient
-    private readonly handleResult: (streams: Stream[], block: number) => void
+    private readonly onNewSnapshot: (streams: Stream[], block: number) => void
     private timeoutRef?: NodeJS.Timeout
     private destroyed = false
 
@@ -18,12 +18,12 @@ export class StoragePoller {
         clusterId: string,
         pollInterval: number,
         streamrClient: StreamrClient,
-        handleResult: (streams: Stream[], block: number) => void
+        onNewSnapshot: (streams: Stream[], block: number) => void
     ) {
         this.clusterId = clusterId
         this.pollInterval = pollInterval
         this.streamrClient = streamrClient
-        this.handleResult = handleResult
+        this.onNewSnapshot = onNewSnapshot
     }
 
     async start(): Promise<void> {
@@ -51,7 +51,7 @@ export class StoragePoller {
         logger.info('polling...')
         const { streams, blockNumber } = await this.streamrClient.getStoredStreamsOf(this.clusterId)
         logger.info('found %d streams at block %d', streams.length, blockNumber)
-        this.handleResult(streams, blockNumber)
+        this.onNewSnapshot(streams, blockNumber)
     }
 
     destroy(): void {

@@ -14,17 +14,17 @@ const POLL_RESULT = Object.freeze({
 
 describe(StoragePoller, () => {
     let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: string]>
-    let handleResult: jest.Mock<void, [streams: Stream[], block: number]>
+    let onNewSnapshot: jest.Mock<void, [streams: Stream[], block: number]>
     let stubClient: Pick<StreamrClient, 'getStoredStreamsOf'>
     let poller: StoragePoller
 
     function initPoller(interval: number): StoragePoller {
-        return new StoragePoller('clusterId', interval, stubClient as StreamrClient, handleResult)
+        return new StoragePoller('clusterId', interval, stubClient as StreamrClient, onNewSnapshot)
     }
 
     beforeEach(() => {
         getStoredStreamsOf = jest.fn()
-        handleResult = jest.fn()
+        onNewSnapshot = jest.fn()
         stubClient = { getStoredStreamsOf }
         poller = initPoller(POLL_TIME)
     })
@@ -39,9 +39,9 @@ describe(StoragePoller, () => {
             await poller.poll()
         })
 
-        it('stream assignment result set is passed to handleResult callback', () => {
-            expect(handleResult).toHaveBeenCalledTimes(1)
-            expect(handleResult).toHaveBeenCalledWith(POLL_RESULT.streams, POLL_RESULT.blockNumber)
+        it('stream assignment result set is passed to onNewSnapshot callback', () => {
+            expect(onNewSnapshot).toHaveBeenCalledTimes(1)
+            expect(onNewSnapshot).toHaveBeenCalledWith(POLL_RESULT.streams, POLL_RESULT.blockNumber)
         })
 
         it('client.getStoredStreamsOf is invoked with correct argument', () => {
@@ -53,7 +53,7 @@ describe(StoragePoller, () => {
         getStoredStreamsOf.mockResolvedValue(POLL_RESULT)
         await poller.start()
         await wait(POLL_TIME * 5)
-        expect(handleResult.mock.calls.length).toBeGreaterThanOrEqual(4)
+        expect(onNewSnapshot.mock.calls.length).toBeGreaterThanOrEqual(4)
     })
 
     it('start() polls only once if pollInterval=0', async () => {
@@ -68,6 +68,6 @@ describe(StoragePoller, () => {
         getStoredStreamsOf.mockRejectedValue(new Error('poll failed'))
         await poller.start()
         await wait(POLL_TIME * 2)
-        expect(handleResult).toBeCalledTimes(0) // Should not have encountered unhandledRejectionError
+        expect(onNewSnapshot).toBeCalledTimes(0) // Should not have encountered unhandledRejectionError
     })
 })
