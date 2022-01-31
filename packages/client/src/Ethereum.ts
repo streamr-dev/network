@@ -64,17 +64,17 @@ type EthereumNetworkConfig = {
 }
 
 export abstract class EthereumConfig {
-    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number }
+    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number, name?: string }
     // address on sidechain
     abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
     abstract binanceSmartChainAMBAddress: EthereumAddress
     abstract withdrawServerUrl: string
     abstract mainChainRPC?: ConnectionInfo|string
-    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number }
+    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number, name?: string }
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
-    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number } | undefined
+    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number, name?: string } | undefined
 
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     abstract ethereumNetworks?: {

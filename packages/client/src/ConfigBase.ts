@@ -137,14 +137,17 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
     mainChainRPC: undefined, // Default to ethers.js default provider settings
     dataUnionChainRPC: {
+        name: 'xdai',
         url: 'https://rpc.xdaichain.com/',
         chainId: 100
     },
     dataUnionBinanceWithdrawalChainRPC: {
+        name: 'bsc',
         url: 'https://bsc-dataseed.binance.org/',
         chainId: 56
     },
     streamRegistryChainRPC: {
+        name: 'polygon',
         url: 'https://polygon-rpc.com',
         chainId: 137
     },
