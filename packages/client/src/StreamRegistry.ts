@@ -97,7 +97,7 @@ export class StreamRegistry implements Context {
             StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
         const streamRegistryChainName = this.config.streamRegistryChainRPC?.name
         this.defaultOverrides = this.config.ethereumNetworks && streamRegistryChainName
-            ? this.config.ethereumNetworks[streamRegistryChainName].overrides ?? {} : {}
+            ? this.config.ethereumNetworks[streamRegistryChainName]?.overrides ?? {} : {}
     }
 
     private parseStream(id: StreamID, propsString: string): Stream {
