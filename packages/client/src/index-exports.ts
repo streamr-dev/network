@@ -8,7 +8,7 @@ export * from './encryption/Encryption'
 export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
-export { SearchStreamsOptions } from './StreamRegistry'
+export { SearchStreamsPermissionFilter } from './searchStreams'
 import ConfigTest from './ConfigTest'
 import validateConfig from './ConfigBase'
 

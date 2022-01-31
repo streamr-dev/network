@@ -3,6 +3,7 @@ function toNumber(value: any): number | undefined {
 }
 
 const sideChainConfig = {
+    name: 'dev_xdai',
     url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     timeout: toNumber(process.env.TEST_TIMEOUT),
 }
@@ -52,6 +53,7 @@ export default {
         jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     },
     mainChainRPC: {
+        name: 'dev_ethereum',
         url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
         timeout: toNumber(process.env.TEST_TIMEOUT),
     },
