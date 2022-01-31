@@ -20,7 +20,8 @@ import {
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { GraphQLClient } from './utils/GraphQLClient'
-import { SearchStreamsPermissionFilter } from './searchStreams'
+import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsQueryItem } from './searchStreams'
+import { map } from './utils/GeneratorUtils'
 
 export type PermissionQueryResult = {
     id: string
@@ -65,7 +66,8 @@ interface PermissionsAssignment {
 
 export type PublicPermissionId = 'public'
 const PUBLIC_PERMISSION_ID: PublicPermissionId = 'public'
-const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
+/** @internal */
+export const PUBLIC_PERMISSION_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
@@ -449,6 +451,14 @@ export class StreamRegistry implements Context {
 
     /* eslint-disable padding-line-between-statements */
     private static getPermissionsAssignment(permissionResult: PermissionQueryResult): PermissionsAssignment {
+        return {
+            address: permissionResult.userAddress,
+            permissions: StreamRegistry.getPermissionsFromChainPermissions(permissionResult)
+        }
+    }
+
+    /** @internal */
+    static getPermissionsFromChainPermissions(permissionResult: ChainPermissions): StreamPermission[] {
         const now = Date.now()
         const permissions = []
         if (permissionResult.canEdit) {
@@ -466,15 +476,15 @@ export class StreamRegistry implements Context {
         if (permissionResult.canGrant) {
             permissions.push(StreamPermission.GRANT)
         }
-        return {
-            address: permissionResult.userAddress,
-            permissions
-        }
+        return permissions
     }
 
-    searchStreams(term?: string | undefined, permissionsFilter?: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
-        this.debug('Search streams term=%s permissions=%j', term, permissionsFilter)
-        return undefined as any
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
+        return map(
+            fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+            (item: SearchStreamsQueryItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
+        )
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
@@ -568,34 +578,6 @@ export class StreamRegistry implements Context {
             }
         }`
         return JSON.stringify({ query })
-    }
-
-    private static buildSearchStreamsQuery(term: string, opts: SearchStreamsOptions): string {
-        // the metadata field contains all stream properties (including the id property),
-        // so there is no need search over other fields in the where clause
-        const query = `
-            query ($term: String!, $first: Int, $skip: Int, $orderBy: String, $orderDirection: String) {
-                streams (
-                    where: {
-                        metadata_contains: $term
-                    }
-                    first: $first
-                    skip: $skip
-                    orderBy: $orderBy
-                    orderDirection: $orderDirection
-                ) {
-                    id,
-                    metadata
-                }
-            }`
-        const variables = {
-            term,
-            first: opts.max,
-            skip: opts.offset,
-            orderBy: (opts.order !== undefined) ? 'id' : undefined,
-            orderDirection: opts.order,
-        }
-        return JSON.stringify({ query, variables })
     }
 
     private static buildGetStreamPublishersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {

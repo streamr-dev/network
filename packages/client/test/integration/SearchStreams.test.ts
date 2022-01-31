@@ -4,7 +4,7 @@ import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { fakeAddress, getPrivateKey } from '../utils'
 
-jest.setTimeout(30 * 1000)
+jest.setTimeout(2 * 60 * 1000)
 
 const SEARCH_TERM = `mock-search-term-${Date.now()}`
 
@@ -89,7 +89,7 @@ describe('SearchStreams', () => {
     })
 
     it('no filters', async () => {
-        const iterable = client.searchStreams()
+        const iterable = client.searchStreams(undefined, undefined)
         // most likely many items created by various tests, check that we can read some item
         const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
         expect(firstItem.id).toBeDefined()

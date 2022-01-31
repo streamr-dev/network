@@ -6,6 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { toArray } from '../../src/utils/iterators'
 
 jest.setTimeout(40000)
 
