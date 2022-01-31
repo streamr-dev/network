@@ -408,7 +408,8 @@ class StreamrStream implements StreamMetadata {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
 
-    static parseStreamPropsFromJson(propsString: string): StreamProperties {
+    /** @internal */
+    static parsePropertiesFromMetadata(propsString: string): StreamProperties {
         try {
             return JSON.parse(propsString)
         } catch (error) {
