@@ -77,7 +77,7 @@ export class SetMembershipSynchronizer<E extends string> {
     /**
      * Ingest a patch update
      * @param elements the set of elements relevant to this patch
-     * @param operation indicates whether this is an assignment or a removal
+     * @param operation indicates whether this is an addition or a removal
      * @param sequenceNo the sequence number for this patch
      */
     ingestPatch(elements: Set<E>, operation: 'added' | 'removed', sequenceNo: number): Diff<E> {
