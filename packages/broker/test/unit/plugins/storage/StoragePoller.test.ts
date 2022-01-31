@@ -67,7 +67,7 @@ describe(StoragePoller, () => {
     it('start() handles polling errors gracefully', async () => {
         getStoredStreamsOf.mockRejectedValue(new Error('poll failed'))
         await poller.start()
-        await wait(10)
-        expect(handleResult).toBeCalledTimes(0)
+        await wait(POLL_TIME * 2)
+        expect(handleResult).toBeCalledTimes(0) // Should not have encountered unhandledRejectionError
     })
 })

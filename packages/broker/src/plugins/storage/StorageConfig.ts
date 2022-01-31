@@ -37,8 +37,8 @@ function createStreamPartIDs(streamId: StreamID, partitions: number): StreamPart
  *
  *  Event-based assignments are great for picking up on changes quickly.
  *  However, there is a risk of not receiving updates due to, e.g. connectivity
- *  issues. Therefore, if the real-time system fails, polling provides acts as
- *  a sort-of backup system.
+ *  issues. Therefore, if the real-time system fails, polling acts as a sort-of
+ *  backup system.
  */
 export class StorageConfig {
     private readonly listener: StorageConfigListener

@@ -7,7 +7,7 @@ describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream'
         | 'registerStorageEventListener'
         | 'unRegisterStorageEventListeners'>
-    let emitStorageAssignmentEvent: ((event: EthereumStorageEvent) => any) | undefined
+    let storageEventListener: ((event: EthereumStorageEvent) => any) | undefined
     let handleEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
@@ -20,11 +20,11 @@ describe(StorageEventListener, () => {
                 } as Stream
             },
             async registerStorageEventListener(cb: (arg0: EthereumStorageEvent) => any): Promise<void> {
-                emitStorageAssignmentEvent = cb
+                storageEventListener = cb
             },
             unRegisterStorageEventListeners: jest.fn()
         }
-        emitStorageAssignmentEvent = undefined
+        storageEventListener = undefined
         handleEvent = jest.fn()
         listener = new StorageEventListener('clusterId', stubClient as StreamrClient, handleEvent)
     })
@@ -34,9 +34,9 @@ describe(StorageEventListener, () => {
     })
 
     it('start() registers storage event listener on client', async () => {
-        expect(emitStorageAssignmentEvent).toBeUndefined()
+        expect(storageEventListener).toBeUndefined()
         await listener.start()
-        expect(emitStorageAssignmentEvent).toBeDefined()
+        expect(storageEventListener).toBeDefined()
     })
 
     it('destroy() unregisters storage event listener on client', async () => {
@@ -46,7 +46,7 @@ describe(StorageEventListener, () => {
     })
 
     function assignStorageNode(recipient: string) {
-        emitStorageAssignmentEvent!({
+        storageEventListener!({
             nodeAddress: recipient,
             streamId: 'streamId',
             type: 'added',
