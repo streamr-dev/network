@@ -20,7 +20,7 @@ import {
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { GraphQLClient } from './utils/GraphQLClient'
-import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsQueryItem } from './searchStreams'
+import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from './searchStreams'
 import { filter, map } from './utils/GeneratorUtils'
 
 type PermissionQueryResult = {
@@ -450,27 +450,27 @@ export class StreamRegistry implements Context {
     private static getPermissionsAssignment(permissionResult: PermissionQueryResult): PermissionsAssignment {
         return {
             address: permissionResult.userAddress,
-            permissions: StreamRegistry.getPermissionsFromChainPermissions(permissionResult)
+            permissions: StreamRegistry.convertChainPermissionsToStreamPermissions(permissionResult)
         }
     }
 
     /** @internal */
-    static getPermissionsFromChainPermissions(permissionResult: ChainPermissions): StreamPermission[] {
+    static convertChainPermissionsToStreamPermissions(chainPermissions: ChainPermissions): StreamPermission[] {
         const now = Date.now()
         const permissions = []
-        if (permissionResult.canEdit) {
+        if (chainPermissions.canEdit) {
             permissions.push(StreamPermission.EDIT)
         }
-        if (permissionResult.canDelete) {
+        if (chainPermissions.canDelete) {
             permissions.push(StreamPermission.DELETE)
         }
-        if (BigNumber.from(permissionResult.publishExpiration).gt(now)) {
+        if (BigNumber.from(chainPermissions.publishExpiration).gt(now)) {
             permissions.push(StreamPermission.PUBLISH)
         }
-        if (BigNumber.from(permissionResult.subscribeExpiration).gt(now)) {
+        if (BigNumber.from(chainPermissions.subscribeExpiration).gt(now)) {
             permissions.push(StreamPermission.SUBSCRIBE)
         }
-        if (permissionResult.canGrant) {
+        if (chainPermissions.canGrant) {
             permissions.push(StreamPermission.GRANT)
         }
         return permissions
@@ -480,7 +480,7 @@ export class StreamRegistry implements Context {
         this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
         return map(
             fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
-            (item: SearchStreamsQueryItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
+            (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
         )
     }
 

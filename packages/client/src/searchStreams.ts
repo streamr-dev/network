@@ -15,7 +15,7 @@ export interface SearchStreamsPermissionFilter {
     allowPublic: boolean
 }
 
-export type SearchStreamsQueryItem = {
+export type SearchStreamsResultItem = {
     id: string
     userAddress: string
     stream: StreamQueryResult
@@ -25,8 +25,8 @@ export async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     graphQLClient: GraphQLClient,
-): AsyncGenerator<SearchStreamsQueryItem> {
-    const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsQueryItem>(
+): AsyncGenerator<SearchStreamsResultItem> {
+    const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, lastId, pageSize)
     )
     /*
@@ -54,8 +54,8 @@ export async function* fetchSearchStreamsResultFromTheGraph(
          * -> To filter out these empty assignments, we define a fallback value for anyOf filter
          */
         const anyOf = permissionFilter.anyOf ?? Object.values(StreamPermission) as StreamPermission[]
-        yield* filter(withoutDuplicates, (item: SearchStreamsQueryItem) => {
-            const actual = StreamRegistry.getPermissionsFromChainPermissions(item)
+        yield* filter(withoutDuplicates, (item: SearchStreamsResultItem) => {
+            const actual = StreamRegistry.convertChainPermissionsToStreamPermissions(item)
             return anyOf.some((p) => actual.includes(p))
         })
     } else {
