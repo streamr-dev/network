@@ -1,7 +1,6 @@
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { Contract } from '@ethersproject/contracts'
-import { createStorageNodeRegistry, StorageNodeInfo } from 'streamr-client-protocol/dist/src/utils/StorageNodeRegistry'
-import { StorageNodeRegistry } from 'streamr-client-protocol'
+import { createStorageNodeRegistry, StorageNodeInfo, StorageNodeRegistry } from 'streamr-client-protocol'
 
 type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
 
