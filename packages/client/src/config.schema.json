@@ -375,6 +375,9 @@
                 "chainId": {
                     "type": "number"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "url": {
                     "type": "string",
                     "format": "uri"
