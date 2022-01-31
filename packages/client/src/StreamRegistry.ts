@@ -2,7 +2,6 @@ import { Contract } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import type { StreamRegistry as StreamRegistryContract } from './ethereumArtifacts/StreamRegistry.d'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryAbi.json'
-import fetch from 'node-fetch'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
@@ -20,6 +19,7 @@ import {
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { GraphQLClient } from './utils/GraphQLClient'
 
 export interface SearchStreamsOptions {
     order?: 'asc'|'desc'
@@ -86,7 +86,8 @@ export class StreamRegistry implements Context {
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Root) private config: StrictStreamrClientConfig
+        @inject(Config.Root) private config: StrictStreamrClientConfig,
+        @inject(GraphQLClient) private graphQLClient: GraphQLClient
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -371,34 +372,6 @@ export class StreamRegistry implements Context {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
-    private async sendStreamQuery(gqlQuery: string): Promise<Object> {
-        this.debug('GraphQL query: %s', gqlQuery)
-        const res = await fetch(this.config.theGraphUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                accept: '*/*',
-            },
-            body: gqlQuery
-        })
-        const resText = await res.text()
-        let resJson
-        try {
-            resJson = JSON.parse(resText)
-        } catch {
-            throw new Error(`GraphQL query failed with "${resText}", check that your theGraphUrl="${this.config.theGraphUrl}" is correct`)
-        }
-        this.debug('GraphQL response: %o', resJson)
-        if (!resJson.data) {
-            if (resJson.errors && resJson.errors.length > 0) {
-                throw new Error('GraphQL query failed: ' + JSON.stringify(resJson.errors.map((e: any) => e.message)))
-            } else {
-                throw new Error('GraphQL query failed')
-            }
-        }
-        return resJson.data
-    }
-
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
@@ -420,7 +393,7 @@ export class StreamRegistry implements Context {
         if (StreamIDUtils.isKeyExchangeStream(streamId)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
-        const response = await this.sendStreamQuery(
+        const response = await this.graphQLClient.sendQuery(
             StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)
         ) as { stream: StreamPermissionsQueryResult }
         if (!response.stream) {
@@ -435,8 +408,9 @@ export class StreamRegistry implements Context {
         let lastResultSize = pagesize
         let lastID: string | undefined
         do {
+            const query = StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)
             // eslint-disable-next-line no-await-in-loop
-            const queryResponse = await this.sendStreamQuery(StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)) as AllStreamsQueryResult
+            const queryResponse = await this.graphQLClient.sendQuery(query) as AllStreamsQueryResult
             if (queryResponse.streams.length === 0) {
                 break
             }
@@ -464,7 +438,7 @@ export class StreamRegistry implements Context {
     async getAllPermissionsForStream(streamIdOrPath: string): Promise<Record<EthereumAddress|PublicPermissionId, StreamPermission[]>> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting all permissions for stream %s', streamId)
-        const response = await this.sendStreamQuery(StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)) as SingleStreamQueryResult
+        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)) as SingleStreamQueryResult
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
@@ -505,7 +479,7 @@ export class StreamRegistry implements Context {
 
     async searchStreams(term: string, opts: SearchStreamsOptions = {}): Promise<Stream[]> {
         this.debug('Getting all streams from thegraph that match filter %s %o', term, opts)
-        const response = await this.sendStreamQuery(StreamRegistry.buildSearchStreamsQuery(term, opts)) as FilteredStreamListQueryResult
+        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildSearchStreamsQuery(term, opts)) as FilteredStreamListQueryResult
         return response.streams.map((s) => this.parseStream(toStreamID(s.id), s.metadata))
     }
 
@@ -528,7 +502,7 @@ export class StreamRegistry implements Context {
         let lastID: string | undefined
         do {
             // eslint-disable-next-line no-await-in-loop
-            const response = await this.sendStreamQuery(queryMethod(streamId, pagesize, lastID)) as SingleStreamQueryResult
+            const response = await this.graphQLClient.sendQuery(queryMethod(streamId, pagesize, lastID)) as SingleStreamQueryResult
             if (!response.stream) {
                 throw new NotFoundError('stream not found: id: ' + streamId)
             }
