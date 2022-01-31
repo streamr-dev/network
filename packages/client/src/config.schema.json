@@ -130,6 +130,9 @@
             "type": "string",
             "format": "ethereum-address"
         },
+        "ethereumNetworks": {
+            "type": "object"
+        },
         "restUrl": {
             "type": "string",
             "format": "uri"

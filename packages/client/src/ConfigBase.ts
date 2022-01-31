@@ -166,14 +166,14 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
 
-    ethereumNetworks: [
-        {
+    ethereumNetworks: {
+        polygon: {
             chainId: 137,
             overrides: {
                 gasPrice: '50000000000', // TODO: implement the "estimate x 1.5" logic if possible
             }
         }
-    ],
+    },
 
     cache: {
         maxSize: 10000,

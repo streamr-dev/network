@@ -77,7 +77,9 @@ export abstract class EthereumConfig {
     abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number } | undefined
 
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-    abstract ethereumNetworks?: EthereumNetworkConfig[]
+    abstract ethereumNetworks?: {
+        [networkName: string]: EthereumNetworkConfig
+    }
 }
 
 @scoped(Lifecycle.ContainerScoped)
