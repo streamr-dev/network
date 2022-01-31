@@ -32,8 +32,8 @@ describe(SetMembershipSynchronizer, () => {
             expect(synchronizer.getState()).toEqual(toSet())
         })
 
-        it('ingesting a state update results in its elements being added', () => {
-            const diff = synchronizer.ingestState(toSet(SP1, SP2, SP3), 10)
+        it('ingesting a snapshot results in its elements being added', () => {
+            const diff = synchronizer.ingestSnapshot(toSet(SP1, SP2, SP3), 10)
             expect(diff).toEqual({
                 added: [SP1, SP2, SP3],
                 removed: []
@@ -54,25 +54,25 @@ describe(SetMembershipSynchronizer, () => {
         })
     })
 
-    describe('state update ingested', () => {
+    describe('one snapshot ingested', () => {
         beforeEach(() => {
-            synchronizer.ingestState(toSet(SP1, SP2, SP3), 10)
+            synchronizer.ingestSnapshot(toSet(SP1, SP2, SP3), 10)
         })
 
-        it('has expected state', () => {
+        it('has expected snapshot', () => {
             expect(synchronizer.getState()).toEqual(toSet(SP1, SP2, SP3))
         })
 
-        it('ingesting a state update results in its elements becoming the new state', () => {
-            const diff = synchronizer.ingestState(toSet(SP1, SP3, SP4, SP5), 15)
+        it('ingesting a snapshot results in its elements becoming the new state', () => {
+            const diff = synchronizer.ingestSnapshot(toSet(SP1, SP3, SP4, SP5), 15)
             expect(diff).toEqual({
                 added: [SP4, SP5],
                 removed: [SP2]
             })
         })
 
-        it('ingesting a stale state update results in empty diff', () => {
-            const diff = synchronizer.ingestState(toSet(SP1, SP3, SP4, SP5), 5)
+        it('ingesting a snapshot update results in empty diff', () => {
+            const diff = synchronizer.ingestSnapshot(toSet(SP1, SP3, SP4, SP5), 5)
             expect(diff).toEqual(EMPTY_DIFF)
         })
 
@@ -120,16 +120,16 @@ describe(SetMembershipSynchronizer, () => {
             synchronizer.ingestPatch(toSet(SP3, SP5), 'removed', 10)
         })
 
-        it('ingesting a state update results in its elements being combined with non-stale patches', () => {
-            const diff = synchronizer.ingestState(new Set<StreamPartID>([SP3, SP4, SP6]), 6)
+        it('ingesting a snapshot results in its elements being combined with non-stale patches', () => {
+            const diff = synchronizer.ingestSnapshot(new Set<StreamPartID>([SP3, SP4, SP6]), 6)
             expect(diff).toEqual({
                 added: [SP6],
                 removed: [SP1]
             })
         })
 
-        it('ingesting a state update superseding all patches results in it becoming the new state', () => {
-            const diff = synchronizer.ingestState(toSet(SP3, SP4, SP8), 15)
+        it('ingesting a snapshot superseding all patches results in it becoming the new state', () => {
+            const diff = synchronizer.ingestSnapshot(toSet(SP3, SP4, SP8), 15)
             expect(synchronizer.getState()).toEqual(toSet(SP3, SP4, SP8))
             expect(diff).toEqual({
                 added: [SP3, SP8],
@@ -137,8 +137,8 @@ describe(SetMembershipSynchronizer, () => {
             })
         })
 
-        it('ingesting a stale state update results in empty diff', () => {
-            const diff = synchronizer.ingestState(toSet(SP1, SP2, SP5), 3)
+        it('ingesting a stale snapshot results in empty diff', () => {
+            const diff = synchronizer.ingestSnapshot(toSet(SP1, SP2, SP5), 3)
             expect(diff).toEqual(EMPTY_DIFF)
         })
 
@@ -180,7 +180,7 @@ describe(SetMembershipSynchronizer, () => {
         }
 
         const diffHistory = [
-            synchronizer.ingestState(toSet(SP1, SP2, SP3), 3),
+            synchronizer.ingestSnapshot(toSet(SP1, SP2, SP3), 3),
             synchronizer.ingestPatch(toSet(SP1, SP5), 'added', 12),
             synchronizer.ingestPatch(toSet(SP8), 'added', 10),
             synchronizer.ingestPatch(toSet(SP9), 'added', 18),
@@ -188,7 +188,7 @@ describe(SetMembershipSynchronizer, () => {
             synchronizer.ingestPatch(toSet(SP1), 'removed', 9),
             synchronizer.ingestPatch(toSet(SP9), 'removed', 10),
             synchronizer.ingestPatch(toSet(SP5), 'added', 10),
-            synchronizer.ingestState(toSet(SP1, SP3, SP8, SP9), 10),
+            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP8, SP9), 10),
         ]
 
         expect(diffHistory).toEqual([
@@ -213,7 +213,7 @@ describe(SetMembershipSynchronizer, () => {
             synchronizer.ingestPatch(toSet(SP1, SP4, SP7), 'added', 13),
             synchronizer.ingestPatch(toSet(SP2), 'added', 18),
             synchronizer.ingestPatch(toSet(SP3), 'removed', 20),
-            synchronizer.ingestState(toSet(SP1, SP3, SP5, SP6, SP9), 17),
+            synchronizer.ingestSnapshot(toSet(SP1, SP3, SP5, SP6, SP9), 17),
         ]
 
         expect(diffHistory2).toEqual([

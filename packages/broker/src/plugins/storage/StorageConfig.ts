@@ -63,7 +63,7 @@ export class StorageConfig {
             const streamParts = streams.flatMap((stream: Stream) => ([
                 ...this.createMyStreamParts(stream)
             ]))
-            this.handleDiff(this.synchronizer.ingestState(new Set<StreamPartID>(streamParts), block))
+            this.handleDiff(this.synchronizer.ingestSnapshot(new Set<StreamPartID>(streamParts), block))
         })
         this.storageEventListener = new StorageEventListener(clusterId, streamrClient, (stream, type, block) => {
             const streamParts = this.createMyStreamParts(stream)
