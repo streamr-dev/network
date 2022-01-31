@@ -170,7 +170,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         polygon: {
             chainId: 137,
             overrides: {
-                gasPrice: '50000000000', // TODO: implement the "estimate x 1.5" logic if possible
+                maxPriorityFeePerGas: '20000000000', // pay 20 gwei extra
             }
         }
     },
