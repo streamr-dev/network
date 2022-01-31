@@ -55,6 +55,7 @@ export default {
         url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
         timeout: toNumber(process.env.TEST_TIMEOUT),
     },
+    ethereumNetworks: {},
     streamRegistryChainRPC: sideChainConfig,
     dataUnionChainRPC: sideChainConfig,
     autoConnect: false,
