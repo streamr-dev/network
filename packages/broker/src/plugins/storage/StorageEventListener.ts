@@ -11,16 +11,16 @@ const logger = new Logger(module)
 export class StorageEventListener {
     private readonly clusterId: string
     private readonly streamrClient: StreamrClient
-    private readonly handleEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
+    private readonly onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
 
     constructor(
         clusterId: string,
         streamrClient: StreamrClient,
-        handleEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
+        onEvent: (stream: Stream, type: 'added' | 'removed', block: number) => void
     ) {
         this.clusterId = clusterId.toLowerCase()
         this.streamrClient = streamrClient
-        this.handleEvent = handleEvent
+        this.onEvent = onEvent
     }
 
     async start(): Promise<void> {
@@ -32,7 +32,7 @@ export class StorageEventListener {
                 logger.info('received EthereumStorageEvent: %j', event)
                 try {
                     const stream = await this.streamrClient.getStream(event.streamId)
-                    this.handleEvent(stream, event.type, event.blockNumber)
+                    this.onEvent(stream, event.type, event.blockNumber)
                 } catch (e) {
                     logger.warn('chainEventsListener: %s', e)
                 }

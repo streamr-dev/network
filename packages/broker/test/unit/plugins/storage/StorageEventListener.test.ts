@@ -8,7 +8,7 @@ describe(StorageEventListener, () => {
         | 'registerStorageEventListener'
         | 'unRegisterStorageEventListeners'>
     let storageEventListener: ((event: EthereumStorageEvent) => any) | undefined
-    let handleEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
+    let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
     beforeEach(() => {
@@ -25,8 +25,8 @@ describe(StorageEventListener, () => {
             unRegisterStorageEventListeners: jest.fn()
         }
         storageEventListener = undefined
-        handleEvent = jest.fn()
-        listener = new StorageEventListener('clusterId', stubClient as StreamrClient, handleEvent)
+        onEvent = jest.fn()
+        listener = new StorageEventListener('clusterId', stubClient as StreamrClient, onEvent)
     })
 
     afterEach(() => {
@@ -54,12 +54,12 @@ describe(StorageEventListener, () => {
         })
     }
 
-    it('storage node assignment event gets passed to handleEvent', async () => {
+    it('storage node assignment event gets passed to onEvent', async () => {
         await listener.start()
         assignStorageNode('clusterId')
         await wait(0)
-        expect(handleEvent).toHaveBeenCalledTimes(1)
-        expect(handleEvent).toHaveBeenCalledWith(
+        expect(onEvent).toHaveBeenCalledTimes(1)
+        expect(onEvent).toHaveBeenCalledWith(
             { id: 'streamId', partitions: 0 },
             'added',
             8694
@@ -70,6 +70,6 @@ describe(StorageEventListener, () => {
         await listener.start()
         assignStorageNode('otherClusterId')
         await wait(0)
-        expect(handleEvent).toHaveBeenCalledTimes(0)
+        expect(onEvent).toHaveBeenCalledTimes(0)
     })
 })
