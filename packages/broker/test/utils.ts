@@ -23,7 +23,6 @@ interface TestConfig {
     enableCassandra?: boolean
     privateKeyFileName?: null | string
     certFileName?: null | string
-    streamrAddress?: string
     restUrl?: string
     storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
@@ -37,7 +36,6 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
     storageNodeRegistry,
     storageConfigRefreshInterval = 0,
@@ -54,7 +52,6 @@ export const formConfig = ({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
-                    streamrAddress,
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
