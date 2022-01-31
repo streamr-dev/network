@@ -20,7 +20,7 @@ export const PERMISSIONS = new Map<string,StreamPermission>([
     ['grant', StreamPermission.GRANT]
 ])
 
-export const getPermission = (id: string): StreamPermission => {
+export const getPermission = (id: string): StreamPermission | never => {
     const result = PERMISSIONS.get(id)
     if (result === undefined) {
         throw new Error(`unknown permission: ${id}`)

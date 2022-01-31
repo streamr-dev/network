@@ -32,7 +32,7 @@ const createPermissionListOption = (id: string) => {
         .argParser((value: string) => value.split(',').map((id) => getPermission(id)))
 }
 
-createClientCommand(async (client: StreamrClient, term: string, options: any ) => {
+createClientCommand(async (client: StreamrClient, term: string | undefined, options: any ) => {
     const permissionFilter = await createPermissionFilter(
         options.user,
         options.public,
