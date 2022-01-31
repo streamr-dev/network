@@ -31,7 +31,7 @@ describe('DataUnion signature', () => {
                 privateKey: memberWallet.privateKey
             }
         } as any)
-        const memberDataUnion = await memberClient.safeGetDataUnion(dataUnionAddress)
+        const memberDataUnion = await memberClient.getDataUnion(dataUnionAddress)
 
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
@@ -74,7 +74,7 @@ describe('DataUnion signature', () => {
                 privateKey: '0x1111111111111111111111111111111111111111111111111111111111111111'
             }
         })
-        const dataUnion = client.getDataUnion('0x2222222222222222222222222222222222222222')
+        const dataUnion = await client.getDataUnion('0x2222222222222222222222222222222222222222')
         const to = '0x3333333333333333333333333333333333333333'
         const withdrawn = BigNumber.from('4000000000000000')
         const amounts = [5000000000000000, '5000000000000000', BigNumber.from('5000000000000000')]

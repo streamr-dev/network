@@ -55,7 +55,7 @@ describe('DataUnion member', () => {
                 privateKey: memberWallet.privateKey,
             }
         } as any)
-        return memberClient.safeGetDataUnion(dataUnion.getAddress())
+        return memberClient.getDataUnion(dataUnion.getAddress())
     }
 
     it('random user is not a member', async () => {

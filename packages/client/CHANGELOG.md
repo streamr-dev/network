@@ -1,4 +1,10 @@
-# [Unreleased](https://github.com/streamr-dev/streamr-client/compare/v5.3.0-beta.0...c98b04415cdf558b483f70a838e58b2a5321ffed) (2021-05-01)
+## 6.0
+### Features
+
+* Deprecated `safeGetDataUnion`, it's now called just `getDataUnion`; but unlike the old `getDataUnion`, it returns a promise so getting a data union is now `const dataUnion = await getDataUnion(address)`.
+
+
+## [Unreleased](https://github.com/streamr-dev/streamr-client/compare/v5.3.0-beta.0...c98b04415cdf558b483f70a838e58b2a5321ffed) (2021-05-01)
 
 ### Bug Fixes
 

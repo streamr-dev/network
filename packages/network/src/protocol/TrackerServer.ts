@@ -7,7 +7,7 @@ import { RtcSubTypes } from '../identifiers'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { ServerWsEndpoint } from "../connection/ws/ServerWsEndpoint"
-import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { NodeId } from '../logic/node/Node'
 
 export enum Event {
@@ -170,6 +170,10 @@ export class TrackerServer extends EventEmitter {
         if (peerInfo.isNode()) {
             this.emit(Event.NODE_DISCONNECTED, peerInfo.peerId)
         }
+    }
+
+    disconnectFromPeer(peerId: string, code = DisconnectionCode.GRACEFUL_SHUTDOWN, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
+        this.endpoint.close(peerId, code, reason)
     }
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {

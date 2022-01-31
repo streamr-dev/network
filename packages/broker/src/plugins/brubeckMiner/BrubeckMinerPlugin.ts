@@ -5,6 +5,7 @@ import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
+import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
 import { Schema } from 'ajv'
@@ -18,12 +19,12 @@ const NAT_ANALYSIS_TIMEOUT = {
     errorCode: 'NAT_ANALYSIS_TIMEOUT'
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
-const METRIC_CONTEXT_NAME = 'broker/plugin/testnetMiner'
+const METRIC_CONTEXT_NAME = 'broker/plugin/brubeckMiner'
 const METRIC_LATEST_CODE = 'latestCode'
 
 const logger = new Logger(module)
 
-export interface TestnetMinerPluginConfig {
+export interface BrubeckMinerPluginConfig {
     rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
@@ -35,7 +36,7 @@ interface Peer {
     rtt: number|undefined
 }
 
-export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
+export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     latestLatency?: number
     latencyPoller?: { stop: () => void }
@@ -75,7 +76,7 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
 
         this.rewardSubscriptionRetryRef = setTimeout(() => this.subscriptionIntervalFn(), this.subscriptionRetryInterval)
 
-        logger.info('Testnet miner plugin started')
+        logger.info('Brubeck miner plugin started')
     }
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
@@ -131,14 +132,18 @@ export class TestnetMinerPlugin extends Plugin<TestnetMinerPluginConfig> {
             peers
         }
         try {
-            await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/claim`, {
+            const res: Response = await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/claim`, {
                 body: JSON.stringify(body),
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            logger.info('Reward claimed successfully')
+            const resBody = await res.json()
+            logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.latestBlock}`)
+            if (resBody.alert) {
+                logger.info(`Claim alert: ${resBody.alert}`)
+            }
         } catch (e) {
             logger.error(`Unable to claim reward: code=${rewardCode}`, e)
         }

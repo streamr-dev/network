@@ -9,6 +9,7 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
+import type { Overrides } from '@ethersproject/contracts'
 
 import { Config } from './Config'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -56,18 +57,29 @@ export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 
 // Ethereum Config
 
+// these should come from ETH-184 config package when it's ready
+type EthereumNetworkConfig = {
+    chainId: number
+    overrides?: Overrides
+}
+
 export abstract class EthereumConfig {
-    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number }
+    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number, name?: string }
     // address on sidechain
     abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
     abstract binanceSmartChainAMBAddress: EthereumAddress
     abstract withdrawServerUrl: string
     abstract mainChainRPC?: ConnectionInfo|string
-    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number }
+    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number, name?: string }
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
-    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number } | undefined
+    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number, name?: string } | undefined
+
+    // most of the above should go into ethereumNetworks configs once ETH-184 is ready
+    abstract ethereumNetworks?: {
+        [networkName: string]: EthereumNetworkConfig
+    }
 }
 
 @scoped(Lifecycle.ContainerScoped)

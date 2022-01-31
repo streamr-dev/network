@@ -1,4 +1,4 @@
-import { Contract } from '@ethersproject/contracts'
+import { Contract, Overrides } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import type { StreamRegistry as StreamRegistryContract } from './ethereumArtifacts/StreamRegistry.d'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryAbi.json'
@@ -80,6 +80,7 @@ export class StreamRegistry implements Context {
     streamRegistryContractReadonly: StreamRegistryContract
     chainProvider: Provider
     chainSigner?: Signer
+    defaultOverrides: Overrides
 
     constructor(
         context: Context,
@@ -94,6 +95,9 @@ export class StreamRegistry implements Context {
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
         this.streamRegistryContractReadonly = new Contract(this.config.streamRegistryChainAddress,
             StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
+        const streamRegistryChainName = this.config.streamRegistryChainRPC?.name
+        this.defaultOverrides = this.config.ethereumNetworks && streamRegistryChainName
+            ? this.config.ethereumNetworks[streamRegistryChainName]?.overrides ?? {} : {}
     }
 
     private parseStream(id: StreamID, propsString: string): Stream {
@@ -165,6 +169,8 @@ export class StreamRegistry implements Context {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
 
+        const ethersOverrides = this.defaultOverrides
+
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
 
         const normalizedProperties = {
@@ -181,7 +187,7 @@ export class StreamRegistry implements Context {
         await this.connectToStreamRegistryContract()
         let tx
         if (StreamIDUtils.isENSAddress(domain)) {
-            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(normalizedProperties))
+            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(normalizedProperties), ethersOverrides)
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
@@ -189,17 +195,17 @@ export class StreamRegistry implements Context {
                 know what the actual error was. (Most likely it has anything to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
-            try {
-                await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
-            } catch (e) {
-                throw new Error(`unable to create stream "${streamId}"`)
-            }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
-            tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties))
+            tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties), ethersOverrides)
+        }
+        await tx.wait()
+        try {
+            await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
+        } catch (e) {
+            throw new Error(`unable to create stream "${streamId}"`)
         }
 
-        await tx.wait()
         return new Stream(normalizedProperties, this.container)
     }
 
@@ -217,7 +223,12 @@ export class StreamRegistry implements Context {
             id: streamId
         }
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.updateStreamMetadata(streamId, JSON.stringify(normalizedProperties))
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.updateStreamMetadata(
+            streamId,
+            JSON.stringify(normalizedProperties),
+            ethersOverrides
+        )
         await tx.wait()
         return new Stream(normalizedProperties, this.container)
     }
@@ -226,8 +237,13 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Granting Permission %o for user %s on stream %s', permission, receivingUser, streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.grantPermission(streamId, receivingUser,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.grantPermission(
+            streamId,
+            receivingUser,
+            StreamRegistry.streamPermissionToSolidityType(permission),
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -235,8 +251,12 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Granting PUBLIC Permission %o on stream %s', permission, streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.grantPublicPermission(streamId,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.grantPublicPermission(
+            streamId,
+            StreamRegistry.streamPermissionToSolidityType(permission),
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -253,10 +273,19 @@ export class StreamRegistry implements Context {
         this.debug(`Setting permissions for user ${receivingUser} on stream ${streamId}:
         edit: ${edit}, delete: ${deletePermission}, publish: ${publish}, subscribe: ${subscribe}, share: ${share}`)
         await this.connectToStreamRegistryContract()
+        const ethersOverrides = this.defaultOverrides
         const publishExpiration = publish ? MaxInt256 : 0
         const subscribeExpiration = subscribe ? MaxInt256 : 0
-        const tx = await this.streamRegistryContract!.setPermissionsForUser(streamId, receivingUser,
-            edit, deletePermission, publishExpiration, subscribeExpiration, share)
+        const tx = await this.streamRegistryContract!.setPermissionsForUser(
+            streamId,
+            receivingUser,
+            edit,
+            deletePermission,
+            publishExpiration,
+            subscribeExpiration,
+            share,
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -272,8 +301,9 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug(`Setting permissions for stream ${streamId} for ${users.length} users`)
         await this.connectToStreamRegistryContract()
+        const ethersOverrides = this.defaultOverrides
         const transformedPermission = permissions.map(StreamRegistry.convertStreamPermissionToChainPermission)
-        const tx = await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission)
+        const tx = await this.streamRegistryContract!.setPermissions(streamId, users, transformedPermission, ethersOverrides)
         await tx.wait()
     }
 
@@ -281,8 +311,13 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Revoking permission %o for user %s on stream %s', permission, receivingUser, streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokePermission(streamId, receivingUser,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.revokePermission(
+            streamId,
+            receivingUser,
+            StreamRegistry.streamPermissionToSolidityType(permission),
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -290,7 +325,8 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Revoking all permissions user %s on stream %s', await this.ethereum.getAddress(), streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.ethereum.getAddress())
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, await this.ethereum.getAddress(), ethersOverrides)
         await tx.wait()
     }
 
@@ -298,7 +334,8 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Revoking all permissions user %s on stream %s', userId, streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, userId)
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId, userId, ethersOverrides)
         await tx.wait()
     }
 
@@ -306,8 +343,12 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Revoking PUBLIC Permission %o on stream %s', permission, streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokePublicPermission(streamId,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.revokePublicPermission(
+            streamId,
+            StreamRegistry.streamPermissionToSolidityType(permission),
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -315,8 +356,12 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Revoking all PUBLIC Permissions stream %s', streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(streamId,
-            AddressZero)
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.revokeAllPermissionsForUser(
+            streamId,
+            AddressZero,
+            ethersOverrides
+        )
         await tx.wait()
     }
 
@@ -324,7 +369,8 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Deleting stream %s', streamId)
         await this.connectToStreamRegistryContract()
-        const tx = await this.streamRegistryContract!.deleteStream(streamId)
+        const ethersOverrides = this.defaultOverrides
+        const tx = await this.streamRegistryContract!.deleteStream(streamId, ethersOverrides)
         await tx.wait()
     }
 
