@@ -45,13 +45,13 @@ export async function* fetchSearchStreamsResultFromTheGraph(
 
     if (permissionFilter !== undefined) {
         /*
-         * Usually The Graph returns only assigments which contains one or more granted permissions
-         * as The Graphs adds the Permission entity to the index only when we grant a permission.
-         * But if a user revokes all permissions from an assignment, The Graph doesn't remove the
-         * entity. Therefore we may receive an assignment which doesn't have any permissions granted.
-         * Similar situation may happen also when some expirable permission (subscribe or publish)
-         * expire as the expiration doesn't trigger the removal of the Permission entity.
-         * -> To filter out these empty assignments, we define a fallback value for anyOf filter
+         * There are situations where the The Graph may contain empty assignments (all boolean flags false,
+         * and all expirations in the past). E.g.:
+         * - if we granted some permissions to a user, but then removed all those permissions
+         * - if we granted an expirable permission (subscribe or publish), and it has now expired
+         * We don't want to return empty assignments to the user, because from user's perspective those are
+         * non-existing assignments.
+         * -> Here we filter out the empty assignments by defining a fallback value for anyOf filter
          */
         const anyOf = permissionFilter.anyOf ?? Object.values(StreamPermission) as StreamPermission[]
         yield* filter(withoutDuplicates, (item: SearchStreamsResultItem) => {
