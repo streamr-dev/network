@@ -47,11 +47,6 @@
         "storageConfig": {
             "type": "object",
             "properties": {
-                "streamrAddress": {
-                    "type": "string",
-                    "description": "Ethereum address Core (E&E)",
-                    "pattern": "^0x[a-fA-F0-9]{40}$"
-                },
                 "refreshInterval": {
                     "type": "integer",
                     "description": "Interval (in milliseconds) in which to refresh storage config from Core API (0 = disable)"
@@ -59,7 +54,6 @@
             },
             "additionalProperties": false,
             "default": {
-                "streamrAddress": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
                 "refreshInterval": 600000
             }
         },

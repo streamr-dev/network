@@ -18,7 +18,6 @@ export interface StoragePluginConfig {
         datacenter: string
     }
     storageConfig: {
-        streamrAddress: string
         refreshInterval: number
     }
     cluster: {
