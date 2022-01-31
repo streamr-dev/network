@@ -79,7 +79,6 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 class StreamrStream implements StreamMetadata {
-    streamId: StreamID
     id: StreamID
     description?: string
     config: {
@@ -105,7 +104,6 @@ class StreamrStream implements StreamMetadata {
     ) {
         Object.assign(this, props)
         this.id = props.id
-        this.streamId = this.id
         this.partitions = props.partitions ? props.partitions : 1
         this._rest = _container.resolve<Rest>(Rest)
         this._resends = _container.resolve<Resends>(Resends)

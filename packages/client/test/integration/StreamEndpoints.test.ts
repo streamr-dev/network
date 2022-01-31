@@ -55,7 +55,7 @@ describe('StreamEndpoints', () => {
                 id: path,
                 requireSignedData: true
             })
-            await until(async () => { return client.streamExistsOnTheGraph(stream.streamId) }, 100000, 1000)
+            await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
             expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
             expect(stream.requireSignedData).toBe(true)
         })
