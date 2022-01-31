@@ -1,7 +1,7 @@
 import { Logger } from 'streamr-network'
 import { keyToArrayIndex, StreamPartID, toStreamPartID, StreamID } from 'streamr-client-protocol'
 import { Stream, StreamrClient } from 'streamr-client'
-import { Diff, StorageAssignmentSynchronizer } from './StorageAssignmentSynchronizer'
+import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
 import { StoragePoller } from './StoragePoller'
 import { StorageEventListener } from './StorageEventListener'
 
@@ -42,7 +42,7 @@ function createStreamPartIDs(streamId: StreamID, partitions: number): StreamPart
  */
 export class StorageConfig {
     private readonly listener: StorageConfigListener
-    private readonly synchronizer = new StorageAssignmentSynchronizer()
+    private readonly synchronizer = new SetMembershipSynchronizer<StreamPartID>()
     private readonly clusterId: string
     private readonly clusterSize: number
     private readonly myIndexInCluster: number
@@ -65,11 +65,11 @@ export class StorageConfig {
             const streamParts = streams.flatMap((stream: Stream) => ([
                 ...this.createMyStreamParts(stream)
             ]))
-            this.handleDiff(this.synchronizer.ingestFullState(new Set<StreamPartID>(streamParts), block))
+            this.handleDiff(this.synchronizer.ingestState(new Set<StreamPartID>(streamParts), block))
         })
         this.storageEventListener = new StorageEventListener(clusterId, streamrClient, (stream, type, block) => {
             const streamParts = this.createMyStreamParts(stream)
-            this.handleDiff(this.synchronizer.ingestPartialState(streamParts, type, block))
+            this.handleDiff(this.synchronizer.ingestPatch(streamParts, type, block))
         })
     }
 
@@ -100,7 +100,7 @@ export class StorageConfig {
         }))
     }
 
-    private handleDiff({ added, removed }: Diff): void {
+    private handleDiff({ added, removed }: Diff<StreamPartID>): void {
         added.forEach((streamPart) => this.listener.onStreamPartAdded(streamPart))
         removed.forEach((streamPart) => this.listener.onStreamPartRemoved(streamPart))
         logger.info('added %j to and removed %j from state', added, removed)
