@@ -153,46 +153,6 @@ export const createClient = async (
     })
 }
 
-export class StorageAssignmentEventManager {
-    storageNodeAccount: Wallet
-    engineAndEditorAccount: Wallet
-    client: Promise<StreamrClient>
-    eventStream?: Stream
-
-    constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
-        this.engineAndEditorAccount = engineAndEditorAccount
-        this.storageNodeAccount = storageNodeAccount
-        this.client = createClient(tracker, engineAndEditorAccount.privateKey)
-    }
-
-    async createStream(): Promise<void> {
-        this.eventStream = await (await this.client).createStream({
-            id: '/' + this.engineAndEditorAccount.address + '/' + getTestName(module) + '/' + Date.now(),
-        })
-    }
-
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
-        await client.addStreamToStorageNode(streamId, storageNodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 10000, 500)
-        this.publishAddEvent(streamId)
-    }
-
-    publishAddEvent(streamId: string): void {
-        this.eventStream!.publish({
-            event: 'STREAM_ADDED',
-            stream: {
-                id: streamId,
-                partitions: 1
-            },
-            storageNode: this.storageNodeAccount.address,
-        })
-    }
-
-    async close(): Promise<void> {
-        await (await this.client).destroy()
-    }
-}
-
 export const waitForStreamPersistedInStorageNode = async (
     streamId: string,
     partition: number,

@@ -8,7 +8,6 @@ import {
     getPrivateKey,
     startBroker,
     startTestTracker,
-    StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode
 } from '../utils'
 import StreamrClient, { ConfigTest, Stream, StreamPermission } from 'streamr-client'
@@ -29,11 +28,9 @@ describe('broker: end-to-end', () => {
     let client3: StreamrClient
     let freshStream: Stream
     let freshStreamId: string
-    let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
         const storageNodeAccount = new Wallet(await getPrivateKey())
-        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const storageNodeRegistry = {
             contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
             jsonRpcProvider: `http://10.200.10.1:8546`
@@ -84,13 +81,11 @@ describe('broker: end-to-end', () => {
         client3 = await createClient(tracker, user2.privateKey, {
             storageNodeRegistry
         })
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
-        await assignmentEventManager.createStream()
 
         // Set up stream
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
-        await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
+        await freshStream.addToStorageNode(storageNodeAccount.address)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort)
         await freshStream.grantUserPermission(StreamPermission.SUBSCRIBE, user2.address)
     })
@@ -104,7 +99,6 @@ describe('broker: end-to-end', () => {
             storageNode.stop(),
             brokerNode1.stop(),
             brokerNode2.stop(),
-            assignmentEventManager.close(),
         ])
     })
 

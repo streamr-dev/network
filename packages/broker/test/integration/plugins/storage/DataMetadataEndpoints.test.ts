@@ -2,8 +2,14 @@ import http from 'http'
 import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
-    createTestStream, getPrivateKey, startTestTracker } from '../../../utils'
+import {
+    startBroker,
+    createClient,
+    waitForStreamPersistedInStorageNode,
+    createTestStream,
+    getPrivateKey,
+    startTestTracker
+} from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
@@ -28,7 +34,6 @@ describe('DataMetadataEndpoints', () => {
     let storageNode: Broker
     let client1: StreamrClient
     let storageNodeAccount: Wallet
-    let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
@@ -37,7 +42,6 @@ describe('DataMetadataEndpoints', () => {
             jsonRpcProvider: `http://127.0.0.1:8546`
         }
         tracker = await startTestTracker(trackerPort)
-        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
             auth: {
@@ -51,21 +55,19 @@ describe('DataMetadataEndpoints', () => {
             trackerPort,
             httpPort: httpPort1,
             enableCassandra: true,
-            streamrAddress: engineAndEditorAccount.address,
             storageNodeRegistry
         })
         client1 = await createClient(tracker, await getPrivateKey(), {
             storageNodeRegistry: storageNodeRegistry,
         })
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
-        await assignmentEventManager.createStream()
     })
 
     afterAll(async () => {
-        await tracker.stop()
-        await client1.destroy()
-        await storageNode.stop()
-        await assignmentEventManager.close()
+        await Promise.allSettled([
+            tracker?.stop(),
+            client1?.destroy(),
+            storageNode?.stop()
+        ])
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
@@ -93,7 +95,7 @@ describe('DataMetadataEndpoints', () => {
 
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client1, module)
-        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAccount.address, client1)
+        await freshStream.addToStorageNode(storageNodeAccount.address)
         await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
         return freshStream
     }

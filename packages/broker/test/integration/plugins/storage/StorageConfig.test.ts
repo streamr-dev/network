@@ -7,7 +7,6 @@ import { waitForCondition } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
-    StorageAssignmentEventManager,
     waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
@@ -34,7 +33,6 @@ describe('StorageConfig', () => {
     let broker: Broker
     let client: StreamrClient
     let stream: Stream
-    let assignmentEventManager: StorageAssignmentEventManager
     let publisherAccount: Wallet
     let storageNodeAccount: Wallet
     let brokerAccount: Wallet
@@ -55,7 +53,6 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         tracker = await startTestTracker(TRACKER_PORT)
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
         await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
@@ -65,7 +62,6 @@ describe('StorageConfig', () => {
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
             restUrl: REST_URL,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
         broker = await startBroker({
@@ -76,18 +72,20 @@ describe('StorageConfig', () => {
             enableCassandra: false
         })
         client = await createClient(tracker, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
-        await assignmentEventManager.createStream()
     })
 
     afterEach(async () => {
         await client.destroy()
-        await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
+        await Promise.allSettled([
+            storageNode?.stop(),
+            broker?.stop(),
+            tracker?.stop()
+        ])
     })
 
     it('when client publishes a message, it is written to the store', async () => {
         stream = await createTestStream(client, module)
-        await assignmentEventManager.addStreamToStorageNode(stream.id, storageNodeAccount.address, client)
+        await stream.addToStorageNode(storageNodeAccount.address)
         await waitForStreamPersistedInStorageNode(stream.id, 0, NODE_HOST, HTTP_PORT)
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
