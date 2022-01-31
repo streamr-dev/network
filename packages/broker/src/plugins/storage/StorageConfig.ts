@@ -43,7 +43,6 @@ function createStreamPartIDs(streamId: StreamID, partitions: number): StreamPart
 export class StorageConfig {
     private readonly listener: StorageConfigListener
     private readonly synchronizer = new SetMembershipSynchronizer<StreamPartID>()
-    private readonly clusterId: string
     private readonly clusterSize: number
     private readonly myIndexInCluster: number
     private readonly storagePoller: StoragePoller
@@ -57,7 +56,6 @@ export class StorageConfig {
         streamrClient: StreamrClient,
         listener: StorageConfigListener
     ) {
-        this.clusterId = clusterId
         this.clusterSize = clusterSize
         this.myIndexInCluster = myIndexInCluster
         this.listener = listener
