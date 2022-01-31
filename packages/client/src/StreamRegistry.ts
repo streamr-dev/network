@@ -179,7 +179,7 @@ export class StreamRegistry implements Context {
             throw new Error(`stream id "${streamId}" not valid`)
         }
         const [domain, path] = domainAndPath
-        
+
         await this.connectToStreamRegistryContract()
         let tx
         if (StreamIDUtils.isENSAddress(domain)) {
