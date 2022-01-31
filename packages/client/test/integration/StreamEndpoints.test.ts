@@ -6,7 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { toArray } from '../../src/utils/iterators'
+import { collect } from '../../src/utils/GeneratorUtils'
 
 jest.setTimeout(40000)
 
@@ -134,9 +134,10 @@ describe('StreamEndpoints', () => {
         })
 
         it('get all Streams', async () => {
-            const streams = await client.getAllStreams()
-            const streamsPagesize2 = await client.getAllStreams(1)
-            expect(streams).toEqual(streamsPagesize2)
+            const iterable = client.getAllStreams()
+            // most likely many items created by various tests, check that we can read some item
+            const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
+            expect(firstItem.id).toBeDefined()
         })
     })
 
@@ -203,16 +204,9 @@ describe('StreamEndpoints', () => {
 
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
-            const publishers = await client.getStreamPublishers(createdStream.id)
+            const publishers = await collect(client.getStreamPublishers(createdStream.id))
             const address = await client.getAddress()
             return expect(publishers).toEqual([address])
-        })
-        it('retrieves a list of publishers, pagination', async () => {
-            await createdStream.grantUserPermission(StreamPermission.PUBLISH, fakeAddress())
-            await createdStream.grantUserPermission(StreamPermission.PUBLISH, fakeAddress())
-            const allPublishers = await client.getStreamPublishers(createdStream.id, 1000)
-            const pagedPublishers = await client.getStreamPublishers(createdStream.id, 2)
-            return expect(pagedPublishers).toEqual(allPublishers)
         })
     })
 
@@ -233,16 +227,9 @@ describe('StreamEndpoints', () => {
 
     describe('getStreamSubscribers', () => {
         it('retrieves a list of subscribers', async () => {
-            const subscribers = await client.getStreamSubscribers(createdStream.id)
+            const subscribers = await collect(client.getStreamSubscribers(createdStream.id))
             const address = await client.getAddress()
             return expect(subscribers).toEqual([address])
-        })
-        it('retrieves a list of subscribers, pagination', async () => {
-            await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, fakeAddress())
-            await createdStream.grantUserPermission(StreamPermission.SUBSCRIBE, fakeAddress())
-            const allSubscribers = await client.getStreamPublishers(createdStream.id, 1000)
-            const pagedSubscribers = await client.getStreamPublishers(createdStream.id, 2)
-            return expect(pagedSubscribers).toEqual(allSubscribers)
         })
     })
 

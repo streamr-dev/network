@@ -21,7 +21,7 @@ import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsQueryItem } from './searchStreams'
-import { map } from './utils/GeneratorUtils'
+import { filter, map } from './utils/GeneratorUtils'
 
 export type PermissionQueryResult = {
     id: string
@@ -47,16 +47,17 @@ export type StreamQueryResult = {
     metadata: string
 }
 
-export type AllStreamsQueryResult = {
-    streams: StreamQueryResult[]
-}
-
 export type FilteredStreamListQueryResult = {
     streams: StreamPermissionsQueryResult[]
 }
 
 export type SingleStreamQueryResult = {
     stream: StreamPermissionsQueryResult | null
+}
+
+type StreamPublisherOrSubscriberItem = {
+    id: string
+    userAddress: string
 }
 
 interface PermissionsAssignment {
@@ -391,7 +392,7 @@ export class StreamRegistry implements Context {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
         const response = await this.graphQLClient.sendQuery(
-            StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)
+            StreamRegistry.buildGetStreamQuery(streamId)
         ) as { stream: StreamPermissionsQueryResult }
         if (!response.stream) {
             throw new NotFoundError('Stream not found: id=' + streamId)
@@ -399,34 +400,31 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, response.stream.metadata)
     }
 
-    async getAllStreams(pagesize: number = 1000): Promise<Stream[]> {
-        this.debug('Getting all streams from thegraph')
-        let results: Stream[] = []
-        let lastResultSize = pagesize
-        let lastID: string | undefined
-        do {
-            const query = StreamRegistry.buildGetAllStreamsQuery(pagesize, lastID)
-            // eslint-disable-next-line no-await-in-loop
-            const queryResponse = await this.graphQLClient.sendQuery(query) as AllStreamsQueryResult
-            if (queryResponse.streams.length === 0) {
-                break
+    async* getAllStreams(): AsyncGenerator<Stream> {
+        this.debug('Get all streams from thegraph')
+        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamQueryResult>(
+            (lastId: string, pageSize: number) => StreamRegistry.buildGetAllStreamsQuery(lastId, pageSize)
+        )
+        for await (const item of backendResults) {
+            try {
+                // toStreamID isn't strictly needed here since we are iterating over a result set from the Graph
+                // (we could just cast). _If_ this ever throws, one of our core assumptions is wrong.
+                yield this.parseStream(toStreamID(item.id), item.metadata)
+            } catch (err) {
+                this.debug(`Skipping stream ${item.id} cannot parse metadata: ${item.metadata}`)
             }
-            const resStreams: Stream[] = []
-            queryResponse.streams.forEach(({ id, metadata }) => {
-                try {
-                    // toStreamID isn't strictly needed here since we are iterating over a result set from the Graph
-                    // (we could just cast). _If_ this ever throws, one of our core assumptions is wrong.
-                    const stream = this.parseStream(toStreamID(id), metadata)
-                    resStreams.push(stream)
-                } catch (err) {
-                    this.debug(`Skipping stream ${id} cannot parse metadata: ${metadata}`)
-                }
-            })
-            results = results.concat(resStreams)
-            lastResultSize = queryResponse.streams.length
-            lastID = queryResponse.streams[queryResponse.streams.length - 1].id
-        } while (lastResultSize === pagesize)
-        return results
+        }
+    }
+
+    private static buildGetAllStreamsQuery(lastId: string, pageSize: number): string {
+        const query = `
+        {
+            streams (first: ${pageSize} id_gt: "${lastId}") {
+                 id
+                 metadata
+            }
+        }`
+        return JSON.stringify({ query })
     }
 
     /**
@@ -435,7 +433,7 @@ export class StreamRegistry implements Context {
     async getAllPermissionsForStream(streamIdOrPath: string): Promise<Record<EthereumAddress|PublicPermissionId, StreamPermission[]>> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting all permissions for stream %s', streamId)
-        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)) as SingleStreamQueryResult
+        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildGetStreamQuery(streamId)) as SingleStreamQueryResult
         if (!response.stream) {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
@@ -487,38 +485,51 @@ export class StreamRegistry implements Context {
         )
     }
 
-    async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.getStreamPublishersOrSubscribersList(streamId, pagesize, StreamRegistry
-            .buildGetStreamPublishersQuery)
-    }
-    async getStreamSubscribers(streamIdOrPath: string, pagesize: number = 1000) {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.getStreamPublishersOrSubscribersList(streamId, pagesize, StreamRegistry
-            .buildGetStreamSubscribersQuery)
+    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+        return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'publishExpiration')
     }
 
-    async getStreamPublishersOrSubscribersList(streamIdOrPath: string, pagesize: number = 1000, queryMethod: Function): Promise<EthereumAddress[]> {
+    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+        return this.getStreamPublishersOrSubscribersList(streamIdOrPath, 'subscribeExpiration')
+    }
+
+    private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Getting stream publishers for stream id %s', streamId)
-        let results: EthereumAddress[] = []
-        let lastResultSize = pagesize
-        let lastID: string | undefined
-        do {
-            // eslint-disable-next-line no-await-in-loop
-            const response = await this.graphQLClient.sendQuery(queryMethod(streamId, pagesize, lastID)) as SingleStreamQueryResult
-            if (!response.stream) {
-                throw new NotFoundError('stream not found: id: ' + streamId)
+        this.debug(`Get stream ${fieldName}s for stream id ${streamId}`)
+        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
+            (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
+        )
+        /*
+         * There can be orphaned permission entities if a stream is deleted (currently
+         * we don't remove the assigned permissions, see ETH-222)
+         * TODO remove the filtering when ETH-222 has been implemented, and remove also
+         * stream result field in buildStreamPublishersOrSubscribersQuery as it is
+         * no longer needed
+         */
+        const validItems = filter<StreamPublisherOrSubscriberItem>(backendResults, (p) => (p as any).stream !== null)
+        yield* map<StreamPublisherOrSubscriberItem, EthereumAddress>(
+            validItems,
+            (item) => item.userAddress as EthereumAddress
+        )
+    }
+
+    private static buildStreamPublishersOrSubscribersQuery(
+        streamId: StreamID,
+        fieldName: string,
+        lastId: string,
+        pageSize: number
+    ): string {
+        const query = `
+        {
+            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Date.now()}" id_gt: "${lastId}"}) {
+                id
+                userAddress
+                stream {
+                    id
+                }
             }
-            const resStreams = response.stream.permissions.map((permission) => permission.userAddress)
-            if (resStreams.length === 0) {
-                break
-            }
-            results = results.concat(resStreams)
-            lastResultSize = resStreams.length
-            lastID = response.stream.permissions[resStreams.length - 1].id
-        } while (lastResultSize === pagesize)
-        return results
+        }`
+        return JSON.stringify({ query })
     }
 
     async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
@@ -543,61 +554,20 @@ export class StreamRegistry implements Context {
         }
     }
 
-    // --------------------------------------------------------------------------------------------
-    // GraphQL query builders
-    // --------------------------------------------------------------------------------------------
-
-    // graphql over fetch:
-    // https://stackoverflow.com/questions/44610310/node-fetch-post-request-using-graphql-query
-
-    private static buildGetAllStreamsQuery(pagesize: number, lastId?: string): string {
-        const startIDFilter = lastId ? `, where: { id_gt: "${lastId}"  }` : ''
-        const query = `{
-            streams (first:${pagesize}${startIDFilter}) {
-                 id,
-                 metadata
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
-        const query = `{
+    private static buildGetStreamQuery(streamId: StreamID): string {
+        const query = `
+        {
             stream (id: "${streamId}") {
-                id,
-                metadata,
+                id
+                metadata
                 permissions {
-                    id,
-                    userAddress,
-                    canEdit,
-                    canDelete,
-                    publishExpiration,
-                    subscribeExpiration,
-                    canGrant,
-                }
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildGetStreamPublishersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {
-        const startIDFilter = lastId ? `, id_gt: "${lastId}"` : ''
-        const query = `{
-            stream (id: "${streamId}") {
-                permissions (first:${pagesize}, where: {publishExpiration_gt: "${Date.now()}"${startIDFilter}}) {
-                    id, userAddress,
-                }
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildGetStreamSubscribersQuery(streamId: StreamID, pagesize: number, lastId?: string): string {
-        const startIDFilter = lastId ? `, id_gt: "${lastId}"` : ''
-        const query = `{
-            stream (id: "${streamId}") {
-                permissions (first:${pagesize}, where: {subscribeExpiration_gt: "${Date.now()}"${startIDFilter}}) {
-                    userAddress,
+                    id
+                    userAddress
+                    canEdit
+                    canDelete
+                    publishExpiration
+                    subscribeExpiration
+                    canGrant
                 }
             }
         }`
