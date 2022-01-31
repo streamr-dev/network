@@ -23,7 +23,6 @@ function setDifference<E>(setA: Set<E>, setB: Set<E>): E[] {
  *      2. Patch updates that add or remove a subset at a given time step.
  */
 export class SetMembershipSynchronizer<E extends string> {
-    private lastState: ReadonlySet<E> = new Set<E>()
     private lastSequenceNo = 0
     private computedState = new Set<E>() // lastState + patches
     private lastSequenceNoByElement = new Map<E, number>()
@@ -46,7 +45,6 @@ export class SetMembershipSynchronizer<E extends string> {
             return EMPTY_DIFF
         }
 
-        this.lastState = new Set<E>(elements)
         this.lastSequenceNo = sequenceNo
 
         // delete stale entries
