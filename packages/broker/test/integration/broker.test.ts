@@ -51,7 +51,6 @@ describe('broker: end-to-end', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true,
             storageNodeRegistry,
             extraPlugins: {
