@@ -64,6 +64,7 @@ describe('createNode', () => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
                 expect(event).toEqual({
+                    blockNumber: expect.any(Number),
                     streamId: createdStream.id,
                     nodeAddress,
                     type: 'added'
