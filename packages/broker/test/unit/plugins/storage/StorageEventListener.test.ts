@@ -16,7 +16,7 @@ describe(StorageEventListener, () => {
             async getStream() {
                 return {
                     id: 'streamId',
-                    partitions: 0
+                    partitions: 3
                 } as Stream
             },
             async registerStorageEventListener(cb: (arg0: EthereumStorageEvent) => any): Promise<void> {
@@ -60,7 +60,7 @@ describe(StorageEventListener, () => {
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
         expect(onEvent).toHaveBeenCalledWith(
-            { id: 'streamId', partitions: 0 },
+            { id: 'streamId', partitions: 3 },
             'added',
             8694
         )
