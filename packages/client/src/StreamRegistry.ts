@@ -20,12 +20,7 @@ import {
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { GraphQLClient } from './utils/GraphQLClient'
-
-export interface SearchStreamsOptions {
-    order?: 'asc'|'desc'
-    max?: number
-    offset?: number
-}
+import { SearchStreamsPermissionFilter } from './searchStreams'
 
 export type PermissionQueryResult = {
     id: string
@@ -477,10 +472,9 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async searchStreams(term: string, opts: SearchStreamsOptions = {}): Promise<Stream[]> {
-        this.debug('Getting all streams from thegraph that match filter %s %o', term, opts)
-        const response = await this.graphQLClient.sendQuery(StreamRegistry.buildSearchStreamsQuery(term, opts)) as FilteredStreamListQueryResult
-        return response.streams.map((s) => this.parseStream(toStreamID(s.id), s.metadata))
+    searchStreams(term?: string | undefined, permissionsFilter?: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        this.debug('Search streams term=%s permissions=%j', term, permissionsFilter)
+        return undefined as any
     }
 
     async getStreamPublishers(streamIdOrPath: string, pagesize: number = 1000) {
