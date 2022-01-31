@@ -23,11 +23,12 @@ import { GraphQLClient } from './utils/GraphQLClient'
 import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsQueryItem } from './searchStreams'
 import { filter, map } from './utils/GeneratorUtils'
 
-export type PermissionQueryResult = {
+type PermissionQueryResult = {
     id: string
     userAddress: string
 } & ChainPermissions
 
+/** @internal */
 export type ChainPermissions = {
     canEdit: boolean
     canDelete: boolean
@@ -36,21 +37,19 @@ export type ChainPermissions = {
     canGrant: boolean
 }
 
-export type StreamPermissionsQueryResult = {
+type StreamPermissionsQueryResult = {
     id: string
     metadata: string
     permissions: PermissionQueryResult[]
 }
 
+/** @internal */
 export type StreamQueryResult = {
     id: string,
     metadata: string
 }
 
-export type FilteredStreamListQueryResult = {
-    streams: StreamPermissionsQueryResult[]
-}
-
+/** @internal */
 export type SingleStreamQueryResult = {
     stream: StreamPermissionsQueryResult | null
 }
