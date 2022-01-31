@@ -1,5 +1,6 @@
 import { Stream, StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
+import { scheduleAtInterval } from '../../helpers/scheduler'
 
 const logger = new Logger(module)
 
@@ -11,8 +12,7 @@ export class StoragePoller {
     private readonly pollInterval: number
     private readonly streamrClient: StreamrClient
     private readonly onNewSnapshot: (streams: Stream[], block: number) => void
-    private timeoutRef?: NodeJS.Timeout
-    private destroyed = false
+    private stopPolling?: () => void
 
     constructor(
         clusterId: string,
@@ -27,24 +27,12 @@ export class StoragePoller {
     }
 
     async start(): Promise<void> {
-        const schedulePoll = async () => {
-            if (this.destroyed) { return }
-
-            try {
-                await this.poll()
-            } catch (err) {
-                logger.warn(`error when trying to poll full state: ${err}`)
-            }
-
-            if (this.destroyed) { return }
-
-            if (this.pollInterval !== 0) {
-                this.timeoutRef = setTimeout(schedulePoll, this.pollInterval)
-            } else {
-                logger.info('pollInterval=0; will not keep refreshing full state.')
-            }
+        if (this.pollInterval > 0) {
+            const { stop } = await scheduleAtInterval(() => this.tryPoll(), this.pollInterval, true)
+            this.stopPolling = stop
+        } else {
+            await this.tryPoll()
         }
-        await schedulePoll()
     }
 
     async poll(): Promise<void> {
@@ -55,9 +43,14 @@ export class StoragePoller {
     }
 
     destroy(): void {
-        this.destroyed = true
-        if (this.timeoutRef !== undefined) {
-            clearTimeout(this.timeoutRef)
+        this.stopPolling?.()
+    }
+
+    private async tryPoll(): Promise<void> {
+        try {
+            await this.poll()
+        } catch (err) {
+            logger.warn(`error when trying to poll full state: ${err}`)
         }
     }
 }
