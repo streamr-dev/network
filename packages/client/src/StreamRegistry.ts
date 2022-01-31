@@ -95,8 +95,9 @@ export class StreamRegistry implements Context {
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
         this.streamRegistryContractReadonly = new Contract(this.config.streamRegistryChainAddress,
             StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
-        const chainId = this.config.streamRegistryChainRPC?.chainId
-        this.defaultOverrides = this.config.ethereumNetworks?.find((network) => network.chainId === chainId)?.overrides ?? {}
+        const streamRegistryChainName = this.config.streamRegistryChainRPC?.name
+        this.defaultOverrides = this.config.ethereumNetworks && streamRegistryChainName
+            ? this.config.ethereumNetworks[streamRegistryChainName]?.overrides ?? {} : {}
     }
 
     private parseStream(id: StreamID, propsString: string): Stream {
@@ -194,17 +195,17 @@ export class StreamRegistry implements Context {
                 know what the actual error was. (Most likely it has anything to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
-            try {
-                await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
-            } catch (e) {
-                throw new Error(`unable to create stream "${streamId}"`)
-            }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties), ethersOverrides)
         }
-
         await tx.wait()
+        try {
+            await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
+        } catch (e) {
+            throw new Error(`unable to create stream "${streamId}"`)
+        }
+
         return new Stream(normalizedProperties, this.container)
     }
 
