@@ -6,13 +6,13 @@ import { defaultAbiCoder } from '@ethersproject/abi'
 import { parseEther } from '@ethersproject/units'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
-import { Todo } from '../types'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import DataUnionAPI from './index'
 import { EthereumAddress } from 'streamr-client-protocol'
+import { AmbMessageHash } from './DataUnion'
 
 const log = Debug('Contracts')
 
@@ -31,7 +31,7 @@ export default class Contracts {
     templateSidechainAddress: EthereumAddress
     binanceAdapterAddress: EthereumAddress
     binanceSmartChainAMBAddress: EthereumAddress
-    cachedSidechainAmb?: Todo
+    cachedSidechainAmb?: Contract | Promise<Contract>
 
     constructor(client: DataUnionAPI) {
         this.ethereum = client.ethereum
@@ -155,7 +155,7 @@ export default class Contracts {
         return new Contract(this.binanceSmartChainAMBAddress, mainnetAmbABI, signer)
     }
 
-    async requiredSignaturesHaveBeenCollected(messageHash: Todo) {
+    async requiredSignaturesHaveBeenCollected(messageHash: AmbMessageHash) {
         const sidechainAmb = await this.getSidechainAmb()
         const requiredSignatureCount = await sidechainAmb.requiredSignatures()
 
@@ -180,7 +180,7 @@ export default class Contracts {
         log(`${collectedSignatureCount} signatures reported, getting them from the sidechain AMB...`)
         const signatures = await Promise.all(Array(collectedSignatureCount).fill(0).map(async (_, i) => sidechainAmb.signature(messageHash, i)))
 
-        const [vArray, rArray, sArray]: Todo = [[], [], []]
+        const [vArray, rArray, sArray]: [string[], string[], string[]] = [[], [], []]
         signatures.forEach((signature: string, i) => {
             log(`  Signature ${i}: ${signature} (len=${signature.length} = ${signature.length / 2 - 1} bytes)`)
             rArray.push(signature.substr(2, 64))
