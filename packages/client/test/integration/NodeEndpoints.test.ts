@@ -64,6 +64,7 @@ describe('createNode', () => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
                 expect(event).toEqual({
+                    blockNumber: expect.any(Number),
                     streamId: createdStream.id,
                     nodeAddress,
                     type: 'added'
@@ -84,7 +85,8 @@ describe('createNode', () => {
     })
 
     it('getStoredStreamsOf', async () => {
-        const streams: Stream[] = await client.getStoredStreamsOf(nodeAddress)
+        const { streams, blockNumber } = await client.getStoredStreamsOf(nodeAddress)
+        expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.length).toBeGreaterThan(0)
         return expect(streams.find((el) => { return el.id === createdStream.id })).toBeDefined()
     })
