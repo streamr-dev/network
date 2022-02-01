@@ -51,8 +51,7 @@ describe('NodeMetrics', () => {
             httpPort,
             enableCassandra: true,
             storageNodeRegistry,
-            storageConfigRefreshInterval: 3000 // The streams are created deep inside `startBroker`,
-            // therefore StorageAssignmentEventManager test helper cannot be used
+            storageConfigRefreshInterval: 3000
         })
         const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,

@@ -19,6 +19,7 @@ import {
 } from 'streamr-client-protocol'
 import { AddressZero, MaxInt256 } from '@ethersproject/constants'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { omit } from 'lodash'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from './searchStreams'
 import { filter, map } from './utils/GeneratorUtils'
@@ -98,9 +99,9 @@ export class StreamRegistry implements Context {
             ? this.config.ethereumNetworks[streamRegistryChainName]?.overrides ?? {} : {}
     }
 
-    private parseStream(id: StreamID, propsString: string): Stream {
-        const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(propsString)
-        return new Stream({ ...parsedProps, id }, this.container)
+    private parseStream(id: StreamID, metadata: string): Stream {
+        const props: StreamProperties = Stream.parsePropertiesFromMetadata(metadata)
+        return new Stream({ ...props, id }, this.container)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -111,8 +112,8 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('getStream %s', streamId)
         try {
-            const propertiesString = await this.streamRegistryContractReadonly.getStreamMetadata(streamId) || '{}'
-            return this.parseStream(streamId, propertiesString)
+            const metadata = await this.streamRegistryContractReadonly.getStreamMetadata(streamId) || '{}'
+            return this.parseStream(streamId, metadata)
         } catch (error) {
             this.debug(error)
         }
@@ -170,11 +171,7 @@ export class StreamRegistry implements Context {
         const ethersOverrides = this.defaultOverrides
 
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-
-        const normalizedProperties = {
-            ...props,
-            id: streamId
-        }
+        const metadata = StreamRegistry.formMetadata(props)
 
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         if (domainAndPath === undefined) {
@@ -185,26 +182,29 @@ export class StreamRegistry implements Context {
         await this.connectToStreamRegistryContract()
         let tx
         if (StreamIDUtils.isENSAddress(domain)) {
-            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, JSON.stringify(normalizedProperties), ethersOverrides)
+            tx = await this.streamRegistryContract!.createStreamWithENS(domain, path, metadata, ethersOverrides)
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
-                creation succeeeds, we need to poll The Graph. If the polling timeouts, we don'
-                know what the actual error was. (Most likely it has anything to do with timeout
+                creation succeeeds, we need to poll the chain for stream existence. If the polling timeouts, we don't
+                know what the actual error was. (Most likely it has nothing to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
+            await tx.wait()
+            try {
+                await until(async () => { return this.streamExistsOnChain(streamId) }, 20000, 500)
+            } catch (e) {
+                throw new Error(`unable to create stream "${streamId}"`)
+            }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
-            tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties), ethersOverrides)
+            tx = await this.streamRegistryContract!.createStream(path, metadata, ethersOverrides)
+            await tx.wait()
         }
-        await tx.wait()
-        try {
-            await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
-        } catch (e) {
-            throw new Error(`unable to create stream "${streamId}"`)
-        }
-
-        return new Stream(normalizedProperties, this.container)
+        return new Stream({
+            ...props,
+            id: streamId
+        }, this.container)
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
@@ -216,19 +216,18 @@ export class StreamRegistry implements Context {
 
     async updateStream(props: StreamProperties): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        const normalizedProperties = {
-            ...props,
-            id: streamId
-        }
         await this.connectToStreamRegistryContract()
         const ethersOverrides = this.defaultOverrides
         const tx = await this.streamRegistryContract!.updateStreamMetadata(
             streamId,
-            JSON.stringify(normalizedProperties),
+            StreamRegistry.formMetadata(props),
             ethersOverrides
         )
         await tx.wait()
-        return new Stream(normalizedProperties, this.container)
+        return new Stream({
+            ...props,
+            id: streamId
+        }, this.container)
     }
 
     async grantPermission(streamIdOrPath: string, permission: StreamPermission, receivingUser: string) {
@@ -372,10 +371,9 @@ export class StreamRegistry implements Context {
         await tx.wait()
     }
 
-    async streamExists(streamIdOrPath: string): Promise<boolean> {
+    async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists %s', streamId)
-        await this.connectToStreamRegistryContract()
+        this.debug('Checking if stream exists on chain %s', streamId)
         return this.streamRegistryContractReadonly!.exists(streamId)
     }
 
@@ -597,6 +595,10 @@ export class StreamRegistry implements Context {
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
+    }
+
+    static formMetadata(props: StreamProperties): string {
+        return JSON.stringify(omit(props, 'id'))
     }
 
     private static buildGetStreamQuery(streamId: StreamID): string {

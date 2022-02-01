@@ -23,7 +23,6 @@ interface TestConfig {
     enableCassandra?: boolean
     privateKeyFileName?: null | string
     certFileName?: null | string
-    streamrAddress?: string
     restUrl?: string
     storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
@@ -37,7 +36,6 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
     storageNodeRegistry,
     storageConfigRefreshInterval = 0,
@@ -54,7 +52,6 @@ export const formConfig = ({
                     keyspace: 'streamr_dev_v2',
                 },
                 storageConfig: {
-                    streamrAddress,
                     refreshInterval: storageConfigRefreshInterval
                 }
             }
@@ -156,46 +153,6 @@ export const createClient = async (
     })
 }
 
-export class StorageAssignmentEventManager {
-    storageNodeAccount: Wallet
-    engineAndEditorAccount: Wallet
-    client: Promise<StreamrClient>
-    eventStream?: Stream
-
-    constructor(tracker: Tracker, engineAndEditorAccount: Wallet, storageNodeAccount: Wallet) {
-        this.engineAndEditorAccount = engineAndEditorAccount
-        this.storageNodeAccount = storageNodeAccount
-        this.client = createClient(tracker, engineAndEditorAccount.privateKey)
-    }
-
-    async createStream(): Promise<void> {
-        this.eventStream = await (await this.client).createStream({
-            id: '/' + this.engineAndEditorAccount.address + '/' + getTestName(module) + '/' + Date.now(),
-        })
-    }
-
-    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient): Promise<void> {
-        await client.addStreamToStorageNode(streamId, storageNodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(streamId, storageNodeAddress) }, 10000, 500)
-        this.publishAddEvent(streamId)
-    }
-
-    publishAddEvent(streamId: string): void {
-        this.eventStream!.publish({
-            event: 'STREAM_ADDED',
-            stream: {
-                id: streamId,
-                partitions: 1
-            },
-            storageNode: this.storageNodeAccount.address,
-        })
-    }
-
-    async close(): Promise<void> {
-        await (await this.client).destroy()
-    }
-}
-
 export const waitForStreamPersistedInStorageNode = async (
     streamId: string,
     partition: number,
@@ -210,7 +167,7 @@ export const waitForStreamPersistedInStorageNode = async (
     await waitForCondition(() => isPersistent(), 20000, 500)
 }
 
-const getTestName = (module: NodeModule) => {
+export const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
     const groups = module.filename.match(fileNamePattern)
     return (groups !== null) ? groups[1] : module.filename
