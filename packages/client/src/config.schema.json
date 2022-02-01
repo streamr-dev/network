@@ -35,18 +35,6 @@
             "type": "string",
             "format": "ethereum-address"
         },
-        "keyExchange": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "publicKey": {
-                    "type": "string"
-                },
-                "privateKey": {
-                    "type": "string"
-                }
-            }
-        },
         "dataUnion": {
             "type": "object",
             "additionalProperties": false,

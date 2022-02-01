@@ -85,7 +85,6 @@ export type StrictStreamrClientConfig = {
     streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
         // noderegistry contracts and saves what streams are stored by which storagenodes
     ensCacheChainAddress: EthereumAddress,
-    keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
 } & (
@@ -131,7 +130,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     verifySignatures: 'auto',
     publisherStoreKeyHistory: true,
     groupKeys: {}, // {streamId: groupKey}
-    keyExchange: {},
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
