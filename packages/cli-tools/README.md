@@ -67,11 +67,43 @@ Useful for generating test data to be published to a stream with `publish`, e.g.
 streamr mock-data generate | streamr stream publish <streamId> --private-key <key>
 ```
 
-### list
-Fetch a list of streams that are accessible to the user authenticated by the private key
+### search
+Query a list of streams by a search term and/or permissions. E.g.:
 ```
-streamr stream list --private-key <key>
+streamr stream search foobar --user 0x1234567890123456789012345678901234567890
 ```
+
+#### Search term
+A search term query searchers over the stream id field. E.g:
+```
+streamr stream search foobar
+```
+It could find these streams:
+```
+0x1234567890123456789012345678901234567890/abc/foobar/1
+foobar.eth/lorem-ipsum
+```
+
+#### Permission
+A permission query searches over stream permissions. You can either query by direct permissions (which are explicitly granted to a user), or by all permissions (including public permissions, which apply to all users).
+
+E.g. all streams where a user has some direct permission:
+```
+streamr stream search --user 0x1234567890123456789012345678901234567890
+```
+All streams accessible by a user:
+```
+streamr stream search --user 0x1234567890123456789012345678901234567890 --public
+```
+
+The argument of the `--user` option can be omitted. In that case, it defaults to the authenticated user (specified by `--private-key`).
+
+It is also possible to filter by specific permissions by using `--all` and `--any`. E.g. if you want to find the streams you can subscribe to:
+```
+streamr stream search --user --public --all subscribe --private-key <key>
+```
+
+If more than one permission is needed, specify the permissions in a comma-separated list (e.g. `--all subscribe,publish`). It returns streams where _all_ listed permissions are granted. If just _any_ of the permissions is required, use `--any` instead of `--all`. Please prefer `--all` to `--any` when possible as it has better query performance.
 
 ### show
 Show detailed information about a specific stream
@@ -128,8 +160,7 @@ The configuration file is a JSON. It has one root-level property `client`, which
     "client": {
         "auth": {
             "privateKey": ...
-        },
-        "publishWithSignature": "always"
+        }
     }
 }
 ```

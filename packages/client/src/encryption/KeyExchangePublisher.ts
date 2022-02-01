@@ -36,7 +36,7 @@ export class PublisherKeyExchange implements Context {
         @inject(delay(() => Publisher)) private publisher: Publisher,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
         private streamEndpoints: StreamEndpointsCached,
-        private keyExchangeStream: KeyExchangeStream,
+        @inject(delay(() => KeyExchangeStream)) private keyExchangeStream: KeyExchangeStream,
     ) {
         this.id = instanceId(this)
         this.debug = this.publisher.debug.extend(this.id)
