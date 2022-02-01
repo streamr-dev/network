@@ -87,7 +87,7 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
     }, 15000)
 
@@ -98,21 +98,20 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxy(stream, proxyNodeId1)
-        await wait(2000)
+        await wait(1000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         await publishingClient.removePublishProxy(stream, proxyNodeId1)
-        await wait(2500)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
     }, 15000)
 
@@ -127,33 +126,32 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
-        await wait(2000)
+        await wait(1000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId1))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.streamId, 0), proxyNodeId2))
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
         await publishingClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
-        await wait(2000)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
         // @ts-expect-error private
         expect((await publishingClient.publisher.node.getNode())
             // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.streamId, 0)))
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
     }, 15000)

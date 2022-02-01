@@ -1,5 +1,5 @@
 import { Logger } from 'streamr-network'
-import StreamrClient, { validateConfig as validateClientConfig} from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
@@ -27,7 +27,7 @@ export interface Broker {
 const transformClientConfig = async (config: ClientConfig) => {
     const trackerConfig = config.network?.trackers
     if ((trackerConfig as NetworkSmartContract)?.contractAddress !== undefined) {
-        const registry = await Protocol.Utils.getTrackerRegistryFromContract({
+        const registry = await getTrackerRegistryFromContract({
             contractAddress: (trackerConfig as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (trackerConfig as NetworkSmartContract).jsonRpcProvider
         })
