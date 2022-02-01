@@ -131,9 +131,6 @@
         "autoDisconnect": {
             "type": "boolean"
         },
-        "publishAutoDisconnectDelay": {
-            "type": "number"
-        },
         "orderMessages": {
             "type": "boolean"
         },

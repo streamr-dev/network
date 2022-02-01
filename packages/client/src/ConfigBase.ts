@@ -24,10 +24,6 @@ export type CacheConfig = {
     maxAge: number
 }
 
-export type PublishConfig = {
-    publishAutoDisconnectDelay: number,
-}
-
 export type SubscribeConfig = {
     /** Attempt to order messages */
     orderMessages: boolean
@@ -87,7 +83,6 @@ export type StrictStreamrClientConfig = {
 } & (
     EthereumConfig
     & ConnectionConfig
-    & PublishConfig
     & SubscribeConfig
     & EncryptionConfig
 )
@@ -119,7 +114,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFill: true,
     maxGapRequests: 5,
     maxRetries: 5,
-    publishAutoDisconnectDelay: 5000,
 
     // Encryption options
     verifySignatures: 'auto',

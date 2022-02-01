@@ -656,15 +656,11 @@ describeRepeats('StreamrClient', () => {
             client.on('disconnected', onDisconnected)
             client.on('connected', onConnected)
 
-            client.options.publishAutoDisconnectDelay = 1000 // eslint-disable-line require-atomic-updates
-
             client.enableAutoConnect()
             client.enableAutoDisconnect()
             await publishTestMessages(3, {
                 delay: 150,
             })
-
-            await wait(client.options.publishAutoDisconnectDelay * 1.5)
 
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onDisconnected).toHaveBeenCalledTimes(1)
