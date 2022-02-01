@@ -18,6 +18,7 @@
             "node"
         ],
         "incremental": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "stripInternal": true
     }
 }
