@@ -25,7 +25,6 @@ export type CacheConfig = {
 }
 
 export type PublishConfig = {
-    publishWithSignature: Todo
     publishAutoDisconnectDelay: number,
 }
 
@@ -123,7 +122,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     publishAutoDisconnectDelay: 5000,
 
     // Encryption options
-    publishWithSignature: 'auto',
     verifySignatures: 'auto',
     groupKeys: {}, // {streamId: groupKey}
 

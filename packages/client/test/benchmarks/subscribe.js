@@ -58,16 +58,14 @@ async function run() {
     const [client1, stream1] = await setupClientAndStream({
         auth: {
             privateKey: account1.privateKey,
-        },
-        publishWithSignature: 'always',
+        }
     })
 
     const account2 = StreamrClient.generateEthereumAccount()
     const [client2, stream2] = await setupClientAndStream({
         auth: {
             privateKey: account2.privateKey,
-        },
-        publishWithSignature: 'never',
+        }
     })
 
     const account3 = StreamrClient.generateEthereumAccount()

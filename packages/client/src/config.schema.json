@@ -131,10 +131,6 @@
         "autoDisconnect": {
             "type": "boolean"
         },
-        "publishWithSignature": {
-            "type": "string",
-            "enum": ["auto", "always", "never"]
-        },
         "publishAutoDisconnectDelay": {
             "type": "number"
         },
