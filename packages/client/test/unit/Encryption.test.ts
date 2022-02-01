@@ -104,67 +104,6 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
         })
 
-        it('throws if invalid public key passed in the constructor', () => {
-            const keys = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            expect(() => {
-                // eslint-disable-next-line no-new
-                new EncryptionUtil({
-                    privateKey: keys.privateKey,
-                    publicKey: 'wrong public key',
-                })
-            }).toThrow()
-        })
-
-        it('throws if invalid private key passed in the constructor', () => {
-            const keys = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            expect(() => {
-                // eslint-disable-next-line no-new
-                new EncryptionUtil({
-                    privateKey: 'wrong private key',
-                    publicKey: keys.publicKey,
-                })
-            }).toThrow()
-        })
-
-        it('does not throw if valid key pair passed in the constructor', () => {
-            const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            // eslint-disable-next-line no-new
-            new EncryptionUtil({
-                privateKey,
-                publicKey,
-            })
-        })
-
         describe('GroupKey.validate', () => {
             it('throws if key is the wrong size', () => {
                 expect(() => {
