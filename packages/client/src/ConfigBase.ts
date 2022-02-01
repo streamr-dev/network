@@ -11,8 +11,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-import type { Todo } from './types'
-
 import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
@@ -30,7 +28,7 @@ export type SubscribeConfig = {
     gapFill: boolean
     maxGapRequests: number
     maxRetries: number
-    verifySignatures: Todo
+    verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
