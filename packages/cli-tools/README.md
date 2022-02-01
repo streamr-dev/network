@@ -160,8 +160,7 @@ The configuration file is a JSON. It has one root-level property `client`, which
     "client": {
         "auth": {
             "privateKey": ...
-        },
-        "publishWithSignature": "always"
+        }
     }
 }
 ```

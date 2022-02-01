@@ -22,7 +22,7 @@ describeRepeats('Validation', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
-            requireSignedData: client.options.publishWithSignature !== 'never'
+            requireSignedData: true
         })
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
