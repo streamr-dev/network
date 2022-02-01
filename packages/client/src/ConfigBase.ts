@@ -27,7 +27,6 @@ export type CacheConfig = {
 export type PublishConfig = {
     maxPublishQueueSize: number
     publishWithSignature: Todo
-    publisherStoreKeyHistory: boolean
     publishAutoDisconnectDelay: number,
 }
 
@@ -128,7 +127,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // Encryption options
     publishWithSignature: 'auto',
     verifySignatures: 'auto',
-    publisherStoreKeyHistory: true,
     groupKeys: {}, // {streamId: groupKey}
 
     // Ethereum and Data Union related options

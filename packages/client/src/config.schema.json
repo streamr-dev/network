@@ -138,9 +138,6 @@
             "type": "string",
             "enum": ["auto", "always", "never"]
         },
-        "publisherStoreKeyHistory": {
-            "type": "boolean"
-        },
         "publishAutoDisconnectDelay": {
             "type": "number"
         },
