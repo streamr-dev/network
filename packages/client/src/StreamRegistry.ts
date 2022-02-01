@@ -193,15 +193,16 @@ export class StreamRegistry implements Context {
                 know what the actual error was. (Most likely it has anything to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
+            await tx.wait()
+            try {
+                await until(async () => { return this.streamExistsOnChain(streamId) }, 20000, 500)
+            } catch (e) {
+                throw new Error(`unable to create stream "${streamId}"`)
+            }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             tx = await this.streamRegistryContract!.createStream(path, JSON.stringify(normalizedProperties), ethersOverrides)
-        }
-        await tx.wait()
-        try {
-            await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
-        } catch (e) {
-            throw new Error(`unable to create stream "${streamId}"`)
+            await tx.wait()
         }
 
         return new Stream(normalizedProperties, this.container)
@@ -372,10 +373,9 @@ export class StreamRegistry implements Context {
         await tx.wait()
     }
 
-    async streamExists(streamIdOrPath: string): Promise<boolean> {
+    async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists %s', streamId)
-        await this.connectToStreamRegistryContract()
+        this.debug('Checking if stream exists on chain %s', streamId)
         return this.streamRegistryContractReadonly!.exists(streamId)
     }
 
