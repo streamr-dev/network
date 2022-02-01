@@ -207,8 +207,8 @@ export class NodeRegistry {
         log('Getting stored streams of node %s', nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
-            const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(stream.metadata)
-            return new Stream({ ...parsedProps, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
+            const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
+            return new Stream({ ...props, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
         })
         return {
             streams,
