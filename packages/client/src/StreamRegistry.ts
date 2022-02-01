@@ -189,8 +189,8 @@ export class StreamRegistry implements Context {
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
-                creation succeeeds, we need to poll The Graph. If the polling timeouts, we don'
-                know what the actual error was. (Most likely it has anything to do with timeout
+                creation succeeeds, we need to poll the chain for stream existence. If the polling timeouts, we don't
+                know what the actual error was. (Most likely it has nothing to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
             await tx.wait()
