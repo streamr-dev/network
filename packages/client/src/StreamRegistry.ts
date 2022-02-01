@@ -186,19 +186,20 @@ export class StreamRegistry implements Context {
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
                 call doesn't fail e.g. if the user doesn't own the ENS name. To see whether the stream
-                creation succeeeds, we need to poll The Graph. If the polling timeouts, we don'
-                know what the actual error was. (Most likely it has anything to do with timeout
+                creation succeeeds, we need to poll the chain for stream existence. If the polling timeouts, we don't
+                know what the actual error was. (Most likely it has nothing to do with timeout
                 -> we don't use the error from until(), but throw an explicit error instead.)
             */
+            await tx.wait()
+            try {
+                await until(async () => { return this.streamExistsOnChain(streamId) }, 20000, 500)
+            } catch (e) {
+                throw new Error(`unable to create stream "${streamId}"`)
+            }
         } else {
             await this.ensureStreamIdInNamespaceOfAuthenticatedUser(domain, streamId)
             tx = await this.streamRegistryContract!.createStream(path, metadata, ethersOverrides)
-        }
-        await tx.wait()
-        try {
-            await until(async () => { return this.streamExistsOnTheGraph(streamId) }, 20000, 500)
-        } catch (e) {
-            throw new Error(`unable to create stream "${streamId}"`)
+            await tx.wait()
         }
         return new Stream({
             ...props,
@@ -370,10 +371,9 @@ export class StreamRegistry implements Context {
         await tx.wait()
     }
 
-    async streamExists(streamIdOrPath: string): Promise<boolean> {
+    async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists %s', streamId)
-        await this.connectToStreamRegistryContract()
+        this.debug('Checking if stream exists on chain %s', streamId)
         return this.streamRegistryContractReadonly!.exists(streamId)
     }
 

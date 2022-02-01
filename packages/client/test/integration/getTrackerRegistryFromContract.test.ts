@@ -1,5 +1,5 @@
-import { createTrackerRegistry, getTrackerRegistryFromContract } from '../../src/utils/TrackerRegistry'
-import { StreamPartIDUtils } from "../../src"
+import { getTrackerRegistryFromContract } from '../../src/getTrackerRegistryFromContract'
+import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545`
@@ -7,7 +7,7 @@ const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localh
 describe('TrackerRegistry', () => {
     test('throw exception if address is wrong (ENS)', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress: 'address', jsonRpcProvider
             })
         )).rejects.toThrow('ENS')
@@ -15,7 +15,7 @@ describe('TrackerRegistry', () => {
 
     test('throw exception if address is wrong', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress: '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', jsonRpcProvider
             })
         )).rejects.toThrow('call revert exception')
@@ -23,7 +23,7 @@ describe('TrackerRegistry', () => {
 
     test('throw exception if jsonRpcProvider is wrong', async () => {
         await expect(async () => (
-            await getTrackerRegistryFromContract({
+            getTrackerRegistryFromContract({
                 contractAddress, jsonRpcProvider: 'jsonRpcProvider'
             })
         )).rejects.toThrow('could not detect network')
@@ -76,33 +76,6 @@ describe('TrackerRegistry', () => {
                 http: 'http://10.200.10.1:30303',
                 ws: 'ws://10.200.10.1:30303'
             })
-        })
-    })
-
-    describe('createTrackerRegistry', () => {
-        test('creates tracker registry', () => {
-            const trackerRegistry = createTrackerRegistry([{
-                id: '',
-                http: 'http://10.200.10.1:30301',
-                ws: 'ws://10.200.10.1:30301'
-            }, {
-                id: '',
-                http: 'http://10.200.10.1:30302',
-                ws: 'ws://10.200.10.1:30302'
-            }])
-
-            expect(trackerRegistry.getAllTrackers()).toStrictEqual([
-                {
-                    id: '',
-                    http: 'http://10.200.10.1:30301',
-                    ws: 'ws://10.200.10.1:30301'
-                },
-                {
-                    id: '',
-                    http: 'http://10.200.10.1:30302',
-                    ws: 'ws://10.200.10.1:30302'
-                }
-            ])
         })
     })
 })
