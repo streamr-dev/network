@@ -72,8 +72,7 @@ async function run() {
     const [client3, stream3] = await setupClientAndStream({
         auth: {
             privateKey: account3.privateKey,
-        },
-        publishWithSignature: 'always',
+        }
     }, {
         requiresEncryption: true,
     })
