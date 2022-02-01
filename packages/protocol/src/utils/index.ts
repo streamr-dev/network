@@ -1,8 +1,8 @@
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator, { StreamMetadata } from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
-import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
-import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
+import { createTrackerRegistry, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
+import { createStorageNodeRegistry, StorageNodeRegistry, StorageNodeInfo } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
 import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
@@ -17,10 +17,9 @@ export {
     SmartContractRecord,
     TrackerRegistry,
     createTrackerRegistry,
-    getTrackerRegistryFromContract,
     StorageNodeRegistry,
     createStorageNodeRegistry,
-    getStorageNodeRegistryFromContract,
+    StorageNodeInfo,
     generateMnemonicFromAddress,
     parseAddressFromNodeId,
     keyToArrayIndex,

@@ -9,6 +9,8 @@ export * from './Subscriber'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
 export { SearchStreamsPermissionFilter } from './searchStreams'
+export { getStorageNodeRegistryFromContract } from './getStorageNodeRegistryFromContract'
+export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 import ConfigTest from './ConfigTest'
 import validateConfig from './ConfigBase'
 
