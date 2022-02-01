@@ -25,7 +25,6 @@ export type CacheConfig = {
 }
 
 export type PublishConfig = {
-    maxPublishQueueSize: number
     publishWithSignature: Todo
     publishAutoDisconnectDelay: number,
 }
@@ -121,7 +120,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFill: true,
     maxGapRequests: 5,
     maxRetries: 5,
-    maxPublishQueueSize: 10000,
     publishAutoDisconnectDelay: 5000,
 
     // Encryption options

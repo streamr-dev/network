@@ -131,9 +131,6 @@
         "autoDisconnect": {
             "type": "boolean"
         },
-        "maxPublishQueueSize": {
-            "type": "number"
-        },
         "publishWithSignature": {
             "type": "string",
             "enum": ["auto", "always", "never"]
