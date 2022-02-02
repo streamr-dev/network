@@ -57,7 +57,11 @@ export default class Contracts {
      *       i.e. can be used for "future deployments" but not necessarily old deployments
      * This can be used when deploying, but not for getDataUnion
      */
-    calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress, templateMainnetAddress?: EthereumAddress) {
+    calculateDataUnionMainnetAddress(
+        dataUnionName: string,
+        deployerAddress: EthereumAddress,
+        templateMainnetAddress?: EthereumAddress
+    ): EthereumAddress {
         validateAddress("deployer's address", deployerAddress)
         const templateAddress = templateMainnetAddress || this.templateMainnetAddress
         validateAddress('DU template mainnet address', templateAddress)
@@ -72,7 +76,7 @@ export default class Contracts {
      *       i.e. can be used for "future deployments" but not necessarily old deployments
      * This can be used when deploying, but not for getDataUnion
      */
-    calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress) {
+    calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress): EthereumAddress {
         validateAddress('DU mainnet address', mainnetAddress)
         const templateAddress = templateSidechainAddress || this.templateSidechainAddress
         validateAddress('DU template sidechain address', templateAddress)
@@ -86,7 +90,7 @@ export default class Contracts {
      * Check if there is a data union in given address, return its version
      * @returns 0 if target address is not a Data Union contract
      */
-    async getVersion(contractAddress: EthereumAddress) {
+    async getVersion(contractAddress: EthereumAddress): Promise<number> {
         validateAddress('contractAddress', contractAddress)
         const provider = this.ethereum.getMainnetProvider()
         const du = new Contract(contractAddress, [{
@@ -97,8 +101,8 @@ export default class Contracts {
             type: 'function'
         }], provider)
         try {
-            const version = await du.version()
-            return +version
+            const version = await du.version() as BigNumber
+            return version.toNumber()
         } catch (e) {
             // "not a data union"
             return 0
@@ -137,7 +141,7 @@ export default class Contracts {
     }
 
     // Find the Asyncronous Message-passing Bridge sidechain ("home") contract
-    async getSidechainAmb() {
+    async getSidechainAmb(): Promise<Contract> {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
                 const sidechainProvider = this.ethereum.getDataUnionChainProvider()
@@ -191,7 +195,10 @@ export default class Contracts {
         return markedComplete
     }
 
-    // move signatures from sidechain to mainnet
+    /**
+     * Move signatures from sidechain to mainnet
+     * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
+     */
     async transportSignaturesForMessage(messageHash: string, ethersOptions = {}): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
