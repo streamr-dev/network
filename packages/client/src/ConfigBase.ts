@@ -72,9 +72,9 @@ export type StrictStreamrClientConfig = {
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
     streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
     streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
         // noderegistry contracts and saves what streams are stored by which storagenodes
+    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
     ensCacheChainAddress: EthereumAddress,
     dataUnion: DataUnionConfig
     cache: CacheConfig,
@@ -141,8 +141,8 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
     streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
-    storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
     streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
+    storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
     ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
