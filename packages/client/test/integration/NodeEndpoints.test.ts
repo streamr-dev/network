@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { EthereumStorageEvent } from '../../src/StorageNodeRegistry'
+import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 
 import { storageNodeTestConfig } from './devEnvironment'
@@ -60,7 +60,7 @@ describe('createNode', () => {
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
         const promise = Promise
-        const callback = (event: EthereumStorageEvent) => {
+        const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
                 expect(event).toEqual({
