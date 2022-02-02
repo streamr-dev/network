@@ -20,7 +20,7 @@ import { StreamIDBuilder } from './StreamIDBuilder'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
-export type EthereumStorageEvent = {
+export type StorageNodeAssignmentEvent = {
     streamId: string,
     nodeAddress: EthereumAddress,
     type: 'added' | 'removed'
@@ -232,7 +232,7 @@ export class StorageNodeRegistry {
         return resJson.data
     }
 
-    async registerStorageEventListener(callback: (arg0: EthereumStorageEvent) => any) {
+    async registerStorageEventListener(callback: (event: StorageNodeAssignmentEvent) => any) {
         this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string, extra: any) => {
             callback({ streamId, nodeAddress, type: 'added', blockNumber: extra.blockNumber })
         })
