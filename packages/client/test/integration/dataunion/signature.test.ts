@@ -10,6 +10,8 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, providerSidechain } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
+import BrubeckConfig from '../../../src/Config'
+import { DataUnion } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
@@ -82,14 +84,18 @@ describe('DataUnion signature', () => {
                 privateKey: '0x1111111111111111111111111111111111111111111111111111111111111111'
             }
         })
-        const dataUnion = await client.getDataUnion('0x2222222222222222222222222222222222222222')
+        const dataUnion = new DataUnion(
+            '0x2222222222222222222222222222222222222222',
+            '0x2222222222222222222222222222222222222222',
+            new DataUnionAPI(client, null!, BrubeckConfig(clientOptions))
+        )
         const to = '0x3333333333333333333333333333333333333333'
         const withdrawn = BigNumber.from('4000000000000000')
         const amounts = [5000000000000000, '5000000000000000', BigNumber.from('5000000000000000')]
         // eslint-disable-next-line no-underscore-dangle
         const signaturePromises = amounts.map((amount) => dataUnion._createWithdrawSignature(amount, to, withdrawn, client.ethereum.getSigner()))
         const actualSignatures = await Promise.all(signaturePromises)
-        const expectedSignature = '0x5325ae62cdfd7d7c15101c611adcb159439217a48193c4e1d87ca5de698ec5233b1a68fd1302fdbd5450618d40739904295c88e88cf79d4241cf8736c2ec75731b' // eslint-disable-line max-len
+        const expectedSignature = '0xcaec648e19b71df9e14ae7c313c7a2b268356648bcfd5c5a0e82a76865d1e4a500890d71e7aa6e2dbf961251329b4528915036f1c484db8ee4ce585fd7cb05531c' // eslint-disable-line max-len
         expect(actualSignatures.every((actual) => actual === expectedSignature))
     })
 })
