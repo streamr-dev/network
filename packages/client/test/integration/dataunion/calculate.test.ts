@@ -6,6 +6,7 @@ import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
 import { getRandomClient, expectInvalidAddress } from '../../utils'
+import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 
@@ -27,8 +28,7 @@ describe('DataUnion calculate', () => {
 
         const dataUnionName = 'test-' + Date.now()
 
-        // @ts-expect-error
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
         const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, adminWalletMainnet.address)
         const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
 
