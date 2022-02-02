@@ -38,7 +38,7 @@ describe('StorageNodeRegistry', () => {
             expect(storageNodeRegistry.getAllStorageNodes()).toStrictEqual([
                 {
                     address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-                    url: 'http://10.200.10.1:8891/api/v1',
+                    url: 'http://10.200.10.1:8891',
                 }
             ])
         })
@@ -52,7 +52,7 @@ describe('StorageNodeRegistry', () => {
 
             expect(
                 storageNodeRegistry.getStorageNodeHTTP('0xde1112f631486CfC759A50196853011528bC5FA0')
-            ).toEqual('http://10.200.10.1:8891/api/v1')
+            ).toEqual('http://10.200.10.1:8891')
         })
 
         test('throw error if address not found', async () => {

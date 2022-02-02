@@ -48,7 +48,7 @@ describe('DataMetadataEndpoints', () => {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
+        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -71,7 +71,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -82,7 +82,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -116,7 +116,7 @@ describe('DataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 

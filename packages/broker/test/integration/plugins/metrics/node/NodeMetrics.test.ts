@@ -56,7 +56,7 @@ describe('NodeMetrics', () => {
         const storageClient = await createClient(tracker, storageNodeAccount.privateKey, {
             storageNodeRegistry: storageNodeRegistry,
         })
-        await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}/api/v1"}`)
+        await storageClient.setNode(`{"http": "http://127.0.0.1:${httpPort}"}`)
         metricsGeneratingBroker = await startBroker({
             name: 'broker1',
             privateKey: tmpAccount.privateKey,

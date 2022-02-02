@@ -11,7 +11,6 @@ import { NodeRegistryOptions } from 'streamr-client/src/NodeRegistry'
 import { StreamPartID } from 'streamr-client-protocol'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
-// const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 interface TestConfig {
     name: string
@@ -116,10 +115,6 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
     return broker
 }
 
-export const getWsUrl = (port: number, ssl = false): string => {
-    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
-}
-
 // generates a private key
 // equivalent to Wallet.createRandom().privateKey but much faster
 // the slow part seems to be deriving the address from the key so if you can avoid this, just use
@@ -161,7 +156,7 @@ export const waitForStreamPersistedInStorageNode = async (
 ): Promise<void> => {
     const isPersistent = async () => {
         // eslint-disable-next-line max-len
-        const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
+        const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }
     await waitForCondition(() => isPersistent(), 20000, 500)
