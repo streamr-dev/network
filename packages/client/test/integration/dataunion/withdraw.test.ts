@@ -183,13 +183,11 @@ async function testWithdraw(
     const balanceAfter = await getRecipientBalance()
     const balanceIncrease = balanceAfter.sub(balanceBefore)
 
-    expect(stats).toMatchObject({
-        status: MemberStatus.ACTIVE,
-        earningsBeforeLastJoin: BigNumber.from(0),
-        totalEarnings: BigNumber.from('1000000000000000000'),
-        withdrawableEarnings: BigNumber.from('1000000000000000000')
-    })
-    expect(balanceIncrease.toString()).toBe((expectedWithdrawAmount || amount).toString())
+    expect(stats.status).toEqual(MemberStatus.ACTIVE)
+    expect(stats.earningsBeforeLastJoin.toNumber()).toEqual(0)
+    expect(stats.totalEarnings.toString()).toEqual('1000000000000000000')
+    expect(stats.withdrawableEarnings.toString()).toEqual('1000000000000000000')
+    expect(balanceIncrease.toString()).toEqual((expectedWithdrawAmount || amount).toString())
 }
 
 log('Starting the simulated bridge-sponsored signature transport process')
