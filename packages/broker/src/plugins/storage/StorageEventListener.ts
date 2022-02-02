@@ -28,7 +28,7 @@ export class StorageEventListener {
                 if (event.nodeAddress.toLowerCase() !== this.clusterId) {
                     return
                 }
-                logger.info('received EthereumStorageEvent: %j', event)
+                logger.info('received StorageNodeAssignmentEvent: %j', event)
                 try {
                     const stream = await this.streamrClient.getStream(event.streamId)
                     this.onEvent(stream, event.type, event.blockNumber)
