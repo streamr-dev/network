@@ -35,18 +35,6 @@
             "type": "string",
             "format": "ethereum-address"
         },
-        "keyExchange": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "publicKey": {
-                    "type": "string"
-                },
-                "privateKey": {
-                    "type": "string"
-                }
-            }
-        },
         "dataUnion": {
             "type": "object",
             "additionalProperties": false,
@@ -142,19 +130,6 @@
         },
         "autoDisconnect": {
             "type": "boolean"
-        },
-        "maxPublishQueueSize": {
-            "type": "number"
-        },
-        "publishWithSignature": {
-            "type": "string",
-            "enum": ["auto", "always", "never"]
-        },
-        "publisherStoreKeyHistory": {
-            "type": "boolean"
-        },
-        "publishAutoDisconnectDelay": {
-            "type": "number"
         },
         "orderMessages": {
             "type": "boolean"

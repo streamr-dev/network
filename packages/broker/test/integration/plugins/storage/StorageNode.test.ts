@@ -19,7 +19,6 @@ describe('StorageNode', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
-        const engineAndEditorAccount = Wallet.createRandom()
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
         await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
 
@@ -28,8 +27,7 @@ describe('StorageNode', () => {
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort1,
-            enableCassandra: true,
-            streamrAddress: engineAndEditorAccount.address,
+            enableCassandra: true
         })
     })
 

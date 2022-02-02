@@ -1,3 +1,4 @@
+import { defaultAbiCoder } from '@ethersproject/abi'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad, BytesLike } from '@ethersproject/bytes'
@@ -48,12 +49,18 @@ export interface DataUnionWithdrawOptions {
 }
 
 export interface DataUnionStats {
+    // new stats added in 2.2 (admin & data union fees)
+    totalRevenue?: BigNumber,
+    totalAdminFees?: BigNumber,
+    totalDataUnionFees?: BigNumber,
+
+    // stats that already existed in 2.0
     activeMemberCount: BigNumber,
     inactiveMemberCount: BigNumber,
     joinPartAgentCount: BigNumber,
     totalEarnings: BigNumber,
     totalWithdrawable: BigNumber,
-    lifetimeMemberEarnings: BigNumber
+    lifetimeMemberEarnings: BigNumber,
 }
 
 export enum MemberStatus {
@@ -301,25 +308,52 @@ export class DataUnion {
 
     // Query functions
 
+    /**
+     * Get stats for the Data Union (version 2).
+     * Most of the interface has remained stable, but getStats has been implemented in functions that return
+     *   a different number of stats, hence the need for the more complex and very manually decoded query.
+     */
     async getStats(): Promise<DataUnionStats> {
-        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        const [
-            totalEarnings,
-            totalEarningsWithdrawn,
-            activeMemberCount,
-            inactiveMemberCount,
-            lifetimeMemberEarnings,
-            joinPartAgentCount,
-        ] = await duSidechain.getStats()
-        const totalWithdrawable = totalEarnings.sub(totalEarningsWithdrawn)
-        return {
-            activeMemberCount,
-            inactiveMemberCount,
-            joinPartAgentCount,
-            totalEarnings,
-            totalWithdrawable,
-            lifetimeMemberEarnings,
-        }
+        const provider = this.client.ethereum.getDataUnionChainProvider()
+        const getStatsResponse = await provider.call({
+            to: this.sidechainAddress,
+            data: '0xc59d4847', // getStats()
+        })
+        log('getStats raw response (length = %d) %s', getStatsResponse.length, getStatsResponse)
+
+        // Attempt to decode longer response first; if that fails, try the shorter one. Decoding too little won't throw, but decoding too much will
+        // for uint[9] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x15287E573007d5FbD65D87ed46c62Cf4C71Dd66d/contracts
+        // for uint[6] returning getStats, see e.g. https://blockscout.com/xdai/mainnet/address/0x71586e2eb532612F0ae61b624cb0a9c26e2F4c3B/contracts
+        try {
+            const [[
+                totalRevenue, totalEarnings, totalAdminFees, totalDataUnionFees, totalWithdrawn,
+                activeMemberCount, inactiveMemberCount, lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[9]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalRevenue, // == earnings (that go to members) + adminFees + dataUnionFees
+                totalAdminFees,
+                totalDataUnionFees,
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } catch (e) {
+            const [[
+                totalEarnings, totalEarningsWithdrawn, activeMemberCount, inactiveMemberCount,
+                lifetimeMemberEarnings, joinPartAgentCount
+            ]] = defaultAbiCoder.decode(['uint256[6]'], getStatsResponse) as BigNumber[][]
+            return {
+                totalEarnings,
+                totalWithdrawable: totalEarnings.sub(totalEarningsWithdrawn),
+                activeMemberCount,
+                inactiveMemberCount,
+                joinPartAgentCount,
+                lifetimeMemberEarnings,
+            }
+        } // TODO: maybe catch and re-throw with a better error message
     }
 
     /**
@@ -358,13 +392,14 @@ export class DataUnion {
      * Get data union admin fee fraction (between 0.0 and 1.0) that admin gets from each revenue event
      */
     async getAdminFee(): Promise<number> {
-        const duMainnet = this.getContracts().getMainnetContractReadOnly(this.contractAddress)
-        const adminFeeBN = await duMainnet.adminFeeFraction()
+        let adminFeeBN = BigNumber.from(0)
+        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
+        adminFeeBN = await duSidechain.adminFeeFraction()
         return +adminFeeBN.toString() / 1e18
     }
 
     async getAdminAddress(): Promise<EthereumAddress> {
-        const duMainnet = this.getContracts().getMainnetContractReadOnly(this.contractAddress)
+        const duMainnet = await this.getContracts().getMainnetContractReadOnly(this.contractAddress)
         return duMainnet.owner()
     }
 
@@ -372,22 +407,11 @@ export class DataUnion {
      * Figure out if given mainnet address is old DataUnion (v 1.0) or current 2.0
      * NOTE: Current version of streamr-client-javascript can only handle current version!
      */
+    static async getVersion(contractAddress: EthereumAddress, client: DataUnionAPI): Promise<number> {
+        return new Contracts(client).getVersion(contractAddress)
+    }
     async getVersion(): Promise<number> {
-        const provider = this.client.ethereum.getMainnetProvider()
-        const du = new Contract(this.contractAddress, [{
-            name: 'version',
-            inputs: [],
-            outputs: [{ type: 'uint256' }],
-            stateMutability: 'view',
-            type: 'function'
-        }], provider)
-        try {
-            const version = await du.version()
-            return +version
-        } catch (e) {
-            // "not a data union"
-            return 0
-        }
+        return this.getContracts().getVersion(this.contractAddress)
     }
 
     // Admin functions
@@ -559,9 +583,11 @@ export class DataUnion {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-        const duMainnet = this.getContracts().getMainnetContract(this.contractAddress)
-        const tx = await duMainnet.setAdminFee(adminFeeBN, ethersOptions)
+        const duFeeBN = await duSidechain.dataUnionFeeFraction()
+        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOptions)
         return waitForTx(tx)
     }
 
@@ -652,7 +678,7 @@ export class DataUnion {
             agentAddressList.push(getAddress(client.options.streamrNodeAddress))
         }
 
-        const contract = await new Contracts(client).deployDataUnion({
+        const { duMainnetAddress, duSidechainAddress } = await new Contracts(client).deployDataUnion({
             ownerAddress,
             agentAddressList,
             duName,
@@ -663,7 +689,7 @@ export class DataUnion {
             confirmations,
             gasPrice
         })
-        return new DataUnion(contract.address, contract.sidechain.address, client)
+        return new DataUnion(duMainnetAddress, duSidechainAddress, client)
     }
 
     /** @internal */
@@ -716,28 +742,6 @@ export class DataUnion {
     }
 
     // Internal functions
-
-    /** @internal */
-    static _fromContractAddress(contractAddress: string, client: DataUnionAPI) {
-        const contracts = new Contracts(client)
-        const sidechainAddress = contracts.getDataUnionSidechainAddress(contractAddress) // throws if bad address
-        return new DataUnion(contractAddress, sidechainAddress, client)
-    }
-
-    /** @internal */
-    static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: DataUnionAPI) {
-        const contracts = new Contracts(client)
-        const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, deployerAddress) // throws if bad address
-        return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
-    }
-
-    /** @internal */
-    async _getContract() {
-        const ret = this.getContracts().getMainnetContract(this.contractAddress)
-        // @ts-expect-error
-        ret.sidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return ret
-    }
 
     private getContracts() {
         return new Contracts(this.client)

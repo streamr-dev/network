@@ -129,7 +129,8 @@ describe('DataUnion earnings transfer methods', () => {
                 beneficiaryAddress: dataUnion.getAddress(),
                 type: 'DATAUNION',
                 dataUnionVersion: 2
-            })
+            }),
+            session: adminClient.session,
         })
 
         const memberWallet = await addMember(dataUnionAddress, secret)

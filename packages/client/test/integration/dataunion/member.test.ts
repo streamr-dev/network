@@ -32,7 +32,8 @@ describe('DataUnion member', () => {
                     beneficiaryAddress: dataUnion.getAddress(),
                     type: 'DATAUNION',
                     dataUnionVersion: 2
-                })
+                }),
+                session: adminClient.session,
             }
         )
         secret = await dataUnion.createSecret()

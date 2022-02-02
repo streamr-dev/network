@@ -11,8 +11,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-import type { Todo } from './types'
-
 import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
@@ -24,20 +22,13 @@ export type CacheConfig = {
     maxAge: number
 }
 
-export type PublishConfig = {
-    maxPublishQueueSize: number
-    publishWithSignature: Todo
-    publisherStoreKeyHistory: boolean
-    publishAutoDisconnectDelay: number,
-}
-
 export type SubscribeConfig = {
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
     maxRetries: number
-    verifySignatures: Todo
+    verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
@@ -85,13 +76,11 @@ export type StrictStreamrClientConfig = {
     streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
         // noderegistry contracts and saves what streams are stored by which storagenodes
     ensCacheChainAddress: EthereumAddress,
-    keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
 } & (
     EthereumConfig
     & ConnectionConfig
-    & PublishConfig
     & SubscribeConfig
     & EncryptionConfig
 )
@@ -123,15 +112,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFill: true,
     maxGapRequests: 5,
     maxRetries: 5,
-    maxPublishQueueSize: 10000,
-    publishAutoDisconnectDelay: 5000,
 
     // Encryption options
-    publishWithSignature: 'auto',
     verifySignatures: 'auto',
-    publisherStoreKeyHistory: true,
     groupKeys: {}, // {streamId: groupKey}
-    keyExchange: {},
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
@@ -174,6 +158,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             chainId: 137,
             overrides: {
                 maxPriorityFeePerGas: '20000000000', // pay 20 gwei extra
+                maxFeePerGas: '500000000000', // 500 gwei gas max fee (TODO: is this enough?)
             }
         }
     },

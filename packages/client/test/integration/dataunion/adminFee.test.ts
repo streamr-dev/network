@@ -4,7 +4,10 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
+import Contracts from '../../../src/dataunion/Contracts'
+import DataUnionAPI from '../../../src/dataunion'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
+import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
@@ -48,9 +51,10 @@ describe('DataUnion admin fee', () => {
         log(`Transaction receipt: ${JSON.stringify(tr)}`)
 
         const amount = parseEther('2')
-        // eslint-disable-next-line no-underscore-dangle
-        const contract = await dataUnion._getContract()
-        const tokenAddress = await contract.token()
+
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
+        const contract = await contracts.getMainnetContract(dataUnion.getAddress())
+        const tokenAddress = await contract.tokenMainnet()
         const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)
 
         log(`Transferring ${amount} token-wei ${adminWalletMainnet.address}->${dataUnion.getAddress()}`)

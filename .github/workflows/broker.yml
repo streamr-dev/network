@@ -10,6 +10,9 @@ on:
   pull_request:
     branches:
       - '*'
+  schedule:
+    # run every day at 00:00
+    - cron: '0 0 * * *'
 concurrency:
   group: broker-build-${{ github.head_ref }}
   cancel-in-progress: true
@@ -55,7 +58,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "cassandra init-keyspace nginx parity-sidechain-node0 graph-deploy-streamregistry-subgraph parity-node0"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph parity-node0"
       - run: npm run test-integration
         env:
           CI: true
@@ -85,7 +88,7 @@ jobs:
           driver-opts: |
             network=host
       - name: Build
-        uses: docker/build-push-action@v2.7.0
+        uses: docker/build-push-action@v2.9.0
         with:
           context: .
           file: ./Dockerfile
@@ -133,8 +136,8 @@ jobs:
     name: Build + Push Docker images
     needs: [test-unit, test-integration, test-docker]
     runs-on: self-hosted
-    # only push for main and tags
-    if: ${{ always() && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+    # only push for nightly runs
+    if: github.event_name == 'schedule'
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -189,7 +192,7 @@ jobs:
           driver-opts: |
             network=host
       - name: Build & Push
-        uses: docker/build-push-action@v2.7.0
+        uses: docker/build-push-action@v2.9.0
         with:
           context: .
           file: ./Dockerfile

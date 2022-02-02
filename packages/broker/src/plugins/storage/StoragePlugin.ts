@@ -1,12 +1,10 @@
-import type { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { Wallet } from 'ethers'
-
+import type { StreamMessage } from 'streamr-client-protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
 import { Plugin, PluginOptions } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
-import { StorageConfig, AssignmentMessage } from './StorageConfig'
+import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 import { MetricsContext } from 'streamr-network'
@@ -20,7 +18,6 @@ export interface StoragePluginConfig {
         datacenter: string
     }
     storageConfig: {
-        streamrAddress: string
         refreshInterval: number
     }
     cluster: {
@@ -32,11 +29,9 @@ export interface StoragePluginConfig {
 }
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
-
     private cassandra?: Storage
     private storageConfig?: StorageConfig
     private messageListener?: (msg: StreamMessage) => void
-    private assignmentMessageListener?: (msg: StreamMessage<AssignmentMessage>) => void
 
     constructor(options: PluginOptions) {
         super(options)
@@ -44,29 +39,35 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
-        this.cassandra = await this.getCassandraStorage(metricsContext)
-        this.storageConfig = await this.createStorageConfig()
+        this.cassandra = await this.startCassandraStorage(metricsContext)
+        this.storageConfig = await this.startStorageConfig()
         this.messageListener = (msg) => {
             if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
             }
         }
-        // TODO: NET-637 use client instead of networkNode?
-        this.storageConfig.getStreamParts().forEach((streamPart) => {
-            this.networkNode.subscribe(streamPart)
-        })
-        // TODO: NET-637 use client instead of networkNode?
-        this.storageConfig.addChangeListener({
-            onStreamPartAdded: (streamPart: StreamPartID) => this.networkNode.subscribe(streamPart),
-            onStreamPartRemoved: (streamPart: StreamPartID) => this.networkNode.unsubscribe(streamPart)
-        })
         this.networkNode.addMessageListener(this.messageListener)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }
 
-    private async getCassandraStorage(metricsContext: MetricsContext): Promise<Storage> {
+    async stop(): Promise<void> {
+        this.networkNode.removeMessageListener(this.messageListener!)
+        this.storageConfig!.getStreamParts().forEach((streamPart) => {
+            this.networkNode.unsubscribe(streamPart)
+        })
+        await Promise.all([
+            this.cassandra!.close(),
+            this.storageConfig!.destroy()
+        ])
+    }
+
+    getConfigSchema(): Schema {
+        return PLUGIN_CONFIG_SCHEMA
+    }
+
+    private async startCassandraStorage(metricsContext: MetricsContext): Promise<Storage> {
         const cassandraStorage = await startCassandraStorage({
             contactPoints: [...this.pluginConfig.cassandra.hosts],
             localDataCenter: this.pluginConfig.cassandra.datacenter,
@@ -81,35 +82,23 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async createStorageConfig(): Promise<StorageConfig> {
-        const brokerAddress = new Wallet(this.brokerConfig.client.auth!.privateKey!).address
-        const storageConfig = await StorageConfig.createInstance(
-            this.pluginConfig.cluster.clusterAddress || brokerAddress,
+    private async startStorageConfig(): Promise<StorageConfig> {
+        const storageConfig = new StorageConfig(
+            this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress(),
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
             this.pluginConfig.storageConfig.refreshInterval,
-            this.streamrClient)
-        this.assignmentMessageListener = storageConfig.
-            startAssignmentEventListener(this.pluginConfig.storageConfig.streamrAddress)
-        await storageConfig.startChainEventsListener()
+            this.streamrClient,
+            {
+                onStreamPartAdded: (streamPart) => {
+                    this.networkNode.subscribe(streamPart)
+                },
+                onStreamPartRemoved: (streamPart) => {
+                    this.networkNode.unsubscribe(streamPart)
+                }
+            }
+        )
+        await storageConfig.start()
         return storageConfig
-    }
-
-    async stop(): Promise<void> {
-        this.storageConfig!.stopAssignmentEventListener(this.assignmentMessageListener!, 
-            this.pluginConfig.storageConfig.streamrAddress)
-        this.networkNode.removeMessageListener(this.messageListener!)
-        this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            this.networkNode.unsubscribe(streamPart)
-        })
-        this.storageConfig!.stopChainEventsListener()
-        await Promise.all([
-            this.cassandra!.close(),
-            this.storageConfig!.cleanup()
-        ])
-    }
-
-    getConfigSchema(): Schema {
-        return PLUGIN_CONFIG_SCHEMA
     }
 }

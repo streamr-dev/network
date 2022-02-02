@@ -4,7 +4,7 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { scoped, Lifecycle } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import EncryptionUtil from './encryption/Encryption'
 import Ethereum from './Ethereum'
 import { Stoppable } from './utils/Stoppable'
@@ -15,7 +15,7 @@ export default class PublisherEncryption implements Stoppable {
 
     constructor(
         private streamEndpoints: StreamEndpointsCached,
-        private keyExchange: PublisherKeyExchange,
+        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         private ethereum: Ethereum,
     ) {
     }

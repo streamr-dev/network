@@ -5,7 +5,7 @@ import { Rest } from '../Rest'
 import { StrictBrubeckClientConfig, Config } from '../Config'
 import { DataUnion, DataUnionDeployOptions } from './DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
-import { getAddress } from '@ethersproject/address'
+import { getAddress, isAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
 import Contracts from './Contracts'
 
@@ -54,14 +54,18 @@ export default class DataUnionAPI {
     }
 
     async getDataUnion(contractAddress: EthereumAddress) {
-        const du = DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
-        const version = await du.getVersion()
+        if (!isAddress(contractAddress)) {
+            throw new Error(`Can't get Data Union, invalid Ethereum address: ${contractAddress}`)
+        }
+        const version = await DataUnion.getVersion(contractAddress, this)
         if (version === 0) {
             throw new Error(`${contractAddress} is not a Data Union!`)
         } else if (version === 1) {
             throw new Error(`${contractAddress} is an old Data Union, please use StreamrClient 4.x or earlier!`)
         } else if (version === 2) {
-            return du
+            const contracts = new Contracts(this)
+            const sidechainContract = await contracts.getSidechainContractReadOnly(contractAddress)
+            return new DataUnion(contractAddress, sidechainContract.address, this)
         }
         throw new Error(`${contractAddress} is an unknown Data Union version "${version}"`)
     }
@@ -100,13 +104,5 @@ export default class DataUnionAPI {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.ethereum.getSigner()
         return DataUnion._createSetBinanceRecipientSignature(to, signer, new Contracts(this)) // eslint-disable-line no-underscore-dangle
-    }
-
-    /** @internal */
-    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
-        return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
-            dataUnionName,
-            deployerAddress
-        }, this)
     }
 }
