@@ -59,45 +59,4 @@ describe('LoginEndpoints', () => {
             // assert(sessionToken.expires)
         })
     })
-
-    describe('API key login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithApiKey('apikey')
-            }).rejects.toThrow()
-        })
-    })
-
-    describe('Username/password login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithUsernamePassword('username', 'password')
-            }).rejects.toThrow('no longer supported')
-        })
-    })
-
-    describe('UserInfo', () => {
-        it('should get user info', async () => {
-            const userInfo = await client.getUserInfo()
-            assert(userInfo.name)
-            assert(userInfo.username)
-        })
-    })
-
-    describe('logout', () => {
-        it('should not be able to use the same session token after logout', async () => {
-            await client.getUserInfo() // first fetches the session token, then requests the endpoint
-            const sessionToken1 = client.session.options.sessionToken
-            await client.logoutEndpoint() // invalidates the session token in core-api
-            await client.getUserInfo() // requests the endpoint with sessionToken1, receives 401, fetches a new session token
-            const sessionToken2 = client.session.options.sessionToken
-            assert.notDeepStrictEqual(sessionToken1, sessionToken2)
-        })
-
-        it('should be able to log in after logging out', async () => {
-            await client.getUserInfo()
-            await client.logout()
-            await client.getUserInfo()
-        })
-    })
 })
