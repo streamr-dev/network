@@ -101,7 +101,9 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
 }
 
 export async function getPrivateKey(): Promise<string> {
-    const response = await fetch('http://localhost:45454/key')
+    const response = await fetch('http://localhost:45454/key', {
+        timeout: 9 * 1000
+    })
     return response.text()
 }
 
