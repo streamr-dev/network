@@ -21,7 +21,7 @@ import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
 
 import { Stream } from '../../src/Stream'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 jest.setTimeout(60000)
 
@@ -529,8 +529,7 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('decodes resent messages correctly', async () => {
-            await stream.addToStorageNode(storageNodeTestConfig.address)// use actual storage nodes Address, actually register it
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address) }, 100000, 1000)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)// use actual storage nodes Address, actually register it
 
             const publishedMessage = Msg({
                 content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')

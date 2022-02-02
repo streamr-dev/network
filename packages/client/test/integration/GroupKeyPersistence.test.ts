@@ -3,8 +3,7 @@ import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createT
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
-import { Wallet } from 'ethers'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
@@ -30,8 +29,7 @@ describeRepeats('Group Key Persistence', () => {
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
-            const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-            await stream.addToStorageNode(await storageNodeWallet.getAddress())
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
@@ -72,8 +70,7 @@ describeRepeats('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-                await stream.addToStorageNode(await storageNodeWallet.getAddress())
+                await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 published = await publishTestMessages(5, {
                     waitForLast: true,
@@ -304,8 +301,7 @@ describeRepeats('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-                    await s.addToStorageNode(await storageNodeWallet.getAddress())
+                    await s.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
                     // eslint-disable-next-line no-loop-func
                     streams.push(s)
                 }

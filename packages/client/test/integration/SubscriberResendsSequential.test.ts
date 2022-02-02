@@ -8,7 +8,7 @@ import {
     createTestStream,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 import { Stream, StreamPermission } from '../../src/Stream'
 
@@ -46,7 +46,7 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(storageNodeTestConfig.address)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())

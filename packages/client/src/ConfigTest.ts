@@ -59,3 +59,5 @@ export default {
     autoDisconnect: false,
     maxRetries: 2,
 }
+
+export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
