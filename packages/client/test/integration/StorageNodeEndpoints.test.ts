@@ -106,7 +106,7 @@ describe('createNode', () => {
     it('addStreamToStorageNode through stream object', async () => {
         const stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const isStored = await client.isStreamStoredInStorageNode(createdStream.id, DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored).toEqual(true)
     })
 
