@@ -105,7 +105,7 @@ jobs:
         with:
           services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 nginx graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers.yml
+        uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2
         name: Run Realtime Test
         with:
@@ -146,7 +146,7 @@ jobs:
         with:
           services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 nginx graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers.yml
+        uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2
         name: Run Resend Test
         with:
@@ -185,7 +185,7 @@ jobs:
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers.yml
+        uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: bootstrap-pkg
         working-directory: './'
         run: |
