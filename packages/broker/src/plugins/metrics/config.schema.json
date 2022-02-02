@@ -19,9 +19,6 @@
         "object",
         "null"
       ],
-      "required": [
-        "storageNode"
-      ],
       "additionalProperties": false,
       "properties": {
         "streamIdPrefix": {
