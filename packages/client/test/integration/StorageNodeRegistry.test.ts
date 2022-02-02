@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import { NodeRegistry } from '../../src/NodeRegistry'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Wallet } from 'ethers'
 import { clientOptions, createTestStream, getPrivateKey, until } from '../utils'
@@ -9,7 +8,7 @@ import { afterAll } from 'jest-circus'
 
 const TEST_TIMEOUT = 60 * 1000
 
-describe(NodeRegistry, () => {
+describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet
     let listenerWallet: Wallet
     let creatorClient: StreamrClient

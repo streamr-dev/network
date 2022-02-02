@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { EthereumStorageEvent } from '../../src/NodeRegistry'
+import { EthereumStorageEvent } from '../../src/StorageNodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 
 import { storageNodeTestConfig } from './devEnvironment'

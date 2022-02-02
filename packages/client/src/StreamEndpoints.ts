@@ -25,7 +25,7 @@ import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
-import { NodeRegistry } from './NodeRegistry'
+import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
 
@@ -85,7 +85,7 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
-        @inject(delay(() => NodeRegistry)) private readonly nodeRegistry: NodeRegistry,
+        @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
         private readonly ethereum: StreamrEthereum
@@ -127,7 +127,7 @@ export class StreamEndpoints implements Context {
             throw new NotFoundError('Stream: id=' + streamId + ' has no storage nodes!')
         }
         const chosenNode = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
+        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(chosenNode)
         const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
         const json = await this.rest.get<StreamMessageAsObject>([
             'streams', normalizedStreamId, 'data', 'partitions', streamPartition, 'last',
@@ -140,7 +140,7 @@ export class StreamEndpoints implements Context {
     }
 
     async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const { streams } = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
+        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
 
         const result: StreamPartID[] = []
         streams.forEach((stream: Stream) => {

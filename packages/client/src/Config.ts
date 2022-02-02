@@ -48,7 +48,7 @@ const BrubeckConfigInjection = {
     Subscribe: Symbol('Config.Subscribe'),
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
-    NodeRegistry: Symbol('Config.NodeRegistry'),
+    StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
     Encryption: Symbol('Config.Encryption'),
 }
 

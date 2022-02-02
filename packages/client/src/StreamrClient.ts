@@ -21,7 +21,7 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
 import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
-import { NodeRegistry } from './NodeRegistry'
+import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
 
@@ -43,7 +43,7 @@ export interface StreamrClient extends Ethereum,
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
-    Methods<NodeRegistry>,
+    Methods<StorageNodeRegistry>,
     Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
     // Omit sessionTokenPromise because TS complains:
@@ -80,7 +80,7 @@ class StreamrClientBase implements Context {
         protected destroySignal: DestroySignal,
         public dataunions: DataUnions,
         public streamRegistry: StreamRegistry,
-        public nodeRegistry: NodeRegistry
+        public storageNodeRegistry: StorageNodeRegistry
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
@@ -96,7 +96,7 @@ class StreamrClientBase implements Context {
         Plugin(this, this.groupKeyStore)
         Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
-        Plugin(this, this.nodeRegistry)
+        Plugin(this, this.storageNodeRegistry)
 
         // override subscribe with resendSubscriber's subscribe+resend
         this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
@@ -221,7 +221,7 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<DestroySignal>(DestroySignal),
             c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
-            c.resolve<NodeRegistry>(NodeRegistry),
+            c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
         )
     }
 }
@@ -229,7 +229,7 @@ export class StreamrClient extends StreamrClientBase {
 export const Dependencies = {
     Context,
     BrubeckNode,
-    NodeRegistry,
+    StorageNodeRegistry,
     Session,
     LoginEndpoints,
     StreamEndpoints,
