@@ -13,8 +13,8 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
-import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
-import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
+import { expectInvalidAddress } from '../../utils'
+import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus, DataUnion } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
 import BrubeckConfig from '../../../src/Config'
 
@@ -31,6 +31,12 @@ const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAd
 const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 let testWalletId = 1000000 // ensure fixed length as string
+
+// TODO: to speed up this test, try re-using the data union?
+let validDataUnion: DataUnion | undefined // use this in a test that only wants a valid data union but doesn't mutate it
+async function getDataUnion(): Promise<DataUnion> {
+    return validDataUnion || new StreamrClient(clientOptions).deployDataUnion()
+}
 
 async function testWithdraw(
     withdraw: (
@@ -57,6 +63,7 @@ async function testWithdraw(
     const adminClient = new StreamrClient(clientOptions)
 
     const dataUnion = await adminClient.deployDataUnion()
+    validDataUnion = dataUnion // save for later re-use
     const secret = await dataUnion.createSecret('test secret')
     log('DataUnion %s is ready to roll', dataUnion.getAddress())
     // dataUnion = await adminClient.getDataUnionContract({dataUnion: "0xd778CfA9BB1d5F36E42526B2BAFD07B74b4066c0"})
@@ -208,19 +215,23 @@ providerSidechain.on({
     }
     const hash = keccak256(message)
     const adminClient = new StreamrClient(clientOptions)
-    const du = await adminClient.getDataUnion('0x0000000000000000000000000000000000000000')
-    await du.transportMessage(hash, 100, 120000)
+    const dataUnion = new DataUnion(
+        '0x0000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000',
+        new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions))
+    )
+    await dataUnion.transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)
 })
 
-describe('DataUnion withdraw', () => {
+describe('DataUnion withdrawX functions', () => {
     describe.each([
         [false, true, true], // sidechain withdraw
         [true, true, true], // self-service mainnet withdraw
         [true, true, false], // self-service mainnet withdraw without checking the recipient account
         [true, false, true], // bridge-sponsored mainnet withdraw
         [true, false, false], // other-sponsored mainnet withdraw
-    ])('Withdrawing with sendToMainnet=%p, payForTransport=%p, wait=%p', (sendToMainnet, payForTransport, waitUntilTransportIsComplete) => {
+    ])('with options: sendToMainnet=%p, payForTransport=%p, wait=%p', (sendToMainnet, payForTransport, waitUntilTransportIsComplete) => {
 
         // for test debugging: select only one case by uncommenting below, and comment out the above .each block
         // const [sendToMainnet, payForTransport, waitUntilTransportIsComplete] = [true, false, true] // bridge-sponsored mainnet withdraw
@@ -281,9 +292,8 @@ describe('DataUnion withdraw', () => {
         })
     })
 
-    it('Validate address', async () => {
-        const client = getRandomClient()
-        const dataUnion = await client.getDataUnion(createMockAddress())
+    it('validates input addresses', async () => {
+        const dataUnion = await getDataUnion()
         return Promise.all([
             expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
             expectInvalidAddress(() => dataUnion.withdrawAllTo('invalid-address')),
