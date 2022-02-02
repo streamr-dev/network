@@ -52,7 +52,7 @@ describe(StoragePoller, () => {
     it('start() schedules polling on an interval', async () => {
         getStoredStreamsOf.mockResolvedValue(POLL_RESULT)
         await poller.start()
-        await wait(POLL_TIME * 5)
+        await wait(POLL_TIME * 10)
         expect(onNewSnapshot.mock.calls.length).toBeGreaterThanOrEqual(4)
     })
 
@@ -60,7 +60,7 @@ describe(StoragePoller, () => {
         getStoredStreamsOf.mockResolvedValue(POLL_RESULT)
         poller = initPoller(0)
         await poller.start()
-        await wait(POLL_TIME * 5)
+        await wait(POLL_TIME * 10)
         expect(getStoredStreamsOf).toBeCalledTimes(1)
     })
 
