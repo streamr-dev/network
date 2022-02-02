@@ -50,8 +50,7 @@ describe('DataUnion signature', () => {
         })
         await memberDataUnion.join(secret)
 
-        // @ts-expect-error
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
         const contractMainnet = await contracts.getMainnetContract(dataUnion.getAddress())
         const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
         const tokenSidechainAddress = await contractMainnet.tokenSidechain()

@@ -16,6 +16,7 @@ import authFetch from '../../../src/authFetch'
 import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
+import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
@@ -97,8 +98,7 @@ async function testWithdraw(
     const res2 = await dataUnionMember.join(secret)
     log('Member joined data union %O', res2)
 
-    // @ts-expect-error
-    const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+    const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
     const mainnetContract = await contracts.getMainnetContract(dataUnion.getAddress())
     const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
 

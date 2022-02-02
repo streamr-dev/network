@@ -7,6 +7,7 @@ import * as Token from '../../../contracts/TestToken.json'
 import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
+import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
@@ -51,8 +52,7 @@ describe('DataUnion admin fee', () => {
 
         const amount = parseEther('2')
 
-        // @ts-expect-error
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null, clientOptions))
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
         const contract = await contracts.getMainnetContract(dataUnion.getAddress())
         const tokenAddress = await contract.tokenMainnet()
         const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)
