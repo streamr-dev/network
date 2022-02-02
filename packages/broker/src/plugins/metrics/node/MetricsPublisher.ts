@@ -15,13 +15,11 @@ export class MetricsPublisher {
 
     private readonly nodeAddress: string
     private readonly client: StreamrClient
-    private readonly storageNodeAddress: string
     private readonly streamIdPrefix: string
 
-    constructor(nodeAddress: string, client: StreamrClient, storageNodeAddress: string, streamIdPrefix: string) {
+    constructor(nodeAddress: string, client: StreamrClient, streamIdPrefix: string) {
         this.nodeAddress = nodeAddress
         this.client = client
-        this.storageNodeAddress = storageNodeAddress
         this.streamIdPrefix = streamIdPrefix
     }
 
