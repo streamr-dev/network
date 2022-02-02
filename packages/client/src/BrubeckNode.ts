@@ -9,6 +9,8 @@ import { Config } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
+import { node } from 'webpack'
+import { str } from 'ajv'
 
 /**
  * Wrap a network node.
@@ -170,12 +172,28 @@ export default class BrubeckNode implements Context {
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
-                const node = await this.startNode()
-                await node.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+                await this.startNode()
             }
-            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            await Promise.all([
+                new Promise<void>((resolve, reject) => {
+                    this.cachedNode!.addPurePublishingAcceptedListener((id, sprt) => {
+                        if (id === nodeId && sprt === streamPartId) {
+                            resolve()
+                        }
+                    })
+                    this.cachedNode!.addPurePublishingRejectedListener((id, sprt) => {
+                        if (id === nodeId && sprt === streamPartId) {
+                            reject()
+                        }
+                    })
+                }),
+                this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            ])
+
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
+            this.cachedNode!.removePurePublishingAcceptedListener(() => {})
+            this.cachedNode!.removePurePublishingRejectedListener(() => {})
         }
     }
 

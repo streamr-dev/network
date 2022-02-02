@@ -37,6 +37,22 @@ export class NetworkNode extends Node {
         this.off(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
+    addPurePublishingAcceptedListener(cb: (nodeId: NodeId, streamPartId: StreamPartID) => void): void {
+        this.on(NodeEvent.PUBLISH_STREAM_ACCEPTED, cb)
+    }
+
+    addPurePublishingRejectedListener(cb: (nodeId: NodeId, streamPartId: StreamPartID) => void): void {
+        this.on(NodeEvent.PUBLISH_STREAM_REJECTED, cb)
+    }
+
+    removePurePublishingAcceptedListener(cb: (nodeId: NodeId, streamPartId: StreamPartID) => void): void {
+        this.off(NodeEvent.PUBLISH_STREAM_ACCEPTED, cb)
+    }
+
+    removePurePublishingRejectedListener(cb: (nodeId: NodeId, streamPartId: StreamPartID) => void): void {
+        this.off(NodeEvent.PUBLISH_STREAM_REJECTED, cb)
+    }
+
     subscribe(streamPartId: StreamPartID): void {
         this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
