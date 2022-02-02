@@ -1,6 +1,5 @@
 import express, { Request, Response, Router } from 'express'
 import { Storage } from './Storage'
-import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
 const parseIntIfExists = (x: string | undefined): number | undefined => {
     return x === undefined ? undefined : parseInt(x)
@@ -30,7 +29,7 @@ export const router = (cassandraStorage: Storage): Router => {
     }
 
     router.get(
-        `${LEGACY_API_ROUTE_PREFIX}/streams/:id/metadata/partitions/:partition`,
+        '/streams/:id/metadata/partitions/:partition',
         handler
     )
 

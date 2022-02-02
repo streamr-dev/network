@@ -373,7 +373,7 @@ class StreamrStream implements StreamMetadata {
         timeout?: number,
         pollInterval?: number
     } = {}, url: string) {
-        // wait for propagation: the storage node sees the database change in E&E and
+        // wait for propagation: the storage node sees the change and
         // is ready to store the any stream data which we publish
         await until(() => StreamrStream.isStreamStoredInStorageNode(this.id, url), timeout, pollInterval, () => (
             `Propagation timeout when adding stream to a storage node: ${this.id}`
