@@ -4,7 +4,8 @@ description: "Run Brokers and Trackers from monorepo"
 runs:
   using: "composite"
   steps:
+    - name: run brokers and trackers
     - run: |
-      npm run bootstrap-pkg streamr-broker
-      (cd packages/broker/bin && node run-all.js&)
-    working-directory: './'
+        npm run bootstrap-pkg streamr-broker
+        (cd packages/broker/bin && node run-all.js&)
+      working-directory: './'
