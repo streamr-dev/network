@@ -27,18 +27,6 @@ export type EthereumStorageEvent = {
     blockNumber: number
 }
 
-export type NetworkSmartContract = {
-    contractAddress: string
-    jsonRpcProvider: string
-}
-
-export type NodeRegistryItem = {
-    address: string
-    url: string
-}
-
-export type NodeRegistryOptions = NetworkSmartContract
-
 type NodeQueryResult = {
     id: string,
     metadata: string,

@@ -248,46 +248,6 @@
                 }
             }
         },
-        "storageNodeRegistry": {
-            "oneOf": [{
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                        "address",
-                        "url"
-                    ],
-                    "properties": {
-                        "address": {
-                            "type": "string",
-                            "format": "ethereum-address"
-                        },
-                        "url": {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    }
-                }
-            }, {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                    "contractAddress",
-                    "jsonRpcProvider"
-                ],
-                "properties": {
-                    "contractAddress": {
-                        "type": "string",
-                        "format": "ethereum-address"
-                    },
-                    "jsonRpcProvider": {
-                        "type": "string",
-                        "format": "uri"
-                    }
-                }
-            }]
-        },
         "debug": {
             "type": "object",
             "additionalProperties": false,

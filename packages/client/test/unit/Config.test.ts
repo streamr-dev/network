@@ -90,35 +90,11 @@ describe('Config', () => {
             expect(new StreamrClient()).toBeInstanceOf(StreamrClient)
         })
 
-        it('can override storageNodeRegistry & network.trackers arrays', () => {
+        it('can override network.trackers arrays', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient(config)
-            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
-            expect(clientOverrides.options.storageNodeRegistry).toEqual(config.storageNodeRegistry)
             expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
             expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
-        })
-
-        it('can override storageNodeRegistry as contract', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
-                storageNodeRegistry: {
-                    contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
-                    jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
-                },
-            })
-            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
-        })
-
-        it('can override storageNodeRegistry as array of nodes', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
-                storageNodeRegistry: {
-                    contractAddress: '0xde1112f631486CfC759A50196853011528bC5FA0',
-                    jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891`
-                },
-            })
-            expect(clientOverrides.options.storageNodeRegistry).not.toEqual(clientDefaults.options.storageNodeRegistry)
         })
 
         it('network can be empty', () => {
