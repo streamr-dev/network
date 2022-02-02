@@ -7,7 +7,6 @@ import { Tracker, startTracker } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config'
-import { NodeRegistryOptions } from 'streamr-client/src/NodeRegistry'
 import { StreamPartID } from 'streamr-client-protocol'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
@@ -24,7 +23,6 @@ interface TestConfig {
     privateKeyFileName?: null | string
     certFileName?: null | string
     restUrl?: string
-    storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
 
@@ -37,7 +35,6 @@ export const formConfig = ({
     apiAuthentication = null,
     enableCassandra = false,
     restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-    storageNodeRegistry,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -82,8 +79,7 @@ export const formConfig = ({
                     city: 'Helsinki'
                 },
                 webrtcDisallowPrivateAddresses: false,
-            },
-            storageNodeRegistry,
+            }
         },
         httpServer: {
             port: httpPort ? httpPort : 7171,

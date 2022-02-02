@@ -1,5 +1,5 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
-import { EthereumStorageEvent, Stream, StreamrClient } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient } from 'streamr-client'
 import { StreamPartID, StreamPartIDUtils, toStreamID} from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
@@ -22,7 +22,7 @@ function makeStubStream(streamId: string): Stream {
 
 describe(StorageConfig, () => {
     let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: string]>
-    let storageEventListener: ((event: EthereumStorageEvent) => any) | undefined
+    let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
     let stubClient: Pick<StreamrClient, 'getStream'
         | 'getStoredStreamsOf'
         | 'registerStorageEventListener'
@@ -39,7 +39,7 @@ describe(StorageConfig, () => {
             async getStream(streamIdOrPath: string) {
                 return makeStubStream(streamIdOrPath, )
             },
-            async registerStorageEventListener(cb: (arg0: EthereumStorageEvent) => any) {
+            async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any) {
                 storageEventListener = cb
             },
             unRegisterStorageEventListeners: async () => {

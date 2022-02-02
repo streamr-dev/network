@@ -15,7 +15,7 @@ import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 import { authRequest } from './authFetch'
 
-import { NodeRegistry } from './NodeRegistry'
+import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamEndpoints } from './StreamEndpoints'
 import { BrubeckContainer } from './Container'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
@@ -126,7 +126,7 @@ export default class Resend implements Context {
 
     constructor(
         context: Context,
-        @inject(delay(() => NodeRegistry)) private nodeRegistry: NodeRegistry,
+        @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         @inject(BrubeckContainer) private container: DependencyContainer
@@ -193,14 +193,14 @@ export default class Resend implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAdresses = await this.nodeRegistry.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAdresses = await this.storageNodeRegistry.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAdresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
 
-        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(nodeAdresses[0]) // TODO: handle multiple nodes
+        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAdresses[0]) // TODO: handle multiple nodes
         const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
@@ -280,6 +280,6 @@ export default class Resend implements Context {
     }
 
     async stop() {
-        await this.nodeRegistry.stop()
+        await this.storageNodeRegistry.stop()
     }
 }
