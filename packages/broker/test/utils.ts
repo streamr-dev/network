@@ -148,20 +148,6 @@ export const createClient = async (
     })
 }
 
-export const waitForStreamPersistedInStorageNode = async (
-    streamId: string,
-    partition: number,
-    nodeHost: string,
-    nodeHttpPort: number
-): Promise<void> => {
-    const isPersistent = async () => {
-        // eslint-disable-next-line max-len
-        const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
-        return (response.status === 200)
-    }
-    await waitForCondition(() => isPersistent(), 20000, 500)
-}
-
 export const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
     const groups = module.filename.match(fileNamePattern)

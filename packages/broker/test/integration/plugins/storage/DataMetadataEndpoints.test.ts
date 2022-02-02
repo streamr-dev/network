@@ -5,7 +5,6 @@ import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
 import {
     startBroker,
     createClient,
-    waitForStreamPersistedInStorageNode,
     createTestStream,
     getPrivateKey,
     startTestTracker
@@ -96,7 +95,6 @@ describe('DataMetadataEndpoints', () => {
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client1, module)
         await freshStream.addToStorageNode(storageNodeAccount.address)
-        await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
         return freshStream
     }
 
