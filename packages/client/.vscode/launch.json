@@ -5,17 +5,25 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Jest test this file",
         "type": "node",
         "request": "launch",
-        "name": "Jest test this file",
         "runtimeExecutable": "${workspaceFolder}/../../node_modules/.bin/jest",
         "env": {
-            "DEBUG": "Streamr*"
+            "DEBUG": "Streamr*",
+            "STREAMR_DOCKER_DEV_HOST": "localhost",
+            "CI": "true"
         },
         "runtimeArgs": [
             "${file}",
-            "--runInBand"
+            "--verbose",
+            "-i",
+            "--no-cache",
+            "--detectOpenHandles"
         ],
+        "cwd": "${workspaceRoot}",
+        "protocol": "inspector",
+        "console": "integratedTerminal",
         "internalConsoleOptions": "openOnSessionStart"
       }
     ]
