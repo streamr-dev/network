@@ -1,5 +1,4 @@
-import { EthereumStorageEvent } from 'streamr-client/dist/types/src/NodeRegistry'
-import { Stream, StreamrClient } from 'streamr-client'
+import { Stream, StreamrClient, StorageNodeAssignmentEvent } from 'streamr-client'
 import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -25,11 +24,11 @@ export class StorageEventListener {
 
     async start(): Promise<void> {
         this.streamrClient.registerStorageEventListener(
-            async (event: EthereumStorageEvent) => {
+            async (event: StorageNodeAssignmentEvent) => {
                 if (event.nodeAddress.toLowerCase() !== this.clusterId) {
                     return
                 }
-                logger.info('received EthereumStorageEvent: %j', event)
+                logger.info('received StorageNodeAssignmentEvent: %j', event)
                 try {
                     const stream = await this.streamrClient.getStream(event.streamId)
                     this.onEvent(stream, event.type, event.blockNumber)

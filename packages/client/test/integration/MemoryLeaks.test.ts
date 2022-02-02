@@ -109,7 +109,6 @@ describe('MemoryLeaks', () => {
                     ...opts,
                 })
                 // ignore stuff captured by leaking network node
-                leaksDetector.ignoreAll(c.options.storageNodeRegistry)
                 leaksDetector.ignoreAll(c.options.network)
                 return c
             }

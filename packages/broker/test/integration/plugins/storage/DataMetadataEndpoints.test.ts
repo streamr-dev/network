@@ -36,10 +36,6 @@ describe('DataMetadataEndpoints', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
-        const storageNodeRegistry = {
-            contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
-            jsonRpcProvider: `http://127.0.0.1:8546`
-        }
         tracker = await startTestTracker(trackerPort)
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
@@ -47,18 +43,15 @@ describe('DataMetadataEndpoints', () => {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort1,
             enableCassandra: true,
-            storageNodeRegistry
         })
-        client1 = await createClient(tracker, await getPrivateKey(), {
-            storageNodeRegistry: storageNodeRegistry,
-        })
+        client1 = await createClient(tracker, await getPrivateKey())
     })
 
     afterAll(async () => {

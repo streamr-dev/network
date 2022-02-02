@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { EthereumStorageEvent } from '../../src/NodeRegistry'
+import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 
 import { storageNodeTestConfig } from './devEnvironment'
@@ -39,7 +39,7 @@ beforeAll(async () => {
 describe('createNode', () => {
     it('creates a node ', async () => {
         const storageNodeMetadata = '{"http": "http://10.200.10.1:8891"}'
-        await newStorageNodeClient.setNode(storageNodeMetadata)
+        await newStorageNodeClient.createOrUpdateNodeInStorageNodeRegistry(storageNodeMetadata)
         await until(async () => {
             try {
                 return (await client.getStorageNodeUrl(nodeAddress)) !== null
@@ -60,7 +60,7 @@ describe('createNode', () => {
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
         const promise = Promise
-        const callback = (event: EthereumStorageEvent) => {
+        const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
                 expect(event).toEqual({
@@ -107,13 +107,13 @@ describe('createNode', () => {
         const storageNodeClientFromDevEnv = await createClient({ auth: {
             privateKey: storageNodeTestConfig.privatekey
         } })
-        await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
+        await storageNodeClientFromDevEnv.createOrUpdateNodeInStorageNodeRegistry(storageNodeTestConfig.url)
         await createdStream.addToStorageNode(storageNodeTestConfig.address)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeTestConfig.address)).toEqual(true)
     })
 
     it('delete a node ', async () => {
-        await newStorageNodeClient.removeNode()
+        await newStorageNodeClient.removeNodeFromStorageNodeRegistry()
         await until(async () => {
             try {
                 const res = await client.getStorageNodeUrl(nodeAddress)

@@ -12,7 +12,7 @@ import Resends from './Resends'
 import Publisher from './Publisher'
 import { StreamRegistry } from './StreamRegistry'
 import Ethereum from './Ethereum'
-import { NodeRegistry } from './NodeRegistry'
+import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
@@ -94,7 +94,7 @@ class StreamrStream implements StreamMetadata {
     protected _streamEndpoints: StreamEndpoints
     protected _streamEndpointsCached: StreamEndpointsCached
     protected _streamRegistry: StreamRegistry
-    protected _nodeRegistry: NodeRegistry
+    protected _nodeRegistry: StorageNodeRegistry
     protected _ethereuem: Ethereum
 
     /** @internal */
@@ -111,7 +111,7 @@ class StreamrStream implements StreamMetadata {
         this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
         this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
-        this._nodeRegistry = _container.resolve<NodeRegistry>(NodeRegistry)
+        this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
     }
 

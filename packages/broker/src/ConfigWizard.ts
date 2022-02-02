@@ -104,11 +104,7 @@ export const CONFIG_TEMPLATE: any = {
             stunUrls: [
                 "stun:stun.streamr.network:5349"
             ]
-        },
-        storageNodeRegistry: [{
-            address: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-            url: "https://brubeck2.streamr.network:8001"
-        }]
+        }
     },
     plugins: {
         brubeckMiner: {

@@ -10,17 +10,14 @@ import merge from 'lodash/merge'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import type { NodeRegistryOptions } from './NodeRegistry'
 
 export type BrubeckClientConfig = StreamrClientConfig & {
     network?: Omit<Partial<NetworkNodeOptions>, 'metricsContext'>
-    storageNodeRegistry?: NodeRegistryOptions
     debug?: Partial<DebugConfig>
 }
 
 export {
-    NetworkNodeOptions as NetworkNodeConfig,
-    NodeRegistryOptions as NodeRegistryConfig
+    NetworkNodeOptions as NetworkNodeConfig
 }
 
 export type DebugConfig = {
@@ -29,7 +26,6 @@ export type DebugConfig = {
 
 export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
     network: NetworkNodeOptions
-    storageNodeRegistry: NodeRegistryOptions
     debug: DebugConfig
 }
 
@@ -52,7 +48,7 @@ const BrubeckConfigInjection = {
     Subscribe: Symbol('Config.Subscribe'),
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
-    NodeRegistry: Symbol('Config.NodeRegistry'),
+    StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
     Encryption: Symbol('Config.Encryption'),
 }
 
@@ -67,10 +63,6 @@ const BRUBECK_CLIENT_DEFAULTS = {
             depth: 5,
             maxStringLength: 512
         }
-    },
-    storageNodeRegistry: {
-        contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
-        jsonRpcProvider: 'http://127.0.0.1:8546',
     },
     network: {
         trackers: [

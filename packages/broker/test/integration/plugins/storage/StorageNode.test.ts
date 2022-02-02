@@ -20,7 +20,7 @@ describe('StorageNode', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await getPrivateKey())
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
 
         storageNode = await startBroker({
             name: 'storageNode',
