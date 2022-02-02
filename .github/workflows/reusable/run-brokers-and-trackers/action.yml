@@ -8,4 +8,5 @@ runs:
     - run: |
         npm run bootstrap-pkg streamr-broker
         (cd packages/broker/bin && node run-all.js&)
+      shell: bash
       working-directory: './'
