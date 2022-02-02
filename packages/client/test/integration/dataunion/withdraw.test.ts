@@ -7,13 +7,16 @@ import debug from 'debug'
 
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
+import Contracts from '../../../src/dataunion/Contracts'
+import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
-import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
-import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
+import { expectInvalidAddress } from '../../utils'
+import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus, DataUnion } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
+import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
@@ -28,6 +31,12 @@ const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAd
 const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 let testWalletId = 1000000 // ensure fixed length as string
+
+// TODO: to speed up this test, try re-using the data union?
+let validDataUnion: DataUnion | undefined // use this in a test that only wants a valid data union but doesn't mutate it
+async function getDataUnion(): Promise<DataUnion> {
+    return validDataUnion || new StreamrClient(clientOptions).deployDataUnion()
+}
 
 async function testWithdraw(
     withdraw: (
@@ -54,6 +63,7 @@ async function testWithdraw(
     const adminClient = new StreamrClient(clientOptions)
 
     const dataUnion = await adminClient.deployDataUnion()
+    validDataUnion = dataUnion // save for later re-use
     const secret = await dataUnion.createSecret('test secret')
     log('DataUnion %s is ready to roll', dataUnion.getAddress())
     // dataUnion = await adminClient.getDataUnionContract({dataUnion: "0xd778CfA9BB1d5F36E42526B2BAFD07B74b4066c0"})
@@ -77,6 +87,7 @@ async function testWithdraw(
             privateKey: memberWallet.privateKey
         }
     })
+    const dataUnionMember = await memberClient.getDataUnion(dataUnion.getAddress())
 
     // product is needed for join requests to analyze the DU version
     const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
@@ -86,15 +97,22 @@ async function testWithdraw(
             beneficiaryAddress: dataUnion.getAddress(),
             type: 'DATAUNION',
             dataUnionVersion: 2
-        })
+        }),
+        session: adminClient.session,
     })
-    const res = await dataUnion.join(secret)
-    // await adminClient.addMembers([memberWallet.address], { dataUnion })
-    log('Member joined data union %O', res)
+    const res1 = await dataUnion.join(secret)
+    log('Admin joined data union %O', res1)
+    const res2 = await dataUnionMember.join(secret)
+    log('Member joined data union %O', res2)
 
-    // eslint-disable-next-line no-underscore-dangle
-    const contract = await dataUnion._getContract()
-    const tokenAddress = await contract.token()
+    const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
+    const mainnetContract = await contracts.getMainnetContract(dataUnion.getAddress())
+    const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
+
+    // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
+    const sidechainContract = new Contract(sidechainContractLimited.address, DataUnionSidechain.abi, adminWalletSidechain)
+
+    const tokenAddress = await mainnetContract.tokenMainnet()
     log('Token address: %s', tokenAddress)
     const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)
     async function logBalance(owner: string, address: EthereumAddress) {
@@ -103,7 +121,7 @@ async function testWithdraw(
     }
 
     const amount = parseEther('1')
-    const duSidechainEarningsBefore = await contract.sidechain.totalEarnings()
+    const duSidechainEarningsBefore = await sidechainContract.totalEarnings()
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
@@ -115,23 +133,21 @@ async function testWithdraw(
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
 
-    log('DU member count: %d', await contract.sidechain.activeMemberCount())
+    log('DU member count: %d', await sidechainContract.activeMemberCount())
 
     log('Transferred %s tokens, next sending to bridge', formatEther(amount))
-    const tx2 = await contract.sendTokensToBridge()
+    const tx2 = await mainnetContract.sendTokensToBridge()
     const tr2 = await tx2.wait()
     log('sendTokensToBridge returned %O', tr2)
 
-    log('Waiting for the tokens to appear at sidechain %s', contract.sidechain.address)
-    await until(async () => !(await tokenSidechain.balanceOf(contract.sidechain.address)).eq('0'), 300000, 3000)
-    log('Confirmed tokens arrived, DU balance: %s -> %s', duSidechainEarningsBefore, await contract.sidechain.totalEarnings())
+    log('Waiting for the tokens to appear at sidechain %s', sidechainContract.address)
+    await until(async () => !(await tokenSidechain.balanceOf(sidechainContract.address)).eq('0'), 300000, 3000)
+    log('Confirmed tokens arrived, DU balance: %s -> %s', duSidechainEarningsBefore, await sidechainContract.totalEarnings())
 
-    // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
-    const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
     const tx3 = await sidechainContract.refreshRevenue()
     const tr3 = await tx3.wait()
     log('refreshRevenue returned %O', tr3)
-    log('DU sidechain totalEarnings: %O', await contract.sidechain.totalEarnings())
+    log('DU sidechain totalEarnings: %O', await sidechainContract.totalEarnings())
 
     await logBalance('Data union', dataUnion.getAddress())
     await logBalance('Admin', adminWalletMainnet.address)
@@ -174,13 +190,11 @@ async function testWithdraw(
     const balanceAfter = await getRecipientBalance()
     const balanceIncrease = balanceAfter.sub(balanceBefore)
 
-    expect(stats).toMatchObject({
-        status: MemberStatus.ACTIVE,
-        earningsBeforeLastJoin: BigNumber.from(0),
-        totalEarnings: BigNumber.from('1000000000000000000'),
-        withdrawableEarnings: BigNumber.from('1000000000000000000')
-    })
-    expect(balanceIncrease.toString()).toBe((expectedWithdrawAmount || amount).toString())
+    expect(stats.status).toEqual(MemberStatus.ACTIVE)
+    expect(stats.earningsBeforeLastJoin.toNumber()).toEqual(0)
+    expect(stats.totalEarnings.toString()).toEqual('1000000000000000000')
+    expect(stats.withdrawableEarnings.toString()).toEqual('1000000000000000000')
+    expect(balanceIncrease.toString()).toEqual((expectedWithdrawAmount || amount).toString())
 }
 
 log('Starting the simulated bridge-sponsored signature transport process')
@@ -201,18 +215,23 @@ providerSidechain.on({
     }
     const hash = keccak256(message)
     const adminClient = new StreamrClient(clientOptions)
-    await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
+    const dataUnion = new DataUnion(
+        '0x0000000000000000000000000000000000000000',
+        '0x0000000000000000000000000000000000000000',
+        new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions))
+    )
+    await dataUnion.transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)
 })
 
-describe('DataUnion withdraw', () => {
+describe('DataUnion withdrawX functions', () => {
     describe.each([
         [false, true, true], // sidechain withdraw
         [true, true, true], // self-service mainnet withdraw
         [true, true, false], // self-service mainnet withdraw without checking the recipient account
         [true, false, true], // bridge-sponsored mainnet withdraw
         [true, false, false], // other-sponsored mainnet withdraw
-    ])('Withdrawing with sendToMainnet=%p, payForTransport=%p, wait=%p', (sendToMainnet, payForTransport, waitUntilTransportIsComplete) => {
+    ])('with options: sendToMainnet=%p, payForTransport=%p, wait=%p', (sendToMainnet, payForTransport, waitUntilTransportIsComplete) => {
 
         // for test debugging: select only one case by uncommenting below, and comment out the above .each block
         // const [sendToMainnet, payForTransport, waitUntilTransportIsComplete] = [true, false, true] // bridge-sponsored mainnet withdraw
@@ -273,9 +292,8 @@ describe('DataUnion withdraw', () => {
         })
     })
 
-    it('Validate address', async () => {
-        const client = getRandomClient()
-        const dataUnion = await client.getDataUnion(createMockAddress())
+    it('validates input addresses', async () => {
+        const dataUnion = await getDataUnion()
         return Promise.all([
             expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
             expectInvalidAddress(() => dataUnion.withdrawAllTo('invalid-address')),

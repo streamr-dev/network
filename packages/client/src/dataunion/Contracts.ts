@@ -22,7 +22,7 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
-/* TODO: remove this class and inline its functions into DataUnion.ts */
+/* TODO during ETH-173 refactor: remove this class and inline its functions into DataUnion.ts */
 export default class Contracts {
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
@@ -56,66 +56,92 @@ export default class Contracts {
      * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
      *       i.e. can be used for "future deployments" but not necessarily old deployments
      * This can be used when deploying, but not for getDataUnion
-     * TODO: rename this to calculateDataUnionMainnetAddress, see v5 branch, around PR #285
      */
-    getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
+    calculateDataUnionMainnetAddress(
+        dataUnionName: string,
+        deployerAddress: EthereumAddress,
+        templateMainnetAddress?: EthereumAddress
+    ): EthereumAddress {
         validateAddress("deployer's address", deployerAddress)
+        const templateAddress = templateMainnetAddress || this.templateMainnetAddress
+        validateAddress('DU template mainnet address', templateAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
         return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
-    }
-
-    async fetchDataUnionSidechainAddress(duMainnetAddress: EthereumAddress): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.sidechainAddress(duMainnetAddress)
     }
 
     /**
      * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
      *       i.e. can be used for "future deployments" but not necessarily old deployments
      * This can be used when deploying, but not for getDataUnion
-     * TODO: rename this to calculateDataUnionSidechainAddress, see v5 branch, around PR #285
      */
-    getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
+    calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress): EthereumAddress {
         validateAddress('DU mainnet address', mainnetAddress)
+        const templateAddress = templateSidechainAddress || this.templateSidechainAddress
+        validateAddress('DU template sidechain address', templateAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
+        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
         const codeHash = keccak256(code)
         return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
     }
 
-    getMainnetContractReadOnly(contractAddress: EthereumAddress) {
+    /**
+     * Check if there is a data union in given address, return its version
+     * @returns 0 if target address is not a Data Union contract
+     */
+    async getVersion(contractAddress: EthereumAddress): Promise<number> {
         validateAddress('contractAddress', contractAddress)
+        const provider = this.ethereum.getMainnetProvider()
+        const du = new Contract(contractAddress, [{
+            name: 'version',
+            inputs: [],
+            outputs: [{ type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function'
+        }], provider)
+        try {
+            const version = await du.version() as BigNumber
+            return version.toNumber()
+        } catch (e) {
+            // "not a data union"
+            return 0
+        }
+    }
+
+    async getMainnetContractReadOnly(contractAddress: EthereumAddress) {
+        const version = await this.getVersion(contractAddress)
+        if (version === 0) {
+            throw new Error(`${contractAddress} is not a Data Union contract`)
+        }
         const provider = this.ethereum.getMainnetProvider()
         return new Contract(contractAddress, dataUnionMainnetABI, provider)
     }
 
-    getMainnetContract(contractAddress: EthereumAddress) {
-        const du = this.getMainnetContractReadOnly(contractAddress)
+    async getMainnetContract(contractAddress: EthereumAddress) {
+        const du = await this.getMainnetContractReadOnly(contractAddress)
         const signer = this.ethereum.getSigner()
         return du.connect(signer)
     }
 
     async getSidechainContract(contractAddress: EthereumAddress) {
         const signer = await this.ethereum.getDataUnionChainSigner()
-        const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duMainnet = await this.getMainnetContractReadOnly(contractAddress)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
         return duSidechain
     }
 
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
         const provider = this.ethereum.getDataUnionChainProvider()
-        const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duMainnet = await this.getMainnetContractReadOnly(contractAddress)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
         return duSidechain
     }
 
     // Find the Asyncronous Message-passing Bridge sidechain ("home") contract
-    async getSidechainAmb() {
+    async getSidechainAmb(): Promise<Contract> {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
                 const sidechainProvider = this.ethereum.getDataUnionChainProvider()
@@ -169,7 +195,10 @@ export default class Contracts {
         return markedComplete
     }
 
-    // move signatures from sidechain to mainnet
+    /**
+     * Move signatures from sidechain to mainnet
+     * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
+     */
     async transportSignaturesForMessage(messageHash: string, ethersOptions = {}): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
@@ -276,8 +305,8 @@ export default class Contracts {
         const mainnetWallet = this.ethereum.getSigner()
         const duChainProvider = this.ethereum.getDataUnionChainProvider()
 
-        const duMainnetAddress = await this.fetchDataUnionMainnetAddress(duName, deployerAddress)
-        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnetAddress)
+        const duMainnetAddress = this.calculateDataUnionMainnetAddress(duName, deployerAddress)
+        const duSidechainAddress = this.calculateDataUnionSidechainAddress(duMainnetAddress)
 
         if (await mainnetProvider.getCode(duMainnetAddress) !== '0x') {
             throw new Error(`Mainnet data union "${duName}" contract ${duMainnetAddress} already exists!`)
@@ -314,9 +343,6 @@ export default class Contracts {
             sidechainPollingIntervalMs
         )
 
-        const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
-        // @ts-expect-error
-        dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, duChainProvider)
-        return dataUnion
+        return { duMainnetAddress, duSidechainAddress }
     }
 }

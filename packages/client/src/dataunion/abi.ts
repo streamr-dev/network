@@ -31,13 +31,19 @@ export const dataUnionMainnetABI = [{
     stateMutability: 'nonpayable',
     type: 'function'
 }, {
-    name: 'token',
+    name: 'owner',
     inputs: [],
     outputs: [{ type: 'address' }],
     stateMutability: 'view',
     type: 'function'
 }, {
-    name: 'owner',
+    name: 'tokenMainnet', // this changed in 2.2, before that it was just "token"
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'tokenSidechain',
     inputs: [],
     outputs: [{ type: 'address' }],
     stateMutability: 'view',
