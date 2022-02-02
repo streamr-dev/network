@@ -7,7 +7,6 @@ import { waitForCondition } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
-    waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
     getPrivateKey,
@@ -21,7 +20,6 @@ const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-const NODE_HOST = '127.0.0.1'
 const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 const HTTP_PORT = 17770
 const TRACKER_PORT = 17772
@@ -55,7 +53,7 @@ describe('StorageConfig', () => {
     beforeEach(async () => {
         tracker = await startTestTracker(TRACKER_PORT)
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${HTTP_PORT}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
@@ -86,7 +84,6 @@ describe('StorageConfig', () => {
     it('when client publishes a message, it is written to the store', async () => {
         stream = await createTestStream(client, module)
         await stream.addToStorageNode(storageNodeAccount.address)
-        await waitForStreamPersistedInStorageNode(stream.id, 0, NODE_HOST, HTTP_PORT)
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })

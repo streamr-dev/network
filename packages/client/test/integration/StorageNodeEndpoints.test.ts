@@ -38,7 +38,7 @@ beforeAll(async () => {
 
 describe('createNode', () => {
     it('creates a node ', async () => {
-        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891/api/v1"}'
+        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891"}'
         await newStorageNodeClient.createOrUpdateNodeInStorageNodeRegistry(storageNodeMetadata)
         await until(async () => {
             try {
@@ -49,7 +49,7 @@ describe('createNode', () => {
             }
         }, 100000, 1000)
         const createdNodeUrl = await client.getStorageNodeUrl(nodeAddress)
-        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891/api/v1')
+        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
     })
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
