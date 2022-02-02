@@ -49,23 +49,19 @@ describe('Config', () => {
             it('ajv-format', () => {
                 expect(() => {
                     return new StreamrClient({
-                        storageNodeRegistry: [{
-                            address: '0x000000000000000000000000000000000000aB12',
-                            url: 'foo'
-                        }]
+                        theGraphUrl: 'foo'
                     } as any)
-                }).toThrow('/storageNodeRegistry/0/url must match format "uri"')
+                }).toThrow('/theGraphUrl must match format "uri"')
             })
 
             it('ethereum address', () => {
                 expect(() => {
                     return new StreamrClient({
-                        storageNodeRegistry: [{
-                            address: 'foo',
-                            url: 'http://foo.bar'
-                        }]
+                        auth: {
+                            address: 'foo'
+                        }
                     } as any)
-                }).toThrow('/storageNodeRegistry/0/address must match format "ethereum-address"')
+                }).toThrow('/auth/privateKey must match format "ethereum-address"')
             })
 
             it('ethereum private key', () => {
