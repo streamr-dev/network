@@ -55,7 +55,7 @@ describe('StorageConfig', () => {
     beforeEach(async () => {
         tracker = await startTestTracker(TRACKER_PORT)
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,

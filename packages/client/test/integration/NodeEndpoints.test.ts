@@ -39,7 +39,7 @@ beforeAll(async () => {
 describe('createNode', () => {
     it('creates a node ', async () => {
         const storageNodeMetadata = '{"http": "http://10.200.10.1:8891/api/v1"}'
-        await newStorageNodeClient.setNode(storageNodeMetadata)
+        await newStorageNodeClient.createOrUpdateNodeInStorageNodeRegistry(storageNodeMetadata)
         await until(async () => {
             try {
                 return (await client.getStorageNodeUrl(nodeAddress)) !== null
@@ -107,13 +107,13 @@ describe('createNode', () => {
         const storageNodeClientFromDevEnv = await createClient({ auth: {
             privateKey: storageNodeTestConfig.privatekey
         } })
-        await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
+        await storageNodeClientFromDevEnv.createOrUpdateNodeInStorageNodeRegistry(storageNodeTestConfig.url)
         await createdStream.addToStorageNode(storageNodeTestConfig.address)
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeTestConfig.address)).toEqual(true)
     })
 
     it('delete a node ', async () => {
-        await newStorageNodeClient.removeNode()
+        await newStorageNodeClient.removeNodeFromStorageNodeRegistry()
         await until(async () => {
             try {
                 const res = await client.getStorageNodeUrl(nodeAddress)
