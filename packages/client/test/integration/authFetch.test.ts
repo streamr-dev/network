@@ -1,9 +1,9 @@
 jest.mock('node-fetch')
 
 import fetch from 'node-fetch'
+import { fakePrivateKey } from 'streamr-test-utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { fakePrivateKey } from '../utils'
 
 import clientOptions from './config'
 

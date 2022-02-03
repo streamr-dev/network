@@ -1,12 +1,13 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { clientOptions, createTestStream, until, createRelativeTestStreamId, getPrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { storageNodeTestConfig } from './devEnvironment'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
+import { fakeAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
 
@@ -173,7 +174,7 @@ describe('StreamEndpoints', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = `0x${fakeAddress()}`
+            const otherAddress = fakeAddress()
             const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {

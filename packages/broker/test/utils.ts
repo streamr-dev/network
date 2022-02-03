@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
@@ -111,19 +110,9 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
     return broker
 }
 
-// generates a private key
-// equivalent to Wallet.createRandom().privateKey but much faster
-// the slow part seems to be deriving the address from the key so if you can avoid this, just use
-// fastPrivateKey instead of createMockUser
-export const fastPrivateKey = (): string => {
-    return `0x${crypto.randomBytes(32).toString('hex')}`
-}
-
 export const createEthereumAddress = (id: number): string => {
     return '0x' + _.padEnd(String(id), 40, '0')
 }
-
-export const createMockUser = (): Wallet => Wallet.createRandom()
 
 export const createClient = async (
     tracker: Tracker,

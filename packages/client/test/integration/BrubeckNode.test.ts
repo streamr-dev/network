@@ -1,6 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { fakePrivateKey, getCreateClient } from '../utils'
-import { Wallet } from 'ethers'
+import { getCreateClient } from '../utils'
+import { fakeWallet } from 'streamr-test-utils'
 
 describe('BrubeckNode', () => {
     const createClient = getCreateClient()
@@ -30,7 +30,7 @@ describe('BrubeckNode', () => {
         })
 
         it('uses supplied network node id, if compatible', async () => {
-            const wallet = new Wallet(fakePrivateKey())
+            const wallet = fakeWallet()
             const nodeId = `${wallet.address}#my-custom-id`
             const client = await createClient({
                 auth: {

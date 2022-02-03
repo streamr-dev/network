@@ -3,6 +3,8 @@ import { EventEmitter } from "events"
 import http from 'http'
 import express from 'express'
 import cors from 'cors'
+import crypto from 'crypto'
+import { Wallet } from '@ethersproject/wallet'
 
 export type Event = string | symbol
 
@@ -272,6 +274,18 @@ export const toReadableStream = (...args: unknown[]): Readable => {
         }
     })
     return rs
+}
+
+export function fakePrivateKey(): string {
+    return crypto.randomBytes(32).toString('hex')
+}
+
+export function fakeWallet(): Wallet {
+    return new Wallet(fakePrivateKey())
+}
+
+export function fakeAddress(): string {
+    return '0x' + crypto.randomBytes(20).toString('hex')
 }
 
 /**
