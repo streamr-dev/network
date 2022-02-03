@@ -6,9 +6,8 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { Stream, StreamPermission } from '../../src/Stream'
-import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from 'streamr-client-protocol'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
@@ -33,10 +32,8 @@ describeRepeats('PubSub with multiple clients', () => {
                 privateKey
             }
         })
-
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(await storageNodeWallet.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
     })
 
     afterEach(async () => {

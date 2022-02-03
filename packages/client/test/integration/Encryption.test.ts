@@ -15,7 +15,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -72,13 +72,8 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-
         stream = await createTestStream(publisher, module)
-
-        await stream.addToStorageNode(await storageNodeClient.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 

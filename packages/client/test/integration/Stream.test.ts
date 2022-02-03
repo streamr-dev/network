@@ -2,8 +2,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
 
-import { Wallet } from 'ethers'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 jest.setTimeout(30000)
 
@@ -17,8 +16,7 @@ describe('Stream', () => {
         await client.connect()
 
         stream = await createTestStream(client, module)
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-        await stream.addToStorageNode(await storageNodeWallet.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
     })
 
     describe('detectFields()', () => {

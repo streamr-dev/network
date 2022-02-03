@@ -12,8 +12,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
 
 import { Stream } from '../../src/Stream'
-import { Wallet } from 'ethers'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 // import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
@@ -31,7 +30,6 @@ describeRepeats('resends', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Resend
-    let storageNodeAddress: string
 
     beforeAll(async () => {
         client = new StreamrClient({
@@ -52,9 +50,7 @@ describeRepeats('resends', () => {
         stream = await createTestStream(client, module)
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-        storageNodeAddress = await storageNodeWallet.getAddress()
-        await stream.addToStorageNode(await storageNodeWallet.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('addToStorageNode <<')
 
         publishTestMessages = getPublishTestStreamMessages(client, stream.id)
@@ -129,7 +125,7 @@ describeRepeats('resends', () => {
         describe('resendSubscribe', () => {
             it('sees realtime when no resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(storageNodeAddress)
+                await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2.id)
 
@@ -161,7 +157,7 @@ describeRepeats('resends', () => {
 
             it('handles errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(storageNodeAddress)
+                await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2.id)
 
@@ -192,7 +188,7 @@ describeRepeats('resends', () => {
 
             it('can ignore errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
-                await stream2.addToStorageNode(storageNodeAddress)
+                await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 const publishTestMessagesStream2 = getPublishTestStreamMessages(client, stream2.id)
 

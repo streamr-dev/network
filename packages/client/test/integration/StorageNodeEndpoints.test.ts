@@ -6,7 +6,7 @@ import { until } from '../../src/utils'
 import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
@@ -103,13 +103,11 @@ describe('createNode', () => {
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
     })
 
-    it('addStreamToStorageNode through streamobject', async () => {
-        const storageNodeClientFromDevEnv = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-        await storageNodeClientFromDevEnv.createOrUpdateNodeInStorageNodeRegistry(storageNodeTestConfig.url)
-        await createdStream.addToStorageNode(storageNodeTestConfig.address)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeTestConfig.address)).toEqual(true)
+    it('addStreamToStorageNode through stream object', async () => {
+        const stream = await createTestStream(client, module)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        expect(isStored).toEqual(true)
     })
 
     it('delete a node ', async () => {
