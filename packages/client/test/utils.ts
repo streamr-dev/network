@@ -35,14 +35,6 @@ export function mockContext() {
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
-export function fakePrivateKey() {
-    return crypto.randomBytes(32).toString('hex')
-}
-
-export function fakeAddress() {
-    return crypto.randomBytes(32).toString('hex').slice(0, 40)
-}
-
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
     try {

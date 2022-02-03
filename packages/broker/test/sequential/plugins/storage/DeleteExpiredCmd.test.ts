@@ -51,7 +51,6 @@ const checkDBCount = async (cassandraClient: Client, streamId: string) => {
 }
 
 describe('DeleteExpiredCmd', () => {
-    let mockUser: Wallet
     let client: StreamrClient
     let cassandraClient: Client
     let deleteExpiredCmd: DeleteExpiredCmd
@@ -62,8 +61,7 @@ describe('DeleteExpiredCmd', () => {
             localDataCenter,
             keyspace,
         })
-        mockUser = new Wallet(await fetchPrivateKeyWithGas())
-
+        const mockUser = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
             ...ConfigTest,
             auth: {

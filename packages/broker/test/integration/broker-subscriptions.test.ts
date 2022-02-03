@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { Tracker } from 'streamr-network'
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { fastWallet, wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, getStreamParts, startTestTracker } from '../utils'
 
@@ -17,9 +17,6 @@ const createMqttClient = (mqttPort: number) => {
 }
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
-    // TODO we could run these permission grants in parallel, but Core API can fail with
-    // error Duplicate entry '...' for key 'username_idx' when it creates the
-    // target users
     for await (const s of streams) {
         for await (const u of brokerUsers) {
             await s.grantUserPermission(StreamPermission.SUBSCRIBE, u.address)
@@ -39,8 +36,8 @@ describe('broker subscriptions', () => {
     let mqttClient2: AsyncMqttClient
 
     beforeEach(async () => {
-        const broker1User = new Wallet(await fetchPrivateKeyWithGas())
-        const broker2User = new Wallet(await fetchPrivateKeyWithGas())
+        const broker1User = fastWallet()
+        const broker2User = fastWallet()
         tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
             name: 'broker1',
@@ -63,11 +60,6 @@ describe('broker subscriptions', () => {
             }
         })
 
-        await wait(2000)
-
-        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
-        client2 = await createClient(tracker, await fetchPrivateKeyWithGas())
-
         client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
         client2 = await createClient(tracker, await fetchPrivateKeyWithGas())
 
@@ -81,13 +73,16 @@ describe('broker subscriptions', () => {
     })
 
     afterEach(async () => {
-        await mqttClient1.end(true)
-        await mqttClient2.end(true)
-        await client1.destroy()
-        await client2.destroy()
-        await broker1.stop()
-        await broker2.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            mqttClient1?.end(true),
+            mqttClient2?.end(true),
+            client1?.destroy(),
+            client2?.destroy(),
+            broker1?.stop(),
+            broker2?.stop(),
+            tracker?.stop()
+        ])
+
     })
 
     it('manage list of subscribed stream partitions when plugins subscribe/unsubscribe', async () => {
