@@ -1,7 +1,7 @@
 import StreamrClient, { StreamPermission } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import { createClient, getPrivateKey, Queue, startBroker, startTestTracker } from '../../../../utils'
+import { createClient, fetchPrivateKeyWithGas, Queue, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 import { v4 as uuid } from 'uuid'
 import { keyToArrayIndex } from 'streamr-client-protocol'
@@ -18,7 +18,7 @@ describe('NodeMetrics', () => {
     let streamIdPrefix: string
 
     beforeAll(async () => {
-        const tmpAccount = new Wallet(await getPrivateKey())
+        const tmpAccount = new Wallet(await fetchPrivateKeyWithGas())
 
         nodeAddress = tmpAccount.address
         tracker = await startTestTracker(trackerPort)

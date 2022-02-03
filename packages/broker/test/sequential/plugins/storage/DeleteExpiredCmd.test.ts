@@ -3,7 +3,7 @@ import { Client, types as cassandraTypes } from 'cassandra-driver'
 import StreamrClient, { ConfigTest } from 'streamr-client'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { DeleteExpiredCmd } from "../../../../src/plugins/storage/DeleteExpiredCmd"
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST, createTestStream, fetchPrivateKeyWithGas } from "../../../utils"
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -61,7 +61,7 @@ describe('DeleteExpiredCmd', () => {
             localDataCenter,
             keyspace,
         })
-        const mockUser = new Wallet(await getPrivateKey())
+        const mockUser = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
