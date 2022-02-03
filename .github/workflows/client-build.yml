@@ -79,8 +79,6 @@ jobs:
         run: npm run test-exports
 
   browser-realtime:
-    # skip to get test suite green, solve in NET-667
-    if: ${{ false }}
     name: Test Browser Realtime
     runs-on: ubuntu-latest
     needs: build
