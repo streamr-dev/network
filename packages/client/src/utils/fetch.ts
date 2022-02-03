@@ -1,5 +1,6 @@
-import fetch, { RequestInfo, RequestInit, Response } from 'node-fetch'
+import fetch from 'node-fetch'
 import debug from 'debug'
+import type { RequestInfo, RequestInit, Response } from 'node-fetch'
 
 const DEFAULT_TIMEOUT = 30 * 1000
 
