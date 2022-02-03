@@ -8,7 +8,7 @@ import {
     publishTestMessagesGenerator,
     createTestStream,
     getCreateClient,
-    getPrivateKey
+    fetchPrivateKeyWithGas
 } from '../utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -91,8 +91,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await getPrivateKey() } }),
-            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await getPrivateKey() } }),
+            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
+            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
         ])
     }
 

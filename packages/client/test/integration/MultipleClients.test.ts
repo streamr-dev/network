@@ -1,7 +1,7 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey,
+    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
@@ -25,7 +25,7 @@ describeRepeats('PubSub with multiple clients', () => {
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        privateKey = await getPrivateKey()
+        privateKey = await fetchPrivateKeyWithGas()
         mainClient = await createClient({
             id: 'main',
             auth: {
@@ -43,7 +43,7 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createPublisher(opts = {}) {
         const pubClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             ...opts
         })
@@ -477,7 +477,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))
@@ -553,7 +553,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))

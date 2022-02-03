@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
+import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
@@ -34,8 +34,8 @@ describeRepeats('Group Key Persistence', () => {
             return client
         }
         beforeEach(async () => {
-            publisherPrivateKey = await getPrivateKey()
-            subscriberPrivateKey = await getPrivateKey()
+            publisherPrivateKey = await fetchPrivateKeyWithGas()
+            subscriberPrivateKey = await fetchPrivateKeyWithGas()
 
             publisher = await setupPublisher({
                 id: 'publisher',

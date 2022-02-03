@@ -6,7 +6,7 @@ import {
     startBroker,
     createClient,
     createTestStream,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     startTestTracker
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
@@ -35,7 +35,7 @@ describe('DataMetadataEndpoints', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await getPrivateKey())
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(trackerPort)
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
@@ -51,7 +51,7 @@ describe('DataMetadataEndpoints', () => {
             httpPort: httpPort1,
             enableCassandra: true,
         })
-        client1 = await createClient(tracker, await getPrivateKey())
+        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
     })
 
     afterAll(async () => {

@@ -1,6 +1,6 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
@@ -21,8 +21,8 @@ describe('StreamEndpoints', () => {
     let otherWallet: Wallet
 
     beforeAll(async () => {
-        wallet = new Wallet(await getPrivateKey())
-        otherWallet = new Wallet(await getPrivateKey())
+        wallet = new Wallet(await fetchPrivateKeyWithGas())
+        otherWallet = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
             ...clientOptions,
             auth: {

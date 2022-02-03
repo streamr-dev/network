@@ -2,7 +2,7 @@ import { Wallet } from 'ethers'
 import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../src'
 import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { fakeAddress, getPrivateKey } from '../utils'
+import { fakeAddress, fetchPrivateKeyWithGas } from '../utils'
 
 jest.setTimeout(2 * 60 * 1000)
 
@@ -40,7 +40,7 @@ describe('SearchStreams', () => {
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             autoConnect: false
         })

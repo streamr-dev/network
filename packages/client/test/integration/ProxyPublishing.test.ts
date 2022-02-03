@@ -1,4 +1,4 @@
-import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
+import { createTestStream, fakePrivateKey, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
@@ -18,7 +18,7 @@ describe('PubSub with proxy connections', () => {
     const createClient = getCreateClient()
 
     beforeEach(async () => {
-        pubPrivateKey = await getPrivateKey()
+        pubPrivateKey = await fetchPrivateKeyWithGas()
         proxyPrivateKey1 = fakePrivateKey()
         proxyPrivateKey2 = fakePrivateKey()
 

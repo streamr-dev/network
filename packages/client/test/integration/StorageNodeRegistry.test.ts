@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Wallet } from 'ethers'
-import { clientOptions, createTestStream, getPrivateKey, until } from '../utils'
+import { clientOptions, createTestStream, fetchPrivateKeyWithGas, until } from '../utils'
 import { Stream } from '../../src'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { afterAll } from 'jest-circus'
@@ -16,8 +16,8 @@ describe('StorageNodeRegistry', () => {
     let stream: Stream
 
     beforeAll(async () => {
-        creatorWallet = new Wallet(await getPrivateKey())
-        listenerWallet = new Wallet(await getPrivateKey())
+        creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
+        listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
         creatorClient = new StreamrClient({
             ...clientOptions,
             auth: {
