@@ -1,7 +1,7 @@
 jest.mock('node-fetch')
 
 import fetch from 'node-fetch'
-import { fakePrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
@@ -35,7 +35,7 @@ describe('authFetch', () => {
             autoConnect: false,
             autoDisconnect: false,
             auth: {
-                privateKey: fakePrivateKey()
+                privateKey: fastPrivateKey()
             },
         })
         await client.connect()

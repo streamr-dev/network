@@ -276,15 +276,15 @@ export const toReadableStream = (...args: unknown[]): Readable => {
     return rs
 }
 
-export function fakePrivateKey(): string {
+export function fastPrivateKey(): string {
     return crypto.randomBytes(32).toString('hex')
 }
 
-export function fakeWallet(): Wallet {
-    return new Wallet(fakePrivateKey())
+export function fastWallet(): Wallet {
+    return new Wallet(fastPrivateKey())
 }
 
-export function fakeAddress(): string {
+export function randomEthereumAddress(): string {
     return '0x' + crypto.randomBytes(20).toString('hex')
 }
 

@@ -7,7 +7,7 @@ import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress } from '../../utils'
 import authFetch from '../../../src/authFetch'
 import { getEndpointUrl } from '../../../src/utils'
-import { fakeWallet } from 'streamr-test-utils'
+import { fastWallet } from 'streamr-test-utils'
 
 const { parseEther } = utils
 
@@ -67,7 +67,7 @@ describe('DataUnion member', () => {
     }, 60000)
 
     it('join with valid secret', async () => {
-        const memberWallet = fakeWallet()
+        const memberWallet = fastWallet()
         const memberDu = await getMemberDuObject(memberWallet)
         await memberDu.join(secret)
         const isMember = await dataUnion.isMember(memberWallet.address)
@@ -88,13 +88,13 @@ describe('DataUnion member', () => {
     }, 60000)
 
     it('join with invalid secret', async () => {
-        const memberWallet = fakeWallet()
+        const memberWallet = fastWallet()
         const memberDu = await getMemberDuObject(memberWallet)
         return expect(() => memberDu.join('invalid-secret')).rejects.toThrow('Incorrect data union secret')
     }, 60000)
 
     it('join without secret', async () => {
-        const memberWallet = fakeWallet()
+        const memberWallet = fastWallet()
         const memberDu = await getMemberDuObject(memberWallet)
         const response = await memberDu.join()
         expect(response.id).toBeDefined()

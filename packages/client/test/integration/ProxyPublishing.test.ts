@@ -1,6 +1,6 @@
 import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
-import { fakePrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
 
 jest.setTimeout(50000)
@@ -19,8 +19,8 @@ describe('PubSub with proxy connections', () => {
 
     beforeEach(async () => {
         pubPrivateKey = await getPrivateKey()
-        proxyPrivateKey1 = fakePrivateKey()
-        proxyPrivateKey2 = fakePrivateKey()
+        proxyPrivateKey1 = fastPrivateKey()
+        proxyPrivateKey2 = fastPrivateKey()
 
         publishingClient = await createClient({
             id: 'publisher',

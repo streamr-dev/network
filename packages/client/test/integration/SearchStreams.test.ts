@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { fakeAddress } from 'streamr-test-utils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../src'
 import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
@@ -123,7 +123,7 @@ describe('SearchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: fakeAddress(),
+                user: randomEthereumAddress(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([
