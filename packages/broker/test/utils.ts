@@ -149,7 +149,7 @@ export const createTestStream = async (
         id,
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(id) }, 100000, 1000)
+    await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
 
