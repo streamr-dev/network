@@ -168,36 +168,13 @@ export default class BrubeckNode implements Context {
     }
 
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
-        let resolveHandler
-        let rejectHandler
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 await this.startNode()
             }
-            await Promise.all([
-                new Promise<void>((resolve, reject) => {
-                    resolveHandler = (node: string, stream: StreamPartID) => {
-                        if (node === nodeId && stream === streamPartId) {
-                            resolve()
-                        }
-                    }
-                    rejectHandler = (node: string, stream: StreamPartID) => {
-                        if (node === nodeId && stream === streamPartId) {
-                            reject()
-                        }
-                    }
-                    this.cachedNode!.addPurePublishingAcceptedListener(resolveHandler)
-                    this.cachedNode!.addPurePublishingRejectedListener(rejectHandler)
-                }),
-                this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
-            ])
-
+            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
-            if (resolveHandler && rejectHandler) {
-                this.cachedNode!.removePurePublishingAcceptedListener(resolveHandler)
-                this.cachedNode!.removePurePublishingRejectedListener(rejectHandler)
-            }
         }
     }
 
