@@ -10,8 +10,6 @@ import { ApiAuthenticator } from './apiAuthenticator'
 
 const logger = new Logger(module)
 
-export const LEGACY_API_ROUTE_PREFIX = '/api/v1'
-
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403
 
