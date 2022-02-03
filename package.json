@@ -7,6 +7,7 @@
         "bootstrap-pkg": "npm ci --no-audit --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs && manypkg check",
         "prune-pkg": "npm prune --no-audit --include-workspace-root --production --workspace",
+        "build": "npm run --workspaces --if-present build",
         "clean": "npm run clean-dist && npx --workspaces --include-workspace-root -c 'rm -rf node_modules || true' && npm run bootstrap-root",
         "eslint": "npm run eslint --workspaces --if-present && manypkg check",
         "fix": "manypkg fix; npm run eslint -- --fix",
