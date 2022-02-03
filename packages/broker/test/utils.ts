@@ -116,14 +116,13 @@ export const createEthereumAddress = (id: number): string => {
 
 export const createClient = async (
     tracker: Tracker,
-    privateKey?: string,
+    privateKey: string,
     clientOptions?: StreamrClientOptions
 ): Promise<StreamrClient> => {
-    const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
     return new StreamrClient({
         ...ConfigTest,
         auth: {
-            privateKey: newPrivateKey
+            privateKey
         },
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         network: {
