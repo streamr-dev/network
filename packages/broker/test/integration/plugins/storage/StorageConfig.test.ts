@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { Protocol, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
@@ -38,7 +38,7 @@ describe('StorageConfig', () => {
     beforeAll(async () => {
         publisherAccount = new Wallet(await getPrivateKey())
         storageNodeAccount = new Wallet(await getPrivateKey())
-        brokerAccount = new Wallet(await getPrivateKey())
+        brokerAccount = fastWallet()
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
