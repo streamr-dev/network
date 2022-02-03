@@ -9,7 +9,6 @@ import { Config } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
-import { Stream } from 'stream'
 
 /**
  * Wrap a network node.
@@ -177,12 +176,12 @@ export default class BrubeckNode implements Context {
             }
             await Promise.all([
                 new Promise<void>((resolve, reject) => {
-                    resolveHandler = (node: NodeID, stream: StreamPartID) => {
+                    resolveHandler = (node: string, stream: StreamPartID) => {
                         if (node === nodeId && stream === streamPartId) {
                             resolve()
                         }
                     }
-                    rejectHandler = (node: NodeID, stream: StreamPartID) => {
+                    rejectHandler = (node: string, stream: StreamPartID) => {
                         if (node === nodeId && stream === streamPartId) {
                             reject()
                         }
