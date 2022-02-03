@@ -2,7 +2,7 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
@@ -33,7 +33,7 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestPublisher',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 
@@ -41,7 +41,7 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestSubscriber',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 

@@ -4,7 +4,7 @@ import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
 import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
-import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
+import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
 
 import { storageNodeTestConfig } from './devEnvironment'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -24,11 +24,11 @@ let nodeAddress: EthereumAddress
 const createClient = getCreateClient()
 
 beforeAll(async () => {
-    const key = await getPrivateKey()
+    const key = await fetchPrivateKeyWithGas()
     client = await createClient({ auth: {
         privateKey: key
     } })
-    const newStorageNodeWallet = new Wallet(await getPrivateKey())
+    const newStorageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
     newStorageNodeClient = await createClient({ auth: {
         privateKey: newStorageNodeWallet.privateKey
     } })

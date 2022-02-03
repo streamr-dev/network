@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config'
 import { StreamPartID } from 'streamr-client-protocol'
@@ -100,8 +100,21 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
     })
 }
 
-export async function getPrivateKey(): Promise<string> {
-    const response = await fetch('http://localhost:45454/key')
+export async function fetchPrivateKeyWithGas(): Promise<string> {
+    let response
+    try {
+        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            timeout: 9 * 1000
+        })
+    } catch (_e) {
+        try {
+            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
+        } finally {
+            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+                timeout: 9 * 1000
+            })
+        }
+    }
     return response.text()
 }
 
@@ -130,7 +143,7 @@ export const createClient = async (
     privateKey?: string,
     clientOptions?: StreamrClientOptions
 ): Promise<StreamrClient> => {
-    const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
+    const newPrivateKey = privateKey ? privateKey :  await fetchPrivateKeyWithGas()
     return new StreamrClient({
         ...ConfigTest,
         auth: {

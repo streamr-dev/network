@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, describeRepeats, createTestStream, getPrivateKey } from '../utils'
+import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
@@ -19,7 +19,7 @@ describeRepeats('StreamrClient resends', () => {
             const c = new StreamrClient({
                 ...config,
                 auth: {
-                    privateKey: await getPrivateKey(),
+                    privateKey: await fetchPrivateKeyWithGas(),
                 },
                 autoConnect: false,
                 autoDisconnect: false,
