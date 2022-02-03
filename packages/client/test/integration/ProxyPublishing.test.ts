@@ -1,4 +1,4 @@
-import { createTestStream, fakePrivateKey, getCreateClient, getPrivateKey } from '../utils'
+import { createTestStream, fakePrivateKey, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
@@ -18,7 +18,7 @@ describe('PubSub with proxy connections', () => {
     const createClient = getCreateClient()
 
     beforeEach(async () => {
-        pubPrivateKey = await getPrivateKey()
+        pubPrivateKey = await fetchPrivateKeyWithGas()
         proxyPrivateKey1 = fakePrivateKey()
         proxyPrivateKey2 = fakePrivateKey()
 
@@ -70,8 +70,14 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
-        await wait(1000)
+        await wait(2000)
         await publishingClient.setPublishProxy(stream, proxyNodeId1)
+
+        expect((await publishingClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .toEqual(true)
+
         await publishingClient.publish(stream, {
             msg: 'hellow'
         })
@@ -84,8 +90,7 @@ describe('PubSub with proxy connections', () => {
         await wait(2500)
         expect(receivedMessagesProxy.length).toEqual(3)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
@@ -98,18 +103,15 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxy(stream, proxyNodeId1)
-        await wait(1000)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         await publishingClient.removePublishProxy(stream, proxyNodeId1)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
@@ -126,30 +128,25 @@ describe('PubSub with proxy connections', () => {
         })
         await wait(1000)
         await publishingClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
-        await wait(1000)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
         await publishingClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
-        // @ts-expect-error private
-        expect((await publishingClient.publisher.node.getNode())
+        expect((await publishingClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)

@@ -281,9 +281,26 @@ export const toReadableStream = (...args: unknown[]): Readable => {
 /* eslint-disable no-console */
 export class KeyServer {
     public static readonly KEY_SERVER_PORT = 45454
-    private readonly server: http.Server
+    private static singleton: KeyServer | undefined
+    private readonly ready: Promise<unknown>
+    private server?: http.Server
 
-    constructor() {
+    public static async startIfNotRunning(): Promise<void> {
+        if (KeyServer.singleton === undefined) {
+            KeyServer.singleton = new KeyServer()
+            await KeyServer.singleton.ready
+        }
+    }
+
+    public static async stopIfRunning(): Promise<void> {
+        if (KeyServer.singleton !== undefined) {
+            const temp = KeyServer.singleton
+            KeyServer.singleton = undefined
+            await temp.destroy()
+        }
+    }
+
+    private constructor() {
         const app = express()
         app.use(cors())
         let c = 1
@@ -305,15 +322,24 @@ export class KeyServer {
             }
         })
         console.info(`starting up keyserver on port ${KeyServer.KEY_SERVER_PORT}...`)
-        this.server = app.listen(KeyServer.KEY_SERVER_PORT)
-            .on('listening', () => {
-                console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
-            })
+        this.ready = new Promise((resolve, reject) => {
+            this.server = app.listen(KeyServer.KEY_SERVER_PORT)
+                .once('listening', () => {
+                    console.info(`keyserver started on port ${KeyServer.KEY_SERVER_PORT}`)
+                    resolve(true)
+                })
+                .once('error', (err) => {
+                    reject(err)
+                })
+        })
     }
 
-    destroy(): Promise<unknown> {
+    private destroy(): Promise<unknown> {
+        if (this.server === undefined) {
+            return Promise.resolve(true)
+        }
         return new Promise((resolve, reject) => {
-            this.server.close((err) => {
+            this.server!.close((err) => {
                 if (err) {
                     reject(err)
                 } else {

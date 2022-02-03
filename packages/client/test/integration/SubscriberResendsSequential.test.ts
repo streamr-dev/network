@@ -2,13 +2,13 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 import { Stream, StreamPermission } from '../../src/Stream'
 
@@ -33,7 +33,7 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestPublisher',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 
@@ -41,12 +41,12 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestSubscriber',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(storageNodeTestConfig.address)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())

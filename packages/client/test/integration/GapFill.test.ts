@@ -8,7 +8,7 @@ import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 
 import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -52,11 +52,7 @@ describeRepeats('GapFill', () => {
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        // const storageNodeClient = await createClient({ auth: {
-        //     privateKey: storageNodeTestConfig.privatekey
-        // } })
-        // await storageNodeClient.setNode(storageNodeTestConfig.url)
-        await stream.addToStorageNode(storageNodeTestConfig.address)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client

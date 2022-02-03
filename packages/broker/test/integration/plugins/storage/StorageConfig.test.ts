@@ -9,7 +9,7 @@ import {
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     startTestTracker
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
@@ -36,9 +36,9 @@ describe('StorageConfig', () => {
     let brokerAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await getPrivateKey())
-        storageNodeAccount = new Wallet(await getPrivateKey())
-        brokerAccount = new Wallet(await getPrivateKey())
+        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        brokerAccount = new Wallet(await fetchPrivateKeyWithGas())
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,

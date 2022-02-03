@@ -156,10 +156,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     ethereumNetworks: {
         polygon: {
             chainId: 137,
-            overrides: {
-                maxPriorityFeePerGas: '20000000000', // pay 20 gwei extra
-                maxFeePerGas: '500000000000', // 500 gwei gas max fee (TODO: is this enough?)
-            }
+            gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
 
