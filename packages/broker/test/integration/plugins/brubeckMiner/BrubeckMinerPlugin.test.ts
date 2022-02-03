@@ -56,7 +56,7 @@ const createRewardStream = async (client: StreamrClient): Promise<Stream> => {
     return stream
 }
 
-describe('TestnetMinerPlugin', () => {
+describe('BrubeckMinerPlugin', () => {
     let brokerWallet: Wallet
     let tracker: Tracker
     let broker: Broker
@@ -83,7 +83,7 @@ describe('TestnetMinerPlugin', () => {
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,
             extraPlugins: {
-                testnetMiner: {
+                brubeckMiner: {
                     rewardStreamIds: [rewardStreamId],
                     claimServerUrl: `http://127.0.0.1:${CLAIM_SERVER_PORT}`,
                     stunServerHost: null,

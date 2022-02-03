@@ -49,6 +49,13 @@ export default class BrubeckNode implements Context {
         // generate id if none supplied
         if (id == null || id === '') {
             id = await this.generateId()
+        } else if (!this.ethereum.isAuthenticated()) {
+            throw new Error(`cannot set explicit nodeId ${id} without authentication`)
+        } else {
+            const ethereumAddress = await this.ethereum.getAddress()
+            if (!id.toLowerCase().startsWith(ethereumAddress.toLowerCase())) {
+                throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
+            }
         }
 
         this.debug('initNode', id)
@@ -167,25 +174,24 @@ export default class BrubeckNode implements Context {
         }
     }
 
-    openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): void | Promise<void> {
+    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
-                return this.startNode().then((node) => {
-                    return node.joinStreamPartAsPurePublisher(streamPartId, nodeId)
-                })
+                const node = await this.startNode()
+                await node.joinStreamPartAsPurePublisher(streamPartId, nodeId)
             }
-            return this.cachedNode.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 
-    closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): void {
+    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 return
             }
-            this.cachedNode.leavePurePublishingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }

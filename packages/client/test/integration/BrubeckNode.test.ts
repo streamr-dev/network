@@ -1,21 +1,11 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { getCreateClient, uid } from '../utils'
+import { fakePrivateKey, getCreateClient } from '../utils'
+import { Wallet } from 'ethers'
 
 describe('BrubeckNode', () => {
     const createClient = getCreateClient()
 
     describe('id assignment/generation', () => {
-        it('uses passed-in network node id, if supplied', async () => {
-            const nodeId = uid('NetworkNode')
-            const client = await createClient({
-                network: {
-                    id: nodeId,
-                }
-            })
-            const node = await client.getNode()
-            expect(node.getNodeId()).toEqual(nodeId)
-        })
-
         it('generates node id from address, if id not supplied', async () => {
             const client = await createClient()
             const node = await client.getNode()
@@ -37,6 +27,45 @@ describe('BrubeckNode', () => {
             expect(node1.getNodeId().startsWith(expectedPrefix)).toBe(true)
             expect(node2.getNodeId().startsWith(expectedPrefix)).toBe(true)
             expect(node1.getNodeId()).not.toEqual(node2.getNodeId())
+        })
+
+        it('uses supplied network node id, if compatible', async () => {
+            const wallet = new Wallet(fakePrivateKey())
+            const nodeId = `${wallet.address}#my-custom-id`
+            const client = await createClient({
+                auth: {
+                    privateKey: wallet.privateKey
+                },
+                network: {
+                    id: nodeId,
+                }
+            })
+            const node = await client.getNode()
+            expect(node.getNodeId()).toEqual(nodeId)
+        })
+
+        it('throws error if supplied network node id not compatible', async () => {
+            const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
+            const client = await createClient({
+                network: {
+                    id: nodeId,
+                }
+            })
+            await expect(async () => {
+                await client.getNode()
+            }).rejects.toThrow(/not compatible with authenticated wallet/)
+        })
+
+        it('throws error if supplied network id whilst unauthenticated', async () => {
+            const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
+            const client = new StreamrClient({
+                network: {
+                    id: nodeId,
+                }
+            })
+            await expect(async () => {
+                await client.getNode()
+            }).rejects.toThrow(/without authentication/)
         })
     })
 

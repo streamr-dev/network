@@ -19,7 +19,7 @@ describe('DataUnion deploy', () => {
 
         it('not specified: defaults to deployer', async () => {
             const dataUnion = await adminClient.deployDataUnion()
-            expect(await dataUnion.getAdminAddress()).toBe(await adminClient.getAddress())
+            expect(await dataUnion.getAdminAddress().then((a) => a.toLowerCase())).toBe(await adminClient.getAddress())
         }, 60000)
 
         it('specified', async () => {

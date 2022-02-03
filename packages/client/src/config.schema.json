@@ -35,18 +35,6 @@
             "type": "string",
             "format": "ethereum-address"
         },
-        "keyExchange": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "publicKey": {
-                    "type": "string"
-                },
-                "privateKey": {
-                    "type": "string"
-                }
-            }
-        },
         "dataUnion": {
             "type": "object",
             "additionalProperties": false,
@@ -107,7 +95,7 @@
         },
         "mainChainRPC": {
             "anyOf": [{
-                "$ref": "#/definitions/connectionInfo"
+                "$ref": "#/definitions/chainConnectionInfo"
             }, {
                 "type": "string",
                 "format": "uri"
@@ -130,6 +118,9 @@
             "type": "string",
             "format": "ethereum-address"
         },
+        "ethereumNetworks": {
+            "type": "object"
+        },
         "restUrl": {
             "type": "string",
             "format": "uri"
@@ -139,19 +130,6 @@
         },
         "autoDisconnect": {
             "type": "boolean"
-        },
-        "maxPublishQueueSize": {
-            "type": "number"
-        },
-        "publishWithSignature": {
-            "type": "string",
-            "enum": ["auto", "always", "never"]
-        },
-        "publisherStoreKeyHistory": {
-            "type": "boolean"
-        },
-        "publishAutoDisconnectDelay": {
-            "type": "number"
         },
         "orderMessages": {
             "type": "boolean"
@@ -334,34 +312,6 @@
         }
     },
     "definitions": {
-        "connectionInfo": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "url"
-            ],
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "format": "uri"
-                },
-                "user": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "allowInsecureAuthentication": {
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "type": "number"
-                },
-                "headers": {
-                    "type": "object"
-                }
-            }
-        },
         "chainConnectionInfo": {
             "type": "object",
             "additionalProperties": false,
@@ -371,6 +321,9 @@
             "properties": {
                 "chainId": {
                     "type": "number"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "url": {
                     "type": "string",
@@ -396,4 +349,3 @@
 
     }
 }
-  

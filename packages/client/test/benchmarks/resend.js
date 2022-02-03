@@ -117,12 +117,8 @@ async function run() {
 
     log('setting up...')
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
-        setup({
-            publishWithSignature: 'always',
-        }),
-        setup({
-            publishWithSignature: 'always',
-        })
+        setup(),
+        setup()
     ])
 
     for (const payloadBytes of PAYLOAD_SIZES) {

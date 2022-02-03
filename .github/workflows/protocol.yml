@@ -44,42 +44,5 @@ jobs:
       - name: eslint
         run: npm run eslint
 
-      - name: test-unit
-        run: npm run test-unit
-
-  test-integration:
-    name: Integration Test on Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x]
-
-    steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          check-latest: true
-
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm install -g npm@8 --prefer-offline --no-audit
-          npm run bootstrap-pkg streamr-client-protocol
-
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-        with:
-          services-to-start: "parity-node0 parity-sidechain-node0"
-
-      - name: test-integration
-        run: npm run test-integration
-
-      - name: Stop Streamr Docker Stack
-        if: always()
-        run: |
-          docker kill $(docker ps -q)
-          docker rm $(docker ps -a -q)
+      - name: test
+        run: npm run test

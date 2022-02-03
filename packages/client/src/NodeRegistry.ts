@@ -24,6 +24,7 @@ export type EthereumStorageEvent = {
     streamId: string,
     nodeAddress: EthereumAddress,
     type: 'added' | 'removed'
+    blockNumber: number
 }
 
 export type NetworkSmartContract = {
@@ -65,6 +66,11 @@ type StorageNodeQueryResult = {
         metadata: string,
         lastSeen: string,
         storedStreams: StreamQueryResult[]
+    }
+    _meta: {
+        block: {
+            number: number
+        }
     }
 }
 @scoped(Lifecycle.ContainerScoped)
@@ -197,13 +203,18 @@ export class NodeRegistry {
         return res.stream.storageNodes.map((node) => node.id)
     }
 
-    async getStoredStreamsOf(nodeAddress: string): Promise<Stream[]> {
+    async getStoredStreamsOf(nodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
         log('Getting stored streams of node %s', nodeAddress)
         const res = await this.sendNodeQuery(NodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
-        return res.node.storedStreams.map((stream) => {
-            const parsedProps: StreamProperties = Stream.parseStreamPropsFromJson(stream.metadata)
-            return new Stream({ ...parsedProps, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
+        const streams = res.node.storedStreams.map((stream) => {
+            const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
+            return new Stream({ ...props, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
         })
+        return {
+            streams,
+            // eslint-disable-next-line no-underscore-dangle
+            blockNumber: res._meta.block.number
+        }
     }
 
     async getAllStorageNodes(): Promise<EthereumAddress[]> {
@@ -235,11 +246,11 @@ export class NodeRegistry {
     }
 
     async registerStorageEventListener(callback: (arg0: EthereumStorageEvent) => any) {
-        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string) => {
-            callback({ streamId, nodeAddress, type: 'added' })
+        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string, extra: any) => {
+            callback({ streamId, nodeAddress, type: 'added', blockNumber: extra.blockNumber })
         })
-        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string) => {
-            callback({ streamId, nodeAddress, type: 'removed' })
+        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string, extra: any) => {
+            callback({ streamId, nodeAddress, type: 'removed', blockNumber: extra.blockNumber })
         })
     }
 
@@ -300,6 +311,11 @@ export class NodeRegistry {
                 storedStreams (first:1000) {
                     id,
                     metadata,
+                }
+            }
+            _meta {
+                block {
+                    number
                 }
             }
         }`
