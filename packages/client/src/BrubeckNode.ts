@@ -9,6 +9,7 @@ import { Config } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
+import { Stream } from 'stream'
 
 /**
  * Wrap a network node.
@@ -168,30 +169,36 @@ export default class BrubeckNode implements Context {
     }
 
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+        let resolveHandler
+        let rejectHandler
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
                 await this.startNode()
             }
             await Promise.all([
                 new Promise<void>((resolve, reject) => {
-                    this.cachedNode!.addPurePublishingAcceptedListener((node, stream) => {
+                    resolveHandler = (node: NodeID, stream: StreamPartID) => {
                         if (node === nodeId && stream === streamPartId) {
                             resolve()
                         }
-                    })
-                    this.cachedNode!.addPurePublishingRejectedListener((node, stream) => {
+                    }
+                    rejectHandler = (node: NodeID, stream: StreamPartID) => {
                         if (node === nodeId && stream === streamPartId) {
                             reject()
                         }
-                    })
+                    }
+                    this.cachedNode!.addPurePublishingAcceptedListener(resolveHandler)
+                    this.cachedNode!.addPurePublishingRejectedListener(rejectHandler)
                 }),
                 this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
             ])
 
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
-            this.cachedNode!.removePurePublishingAcceptedListener(() => {})
-            this.cachedNode!.removePurePublishingRejectedListener(() => {})
+            if (resolveHandler && rejectHandler) {
+                this.cachedNode!.removePurePublishingAcceptedListener(resolveHandler)
+                this.cachedNode!.removePurePublishingRejectedListener(rejectHandler)
+            }
         }
     }
 
