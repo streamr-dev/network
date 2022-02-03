@@ -5,7 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: run brokers and trackers
-    - run: |
+      run: |
         npm run bootstrap-pkg streamr-broker
         (cd packages/broker/bin && node run-all.js&)
       shell: bash
