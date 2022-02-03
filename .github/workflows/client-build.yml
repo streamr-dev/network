@@ -102,10 +102,9 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 brokers trackers nginx graph-deploy-streamregistry-subgraph"
-      - uses: actions/setup-node@v2.5.1
-        name: Run Realtime Test
-        working-directory: './packages/client'
+      - name: Run Realtime Test
         run: |
+          cd packages/client
           npm run test-browser-realtime
           npm run test-browser-realtime
           npm run test-browser-realtime
