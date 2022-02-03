@@ -108,7 +108,7 @@ jobs:
           max_attempts: 1
           timeout_minutes: 3
           retry_on: error
-          run: |
+          command: |
             cd packages/client
             npm run test-browser-realtime
             npm run test-browser-realtime
