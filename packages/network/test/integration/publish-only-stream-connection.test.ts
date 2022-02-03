@@ -128,6 +128,18 @@ describe('Publish only connection tests', () => {
         await nonContactNode.stop()
     })
 
+    it('Multiple calls to joinStreamPartAsPurePublisher do not cancel the first call', async () => {
+        await Promise.all([
+            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
+            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
+            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
+        ])
+        // @ts-expect-error private
+        expect(publisherNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValue('contact-node')
+    })
+    
     it('Published data is received using one-way stream connections', async () => {
         await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
         await Promise.all([
