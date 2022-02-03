@@ -105,7 +105,7 @@ jobs:
       - uses: nick-invision/retry@v2
         name: Run Realtime Test
         with:
-          max_attempts: 3
+          max_attempts: 1
           timeout_minutes: 3
           retry_on: error
           command: cd packages/client && npm run test-browser-realtime
