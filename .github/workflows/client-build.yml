@@ -104,21 +104,20 @@ jobs:
           services-to-start: "init-keyspace parity-node0 parity-sidechain-node0 brokers trackers nginx graph-deploy-streamregistry-subgraph"
       - uses: actions/setup-node@v2.5.1
         name: Run Realtime Test
-        with:
-          run: |
-            cd packages/client
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
-            npm run test-browser-realtime
+        working-directory: './packages/client'
+        run: |
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
+          npm run test-browser-realtime
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
