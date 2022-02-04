@@ -206,7 +206,8 @@ export class DataUnion {
             throw new Error(`${address} has only ${withdrawable} to withdraw in `
                 + `(sidechain) data union ${duSidechain.address} (min: ${this.client.options.dataUnion.minimumWithdrawTokenWei})`)
         }
-        return duSidechain.withdrawAll(address, sendToMainnet)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        return duSidechain.withdrawAll(address, sendToMainnet, ethersOverrides)
     }
 
     /**
@@ -241,7 +242,8 @@ export class DataUnion {
         if (withdrawable.eq(0)) {
             throw new Error(`${address} has nothing to withdraw in (sidechain) data union ${duSidechain.address}`)
         }
-        return duSidechain.withdrawAllTo(recipientAddress, sendToMainnet)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        return duSidechain.withdrawAllTo(recipientAddress, sendToMainnet, ethersOverrides)
     }
 
     /**
@@ -432,7 +434,8 @@ export class DataUnion {
     async addMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.addMembers(members)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        const tx = await duSidechain.addMembers(members, ethersOverrides)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
         return waitForTx(tx)
     }
@@ -443,7 +446,8 @@ export class DataUnion {
     async removeMembers(memberAddressList: EthereumAddress[]): Promise<ContractReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.partMembers(members)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        const tx = await duSidechain.partMembers(members, ethersOverrides)
         // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
         return waitForTx(tx)
     }
@@ -484,7 +488,8 @@ export class DataUnion {
     private async getWithdrawAllToMemberTx(memberAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<ContractTransaction> {
         const a = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAll(a, sendToMainnet)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        return duSidechain.withdrawAll(a, sendToMainnet, ethersOverrides)
     }
 
     /**
@@ -527,7 +532,8 @@ export class DataUnion {
         sendToMainnet: boolean = true,
     ) {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature, ethersOverrides)
     }
 
     /**
@@ -573,13 +579,14 @@ export class DataUnion {
         sendToMainnet: boolean = true,
     ) {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawToSigned(memberAddress, recipientAddress, amount, sendToMainnet, signature)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        return duSidechain.withdrawToSigned(memberAddress, recipientAddress, amount, sendToMainnet, signature, ethersOverrides)
     }
 
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
      */
-    async setAdminFee(newFeeFraction: number, ethersOptions: EthersOptions = {}) {
+    async setAdminFee(newFeeFraction: number) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
@@ -587,7 +594,8 @@ export class DataUnion {
 
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
         const duFeeBN = await duSidechain.dataUnionFeeFraction()
-        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOptions)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOverrides)
         return waitForTx(tx)
     }
 
@@ -606,6 +614,7 @@ export class DataUnion {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const { signer } = duSidechain
         const myAddress = await signer.getAddress()
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
 
         // check first that we have enough allowance to do the transferFrom within the transferToMemberInContract
         const { tokenSidechainAddress } = this.client.options
@@ -613,12 +622,12 @@ export class DataUnion {
         const allowance = await token.allowance(myAddress, duSidechain.address)
         if (allowance.lt(amount)) {
             const difference = amount.sub(allowance)
-            const approveTx = await token.increaseAllowance(duSidechain.address, difference)
+            const approveTx = await token.increaseAllowance(duSidechain.address, difference, ethersOverrides)
             const approveTr = await waitForTx(approveTx)
             log('Approval transaction receipt: %o', approveTr)
         }
 
-        const tx = await duSidechain.transferToMemberInContract(address, amount)
+        const tx = await duSidechain.transferToMemberInContract(address, amount, ethersOverrides)
         return waitForTx(tx)
     }
 
@@ -634,7 +643,8 @@ export class DataUnion {
     ): Promise<ContractReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        const tx = await duSidechain.transferWithinContract(address, amountTokenWei)
+        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+        const tx = await duSidechain.transferWithinContract(address, amountTokenWei, ethersOverrides)
         return waitForTx(tx)
     }
 
@@ -724,7 +734,8 @@ export class DataUnion {
     static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: DataUnionAPI) {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
-        const tx = await adapter.setBinanceRecipient(binanceRecipient)
+        const ethersOverrides = client.ethereum.getDataUnionOverrides()
+        const tx = await adapter.setBinanceRecipient(binanceRecipient, ethersOverrides)
         return tx.wait()
     }
 
@@ -737,7 +748,8 @@ export class DataUnion {
     ) {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
-        const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature)
+        const ethersOverrides = client.ethereum.getDataUnionOverrides()
+        const tx = await adapter.setBinanceRecipientFromSig(from, binanceRecipient, signature, ethersOverrides)
         return tx.wait()
     }
 
