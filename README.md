@@ -54,8 +54,16 @@ npm run bootstrap-pkg $PACKAGE_NAME
 
 Examples:
 ```bash
+# from top level
 npm run bootstrap-pkg streamr-client
 npm run bootstrap-pkg streamr-network
+```
+
+## Build all sub-packages
+To build all sub-packages (with dependencies pre-installed beforehand)
+```bash
+# from top level
+npm run build
 ```
 
 ## Regenerate lockfile

@@ -2,7 +2,7 @@ import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
-import { createClient, startBroker, createTestStream, Queue, getPrivateKey, startTestTracker } from '../../../utils'
+import { createClient, startBroker, createTestStream, Queue, fetchPrivateKeyWithGas, startTestTracker } from '../../../utils'
 import { wait } from 'streamr-test-utils'
 import { Wallet } from '@ethersproject/wallet'
 
@@ -30,7 +30,7 @@ describe('MQTT Bridge', () => {
     }
 
     beforeAll(async () => {
-        brokerUser = new Wallet(await getPrivateKey())
+        brokerUser = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
             name: 'broker',

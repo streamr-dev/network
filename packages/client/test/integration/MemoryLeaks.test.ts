@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, getPrivateKey, snapshot, LeaksDetector } from '../utils'
+import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient, initContainer, Dependencies } from '../../src/StreamrClient'
 import { container, DependencyContainer } from 'tsyringe'
 import Subscription from '../../src/Subscription'
@@ -41,7 +41,7 @@ describe('MemoryLeaks', () => {
                 return initContainer({
                     ...clientOptions,
                     auth: {
-                        privateKey: await getPrivateKey(),
+                        privateKey: await fetchPrivateKeyWithGas(),
                     },
                     autoConnect: false,
                     autoDisconnect: false,
@@ -101,7 +101,7 @@ describe('MemoryLeaks', () => {
                 const c = new StreamrClient({
                     ...clientOptions,
                     auth: {
-                        privateKey: await getPrivateKey(),
+                        privateKey: await fetchPrivateKeyWithGas(),
                     },
                     autoConnect: false,
                     autoDisconnect: false,

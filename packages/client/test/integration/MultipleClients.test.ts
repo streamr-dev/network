@@ -1,14 +1,13 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey,
+    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
 } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { Stream, StreamPermission } from '../../src/Stream'
-import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from 'streamr-client-protocol'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
@@ -26,17 +25,15 @@ describeRepeats('PubSub with multiple clients', () => {
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        privateKey = await getPrivateKey()
+        privateKey = await fetchPrivateKeyWithGas()
         mainClient = await createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(await storageNodeWallet.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
     })
 
     afterEach(async () => {
@@ -46,7 +43,7 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createPublisher(opts = {}) {
         const pubClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             ...opts
         })
@@ -480,7 +477,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))
@@ -556,7 +553,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))

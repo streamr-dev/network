@@ -8,14 +8,14 @@ import {
     publishTestMessagesGenerator,
     createTestStream,
     getCreateClient,
-    getPrivateKey
+    fetchPrivateKeyWithGas
 } from '../utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -72,13 +72,8 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-
         stream = await createTestStream(publisher, module)
-
-        await stream.addToStorageNode(await storageNodeClient.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 
@@ -96,8 +91,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await getPrivateKey() } }),
-            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await getPrivateKey() } }),
+            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
+            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
         ])
     }
 

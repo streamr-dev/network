@@ -1,10 +1,9 @@
-import crypto from 'crypto'
 import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config'
 import { StreamPartID } from 'streamr-client-protocol'
@@ -100,10 +99,21 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
     })
 }
 
-export async function getPrivateKey(): Promise<string> {
-    const response = await fetch('http://localhost:45454/key', {
-        timeout: 9 * 1000
-    })
+export async function fetchPrivateKeyWithGas(): Promise<string> {
+    let response
+    try {
+        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            timeout: 9 * 1000
+        })
+    } catch (_e) {
+        try {
+            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
+        } finally {
+            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+                timeout: 9 * 1000
+            })
+        }
+    }
     return response.text()
 }
 
@@ -113,30 +123,19 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
     return broker
 }
 
-// generates a private key
-// equivalent to Wallet.createRandom().privateKey but much faster
-// the slow part seems to be deriving the address from the key so if you can avoid this, just use
-// fastPrivateKey instead of createMockUser
-export const fastPrivateKey = (): string => {
-    return `0x${crypto.randomBytes(32).toString('hex')}`
-}
-
 export const createEthereumAddress = (id: number): string => {
     return '0x' + _.padEnd(String(id), 40, '0')
 }
 
-export const createMockUser = (): Wallet => Wallet.createRandom()
-
 export const createClient = async (
     tracker: Tracker,
-    privateKey?: string,
+    privateKey: string,
     clientOptions?: StreamrClientOptions
 ): Promise<StreamrClient> => {
-    const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
     return new StreamrClient({
         ...ConfigTest,
         auth: {
-            privateKey: newPrivateKey
+            privateKey
         },
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         network: {
@@ -162,7 +161,7 @@ export const createTestStream = async (
         id,
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(id) }, 100000, 1000)
+    await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
 

@@ -28,6 +28,7 @@
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "@ethersproject/wallet": "^5.5.0",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },
