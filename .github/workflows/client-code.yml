@@ -74,8 +74,11 @@ jobs:
       matrix:
         node-version: [16.x]
         test-name: [
-          "test-integration-no-resend",
-          "test-integration-resend",
+          "test-integration-set1",
+          "test-integration-set2",
+          "test-integration-set3",
+          "test-integration-set4",
+          "test-integration-set5"
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
@@ -97,7 +100,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph chainlink"
+          services-to-start: "core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: Run Test

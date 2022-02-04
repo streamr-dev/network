@@ -1,9 +1,9 @@
 import { Wallet } from 'ethers'
 import { randomEthereumAddress } from 'streamr-test-utils'
-import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../src'
-import { until } from '../../src/utils'
-import { collect } from '../../src/utils/GeneratorUtils'
-import { fetchPrivateKeyWithGas } from '../utils'
+import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../../src'
+import { until } from '../../../src/utils'
+import { collect } from '../../../src/utils/GeneratorUtils'
+import { fetchPrivateKeyWithGas } from '../../utils'
 
 jest.setTimeout(2 * 60 * 1000)
 

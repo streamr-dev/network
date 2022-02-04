@@ -1,4 +1,4 @@
-import { getTrackerRegistryFromContract } from '../../src/getTrackerRegistryFromContract'
+import { getTrackerRegistryFromContract } from '../../../src/getTrackerRegistryFromContract'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'

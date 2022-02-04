@@ -1,14 +1,14 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { StreamrClient } from '../../src/StreamrClient'
-import { BrubeckClientConfig } from '../../src/Config'
-import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/Subscriber'
-import Subscription from '../../src/Subscription'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { BrubeckClientConfig } from '../../../src/Config'
+import { Stream } from '../../../src/Stream'
+import Subscriber from '../../../src/Subscriber'
+import Subscription from '../../../src/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../../utils'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)

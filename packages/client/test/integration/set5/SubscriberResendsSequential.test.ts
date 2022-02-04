@@ -6,11 +6,11 @@ import {
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
-} from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+} from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
-import { Stream, StreamPermission } from '../../src/Stream'
+import { Stream, StreamPermission } from '../../../src/Stream'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5

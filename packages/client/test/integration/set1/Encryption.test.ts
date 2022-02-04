@@ -9,13 +9,13 @@ import {
     createTestStream,
     getCreateClient,
     fetchPrivateKeyWithGas
-} from '../utils'
-import { Defer, pLimitFn, until } from '../../src/utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { GroupKey } from '../../src/encryption/Encryption'
-import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+} from '../../utils'
+import { Defer, pLimitFn, until } from '../../../src/utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { GroupKey } from '../../../src/encryption/Encryption'
+import { Stream, StreamPermission } from '../../../src/Stream'
+import Subscription from '../../../src/Subscription'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000

@@ -14,14 +14,14 @@ import {
     describeRepeats,
     createRelativeTestStreamId,
     until
-} from '../utils'
+} from '../../utils'
 
-import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils'
-import * as G from '../../src/utils/GeneratorUtils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { Defer } from '../../../src/utils'
+import * as G from '../../../src/utils/GeneratorUtils'
 
-import { Stream } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../../src/Stream'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 jest.setTimeout(60000)
 

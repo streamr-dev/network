@@ -1,12 +1,12 @@
 import debug from 'debug'
 import { Wallet } from 'ethers'
-import { NotFoundError, Stream } from '../../src'
-import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils'
-import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
-import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
+import { NotFoundError, Stream } from '../../../src'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { until } from '../../../src/utils'
+import { StorageNodeAssignmentEvent } from '../../../src/StorageNodeRegistry'
+import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../../utils'
 
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)

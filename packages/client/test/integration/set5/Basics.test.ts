@@ -1,9 +1,9 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import { Stream } from '../../src/Stream'
+import { Stream } from '../../../src/Stream'
 
 const TEST_TIMEOUT = 60 * 1000
 

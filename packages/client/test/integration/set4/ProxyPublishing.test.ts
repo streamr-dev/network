@@ -1,5 +1,5 @@
-import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
-import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
+import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../../utils'
+import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../../src'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
 

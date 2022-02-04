@@ -1,8 +1,8 @@
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, getCreateClient, createTestStream } from '../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { Stream } from '../../../src/Stream'
+import { getPublishTestMessages, getCreateClient, createTestStream } from '../../utils'
 
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 jest.setTimeout(30000)
 

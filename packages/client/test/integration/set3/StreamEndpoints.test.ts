@@ -1,12 +1,12 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
-import { NotFoundError } from '../../src/authFetch'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream, StreamPermission } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../../utils'
+import { NotFoundError } from '../../../src/authFetch'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { Stream, StreamPermission } from '../../../src/Stream'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { collect } from '../../src/utils/GeneratorUtils'
+import { collect } from '../../../src/utils/GeneratorUtils'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)

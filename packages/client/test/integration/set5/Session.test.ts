@@ -1,4 +1,4 @@
-import { getCreateClient } from '../utils'
+import { getCreateClient } from '../../utils'
 
 describe('Session', () => {
     const createClient = getCreateClient()

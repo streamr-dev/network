@@ -7,12 +7,12 @@ import {
     getWaitForStorage,
     createTestStream,
     clientOptions
-} from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import Resend from '../../src/Resends'
+} from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import Resend from '../../../src/Resends'
 
-import { Stream } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../../src/Stream'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 // import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */

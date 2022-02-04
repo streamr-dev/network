@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
-import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { Stream, StreamPermission } from '../../src/Stream'
-import { GroupKey } from '../../src/encryption/Encryption'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { Stream, StreamPermission } from '../../../src/Stream'
+import { GroupKey } from '../../../src/encryption/Encryption'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)

@@ -2,12 +2,12 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
     getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
-} from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
-import { counterId } from '../../src/utils'
-import { Stream, StreamPermission } from '../../src/Stream'
+} from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { counterId } from '../../../src/utils'
+import { Stream, StreamPermission } from '../../../src/Stream'
 import { StreamMessage } from 'streamr-client-protocol'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join

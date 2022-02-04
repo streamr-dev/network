@@ -2,9 +2,9 @@ import assert from 'assert'
 
 import { ethers } from 'ethers'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import { getCreateClient } from '../utils'
+import { getCreateClient } from '../../utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient

@@ -1,9 +1,9 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../../utils'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import { Stream } from '../../src/Stream'
+import { Stream } from '../../../src/Stream'
 
 jest.setTimeout(30000)
 
