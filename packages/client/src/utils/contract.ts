@@ -1,5 +1,6 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import debug from 'debug'
+import { NameDirectory } from 'streamr-network'
 
 const log = debug('Streamr:contract')
 
@@ -16,10 +17,6 @@ export async function waitForTx(
     return tx.wait()
 }
 
-function shortenAddress(address: string | undefined): string | undefined {
-    return address !== undefined ? `${address.slice(0, 5)}...${address.slice(-4)}` : undefined
-}
-
 const isTransaction = (returnValue: any): returnValue is ContractTransaction => {
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
@@ -34,7 +31,7 @@ const createLogger = (): ContractLogger => {
                 'transaction submitted { method=%s, tx=%s, to=%s, nonce=%d, gasLimit=%d, gasPrice=%d }',
                 methodName,
                 tx.hash,
-                shortenAddress(tx.to),
+                NameDirectory.getName(tx.to),
                 tx.nonce,
                 tx.gasLimit,
                 tx.gasPrice
