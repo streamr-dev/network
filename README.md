@@ -109,7 +109,17 @@ run `npm run bootstrap-pkg $PACKAGE_NAME`.
 
 Alternatively:
 ```bash
+#top level
 npm install some-dependency --workspace=$PACKAGE_NAME
+```
+
+## Updating sub-package dependencies
+
+For an interactive update experience run
+
+```bash
+#top level
+npm run interactive-update
 ```
 
 ## List active versions & symlinks
