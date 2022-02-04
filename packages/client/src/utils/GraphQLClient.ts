@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import fetch from './fetch'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { instanceId } from './index'
 import { Config, StrictStreamrClientConfig } from '../Config'
