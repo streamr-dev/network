@@ -48,7 +48,9 @@ describe('Session', () => {
 
     afterAll(async () => {
         // give tests a few moments to end
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        await new Promise((resolve) => {
+            setTimeout(resolve, 2000)
+        })
     })
 
     describe('instantiation', () => {

@@ -81,7 +81,9 @@ describe('StreamrClient Resend', () => {
                 console.info(`[${l.level}]: ${l.message}`)
             })
         })
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        await new Promise((resolve) => {
+            setTimeout(resolve, 500)
+        })
         return browser.end()
     })
 })

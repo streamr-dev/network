@@ -2,7 +2,9 @@ export const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 
 export const MAX_ITEMS = 3
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const wait = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms)
+})
 const WAIT = 20
 
 export default function IteratorTest(name, fn) {

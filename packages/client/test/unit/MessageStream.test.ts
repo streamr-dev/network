@@ -35,11 +35,9 @@ describe('MessageStream', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const received = []
-        for await (const msg of s) {
-            leaksDetector.add('receivedMessage', msg)
-            received.push(msg)
-            break
-        }
+        const msg = (await s[Symbol.asyncIterator]().next()).value
+        leaksDetector.add('receivedMessage', msg)
+        received.push(msg)
 
         expect(received).toEqual([streamMessage])
     })
@@ -118,11 +116,10 @@ describe('MessageStream', () => {
         leaksDetector.add('streamMessage', streamMessage)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
-            for await (const msg of s) {
-                leaksDetector.add('receivedMessage', msg)
-                received.push(msg)
-                throw err
-            }
+            const msg = (await s[Symbol.asyncIterator]().next()).value
+            leaksDetector.add('receivedMessage', msg)
+            received.push(msg)
+            throw err
         }).rejects.toThrow(err)
 
         expect(received).toEqual([streamMessage])

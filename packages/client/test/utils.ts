@@ -150,7 +150,7 @@ export const expectInvalidAddress = (operation: () => Promise<any>) => {
 
 // eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule) => {
-    const fileNamePattern = new RegExp('.*/(.*).test\\...')
+    const fileNamePattern = /.*\/(.*).test\.../
     const groups = module.filename.match(fileNamePattern)
     return (groups !== null) ? groups[1] : module.filename
 }

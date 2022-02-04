@@ -32,6 +32,7 @@ module.exports = {
                 blankLine: 'always', prev: 'if', next: 'if'
             }
         ],
+        'default-param-last': 'off', // TODO: good rule maybe, but doesn't play nicely with TS and optional params?
         'prefer-destructuring': 'warn',
         'object-curly-newline': 'off',
         'no-continue': 'off',

@@ -307,11 +307,24 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async setPermissionsForUser(recipientId: EthereumAddress, edit: boolean,
-        deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
+    async setPermissionsForUser(
+        recipientId: EthereumAddress,
+        edit: boolean,
+        deletePerm: boolean,
+        publish: boolean,
+        subscribe: boolean,
+        share: boolean
+    ) {
         try {
-            await this._streamRegistry.setPermissionsForUser(this.id, recipientId, edit,
-                deletePerm, publish, subscribe, share)
+            await this._streamRegistry.setPermissionsForUser(
+                this.id,
+                recipientId,
+                edit,
+                deletePerm,
+                publish,
+                subscribe,
+                share
+            )
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }

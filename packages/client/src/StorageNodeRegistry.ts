@@ -81,10 +81,16 @@ export class StorageNodeRegistry {
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.nodeRegistryContractReadonly = new Contract(this.clientConfig.storageNodeRegistryChainAddress,
-            NodeRegistryArtifact, this.chainProvider) as NodeRegistryContract
-        this.streamStorageRegistryContractReadonly = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
-            StreamStorageRegistryArtifact, this.chainProvider) as StreamStorageRegistryContract
+        this.nodeRegistryContractReadonly = new Contract(
+            this.clientConfig.storageNodeRegistryChainAddress,
+            NodeRegistryArtifact,
+            this.chainProvider
+        ) as NodeRegistryContract
+        this.streamStorageRegistryContractReadonly = new Contract(
+            this.clientConfig.streamStorageRegistryChainAddress,
+            StreamStorageRegistryArtifact,
+            this.chainProvider
+        ) as StreamStorageRegistryContract
     }
 
     // --------------------------------------------------------------------------------------------
@@ -104,10 +110,16 @@ export class StorageNodeRegistry {
     private async connectToNodeRegistryContract() {
         if (!this.chainSigner || !this.nodeRegistryContract) {
             this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.nodeRegistryContract = new Contract(this.clientConfig.storageNodeRegistryChainAddress,
-                NodeRegistryArtifact, this.chainSigner) as NodeRegistryContract
-            this.streamStorageRegistryContract = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
-                StreamStorageRegistryArtifact, this.chainSigner) as StreamStorageRegistryContract
+            this.nodeRegistryContract = new Contract(
+                this.clientConfig.storageNodeRegistryChainAddress,
+                NodeRegistryArtifact,
+                this.chainSigner
+            ) as NodeRegistryContract
+            this.streamStorageRegistryContract = new Contract(
+                this.clientConfig.streamStorageRegistryChainAddress,
+                StreamStorageRegistryArtifact,
+                this.chainSigner
+            ) as StreamStorageRegistryContract
         }
     }
 
@@ -116,15 +128,19 @@ export class StorageNodeRegistry {
         await this.connectToNodeRegistryContract()
         const nodeAddress = await this.ethereum.getAddress()
         await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata))
-        await until(async () => {
-            try {
-                const url = await this.getStorageNodeUrl(nodeAddress)
-                return nodeMetadata.includes(url)
-            } catch (err) {
-                return false
-            }
-        }, 10000, 500,
-        () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(
+            async () => {
+                try {
+                    const url = await this.getStorageNodeUrl(nodeAddress)
+                    return nodeMetadata.includes(url)
+                } catch (err) {
+                    return false
+                }
+            },
+            10000,
+            500,
+            () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`
+        )
     }
 
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
@@ -138,8 +154,12 @@ export class StorageNodeRegistry {
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress))
-        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
-            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(
+            async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) },
+            10000,
+            500,
+            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`
+        )
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
@@ -214,7 +234,7 @@ export class StorageNodeRegistry {
             },
             body: gqlQuery
         })
-        const resJson = await res.json()
+        const resJson: any = await res.json()
         log('GraphQL response: %o', resJson)
         if (!resJson.data) {
             if (resJson.errors && resJson.errors.length > 0) {
