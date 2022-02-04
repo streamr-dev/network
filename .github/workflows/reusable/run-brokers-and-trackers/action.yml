@@ -7,6 +7,7 @@ runs:
     - name: run brokers and trackers
       run: |
         npm run bootstrap-pkg streamr-broker
-        (cd packages/broker/bin && node run-all.js) >broker-tracker-logs.txt 2>&1 &
+        mkdir -p logs
+        (cd packages/broker/bin && node run-all.js) >logs/broker-tracker-logs.txt 2>&1 &
       shell: bash
       working-directory: './'
