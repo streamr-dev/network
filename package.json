@@ -27,15 +27,15 @@
         "packages/cli-tools"
     ],
     "dependencies": {
-        "@commitlint/cli": "^12.1.4",
-        "@commitlint/config-conventional": "^12.1.4",
+        "@commitlint/cli": "^16.1.0",
+        "@commitlint/config-conventional": "^16.0.0",
         "@manypkg/cli": "^0.19.1",
         "cli-table": "^0.3.6",
-        "husky": "^6.0.0",
+        "husky": "^7.0.4",
         "lerna": "^4.0.0",
         "node-gyp-build": "^4.3.0",
         "semver": "^7.3.5",
         "yarn": "^1.22.17",
-        "zx": "^1.14.1"
+        "zx": "^4.3.0"
     }
 }
