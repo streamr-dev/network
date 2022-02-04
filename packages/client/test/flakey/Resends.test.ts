@@ -1,12 +1,11 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, describeRepeats, createTestStream, getPrivateKey } from '../utils'
+import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
-import config from '../../src/ConfigTest'
+import config, { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
-import { storageNodeTestConfig } from '../integration/devEnvironment'
 
 /* eslint-disable no-await-in-loop */
 
@@ -19,7 +18,7 @@ describeRepeats('StreamrClient resends', () => {
             const c = new StreamrClient({
                 ...config,
                 auth: {
-                    privateKey: await getPrivateKey(),
+                    privateKey: await fetchPrivateKeyWithGas(),
                 },
                 autoConnect: false,
                 autoDisconnect: false,
@@ -61,7 +60,7 @@ describeRepeats('StreamrClient resends', () => {
             beforeEach(async () => {
                 stream = await createTestStream(client, module)
 
-                await stream.addToStorageNode(storageNodeTestConfig.address)
+                await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 publishTestMessages = getPublishTestMessages(client, stream)
             }, 300000)

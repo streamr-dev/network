@@ -23,6 +23,7 @@ const startTestServer = (apiConfig: { keys: string[] } | null) => {
 
 const createRequest = async (headers?: Record<string,string>) => {
     return await fetch(`http://127.0.0.1:${PORT}/foo`, {
+        timeout: 9 * 1000,
         headers
     })
 }

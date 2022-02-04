@@ -177,8 +177,7 @@ export default class BrubeckNode implements Context {
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
             if (!this.cachedNode || !this.startNodeComplete) {
-                const node = await this.startNode()
-                await node.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+                await this.startNode()
             }
             await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
         } finally {

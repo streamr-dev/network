@@ -126,7 +126,7 @@ export const CONFIG_TEMPLATE: any = {
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
             nodeMetrics: {
-                storageNode: "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916"
+                streamIdPrefix: 'streamr.eth/metrics/nodes/firehose/'
             }
         },
     },

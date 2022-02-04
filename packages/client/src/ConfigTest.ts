@@ -3,7 +3,7 @@ function toNumber(value: any): number | undefined {
 }
 
 const sideChainConfig = {
-    name: 'dev_xdai',
+    name: 'streamr',
     url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     timeout: toNumber(process.env.TEST_TIMEOUT),
 }
@@ -59,3 +59,5 @@ export default {
     autoDisconnect: false,
     maxRetries: 2,
 }
+
+export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'

@@ -6,6 +6,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
 import type { ExternalProvider, Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
+import type { BigNumber } from '@ethersproject/bignumber'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
@@ -61,6 +62,7 @@ export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 type EthereumNetworkConfig = {
     chainId: number
     overrides?: Overrides
+    gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
 export abstract class EthereumConfig {

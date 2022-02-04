@@ -1,12 +1,13 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
 
@@ -19,11 +20,10 @@ describe('StreamEndpoints', () => {
     let wallet: Wallet
     let createdStream: Stream
     let otherWallet: Wallet
-    let storageNodeAddress: string
 
     beforeAll(async () => {
-        wallet = new Wallet(await getPrivateKey())
-        otherWallet = new Wallet(await getPrivateKey())
+        wallet = new Wallet(await fetchPrivateKeyWithGas())
+        otherWallet = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
             ...clientOptions,
             auth: {
@@ -36,16 +36,6 @@ describe('StreamEndpoints', () => {
         createdStream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-        // const storageNodeClient = new StreamrClient({
-        //     ...clientOptions,
-        //     auth: {
-        //         privateKey: storageNodeWallet.privateKey,
-        //     },
-        // })
-        // await storageNodeClient.setNode(storageNodeTestConfig.url)
-        storageNodeAddress = storageNodeWallet.address
-        // storageNode = await client.getStorageNode(await storageNodeWallet.getAddress())
     })
 
     describe('createStream', () => {
@@ -173,7 +163,7 @@ describe('StreamEndpoints', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = `0x${fakeAddress()}`
+            const otherAddress = randomEthereumAddress()
             const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
@@ -195,8 +185,7 @@ describe('StreamEndpoints', () => {
             const stream = await client.createStream({
                 id: await createRelativeTestStreamId(module),
             })
-            await stream.addToStorageNode(storageNodeAddress)
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             const result = await client.getStreamLast(stream.id)
             expect(result).toEqual([])
         })
@@ -220,7 +209,7 @@ describe('StreamEndpoints', () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, fakeAddress())
+            const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
             return expect(!valid).toBeTruthy()
         })
     })
@@ -243,7 +232,7 @@ describe('StreamEndpoints', () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, fakeAddress())
+            const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
             return expect(!valid).toBeTruthy()
         })
     })
@@ -326,8 +315,8 @@ describe('StreamEndpoints', () => {
             })
 
             it('sets Permissions for multiple users in one transaction', async () => {
-                const userA = fakeAddress()
-                const userB = fakeAddress()
+                const userA = randomEthereumAddress()
+                const userB = randomEthereumAddress()
                 const permissionA = {
                     canEdit: true,
                     canDelete: true,
@@ -574,25 +563,23 @@ describe('StreamEndpoints', () => {
         it('add', async () => {
             // await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
             const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNodeAddress)
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0]).toStrictEqual(storageNodeAddress.toLowerCase())
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
+            expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
+            const storedStreamParts = await client.getStreamPartsByStorageNode(DOCKER_DEV_STORAGE_NODE)
             const expectedStreamPartId = toStreamPartID(stream.id, 0)
             return expect(storedStreamParts.some((sp) => sp === expectedStreamPartId)).toBeTruthy()
         })
 
         it('remove', async () => {
             const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNodeAddress)
-            await until(async () => { return client.isStreamStoredInStorageNode(stream.id, storageNodeAddress) }, 100000, 1000)
-            await stream.removeFromStorageNode(storageNodeAddress)
-            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, storageNodeAddress)) }, 100000, 1000)
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
+            const storedStreamParts = await client.getStreamPartsByStorageNode(DOCKER_DEV_STORAGE_NODE)
             return expect(storedStreamParts.some((sp) => (StreamPartIDUtils.getStreamID(sp) === stream.id))).toBeFalsy()
         })
     })
