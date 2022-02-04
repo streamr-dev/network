@@ -147,7 +147,7 @@ describeRepeats('Group Key Persistence', () => {
             await sub2.collect(2) // either one old and one new or 2 new messages
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
-        }, 2 * TIMEOUT)
+        }, 3 * TIMEOUT)
 
         // TODO: fix flaky test in NET-641b
         it.skip('subscriber persists group key with resend last', async () => {
