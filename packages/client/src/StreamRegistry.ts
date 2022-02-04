@@ -23,7 +23,7 @@ import { omit } from 'lodash'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from './searchStreams'
 import { filter, map } from './utils/GeneratorUtils'
-import { waitForTx } from './utils/waitForTx'
+import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
 
 type PermissionQueryResult = {
     id: string
@@ -94,8 +94,10 @@ export class StreamRegistry implements Context {
         this.debug = context.debug.extend(this.id)
         this.debug('create')
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.streamRegistryContractReadonly = new Contract(this.config.streamRegistryChainAddress,
-            StreamRegistryArtifact, this.chainProvider) as StreamRegistryContract
+        this.streamRegistryContractReadonly = withErrorHandlingAndLogging(
+            new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, this.chainProvider),
+            'streamRegistry'
+        ) as StreamRegistryContract
 
         // find chain-specific configs
         const streamRegistryChainName = this.config.streamRegistryChainRPC?.name
@@ -177,8 +179,10 @@ export class StreamRegistry implements Context {
     private async connectToStreamRegistryContract() {
         if (!this.chainSigner || !this.streamRegistryContract) {
             this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.streamRegistryContract = new Contract(this.config.streamRegistryChainAddress,
-                StreamRegistryArtifact, this.chainSigner) as StreamRegistryContract
+            this.streamRegistryContract = withErrorHandlingAndLogging(
+                new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, this.chainSigner),
+                'streamRegistry'
+            ) as StreamRegistryContract
         }
     }
 
@@ -642,4 +646,3 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 }
-
