@@ -99,10 +99,17 @@ export const withErrorHandlingAndLogging = (
     contractName: string,
 ): Contract => {
     const methods: Record<string, () => Promise<any>> = {}
-    Object.keys(contract.functions).forEach((key) => {
-        methods[key] = createWrappedContractMethod(
-            contract.functions[key],
-            `${contractName}.${key}`,
+    /*
+     * Wrap each contract function. We read the list of functions from contract.functions, but
+     * actually delegate each method to contract[methodName]. Those methods are almost identical
+     * to contract.functions[methodName] methods. The major difference is the way of handling
+     * single-value results: the return type of contract.functions[methodName] is always
+     * Promise<Result> (see https://docs.ethers.io/v5/api/contract/contract/#Contract--readonly)
+     */
+    Object.keys(contract.functions).forEach((methodName) => {
+        methods[methodName] = createWrappedContractMethod(
+            contract[methodName],
+            `${contractName}.${methodName}`,
             createLogger()
         )
     })
