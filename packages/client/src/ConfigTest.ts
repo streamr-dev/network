@@ -3,7 +3,7 @@ function toNumber(value: any): number | undefined {
 }
 
 const sideChainConfig = {
-    name: 'dev_xdai',
+    name: 'streamr',
     url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     timeout: toNumber(process.env.TEST_TIMEOUT),
 }
@@ -23,8 +23,8 @@ export default {
     withdrawServerUrl: process.env.WITHDRAW_SERVER_URL || 'http://localhost:3000',
     binanceAdapterAddress: process.env.BINANCE_ADAPTER || '0xdc5F6368cd31330adC259386e78604a5E29E9415',
     streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
-    nodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',
     streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
+    storageNodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',
     dataUnion: {
         factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x4bbcBeFBEC587f6C4AF9AF9B48847caEa1Fe81dA',
         factorySidechainAddress: process.env.DU_FACTORY_SIDECHAIN || '0x4A4c4759eb3b7ABee079f832850cD3D0dC48D927',
@@ -48,10 +48,6 @@ export default {
             }
         ],
     },
-    storageNodeRegistry: {
-        contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
-        jsonRpcProvider: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
-    },
     mainChainRPC: {
         name: 'dev_ethereum',
         url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
@@ -63,3 +59,5 @@ export default {
     autoDisconnect: false,
     maxRetries: 2,
 }
+
+export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'

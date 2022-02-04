@@ -1,6 +1,5 @@
-import { StreamPartID } from 'streamr-client-protocol'
-import { Node, Event as NodeEvent, NodeOptions, NodeId } from './Node'
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { Event as NodeEvent, Event, Node, NodeId, NodeOptions } from './Node'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -22,7 +21,28 @@ export class NetworkNode extends Node {
     }
 
     async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openOutgoingStreamConnection(streamPartId, contactNodeId)
+        let resolveHandler: any
+        let rejectHandler: any
+        await Promise.all([
+            new Promise<void>((resolve, reject) => {
+                resolveHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        resolve()
+                    }
+                }
+                rejectHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        reject(`Joining stream as pure publisher failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
+                    }
+                }
+                this.on(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
+                this.on(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
+            }),
+            this.openOutgoingStreamConnection(streamPartId, contactNodeId)
+        ]).finally(() => {
+            this.off(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
+            this.off(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
+        })
     }
 
     async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {

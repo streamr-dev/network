@@ -3,10 +3,10 @@ import { Wallet } from 'ethers'
 import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
-import { EthereumStorageEvent } from '../../src/NodeRegistry'
-import { createTestStream, getCreateClient, getPrivateKey } from '../utils'
+import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
+import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
 
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
@@ -24,11 +24,11 @@ let nodeAddress: EthereumAddress
 const createClient = getCreateClient()
 
 beforeAll(async () => {
-    const key = await getPrivateKey()
+    const key = await fetchPrivateKeyWithGas()
     client = await createClient({ auth: {
         privateKey: key
     } })
-    const newStorageNodeWallet = new Wallet(await getPrivateKey())
+    const newStorageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
     newStorageNodeClient = await createClient({ auth: {
         privateKey: newStorageNodeWallet.privateKey
     } })
@@ -38,8 +38,8 @@ beforeAll(async () => {
 
 describe('createNode', () => {
     it('creates a node ', async () => {
-        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891/api/v1"}'
-        await newStorageNodeClient.setNode(storageNodeMetadata)
+        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891"}'
+        await newStorageNodeClient.createOrUpdateNodeInStorageNodeRegistry(storageNodeMetadata)
         await until(async () => {
             try {
                 return (await client.getStorageNodeUrl(nodeAddress)) !== null
@@ -49,7 +49,7 @@ describe('createNode', () => {
             }
         }, 100000, 1000)
         const createdNodeUrl = await client.getStorageNodeUrl(nodeAddress)
-        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891/api/v1')
+        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
     })
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
@@ -60,7 +60,7 @@ describe('createNode', () => {
 
     it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
         const promise = Promise
-        const callback = (event: EthereumStorageEvent) => {
+        const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
                 expect(event).toEqual({
@@ -103,17 +103,15 @@ describe('createNode', () => {
         return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
     })
 
-    it('addStreamToStorageNode through streamobject', async () => {
-        const storageNodeClientFromDevEnv = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-        await storageNodeClientFromDevEnv.setNode(storageNodeTestConfig.url)
-        await createdStream.addToStorageNode(storageNodeTestConfig.address)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeTestConfig.address)).toEqual(true)
+    it('addStreamToStorageNode through stream object', async () => {
+        const stream = await createTestStream(client, module)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        expect(isStored).toEqual(true)
     })
 
     it('delete a node ', async () => {
-        await newStorageNodeClient.removeNode()
+        await newStorageNodeClient.removeNodeFromStorageNodeRegistry()
         await until(async () => {
             try {
                 const res = await client.getStorageNodeUrl(nodeAddress)

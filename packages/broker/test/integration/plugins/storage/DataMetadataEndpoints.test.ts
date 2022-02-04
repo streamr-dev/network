@@ -5,9 +5,8 @@ import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
 import {
     startBroker,
     createClient,
-    waitForStreamPersistedInStorageNode,
     createTestStream,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     startTestTracker
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
@@ -36,11 +35,7 @@ describe('DataMetadataEndpoints', () => {
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await getPrivateKey())
-        const storageNodeRegistry = {
-            contractAddress: '0x231b810D98702782963472e1D60a25496999E75D',
-            jsonRpcProvider: `http://127.0.0.1:8546`
-        }
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(trackerPort)
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
@@ -48,18 +43,15 @@ describe('DataMetadataEndpoints', () => {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort1,
             enableCassandra: true,
-            storageNodeRegistry
         })
-        client1 = await createClient(tracker, await getPrivateKey(), {
-            storageNodeRegistry: storageNodeRegistry,
-        })
+        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
     })
 
     afterAll(async () => {
@@ -71,7 +63,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -82,7 +74,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -96,7 +88,6 @@ describe('DataMetadataEndpoints', () => {
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client1, module)
         await freshStream.addToStorageNode(storageNodeAccount.address)
-        await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
         return freshStream
     }
 
@@ -116,7 +107,7 @@ describe('DataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 

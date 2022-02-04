@@ -1,18 +1,17 @@
 import Emitter from 'events'
 
 import { wait } from 'streamr-test-utils'
-import { Todo } from '../../src/types'
 
 import { Defer } from '../../src/utils'
 import Scaffold from '../../src/utils/Scaffold'
 
 describe('Scaffold', () => {
-    let order: Todo
-    let up: Todo
-    let down: Todo
-    let emitter: Todo
-    let onDone: Todo
-    let onChange: Todo
+    let order: string[]
+    let up: (...args: string[]) => Promise<void>
+    let down: (...args: string[]) => Promise<void>
+    let emitter: Emitter
+    let onDone: (isUp: boolean) => void
+    let onChange: (isUp: boolean) => void
     // const log = debug.extend('Scaffold')
 
     beforeEach(() => {
@@ -24,30 +23,30 @@ describe('Scaffold', () => {
         const currentOrder = order
         emitter = new Emitter()
 
-        emitter.on('next', (name: Todo, v = '') => {
+        emitter.on('next', (name: string, v = '') => {
             const msg = `${name} ${v}`.trim()
             // log(msg)
             currentOrder.push(msg)
         })
 
         const currentEmitter = emitter
-        up = async (...args: Todo[]) => {
+        up = async (...args: string[]) => {
             currentEmitter.emit('next', 'up start', ...args)
             await wait(50)
             currentEmitter.emit('next', 'up end', ...args)
         }
 
-        down = async (...args: Todo[]) => {
+        down = async (...args: string[]) => {
             currentEmitter.emit('next', 'down start', ...args)
             await wait(10)
             currentEmitter.emit('next', 'down end', ...args)
         }
 
-        onDone = (isUp: Todo) => {
+        onDone = (isUp: boolean) => {
             currentEmitter.emit('next', 'done', isUp ? 'up' : 'down')
         }
 
-        onChange = (isUp: Todo) => {
+        onChange = (isUp: boolean) => {
             currentEmitter.emit('next', 'change', isUp ? 'up' : 'down')
         }
     })
@@ -193,7 +192,7 @@ describe('Scaffold', () => {
 
         const err = new Error('expected')
         const currentEmitter = emitter
-        currentEmitter.on('next', (event: Todo, name: Todo) => {
+        currentEmitter.on('next', (event: string, name: string) => {
             if (event === 'down start' && name === 'c') {
                 throw err // throw on down b
             }
@@ -250,7 +249,7 @@ describe('Scaffold', () => {
 
         const err = new Error('expected')
         const currentEmitter = emitter
-        currentEmitter.on('next', (event: Todo, name: Todo) => {
+        currentEmitter.on('next', (event: string, name: string) => {
             if (event === 'down start' && name === 'a') {
                 throw err // throw on down b
             }
@@ -522,7 +521,7 @@ describe('Scaffold', () => {
             onDone, onChange
         })
         const done = Defer()
-        emitter.on('next', async (name: Todo) => {
+        emitter.on('next', async (name: string) => {
             if (name === 'up start') {
                 shouldUp = false
                 done.resolve(next())
@@ -546,8 +545,8 @@ describe('Scaffold', () => {
     })
 
     describe('plays undo stack at point of state change', () => {
-        let shouldUp: Todo
-        let next: Todo
+        let shouldUp: boolean
+        let next: ReturnType<typeof Scaffold>
         const allUp = [
             'change up',
             'up start a',
@@ -607,7 +606,7 @@ describe('Scaffold', () => {
         it('can stop before first step', async () => {
             shouldUp = true
             const done = Defer()
-            emitter.on('next', async (name: Todo, v: Todo) => {
+            emitter.on('next', async (name: string, v: string) => {
                 if (name === 'up start' && v === 'a') {
                     shouldUp = false
                     done.resolve(undefined)
@@ -633,7 +632,7 @@ describe('Scaffold', () => {
         it('can stop before second step', async () => {
             shouldUp = true
             const done = Defer()
-            emitter.on('next', async (name: Todo, v: Todo) => {
+            emitter.on('next', async (name: string, v: string) => {
                 if (name === 'up end' && v === 'b') {
                     shouldUp = false
                     done.resolve(undefined)
@@ -663,7 +662,7 @@ describe('Scaffold', () => {
         it('can interrupt down while going down', async () => {
             const done = Defer()
             shouldUp = true
-            emitter.on('next', async (name: Todo, v: Todo) => {
+            emitter.on('next', async (name: string, v: string) => {
                 if (name === 'down end' && v === 'b') {
                     shouldUp = true
                     done.resolve(undefined)
@@ -695,7 +694,7 @@ describe('Scaffold', () => {
             const done3 = Defer()
             shouldUp = true
             let count = 0
-            emitter.on('next', async (name: Todo, v: Todo) => {
+            emitter.on('next', async (name: string, v: string) => {
                 if (name === 'down end' && v === 'b') {
                     count += 1
                     shouldUp = true

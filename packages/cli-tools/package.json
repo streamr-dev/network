@@ -33,15 +33,14 @@
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "^6.0.0-alpha.25",
-    "streamr-client-protocol": "^11.0.0",
+    "streamr-client": "^6.0.0-alpha.31",
+    "streamr-client-protocol": "^12.0.0",
     "streamr-test-utils": "^2.0.0"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/jest": "^27.0.2",
     "@types/lodash": "^4.14.175",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",

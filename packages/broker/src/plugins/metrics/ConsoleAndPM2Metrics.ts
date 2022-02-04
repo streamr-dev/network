@@ -102,10 +102,6 @@ export class ConsoleAndPM2Metrics {
         const report = await this.metricsContext.report(true)
 
         // @ts-expect-error not enough typing info available
-        const inPerSecond = report.metrics['broker/publisher'].messages.rate
-        // @ts-expect-error not enough typing info available
-        const kbInPerSecond = report.metrics['broker/publisher'].bytes.rate / 1000
-        // @ts-expect-error not enough typing info available
         const outPerSecond = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].outMessages.rate : 0)
             // @ts-expect-error not enough typing info available
             + (report.metrics['broker/http'] ? report.metrics['broker/http'].outMessages.rate : 0)
@@ -161,8 +157,6 @@ export class ConsoleAndPM2Metrics {
         logger.info(
             'Report\n'
             + '\tBroker connections: %d\n'
-            + '\tBroker in: %d events/s, %d kb/s\n'
-            + '\tBroker out: %d events/s, %d kb/s\n'
             + '\tNetwork connections %d\n'
             + '\tQueued messages: %d\n'
             + '\tNetwork in: %d events/s, %d kb/s\n'
@@ -172,10 +166,6 @@ export class ConsoleAndPM2Metrics {
             + '\tTotal ongoing resends: %d (mean age %d ms)\n'
             + '\tTotal batches: %d (mean age %d ms)\n',
             brokerConnectionCount,
-            formatNumber(inPerSecond),
-            formatNumber(kbInPerSecond),
-            formatNumber(outPerSecond),
-            formatNumber(kbOutPerSecond),
             networkConnectionCount,
             messageQueueSize,
             formatNumber(networkInPerSecond),
@@ -192,8 +182,6 @@ export class ConsoleAndPM2Metrics {
             meanBatchAge
         )
 
-        this.eventsInPerSecondMetric.set(inPerSecond)
-        this.kbInPerSecondMetric.set(kbInPerSecond)
         this.eventsOutPerSecondMetric.set(outPerSecond)
         this.kbOutPerSecondMetric.set(kbOutPerSecond)
         this.storageReadPerSecondMetric.set(storageReadCountPerSecond)

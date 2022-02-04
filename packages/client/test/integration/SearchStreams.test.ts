@@ -1,8 +1,9 @@
 import { Wallet } from 'ethers'
+import { randomEthereumAddress } from 'streamr-test-utils'
 import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../src'
 import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { fakeAddress, getPrivateKey } from '../utils'
+import { fetchPrivateKeyWithGas } from '../utils'
 
 jest.setTimeout(2 * 60 * 1000)
 
@@ -40,7 +41,7 @@ describe('SearchStreams', () => {
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             autoConnect: false
         })
@@ -122,7 +123,7 @@ describe('SearchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: fakeAddress(),
+                user: randomEthereumAddress(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([

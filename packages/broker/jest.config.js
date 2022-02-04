@@ -19,7 +19,7 @@ module.exports = {
     // The directory where Jest should output its coverage files
     coverageDirectory: 'coverage',
 
-    globalSetup: './jest.setup.js',
+    globalTeardown: './jest.teardown.js',
    
     preset: 'ts-jest/presets/js-with-ts',
 

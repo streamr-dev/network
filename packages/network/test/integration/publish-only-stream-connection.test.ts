@@ -70,14 +70,8 @@ describe('Publish only connection tests', () => {
     })
 
     it('publisher node can form one-way connections', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-        ])
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
-        ])
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2')
         // @ts-expect-error private
         expect(publisherNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -85,14 +79,8 @@ describe('Publish only connection tests', () => {
     })
 
     it('publisher node can close one way connections', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
-        ])
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-        ])
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2')
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
         // @ts-expect-error private
         expect(publisherNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
         // @ts-expect-error private
@@ -133,59 +121,11 @@ describe('Publish only connection tests', () => {
             nonContactNode.subscribe(defaultStreamPartId)
         ])
 
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node')
-        ])
-        // @ts-expect-error private
-        expect(publisherNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeFalse()
+        await expect(publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
+            .rejects
+            .toMatch(`failed`)
 
         await nonContactNode.stop()
-
-    })
-
-    it('Published data is received using one-way stream connections', async () => {
-        await Promise.all([
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED)
-        ])
-        await Promise.all([
-            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
-            waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
-            publisherNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
-                content: {
-                    hello: 'world'
-                },
-            }))
-        ])
-    })
-
-    it('Node with existing subscription cannot create a publish only stream connection', async () => {
-        await Promise.all([
-            waitForEvent(contactNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            contactNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
-        ])
-        // @ts-expect-error private
-        expect(contactNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeTrue()
-    })
-
-    it('Cannot open publish only stream connection to non-existing node (not connected to the streams tracker)', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-existing-node'),
-        ])
-        // @ts-expect-error private
-        expect(publisherNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeFalse()
-    })
-
-    it('Cannot open publish only stream connection to a node without an existing subscription to the given stream', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamPartAsPurePublisher(StreamPartIDUtils.parse('non-existing-stream#0'), 'contact-node'),
-        ])
-        // @ts-expect-error private
-        expect(publisherNode.streamPartManager.isSetUp(defaultStreamPartId)).toBeFalse()
     })
 
     it('Multiple calls to joinStreamPartAsPurePublisher do not cancel the first call', async () => {
@@ -199,20 +139,46 @@ describe('Publish only connection tests', () => {
         // @ts-expect-error private
         expect(publisherNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValue('contact-node')
     })
+    
+    it('Published data is received using one-way stream connections', async () => {
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
+            waitForEvent(contactNode2, NodeEvent.MESSAGE_RECEIVED),
+            publisherNode.publish(new StreamMessage({
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                content: {
+                    hello: 'world'
+                },
+            }))
+        ])
+    })
 
-    it('failed publish only connections do not clean out existing connections', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-        ])
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2'),
-        ])
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_REJECTED),
-            publisherNode.joinStreamPartAsPurePublisher(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node'),
-        ])
+    it('Node with existing subscription cannot create a publish only stream connection', async () => {
+        await expect(publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
+            .rejects
+            .toMatch(`failed`)
+    })
+
+    it('Cannot open publish only stream connection to non-existing node (not connected to the streams tracker)', async () => {
+        await expect(publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
+            .rejects
+            .toMatch(`failed`)
+    })
+
+    it('Cannot open publish only stream connection to a node without an existing subscription to the given stream', async () => {
+        await expect(publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
+            .rejects
+            .toMatch(`failed`)
+    })
+
+    it('if caught, failed publish only connections do not clean out existing connections', async () => {
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node-2')
+        try {
+            await publisherNode.joinStreamPartAsPurePublisher(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node')
+        } catch (err) {
+        }
 
         // @ts-expect-error private
         expect(publisherNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValues(['contact-node', 'contact-node-2'])
@@ -225,10 +191,7 @@ describe('Publish only connection tests', () => {
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
             contactNode2.unsubscribe(defaultStreamPartId)
         ])
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-        ])
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             publisherNode.leavePurePublishingStreamPart(defaultStreamPartId, 'contact-node'),
@@ -238,10 +201,7 @@ describe('Publish only connection tests', () => {
     })
 
     it('will reconnect after lost connectivity', async () => {
-        await Promise.all([
-            waitForEvent(publisherNode, NodeEvent.PUBLISH_STREAM_ACCEPTED),
-            publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node'),
-        ])
+        await publisherNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'contact-node')
 
         await Promise.all([
             waitForEvent(publisherNode, NodeEvent.NODE_CONNECTED, 20000),

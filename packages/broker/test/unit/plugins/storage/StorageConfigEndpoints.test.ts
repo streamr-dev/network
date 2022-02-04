@@ -5,7 +5,7 @@ import { router } from '../../../../src/plugins/storage/StorageConfigEndpoints'
 import { createMockStorageConfig } from '../../../integration/plugins/storage/MockStorageConfig'
 
 const createRequest = (streamId: string, partition: number, app: express.Application) => {
-    return request(app).get(`/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
+    return request(app).get(`/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
 }
 
 describe('StorageConfigEndpoints', () => {

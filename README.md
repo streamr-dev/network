@@ -4,57 +4,66 @@
   </a>
 </p>
 
-# Streamr Network + Client Monorepo
+# Network Monorepo
 
-Streamr network, broker, client & supporting packages.
+Monorepo for Streamr Network packages.
 
-## Contains
+## Packages
 
-* [network](packages/network/README.md) (streamr-network)
 * [broker](packages/broker/README.md) (streamr-broker)
 * [client](packages/client/README.md) (streamr-client)
+* [network](packages/network/README.md) (streamr-network)
 * [protocol](packages/protocol/README.md) (streamr-client-protocol)
 * [test-utils](packages/test-utils/README.md) (streamr-test-utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 
-## Build Status
+## CI Status
 
 [![Client – Lint, Unit, Integration Tests](https://github.com/streamr-dev/monorepo/actions/workflows/client-code.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-code.yml)
-
 [![Client – Test Build](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
-
 [![Protocol – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml)
-
 [![Broker – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml)
-
 [![Network – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml)
 
-## Installation
+## Install
 
-Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
+Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to manage monorepo.
+
+**Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
+
+### Install all sub-packages
+
+Install the dependencies and build all sub-packages, linking sub-packages together as needed.
 
 ```bash
 # from top level
-npm ci # installs dependencies for all packages and links them together
+npm ci
 ```
 
-##  Install + link one sub-package
+###  Install a sub-package
 
-The script `bootstrap-pkg` script installs all dependencies of a
-sub-package, links internal packages, builds sub-deps and the target dep
-by running their `prepare` scripts.
+Install and build a single sub-package.
 
-### Important: Do not use `npm ci` or `npm install` in monorepo sub-package directories.
-
-Normal `npm ci` and `npm install` commmands will not work properly within a sub-package e.g. `packages/streamr-client`, because `npm` doesn't know how to deal with the monorepo sub-package linking.
+The script `bootstrap-pkg` installs the dependencies of a given sub-package, building and linking any required internal
+sub-packages (by running their `prepare` scripts), and finally the target dependency by using its `prepare` script.
 
 ```bash
 # from top level
 npm run bootstrap-pkg $PACKAGE_NAME
+```
 
-# e.g.
+Examples:
+```bash
+# from top level
 npm run bootstrap-pkg streamr-client
 npm run bootstrap-pkg streamr-network
+```
+
+## Build all sub-packages
+To build all sub-packages (with dependencies pre-installed beforehand)
+```bash
+# from top level
+npm run build
 ```
 
 ## Regenerate lockfile
@@ -62,60 +71,81 @@ npm run bootstrap-pkg streamr-network
 ```bash
 # from top level
 npm run clean-lockfiles
-
 ```
 
-## Clean Cached/Built Files
+## Clear caches and built files
 
-This cleans all cache and `dist` directories from each sub-package.
+The below clears all caches and removes `dist` directories from each sub-package.
 
 ```bash
 # from top level
-npm run clean-dist # also clears cache
-# alternatively, just clear cache:
+npm run clean-dist
+```
+
+Alternatively, to just clear caches.
+
+```bash
+# from top level
 npm run clean-cache
 ```
 
-## Clean All
 
-This removes all cached/built files and `node_modules` from each
-sub-package, and the top-level node_modules.  You will need to run `npm
-ci` (honour package-lock), `npm install` (update package-lock) or `npm
-run bootstrap` (only install top-level packages) before proceeding.
+## Clean all
+
+This removes all caches, built files, and `node_modules` of each sub-package, and the
+top-level `node_modules`.
+
+You will need to run `npm ci`, `npm install`, or `npm run bootstrap`  before proceeding.
 
 ```bash
 # from top level
 npm run clean
 ```
 
-## Install an npm/internal dependency into a sub-package
+## Add a dependency into a sub-package
 
-Manually add the package + version to the appropriate `package.json` and
+Manually add the entry to the `package.json` of the sub-package and 
 run `npm run bootstrap-pkg $PACKAGE_NAME`.
 
-or:
-
+Alternatively:
 ```bash
 npm install some-dependency --workspace=$PACKAGE_NAME
 ```
 
 ## List active versions & symlinks
 
-Check which packages are currently being symlinked.
+Check which sub-packages are currently being symlinked.
 
 ```bash
 # from top level
 npm run versions
 ```
 
-This lists internal packages & their versions on the left, linked
-packages are columns.  If the package on the left links to the package
+This lists sub-packages & their versions on the left, linked
+sub-packages are columns.  If the package on the left links to the package
 in the column, it shows a checkmark & the semver range, otherwise it
 shows the mismatched semver range and prints a warning at the end.  It
 prints the version ranges so you can double-check that they're formatted
 as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ![image](https://user-images.githubusercontent.com/43438/135347920-97d6e0e7-b86c-40ff-bfc9-91f160ae975c.png)
+
+## Commands Reference
+
+| Command                                                            | After (using `npm` workspaces)                                                                                                                                                                |
+|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `npm ci`                                                           | Installs all top-level dependencies AND sub-packages according to top-level `package-lock.json`                                                                                               |
+| `npm install`                                                      | Installs all top-level dependencies AND sub-packages and updates `package-lock.json`. Will install new sub-package dependencies.                                                              |
+| `npm run bootstrap`                                                | Runs `npm ci`.                                                                                                                                                                                |
+| `npm run bootstrap-pkg streamr-network`                            | Installs top-level dependencies AND the dependencies for a sub-package using package-lock. Does not update `package-lock.json`. Will not install new sub-package dependencies.                |
+| `npm install --include-workspace-root --workspace streamr-network` | Installs top-level dependencies (`--include-workspace-root`) AND the dependencies for a sub-package. Will update `package-lock.json`. Will install new sub-package dependencies.              | 
+| `npm run clean-dist`                                               | Removes cache and `dist` from sub-packages. Removes cache from top-level.                                                                                                                     |
+| `npm run clean`                                                    | Removes all cache, dist & packages from root & sub-package `node_modules/`, except those packages needed by the top-level `package.json` e.g. `zx`.                                           | 
+| `npm run prune-pkg streamr-broker`                                 | Removes all packages except the production deps needed by the specified package's `package.json`. Note they will be installed in the top-level `node_modules/` not `packages/*/node_modules/` | 
+| `npm run bootstrap-root`                                           | Removes all packages except those needed by top-level `package.json`.                                                                                                                         |
+| `npm run fix`                                                      | Runs `eslint --fix` in all packages and `manypkg fix`.                                                                                                                                        |
+| `npm run clean-package-locks`                                      | Removes only top-level package-lock.  There should only be a single top-level package-lock.                                                                                                   |
+
 
 ## Important changes to the bootstrap/install scripts as of 48e165f:
 
@@ -156,21 +186,3 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 * `npm run versions` also run `manypkg check`. This lints package.json
   to do things like ensure all packages are using the same versions of
   dependencies. e.g. same version of TS in every package.
-
-### Before/After Comparison
-
-|  Command      |  After (using `npm` workspaces) | Before (using `lerna`) |
-| ------------ | ----------- | ----------- |
-| `npm ci`      |  Installs all top-level dependencies AND sub-packages according to top-level `package-lock.json` | Installs only top-level dependencies e.g. `lerna`  according to top-level `package-lock.json` |
-| `npm install`      | Installs all top-level dependencies AND sub-packages and updates `package-lock.json`. Will install new sub-package dependencies. |  Installs only top-level dependencies and updates `package-lock.json`
-| `npm run bootstrap`   | Runs `npm ci`. | Installs dependencies for sub-packages using `lerna`. Unclear whether package-lock is used, but it will update `package-lock.json`.  |
-| `npm run bootstrap-pkg streamr-network`      | Installs top-level dependencies AND the dependencies for a sub-package using package-lock. Does not update `package-lock.json`. Will not install new sub-package dependencies. | Installs dependencies for a sub-package using `lerna`. Unclear if package-lock is used. Does not update `package-lock.json`. |
-| `npm install --include-workspace-root --workspace streamr-network`       | Installs top-level dependencies (`--include-workspace-root`) AND the dependencies for a sub-package. Will update `package-lock.json`. Will install new sub-package dependencies.  | N/A but roughly equivalent to running this in the old setup: `npm install && npm run bootstrap-pkg streamr-network` |
-| `npm run clean-dist`       | Removes cache and `dist` from sub-packages. Removes cache from top-level. | Removes cache and `dist` from sub-packages. |
-| `npm run clean`      |  Removes all cache, dist & packages from root & sub-package `node_modules/`, except those packages needed by the top-level `package.json` e.g. `zx`. |  Runs `npm run clean-dist` and `npm run bootstrap-root`. |
-| `npm run prune-pkg streamr-broker`      | Removes all packages except the production deps needed by the specified package's `package.json`. Note they will be installed in the top-level `node_modules/` not `packages/*/node_modules/` | N/A, roughly equivalent to `cd packages/streamr-broker/ && npm prune --production`
-| `npm run bootstrap-root`      | Removes all packages except those needed by top-level `package.json`. | N/A, roughly equivalent to `npm ci && npm run clean`
-| `npm run fix` | Runs `eslint --fix` in all packages and `manypkg fix`. | N/A |
-| `npm run clean-package-locks` | Removes only top-level package-lock.  There should only be a single top-level package-lock. | Removes all package locks in all packages. |
-
-Left `lerna` in the tree because `lerna` works best for implementing the `npm run versions` script.
