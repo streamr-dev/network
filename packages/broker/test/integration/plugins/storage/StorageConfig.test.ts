@@ -20,7 +20,7 @@ const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
+const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`
 const HTTP_PORT = 17770
 const TRACKER_PORT = 17772
 
