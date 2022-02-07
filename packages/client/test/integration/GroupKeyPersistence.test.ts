@@ -4,6 +4,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { wait } from 'streamr-test-utils'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(90000)
@@ -147,19 +148,21 @@ describe('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
+            await wait(2000)
+
             await Promise.all([
                 sub2.collect(2), // either one old and one new or 2 new messages
                 published.push(...await publishTestMessages(3))
             ])
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
-            await Promise.all([
-                sub2.unsubscribe(),
-                sub.unsubscribe(),
-                subscriber.destroy(),
-                subscriber2.destroy(),
-                publisher.destroy()
-            ])
+            // await Promise.all([
+            //     sub2.unsubscribe(),
+            //     sub.unsubscribe(),
+            //     subscriber.destroy(),
+            //     subscriber2.destroy(),
+            //     publisher.destroy()
+            // ])
             console.log('HERE')
         }, 3 * TIMEOUT)
 
