@@ -1,12 +1,13 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, fakeAddress, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
+import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
 
@@ -162,7 +163,7 @@ describe('StreamEndpoints', () => {
 
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
-            const otherAddress = `0x${fakeAddress()}`
+            const otherAddress = randomEthereumAddress()
             const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
@@ -208,7 +209,7 @@ describe('StreamEndpoints', () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, fakeAddress())
+            const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
             return expect(!valid).toBeTruthy()
         })
     })
@@ -231,7 +232,7 @@ describe('StreamEndpoints', () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, fakeAddress())
+            const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
             return expect(!valid).toBeTruthy()
         })
     })
@@ -314,8 +315,8 @@ describe('StreamEndpoints', () => {
             })
 
             it('sets Permissions for multiple users in one transaction', async () => {
-                const userA = fakeAddress()
-                const userB = fakeAddress()
+                const userA = randomEthereumAddress()
+                const userB = randomEthereumAddress()
                 const permissionA = {
                     canEdit: true,
                     canDelete: true,

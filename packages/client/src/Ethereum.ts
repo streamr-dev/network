@@ -248,6 +248,39 @@ class StreamrEthereum {
 
         return new JsonRpcProvider(this.ethereumConfig.streamRegistryChainRPC)
     }
+
+    getMainnetOverrides(): Overrides {
+        return this.getOverrides('ethereum', this.getMainnetProvider())
+    }
+
+    getBinanceOverrides(): Overrides {
+        return this.getOverrides(this.ethereumConfig?.dataUnionBinanceWithdrawalChainRPC?.name ?? 'binance', this.getBinanceProvider())
+    }
+
+    getDataUnionOverrides(): Overrides {
+        return this.getOverrides(this.ethereumConfig?.dataUnionChainRPC?.name ?? 'gnosis', this.getDataUnionChainProvider())
+    }
+
+    getStreamRegistryOverrides(): Overrides {
+        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPC?.name ?? 'polygon', this.getStreamRegistryChainProvider())
+    }
+
+    /**
+     * Apply the gasPriceStrategy to the estimated gas price, if given
+     * Ethers.js will resolve the gas price promise before sending the tx
+     */
+    private getOverrides(chainName: string, provider: Provider): Overrides {
+        const chainConfig = this.ethereumConfig?.ethereumNetworks?.[chainName]
+        if (!chainConfig) { return {} }
+        const overrides = chainConfig?.overrides ?? {}
+        if (chainConfig.gasPriceStrategy) {
+            return {
+                ...overrides,
+                gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)
+            }
+        }
+        return overrides
+    }
 }
 
 export default StreamrEthereum

@@ -1,13 +1,9 @@
-import { getCreate2Address, isAddress } from '@ethersproject/address'
-import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
+import { isAddress } from '@ethersproject/address'
+import { arrayify, BytesLike } from '@ethersproject/bytes'
 import { Contract, ContractReceipt } from '@ethersproject/contracts'
-import { keccak256 } from '@ethersproject/keccak256'
-import { defaultAbiCoder } from '@ethersproject/abi'
-import { parseEther } from '@ethersproject/units'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
-import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import DataUnionAPI from './index'
@@ -22,7 +18,6 @@ function validateAddress(name: string, address: EthereumAddress) {
     }
 }
 
-/* TODO during ETH-173 refactor: remove this class and inline its functions into DataUnion.ts */
 export default class Contracts {
     ethereum: StreamrEthereum
     factoryMainnetAddress: EthereumAddress
@@ -41,49 +36,6 @@ export default class Contracts {
         this.templateSidechainAddress = client.options.dataUnion.templateSidechainAddress
         this.binanceAdapterAddress = client.options.binanceAdapterAddress
         this.binanceSmartChainAMBAddress = client.options.binanceSmartChainAMBAddress
-    }
-
-    async fetchDataUnionMainnetAddress(
-        dataUnionName: string,
-        deployerAddress: EthereumAddress
-    ): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
-    }
-
-    /**
-     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
-     *       i.e. can be used for "future deployments" but not necessarily old deployments
-     * This can be used when deploying, but not for getDataUnion
-     */
-    calculateDataUnionMainnetAddress(
-        dataUnionName: string,
-        deployerAddress: EthereumAddress,
-        templateMainnetAddress?: EthereumAddress
-    ): EthereumAddress {
-        validateAddress("deployer's address", deployerAddress)
-        const templateAddress = templateMainnetAddress || this.templateMainnetAddress
-        validateAddress('DU template mainnet address', templateAddress)
-        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
-        const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
-        return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
-    }
-
-    /**
-     * NOTE: if template address is not given, calculation only works for the newest currently deployed factory,
-     *       i.e. can be used for "future deployments" but not necessarily old deployments
-     * This can be used when deploying, but not for getDataUnion
-     */
-    calculateDataUnionSidechainAddress(mainnetAddress: EthereumAddress, templateSidechainAddress?: EthereumAddress): EthereumAddress {
-        validateAddress('DU mainnet address', mainnetAddress)
-        const templateAddress = templateSidechainAddress || this.templateSidechainAddress
-        validateAddress('DU template sidechain address', templateAddress)
-        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
-        const codeHash = keccak256(code)
-        return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
     }
 
     /**
@@ -278,71 +230,5 @@ export default class Contracts {
         const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures, ethersOptions)
         const trAMB = await txAMB.wait()
         return trAMB
-    }
-
-    async deployDataUnion({
-        ownerAddress,
-        agentAddressList,
-        duName,
-        deployerAddress,
-        adminFeeBN,
-        sidechainRetryTimeoutMs,
-        sidechainPollingIntervalMs,
-        confirmations,
-        gasPrice
-    }: {
-        ownerAddress: EthereumAddress,
-        agentAddressList: EthereumAddress[]
-        duName: string
-        deployerAddress: EthereumAddress
-        adminFeeBN: BigNumber
-        sidechainRetryTimeoutMs: number
-        sidechainPollingIntervalMs: number
-        confirmations: number
-        gasPrice?: BigNumber,
-    }) {
-        const mainnetProvider = this.ethereum.getMainnetProvider()
-        const mainnetWallet = this.ethereum.getSigner()
-        const duChainProvider = this.ethereum.getDataUnionChainProvider()
-
-        const duMainnetAddress = this.calculateDataUnionMainnetAddress(duName, deployerAddress)
-        const duSidechainAddress = this.calculateDataUnionSidechainAddress(duMainnetAddress)
-
-        if (await mainnetProvider.getCode(duMainnetAddress) !== '0x') {
-            throw new Error(`Mainnet data union "${duName}" contract ${duMainnetAddress} already exists!`)
-        }
-
-        if (await mainnetProvider.getCode(this.factoryMainnetAddress) === '0x') {
-            throw new Error(
-                `Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.dataUnion.factoryMainnetAddress!`
-            )
-        }
-
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, mainnetWallet)
-        const ethersOptions: any = {}
-        if (gasPrice) {
-            ethersOptions.gasPrice = gasPrice
-        }
-        const duFeeFraction = parseEther('0') // TODO: decide what the default values should be
-        const duBeneficiary = '0x0000000000000000000000000000000000000000' // TODO: decide what the default values should be
-        const tx = await factoryMainnet.deployNewDataUnion(
-            ownerAddress,
-            adminFeeBN,
-            duFeeFraction,
-            duBeneficiary,
-            agentAddressList,
-            duName,
-            ethersOptions
-        )
-        await tx.wait(confirmations)
-
-        log(`Data Union "${duName}" (mainnet: ${duMainnetAddress}, sidechain: ${duSidechainAddress}) deployed to mainnet, waiting for side-chain...`)
-        await until(
-            async () => await duChainProvider.getCode(duSidechainAddress) !== '0x',
-            sidechainRetryTimeoutMs,
-            sidechainPollingIntervalMs
-        )
-
-        return { duMainnetAddress, duSidechainAddress }
     }
 }

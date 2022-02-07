@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
-import fetch from 'node-fetch'
+import fetch from '../src/utils/fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -34,14 +34,6 @@ export function mockContext() {
 }
 
 export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
-
-export function fakePrivateKey() {
-    return crypto.randomBytes(32).toString('hex')
-}
-
-export function fakeAddress() {
-    return crypto.randomBytes(32).toString('hex').slice(0, 40)
-}
 
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response

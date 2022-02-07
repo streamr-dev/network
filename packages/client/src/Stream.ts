@@ -1,7 +1,7 @@
 /**
  * Wrapper for Stream metadata and (some) methods.
  */
-import fetch from 'node-fetch'
+import fetch from './utils/fetch'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
