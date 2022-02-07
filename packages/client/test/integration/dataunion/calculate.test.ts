@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
@@ -6,8 +5,6 @@ import { clientOptions, providerMainnet, providerSidechain } from '../devEnviron
 import { getRandomClient, expectInvalidAddress } from '../../utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
-
-const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 
 // This test will fail when new docker images are pushed with updated DU smart contracts
 // -> generate new codehashes for calculateDataUnionMainnetAddress() and calculateDataUnionSidechainAddress()
@@ -26,7 +23,7 @@ describe('DataUnion calculate', () => {
         const {
             mainnetAddress,
             sidechainAddress,
-        } = adminClient.calculateDataUnionAddresses(dataUnionName, adminWalletMainnet.address)
+        } = await adminClient.calculateDataUnionAddresses(dataUnionName)
 
         const dataUnionDeployed = await adminClient.deployDataUnion({ dataUnionName })
         const version = await dataUnionDeployed.getVersion()
