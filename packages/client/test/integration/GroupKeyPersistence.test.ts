@@ -57,6 +57,10 @@ describe('Group Key Persistence', () => {
             await publisher.setNextGroupKey(stream.id, groupKey)
         })
 
+        afterEach(() => {
+            console.log('HERE2222')
+        })
+
         describe('publisher persists group key, can keep serving group key requests (resend)', () => {
             let published: any[]
             let publisher2: StreamrClient
@@ -109,7 +113,7 @@ describe('Group Key Persistence', () => {
             }, 2 * TIMEOUT)
         })
 
-        it('subscriber persists group key with realtime', async () => {
+        it.only('subscriber persists group key with realtime', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber
@@ -151,7 +155,10 @@ describe('Group Key Persistence', () => {
             expect(received).toEqual(published.slice(0, 1))
             await Promise.all([
                 sub2.unsubscribe(),
-                sub.unsubscribe()
+                sub.unsubscribe(),
+                subscriber.destroy(),
+                subscriber2.destroy(),
+                publisher.destroy()
             ])
             console.log('HERE')
         }, 3 * TIMEOUT)
