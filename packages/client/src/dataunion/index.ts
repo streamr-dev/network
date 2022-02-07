@@ -69,11 +69,11 @@ export default class DataUnionAPI {
      *       i.e. can be used for "future deployments" but NOT for old deployments
      * For old deployments, please use getDataUnion
      */
-    calculateDataUnionAddresses(
+    async calculateDataUnionAddresses(
         dataUnionName: string,
-        deployerAddress: EthereumAddress
-    ): { mainnetAddress: EthereumAddress, sidechainAddress: EthereumAddress } {
-        const deployer = getAddress(deployerAddress)
+        deployerAddress?: EthereumAddress
+    ): Promise<{ mainnetAddress: EthereumAddress, sidechainAddress: EthereumAddress }> {
+        const deployer = deployerAddress ?? await this.ethereum.getAddress()
         const {
             templateMainnetAddress,
             templateSidechainAddress,
@@ -143,7 +143,7 @@ export default class DataUnionAPI {
         const {
             mainnetAddress,
             sidechainAddress,
-        } = this.calculateDataUnionAddresses(dataUnionName, deployerAddress)
+        } = await this.calculateDataUnionAddresses(dataUnionName, deployerAddress)
 
         if (await mainnetProvider.getCode(mainnetAddress) !== '0x') {
             throw new Error(`Mainnet data union "${dataUnionName}" contract ${mainnetAddress} already exists!`)
