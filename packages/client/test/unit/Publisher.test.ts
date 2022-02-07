@@ -73,7 +73,6 @@ describe('Publisher', () => {
 
     it('partition and partitionKey', async () => {
         // eslint-disable-next-line max-len
-        const errorMessage = `Failed to publish to stream {"streamId":"${STREAM_ID}","partition":0} due to: Error: Invalid combination of "partition" and "partitionKey`
         return expect(() => {
             return publisher.publish({
                 streamId: STREAM_ID,
@@ -81,6 +80,6 @@ describe('Publisher', () => {
             }, {
                 foo: 'bar'
             }, TIMESTAMP, 'mockPartitionKey')
-        }).rejects.toThrow(errorMessage)
+        }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
     })
 })
