@@ -16,6 +16,7 @@ import { erc20AllowanceAbi } from './abi'
 
 import DataUnionAPI from './index'
 import { EthereumAddress } from 'streamr-client-protocol'
+import type { TransactionReceipt } from '@ethersproject/providers'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
@@ -731,7 +732,7 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: DataUnionAPI) {
+    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: DataUnionAPI): Promise<TransactionReceipt> {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const ethersOverrides = client.ethereum.getDataUnionOverrides()
@@ -745,7 +746,7 @@ export class DataUnion {
         binanceRecipient: EthereumAddress,
         signature: BytesLike,
         client: DataUnionAPI
-    ) {
+    ): Promise<TransactionReceipt> {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const ethersOverrides = client.ethereum.getDataUnionOverrides()
