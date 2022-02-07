@@ -16,6 +16,7 @@ import { erc20AllowanceAbi } from './abi'
 
 import DataUnionAPI from './index'
 import { EthereumAddress } from 'streamr-client-protocol'
+import type { TransactionReceipt } from '@ethersproject/providers'
 
 export interface DataUnionDeployOptions {
     owner?: EthereumAddress,
@@ -392,11 +393,19 @@ export class DataUnion {
 
     /**
      * Get data union admin fee fraction (between 0.0 and 1.0) that admin gets from each revenue event
+     * Version 2.2: admin fee is collected in DataUnionSidechain
+     * Version 2.0: admin fee was collected in DataUnionMainnet
      */
     async getAdminFee(): Promise<number> {
-        let adminFeeBN = BigNumber.from(0)
-        const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        adminFeeBN = await duSidechain.adminFeeFraction()
+        let adminFeeBN: BigNumber
+        try {
+            // v2.0, this did not exist and thus will fail for old DataUnionSidechain contracts
+            const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
+            adminFeeBN = await duSidechain.adminFeeFraction()
+        } catch (e) {
+            const duMainnet = await this.getContracts().getMainnetContractReadOnly(this.contractAddress)
+            adminFeeBN = await duMainnet.adminFeeFraction()
+        }
         return +adminFeeBN.toString() / 1e18
     }
 
@@ -585,17 +594,27 @@ export class DataUnion {
 
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
+     * Version 2.2: admin fee is collected in DataUnionSidechain
+     * Version 2.0: admin fee was collected in DataUnionMainnet
      */
     async setAdminFee(newFeeFraction: number) {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
-        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
 
         const adminFeeBN = BigNumber.from((newFeeFraction * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-        const duFeeBN = await duSidechain.dataUnionFeeFraction()
-        const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
-        const tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOverrides)
+        let tx: ContractTransaction
+        try {
+            // v2.0, this did not exist and thus will fail for old DataUnionSidechain contracts
+            const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+            const duFeeBN = await duSidechain.dataUnionFeeFraction()
+            const ethersOverrides = this.client.ethereum.getDataUnionOverrides()
+            tx = await duSidechain.setFees(adminFeeBN, duFeeBN, ethersOverrides)
+        } catch (e) {
+            const duMainnet = await this.getContracts().getMainnetContract(this.contractAddress)
+            const ethersOverrides = this.client.ethereum.getMainnetOverrides()
+            tx = await duMainnet.setAdminFee(adminFeeBN, ethersOverrides)
+        }
         return waitForTx(tx)
     }
 
@@ -648,60 +667,6 @@ export class DataUnion {
         return waitForTx(tx)
     }
 
-    /**
-     * Create a new DataUnionMainnet contract to mainnet with DataUnionFactoryMainnet
-     * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
-     * @return that resolves when the new DU is deployed over the bridge to side-chain
-     * @internal
-     */
-    static async _deploy(options: DataUnionDeployOptions = {}, client: DataUnionAPI): Promise<DataUnion> {
-        const {
-            owner,
-            joinPartAgents,
-            dataUnionName,
-            adminFee = 0,
-            sidechainPollingIntervalMs = 1000,
-            sidechainRetryTimeoutMs = 600000,
-            confirmations = 1,
-            gasPrice
-        } = options
-        const deployerAddress = await client.ethereum.getAddress()
-
-        let duName = dataUnionName
-        if (!duName) {
-            duName = `DataUnion-${Date.now()}` // TODO: use uuid
-            log(`dataUnionName generated: ${duName}`)
-        }
-
-        if (adminFee < 0 || adminFee > 1) { throw new Error('options.adminFeeFraction must be a number between 0...1, got: ' + adminFee) }
-        const adminFeeBN = BigNumber.from((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-
-        const ownerAddress = (owner) ? getAddress(owner) : deployerAddress
-
-        let agentAddressList
-        if (Array.isArray(joinPartAgents)) {
-            // getAddress throws if there's an invalid address in the array
-            agentAddressList = joinPartAgents.map(getAddress)
-        } else {
-            // streamrNode needs to be joinPartAgent so that EE join with secret works (and join approvals from Marketplace UI)
-            agentAddressList = [ownerAddress]
-            agentAddressList.push(getAddress(client.options.streamrNodeAddress))
-        }
-
-        const { duMainnetAddress, duSidechainAddress } = await new Contracts(client).deployDataUnion({
-            ownerAddress,
-            agentAddressList,
-            duName,
-            deployerAddress,
-            adminFeeBN,
-            sidechainRetryTimeoutMs,
-            sidechainPollingIntervalMs,
-            confirmations,
-            gasPrice
-        })
-        return new DataUnion(duMainnetAddress, duSidechainAddress, client)
-    }
-
     /** @internal */
     static async _createSetBinanceRecipientSignature(
         to: EthereumAddress,
@@ -731,7 +696,7 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: DataUnionAPI) {
+    static async _setBinanceDepositAddress(binanceRecipient: EthereumAddress, client: DataUnionAPI): Promise<TransactionReceipt> {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const ethersOverrides = client.ethereum.getDataUnionOverrides()
@@ -745,7 +710,7 @@ export class DataUnion {
         binanceRecipient: EthereumAddress,
         signature: BytesLike,
         client: DataUnionAPI
-    ) {
+    ): Promise<TransactionReceipt> {
         const contracts = new Contracts(client)
         const adapter = await contracts.getBinanceAdapter()
         const ethersOverrides = client.ethereum.getDataUnionOverrides()
