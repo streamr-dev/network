@@ -32,7 +32,7 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -137,7 +137,7 @@ export const createClient = async (
         auth: {
             privateKey
         },
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
         network: {
             trackers: [tracker.getConfigRecord()]
         },
