@@ -75,6 +75,20 @@ jobs:
         node-version: [16.x]
         test-name: [
           "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey",
+          "test test/integration/Groupkey"
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
