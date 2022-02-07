@@ -253,6 +253,7 @@ describeRepeats('GapFill', () => {
 
     describe('client settings', () => {
         it('ignores gaps if orderMessages disabled', async () => {
+            await client?.destroy()
             await setupClient({
                 orderMessages: false, // should disable all gapfilling
                 gapFillTimeout: 200,
