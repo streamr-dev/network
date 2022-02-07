@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../utils'
+import { getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
@@ -153,7 +153,7 @@ describe('Group Key Persistence', () => {
                 sub2.unsubscribe(),
                 sub.unsubscribe()
             ])
-            console.log("HERE")
+            console.log('HERE')
         }, 3 * TIMEOUT)
 
         // TODO: fix flaky test in NET-641b
