@@ -6,7 +6,7 @@ import type { NodeRegistry as NodeRegistryContract } from './ethereumArtifacts/N
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from './ethereumArtifacts/StreamStorageRegistry'
 import NodeRegistryArtifact from './ethereumArtifacts/NodeRegistryAbi.json'
 import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegistry.json'
-import fetch from 'node-fetch'
+import fetch from './utils/fetch'
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'

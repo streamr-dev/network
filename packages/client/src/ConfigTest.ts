@@ -3,7 +3,7 @@ function toNumber(value: any): number | undefined {
 }
 
 const sideChainConfig = {
-    name: 'dev_xdai',
+    name: 'streamr',
     url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
     timeout: toNumber(process.env.TEST_TIMEOUT),
 }
