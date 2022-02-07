@@ -114,8 +114,10 @@ export class StorageNodeRegistry {
     async createOrUpdateNodeInStorageNodeRegistry(nodeMetadata: string): Promise<void> {
         log('setNode %s -> %s', nodeMetadata)
         await this.connectToNodeRegistryContract()
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
+
         const nodeAddress = await this.ethereum.getAddress()
-        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata))
         await until(async () => {
             try {
                 const url = await this.getStorageNodeUrl(nodeAddress)
@@ -130,14 +132,16 @@ export class StorageNodeRegistry {
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
         log('removeNode called')
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.nodeRegistryContract!.removeNodeSelf())
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
     }
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress))
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
         await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
             () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
@@ -146,7 +150,8 @@ export class StorageNodeRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress))
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
     // --------------------------------------------------------------------------------------------
