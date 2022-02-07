@@ -7,8 +7,6 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-    getCreateClient,
-    fetchPrivateKeyWithGas
 } from '../utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -16,6 +14,7 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../fakeEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -31,8 +30,7 @@ describeRepeats('decryption', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
-
-    const createClient = getCreateClient()
+    let clientFactory: ClientFactory
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
@@ -53,6 +51,7 @@ describeRepeats('decryption', () => {
     }
 
     beforeEach(() => {
+        clientFactory = createClientFactory()
         errors = []
         expectErrors = 0
     })
@@ -64,7 +63,7 @@ describeRepeats('decryption', () => {
     })
 
     async function setupClient(opts?: any) {
-        const client = await createClient(opts)
+        const client = clientFactory.createClient(opts)
         await Promise.all([
             client.connect(),
         ])
@@ -91,8 +90,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
-            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await fetchPrivateKeyWithGas() } }),
+            setupClient({ id: 'publisher', ...opts }),
+            setupClient({ id: 'subscriber', ...opts }),
         ])
     }
 
