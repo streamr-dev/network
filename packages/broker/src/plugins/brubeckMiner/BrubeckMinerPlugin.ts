@@ -139,7 +139,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                     'Content-Type': 'application/json'
                 }
             })
-            const resBody = await res.json()
+            const resBody: any = await res.json()
             logger.info(`Reward claimed successfully, current stake ${resBody.stake} on block ${resBody.latestBlock}`)
             if (resBody.alert) {
                 logger.info(`Claim alert: ${resBody.alert}`)

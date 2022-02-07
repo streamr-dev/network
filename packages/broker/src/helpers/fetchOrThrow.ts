@@ -1,10 +1,11 @@
 import fetch, { RequestInit, Response } from 'node-fetch'
+import timeoutSignal from 'timeout-signal'
 
 const DEFAULT_TIMEOUT = 30 * 1000
 
 export const fetchOrThrow = async (url: string, init?: RequestInit): Promise<Response> => {
     const res = await fetch(url, {
-        timeout: DEFAULT_TIMEOUT,
+        signal: timeoutSignal(DEFAULT_TIMEOUT),
         ...init
     })
     if (res.ok) {

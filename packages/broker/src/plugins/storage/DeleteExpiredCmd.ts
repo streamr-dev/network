@@ -1,5 +1,5 @@
 import cassandra, { Client } from 'cassandra-driver'
-import pLimit, { Limit } from 'p-limit'
+import pLimit, { LimitFunction } from 'p-limit'
 import StreamrClient from 'streamr-client'
 import { Logger } from 'streamr-network'
 
@@ -45,7 +45,7 @@ export class DeleteExpiredCmd {
     dryRun: boolean
     bucketLimit: number
     cassandraClient: Client
-    limit: Limit
+    limit: LimitFunction
 
     constructor({
         streamrBaseUrl,
