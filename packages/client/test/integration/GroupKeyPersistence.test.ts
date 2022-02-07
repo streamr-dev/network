@@ -6,9 +6,9 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const TIMEOUT = 30 * 1000
-jest.setTimeout(60000)
+jest.setTimeout(90000)
 
-describeRepeats('Group Key Persistence', () => {
+describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
@@ -143,10 +143,17 @@ describeRepeats('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
-            published.push(...await publishTestMessages(3))
-            await sub2.collect(2) // either one old and one new or 2 new messages
+            await Promise.all([
+                sub2.collect(2), // either one old and one new or 2 new messages
+                published.push(...await publishTestMessages(3))
+            ])
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
+            await Promise.all([
+                sub2.unsubscribe(),
+                sub.unsubscribe()
+            ])
+            console.log("HERE")
         }, 3 * TIMEOUT)
 
         // TODO: fix flaky test in NET-641b
@@ -202,7 +209,7 @@ describeRepeats('Group Key Persistence', () => {
             }
             expect(received2).toEqual(published)
             expect(received).toEqual(published.slice(0, 1))
-        }, 2 * TIMEOUT)
+        }, 3 * TIMEOUT)
 
         it('can run multiple publishers in parallel', async () => {
             const sub = await subscriber.subscribe({

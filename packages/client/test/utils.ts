@@ -66,7 +66,9 @@ export function describeRepeats(msg: any, fn: any, describeFn = describe) {
         describe(msg, () => {
             describeFn(`test repeat ${k + 1} of ${TEST_REPEATS}`, fn)
         })
+        console.log("HERE3")
     }
+    console.log("STOPPED")
 }
 
 describeRepeats.skip = (msg: any, fn: any) => {
