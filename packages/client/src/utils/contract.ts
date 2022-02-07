@@ -54,7 +54,7 @@ const createLogger = (): ContractLogger => {
 const withErrorHandling = async <T>(
     execute: () => Promise<T>,
     methodName: string
-): Promise<T> | never => {
+): Promise<T> => {
     try {
         return await execute()
     } catch (e: any) {
