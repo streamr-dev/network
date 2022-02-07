@@ -649,60 +649,6 @@ export class DataUnion {
         return waitForTx(tx)
     }
 
-    /**
-     * Create a new DataUnionMainnet contract to mainnet with DataUnionFactoryMainnet
-     * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
-     * @return that resolves when the new DU is deployed over the bridge to side-chain
-     * @internal
-     */
-    static async _deploy(options: DataUnionDeployOptions = {}, client: DataUnionAPI): Promise<DataUnion> {
-        const {
-            owner,
-            joinPartAgents,
-            dataUnionName,
-            adminFee = 0,
-            sidechainPollingIntervalMs = 1000,
-            sidechainRetryTimeoutMs = 600000,
-            confirmations = 1,
-            gasPrice
-        } = options
-        const deployerAddress = await client.ethereum.getAddress()
-
-        let duName = dataUnionName
-        if (!duName) {
-            duName = `DataUnion-${Date.now()}` // TODO: use uuid
-            log(`dataUnionName generated: ${duName}`)
-        }
-
-        if (adminFee < 0 || adminFee > 1) { throw new Error('options.adminFeeFraction must be a number between 0...1, got: ' + adminFee) }
-        const adminFeeBN = BigNumber.from((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
-
-        const ownerAddress = (owner) ? getAddress(owner) : deployerAddress
-
-        let agentAddressList
-        if (Array.isArray(joinPartAgents)) {
-            // getAddress throws if there's an invalid address in the array
-            agentAddressList = joinPartAgents.map(getAddress)
-        } else {
-            // streamrNode needs to be joinPartAgent so that EE join with secret works (and join approvals from Marketplace UI)
-            agentAddressList = [ownerAddress]
-            agentAddressList.push(getAddress(client.options.streamrNodeAddress))
-        }
-
-        const { duMainnetAddress, duSidechainAddress } = await new Contracts(client).deployDataUnion({
-            ownerAddress,
-            agentAddressList,
-            duName,
-            deployerAddress,
-            adminFeeBN,
-            sidechainRetryTimeoutMs,
-            sidechainPollingIntervalMs,
-            confirmations,
-            gasPrice
-        })
-        return new DataUnion(duMainnetAddress, duSidechainAddress, client)
-    }
-
     /** @internal */
     static async _createSetBinanceRecipientSignature(
         to: EthereumAddress,

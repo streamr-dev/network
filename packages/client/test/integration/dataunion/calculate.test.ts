@@ -25,18 +25,17 @@ describe('DataUnion calculate', () => {
         log('Connected to sidechain network: ', JSON.stringify(network2))
 
         const adminClient = new StreamrClient(clientOptions as any)
-
         const dataUnionName = 'test-' + Date.now()
-
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
-        const mainnetAddressPredicted = contracts.calculateDataUnionMainnetAddress(dataUnionName, adminWalletMainnet.address)
-        const sidechainAddressPredicted = contracts.calculateDataUnionSidechainAddress(mainnetAddressPredicted)
+        const {
+            mainnetAddress,
+            sidechainAddress,
+        } = adminClient.calculateDataUnionAddresses(dataUnionName, adminWalletMainnet.address)
 
         const dataUnionDeployed = await adminClient.deployDataUnion({ dataUnionName })
         const version = await dataUnionDeployed.getVersion()
 
-        expect(dataUnionDeployed.getAddress()).toBe(mainnetAddressPredicted)
-        expect(dataUnionDeployed.getSidechainAddress()).toBe(sidechainAddressPredicted)
+        expect(dataUnionDeployed.getAddress()).toBe(mainnetAddress)
+        expect(dataUnionDeployed.getSidechainAddress()).toBe(sidechainAddress)
         expect(version).toBe(2)
     }, 60000)
 
