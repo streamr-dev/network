@@ -118,7 +118,7 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
-    "pino-pretty": "^5.0.2",
+    "pino-pretty": "^7.5.1",
     "utf-8-validate": "^5.0.7"
   }
 }
