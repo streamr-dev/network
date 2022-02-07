@@ -37,6 +37,15 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
     }
 }
 
+export const streamDefinitionToString = (definition: StreamDefinition) => {
+    const raw = parseRawDefinition(definition)
+    let str = raw[0]
+    if (raw[1] !== undefined) {
+        str += '#' + raw[1] // TODO '#' from a constant?
+    }
+    return str
+}
+
 /* eslint-disable no-else-return */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
