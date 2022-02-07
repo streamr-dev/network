@@ -5,7 +5,7 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from '../src/utils/fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../src/StreamrClient'
@@ -592,3 +592,16 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     }
 }
 
+export const createEthereumAddressCache = () => {
+    const cache: Map<string, EthereumAddress> = new Map()
+    return {
+        getAddress: (privateKey: string): EthereumAddress => {
+            let address = cache.get(privateKey)
+            if (address === undefined) {
+                address = new Wallet(privateKey).address
+                cache.set(privateKey, address)
+            }
+            return address
+        }
+    }
+}

@@ -3,6 +3,7 @@ import { DependencyContainer } from 'tsyringe'
 import { NotFoundError, Stream, StreamPermission } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'
 
+// TODO: remove this and use new Fake* classes instead
 export class FakeStreamRegistry implements Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> {
 
     private streamId: StreamID
