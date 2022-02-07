@@ -75,7 +75,7 @@ jobs:
         node-version: [16.x]
         test-name: [
           "test-integration-no-resend",
-          "test-integration-resend",
+          "test test/integration/Groupkey",
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
