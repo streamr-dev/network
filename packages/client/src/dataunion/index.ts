@@ -76,14 +76,16 @@ export default class DataUnionAPI {
         const deployer = getAddress(deployerAddress)
         const {
             templateMainnetAddress,
+            templateSidechainAddress,
             factoryMainnetAddress,
             factorySidechainAddress,
         } = this.options.dataUnion
-        // These magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        // The magic hex strings come from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployer]))
-        const mainnetAddress = getCreate2Address(factoryMainnetAddress, salt, codeHash)
-        const sidechainAddress = getCreate2Address(factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
+        const codeHashM = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        const mainnetAddress = getCreate2Address(factoryMainnetAddress, salt, codeHashM)
+        const codeHashS = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        const sidechainAddress = getCreate2Address(factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHashS)
         return { mainnetAddress, sidechainAddress }
     }
 
