@@ -12,7 +12,7 @@ export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 import ConfigTest from './ConfigTest'
-import validateConfig from './ConfigBase'
+import { validateConfig } from './ConfigBase'
 
 export { ConfigTest, validateConfig }
 export * from './dataunion/DataUnion'
