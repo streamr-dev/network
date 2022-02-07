@@ -114,7 +114,7 @@ describe('Group Key Persistence', () => {
             }, 2 * TIMEOUT)
         })
 
-        it.only('subscriber persists group key with realtime', async () => {
+        it('subscriber persists group key with realtime', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber
@@ -148,7 +148,7 @@ describe('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
-            await wait(2000)
+            await wait(1000)
 
             await Promise.all([
                 sub2.collect(2), // either one old and one new or 2 new messages
@@ -167,7 +167,7 @@ describe('Group Key Persistence', () => {
         }, 3 * TIMEOUT)
 
         // TODO: fix flaky test in NET-641b
-        it.skip('subscriber persists group key with resend last', async () => {
+        it('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber
