@@ -3,18 +3,18 @@ import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils } from 'stre
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
-import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
+import { ActiveNodes } from './ActiveNodes'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry {
 
     private assignments: Map<StreamID, EthereumAddress[]> = new Map()
     private streamIdBuilder: StreamIDBuilder
-    private fakeBrubeckNodeRegistry: FakeBrubeckNodeRegistry
+    private fakeBrubeckNodeRegistry: ActiveNodes
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(FakeBrubeckNodeRegistry) fakeBrubeckNodeRegistry: FakeBrubeckNodeRegistry,
+        @inject(ActiveNodes) fakeBrubeckNodeRegistry: ActiveNodes,
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.fakeBrubeckNodeRegistry = fakeBrubeckNodeRegistry

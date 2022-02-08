@@ -3,7 +3,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeBrubeckNodeRegistry {
+export class ActiveNodes {
 
     private nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
 

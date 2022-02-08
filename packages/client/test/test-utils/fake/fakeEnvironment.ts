@@ -9,7 +9,7 @@ import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
-import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
+import { ActiveNodes } from './ActiveNodes'
 import { FakeRest } from './FakeRest'
 import { createEthereumAddressCache } from '../utils'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
@@ -23,12 +23,12 @@ export const createClientFactory = () => {
     const mockContainer = container.createChildContainer()
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
-    mockContainer.registerSingleton(FakeBrubeckNodeRegistry, FakeBrubeckNodeRegistry as any)
+    mockContainer.registerSingleton(ActiveNodes, ActiveNodes as any)
     mockContainer.registerSingleton(Rest, FakeRest as any)
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {
         const { privateKey } = c.resolve(Config.Auth) as AuthConfig
-        const registry = c.resolve(FakeBrubeckNodeRegistry)
+        const registry = c.resolve(ActiveNodes)
         const address = ethereumAddressCache.getAddress(privateKey!)
         let node = registry.getNode(address)
         if (node === undefined) {

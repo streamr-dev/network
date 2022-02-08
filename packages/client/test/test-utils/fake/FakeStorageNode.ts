@@ -1,12 +1,12 @@
 import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
-import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
+import { ActiveNodes } from './ActiveNodes'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
     private streamPartMessages: Map<StreamPartID, StreamMessage[]> = new Map()
 
-    constructor(address: EthereumAddress, fakeBrubeckNodeRegistry: FakeBrubeckNodeRegistry, name?: string) {
+    constructor(address: EthereumAddress, fakeBrubeckNodeRegistry: ActiveNodes, name?: string) {
         super(address, fakeBrubeckNodeRegistry, undefined, name)
     }
 

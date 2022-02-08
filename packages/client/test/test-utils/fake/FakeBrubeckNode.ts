@@ -2,7 +2,7 @@ import debug from 'debug'
 import { pull } from 'lodash'
 import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from '../../../src/DestroySignal'
-import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
+import { ActiveNodes } from './ActiveNodes'
 
 const log = debug('Streamr:FakeBrubeckNode')
 
@@ -11,11 +11,11 @@ export class FakeBrubeckNode {
     private address: EthereumAddress
     public subsribedStreamParts: Set<StreamPartID> = new Set()
     public messageListeners: ((msg: StreamMessage) => void)[] = []
-    private fakeBrubeckNodeRegistry: FakeBrubeckNodeRegistry
+    private fakeBrubeckNodeRegistry: ActiveNodes
 
     constructor(
         address: EthereumAddress,
-        fakeBrubeckNodeRegistry: FakeBrubeckNodeRegistry,
+        fakeBrubeckNodeRegistry: ActiveNodes,
         destroySignal: DestroySignal | undefined,
         name?: string
     ) {
