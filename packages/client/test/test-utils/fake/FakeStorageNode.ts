@@ -12,8 +12,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
 
     addAssignment(streamId: StreamID) {
         const streamPartId = toStreamPartID(streamId, 0) // TODO all partitions
-        this.subscribe(streamPartId) // TODO do not subscribe if already subscribed
-        this.addMessageListener((msg: StreamMessage) => {
+        this.subscribe(streamPartId, (msg: StreamMessage) => { // TODO do not subscribe if already subscribed
             this.storeMessage(msg)
         })
     }

@@ -8,11 +8,10 @@ export class ActiveNodes {
     private nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
 
     addNode(node: FakeBrubeckNode) {
-        const address = node.getAddress().toLowerCase()
-        if (!this.nodes.has(address)) {
-            this.nodes.set(address, node)
+        if (!this.nodes.has(node.id)) {
+            this.nodes.set(node.id, node)
         } else {
-            throw new Error(`Duplicate node: ${address}`)
+            throw new Error(`Duplicate node: ${node.id}`)
         }
     }
 

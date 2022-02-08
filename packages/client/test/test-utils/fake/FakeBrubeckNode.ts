@@ -1,65 +1,52 @@
 import debug from 'debug'
-import { pull } from 'lodash'
 import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { NetworkNode } from 'streamr-network'
+import BrubeckNode from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
+import { Multimap } from '../utils'
 import { ActiveNodes } from './ActiveNodes'
 
-const log = debug('Streamr:FakeBrubeckNode')
+type MessageListener = (msg: StreamMessage) => void
 
-export class FakeBrubeckNode {
-
-    private address: EthereumAddress
-    public subsribedStreamParts: Set<StreamPartID> = new Set()
-    public messageListeners: ((msg: StreamMessage) => void)[] = []
+export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete'> {
+    readonly id: EthereumAddress
+    readonly debug
+    public messageListeners: Multimap<StreamPartID,MessageListener> = new Multimap()
     private fakeBrubeckNodeRegistry: ActiveNodes
 
     constructor(
-        address: EthereumAddress,
+        id: EthereumAddress,
         fakeBrubeckNodeRegistry: ActiveNodes,
         destroySignal: DestroySignal | undefined,
         name?: string
     ) {
-        this.address = address.toLowerCase()
+        this.id = id.toLowerCase()
+        this.debug = debug('Streamr:FakeBrubeckNode')
         this.fakeBrubeckNodeRegistry = fakeBrubeckNodeRegistry
         if (destroySignal !== undefined) {
-            destroySignal.onDestroy(() => this.destroy())
+            destroySignal.onDestroy(() => {
+                this.debug(`destroy ${this.id}`)
+                this.fakeBrubeckNodeRegistry.removeNode(this.id)
+            })
         }
-        log(`Created${name ? ' ' + name : ''}: ${address}`)
+        this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
-    getAddress() {
-        return this.address
+    async getNodeId() {
+        return this.id
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    startNode() {
+    async subscribe(streamPartId: StreamPartID, listener: MessageListener) {
+        this.messageListeners.add(streamPartId, listener)
     }
 
-    // the instance of FakeBrubeckNode is both BrubeckNode and NetworkNode
-    async getNode() {
-        return this
-    }
-
-    addMessageListener(listener: (msg: StreamMessage) => void) {
-        this.messageListeners.push(listener)
-    }
-
-    removeMessageListener(listener: (msg: StreamMessage) => void) {
-        pull(this.messageListeners, listener)
-    }
-
-    subscribe(streamPartId: StreamPartID) {
-        this.subsribedStreamParts.add(streamPartId)
-    }
-
-    unsubscribe(streamPartId: StreamPartID) {
-        this.subsribedStreamParts.delete(streamPartId)
+    async unsubscribe(streamPartId: StreamPartID, listener: MessageListener) {
+        this.messageListeners.remove(streamPartId, listener)
     }
 
     // eslint-disable-next-line class-methods-use-this
     publishToNode(msg: StreamMessage) {
         this.fakeBrubeckNodeRegistry.getNodes()
-            .filter((n) => n.subsribedStreamParts.has(msg.getStreamPartID()))
             .forEach((n) => {
                 /*
                  * This serialization+serialization is needed in test/integration/Encryption.ts
@@ -68,14 +55,24 @@ export class FakeBrubeckNode {
                  */
                 const serialized = msg.serialize()
                 const deserialized = StreamMessage.deserialize(serialized)
-                n.messageListeners.forEach((listener) => listener(deserialized))
+                const listeners = n.messageListeners.get(msg.getStreamPartID())
+                listeners.forEach((listener) => listener(deserialized))
             })
     }
 
-    destroy() {
-        log(`destroy ${this.address}`)
-        this.fakeBrubeckNodeRegistry.removeNode(this.address)
+    async startNode(): Promise<void> {
+        // no-op, no need to explictly start FakeBrubeckNode
     }
 
-    // TODO implement other public methods of BrubeckNode
+    async getNode(): Promise<NetworkNode> {
+        throw new Error('not implemented')
+    }
+
+    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+        throw new Error('not implemented')
+    }
 }
