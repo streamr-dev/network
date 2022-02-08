@@ -7,7 +7,7 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { wait } from 'streamr-test-utils'
 
 const TIMEOUT = 30 * 1000
-jest.setTimeout(90000)
+jest.setTimeout(60000)
 
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
