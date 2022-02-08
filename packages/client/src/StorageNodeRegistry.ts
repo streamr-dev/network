@@ -17,7 +17,7 @@ import { NotFoundError } from '.'
 import { until } from './utils'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { waitForTx } from './utils/waitForTx'
+import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -81,10 +81,14 @@ export class StorageNodeRegistry {
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.nodeRegistryContractReadonly = new Contract(this.clientConfig.storageNodeRegistryChainAddress,
-            NodeRegistryArtifact, this.chainProvider) as NodeRegistryContract
-        this.streamStorageRegistryContractReadonly = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
-            StreamStorageRegistryArtifact, this.chainProvider) as StreamStorageRegistryContract
+        this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
+            new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainProvider),
+            'storageNodeRegistry'
+        ) as NodeRegistryContract
+        this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
+            new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainProvider),
+            'streamStorageRegistry'
+        ) as StreamStorageRegistryContract
     }
 
     // --------------------------------------------------------------------------------------------
@@ -104,18 +108,24 @@ export class StorageNodeRegistry {
     private async connectToNodeRegistryContract() {
         if (!this.chainSigner || !this.nodeRegistryContract) {
             this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.nodeRegistryContract = new Contract(this.clientConfig.storageNodeRegistryChainAddress,
-                NodeRegistryArtifact, this.chainSigner) as NodeRegistryContract
-            this.streamStorageRegistryContract = new Contract(this.clientConfig.streamStorageRegistryChainAddress,
-                StreamStorageRegistryArtifact, this.chainSigner) as StreamStorageRegistryContract
+            this.nodeRegistryContract = withErrorHandlingAndLogging(
+                new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainSigner),
+                'storageNodeRegistry'
+            ) as NodeRegistryContract
+            this.streamStorageRegistryContract = withErrorHandlingAndLogging(
+                new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainSigner),
+                'streamStorageRegistry'
+            ) as StreamStorageRegistryContract
         }
     }
 
     async createOrUpdateNodeInStorageNodeRegistry(nodeMetadata: string): Promise<void> {
         log('setNode %s -> %s', nodeMetadata)
         await this.connectToNodeRegistryContract()
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
+
         const nodeAddress = await this.ethereum.getAddress()
-        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata))
         await until(async () => {
             try {
                 const url = await this.getStorageNodeUrl(nodeAddress)
@@ -130,14 +140,16 @@ export class StorageNodeRegistry {
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
         log('removeNode called')
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.nodeRegistryContract!.removeNodeSelf())
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
     }
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress))
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
         await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
             () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
     }
@@ -146,7 +158,8 @@ export class StorageNodeRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress))
+        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
     // --------------------------------------------------------------------------------------------

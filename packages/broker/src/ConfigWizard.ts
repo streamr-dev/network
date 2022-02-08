@@ -46,7 +46,7 @@ export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {
         },
-        restUrl: 'https://streamr.network/api/v1',
+        restUrl: 'https://streamr.network/api/v2',
         network: {
             name: 'miner-node',
             trackers: [
