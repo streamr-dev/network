@@ -134,6 +134,7 @@ export async function collect<InType>(
             await srcGen.return(undefined)
         }
     }, onError)
+
     return results
 }
 
