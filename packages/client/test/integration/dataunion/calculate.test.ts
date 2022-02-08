@@ -5,7 +5,7 @@ import { StreamrClient } from '../../../src/StreamrClient'
 import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
-import { getRandomClient, expectInvalidAddress } from '../../utils'
+import { getRandomClient, expectInvalidAddress } from '../../test-utils/utils'
 import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')

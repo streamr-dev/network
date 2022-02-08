@@ -7,7 +7,7 @@ import {
     getWaitForStorage,
     createTestStream,
     clientOptions
-} from '../utils'
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/Resends'
 

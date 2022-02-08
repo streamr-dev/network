@@ -11,7 +11,7 @@ import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
 import { FakeRest } from './FakeRest'
-import { createEthereumAddressCache } from '../../utils'
+import { createEthereumAddressCache } from '../utils'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 

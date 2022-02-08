@@ -2,22 +2,22 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
-import fetch from '../src/utils/fetch'
+import fetch from '../../src/utils/fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
-import { StreamrClient } from '../src/StreamrClient'
-import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
-import { Debug, format } from '../src/utils/log'
-import { MaybeAsync, StreamDefinition } from '../src/types'
-import { StreamProperties } from '../src/Stream'
-import clientOptions from '../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
+import { counterId, CounterId, AggregatedError, instanceId } from '../../src/utils'
+import { Debug, format } from '../../src/utils/log'
+import { MaybeAsync, StreamDefinition } from '../../src/types'
+import { StreamProperties } from '../../src/Stream'
+import clientOptions from '../../src/ConfigTest'
 
-import Signal from '../src/utils/Signal'
-import { PublishMetadata } from '../src/Publisher'
-import { Pipeline } from '../src/utils/Pipeline'
+import Signal from '../../src/utils/Signal'
+import { PublishMetadata } from '../../src/Publisher'
+import { Pipeline } from '../../src/utils/Pipeline'
 
 export { clientOptions }
 

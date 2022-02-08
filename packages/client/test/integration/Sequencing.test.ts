@@ -1,6 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../utils'
+import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'

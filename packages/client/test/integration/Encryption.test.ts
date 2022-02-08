@@ -7,7 +7,7 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-} from '../utils'
+} from '../test-utils/utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
