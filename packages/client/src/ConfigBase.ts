@@ -22,7 +22,7 @@ export type CacheConfig = {
     maxAge: number
 }
 
-export type TimeoutsConfig = {
+type TimeoutsConfig = {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -94,6 +94,7 @@ export type StrictStreamrClientConfig = {
     ensCacheChainAddress: EthereumAddress,
     dataUnion: DataUnionConfig
     cache: CacheConfig,
+    /** @internal */
     timeouts: TimeoutsConfig
 } & (
     EthereumConfig
