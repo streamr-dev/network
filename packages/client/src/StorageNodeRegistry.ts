@@ -6,7 +6,6 @@ import type { NodeRegistry as NodeRegistryContract } from './ethereumArtifacts/N
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from './ethereumArtifacts/StreamStorageRegistry'
 import NodeRegistryArtifact from './ethereumArtifacts/NodeRegistryAbi.json'
 import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegistry.json'
-import fetch from './utils/fetch'
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
@@ -18,6 +17,7 @@ import { until } from './utils'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
+import { HttpFetcher } from './utils/HttpFetcher'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -77,6 +77,7 @@ export class StorageNodeRegistry {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
+        @inject(HttpFetcher) private httpFetcher: HttpFetcher,
         @inject(Config.Root) clientConfig: StrictStreamrClientConfig
     ) {
         this.clientConfig = clientConfig
@@ -133,7 +134,9 @@ export class StorageNodeRegistry {
             } catch (err) {
                 return false
             }
-        }, 10000, 500,
+        },
+        this.clientConfig.timeouts.theGraph.timeout,
+        this.clientConfig.timeouts.theGraph.retryInterval,
         () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
@@ -150,8 +153,12 @@ export class StorageNodeRegistry {
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
-        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
-            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(
+            async () => this.isStreamStoredInStorageNode(streamId, nodeAddress),
+            this.clientConfig.timeouts.theGraph.timeout,
+            this.clientConfig.timeouts.theGraph.retryInterval,
+            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`
+        )
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
@@ -219,7 +226,7 @@ export class StorageNodeRegistry {
 
     private async sendNodeQuery(gqlQuery: string): Promise<Object> {
         log('GraphQL query: %s', gqlQuery)
-        const res = await fetch(this.clientConfig.theGraphUrl, {
+        const res = await this.httpFetcher.fetch(this.clientConfig.theGraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

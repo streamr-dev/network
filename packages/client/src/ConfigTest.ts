@@ -58,6 +58,21 @@ export default {
     autoConnect: false,
     autoDisconnect: false,
     maxRetries: 2,
+    timeouts: {
+        theGraph: {
+            timeout: 10 * 1000,
+            retryInterval: 500
+        },
+        storageNode: {
+            timeout: 30 * 1000,
+            retryInterval: 500
+        },
+        jsonRpc: {
+            timeout: 20 * 1000,
+            retryInterval: 500
+        },
+        httpFetchTimeout: 30 * 1000
+    }
 }
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'

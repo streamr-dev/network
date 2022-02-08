@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
-import fetch from '../src/utils/fetch'
+import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { StreamMessage } from 'streamr-client-protocol'

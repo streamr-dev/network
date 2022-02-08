@@ -191,7 +191,11 @@ export class StreamRegistry implements Context {
             */
             await waitForTx(this.streamRegistryContract!.createStreamWithENS(domain, path, metadata, ethersOverrides))
             try {
-                await until(async () => { return this.streamExistsOnChain(streamId) }, 20000, 500)
+                await until(
+                    async () => this.streamExistsOnChain(streamId),
+                    this.config.timeouts.jsonRpc.timeout,
+                    this.config.timeouts.jsonRpc.retryInterval
+                )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)
             }

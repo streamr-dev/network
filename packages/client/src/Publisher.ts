@@ -137,6 +137,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         }
     }
 
+    /** @internal */
     async waitForStorage(streamMessage: StreamMessage, {
         interval = 500,
         timeout = 30000,
