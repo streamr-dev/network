@@ -23,9 +23,8 @@ export class FakeStorageNodeRegistry {
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
         const normalizedNodeAddress = nodeAddress.toLowerCase()
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const assignment = this.assignments.get(streamId)
-        return (assignment !== undefined) && assignment.includes(normalizedNodeAddress)
+        const assignments = await this.getStorageNodesOf(streamIdOrPath)
+        return assignments.includes(normalizedNodeAddress)
     }
 
     async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
