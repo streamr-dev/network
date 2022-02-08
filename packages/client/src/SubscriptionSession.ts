@@ -1,7 +1,6 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { NetworkNode } from 'streamr-network'
 
 import { Scaffold, instanceId, until } from './utils'
 import { Stoppable } from './utils/Stoppable'
@@ -92,23 +91,20 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
 
     private async subscribe() {
         this.debug('subscribe')
-        const node = await this.node.getNode()
-        node.addMessageListener(this.onMessageInput)
-        node.subscribe(this.streamPartId)
-        return node
+        await this.node.subscribe(this.streamPartId, this.onMessageInput)
+        return this.node
     }
 
-    private async unsubscribe(node: NetworkNode) {
+    private async unsubscribe(node: BrubeckNode) {
         this.debug('unsubscribe')
         this.pipeline.end()
         this.pipeline.return()
         this.pipeline.onError.end(new Error('done'))
-        node.removeMessageListener(this.onMessageInput)
-        node.unsubscribe(this.streamPartId)
+        await node.unsubscribe(this.streamPartId, this.onMessageInput)
     }
 
     updateNodeSubscriptions = (() => {
-        let node: NetworkNode | undefined
+        let node: BrubeckNode | undefined
         return Scaffold([
             async () => {
                 node = await this.subscribe()

@@ -40,7 +40,7 @@ export interface StreamrClient extends Ethereum,
     Methods<ResendSubscribe>,
     Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
-    Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
+    Methods<Omit<BrubeckNode, 'destroy' | 'connect' | 'subscribe' | 'unsubscribe'>>,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<StorageNodeRegistry>,
