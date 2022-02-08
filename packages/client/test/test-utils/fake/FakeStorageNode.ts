@@ -32,11 +32,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
         if (messages !== undefined) {
             const firstIndex = Math.max(messages.length - count, 0)
             const lastIndex = Math.min(firstIndex + count, messages.length - 1)
-            const result: StreamMessage[] = []
-            for (let i = firstIndex; i <= lastIndex; i++) {
-                result.push(messages[i])
-            }
-            return result
+            return messages.slice(firstIndex, lastIndex + 1)
             // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
