@@ -4,7 +4,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { wait } from 'streamr-test-utils'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
