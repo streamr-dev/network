@@ -66,17 +66,17 @@ type EthereumNetworkConfig = {
 }
 
 export abstract class EthereumConfig {
-    abstract dataUnionBinanceWithdrawalChainRPC: ConnectionInfo & { chainId?: number, name?: string }
+    abstract dataUnionBinanceWithdrawalChainRPCs: ConnectionInfo[] & { chainId?: number, name?: string }
     // address on sidechain
     abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
     abstract binanceSmartChainAMBAddress: EthereumAddress
     abstract withdrawServerUrl: string
-    abstract mainChainRPC?: ConnectionInfo|string
-    abstract dataUnionChainRPC: ConnectionInfo & { chainId?: number, name?: string }
+    abstract mainChainRPCs?: ConnectionInfo[] | string
+    abstract dataUnionChainRPCs: ConnectionInfo[] & { chainId?: number, name?: string }
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
-    abstract streamRegistryChainRPC: ConnectionInfo & { chainId?: number, name?: string } | undefined
+    abstract streamRegistryChainRPCs: ConnectionInfo[] & { chainId?: number, name?: string } | undefined
 
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     abstract ethereumNetworks?: {
@@ -216,11 +216,11 @@ class StreamrEthereum {
 
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
     getMainnetProvider(): Provider {
-        if (!this.ethereumConfig.mainChainRPC) {
+        if (!this.ethereumConfig.mainChainRPCs) {
             return getDefaultProvider()
         }
 
-        return new JsonRpcProvider(this.ethereumConfig.mainChainRPC)
+        return new JsonRpcProvider(this.ethereumConfig.mainChainRPCs)
     }
 
     /** @returns Ethers.js Provider, a connection to Binance Smart Chain */

@@ -93,22 +93,22 @@
             "type": "string",
             "format": "uri"
         },
-        "mainChainRPC": {
+        "mainChainRPCs": {
             "anyOf": [{
-                "$ref": "#/definitions/chainConnectionInfo"
+                "$ref": "#/definitions/chainConnectionInfoList"
             }, {
                 "type": "string",
                 "format": "uri"
             }]
         },
-        "streamRegistryChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "streamRegistryChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
-        "dataUnionBinanceWithdrawalChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "dataUnionBinanceWithdrawalChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
-        "dataUnionChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "dataUnionChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
         "tokenAddress": {
             "type": "string",
@@ -272,40 +272,42 @@
         }
     },
     "definitions": {
-        "chainConnectionInfo": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "url"
-            ],
-            "properties": {
-                "chainId": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string",
-                    "format": "uri"
-                },
-                "user": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "allowInsecureAuthentication": {
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "type": "number"
-                },
-                "headers": {
-                    "type": "object"
+        "chainConnectionInfoList": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "url"
+                ],
+                "properties": {
+                    "chainId": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "user": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "allowInsecureAuthentication": {
+                        "type": "boolean"
+                    },
+                    "timeout": {
+                        "type": "number"
+                    },
+                    "headers": {
+                        "type": "object"
+                    }
                 }
             }
         }
-
     }
 }
