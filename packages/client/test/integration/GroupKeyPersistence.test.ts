@@ -143,9 +143,7 @@ describe('Group Key Persistence', () => {
             const sub2 = await subscriber2.subscribe({
                 stream: stream.id,
             })
-
-            // Wait for network layer
-            await wait(2000)
+            await sub2.waitForNeighbours()
 
             await Promise.all([
                 sub2.collect(3),
