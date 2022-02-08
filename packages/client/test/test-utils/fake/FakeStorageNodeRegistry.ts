@@ -41,7 +41,7 @@ export class FakeStorageNodeRegistry {
                 return storageNode as FakeStorageNode
                 // eslint-disable-next-line no-else-return
             } else {
-                throw new Error('no storage node available: ' + chosenAddress)
+                throw new Error('no storage node online: ' + chosenAddress)
             }
         } else {
             throw new Error('no storage node assignments for ' + streamPartId)
