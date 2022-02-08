@@ -148,7 +148,7 @@ describe('Group Key Persistence', () => {
             await wait(2000)
 
             await Promise.all([
-                sub2.collect(2), // either one old and one new or 2 new messages
+                sub2.collect(3), // either one old and one new or 2 new messages
                 published.push(...await publishTestMessages(3)),
             ])
 
