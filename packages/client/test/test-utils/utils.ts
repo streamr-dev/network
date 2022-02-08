@@ -606,13 +606,13 @@ export const createEthereumAddressCache = () => {
     }
 }
 
-export class Multimap<K,V> {
-    private values: Map<K,V[]> = new Map()
+export class Multimap<K, V> {
+    private values: Map<K, V[]> = new Map()
 
     get(key: K) {
         return this.values.get(key) ?? []
     }
-    
+
     add(key: K, value: V) {
         this.values.set(key, this.get(key).concat(value))
     }
@@ -624,7 +624,7 @@ export class Multimap<K,V> {
                 this.values.delete(key)
             } else {
                 this.values.set(key, items.filter((i) => i !== value))
-            }    
+            }
         }
     }
 }

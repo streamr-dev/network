@@ -11,7 +11,7 @@ type MessageListener = (msg: StreamMessage) => void
 export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete'> {
     readonly id: EthereumAddress
     readonly debug
-    public messageListeners: Multimap<StreamPartID,MessageListener> = new Multimap()
+    public messageListeners: Multimap<StreamPartID, MessageListener> = new Multimap()
     private activeNodes: ActiveNodes
 
     constructor(
@@ -60,19 +60,23 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
             })
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async startNode(): Promise<void> {
         // no-op, no need to explictly start FakeBrubeckNode
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async getNode(): Promise<NetworkNode> {
         throw new Error('not implemented')
     }
 
-    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    // eslint-disable-next-line class-methods-use-this
+    async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')
     }
 
-    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    // eslint-disable-next-line class-methods-use-this
+    async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')
     }
 }
