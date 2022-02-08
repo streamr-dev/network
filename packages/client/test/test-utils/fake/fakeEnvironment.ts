@@ -1,21 +1,21 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
-import BrubeckNode from '../src/BrubeckNode'
-import { Config, StrictStreamrClientConfig } from '../src/Config'
-import { DestroySignal } from '../src/DestroySignal'
-import { AuthConfig } from '../src/Ethereum'
-import { Rest } from '../src/Rest'
-import { StorageNodeRegistry } from '../src/StorageNodeRegistry'
-import { StreamrClient } from '../src/StreamrClient'
-import { StreamRegistry } from '../src/StreamRegistry'
+import BrubeckNode from '../../../src/BrubeckNode'
+import { Config, StrictStreamrClientConfig } from '../../../src/Config'
+import { DestroySignal } from '../../../src/DestroySignal'
+import { AuthConfig } from '../../../src/Ethereum'
+import { Rest } from '../../../src/Rest'
+import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { StreamrClient } from '../../../src/StreamrClient'
+import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
 import { FakeRest } from './FakeRest'
+import { createEthereumAddressCache } from '../../utils'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
-import { createEthereumAddressCache } from './utils'
 
-export interface ClientFactory{
+export interface ClientFactory {
     createClient: (opts: any) => StreamrClient
 }
 

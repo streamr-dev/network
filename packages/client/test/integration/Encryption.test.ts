@@ -14,7 +14,7 @@ import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
 import Subscription from '../../src/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../fakeEnvironment'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000

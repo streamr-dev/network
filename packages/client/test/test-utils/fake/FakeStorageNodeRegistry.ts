@@ -1,7 +1,7 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { StreamIDBuilder } from '../src/StreamIDBuilder'
-import { DOCKER_DEV_STORAGE_NODE } from '../src/ConfigTest'
+import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
 

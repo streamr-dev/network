@@ -1,12 +1,12 @@
 import { without } from 'lodash'
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
 import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
-import { Stream, StreamPermission, StreamProperties } from '../src/Stream'
-import { StreamIDBuilder } from '../src/StreamIDBuilder'
-import { BrubeckContainer } from '../src/Container'
-import Ethereum from '../src/Ethereum'
-import { NotFoundError } from '../src/authFetch'
-import { PUBLIC_PERMISSION_ADDRESS } from '../src/StreamRegistry'
+import { Stream, StreamPermission, StreamProperties } from '../../../src/Stream'
+import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
+import { BrubeckContainer } from '../../../src/Container'
+import Ethereum from '../../../src/Ethereum'
+import { NotFoundError } from '../../../src/authFetch'
+import { PUBLIC_PERMISSION_ADDRESS } from '../../../src/StreamRegistry'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>

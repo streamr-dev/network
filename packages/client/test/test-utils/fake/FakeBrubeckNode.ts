@@ -1,7 +1,7 @@
 import debug from 'debug'
 import { pull } from 'lodash'
 import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { DestroySignal } from '../src/DestroySignal'
+import { DestroySignal } from '../../../src/DestroySignal'
 import { FakeBrubeckNodeRegistry } from './FakeBrubeckNodeRegistry'
 
 const log = debug('Streamr:FakeBrubeckNode')

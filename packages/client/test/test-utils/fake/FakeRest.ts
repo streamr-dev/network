@@ -2,8 +2,8 @@ import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { FetchOptions, UrlParts } from '../src/Rest'
-import { StorageNodeRegistry } from '../src/StorageNodeRegistry'
+import { FetchOptions, UrlParts } from '../../../src/Rest'
+import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeRest {
