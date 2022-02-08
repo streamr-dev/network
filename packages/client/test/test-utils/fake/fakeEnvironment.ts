@@ -28,14 +28,14 @@ export const createClientFactory = () => {
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {
         const { privateKey } = c.resolve(Config.Auth) as AuthConfig
-        const registry = c.resolve(ActiveNodes)
+        const activeNodes = c.resolve(ActiveNodes)
         const address = ethereumAddressCache.getAddress(privateKey!)
-        let node = registry.getNode(address)
+        let node = activeNodes.getNode(address)
         if (node === undefined) {
             const { id } = c.resolve(Config.Root) as StrictStreamrClientConfig
             const destroySignal = c.resolve(DestroySignal)
-            node = new FakeBrubeckNode(address!, registry, destroySignal, id)
-            registry.addNode(node)
+            node = new FakeBrubeckNode(address!, activeNodes, destroySignal, id)
+            activeNodes.addNode(node)
         }
         return node as any
     } })

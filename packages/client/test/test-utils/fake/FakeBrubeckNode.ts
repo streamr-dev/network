@@ -12,21 +12,21 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     readonly id: EthereumAddress
     readonly debug
     public messageListeners: Multimap<StreamPartID,MessageListener> = new Multimap()
-    private fakeBrubeckNodeRegistry: ActiveNodes
+    private activeNodes: ActiveNodes
 
     constructor(
         id: EthereumAddress,
-        fakeBrubeckNodeRegistry: ActiveNodes,
+        activeNodes: ActiveNodes,
         destroySignal: DestroySignal | undefined,
         name?: string
     ) {
         this.id = id.toLowerCase()
         this.debug = debug('Streamr:FakeBrubeckNode')
-        this.fakeBrubeckNodeRegistry = fakeBrubeckNodeRegistry
+        this.activeNodes = activeNodes
         if (destroySignal !== undefined) {
             destroySignal.onDestroy(() => {
                 this.debug(`destroy ${this.id}`)
-                this.fakeBrubeckNodeRegistry.removeNode(this.id)
+                this.activeNodes.removeNode(this.id)
             })
         }
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
@@ -46,7 +46,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
 
     // eslint-disable-next-line class-methods-use-this
     publishToNode(msg: StreamMessage) {
-        this.fakeBrubeckNodeRegistry.getNodes()
+        this.activeNodes.getNodes()
             .forEach((n) => {
                 /*
                  * This serialization+serialization is needed in test/integration/Encryption.ts

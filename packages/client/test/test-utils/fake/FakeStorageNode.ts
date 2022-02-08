@@ -6,8 +6,8 @@ export class FakeStorageNode extends FakeBrubeckNode {
 
     private streamPartMessages: Map<StreamPartID, StreamMessage[]> = new Map()
 
-    constructor(address: EthereumAddress, fakeBrubeckNodeRegistry: ActiveNodes, name?: string) {
-        super(address, fakeBrubeckNodeRegistry, undefined, name)
+    constructor(address: EthereumAddress, activeNodes: ActiveNodes, name?: string) {
+        super(address, activeNodes, undefined, name)
     }
 
     addAssignment(streamId: StreamID) {

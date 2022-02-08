@@ -10,15 +10,15 @@ export class FakeStorageNodeRegistry {
 
     private assignments: Map<StreamID, EthereumAddress[]> = new Map()
     private streamIdBuilder: StreamIDBuilder
-    private fakeBrubeckNodeRegistry: ActiveNodes
+    private activeNodes: ActiveNodes
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(ActiveNodes) fakeBrubeckNodeRegistry: ActiveNodes,
+        @inject(ActiveNodes) activeNodes: ActiveNodes,
     ) {
         this.streamIdBuilder = streamIdBuilder
-        this.fakeBrubeckNodeRegistry = fakeBrubeckNodeRegistry
-        this.fakeBrubeckNodeRegistry.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, fakeBrubeckNodeRegistry, 'storage'))
+        this.activeNodes = activeNodes
+        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, 'storage'))
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
@@ -36,7 +36,7 @@ export class FakeStorageNodeRegistry {
         const nodeAddresses = await this.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
         if (nodeAddresses.length > 0) {
             const chosenAddress = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-            const storageNode = this.fakeBrubeckNodeRegistry.getNode(chosenAddress)
+            const storageNode = this.activeNodes.getNode(chosenAddress)
             if (storageNode !== undefined) {
                 return storageNode as FakeStorageNode
                 // eslint-disable-next-line no-else-return
@@ -52,7 +52,7 @@ export class FakeStorageNodeRegistry {
         if (!(await this.hasAssignment(streamIdOrPath, nodeAddress))) {
             const normalizedNodeAddress = nodeAddress.toLowerCase()
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            const node = this.fakeBrubeckNodeRegistry.getNode(nodeAddress)
+            const node = this.activeNodes.getNode(nodeAddress)
             if (node !== undefined) {
                 const assignment = this.assignments.get(streamId)
                 if (assignment !== undefined) {

@@ -7,7 +7,7 @@ export class ActiveNodes {
 
     private nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
 
-    addNode(node: FakeBrubeckNode) {
+    addNode(node: FakeBrubeckNode): void {
         if (!this.nodes.has(node.id)) {
             this.nodes.set(node.id, node)
         } else {
@@ -15,15 +15,15 @@ export class ActiveNodes {
         }
     }
 
-    removeNode(address: EthereumAddress) {
+    removeNode(address: EthereumAddress): void {
         this.nodes.delete(address)
     }
 
-    getNode(address: EthereumAddress) {
+    getNode(address: EthereumAddress): FakeBrubeckNode | undefined {
         return this.nodes.get(address.toLowerCase())
     }
 
-    getNodes() {
+    getNodes(): FakeBrubeckNode[] {
         return Array.from(this.nodes.values())
     }
 }
