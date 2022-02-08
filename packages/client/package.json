@@ -41,7 +41,7 @@
         "benchmark": "npm run benchmarks",
         "watch": "webpack --progress --watch --mode=development",
         "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-        "test": "jest --forceExit",
+        "test": "jest --detectOpenHandles",
         "test-unit": "jest  --verbose --useStderr --forceExit test/unit",
         "test-types": "npm run test-browser-types",
         "test-browser-types": "tsc -b tsconfig.browser.json",
