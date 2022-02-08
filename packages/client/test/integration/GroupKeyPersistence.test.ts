@@ -58,10 +58,6 @@ describe('Group Key Persistence', () => {
             await publisher.setNextGroupKey(stream.id, groupKey)
         })
 
-        afterEach(() => {
-            console.log('HERE2222')
-        })
-
         describe('publisher persists group key, can keep serving group key requests (resend)', () => {
             let published: any[]
             let publisher2: StreamrClient
@@ -148,25 +144,18 @@ describe('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
-            await wait(1000)
+            // Wait for network layer
+            await wait(2000)
 
             await Promise.all([
                 sub2.collect(2), // either one old and one new or 2 new messages
-                published.push(...await publishTestMessages(3))
+                published.push(...await publishTestMessages(3)),
             ])
+
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
-            // await Promise.all([
-            //     sub2.unsubscribe(),
-            //     sub.unsubscribe(),
-            //     subscriber.destroy(),
-            //     subscriber2.destroy(),
-            //     publisher.destroy()
-            // ])
-            console.log('HERE')
-        }, 3 * TIMEOUT)
+        }, 2 * TIMEOUT)
 
-        // TODO: fix flaky test in NET-641b
         it('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
