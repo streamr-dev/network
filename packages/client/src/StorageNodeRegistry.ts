@@ -64,14 +64,13 @@ type StorageNodeQueryResult = {
 }
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
-    clientConfig: StrictStreamrClientConfig
-    chainProvider: Provider
-    nodeRegistryContractReadonly: NodeRegistryContract
-    streamStorageRegistryContractReadonly: StreamStorageRegistryContract
-
-    chainSigner?: Signer
-    nodeRegistryContract?: NodeRegistryContract
-    streamStorageRegistryContract?: StreamStorageRegistryContract
+    
+    private clientConfig: StrictStreamrClientConfig
+    private chainProvider: Provider
+    private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
+    private chainSigner?: Signer
+    private nodeRegistryContract?: NodeRegistryContract
+    private streamStorageRegistryContract?: StreamStorageRegistryContract
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -81,10 +80,6 @@ export class StorageNodeRegistry {
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
-            new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainProvider),
-            'storageNodeRegistry'
-        ) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainProvider),
             'streamStorageRegistry'

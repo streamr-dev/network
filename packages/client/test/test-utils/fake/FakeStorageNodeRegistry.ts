@@ -4,9 +4,13 @@ import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
+import { StorageNodeAssignmentEvent, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { Stream } from '../../../src/Stream'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStorageNodeRegistry {
+export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
+    'clientConfig' | 'chainProvider' | 'streamStorageRegistryContractReadonly' |
+    'chainSigner' | 'nodeRegistryContract' | 'streamStorageRegistryContract'> {
 
     private assignments: Map<StreamID, EthereumAddress[]> = new Map()
     private streamIdBuilder: StreamIDBuilder
@@ -68,15 +72,50 @@ export class FakeStorageNodeRegistry {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getStorageNodeUrl(_nodeAddress: string) {
+    async getStorageNodeUrl(_nodeAddress: string): Promise<string> {
         // return some dummy value: the receiving component passes the info to FakeRest,
         // and it is ignored there
         return ''
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async stop() {
+    async stop(): Promise<void> {
+        // no-op
     }
 
-    // TODO implement other public methods of StorageNodeRegistry
+    isStreamStoredInStorageNodeFromContract(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
+        throw new Error('not implemented')
+    }
+
+    createOrUpdateNodeInStorageNodeRegistry(_nodeMetadata: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+    
+    removeNodeFromStorageNodeRegistry(): Promise<void> {
+        throw new Error('not implemented')
+    }
+    
+    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+    
+    isStreamStoredInStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
+        throw new Error('not implemented')
+    }
+    
+    getStoredStreamsOf(_nodeAddress: string): Promise<{ streams: Stream[]; blockNumber: number }> {
+        throw new Error('not implemented')
+    }
+    
+    getAllStorageNodes(): Promise<string[]> {
+        throw new Error('not implemented')
+    }
+    
+    registerStorageEventListener(_listener: (event: StorageNodeAssignmentEvent) => any): Promise<void> {
+        throw new Error('not implemented')
+    }
+    
+    unRegisterStorageEventListeners(): Promise<void> {
+        throw new Error('not implemented')
+    }
 }
