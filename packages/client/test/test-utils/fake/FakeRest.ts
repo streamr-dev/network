@@ -1,12 +1,17 @@
 import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { FetchOptions, UrlParts } from '../../../src/Rest'
+import { FetchOptions, Rest, UrlParts } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { Response } from 'node-fetch'
+import Session from '../../../src/Session'
+import { URLSearchParams } from 'url'
+
+type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeRest {
+export class FakeRest implements Omit<Rest,'id'|'debug'> {
 
     private storageNodeRegistry: FakeStorageNodeRegistry
 
@@ -47,7 +52,7 @@ export class FakeRest {
         throw new Error('not implemented: ' + url)
     }
 
-    private static getResendRequest(url: string) {
+    private static getResendRequest(url: string): ResendRequest | undefined {
         const resendLast = /streams\/(.+)\/data\/partitions\/(.+)\/([a-z]+)(\?.*)?$/
         const match = resendLast.exec(url)
         if (match !== null) {
@@ -65,5 +70,35 @@ export class FakeRest {
         }
     }
 
-    // TODO implement other public methods of Rest
+    getUrl(_urlParts: UrlParts, _query?: {}, _restUrl?: string): URL {
+        throw new Error('not implemented')
+    }
+
+    get session(): Session {
+        throw new Error('not implemented')
+    }
+
+    fetch<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<T> {
+        throw new Error('not implemented')
+    }
+
+    request<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<Response> {
+        throw new Error('not implemented')
+    }
+
+    post<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
+        throw new Error('not implemented')
+    }
+
+    put<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
+        throw new Error('not implemented')
+    }
+
+    del<T extends object>(_urlParts: UrlParts, _options?: FetchOptions): Promise<T> {
+        throw new Error('not implemented')
+    }
+
+    stream(_urlParts: UrlParts, _options?: FetchOptions, _abortController?: AbortController): Promise<Readable> {
+        throw new Error('not implemented')
+    }
 }
