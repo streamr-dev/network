@@ -35,7 +35,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         this.container = container
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamProperties) {
+    async createStream(propsOrStreamIdOrPath: StreamProperties | string) {
         if (!this.ethereum.isAuthenticated()) {
             throw new Error('Not authenticated')
         }
