@@ -24,7 +24,7 @@ export class FailedToPublishError extends Error {
     reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
-        super(`Failed to publish to stream ${JSON.stringify(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        super(`Failed to publish to stream ${publishMetadata.streamDefinition} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.publishMetadata = publishMetadata
         this.reason = reason
         if (Error.captureStackTrace) {

@@ -10,6 +10,7 @@ import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../../helpers/MetricsContext'
 import { NameDirectory } from '../../NameDirectory'
+import { node } from 'webpack'
 
 const logger = new Logger(module)
 
@@ -29,6 +30,8 @@ interface Subscriber {
         reattempt: boolean
     ) => Promise<PromiseSettledResult<NodeId>[]>,
     unsubscribeFromStreamPartOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
+    emitJoinCompleted: (streamPartId: StreamPartID, numOfNeighbors: number) => void
+    emitJoinFailed: (streamPartId: StreamPartID, error: string) => void
 }
 
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
@@ -159,7 +162,11 @@ export class TrackerManager {
                 await this.nodeToTracker.sendStatus(trackerId, status)
                 logger.trace('sent status %j to tracker %s', status.streamPart, trackerId)
             } catch (e) {
-                logger.trace('failed to send status to tracker %s, reason: %s', trackerId, e)
+                const error = `failed to send status to tracker ${trackerId}, reason: ${e}`
+                if (this.streamPartManager.isNewStream(streamPartId)) {
+                    this.subscriber.emitJoinFailed(streamPartId, error)
+                }
+                logger.trace(error)
             }
         }
     }
@@ -194,7 +201,9 @@ export class TrackerManager {
         })
 
         const results = await this.subscriber.subscribeToStreamPartOnNodes(nodeIds, streamPartId, trackerId, reattempt)
+        let newStream = false
         if (this.streamPartManager.isSetUp(streamPartId)) {
+            newStream = this.streamPartManager.isNewStream(streamPartId)
             this.streamPartManager.updateCounter(streamPartId, counter)
         }
 
@@ -214,8 +223,17 @@ export class TrackerManager {
             this.sendStreamPartStatus(streamPartId)
         }
 
-        if (currentNodes.length === 0) {
-
+        if (newStream) {
+            if (nodeIds.length === 0) {
+                this.subscriber.emitJoinCompleted(streamPartId, nodeIds.length)
+            } else if (nodeIds.length > 0 && subscribedNodeIds.length === 0) {
+                this.subscriber.emitJoinFailed(streamPartId,
+                    `Failed initial join operation to stream partition ${streamPartId},
+                            failed to form connections to all target neighbors`
+                )
+            } else {
+                this.subscriber.emitJoinCompleted(streamPartId, subscribedNodeIds.length)
+            }
         }
 
         logger.trace('subscribed to %j and unsubscribed from %j (streamPartId=%s, counter=%d)',

@@ -32,7 +32,9 @@ export enum Event {
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
     PUBLISH_STREAM_ACCEPTED = 'streamr:node:publish-stream-accepted',
     PUBLISH_STREAM_REJECTED = 'streamr:node:node-stream-rejected',
-    ONE_WAY_CONNECTION_CLOSED = 'stream:node-one-way-connection-closed'
+    ONE_WAY_CONNECTION_CLOSED = 'stream:node-one-way-connection-closed',
+    JOIN_COMPLETED = 'stream:node-stream-join-operation-completed',
+    JOIN_FAILED = 'stream:node-stream-join-operation-failed'
 }
 
 export interface NodeOptions extends TrackerManagerOptions {
@@ -59,13 +61,15 @@ export interface Node {
     on(event: Event.PUBLISH_STREAM_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PUBLISH_STREAM_REJECTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, reason?: string) => void): this
     on(event: Event.ONE_WAY_CONNECTION_CLOSED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
+    on(event: Event.JOIN_COMPLETED, listener: (streamPartId: StreamPartID, numOfNeighbors: number) => void): this
+    on(event: Event.JOIN_FAILED, listener: (streamPartId: StreamPartID, error: string) => void): this
 }
 
 export class Node extends EventEmitter {
     /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    private readonly nodeConnectTimeout: number
+    protected readonly nodeConnectTimeout: number
     private readonly started: string
 
     protected readonly streamPartManager: StreamPartManager
@@ -161,7 +165,10 @@ export class Node extends EventEmitter {
             {
                 subscribeToStreamPartIfHaveNotYet: this.subscribeToStreamIfHaveNotYet.bind(this),
                 subscribeToStreamPartOnNodes: this.subscribeToStreamPartOnNodes.bind(this),
-                unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this)
+                unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this),
+                emitJoinCompleted: this.emitJoinCompleted.bind(this),
+                emitJoinFailed: this.emitJoinFailed.bind(this)
+
             }
         )
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
@@ -355,5 +362,42 @@ export class Node extends EventEmitter {
 
     getMetricsContext(): MetricsContext {
         return this.metricsContext
+    }
+
+    async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID): Promise<number> {
+        if (this.streamPartManager.isSetUp(streamPartId)) {
+            return this.streamPartManager.getAllNodesForStreamPart(streamPartId).length
+        }
+        let resolveHandler: any
+        let rejectHandler: any
+        const res = await Promise.all([
+            promiseTimeout(this.nodeConnectTimeout, new Promise<number>((resolve, reject) => {
+                resolveHandler = (stream: StreamPartID, numOfNeighbors: number) => {
+                    if (stream === streamPartId) {
+                        resolve(numOfNeighbors)
+                    }
+                }
+                rejectHandler = (stream: StreamPartID, error: string) => {
+                    if (stream === streamPartId) {
+                        reject(error)
+                    }
+                }
+                this.on(Event.JOIN_COMPLETED, resolveHandler)
+                this.on(Event.JOIN_FAILED, rejectHandler)
+            })),
+            this.subscribeToStreamIfHaveNotYet(streamPartId)
+        ]).finally(() => {
+            this.off(Event.JOIN_COMPLETED, resolveHandler)
+            this.off(Event.JOIN_FAILED, rejectHandler)
+        })
+        return res[0]
+    }
+
+    emitJoinCompleted(streamPartId: StreamPartID, numOfNeighbors: number): void {
+        this.emit(Event.JOIN_COMPLETED, streamPartId, numOfNeighbors)
+    }
+
+    emitJoinFailed(streamPartId: StreamPartID, error: string): void {
+        this.emit(streamPartId, error)
     }
 }

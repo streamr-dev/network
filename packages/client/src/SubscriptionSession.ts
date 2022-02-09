@@ -94,7 +94,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('subscribe')
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
-        node.subscribe(this.streamPartId)
+        await node.subscribeAndWaitJoin(this.streamPartId)
         return node
     }
 

@@ -121,6 +121,7 @@ describe('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
+            console.log("here")
             // this will be called if group key request is sent
             // @ts-expect-error private
             const onKeyExchangeMessage = jest.spyOn(publisher.publisher.keyExchange, 'onKeyExchangeMessage')
@@ -153,7 +154,7 @@ describe('Group Key Persistence', () => {
             expect(received).toEqual(published.slice(0, 1))
         }, 2 * TIMEOUT)
 
-        it('subscriber persists group key with resend last', async () => {
+        it.only('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber
@@ -188,6 +189,7 @@ describe('Group Key Persistence', () => {
                 }
             })
 
+            console.log("here")
             await subscriber2.connect()
             const sub2 = await subscriber2.resend({
                 stream: stream.id,
@@ -195,6 +197,8 @@ describe('Group Key Persistence', () => {
                     last: 5
                 }
             })
+
+            console.log("here")
 
             const received2 = []
             for await (const m of sub2) {

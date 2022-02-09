@@ -1,5 +1,6 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Event, Node, NodeId, NodeOptions } from './Node'
+import { promiseTimeout } from '../../helpers/PromiseTools'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -62,28 +63,7 @@ export class NetworkNode extends Node {
     }
 
     async subscribeAndWaitJoin(streamPartId: StreamPartID): Promise<number> {
-        let resolveHandler: any
-        let rejectHandler: any
-        await Promise.all([
-            new Promise<void>((resolve, reject) => {
-                resolveHandler = (stream: StreamPartID) => {
-                    if (stream === streamPartId) {
-                        resolve()
-                    }
-                }
-                rejectHandler = (stream: StreamPartID, error: string) => {
-                    if (stream === streamPartId) {
-                        reject(error)
-                    }
-                }
-                this.on(Event.INSTRUCTION_PROCESSED, resolveHandler)
-                this.on(Event.INSTRUCTION_PROCESSING_FAILED, rejectHandler)
-            }),
-            this.subscribeToStreamIfHaveNotYet(streamPartId)
-        ]).finally(() => {
-            this.off(Event.INSTRUCTION_PROCESSED, resolveHandler)
-            this.off(Event.INSTRUCTION_PROCESSING_FAILED, rejectHandler)
-        })
+        return this.subscribeAndWaitForJoinOperation(streamPartId)
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
