@@ -17,7 +17,7 @@ import { EthereumAddress } from 'streamr-client-protocol'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
 type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
-type ChainConnectionInfo = ConnectionInfo & { chainId?: number, name?: string }
+type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
 
 export type ProviderConfig = ExternalProvider
 
@@ -67,17 +67,17 @@ type EthereumNetworkConfig = {
 }
 
 export abstract class EthereumConfig {
-    abstract dataUnionBinanceWithdrawalChainRPCs: ChainConnectionInfo[]
+    abstract dataUnionBinanceWithdrawalChainRPCs: ChainConnectionInfo
     // address on sidechain
     abstract binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
     abstract binanceSmartChainAMBAddress: EthereumAddress
     abstract withdrawServerUrl: string
-    abstract mainChainRPCs?: ConnectionInfo[]
-    abstract dataUnionChainRPCs: ChainConnectionInfo[]
+    abstract mainChainRPCs?: ChainConnectionInfo
+    abstract dataUnionChainRPCs: ChainConnectionInfo
     abstract tokenAddress: EthereumAddress
     abstract tokenSidechainAddress: EthereumAddress
-    abstract streamRegistryChainRPCs: ChainConnectionInfo[]
+    abstract streamRegistryChainRPCs: ChainConnectionInfo
 
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     abstract ethereumNetworks?: {
@@ -131,14 +131,14 @@ class StreamrEthereum {
                 return metamaskSigner
             }
             this._getDataUnionChainSigner = async () => {
-                if (!ethereumConfig.dataUnionChainRPCs || !ethereumConfig.dataUnionChainRPCs[0].chainId) {
+                if (!ethereumConfig.dataUnionChainRPCs || ethereumConfig.dataUnionChainRPCs.chainId === undefined) {
                     throw new Error('Streamr dataUnionChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
 
                 const metamaskProvider = new Web3Provider(ethereum)
                 const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.dataUnionChainRPCs[0].chainId) {
-                    const sideChainId = ethereumConfig.dataUnionChainRPCs[0].chainId
+                if (chainId !== ethereumConfig.dataUnionChainRPCs.chainId) {
+                    const sideChainId = ethereumConfig.dataUnionChainRPCs.chainId
                     throw new Error(
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
@@ -147,14 +147,14 @@ class StreamrEthereum {
                 return metamaskSigner
             }
             this._getStreamRegistryChainSigner = async () => {
-                if (!ethereumConfig.streamRegistryChainRPCs || !ethereumConfig.streamRegistryChainRPCs[0].chainId) {
+                if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
 
                 const metamaskProvider = new Web3Provider(ethereum)
                 const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.streamRegistryChainRPCs[0].chainId) {
-                    const sideChainId = ethereumConfig.streamRegistryChainRPCs[0].chainId
+                if (chainId !== ethereumConfig.streamRegistryChainRPCs.chainId) {
+                    const sideChainId = ethereumConfig.streamRegistryChainRPCs.chainId
                     throw new Error(
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
@@ -222,11 +222,11 @@ class StreamrEthereum {
 
     /** @returns Array of Ethers.js Providers, connections to the Ethereum network (mainnet) */
     getAllMainnetProviders(): Provider[] {
-        if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.length) {
+        if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.rpcs.length) {
             return [getDefaultProvider()]
         }
 
-        return this.ethereumConfig.mainChainRPCs.map((config: ConnectionInfo) => {
+        return this.ethereumConfig.mainChainRPCs.rpcs.map((config: ConnectionInfo) => {
             return new JsonRpcProvider(config)
         })
     }
@@ -239,10 +239,10 @@ class StreamrEthereum {
     /** @returns Array of Ethers.js Provider, connections to Binance Smart Chain */
     getAllBinanceProviders(): Provider[] {
         if (!this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs
-            || !this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs.length) {
+            || !this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs.rpcs.length) {
             throw new Error('StreamrClientEthereumConfig has no data union binance withdrawal configuration.')
         }
-        return this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs.map((config: ConnectionInfo) => {
+        return this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs.rpcs.map((config: ConnectionInfo) => {
             return new JsonRpcProvider(config)
         })
     }
@@ -254,11 +254,11 @@ class StreamrEthereum {
 
     /** @returns Array of Ethers.js Provider, connections to the Streamr EVM sidechain */
     getAllDataUnionChainProviders(): Provider[] {
-        if (!this.ethereumConfig.dataUnionChainRPCs || !this.ethereumConfig.dataUnionChainRPCs.length) {
+        if (!this.ethereumConfig.dataUnionChainRPCs || !this.ethereumConfig.dataUnionChainRPCs.rpcs.length) {
             throw new Error('EthereumConfig has no dataunion chain configuration.')
         }
 
-        return this.ethereumConfig.dataUnionChainRPCs.map((config: ConnectionInfo) => {
+        return this.ethereumConfig.dataUnionChainRPCs.rpcs.map((config: ConnectionInfo) => {
             return new JsonRpcProvider(config)
         })
     }
@@ -270,11 +270,11 @@ class StreamrEthereum {
 
     /** @returns Array of Ethers.js Providers, connections to the Stream Registry Chain */
     getAllStreamRegistryChainProviders(): Provider[] {
-        if (!this.ethereumConfig.streamRegistryChainRPCs || !this.ethereumConfig.streamRegistryChainRPCs.length) {
+        if (!this.ethereumConfig.streamRegistryChainRPCs || !this.ethereumConfig.streamRegistryChainRPCs.rpcs.length) {
             throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
         }
 
-        return this.ethereumConfig.streamRegistryChainRPCs.map((config: ConnectionInfo) => {
+        return this.ethereumConfig.streamRegistryChainRPCs.rpcs.map((config: ConnectionInfo) => {
             return new JsonRpcProvider(config)
         })
     }
@@ -284,15 +284,15 @@ class StreamrEthereum {
     }
 
     getBinanceOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.dataUnionBinanceWithdrawalChainRPCs[0]?.name ?? 'binance', this.getBinanceProvider())
+        return this.getOverrides(this.ethereumConfig?.dataUnionBinanceWithdrawalChainRPCs?.name ?? 'binance', this.getBinanceProvider())
     }
 
     getDataUnionOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.dataUnionChainRPCs[0]?.name ?? 'gnosis', this.getDataUnionChainProvider())
+        return this.getOverrides(this.ethereumConfig?.dataUnionChainRPCs?.name ?? 'gnosis', this.getDataUnionChainProvider())
     }
 
     getStreamRegistryOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs[0]?.name ?? 'polygon', this.getStreamRegistryChainProvider())
+        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs?.name ?? 'polygon', this.getStreamRegistryChainProvider())
     }
 
     /**
