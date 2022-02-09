@@ -634,10 +634,11 @@ export class Multimap<K, V> {
     remove(key: K, value: V): void {
         const items = this.values.get(key)
         if (items !== undefined) {
-            if ((items.length === 1) && (items[0] === value)) {
-                this.values.delete(key)
+            const newItems = items.filter((i) => i !== value)
+            if (newItems.length > 0) {
+                this.values.set(key, newItems)
             } else {
-                this.values.set(key, items.filter((i) => i !== value))
+                this.values.delete(key)
             }
         }
     }
