@@ -81,9 +81,9 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-buildx-v1-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
         with:
@@ -154,9 +154,9 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-buildx-v1-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
         with:
