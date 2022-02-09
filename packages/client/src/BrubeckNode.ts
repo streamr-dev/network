@@ -17,7 +17,7 @@ import Ethereum from './Ethereum'
 @scoped(Lifecycle.ContainerScoped)
 export default class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
-    private options
+    options
     id
     debug
     private startNodeCalled = false
@@ -39,7 +39,7 @@ export default class BrubeckNode implements Context {
         this.destroySignal.assertNotDestroyed(this)
     }
 
-    private async initNode() {
+    async initNode() {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
@@ -88,7 +88,7 @@ export default class BrubeckNode implements Context {
      * Stop network node, or wait for it to stop if already stopping.
      * Subsequent calls to getNode/start will fail.
      */
-    private destroy = pOnce(async () => {
+    destroy = pOnce(async () => {
         this.debug('destroy >>')
 
         const node = this.cachedNode
@@ -98,28 +98,23 @@ export default class BrubeckNode implements Context {
             this.debug('stopping node >>')
             if (!this.startNodeComplete) {
                 // wait for start to finish before stopping node
-                const startNodeTask = this.startNodeTask()
-                this.startNodeTask.reset() // allow subsequent calls to fail
+                const startNodeTask = this.startNode()
+                this.startNode.reset() // allow subsequent calls to fail
                 await startNodeTask
             }
 
             await node.stop()
             this.debug('stopping node <<')
         }
-        this.startNodeTask.reset() // allow subsequent calls to fail
+        this.startNode.reset() // allow subsequent calls to fail
 
         this.debug('destroy <<')
     })
 
-    /** @internal */
-    async startNode(): Promise<void> {
-        await this.startNodeTask()
-    }
-
     /**
      * Start network node, or wait for it to start if already started.
      */
-    private startNodeTask = pOnce(async () => {
+    startNode = pOnce(async () => {
         this.startNodeCalled = true
         this.debug('start >>')
         try {
@@ -144,9 +139,7 @@ export default class BrubeckNode implements Context {
     /**
      * Get started network node.
      */
-    async getNode(): Promise<NetworkNode> {
-        return this.startNodeTask()
-    }
+    getNode = this.startNode
 
     async getNodeId() {
         const node = await this.getNode()
@@ -170,7 +163,7 @@ export default class BrubeckNode implements Context {
             if (!this.cachedNode || !this.startNodeComplete) {
                 // use .then instead of async/await so
                 // this.cachedNode.publish call can be sync
-                return this.startNodeTask().then((node) => {
+                return this.startNode().then((node) => {
                     return node.publish(streamMessage)
                 })
             }
@@ -179,18 +172,6 @@ export default class BrubeckNode implements Context {
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
         }
-    }
-
-    async subscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void): Promise<void> {
-        const node = await this.getNode()
-        node.addMessageListener(onMessageInput)
-        node.subscribe(streamPartId)
-    }
-
-    async unsubscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void): Promise<void> {
-        const node = await this.getNode()
-        node.removeMessageListener(onMessageInput)
-        node.unsubscribe(streamPartId)
     }
 
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
