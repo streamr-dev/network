@@ -214,6 +214,10 @@ export class TrackerManager {
             this.sendStreamPartStatus(streamPartId)
         }
 
+        if (currentNodes.length === 0) {
+
+        }
+
         logger.trace('subscribed to %j and unsubscribed from %j (streamPartId=%s, counter=%d)',
             subscribedNodeIds, unsubscribedNodeIds, streamPartId, counter)
 

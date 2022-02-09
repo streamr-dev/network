@@ -61,6 +61,31 @@ export class NetworkNode extends Node {
         this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
 
+    async subscribeAndWaitJoin(streamPartId: StreamPartID): Promise<number> {
+        let resolveHandler: any
+        let rejectHandler: any
+        await Promise.all([
+            new Promise<void>((resolve, reject) => {
+                resolveHandler = (stream: StreamPartID) => {
+                    if (stream === streamPartId) {
+                        resolve()
+                    }
+                }
+                rejectHandler = (stream: StreamPartID, error: string) => {
+                    if (stream === streamPartId) {
+                        reject(error)
+                    }
+                }
+                this.on(Event.INSTRUCTION_PROCESSED, resolveHandler)
+                this.on(Event.INSTRUCTION_PROCESSING_FAILED, rejectHandler)
+            }),
+            this.subscribeToStreamIfHaveNotYet(streamPartId)
+        ]).finally(() => {
+            this.off(Event.INSTRUCTION_PROCESSED, resolveHandler)
+            this.off(Event.INSTRUCTION_PROCESSING_FAILED, rejectHandler)
+        })
+    }
+
     unsubscribe(streamPartId: StreamPartID): void {
         this.unsubscribeFromStream(streamPartId)
     }
