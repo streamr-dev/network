@@ -16,7 +16,7 @@ import Signer from './Signer'
 import Encrypt from './Encrypt'
 import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
-import { streamDefinitionToString, StreamIDBuilder } from './StreamIDBuilder'
+import { formStreamDefinitionDescription, StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
 
 export class FailedToPublishError extends Error {
@@ -24,7 +24,7 @@ export class FailedToPublishError extends Error {
     reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
-        super(`Failed to publish to stream ${streamDefinitionToString(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.publishMetadata = publishMetadata
         this.reason = reason
         if (Error.captureStackTrace) {

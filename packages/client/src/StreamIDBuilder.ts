@@ -37,7 +37,17 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
     }
 }
 
-export const streamDefinitionToString = (definition: StreamDefinition) => {
+/*
+ * Use this e.g. for internal logging purposes where any kind of string representation is fine.
+ *
+ * Note that sometimes it is better to write this object to a log than just write e.g. JSON
+ * representation of a stream definition. The stream definition object may be any instance which
+ * implements the StreamDefinition interface (e.g a Stream object), and we don't want to write
+ * many extra fields to the log. By converting the streamDefinition to a string with this method
+ * we write just the information we need. Also calling JSON.strinfigy for a Stream object may
+ * fail because the object contains circular refences.
+ * */
+export const formStreamDefinitionDescription = (definition: StreamDefinition) => {
     const raw = parseRawDefinition(definition)
     let str = raw[0]
     if (raw[1] !== undefined) {
