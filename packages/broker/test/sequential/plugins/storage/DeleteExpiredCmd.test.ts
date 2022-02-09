@@ -67,7 +67,7 @@ describe('DeleteExpiredCmd', () => {
             auth: {
                 privateKey: mockUser.privateKey
             },
-            restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+            restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
             orderMessages: false,
         })
         deleteExpiredCmd = new DeleteExpiredCmd({

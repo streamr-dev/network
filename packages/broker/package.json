@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "31.0.0-alpha.1",
+  "version": "31.0.0-beta.1",
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
@@ -60,7 +60,7 @@
     "p-limit": "^4.0.0",
     "pino-pretty": "^7.5.1",
     "qs": "^6.10.1",
-    "streamr-client": "^6.0.0-alpha.31",
+    "streamr-client": "^6.0.0-beta.1",
     "streamr-client-protocol": "^12.0.0",
     "streamr-network": "^33.0.0",
     "streamr-test-utils": "^2.0.0",
