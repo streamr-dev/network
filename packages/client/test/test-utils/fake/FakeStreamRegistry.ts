@@ -20,10 +20,10 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     'streamRegistryContract' | 'streamRegistryContractReadonly' |
     'chainProvider' |'chainSigner'> {
 
-    private registryItems: Map<StreamID, RegistryItem> = new Map()
-    private streamIdBuilder: StreamIDBuilder
-    private ethereum: Ethereum
-    private container: DependencyContainer
+    private readonly registryItems: Map<StreamID, RegistryItem> = new Map()
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly ethereum: Ethereum
+    private readonly container: DependencyContainer
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,

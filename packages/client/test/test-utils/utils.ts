@@ -617,7 +617,7 @@ export const createEthereumAddressCache = (): { getAddress: (privateKey: string)
  * unit tests if this is not just a test helper class.
  */
 export class Multimap<K, V> {
-    private values: Map<K, V[]> = new Map()
+    private readonly values: Map<K, V[]> = new Map()
 
     get(key: K): V[] {
         return this.values.get(key) ?? []

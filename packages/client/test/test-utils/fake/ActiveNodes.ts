@@ -5,7 +5,7 @@ import { FakeBrubeckNode } from './FakeBrubeckNode'
 @scoped(Lifecycle.ContainerScoped)
 export class ActiveNodes {
 
-    private nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
+    private readonly nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
 
     addNode(node: FakeBrubeckNode): void {
         if (!this.nodes.has(node.id)) {

@@ -10,9 +10,9 @@ type MessageListener = (msg: StreamMessage) => void
 
 class FakeNetworkNodeStub implements NetworkNodeStub {
 
-    private node: FakeBrubeckNode
-    subsciptions: Set<StreamPartID> = new Set()
-    private messageListeners: MessageListener[] = []
+    private readonly node: FakeBrubeckNode
+    readonly subsciptions: Set<StreamPartID> = new Set()
+    private readonly messageListeners: MessageListener[] = []
 
     constructor(node: FakeBrubeckNode) {
         this.node = node

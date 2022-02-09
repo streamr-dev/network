@@ -5,7 +5,7 @@ import { Multimap } from '../utils'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
-    private streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
+    private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
 
     constructor(address: EthereumAddress, activeNodes: ActiveNodes, name?: string) {
         super(address, activeNodes, undefined, name)

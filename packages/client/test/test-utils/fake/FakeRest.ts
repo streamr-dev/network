@@ -13,7 +13,7 @@ type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: U
 @scoped(Lifecycle.ContainerScoped)
 export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
 
-    private storageNodeRegistry: FakeStorageNodeRegistry
+    private readonly storageNodeRegistry: FakeStorageNodeRegistry
 
     constructor(
         @inject(StorageNodeRegistry) storageNodeRegistry: StorageNodeRegistry

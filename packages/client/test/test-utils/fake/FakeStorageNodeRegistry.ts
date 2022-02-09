@@ -13,9 +13,9 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     'clientConfig' | 'chainProvider' | 'streamStorageRegistryContractReadonly' |
     'chainSigner' | 'nodeRegistryContract' | 'streamStorageRegistryContract'> {
 
-    private assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
-    private streamIdBuilder: StreamIDBuilder
-    private activeNodes: ActiveNodes
+    private readonly assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly activeNodes: ActiveNodes
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
