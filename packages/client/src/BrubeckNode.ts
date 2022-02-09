@@ -13,10 +13,11 @@ import Ethereum from './Ethereum'
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
     getNodeId: () => string,
-    addMessageListener: (listener: (msg: StreamMessage<unknown>) => void) => void,
-    removeMessageListener: (listener: (msg: StreamMessage<unknown>) => void) => void
+    addMessageListener: (listener: (msg: StreamMessage) => void) => void,
+    removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
     unsubscribe: (streamPartId: StreamPartID) => void
+    publish: (streamMessage: StreamMessage) => void,
     getStreamParts: () => Iterable<StreamPartID>
     getNeighbors: () => ReadonlyArray<string>
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>

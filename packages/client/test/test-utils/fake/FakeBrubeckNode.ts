@@ -10,9 +10,9 @@ type MessageListener = (msg: StreamMessage) => void
 
 class FakeNetworkNodeStub implements NetworkNodeStub {
 
-    node: FakeBrubeckNode
+    private node: FakeBrubeckNode
     subsciptions: Set<StreamPartID> = new Set()
-    messageListeners: MessageListener[] = []
+    private messageListeners: MessageListener[] = []
 
     constructor(node: FakeBrubeckNode) {
         this.node = node
@@ -30,12 +30,29 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         pull(this.messageListeners, listener)
     }
 
-    subscribe(streamPartId: StreamPartID) {
+    subscribe(streamPartId: StreamPartID): void {
         this.subsciptions.add(streamPartId)
     }
 
-    unsubscribe(streamPartId: StreamPartID) {
+    unsubscribe(streamPartId: StreamPartID): void {
         this.subsciptions.delete(streamPartId)
+    }
+
+    publish(msg: StreamMessage): void {
+        /*
+         * This serialization+serialization is needed in test/integration/Encryption.ts
+         * as it expects that the EncryptedGroupKey format changes in the process.
+         * TODO: should we change the serialization or the test? Or keep this hack?
+         */
+        const serialized = msg.serialize()
+        this.node.activeNodes.getNodes()
+            .forEach(async (n) => {
+                const networkNode = await n.getNode()
+                if (networkNode.subsciptions.has(msg.getStreamPartID())) {
+                    const deserialized = StreamMessage.deserialize(serialized)
+                    networkNode.messageListeners.forEach((listener) => listener(deserialized))
+                }
+            })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -73,8 +90,8 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
 
     readonly id: EthereumAddress
     readonly debug
-    private activeNodes: ActiveNodes
-    private networkNodeStub: FakeNetworkNodeStub
+    readonly activeNodes: ActiveNodes
+    private readonly networkNodeStub: FakeNetworkNodeStub
 
     constructor(
         id: EthereumAddress,
@@ -99,22 +116,8 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         return this.id
     }
 
-    // eslint-disable-next-line class-methods-use-this
     publishToNode(msg: StreamMessage): void {
-        /*
-        * This serialization+serialization is needed in test/integration/Encryption.ts
-        * as it expects that the EncryptedGroupKey format changes in the process.
-        * TODO: should we change the serialization or the test? Or keep this hack?
-        */
-        const serialized = msg.serialize()
-        this.activeNodes.getNodes()
-            .forEach(async (n) => {
-                const networkNode = await n.getNode()
-                if (networkNode.subsciptions.has(msg.getStreamPartID())) {
-                    const deserialized = StreamMessage.deserialize(serialized)
-                    networkNode.messageListeners.forEach((listener) => listener(deserialized))
-                }
-            })
+        this.networkNodeStub.publish(msg)
     }
 
     async getNode(): Promise<FakeNetworkNodeStub> {
