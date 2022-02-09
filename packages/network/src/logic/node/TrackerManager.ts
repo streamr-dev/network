@@ -10,7 +10,6 @@ import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../../helpers/MetricsContext'
 import { NameDirectory } from '../../NameDirectory'
-import { node } from 'webpack'
 
 const logger = new Logger(module)
 
