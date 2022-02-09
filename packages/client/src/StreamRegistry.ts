@@ -91,7 +91,7 @@ export class StreamRegistry implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        this.chainProviders = this.ethereum.getStreamRegistryChainProviders()
+        this.chainProviders = this.ethereum.getAllStreamRegistryChainProviders()
         this.streamRegistryContractsReadonly = this.chainProviders.map((provider) => {
             return withErrorHandlingAndLogging(
                 new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, provider),

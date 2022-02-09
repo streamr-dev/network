@@ -108,9 +108,9 @@ class StreamrEthereum {
             const key = authConfig.privateKey
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
-            this._getSigner = () => new Wallet(key, this.getMainnetProviders()[0])
-            this._getDataUnionChainSigner = async () => new Wallet(key, this.getDataUnionChainProviders()[0])
-            this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProviders()[0])
+            this._getSigner = () => new Wallet(key, this.getMainnetProvider())
+            this._getDataUnionChainSigner = async () => new Wallet(key, this.getDataUnionChainProvider())
+            this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
         } else if ('ethereum' in authConfig && authConfig.ethereum) {
             const { ethereum } = authConfig
             this._getAddress = async () => {
@@ -215,8 +215,13 @@ class StreamrEthereum {
         return this._getStreamRegistryChainSigner()
     }
 
+    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    getMainnetProvider(): Provider {
+        return this.getAllMainnetProviders()[0]
+    }
+
     /** @returns Array of Ethers.js Providers, connections to the Ethereum network (mainnet) */
-    getMainnetProviders(): Provider[] {
+    getAllMainnetProviders(): Provider[] {
         if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.length) {
             return [getDefaultProvider()]
         }
@@ -226,8 +231,13 @@ class StreamrEthereum {
         })
     }
 
+    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    getBinanceProvider(): Provider {
+        return this.getAllBinanceProviders()[0]
+    }
+
     /** @returns Array of Ethers.js Provider, connections to Binance Smart Chain */
-    getBinanceProviders(): Provider[] {
+    getAllBinanceProviders(): Provider[] {
         if (!this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs
             || !this.ethereumConfig.dataUnionBinanceWithdrawalChainRPCs.length) {
             throw new Error('StreamrClientEthereumConfig has no data union binance withdrawal configuration.')
@@ -237,8 +247,13 @@ class StreamrEthereum {
         })
     }
 
+    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    getDataUnionChainProvider(): Provider {
+        return this.getAllDataUnionChainProviders()[0]
+    }
+
     /** @returns Array of Ethers.js Provider, connections to the Streamr EVM sidechain */
-    getDataUnionChainProviders(): Provider[] {
+    getAllDataUnionChainProviders(): Provider[] {
         if (!this.ethereumConfig.dataUnionChainRPCs || !this.ethereumConfig.dataUnionChainRPCs.length) {
             throw new Error('EthereumConfig has no dataunion chain configuration.')
         }
@@ -248,8 +263,13 @@ class StreamrEthereum {
         })
     }
 
+    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    getStreamRegistryChainProvider(): Provider {
+        return this.getAllStreamRegistryChainProviders()[0]
+    }
+
     /** @returns Array of Ethers.js Providers, connections to the Stream Registry Chain */
-    getStreamRegistryChainProviders(): Provider[] {
+    getAllStreamRegistryChainProviders(): Provider[] {
         if (!this.ethereumConfig.streamRegistryChainRPCs || !this.ethereumConfig.streamRegistryChainRPCs.length) {
             throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
         }
@@ -260,19 +280,19 @@ class StreamrEthereum {
     }
 
     getMainnetOverrides(): Overrides {
-        return this.getOverrides('ethereum', this.getMainnetProviders()[0])
+        return this.getOverrides('ethereum', this.getMainnetProvider())
     }
 
     getBinanceOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.dataUnionBinanceWithdrawalChainRPCs[0]?.name ?? 'binance', this.getBinanceProviders()[0])
+        return this.getOverrides(this.ethereumConfig?.dataUnionBinanceWithdrawalChainRPCs[0]?.name ?? 'binance', this.getBinanceProvider())
     }
 
     getDataUnionOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.dataUnionChainRPCs[0]?.name ?? 'gnosis', this.getDataUnionChainProviders()[0])
+        return this.getOverrides(this.ethereumConfig?.dataUnionChainRPCs[0]?.name ?? 'gnosis', this.getDataUnionChainProvider())
     }
 
     getStreamRegistryOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs[0]?.name ?? 'polygon', this.getStreamRegistryChainProviders()[0])
+        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs[0]?.name ?? 'polygon', this.getStreamRegistryChainProvider())
     }
 
     /**

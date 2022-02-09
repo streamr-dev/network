@@ -44,7 +44,7 @@ export default class Contracts {
      */
     async getVersion(contractAddress: EthereumAddress): Promise<number> {
         validateAddress('contractAddress', contractAddress)
-        const provider = this.ethereum.getMainnetProviders()[0]
+        const provider = this.ethereum.getMainnetProvider()
         const du = new Contract(contractAddress, [{
             name: 'version',
             inputs: [],
@@ -66,7 +66,7 @@ export default class Contracts {
         if (version === 0) {
             throw new Error(`${contractAddress} is not a Data Union contract`)
         }
-        const provider = this.ethereum.getMainnetProviders()[0]
+        const provider = this.ethereum.getMainnetProvider()
         return new Contract(contractAddress, dataUnionMainnetABI, provider)
     }
 
@@ -85,7 +85,7 @@ export default class Contracts {
     }
 
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
-        const provider = this.ethereum.getDataUnionChainProviders()[0]
+        const provider = this.ethereum.getDataUnionChainProvider()
         const duMainnet = await this.getMainnetContractReadOnly(contractAddress)
         const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
@@ -96,7 +96,7 @@ export default class Contracts {
     async getSidechainAmb(): Promise<Contract> {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
-                const sidechainProvider = this.ethereum.getDataUnionChainProviders()[0]
+                const sidechainProvider = this.ethereum.getDataUnionChainProvider()
                 const factorySidechain = new Contract(this.factorySidechainAddress, [{
                     name: 'amb',
                     inputs: [],
@@ -114,7 +114,7 @@ export default class Contracts {
     }
 
     async getMainnetAmb() {
-        const mainnetProvider = this.ethereum.getMainnetProviders()[0]
+        const mainnetProvider = this.ethereum.getMainnetProvider()
         const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
         const mainnetAmbAddress = await factoryMainnet.amb()
         return new Contract(mainnetAmbAddress, mainnetAmbABI, mainnetProvider)
@@ -125,11 +125,11 @@ export default class Contracts {
     }
 
     getBinanceAdapterReadOnly() {
-        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getDataUnionChainProviders()[0])
+        return new Contract(this.binanceAdapterAddress, binanceAdapterABI, this.ethereum.getDataUnionChainProvider())
     }
 
     async getBinanceSmartChainAmb(binanceSenderPrivateKey: BytesLike) {
-        const signer = new Wallet(binanceSenderPrivateKey, this.ethereum.getBinanceProviders()[0])
+        const signer = new Wallet(binanceSenderPrivateKey, this.ethereum.getBinanceProvider())
         return new Contract(this.binanceSmartChainAMBAddress, mainnetAmbABI, signer)
     }
 
@@ -190,7 +190,7 @@ export default class Contracts {
             }
 
             log('Gas estimation failed: Check if number of signatures is enough')
-            const mainnetProvider = this.ethereum.getMainnetProviders()[0]
+            const mainnetProvider = this.ethereum.getMainnetProvider()
             const validatorContractAddress = await mainnetAmb.validatorContract()
             const validatorContract = new Contract(validatorContractAddress, [{
                 name: 'isValidator',

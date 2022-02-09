@@ -49,7 +49,7 @@ export default class DataUnionAPI {
     async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenAddress } = this.options
         const addr = getAddress(address)
-        const providers = this.ethereum.getMainnetProviders()
+        const providers = this.ethereum.getAllMainnetProviders()
         const tokens = providers.map((provider: Provider) => {
             return new Contract(tokenAddress, balanceOfAbi, provider)
         })
@@ -65,7 +65,7 @@ export default class DataUnionAPI {
         const { tokenSidechainAddress } = this.options
         const addr = getAddress(address)
 
-        const providers = this.ethereum.getDataUnionChainProviders()
+        const providers = this.ethereum.getAllDataUnionChainProviders()
         const tokens = providers.map((provider: Provider) => {
             return new Contract(tokenSidechainAddress, balanceOfAbi, provider)
         })
@@ -123,9 +123,9 @@ export default class DataUnionAPI {
      */
     async deployDataUnion(options: DataUnionDeployOptions = {}): Promise<DataUnion> {
         const deployerAddress = await this.ethereum.getAddress()
-        const mainnetProvider = this.ethereum.getMainnetProviders()[0]
+        const mainnetProvider = this.ethereum.getMainnetProvider()
         const mainnetWallet = this.ethereum.getSigner()
-        const duChainProvider = this.ethereum.getDataUnionChainProviders()[0]
+        const duChainProvider = this.ethereum.getDataUnionChainProvider()
 
         const {
             factoryMainnetAddress
