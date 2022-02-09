@@ -6,12 +6,13 @@ on:
       - "*"
     branches:
       - main
+      - v5
   pull_request:
     branches:
       - '*'
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 defaults:
   run:
@@ -38,6 +39,7 @@ jobs:
         uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{ matrix.node-version }}
+      - run: npm install -g npm@8
       - name: Cache Node.js modules
         uses: actions/cache@v2.1.4
         with:

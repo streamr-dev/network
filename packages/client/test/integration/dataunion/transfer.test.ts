@@ -65,7 +65,7 @@ describe('DataUnion earnings transfer methods', () => {
             tokenMainnet.address,
             tokenAdminSidechainWallet.address,
             parseEther('100'),
-            '0x1234' // dummy
+            '0x1234', // dummy
         )
         await relayTx.wait()
         await until(async () => (await tokenSidechain.balanceOf(tokenAdminSidechainWallet.address)).gt('0'), 300000, 3000)

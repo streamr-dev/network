@@ -98,6 +98,12 @@ export const binanceAdapterABI = [
 ]
 
 export const dataUnionMainnetABI = [{
+    name: 'sidechainAddress',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
     name: 'sendTokensToBridge',
     inputs: [],
     outputs: [{ type: 'uint256' }],
@@ -116,20 +122,39 @@ export const dataUnionMainnetABI = [{
     stateMutability: 'view',
     type: 'function'
 }, {
-    name: 'setAdminFee',
+    name: 'setAdminFee', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
     inputs: [{ type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
 }, {
-    name: 'adminFeeFraction',
+    name: 'adminFeeFraction', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
     inputs: [],
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
 }]
 
+// In DU v2.2, fees were moved to the sidechain (admin fee and added DU fee that goes to the DU DAO)
 export const dataUnionSidechainABI = [{
+    name: 'adminFeeFraction',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'dataUnionFeeFraction',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'setFees',
+    inputs: [{ type: 'uint256' }, { type: 'uint256' }], // newAdminfee, newDataUnionFee
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, { // The rest of the functions are common to DU v2.0 and v2.2
     name: 'addMembers',
     inputs: [{ type: 'address[]', internalType: 'address payable[]', }],
     outputs: [],
@@ -181,7 +206,7 @@ export const dataUnionSidechainABI = [{
 }, {
     inputs: [],
     name: 'getStats',
-    outputs: [{ type: 'uint256[6]' }],
+    outputs: [{ type: 'uint256[9]' }],
     stateMutability: 'view',
     type: 'function'
 }, {
@@ -263,7 +288,7 @@ export const factoryMainnetABI = [{
     type: 'function'
 }, {
     name: 'deployNewDataUnion',
-    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'address[]' }, { type: 'string' }],
+    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'address' }, { type: 'address[]' }, { type: 'string' }],
     outputs: [{ type: 'address' }],
     stateMutability: 'nonpayable',
     type: 'function'

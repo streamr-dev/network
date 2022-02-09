@@ -8,8 +8,7 @@ export const show = (
     const options = { ...streamrOptions }
     const client = new StreamrClient(options)
     client.getStream(streamId).then(async (stream) => {
-        // @ts-expect-error toObject is internal
-        const obj = stream.toObject()
+        const obj = stream.toObject() as any
         if (includePermissions) {
             obj.permissions = await stream.getPermissions()
         }
