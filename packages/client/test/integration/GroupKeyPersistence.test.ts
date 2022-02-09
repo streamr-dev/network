@@ -195,7 +195,7 @@ describe('Group Key Persistence', () => {
                     last: 5
                 }
             })
-            
+
             const received2 = []
             for await (const m of sub2) {
                 received2.push(m)
