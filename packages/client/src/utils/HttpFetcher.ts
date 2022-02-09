@@ -22,6 +22,6 @@ export class HttpFetcher {
         return fetch(url, {
             timeout,
             ...init
-        })
+        } as any)
     }
 }
