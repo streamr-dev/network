@@ -62,8 +62,9 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async startNode(): Promise<void> {
+    async startNode(): Promise<unknown> {
         // no-op, no need to explictly start FakeBrubeckNode
+        return
     }
 
     // eslint-disable-next-line class-methods-use-this
