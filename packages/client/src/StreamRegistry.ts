@@ -75,10 +75,10 @@ export const PUBLIC_PERMISSION_ADDRESS = '0x000000000000000000000000000000000000
 export class StreamRegistry implements Context {
     id
     debug
-    streamRegistryContract?: StreamRegistryContract
-    streamRegistryContractReadonly: StreamRegistryContract
-    chainProvider: Provider
-    chainSigner?: Signer
+    private streamRegistryContract?: StreamRegistryContract
+    private streamRegistryContractReadonly: StreamRegistryContract
+    private chainProvider: Provider
+    private chainSigner?: Signer
 
     constructor(
         context: Context,

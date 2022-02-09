@@ -1,12 +1,13 @@
 import { without } from 'lodash'
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
 import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
-import { Stream, StreamPermission, StreamProperties } from '../../../src/Stream'
+import { Stream, StreamPermission, StreamPermissions, StreamProperties } from '../../../src/Stream'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
 import Ethereum from '../../../src/Ethereum'
 import { NotFoundError } from '../../../src/authFetch'
-import { PUBLIC_PERMISSION_ADDRESS } from '../../../src/StreamRegistry'
+import { PUBLIC_PERMISSION_ADDRESS, StreamRegistry } from '../../../src/StreamRegistry'
+import { SearchStreamsPermissionFilter } from '../../../src'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>
@@ -14,7 +15,10 @@ interface RegistryItem {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStreamRegistry {
+export class FakeStreamRegistry implements Omit<StreamRegistry,
+    'id' | 'debug' |
+    'streamRegistryContract' | 'streamRegistryContractReadonly' |
+    'chainProvider' |'chainSigner'> {
 
     private registryItems: Map<StreamID, RegistryItem> = new Map()
     private streamIdBuilder: StreamIDBuilder
@@ -137,5 +141,83 @@ export class FakeStreamRegistry {
         return this.hasPermission(streamIdOrPath, PUBLIC_PERMISSION_ADDRESS, permission)
     }
 
-    // TODO implement other public methods of StreamRegistry
+    getStreamFromContract(_streamIdOrPath: string): Promise<Stream> {
+        throw new Error('not implemented')
+    }
+
+    hasDirectPermission(_streamIdOrPath: string, _userAddess: string, _permission: StreamPermission): Promise<boolean> {
+        throw new Error('not implemented')
+    }
+
+    getPermissionsForUser(_streamIdOrPath: string, _userAddress?: string): Promise<StreamPermissions> {
+        throw new Error('not implemented')
+    }
+
+    updateStream(_props: StreamProperties): Promise<Stream> {
+        throw new Error('not implemented')
+    }
+
+    setPermissionsForUser(
+        _streamIdOrPath: string,
+        _receivingUser: string,
+        _edit: boolean,
+        _deletePermission: boolean,
+        _publish: boolean,
+        _subscribe: boolean,
+        _share: boolean
+    ): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    setPermissions(_streamIdOrPath: string, _users: string[], _permissions: StreamPermissions[]): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    revokeAllMyPermission(_streamIdOrPath: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    revokeAllUserPermission(_streamIdOrPath: string, _userId: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    revokePublicPermission(_streamIdOrPath: string, _permission: StreamPermission): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    revokeAllPublicPermissions(_streamIdOrPath: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    deleteStream(_streamIdOrPath: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    streamExistsOnChain(_streamIdOrPath: string): Promise<boolean> {
+        throw new Error('not implemented')
+    }
+
+    getStreamFromGraph(_streamIdOrPath: string): Promise<Stream> {
+        throw new Error('not implemented')
+    }
+
+    getAllStreams(): AsyncGenerator<Stream, any, unknown> {
+        throw new Error('not implemented')
+    }
+
+    getAllPermissionsForStream(_streamIdOrPath: string): Promise<Record<string, StreamPermission[]>> {
+        throw new Error('not implemented')
+    }
+
+    searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream, any, unknown> {
+        throw new Error('not implemented')
+    }
+
+    getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
+        throw new Error('not implemented')
+    }
+
+    getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
+        throw new Error('not implemented')
+    }
 }
