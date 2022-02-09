@@ -47,7 +47,7 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
  * we write just the information we need. Also calling JSON.strinfigy for a Stream object may
  * fail because the object contains circular refences.
  * */
-export const formStreamDefinitionDescription = (definition: StreamDefinition) => {
+export const formStreamDefinitionDescription = (definition: StreamDefinition): string => {
     const raw = parseRawDefinition(definition)
     let str = raw[0]
     if (raw[1] !== undefined) {
