@@ -27,6 +27,17 @@ export const createClientFactory = (): ClientFactory => {
     mockContainer.registerSingleton(Rest, FakeRest as any)
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {
+        /*
+         * We need to use a DI factory the register the BrubeckNode, because config-related
+         * injection tokens for the DI are only available after we have created a StreamrClient
+         * instance (it calls initContainer() in StreamrClient.ts to create the injection tokens).
+         *
+         * The ActiveNodes singleton is used to keep track of all nodes created in this
+         * fake environment. The BrubeckNode which we create here belongs a StreamrClient,
+         * and we identify it by a Ethereum address (calculated from client.auth.privateKey).
+         * The calculation of the Ethereum address is relatively slow: therefore we use
+         * the ethereumAddressCache to speed-up the privateKey->address mapping.
+         */
         const { privateKey } = c.resolve(Config.Auth) as AuthConfig
         const activeNodes = c.resolve(ActiveNodes)
         const address = ethereumAddressCache.getAddress(privateKey!)
