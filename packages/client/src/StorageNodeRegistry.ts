@@ -83,16 +83,16 @@ export class StorageNodeRegistry {
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
         this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(
-            this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact,
-            this.chainProvider
-        ),
+                this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact,
+                this.chainProvider
+            ),
             'storageNodeRegistry'
         ) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(
-            this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact,
-            this.chainProvider
-        ),
+                this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact,
+                this.chainProvider
+            ),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
     }
@@ -116,16 +116,16 @@ export class StorageNodeRegistry {
             this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.nodeRegistryContract = withErrorHandlingAndLogging(
                 new Contract(
-                this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact,
-                this.chainSigner
-            ),
+                    this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact,
+                    this.chainSigner
+                ),
                 'storageNodeRegistry'
             ) as NodeRegistryContract
             this.streamStorageRegistryContract = withErrorHandlingAndLogging(
                 new Contract(
-                this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact,
-                this.chainSigner
-            ),
+                    this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact,
+                    this.chainSigner
+                ),
                 'streamStorageRegistry'
             ) as StreamStorageRegistryContract
         }
