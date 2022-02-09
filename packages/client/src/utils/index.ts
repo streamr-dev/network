@@ -1,9 +1,9 @@
 import { inspect } from 'util'
 import EventEmitter from 'events'
 import { SEPARATOR } from './uuid'
-import pMemoize, { pMemoizeClear } from 'p-memoize'
+import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
-import mem, { memClear } from 'mem'
+import mem from 'mem'
 import { L } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
@@ -144,6 +144,7 @@ function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => bo
 }
 
 /* eslint-disable object-curly-newline */
+
 /**
  * Returns a cached async fn, cached keyed on first argument passed. See documentation for mem/p-memoize.
  * Caches into a LRU cache capped at options.maxSize
@@ -157,7 +158,7 @@ function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => bo
  * cachedAsyncFn.clear()
  * ```
  */
-export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => Promise<ReturnType>, {
+export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0]>(asyncFn: (...args: ArgsType) => PromiseLike<ReturnType>, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
@@ -171,20 +172,20 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
 } = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
-    const cache: any = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
+    const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
     })
 
-    const cachedFn = Object.assign(pMemoize<(...args: any) => Promise<ReturnType>, KeyType>(asyncFn, {
+    const cachedFn = Object.assign(pMemoize(asyncFn, {
         cachePromiseRejection,
         cache,
         cacheKey,
         ...opts,
     }), {
         clear: () => {
-            pMemoizeClear(cachedFn as any)
+            pMemoize.clear(cachedFn as any)
             cache.clear()
         },
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
@@ -231,7 +232,7 @@ export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0
         ...opts,
     }), {
         clear: () => {
-            memClear(cachedFn as any)
+            mem.clear(cachedFn as any)
             cache.clear()
         },
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
