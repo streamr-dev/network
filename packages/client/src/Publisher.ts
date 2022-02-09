@@ -17,6 +17,7 @@ import Validator from './Validator'
 import BrubeckNode from './BrubeckNode'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
+import { Config, StrictStreamrClientConfig } from './Config'
 
 export type { PublishMetadata }
 
@@ -40,6 +41,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
+        @inject(Config.Root) private config: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -137,10 +139,9 @@ export default class BrubeckPublisher implements Context, Stoppable {
         }
     }
 
-    /** @internal */
     async waitForStorage(streamMessage: StreamMessage, {
-        interval = 500,
-        timeout = 30000,
+        interval = this.config.timeouts.storageNode.retryInterval,
+        timeout = this.config.timeouts.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature
