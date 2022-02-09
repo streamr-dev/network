@@ -1,6 +1,7 @@
-import { BigNumber, Contract, providers, Wallet } from 'ethers'
-import { formatEther, parseEther, defaultAbiCoder } from 'ethers/lib/utils'
-import { ContractReceipt } from '@ethersproject/contracts'
+import { BigNumber, providers, Wallet } from 'ethers'
+import { formatEther, parseEther } from '@ethersproject/units'
+import { defaultAbiCoder } from '@ethersproject/abi'
+import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 
 import debug from 'debug'

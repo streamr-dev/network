@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import { Contract, Wallet } from 'ethers'
-import { formatEther, parseEther } from 'ethers/lib/utils'
+import { Wallet } from '@ethersproject/wallet'
+import { Contract } from '@ethersproject/contracts'
+import { formatEther, parseEther } from '@ethersproject/units'
 import debug from 'debug'
 import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'

@@ -186,6 +186,8 @@ export default class Contracts {
             gasLimit = BigNumber.from(await mainnetAmb.estimateGas.executeSignatures(message, packedSignatures)).add(200000)
             log(`Calculated gas limit: ${gasLimit.toString()}`)
         } catch (e) {
+            if (!(e instanceof Error)) { return null } // make typescript happy
+
             // Failure modes from https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/events/processAMBCollectedSignatures/estimateGas.js
             log('Gas estimation failed: Check if the message was already processed')
             const alreadyProcessed = await mainnetAmb.relayedMessages(messageId)
