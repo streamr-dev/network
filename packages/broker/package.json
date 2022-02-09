@@ -46,7 +46,7 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "cassandra-driver": "^4.6.3",
-    "chalk": "^5.0.0",
+    "chalk": "^4.1.2",
     "commander": "^9.0.0",
     "cors": "^2.8.5",
     "ethers": "^5.4.7",

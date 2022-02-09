@@ -32,5 +32,5 @@ module.exports = {
     // Default timeout of a test in milliseconds
     testTimeout: 10000,
 
-    setupFilesAfterEnv: ["jest-extended"]
+    setupFilesAfterEnv: ["jest-extended/all"]
 }

@@ -172,7 +172,7 @@ export class StreamRegistry implements Context {
             this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.streamRegistryContract = withErrorHandlingAndLogging(
                 new Contract(
-                    th1is.config.streamRegistryChainAddress,
+                    this.config.streamRegistryChainAddress,
                     StreamRegistryArtifact,
                     this.chainSigner
                 ),

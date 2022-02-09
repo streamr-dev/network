@@ -1,6 +1,7 @@
 import path from 'path'
 import { Logger } from "../../src/helpers/Logger"
 import Mock = jest.Mock
+import { wait } from 'streamr-test-utils'
 
 // eslint-disable-next-line no-underscore-dangle
 declare let _streamr_electron_test: any
@@ -94,12 +95,13 @@ describe(Logger, () => {
         }
 
         let lines: string[]
-        const logger = new Logger(module, '', {
+        const logger = new Logger(module, undefined, {
             write: (msg: string) => {
                 lines = msg.split('\n').map((line) => line.trim())
             }
         })
         logger.error('log message', new SyntaxError('error message'))
+        await wait(10)
         expect(lines!.length >= 7)
         // eslint-disable-next-line
         const [ main, _errorTag, errorType, errorMessage, _stackTag, _errorDescription, firstStackFrame ] = lines!
