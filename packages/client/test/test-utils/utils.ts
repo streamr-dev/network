@@ -592,7 +592,7 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     }
 }
 
-export const createEthereumAddressCache = () => {
+export const createEthereumAddressCache = (): { getAddress: (privateKey: string) => EthereumAddress } => {
     const cache: Map<string, EthereumAddress> = new Map()
     return {
         getAddress: (privateKey: string): EthereumAddress => {
@@ -609,15 +609,15 @@ export const createEthereumAddressCache = () => {
 export class Multimap<K, V> {
     private values: Map<K, V[]> = new Map()
 
-    get(key: K) {
+    get(key: K): V[] {
         return this.values.get(key) ?? []
     }
 
-    add(key: K, value: V) {
+    add(key: K, value: V): void {
         this.values.set(key, this.get(key).concat(value))
     }
 
-    remove(key: K, value: V) {
+    remove(key: K, value: V): void {
         const items = this.values.get(key)
         if (items !== undefined) {
             if ((items.length === 1) && (items[0] === value)) {

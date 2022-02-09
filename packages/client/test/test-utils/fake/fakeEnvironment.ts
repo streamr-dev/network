@@ -1,7 +1,7 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
 import BrubeckNode from '../../../src/BrubeckNode'
-import { Config, StrictStreamrClientConfig } from '../../../src/Config'
+import { BrubeckClientConfig, Config, StrictStreamrClientConfig } from '../../../src/Config'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { AuthConfig } from '../../../src/Ethereum'
 import { Rest } from '../../../src/Rest'
@@ -19,7 +19,7 @@ export interface ClientFactory {
     createClient: (opts: any) => StreamrClient
 }
 
-export const createClientFactory = () => {
+export const createClientFactory = (): ClientFactory => {
     const mockContainer = container.createChildContainer()
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
@@ -41,7 +41,7 @@ export const createClientFactory = () => {
     } })
 
     return {
-        createClient: (opts: any) => {
+        createClient: (opts: BrubeckClientConfig) => {
             let authOpts
             if (opts?.auth?.privateKey === undefined) {
                 authOpts = {

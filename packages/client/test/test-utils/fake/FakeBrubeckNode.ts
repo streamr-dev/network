@@ -9,6 +9,7 @@ import { ActiveNodes } from './ActiveNodes'
 type MessageListener = (msg: StreamMessage) => void
 
 export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete'> {
+
     readonly id: EthereumAddress
     readonly debug
     public messageListeners: Multimap<StreamPartID, MessageListener> = new Multimap()
@@ -32,20 +33,20 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
-    async getNodeId() {
+    async getNodeId(): Promise<EthereumAddress> {
         return this.id
     }
 
-    async subscribe(streamPartId: StreamPartID, listener: MessageListener) {
+    async subscribe(streamPartId: StreamPartID, listener: MessageListener): Promise<void> {
         this.messageListeners.add(streamPartId, listener)
     }
 
-    async unsubscribe(streamPartId: StreamPartID, listener: MessageListener) {
+    async unsubscribe(streamPartId: StreamPartID, listener: MessageListener): Promise<void> {
         this.messageListeners.remove(streamPartId, listener)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    publishToNode(msg: StreamMessage) {
+    publishToNode(msg: StreamMessage): void {
         this.activeNodes.getNodes()
             .forEach((n) => {
                 /*

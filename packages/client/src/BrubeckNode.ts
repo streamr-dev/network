@@ -181,13 +181,13 @@ export default class BrubeckNode implements Context {
         }
     }
 
-    async subscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void) {
+    async subscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void): Promise<void> {
         const node = await this.getNode()
         node.addMessageListener(onMessageInput)
         node.subscribe(streamPartId)
     }
 
-    async unsubscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void) {
+    async unsubscribe(streamPartId: StreamPartID, onMessageInput: (msg: StreamMessage) => void): Promise<void> {
         const node = await this.getNode()
         node.removeMessageListener(onMessageInput)
         node.unsubscribe(streamPartId)
