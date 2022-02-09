@@ -257,7 +257,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
                 yield msg
             }
             this.isCleaningUp = true
-        } catch (err) {
+        } catch (err: any) {
             this.isCleaningUp = true
             await this.handleError(err)
         } finally {
@@ -379,7 +379,7 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     async handleError(err: Error) {
         try {
             await this.onError.trigger(err)
-        } catch (error) {
+        } catch (error: any) {
             if (this.isCleaningUp) {
                 throw error
             }

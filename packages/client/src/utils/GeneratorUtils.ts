@@ -30,7 +30,7 @@ export async function* forEach<InType>(
     for await (const v of src) {
         try {
             await fn(v, index, src)
-        } catch (err) {
+        } catch (err: any) {
             if (onError) {
                 await onError(err, v, index)
                 continue
@@ -56,7 +56,7 @@ export async function* map<InType, OutType>(
     for await (const v of src) {
         try {
             yield await fn(v, index, src)
-        } catch (err) {
+        } catch (err: any) {
             if (onError) {
                 await onError(err, v, index)
                 continue
@@ -82,7 +82,7 @@ export async function* filter<InType>(
         let ok
         try {
             ok = await fn(v, index, src)
-        } catch (err) {
+        } catch (err: any) {
             if (onError) {
                 await onError(err, v, index)
                 continue

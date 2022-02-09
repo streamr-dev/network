@@ -45,7 +45,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
                 await this.nodeMetrics.start()
             }
             await this.volumeLogger.start()
-        } catch (e) {
+        } catch (e: any) {
             // TODO remove this catch block after testnet is completed (it is ok to that the plugin throws an error and Broker doesn't start)
             logger.warn(`Unable to start MetricsPlugin: ${e.message}`)
         }

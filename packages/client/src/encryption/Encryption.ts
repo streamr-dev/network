@@ -306,7 +306,7 @@ class EncryptionUtilBase {
 
         try {
             GroupKey.validate(groupKey)
-        } catch (err) {
+        } catch (err: any) {
             throw new UnableToDecryptError(`${err.message}`, streamMessage)
         }
 
@@ -316,7 +316,7 @@ class EncryptionUtilBase {
             const serializedContent = this.decrypt(streamMessage.getSerializedContent(), groupKey).toString()
             streamMessage.parsedContent = JSON.parse(serializedContent)
             streamMessage.serializedContent = serializedContent
-        } catch (err) {
+        } catch (err: any) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             throw new UnableToDecryptError(err.stack, streamMessage)
         }
@@ -331,7 +331,7 @@ class EncryptionUtilBase {
                     this.decrypt(newGroupKey.encryptedGroupKeyHex, groupKey)
                 ])
             }
-        } catch (err) {
+        } catch (err: any) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
         }

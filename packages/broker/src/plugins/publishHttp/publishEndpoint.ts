@@ -23,7 +23,7 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
             partition = parseQueryParameter<number>('partition', req.query, parsePositiveInteger)
             partitionKey = req.query['partitionKey'] as string
-        } catch (e) {
+        } catch (e: any) {
             res.status(400).send({
                 error: e.message
             })
@@ -43,7 +43,7 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         try {
             await streamrClient.publish(streamPartDefinition, content, timestamp, partitionKey)
             return res.sendStatus(200)
-        } catch (e) {
+        } catch (e: any) {
             logger.error(`Unable to publish to ${streamId}: ${e.message}`)
             return res.sendStatus(500)
         }

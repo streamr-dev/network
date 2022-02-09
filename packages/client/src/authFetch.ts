@@ -139,7 +139,7 @@ export default async function authFetch<T extends object>(
     const body = await response.text()
     try {
         return JSON.parse(body || '{}')
-    } catch (e) {
+    } catch (e: any) {
         debug('%s – failed to parse body: %s', url, e.stack)
         throw new AuthFetchError(e.message, response, body)
     }

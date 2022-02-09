@@ -34,6 +34,7 @@ module.exports = {
         ],
         'prefer-destructuring': 'warn',
         'object-curly-newline': 'off',
+        'default-param-last': 'off',
         'no-continue': 'off',
         'max-classes-per-file': 'off', // javascript is not java
         // TODO check all errors/warnings and create separate PR

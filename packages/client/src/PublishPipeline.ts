@@ -195,7 +195,7 @@ export default class PublishPipeline implements Context, Stoppable {
             this.check()
             await this.streamMessageQueue.push([publishMetadata, defer])
             return await defer
-        } catch (err) {
+        } catch (err: any) {
             const error = new FailedToPublishError(publishMetadata, err)
             defer.reject(error)
             throw error

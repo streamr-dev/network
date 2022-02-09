@@ -126,15 +126,19 @@ export class StorageNodeRegistry {
         await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
 
         const nodeAddress = await this.ethereum.getAddress()
-        await until(async () => {
-            try {
-                const url = await this.getStorageNodeUrl(nodeAddress)
-                return nodeMetadata.includes(url)
-            } catch (err) {
-                return false
-            }
-        }, 10000, 500,
-        () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(
+            async () => {
+                try {
+                    const url = await this.getStorageNodeUrl(nodeAddress)
+                    return nodeMetadata.includes(url)
+                } catch (err) {
+                    return false
+                }
+            },
+            10000,
+            500,
+            () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`
+        )
     }
 
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
@@ -150,8 +154,12 @@ export class StorageNodeRegistry {
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
-        await until(async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) }, 10000, 500,
-            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`)
+        await until(
+            async () => { return this.isStreamStoredInStorageNode(streamId, nodeAddress) },
+            10000,
+            500,
+            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`
+        )
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {

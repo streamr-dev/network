@@ -59,7 +59,7 @@ export default function Scaffold(
             } else {
                 throw err // rethrow
             }
-        } catch (newErr) {
+        } catch (newErr: any) {
             error = AggregatedError.from(error, newErr, `ScaffoldError:${id}`)
         }
     }
@@ -68,7 +68,7 @@ export default function Scaffold(
         if (error) { return false }
         try {
             return await _checkFn()
-        } catch (err) {
+        } catch (err: any) {
             collectErrors(err)
         }
         return false
@@ -85,7 +85,7 @@ export default function Scaffold(
         if (didChange && typeof onChange === 'function') {
             try {
                 await onChange(shouldUp)
-            } catch (err) {
+            } catch (err: any) {
                 collectErrors(err)
             }
             return nextScaffoldStep()
@@ -100,7 +100,7 @@ export default function Scaffold(
                 prevSteps.push(stepFn)
                 try {
                     onDownStep = await stepFn()
-                } catch (err) {
+                } catch (err: any) {
                     collectErrors(err)
                 }
                 onDownSteps.push(onDownStep || (() => {}))
@@ -113,7 +113,7 @@ export default function Scaffold(
             const stepFn = onDownSteps.pop() as StepDown // exists because checked onDownSteps.length
             try {
                 await stepFn()
-            } catch (err) {
+            } catch (err: any) {
                 collectErrors(err)
             }
             nextSteps.push(prevSteps.pop() as StepUp)
@@ -151,7 +151,7 @@ export default function Scaffold(
         try {
             currentStep = queue(() => nextDone())
             await currentStep
-        } catch (err) {
+        } catch (err: any) {
             stepErr = err
             throw err
         } finally {

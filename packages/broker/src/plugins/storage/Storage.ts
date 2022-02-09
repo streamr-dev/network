@@ -141,7 +141,7 @@ export class Storage extends EventEmitter {
                     resultStream.write(r)
                 })
                 resultStream.end()
-            } catch (err) {
+            } catch (err: any) {
                 resultStream.destroy(err)
             }
         }
@@ -183,7 +183,7 @@ export class Storage extends EventEmitter {
                     } else {
                         makeLastQuery(bucketIds)
                     }
-                } catch (err) {
+                } catch (err: any) {
                     resultStream.destroy(err)
                 }
             }
@@ -600,7 +600,7 @@ export const startCassandraStorage = async ({
         try {
             await cassandraClient.connect().catch((err) => { throw err })
             return new Storage(cassandraClient, opts || {})
-        } catch (err) {
+        } catch (err: any) {
             // eslint-disable-next-line no-console
             console.log('Cassandra not responding yet...')
             retryCount -= 1

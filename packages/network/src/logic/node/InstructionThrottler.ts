@@ -1,5 +1,5 @@
 import { StreamPartID } from 'streamr-client-protocol'
-import { cancelable, CancelablePromiseType } from 'cancelable-promise'
+import { cancelable, CancelablePromise } from 'cancelable-promise'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from "../../helpers/Logger"
 import { TrackerId } from '../tracker/Tracker'
@@ -23,7 +23,7 @@ export class InstructionThrottler {
     private queue: Queue = {}
     private instructionCounter: Record<StreamPartID,number> = {}
     private ongoingPromises: Record<StreamPartID, {
-        promise: CancelablePromiseType<void> | null
+        promise: CancelablePromise<void> | null
         handling: boolean
     }>
     private stopped: boolean

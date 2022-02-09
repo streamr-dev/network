@@ -60,7 +60,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
         try {
             yield* await this.getResent()
-        } catch (err) {
+        } catch (err: any) {
             if (err.code !== 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
                 await this.handleError(err)

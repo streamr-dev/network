@@ -11,7 +11,9 @@ import { PersistentStore } from './PersistentStore'
 import { StreamID } from 'streamr-client-protocol'
 
 // eslint-disable-next-line promise/param-names
-const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
+const wait = (ms: number) => new Promise((resolveFn) => {
+    setTimeout(resolveFn, ms)
+})
 
 export type ServerPersistentStoreOptions = {
     context: Context,
@@ -63,7 +65,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         try {
             await fs.access(this.dbFilePath)
             return true
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 return false
             }
@@ -75,7 +77,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     private async tryExec<T>(fn: () => Promise<T>, maxRetries = 10, retriesLeft = maxRetries): Promise<T> {
         try {
             return await fn()
-        } catch (err) {
+        } catch (err: any) {
             if (retriesLeft > 0 && err.code === 'SQLITE_BUSY') {
                 this.debug('DB Busy, retrying %d of %d', maxRetries - retriesLeft + 1, maxRetries)
                 return this.tryExec(async () => {
@@ -107,7 +109,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
                     await store.migrate({
                         migrationsPath: this.migrationsPath
                     })
-                } catch (err) {
+                } catch (err: any) {
                     if (err.code.startsWith('SQLITE_')) {
                         // ignore: some other migration is probably running, assume that worked
                         return
@@ -116,7 +118,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
                 }
             })
             this.store = store
-        } catch (err) {
+        } catch (err: any) {
             this.debug('error', err)
             if (!this.error) {
                 this.error = err

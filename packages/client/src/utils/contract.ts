@@ -31,7 +31,7 @@ const createLogger = (): ContractLogger => {
                 'transaction submitted { method=%s, tx=%s, to=%s, nonce=%d, gasLimit=%d, gasPrice=%d }',
                 methodName,
                 tx.hash,
-                NameDirectory.getName(tx.to),
+                NameDirectory.getName(tx.to!),
                 tx.nonce,
                 tx.gasLimit,
                 tx.gasPrice

@@ -350,7 +350,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
 
             // suppress error
             this.ignoredErrors.add(err)
-        } catch (nextErr) {
+        } catch (nextErr: any) {
             // don't double handle if different error thrown
             // by onError trigger
             this.seenErrors.add(nextErr)

@@ -369,7 +369,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
                     sent = this.isOpen() && this.doSendMessage(queueItem.getMessage())
                     isOpen = this.isOpen()
                     sent = sent && isOpen
-                } catch (e) {
+                } catch (e: any) {
                     this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
                 }

@@ -110,7 +110,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     this.onReceive(connection, data)
                 }
 
-            } catch (err) {
+            } catch (err: any) {
                 this.logger.trace(err)
                 this.onReceive(connection, data)
             }

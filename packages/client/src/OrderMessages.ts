@@ -88,7 +88,7 @@ export default class OrderMessages<T> implements Context {
                 if (this.done) { return }
                 this.orderingUtil.add(streamMessage)
             }
-        } catch (err) {
+        } catch (err: any) {
             if (this.done) { return }
 
             if (err.code === 'NO_STORAGE_NODES') {
@@ -138,7 +138,7 @@ export default class OrderMessages<T> implements Context {
             }
             this.inputClosed = true
             this.maybeClose()
-        } catch (err) {
+        } catch (err: any) {
             this.outBuffer.endWrite(err)
         }
     }

@@ -230,7 +230,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
             try {
                 connection.connect()
-            } catch(e) {
+            } catch (e: any) {
                 this.logger.warn(e)
             }
             this.connections[peerId] = connection
@@ -324,7 +324,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         try {
             connection.connect()
-        } catch(e) {
+        } catch (e: any) {
             this.logger.warn(e)
         }
         this.connections[peerId] = connection
@@ -414,7 +414,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 connection.getPeerInfo().controlLayerVersions,
                 connection.getPeerInfo().messageLayerVersions
             )
-        } catch (err) {
+        } catch (err: any) {
             this.logger.debug(err)
             this.close(connection.getPeerId(), `No shared protocol versions with node: ${connection.getPeerId()}`)
         }

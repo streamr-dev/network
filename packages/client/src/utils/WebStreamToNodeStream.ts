@@ -45,7 +45,7 @@ async function pull(fromBrowserStream: ReadableStream, toNodeStream: PassThrough
             }
             await write(toNodeStream, value, ac)
         }
-    } catch (err) {
+    } catch (err: any) {
         toNodeStream.destroy(err)
         reader.cancel()
         ac.abort()

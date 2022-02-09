@@ -84,7 +84,7 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
             } else {
                 logger.warn('unrecognized RelayMessage subType %s with contents %o', subType, relayMessage)
             }
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === UnknownPeerError.CODE) {
                 trackerServer.sendUnknownPeerRtcError(originator.peerId, requestId, targetNode)
                     .catch((e) => logger.error('failed to sendUnknownPeerRtcError, reason: %s', e))

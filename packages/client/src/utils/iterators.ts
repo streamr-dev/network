@@ -66,7 +66,7 @@ export function iteratorFinally<T>( // eslint-disable-line no-redeclare
             // otherwise iteration can still start if finally function still pending
             try {
                 return await originalFn(...args)
-            } catch (err) {
+            } catch (err: any) {
                 if (!error) {
                     error = err
                 }
@@ -82,7 +82,7 @@ export function iteratorFinally<T>( // eslint-disable-line no-redeclare
         started = true
         try {
             yield* iterable
-        } catch (err) {
+        } catch (err: any) {
             if (!error) {
                 error = err
             }

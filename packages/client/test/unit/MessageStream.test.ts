@@ -35,6 +35,7 @@ describe('MessageStream', () => {
         leaksDetector.add('streamMessage', streamMessage)
         s.push(streamMessage)
         const received = []
+        // eslint-disable-next-line no-unreachable-loop
         for await (const msg of s) {
             leaksDetector.add('receivedMessage', msg)
             received.push(msg)
@@ -118,6 +119,7 @@ describe('MessageStream', () => {
         leaksDetector.add('streamMessage', streamMessage)
         const received: StreamMessage<typeof testMessage>[] = []
         await expect(async () => {
+            // eslint-disable-next-line no-unreachable-loop
             for await (const msg of s) {
                 leaksDetector.add('receivedMessage', msg)
                 received.push(msg)

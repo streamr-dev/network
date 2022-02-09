@@ -170,7 +170,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             }), NAT_ANALYSIS_TIMEOUT.maxWaitTime, NAT_ANALYSIS_TIMEOUT.errorCode)
             logger.info(`NAT type: ${result}`)
             return result
-        } catch (e) {
+        } catch (e: any) {
             logger.warn(`Unable to analyze NAT type: ${e.message}`)
             return NAT_TYPE_UNKNOWN
         }

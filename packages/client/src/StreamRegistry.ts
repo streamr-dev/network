@@ -121,20 +121,28 @@ export class StreamRegistry implements Context {
 
     async hasPermission(streamIdOrPath: string, userAddress: EthereumAddress, permission: StreamPermission) {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        return this.streamRegistryContractReadonly.hasPermission(
+            streamId,
+            userAddress,
+            StreamRegistry.streamPermissionToSolidityType(permission)
+        )
     }
 
     async hasPublicPermission(streamIdOrPath: string, permission: StreamPermission) {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistryContractReadonly.hasPublicPermission(streamId,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        return this.streamRegistryContractReadonly.hasPublicPermission(
+            streamId,
+            StreamRegistry.streamPermissionToSolidityType(permission)
+        )
     }
 
     async hasDirectPermission(streamIdOrPath: string, userAddess: EthereumAddress, permission: StreamPermission) {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.streamRegistryContractReadonly.hasDirectPermission(streamId, userAddess,
-            StreamRegistry.streamPermissionToSolidityType(permission))
+        return this.streamRegistryContractReadonly.hasDirectPermission(
+            streamId,
+            userAddess,
+            StreamRegistry.streamPermissionToSolidityType(permission)
+        )
     }
 
     async getPermissionsForUser(streamIdOrPath: string, userAddress?: EthereumAddress): Promise<StreamPermissions> {
@@ -387,7 +395,7 @@ export class StreamRegistry implements Context {
         try {
             await this.getStreamFromGraph(streamId)
             return true
-        } catch (err) {
+        } catch (err: any) {
             if (err.errorCode === 'NOT_FOUND') {
                 return false
             }
@@ -583,8 +591,11 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking isStreamPublisher for stream %s for address %s', streamId, userAddress)
         try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.streamPermissionToSolidityType(StreamPermission.PUBLISH))
+            return await this.streamRegistryContractReadonly.hasPermission(
+                streamId,
+                userAddress,
+                StreamRegistry.streamPermissionToSolidityType(StreamPermission.PUBLISH)
+            )
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }
@@ -594,8 +605,11 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking isStreamSubscriber for stream %s for address %s', streamId, userAddress)
         try {
-            return await this.streamRegistryContractReadonly.hasPermission(streamId, userAddress,
-                StreamRegistry.streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
+            return await this.streamRegistryContractReadonly.hasPermission(
+                streamId,
+                userAddress,
+                StreamRegistry.streamPermissionToSolidityType(StreamPermission.SUBSCRIBE)
+            )
         } catch {
             throw new NotFoundError('stream not found: id: ' + streamId)
         }

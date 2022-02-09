@@ -296,7 +296,7 @@ export async function pull<InType, OutType = InType>(src: AsyncGenerator<InType>
                 break
             }
         }
-    } catch (err) {
+    } catch (err: any) {
         dest.endWrite(err)
     } finally {
         dest.endWrite()

@@ -179,7 +179,7 @@ export default class Contracts {
             // magic number suggested by https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/utils/constants.js
             gasLimit = BigNumber.from(await mainnetAmb.estimateGas.executeSignatures(message, packedSignatures)).add(200000)
             log(`Calculated gas limit: ${gasLimit.toString()}`)
-        } catch (e) {
+        } catch (e: any) {
             // Failure modes from https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/events/processAMBCollectedSignatures/estimateGas.js
             log('Gas estimation failed: Check if the message was already processed')
             const alreadyProcessed = await mainnetAmb.relayedMessages(messageId)

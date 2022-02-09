@@ -144,7 +144,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             } else {
                 this.logger.trace('Expected a handshake message got: ' + message)
             }
-        } catch (err) {
+        } catch (err: any) {
             this.logger.trace(err)
         }
     }

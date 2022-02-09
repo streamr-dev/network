@@ -88,7 +88,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                     } else {
                         this.logger.trace('Expected a handshake message got: ' + data.toString())
                     }
-                } catch (err) {
+                } catch (err: any) {
                     this.logger.trace(err)
                 }
             })
@@ -191,7 +191,7 @@ function cleanSocket(httpServer: http.Server | https.Server, config: UnixSocket)
             try {
                 staticLogger.trace('cleaning unused socket: %s', config)
                 fs.unlinkSync(config)
-            } catch (unlinkErr) {
+            } catch (unlinkErr: any) {
                 // ignore error if somehow file was already removed
                 if (unlinkErr.code !== 'ENOENT') {
                     throw unlinkErr
@@ -236,7 +236,7 @@ export async function startHttpServer(
         httpServer.listen(config)
         await once(httpServer, 'listening')
         staticLogger.info(`listening on %s`, JSON.stringify(config))
-    } catch (err) {
+    } catch (err: any) {
         // Kill process if started on host/port, else wait for Unix Socket to be cleaned up
         if (typeof config !== "string") {
             staticLogger.error(err)

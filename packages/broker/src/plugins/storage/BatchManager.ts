@@ -134,7 +134,7 @@ export class BatchManager extends EventEmitter {
             batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
-        } catch (err) {
+        } catch (err: any) {
             this.logger.trace(`failed to insert batch, error ${err}`)
             if (this.opts.logErrors) {
                 this.logger.error(`Failed to insert batchId: (${batchId})`)

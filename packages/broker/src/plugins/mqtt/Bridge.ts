@@ -40,7 +40,7 @@ export class Bridge implements MqttServerListener {
         let message
         try {
             message = this.payloadFormat.createMessage(payload)
-        } catch (err) {
+        } catch (err: any) {
             logger.warn(`Unable to publish message: ${err.message}`)
             return
         }

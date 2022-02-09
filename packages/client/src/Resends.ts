@@ -3,7 +3,7 @@
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import AbortController from 'node-abort-controller'
+import { AbortController } from 'node-abort-controller'
 import split2 from 'split2'
 import { Readable } from 'stream'
 
