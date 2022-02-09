@@ -65,9 +65,12 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    getNeighborsForStreamPart(_streamPartId: StreamPartID): ReadonlyArray<string> {
-        throw new Error('not implemented')
+    getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
+        const allNodes = this.node.activeNodes.getNodes()
+        return allNodes
+            .filter((node) => (node.id !== this.node.id))
+            .filter((node) => node.networkNodeStub.subsciptions.has(streamPartId))
+            .map((node) => node.id)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -91,7 +94,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     readonly id: EthereumAddress
     readonly debug
     readonly activeNodes: ActiveNodes
-    private readonly networkNodeStub: FakeNetworkNodeStub
+    readonly networkNodeStub: FakeNetworkNodeStub
 
     constructor(
         id: EthereumAddress,
