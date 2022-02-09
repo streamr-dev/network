@@ -119,7 +119,6 @@ export class StreamRegistry implements Context {
                 })
             ])
             return this.parseStream(streamId, metadata)
-            return this.parseStream(streamId, metadata)
         } catch (error) {
             this.debug(error)
         }
