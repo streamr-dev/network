@@ -10,14 +10,18 @@ export class FakeStorageNode extends FakeBrubeckNode {
         super(address, activeNodes, undefined, name)
     }
 
-    addAssignment(streamId: StreamID) {
+    async addAssignment(streamId: StreamID): Promise<void> {
         const streamPartId = toStreamPartID(streamId, 0) // TODO all partitions
-        this.subscribe(streamPartId, (msg: StreamMessage) => { // TODO do not subscribe if already subscribed
-            this.storeMessage(msg)
-        })
+        const networkNode = await this.getNode()
+        if (!networkNode.subsciptions.has(streamPartId)) {
+            networkNode.addMessageListener((msg: StreamMessage) => {
+                this.storeMessage(msg)
+            })
+            networkNode.subscribe(streamPartId)    
+        }
     }
 
-    private storeMessage(msg: StreamMessage) {
+    private storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
         if (this.streamPartMessages.has(streamPartId)) {
             this.streamPartMessages.get(streamPartId)!.push(msg)

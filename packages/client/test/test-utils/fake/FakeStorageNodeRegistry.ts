@@ -60,7 +60,7 @@ export class FakeStorageNodeRegistry {
                 } else {
                     this.assignments.set(streamId, [normalizedNodeAddress])
                 }
-                (node as FakeStorageNode).addAssignment(streamId)
+                await (node as FakeStorageNode).addAssignment(streamId)
             } else {
                 throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
             }
