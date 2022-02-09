@@ -20,6 +20,7 @@ import { factoryMainnetABI } from './abi'
 import { Debug } from '../utils/log'
 import { parseEther } from '@ethersproject/units'
 import { until } from '../utils'
+import { Provider } from '@ethersproject/providers'
 
 const log = Debug('DataUnionAPI')
 
@@ -48,9 +49,13 @@ export default class DataUnionAPI {
     async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenAddress } = this.options
         const addr = getAddress(address)
-        const provider = this.ethereum.getMainnetProvider()
-        const token = new Contract(tokenAddress, balanceOfAbi, provider)
-        return token.balanceOf(addr)
+        const providers = this.ethereum.getMainnetProviders()
+        const tokens = providers.map((provider: Provider) => {
+            return new Contract(tokenAddress, balanceOfAbi, provider)
+        })
+        return Promise.any([
+            ...tokens.map((token: Contract) => token.balanceOf(addr))
+        ])
     }
 
     /**
@@ -59,9 +64,14 @@ export default class DataUnionAPI {
     async getSidechainTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenSidechainAddress } = this.options
         const addr = getAddress(address)
-        const provider = this.ethereum.getDataUnionChainProvider()
-        const token = new Contract(tokenSidechainAddress, balanceOfAbi, provider)
-        return token.balanceOf(addr)
+
+        const providers = this.ethereum.getDataUnionChainProviders()
+        const tokens = providers.map((provider: Provider) => {
+            return new Contract(tokenSidechainAddress, balanceOfAbi, provider)
+        })
+        return Promise.any([
+            ...tokens.map((token: Contract) => token.balanceOf(addr))
+        ])
     }
 
     /**
@@ -113,9 +123,9 @@ export default class DataUnionAPI {
      */
     async deployDataUnion(options: DataUnionDeployOptions = {}): Promise<DataUnion> {
         const deployerAddress = await this.ethereum.getAddress()
-        const mainnetProvider = this.ethereum.getMainnetProvider()
+        const mainnetProvider = this.ethereum.getMainnetProviders()[0]
         const mainnetWallet = this.ethereum.getSigner()
-        const duChainProvider = this.ethereum.getDataUnionChainProvider()
+        const duChainProvider = this.ethereum.getDataUnionChainProviders()[0]
 
         const {
             factoryMainnetAddress

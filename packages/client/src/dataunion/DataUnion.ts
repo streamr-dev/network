@@ -317,7 +317,7 @@ export class DataUnion {
      *   a different number of stats, hence the need for the more complex and very manually decoded query.
      */
     async getStats(): Promise<DataUnionStats> {
-        const provider = this.client.ethereum.getDataUnionChainProvider()
+        const provider = this.client.ethereum.getDataUnionChainProviders()[0]
         const getStatsResponse = await provider.call({
             to: this.sidechainAddress,
             data: '0xc59d4847', // getStats()

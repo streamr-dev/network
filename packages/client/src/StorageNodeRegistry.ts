@@ -80,7 +80,7 @@ export class StorageNodeRegistry {
         @inject(Config.Root) clientConfig: StrictStreamrClientConfig
     ) {
         this.clientConfig = clientConfig
-        this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        this.chainProvider = this.ethereum.getStreamRegistryChainProviders()[0]
         this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainProvider),
             'storageNodeRegistry'

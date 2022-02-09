@@ -119,7 +119,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainChainRPC: undefined, // Default to ethers.js default provider settings
+    mainChainRPCs: undefined, // Default to ethers.js default provider settings
     dataUnionChainRPCs: [{
         name: 'gnosis',
         url: 'https://rpc.xdaichain.com/',
