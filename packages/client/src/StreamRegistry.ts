@@ -466,7 +466,7 @@ export class StreamRegistry implements Context {
     private static buildGetAllStreamsQuery(lastId: string, pageSize: number): string {
         const query = `
         {
-            streams (first: ${pageSize} id_gt: "${lastId}") {
+            streams (first: ${pageSize} where: { id_gt: "${lastId}" } ) {
                  id
                  metadata
             }
