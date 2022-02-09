@@ -1,4 +1,3 @@
-import { without } from 'lodash'
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
 import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
 import { Stream, StreamPermission, StreamPermissions, StreamProperties } from '../../../src/Stream'
@@ -8,10 +7,11 @@ import Ethereum from '../../../src/Ethereum'
 import { NotFoundError } from '../../../src/authFetch'
 import { PUBLIC_PERMISSION_ADDRESS, StreamRegistry } from '../../../src/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src'
+import { Multimap } from '../utils'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>
-    permissions: Map<EthereumAddress, StreamPermission[]>
+    permissions: Multimap<EthereumAddress, StreamPermission>
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -46,8 +46,8 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
             throw new Error('Stream already exists')
         }
         const authenticatedUser: EthereumAddress = (await this.ethereum.getAddress())!.toLowerCase()
-        const permissions = new Map()
-        permissions.set(authenticatedUser, Object.values(StreamPermission))
+        const permissions = new Multimap<EthereumAddress, StreamPermission>()
+        permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: RegistryItem = {
             metadata: props,
             permissions
@@ -91,10 +91,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
             throw new Error('Stream not found')
         } else {
             const userKey = receivingUser.toLowerCase()
-            if (!registryItem.permissions.has(receivingUser)) {
-                registryItem.permissions.set(userKey, [])
-            }
-            registryItem.permissions.get(userKey)!.push(permission)
+            registryItem.permissions.add(userKey, permission)
         }
     }
 
@@ -105,10 +102,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
             throw new Error('Stream not found')
         } else {
             const userKey = receivingUser.toLowerCase()
-            if (registryItem.permissions.has(receivingUser)) {
-                const newPermissions = without(registryItem.permissions.get(userKey), permission)
-                registryItem.permissions.set(userKey, newPermissions)
-            }
+            registryItem.permissions.remove(userKey, permission)
         }
     }
 
@@ -119,9 +113,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
             throw new Error('Stream not found')
         } else {
             const userKey = userAddress.toLowerCase()
-            return (registryItem.permissions !== undefined)
-                && (registryItem.permissions.get(userKey) !== undefined)
-                && registryItem.permissions.get(userKey)!.includes(permission)
+            return registryItem.permissions.has(userKey, permission)
         }
     }
 

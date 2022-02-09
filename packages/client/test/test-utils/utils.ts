@@ -613,8 +613,22 @@ export class Multimap<K, V> {
         return this.values.get(key) ?? []
     }
 
+    has(key: K, value: V) {
+        const items = this.values.get(key)
+        if (items !== undefined) {
+            return items.includes(value)
+            // eslint-disable-next-line no-else-return
+        } else {
+            return false
+        }
+    }
+
     add(key: K, value: V): void {
         this.values.set(key, this.get(key).concat(value))
+    }
+
+    addAll(key: K, values: V[]): void {
+        this.values.set(key, this.get(key).concat(values))
     }
 
     remove(key: K, value: V): void {

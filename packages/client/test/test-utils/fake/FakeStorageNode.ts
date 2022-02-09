@@ -1,10 +1,11 @@
 import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
+import { Multimap } from '../utils'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
-    private streamPartMessages: Map<StreamPartID, StreamMessage[]> = new Map()
+    private streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
 
     constructor(address: EthereumAddress, activeNodes: ActiveNodes, name?: string) {
         super(address, activeNodes, undefined, name)
@@ -23,11 +24,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
 
     private storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
-        if (this.streamPartMessages.has(streamPartId)) {
-            this.streamPartMessages.get(streamPartId)!.push(msg)
-        } else {
-            this.streamPartMessages.set(streamPartId, [msg])
-        }
+        this.streamPartMessages.add(streamPartId, msg)
     }
 
     async getLast(streamPartId: StreamPartID, count: number): Promise<StreamMessage[]> {

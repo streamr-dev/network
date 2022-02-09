@@ -6,13 +6,14 @@ import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
 import { StorageNodeAssignmentEvent, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { Stream } from '../../../src/Stream'
+import { Multimap } from '../utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     'clientConfig' | 'chainProvider' | 'streamStorageRegistryContractReadonly' |
     'chainSigner' | 'nodeRegistryContract' | 'streamStorageRegistryContract'> {
 
-    private assignments: Map<StreamID, EthereumAddress[]> = new Map()
+    private assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     private streamIdBuilder: StreamIDBuilder
     private activeNodes: ActiveNodes
 
@@ -33,7 +34,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
 
     async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.assignments.get(streamId) ?? []
+        return this.assignments.get(streamId)
     }
 
     async getRandomStorageNodeFor(streamPartId: StreamPartID): Promise<FakeStorageNode> {
@@ -58,12 +59,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             const node = this.activeNodes.getNode(nodeAddress)
             if (node !== undefined) {
-                const assignment = this.assignments.get(streamId)
-                if (assignment !== undefined) {
-                    assignment.push(normalizedNodeAddress)
-                } else {
-                    this.assignments.set(streamId, [normalizedNodeAddress])
-                }
+                this.assignments.add(streamId, normalizedNodeAddress)
                 await (node as FakeStorageNode).addAssignment(streamId)
             } else {
                 throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
