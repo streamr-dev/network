@@ -29,35 +29,41 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     removeMessageListener(listener: (msg: StreamMessage<unknown>) => void): void {
         pull(this.messageListeners, listener)
     }
-    
+
     subscribe(streamPartId: StreamPartID) {
         this.subsciptions.add(streamPartId)
     }
-    
+
     unsubscribe(streamPartId: StreamPartID) {
         this.subsciptions.delete(streamPartId)
     }
-    
-    getStreamParts(): Iterable<StreamPartID>{
+
+    // eslint-disable-next-line class-methods-use-this
+    getStreamParts(): Iterable<StreamPartID> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getNeighbors(): ReadonlyArray<string> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getNeighborsForStreamPart(_streamPartId: StreamPartID): ReadonlyArray<string> {
         throw new Error('not implemented')
     }
 
-    getRtt(nodeId: string): number | undefined {
+    // eslint-disable-next-line class-methods-use-this
+    getRtt(_nodeId: string): number | undefined {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     setExtraMetadata(_metadata: Record<string, unknown>) {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
         throw new Error('not implemented')
     }
@@ -96,10 +102,10 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     // eslint-disable-next-line class-methods-use-this
     publishToNode(msg: StreamMessage): void {
         /*
-            * This serialization+serialization is needed in test/integration/Encryption.ts
-            * as it expects that the EncryptedGroupKey format changes in the process.
-            * TODO: should we change the serialization or the test? Or keep this hack?
-            */
+        * This serialization+serialization is needed in test/integration/Encryption.ts
+        * as it expects that the EncryptedGroupKey format changes in the process.
+        * TODO: should we change the serialization or the test? Or keep this hack?
+        */
         const serialized = msg.serialize()
         this.activeNodes.getNodes()
             .forEach(async (n) => {
@@ -116,16 +122,17 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async startNode(): Promise<unknown> {
+    async startNode(): Promise<any> {
         // no-op
-        return
     }
 
+    // eslint-disable-next-line class-methods-use-this
     // eslint-disable-next-line class-methods-use-this
     async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     // eslint-disable-next-line class-methods-use-this
     async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')

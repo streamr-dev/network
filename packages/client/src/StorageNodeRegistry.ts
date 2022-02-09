@@ -64,7 +64,7 @@ type StorageNodeQueryResult = {
 }
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
-    
+
     private clientConfig: StrictStreamrClientConfig
     private chainProvider: Provider
     private streamStorageRegistryContractReadonly: StreamStorageRegistryContract

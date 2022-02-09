@@ -141,22 +141,27 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         return this.hasPermission(streamIdOrPath, PUBLIC_PERMISSION_ADDRESS, permission)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getStreamFromContract(_streamIdOrPath: string): Promise<Stream> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     hasDirectPermission(_streamIdOrPath: string, _userAddess: string, _permission: StreamPermission): Promise<boolean> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getPermissionsForUser(_streamIdOrPath: string, _userAddress?: string): Promise<StreamPermissions> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     updateStream(_props: StreamProperties): Promise<Stream> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     setPermissionsForUser(
         _streamIdOrPath: string,
         _receivingUser: string,
@@ -169,54 +174,67 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     setPermissions(_streamIdOrPath: string, _users: string[], _permissions: StreamPermissions[]): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     revokeAllMyPermission(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     revokeAllUserPermission(_streamIdOrPath: string, _userId: string): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     revokePublicPermission(_streamIdOrPath: string, _permission: StreamPermission): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     revokeAllPublicPermissions(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     deleteStream(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     streamExistsOnChain(_streamIdOrPath: string): Promise<boolean> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getStreamFromGraph(_streamIdOrPath: string): Promise<Stream> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getAllStreams(): AsyncGenerator<Stream, any, unknown> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getAllPermissionsForStream(_streamIdOrPath: string): Promise<Record<string, StreamPermission[]>> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     searchStreams(_term: string | undefined, _permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream, any, unknown> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getStreamPublishers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getStreamSubscribers(_streamIdOrPath: string): AsyncGenerator<string, any, unknown> {
         throw new Error('not implemented')
     }

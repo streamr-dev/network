@@ -15,7 +15,7 @@ export interface NetworkNodeStub {
     getNodeId: () => string,
     addMessageListener: (listener: (msg: StreamMessage<unknown>) => void) => void,
     removeMessageListener: (listener: (msg: StreamMessage<unknown>) => void) => void
-    subscribe: (streamPartId: StreamPartID) => void 
+    subscribe: (streamPartId: StreamPartID) => void
     unsubscribe: (streamPartId: StreamPartID) => void
     getStreamParts: () => Iterable<StreamPartID>
     getNeighbors: () => ReadonlyArray<string>

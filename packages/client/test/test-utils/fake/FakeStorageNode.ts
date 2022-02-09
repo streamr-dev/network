@@ -17,7 +17,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
             networkNode.addMessageListener((msg: StreamMessage) => {
                 this.storeMessage(msg)
             })
-            networkNode.subscribe(streamPartId)    
+            networkNode.subscribe(streamPartId)
         }
     }
 

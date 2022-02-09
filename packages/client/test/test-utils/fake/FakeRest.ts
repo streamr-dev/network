@@ -11,7 +11,7 @@ import { URLSearchParams } from 'url'
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeRest implements Omit<Rest,'id'|'debug'> {
+export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
 
     private storageNodeRegistry: FakeStorageNodeRegistry
 
@@ -70,34 +70,42 @@ export class FakeRest implements Omit<Rest,'id'|'debug'> {
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getUrl(_urlParts: UrlParts, _query?: {}, _restUrl?: string): URL {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     get session(): Session {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     fetch<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 
-    request<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<Response> {
+    // eslint-disable-next-line class-methods-use-this
+    request(_urlParts: UrlParts, _opts: FetchOptions): Promise<Response> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     post<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     put<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     del<T extends object>(_urlParts: UrlParts, _options?: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     stream(_urlParts: UrlParts, _options?: FetchOptions, _abortController?: AbortController): Promise<Readable> {
         throw new Error('not implemented')
     }
