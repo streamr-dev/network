@@ -75,7 +75,6 @@ describe('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE) // tgtest tama on ylimaarainen (storage node on jo asetettu)
 
                 published = await publishTestMessages(5, {
                     waitForLast: true,
