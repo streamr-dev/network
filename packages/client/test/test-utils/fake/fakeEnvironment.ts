@@ -28,7 +28,7 @@ export const createClientFactory = (): ClientFactory => {
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {
         /*
-         * We need to use a DI factory the register the BrubeckNode, because config-related
+         * We need to use a DI factory to register the BrubeckNode, because config-related
          * injection tokens for the DI are only available after we have created a StreamrClient
          * instance (it calls initContainer() in StreamrClient.ts to create the injection tokens).
          *
