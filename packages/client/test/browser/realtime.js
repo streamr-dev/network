@@ -16,8 +16,6 @@ describe('StreamrClient Realtime', () => {
 
     test('Test StreamrClient in Chrome Browser', (browser) => {
         browser
-            .moveTo
-            .waitForElementVisible('resend')
             .waitForElementVisible('body')
             .assert.titleContains('Test StreamrClient in Chrome Browser')
             .click('button[id=connect]')
