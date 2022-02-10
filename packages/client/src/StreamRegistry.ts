@@ -447,33 +447,6 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, response.stream.metadata)
     }
 
-    async* getAllStreams(): AsyncGenerator<Stream> {
-        this.debug('Get all streams from thegraph')
-        const backendResults = this.graphQLClient.fetchPaginatedResults<StreamQueryResult>(
-            (lastId: string, pageSize: number) => StreamRegistry.buildGetAllStreamsQuery(lastId, pageSize)
-        )
-        for await (const item of backendResults) {
-            try {
-                // toStreamID isn't strictly needed here since we are iterating over a result set from the Graph
-                // (we could just cast). _If_ this ever throws, one of our core assumptions is wrong.
-                yield this.parseStream(toStreamID(item.id), item.metadata)
-            } catch (err) {
-                this.debug(`Skipping stream ${item.id} cannot parse metadata: ${item.metadata}`)
-            }
-        }
-    }
-
-    private static buildGetAllStreamsQuery(lastId: string, pageSize: number): string {
-        const query = `
-        {
-            streams (first: ${pageSize} where: { id_gt: "${lastId}" } ) {
-                 id
-                 metadata
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
     /**
      * The user addresses are in lowercase format
      */

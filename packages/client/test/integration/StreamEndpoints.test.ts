@@ -122,13 +122,6 @@ describe('StreamEndpoints', () => {
             const streamId = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
         })
-
-        it('get all Streams', async () => {
-            const iterable = client.getAllStreams()
-            // most likely many items created by various tests, check that we can read some item
-            const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
-            expect(firstItem.id).toBeDefined()
-        })
     })
 
     describe('getOrCreate', () => {
