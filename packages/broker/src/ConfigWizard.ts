@@ -45,11 +45,6 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {
-        },
-        network: {
-            stunUrls: [
-                "stun:stun.streamr.network:5349"
-            ]
         }
     },
     plugins: {
