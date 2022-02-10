@@ -234,7 +234,6 @@ export const storagePathPrompts = [{
 export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.client.auth.privateKey = privateKey
-    config.client.network.id = new Wallet(privateKey).address
 
     const pluginKeys = Object.keys(PLUGIN_NAMES)
     pluginKeys.forEach((pluginKey) => {
