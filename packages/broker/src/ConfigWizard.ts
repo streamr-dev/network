@@ -48,22 +48,7 @@ export const CONFIG_TEMPLATE: any = {
         }
     },
     plugins: {
-        brubeckMiner: {
-            rewardStreamIds: [
-                'streamr.eth/brubeck-mainnet/rewards/001ae9',
-                'streamr.eth/brubeck-mainnet/rewards/b82a43',
-                'streamr.eth/brubeck-mainnet/rewards/d72f1a',
-                'streamr.eth/brubeck-mainnet/rewards/d1aed2',
-                'streamr.eth/brubeck-mainnet/rewards/14aptk',
-                'streamr.eth/brubeck-mainnet/rewards/b2ab22',
-                'streamr.eth/brubeck-mainnet/rewards/7cd249',
-                'streamr.eth/brubeck-mainnet/rewards/af81e2',
-                'streamr.eth/brubeck-mainnet/rewards/52ada6',
-                'streamr.eth/brubeck-mainnet/rewards/cbab52'
-            ],
-            claimServerUrl: "http://brubeck1.streamr.network:3011",
-            stunServerHost: "stun.sipgate.net"
-        },
+        brubeckMiner: {},
         metrics: {
             consoleAndPM2IntervalInSeconds: 0,
             nodeMetrics: {
