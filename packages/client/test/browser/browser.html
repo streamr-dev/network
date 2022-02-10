@@ -310,8 +310,10 @@
 
         const sub = await subscriber.resend({
             stream: stream.id,
-            last: 10,
-        }, (message) => {
+            last: 10
+        })
+
+        sub.onMessage((message) => {
             messages.push(message)
             console.log("here")
             log(`Received Resent: ${JSON.stringify(message)}`)
@@ -319,7 +321,6 @@
                 log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
             }
         })
-        // sub.onMessage()
 
         sub.onConsumed(() => {
             log('Resend Consumed.', 'resendResult')
