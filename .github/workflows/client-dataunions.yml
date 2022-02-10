@@ -45,7 +45,7 @@ jobs:
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - name: Run Test
