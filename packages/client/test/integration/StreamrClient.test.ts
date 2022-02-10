@@ -14,7 +14,7 @@ import {
     describeRepeats,
     createRelativeTestStreamId,
     until
-} from '../utils'
+} from '../test-utils/utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'

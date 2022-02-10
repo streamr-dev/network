@@ -16,7 +16,7 @@ import Signer from './Signer'
 import Encrypt from './Encrypt'
 import Validator from './Validator'
 import { DestroySignal } from './DestroySignal'
-import { StreamIDBuilder } from './StreamIDBuilder'
+import { formStreamDefinitionDescription, StreamIDBuilder } from './StreamIDBuilder'
 import { StreamDefinition } from './types'
 
 export class FailedToPublishError extends Error {
@@ -24,7 +24,7 @@ export class FailedToPublishError extends Error {
     reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
-        super(`Failed to publish to stream ${JSON.stringify(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.publishMetadata = publishMetadata
         this.reason = reason
         if (Error.captureStackTrace) {
@@ -186,6 +186,8 @@ export default class PublishPipeline implements Context, Stoppable {
      * Creates a Defer to be resolved when message gets sent to node.
      */
     async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
+        // TODO the logged object contains a huge streamDefiniton if a Stream object is
+        // used -> truncate to minimal e.g. with streamDefinitionToString?
         this.debug('publish >> %o', publishMetadata)
         this.startQueue()
 

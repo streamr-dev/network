@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
-import { getRandomClient, expectInvalidAddress } from '../../utils'
+import { getRandomClient, expectInvalidAddress } from '../../test-utils/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 

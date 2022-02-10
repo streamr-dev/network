@@ -6,7 +6,7 @@ import {
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
-} from '../utils'
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 

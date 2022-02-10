@@ -7,7 +7,7 @@ import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/Subscriber'
 import Subscription from '../../src/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const MAX_MESSAGES = 10

@@ -114,7 +114,7 @@ export class StreamEndpoints implements Context {
         }
     }
 
-    async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject> {
+    async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject[]> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.debug('getStreamLast %o', {
@@ -129,7 +129,7 @@ export class StreamEndpoints implements Context {
         const chosenNode = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
         const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(chosenNode)
         const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
-        const json = await this.rest.get<StreamMessageAsObject>([
+        const json = await this.rest.get<StreamMessageAsObject[]>([
             'streams', normalizedStreamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },

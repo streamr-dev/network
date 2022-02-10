@@ -13,8 +13,9 @@ export { SearchStreamsPermissionFilter } from './searchStreams'
 export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 import ConfigTest from './ConfigTest'
 import { validateConfig } from './ConfigBase'
+import { NetworkNodeStub } from './BrubeckNode'
 
-export { ConfigTest, validateConfig }
+export { ConfigTest, validateConfig, NetworkNodeStub }
 export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'
