@@ -49,12 +49,7 @@ export const CONFIG_TEMPLATE: any = {
     },
     plugins: {
         brubeckMiner: {},
-        metrics: {
-            consoleAndPM2IntervalInSeconds: 0,
-            nodeMetrics: {
-                streamIdPrefix: 'streamr.eth/metrics/nodes/firehose/'
-            }
-        },
+        metrics: {}
     },
     apiAuthentication: {
         keys: [generateApiKey()]
