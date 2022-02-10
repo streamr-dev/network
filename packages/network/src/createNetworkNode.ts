@@ -39,7 +39,7 @@ export const createNetworkNode = ({
     rttUpdateTimeout,
     webrtcDatachannelBufferThresholdLow,
     webrtcDatachannelBufferThresholdHigh,
-    stunUrls = ['stun:stun.l.google.com:19302'],
+    stunUrls = ['stun:stun.streamr.network:5349'],
     trackerConnectionMaintenanceInterval,
     webrtcDisallowPrivateAddresses = false,
     acceptProxyConnections
