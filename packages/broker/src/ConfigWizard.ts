@@ -48,7 +48,6 @@ export const CONFIG_TEMPLATE: any = {
         },
         restUrl: 'https://streamr.network/api/v2',
         network: {
-            name: 'miner-node',
             trackers: [
                 {
                     "id": "0xFBB6066c44bc8132bA794C73f58F391273E3bdA1",
