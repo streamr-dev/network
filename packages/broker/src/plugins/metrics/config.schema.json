@@ -12,7 +12,8 @@
     "consoleAndPM2IntervalInSeconds": {
       "type": "integer",
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
-      "minimum": 0
+      "minimum": 0,
+      "default": 0
     },
     "nodeMetrics" : {
       "type": [
@@ -20,6 +21,7 @@
         "null"
       ],
       "additionalProperties": false,
+      "default": {},
       "properties": {
         "streamIdPrefix": {
           "type": "string",

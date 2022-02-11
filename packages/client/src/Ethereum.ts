@@ -231,7 +231,7 @@ class StreamrEthereum {
         })
     }
 
-    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    /** @returns Ethers.js Provider, a connection to the Binance Smart Chain */
     getBinanceProvider(): Provider {
         return this.getAllBinanceProviders()[0]
     }
@@ -247,7 +247,7 @@ class StreamrEthereum {
         })
     }
 
-    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
     getDataUnionChainProvider(): Provider {
         return this.getAllDataUnionChainProviders()[0]
     }
@@ -263,7 +263,7 @@ class StreamrEthereum {
         })
     }
 
-    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    /** @returns Ethers.js Provider, a connection to the Stream Registry Chain */
     getStreamRegistryChainProvider(): Provider {
         return this.getAllStreamRegistryChainProviders()[0]
     }

@@ -105,7 +105,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (streamrClient !== undefined) {
                 await streamrClient.destroy()
             }
-            await networkNode.stop()
         }
     }
 }

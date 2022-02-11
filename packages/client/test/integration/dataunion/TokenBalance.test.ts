@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
 
-import { getRandomClient, createMockAddress } from '../../utils'
+import { getRandomClient, createMockAddress } from '../../test-utils/utils'
 import * as Token from '../../../contracts/TestToken.json'
 import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
 import { BigNumber, providers } from 'ethers'

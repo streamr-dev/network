@@ -6,7 +6,7 @@ import authFetch from '../../src/authFetch'
 import * as utils from '../../src/utils'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
-import { describeRepeats, Debug } from '../utils'
+import { describeRepeats, Debug } from '../test-utils/utils'
 
 const debug = Debug('StreamrClient::test::utils')
 
