@@ -258,7 +258,7 @@ describe('Config migration', () => {
     it('storage plugin', () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.plugins.storage = {}
-        expect(() => testMigration(source, () => {})).toThrow('migration not supported for plugin: storage')
+        expect(() => testMigration(source, () => {})).toThrow('Migration not supported for plugin: storage')
     })
 
     it('no migration', () => {
