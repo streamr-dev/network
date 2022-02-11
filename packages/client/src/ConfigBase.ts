@@ -141,17 +141,20 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     dataUnionChainRPC: {
         name: 'gnosis',
         url: 'https://rpc.xdaichain.com/',
-        chainId: 100
+        chainId: 100,
+        timeout: 120 * 1000
     },
     dataUnionBinanceWithdrawalChainRPC: {
         name: 'binance',
         url: 'https://bsc-dataseed.binance.org/',
-        chainId: 56
+        chainId: 56,
+        timeout: 120 * 1000
     },
     streamRegistryChainRPC: {
         name: 'polygon',
         url: 'https://polygon-rpc.com',
-        chainId: 137
+        chainId: 137,
+        timeout: 120 * 1000
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
