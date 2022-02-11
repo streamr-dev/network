@@ -1,4 +1,4 @@
-import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
+import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'

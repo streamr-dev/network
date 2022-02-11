@@ -1,5 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { getCreateClient } from '../utils'
+import { getCreateClient } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
 
 describe('BrubeckNode', () => {

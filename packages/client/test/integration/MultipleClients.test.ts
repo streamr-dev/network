@@ -2,7 +2,7 @@ import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
     getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
-} from '../utils'
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import { Stream, StreamPermission } from '../../src/Stream'

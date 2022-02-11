@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import clientOptions from '../config'
-import { createMockAddress } from '../../utils'
+import { createMockAddress } from '../../test-utils/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')
 

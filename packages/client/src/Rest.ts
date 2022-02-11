@@ -13,6 +13,8 @@ import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
 import Session from './Session'
 import { BrubeckContainer } from './Container'
+import { StreamMessage } from 'streamr-client-protocol'
+import split2 from 'split2'
 
 export type FetchOptions = {
     query?: any,
@@ -163,5 +165,38 @@ export class Rest implements Context {
         return Object.assign(stream, {
             startTime,
         })
+    }
+
+    // TODO this method is very similar to stream() method, maybe we don't need both?
+    // eslint-disable-next-line class-methods-use-this
+    async fetchStream(url: string, opts = {}, abortController = new AbortController()): Promise<Readable> {
+        const startTime = Date.now()
+        const response = await authRequest(url, {
+            signal: abortController.signal,
+            ...opts,
+        })
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+            const stream = source.pipe(split2((message: string) => {
+                return StreamMessage.deserialize(message)
+            }))
+
+            stream.once('close', () => {
+                abortController.abort()
+            })
+
+            return Object.assign(stream, {
+                startTime,
+            })
+        } catch (err) {
+            abortController.abort()
+            throw err
+        }
     }
 }

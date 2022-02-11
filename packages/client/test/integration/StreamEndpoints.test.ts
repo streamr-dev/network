@@ -1,6 +1,6 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../utils'
+import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
@@ -121,13 +121,6 @@ describe('StreamEndpoints', () => {
         it('get a non-existing Stream', async () => {
             const streamId = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
-        })
-
-        it('get all Streams', async () => {
-            const iterable = client.getAllStreams()
-            // most likely many items created by various tests, check that we can read some item
-            const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
-            expect(firstItem.id).toBeDefined()
         })
     })
 

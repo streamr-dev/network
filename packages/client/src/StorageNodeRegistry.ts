@@ -64,14 +64,13 @@ type StorageNodeQueryResult = {
 }
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
-    clientConfig: StrictStreamrClientConfig
-    chainProvider: Provider
-    nodeRegistryContractReadonly: NodeRegistryContract
-    streamStorageRegistryContractReadonly: StreamStorageRegistryContract
 
-    chainSigner?: Signer
-    nodeRegistryContract?: NodeRegistryContract
-    streamStorageRegistryContract?: StreamStorageRegistryContract
+    private clientConfig: StrictStreamrClientConfig
+    private chainProvider: Provider
+    private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
+    private chainSigner?: Signer
+    private nodeRegistryContract?: NodeRegistryContract
+    private streamStorageRegistryContract?: StreamStorageRegistryContract
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -82,10 +81,6 @@ export class StorageNodeRegistry {
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
-        this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
-            new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainProvider),
-            'storageNodeRegistry'
-        ) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainProvider),
             'streamStorageRegistry'
@@ -121,7 +116,7 @@ export class StorageNodeRegistry {
     }
 
     async createOrUpdateNodeInStorageNodeRegistry(nodeMetadata: string): Promise<void> {
-        log('setNode %s -> %s', nodeMetadata)
+        log('createOrUpdateNodeInStorageNodeRegistry %s -> %s', nodeMetadata)
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
@@ -141,7 +136,7 @@ export class StorageNodeRegistry {
     }
 
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
-        log('removeNode called')
+        log('removeNodeFromStorageNodeRegistry called')
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))

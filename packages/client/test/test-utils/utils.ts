@@ -5,19 +5,19 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
-import { StreamrClient } from '../src/StreamrClient'
-import { counterId, CounterId, AggregatedError, instanceId } from '../src/utils'
-import { Debug, format } from '../src/utils/log'
-import { MaybeAsync, StreamDefinition } from '../src/types'
-import { StreamProperties } from '../src/Stream'
-import clientOptions from '../src/ConfigTest'
+import { StreamrClient } from '../../src/StreamrClient'
+import { counterId, CounterId, AggregatedError, instanceId } from '../../src/utils'
+import { Debug, format } from '../../src/utils/log'
+import { MaybeAsync, StreamDefinition } from '../../src/types'
+import { StreamProperties } from '../../src/Stream'
+import clientOptions from '../../src/ConfigTest'
 
-import Signal from '../src/utils/Signal'
-import { PublishMetadata } from '../src/Publisher'
-import { Pipeline } from '../src/utils/Pipeline'
+import Signal from '../../src/utils/Signal'
+import { PublishMetadata } from '../../src/Publisher'
+import { Pipeline } from '../../src/utils/Pipeline'
 
 export { clientOptions }
 
@@ -592,3 +592,64 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     }
 }
 
+export const createEthereumAddressCache = (): { getAddress: (privateKey: string) => EthereumAddress } => {
+    const cache: Map<string, EthereumAddress> = new Map()
+    return {
+        getAddress: (privateKey: string): EthereumAddress => {
+            let address = cache.get(privateKey)
+            if (address === undefined) {
+                address = new Wallet(privateKey).address
+                cache.set(privateKey, address)
+            }
+            return address
+        }
+    }
+}
+
+/*
+ * Generic multimap: a key which maps to multiple valuess.
+ * The values is an array
+ * -> when we query the data, we get it back in the same order
+ * -> an array may contain duplicates, if same value is added multiple times
+ *    (we could implement a Multiset class if we need a different kind of duplication handling)
+ *
+ * TODO: Move this class to a streamr-utils package when we create that? Also implement some
+ * unit tests if this is not just a test helper class.
+ */
+export class Multimap<K, V> {
+    private readonly values: Map<K, V[]> = new Map()
+
+    get(key: K): V[] {
+        return this.values.get(key) ?? []
+    }
+
+    has(key: K, value: V) {
+        const items = this.values.get(key)
+        if (items !== undefined) {
+            return items.includes(value)
+            // eslint-disable-next-line no-else-return
+        } else {
+            return false
+        }
+    }
+
+    add(key: K, value: V): void {
+        this.values.set(key, this.get(key).concat(value))
+    }
+
+    addAll(key: K, values: V[]): void {
+        this.values.set(key, this.get(key).concat(values))
+    }
+
+    remove(key: K, value: V): void {
+        const items = this.values.get(key)
+        if (items !== undefined) {
+            const newItems = items.filter((i) => i !== value)
+            if (newItems.length > 0) {
+                this.values.set(key, newItems)
+            } else {
+                this.values.delete(key)
+            }
+        }
+    }
+}
