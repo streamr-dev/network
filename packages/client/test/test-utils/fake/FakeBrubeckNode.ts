@@ -38,8 +38,14 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         this.subsciptions.delete(streamPartId)
     }
 
-    async subscribeAndWaitJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
         this.subsciptions.add(streamPartId)
+        return 1
+    }
+
+    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
+        this.subsciptions.add(msg.getStreamPartID())
+        this.publish(msg)
         return 1
     }
 
