@@ -200,7 +200,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
         })
     }
     writeFileSync(answers.storagePath, JSON.stringify(config, null, 4))
-    chmodSync(answers.storagePath, '0600')
+    chmodSync(answers.storagePath, '600')
     return answers.storagePath
 }
 
