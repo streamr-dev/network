@@ -76,7 +76,7 @@ export class StreamRegistry implements Context {
     id
     debug
     private streamRegistryContract?: StreamRegistryContract
-    private  streamRegistryContractsReadonly: StreamRegistryContract[]
+    private streamRegistryContractsReadonly: StreamRegistryContract[]
     private chainProviders: Provider[]
     private chainSigner?: Signer
 
