@@ -147,10 +147,9 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
         const backupFile = formBackupFileName(fileName)
         // eslint-disable-next-line no-console
         console.log(`Migrating config ${fileName}, saving backup to ${backupFile}`)
-        fs.renameSync(fileName, backupFile)
+        fs.copyFileSync(fileName, backupFile)
         content = createMigratedConfig(content)
         fs.writeFileSync(fileName, JSON.stringify(content, undefined, 4))
-        fs.chmodSync(fileName, '600')
     }
     return content
 }
