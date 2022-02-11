@@ -199,7 +199,7 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
             recursive: true
         })
     }
-    writeFileSync(answers.storagePath, JSON.stringify(config, null, 2))
+    writeFileSync(answers.storagePath, JSON.stringify(config, null, 4))
     chmodSync(answers.storagePath, '0600')
     return answers.storagePath
 }
