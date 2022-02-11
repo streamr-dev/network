@@ -130,8 +130,10 @@ export class StorageNodeRegistry {
                 return false
             }
         },
-        this.clientConfig.timeouts.theGraph.timeout,
-        this.clientConfig.timeouts.theGraph.retryInterval,
+        // eslint-disable-next-line no-underscore-dangle
+        this.clientConfig._timeouts.theGraph.timeout,
+        // eslint-disable-next-line no-underscore-dangle
+        this.clientConfig._timeouts.theGraph.retryInterval,
         () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
@@ -150,8 +152,10 @@ export class StorageNodeRegistry {
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
         await until(
             async () => this.isStreamStoredInStorageNode(streamId, nodeAddress),
-            this.clientConfig.timeouts.theGraph.timeout,
-            this.clientConfig.timeouts.theGraph.retryInterval,
+            // eslint-disable-next-line no-underscore-dangle
+            this.clientConfig._timeouts.theGraph.timeout,
+            // eslint-disable-next-line no-underscore-dangle
+            this.clientConfig._timeouts.theGraph.retryInterval,
             () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`
         )
     }

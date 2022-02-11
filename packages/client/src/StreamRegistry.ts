@@ -193,8 +193,10 @@ export class StreamRegistry implements Context {
             try {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
-                    this.config.timeouts.jsonRpc.timeout,
-                    this.config.timeouts.jsonRpc.retryInterval
+                    // eslint-disable-next-line no-underscore-dangle
+                    this.config._timeouts.jsonRpc.timeout,
+                    // eslint-disable-next-line no-underscore-dangle
+                    this.config._timeouts.jsonRpc.retryInterval
                 )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)

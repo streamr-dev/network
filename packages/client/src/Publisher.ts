@@ -140,8 +140,10 @@ export default class BrubeckPublisher implements Context, Stoppable {
     }
 
     async waitForStorage(streamMessage: StreamMessage, {
-        interval = this.config.timeouts.storageNode.retryInterval,
-        timeout = this.config.timeouts.storageNode.timeout,
+        // eslint-disable-next-line no-underscore-dangle
+        interval = this.config._timeouts.storageNode.retryInterval,
+        // eslint-disable-next-line no-underscore-dangle
+        timeout = this.config._timeouts.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature

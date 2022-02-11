@@ -95,7 +95,7 @@ export type StrictStreamrClientConfig = {
     dataUnion: DataUnionConfig
     cache: CacheConfig,
     /** @internal */
-    timeouts: TimeoutsConfig
+    _timeouts: TimeoutsConfig
 } & (
     EthereumConfig
     & ConnectionConfig
@@ -183,7 +183,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes
     },
-    timeouts: {
+    _timeouts: {
         theGraph: {
             timeout: 60 * 1000,
             retryInterval: 1000

@@ -383,8 +383,10 @@ class StreamrStream implements StreamMetadata {
         // is ready to store the any stream data which we publish
         await until(
             () => this.isStreamStoredInStorageNode(this.id, url),
-            timeout ?? this.clientConfig.timeouts.storageNode.timeout,
-            pollInterval ?? this.clientConfig.timeouts.storageNode.retryInterval,
+            // eslint-disable-next-line no-underscore-dangle
+            timeout ?? this.clientConfig._timeouts.storageNode.timeout,
+            // eslint-disable-next-line no-underscore-dangle
+            pollInterval ?? this.clientConfig._timeouts.storageNode.retryInterval,
             () => `Propagation timeout when adding stream to a storage node: ${this.id}`
         )
     }

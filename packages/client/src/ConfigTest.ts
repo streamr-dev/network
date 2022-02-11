@@ -58,7 +58,7 @@ export default {
     autoConnect: false,
     autoDisconnect: false,
     maxRetries: 2,
-    timeouts: {
+    _timeouts: {
         theGraph: {
             timeout: 10 * 1000,
             retryInterval: 500
