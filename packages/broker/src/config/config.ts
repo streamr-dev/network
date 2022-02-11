@@ -21,6 +21,7 @@ export type ApiAuthenticationConfig = { keys: string[] } | null
 export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
 
 export interface Config {
+    $schema: string,
     client: ClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>

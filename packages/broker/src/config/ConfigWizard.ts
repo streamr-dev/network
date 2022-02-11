@@ -10,6 +10,7 @@ import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from '../helpers/config.schema.json'
 import { getDefaultFile } from './config'
+import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
 
 const createLogger = () => {
     return {
@@ -44,6 +45,7 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
     client: {
+        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
         auth: {
         }
     },
