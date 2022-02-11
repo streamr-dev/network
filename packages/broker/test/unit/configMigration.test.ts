@@ -270,6 +270,6 @@ describe('Config migration', () => {
 
     it('corrupted config', () => {
         const source = {}
-        expect(() => createMigratedConfig(source)).toThrow('unable to migrate the config')
+        expect(() => createMigratedConfig(source)).toThrow('Unable to migrate the config')
     })
 })
