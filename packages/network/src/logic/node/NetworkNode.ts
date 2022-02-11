@@ -61,8 +61,14 @@ export class NetworkNode extends Node {
         this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
 
-    async subscribeAndWaitJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
         return this.subscribeAndWaitForJoinOperation(streamPartId, timeout)
+    }
+
+    async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
+        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamMessage.getStreamPartID(), timeout)
+        this.onDataReceived(streamMessage)
+        return numOfNeighbors
     }
 
     unsubscribe(streamPartId: StreamPartID): void {

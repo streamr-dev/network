@@ -1,6 +1,6 @@
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { Tracker } from '../../src/logic/tracker/Tracker'
-import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
@@ -63,17 +63,17 @@ describe('subscribe and wait for the node to join the stream', () => {
     })
 
     test('subscribing and waiting for joining', async () => {
-        const firstNodeNeighbors = await nodes[0].subscribeAndWaitJoin(stream1, TIMEOUT)
-        const firstNodeNeighborsRetry = await nodes[0].subscribeAndWaitJoin(stream1, TIMEOUT)
-        const firstNodeSecondStream = await nodes[0].subscribeAndWaitJoin(stream2, TIMEOUT)
+        const firstNodeNeighbors = await nodes[0].subscribeAndWaitForJoin(stream1, TIMEOUT)
+        const firstNodeNeighborsRetry = await nodes[0].subscribeAndWaitForJoin(stream1, TIMEOUT)
+        const firstNodeSecondStream = await nodes[0].subscribeAndWaitForJoin(stream2, TIMEOUT)
         expect(firstNodeNeighbors).toEqual(0)
         expect(firstNodeNeighborsRetry).toEqual(0)
         expect(firstNodeSecondStream).toEqual(0)
 
-        const secondNodeNeighbors = await nodes[1].subscribeAndWaitJoin(stream1, TIMEOUT)
-        const thirdNodeNeighbors = await nodes[2].subscribeAndWaitJoin(stream1, TIMEOUT)
-        const fourthNodeNeighbors = await nodes[3].subscribeAndWaitJoin(stream1, TIMEOUT)
-        const fifthNodeNeighbors = await nodes[4].subscribeAndWaitJoin(stream1, TIMEOUT)
+        const secondNodeNeighbors = await nodes[1].subscribeAndWaitForJoin(stream1, TIMEOUT)
+        const thirdNodeNeighbors = await nodes[2].subscribeAndWaitForJoin(stream1, TIMEOUT)
+        const fourthNodeNeighbors = await nodes[3].subscribeAndWaitForJoin(stream1, TIMEOUT)
+        const fifthNodeNeighbors = await nodes[4].subscribeAndWaitForJoin(stream1, TIMEOUT)
         expect(secondNodeNeighbors).toEqual(1)
         expect(thirdNodeNeighbors).toEqual(2)
         expect(fourthNodeNeighbors).toEqual(3)
@@ -84,7 +84,24 @@ describe('subscribe and wait for the node to join the stream', () => {
             nodes[1].unsubscribe(stream1)
         ])
 
-        const resubscribeNeighbors = await nodes[1].subscribeAndWaitJoin(stream1, TIMEOUT)
+        const resubscribeNeighbors = await nodes[1].subscribeAndWaitForJoin(stream1, TIMEOUT)
         expect(resubscribeNeighbors).toEqual(4)
+    })
+
+    test('wait for join and publish', async () => {
+        const msg = new StreamMessage({
+            messageId: new MessageID(toStreamID('stream-2'), 0, 0, 0, 'publisherId', 'msgChainId'),
+            prevMsgRef: null,
+            content: {
+                foo: 'bar'
+            }
+        })
+        const firstNeighbors = await nodes[0].subscribeAndWaitForJoin(stream2, TIMEOUT)
+        const result = await Promise.all([
+            waitForEvent(nodes[0], NodeEvent.MESSAGE_RECEIVED),
+            nodes[1].waitForJoinAndPublish(msg, TIMEOUT)
+        ])
+        expect(firstNeighbors).toEqual(0)
+        expect(result[1]).toEqual(1)
     })
 })
