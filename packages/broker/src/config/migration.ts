@@ -135,21 +135,44 @@ const formBackupFileName = (originalFileName: string) => {
 }
 
 export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Config | never => {
+    let explicitTargetFile = undefined
     if (fileName === undefined) {
-        fileName = [getDefaultFile(), getLegacyDefaultFile()].find((file) => fs.existsSync(file))
+        const defaultTargetFile = getDefaultFile()
+        const legacyTargetFile = getLegacyDefaultFile()
+        fileName = [defaultTargetFile, legacyTargetFile].find((file) => fs.existsSync(file))
         if (fileName === undefined) {
             // eslint-disable-next-line max-len
             throw new Error(`Config file not found in the default location. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"`)
         }
+        if (fileName === legacyTargetFile) {
+            /*
+             * User has not specified the config file location in the command line and we found
+             * the file from the legacy default location. We'll write the migrated the file to current 
+             * default location instead of the legacy default location. There is no need to backup 
+             * the file as we won't overwrite anything.
+             */
+            explicitTargetFile = defaultTargetFile
+        }
     }
     let content = JSON.parse(fs.readFileSync(fileName, 'utf8'))
     if (needsMigration(content)) {
-        const backupFile = formBackupFileName(fileName)
-        // eslint-disable-next-line no-console
-        console.log(`Migrating config ${fileName}, saving backup to ${backupFile}`)
-        fs.copyFileSync(fileName, backupFile)
-        content = createMigratedConfig(content)
-        fs.writeFileSync(fileName, JSON.stringify(content, undefined, 4))
+        if (explicitTargetFile === undefined) {
+            const backupFile = formBackupFileName(fileName)
+            // eslint-disable-next-line no-console
+            console.log(`Migrating config ${fileName}, saving backup to ${backupFile}`)
+            fs.copyFileSync(fileName, backupFile)
+            content = createMigratedConfig(content)
+            fs.writeFileSync(fileName, JSON.stringify(content, undefined, 4))
+        } else {
+            const backupFile = formBackupFileName(fileName)
+            // eslint-disable-next-line no-console
+            console.log(`Migrating config ${fileName} to ${explicitTargetFile} (archiving the original file to ${backupFile})`)
+            content = createMigratedConfig(content)
+            fs.writeFileSync(explicitTargetFile, JSON.stringify(content, undefined, 4))
+            // read permissions from the source file and set the same permissions to the target file
+            fs.chmodSync(explicitTargetFile, (fs.statSync(fileName).mode & parseInt('777', 8)).toString(8))
+            fs.renameSync(fileName, backupFile)
+        }
     }
     return content
 }
