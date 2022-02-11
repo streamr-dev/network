@@ -212,6 +212,7 @@
     const subscriberAuth = {
         privateKey: urlParams.get('SUBSCRIBE_KEY') || await getPrivateKey()
     }
+    log(`${publisherAuth.privateKey}, ${subscriberAuth.privateKey}`)
 
     if (subscriberAuth.privateKey !==  urlParams.get('SUBSCRIBE_KEY') || publisherAuth.privateKey !== urlParams.get('PUBLISHER_KEY')) {
         const newURL = new URL(document.URL)
@@ -313,7 +314,7 @@
             last: 10
         })
 
-        sub.onMessage((message) => {
+        sub.onResent((message) => {
             messages.push(message)
             console.log("here")
             log(`Received Resent: ${JSON.stringify(message)}`)
@@ -322,9 +323,9 @@
             }
         })
 
-        sub.onConsumed(() => {
-            log('Resend Consumed.', 'resendResult')
-        })
+        // sub.onConsumed(() => {
+        //     log('Resend Consumed.', 'resendResult')
+        // })
     })
 
     $('#disconnect').on('click', async () => {

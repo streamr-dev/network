@@ -39,7 +39,6 @@ describe('StreamrClient Resend', () => {
             .waitForElementPresent('.publishResult', 20000)
             .assert.not.elementPresent('.error')
             .click('button[id=resend]')
-            .waitForElementPresent('.resendResult')
             .waitForElementPresent('.resendMessagesResult')
             .verify.containsText('#result', '{"msg":0}')
             .assert.not.elementPresent('.error')
