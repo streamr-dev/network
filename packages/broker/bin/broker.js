@@ -5,7 +5,7 @@ const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
-const { getDefaultFile } = require('../dist/src/config')
+const { getDefaultFile } = require('../dist/src/config/config')
 
 program
     .version(CURRENT_VERSION)

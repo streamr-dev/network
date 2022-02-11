@@ -5,7 +5,7 @@ import { Wallet } from 'ethers'
 import { Tracker, startTracker } from 'streamr-network'
 import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { ApiAuthenticationConfig, Config } from '../src/config'
+import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
