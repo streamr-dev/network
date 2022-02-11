@@ -32,3 +32,8 @@ export const getDefaultFile = (): string => {
     const relativePath = '.streamr/config/default.json'
     return path.join(os.homedir(), relativePath)
 }
+
+export const getLegacyDefaultFile = (): string => {
+    const relativePath = '/.streamr/broker-config.json'
+    return path.join(os.homedir(), relativePath)
+}
