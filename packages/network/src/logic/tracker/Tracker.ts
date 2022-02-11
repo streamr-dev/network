@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { Event as TrackerServerEvent, TrackerServer } from '../../protocol/TrackerServer'
@@ -44,6 +44,43 @@ export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
 
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
+}
+
+// TODO: Testnet (3rd iteration) compatibility, rm when no more testnet nodes
+export function convertTestNet3Status(statusMessage: StatusMessage): void {
+    if (statusMessage.status.stream !== undefined) {
+        const streamKey: string | undefined = statusMessage.status.stream.streamKey
+        let id = ''
+        let partition = 0
+        if (streamKey !== undefined) {
+            const [parsedId, parsedPartition] = streamKey.split('::')
+            if (parsedId !== undefined) {
+                id = parsedId
+            }
+            if (parsedPartition !== undefined) {
+                partition = parseInt(parsedPartition)
+            }
+        }
+
+        let neighbors = []
+        if (statusMessage.status.stream.inboundNodes !== undefined) {
+            neighbors = statusMessage.status.stream.inboundNodes
+        }
+
+        let counter = 0
+        if (statusMessage.status.stream.counter !== undefined) {
+            counter = parseInt(statusMessage.status.stream.counter)
+        }
+        statusMessage.status = {
+            ...statusMessage.status,
+            streamPart: {
+                id,
+                partition,
+                neighbors,
+                counter
+            }
+        }
+    }
 }
 
 export class Tracker extends EventEmitter {
@@ -92,6 +129,7 @@ export class Tracker extends EventEmitter {
             this.onNodeDisconnected(nodeId)
         })
         this.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+            convertTestNet3Status(statusMessage)
             const valid = this.statusSchemaValidator.validate(statusMessage.status, statusMessage.version)
             if (valid) {
                 this.processNodeStatus(statusMessage, nodeId)
@@ -131,11 +169,6 @@ export class Tracker extends EventEmitter {
     processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
         if (this.stopped) {
             return
-        }
-
-        // TODO: Testnet (3rd iteration) compatibility, rm when no more testnet nodes
-        if (statusMessage.status.stream !== undefined) {
-            statusMessage.status.streamPart = statusMessage.status.stream
         }
 
         this.metrics.record('processNodeStatus', 1)

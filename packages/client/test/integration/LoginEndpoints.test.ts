@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 
 import { StreamrClient } from '../../src/StreamrClient'
 
-import { getCreateClient } from '../utils'
+import { getCreateClient } from '../test-utils/utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
