@@ -61,6 +61,7 @@ export class StreamPartManager {
     }
 
     isNewStream(streamPartId: StreamPartID): boolean {
+        this.ensureThatIsSetUp(streamPartId)
         return this.streamParts.get(streamPartId)!.counter === 0
     }
 

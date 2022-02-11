@@ -167,7 +167,8 @@ export class TrackerManager {
                 logger.trace('sent status %j to tracker %s', status.streamPart, trackerId)
             } catch (e) {
                 const error = `failed to send status to tracker ${trackerId}, reason: ${e}`
-                if (this.streamPartManager.isNewStream(streamPartId)) {
+                if (this.streamPartManager.isSetUp(streamPartId)
+                    && this.streamPartManager.isNewStream(streamPartId)) {
                     this.subscriber.emitJoinFailed(streamPartId, error)
                 }
                 logger.trace(error)
