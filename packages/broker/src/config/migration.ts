@@ -36,9 +36,10 @@ export const needsMigration = (config: any): boolean => {
  * - subscriber plugin
  */
 const convertTestnet3ToV1 = (source: any): Config => {
+    const TARGET_VERSION = 1
     const DEFAULT_NAME = 'miner-node'
     const target: any = {
-        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION)
+        $schema: formSchemaUrl(TARGET_VERSION)
     }
 
     const copyProperty = (sourceName: string, targetName?: string, transform?: (sourceValue: any) => any) => {
