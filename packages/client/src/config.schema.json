@@ -81,7 +81,7 @@
                 }
             }
         },
-        "timeouts": {
+        "_timeouts": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
