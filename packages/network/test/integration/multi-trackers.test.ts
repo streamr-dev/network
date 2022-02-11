@@ -127,7 +127,7 @@ describe('multi trackers', () => {
 
         await nodePromise
 
-        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeOneEvents).toHaveLength(3)
         expect(nodeTwoEvents).toHaveLength(2)
         expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[1][2]).toEqual(trackerOne.getTrackerId())
@@ -148,7 +148,7 @@ describe('multi trackers', () => {
 
         await nodePromise2
 
-        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeOneEvents).toHaveLength(3)
         expect(nodeTwoEvents).toHaveLength(2)
         expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[1][2]).toEqual(trackerTwo.getTrackerId())
@@ -169,7 +169,7 @@ describe('multi trackers', () => {
 
         await nodePromise3
 
-        expect(nodeOneEvents).toHaveLength(2)
+        expect(nodeOneEvents).toHaveLength(3)
         expect(nodeTwoEvents).toHaveLength(2)
         expect(nodeTwoEvents[1][0]).toEqual(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[1][2]).toEqual(trackerThree.getTrackerId())

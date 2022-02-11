@@ -16,6 +16,7 @@ export interface NetworkNodeStub {
     addMessageListener: (listener: (msg: StreamMessage) => void) => void,
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
+    subscribeAndWaitJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
     publish: (streamMessage: StreamMessage) => void,
     getStreamParts: () => Iterable<StreamPartID>

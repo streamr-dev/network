@@ -38,6 +38,11 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         this.subsciptions.delete(streamPartId)
     }
 
+    async subscribeAndWaitJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
+        this.subsciptions.add(streamPartId)
+        return 1
+    }
+
     publish(msg: StreamMessage): void {
         /*
          * This serialization+serialization is needed in test/integration/Encryption.ts

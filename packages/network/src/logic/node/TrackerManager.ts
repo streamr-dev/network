@@ -10,6 +10,7 @@ import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { Metrics } from '../../helpers/MetricsContext'
 import { NameDirectory } from '../../NameDirectory'
+import { COUNTER_LONE_NODE } from '../tracker/InstructionCounter'
 
 const logger = new Logger(module)
 
@@ -93,7 +94,11 @@ export class TrackerManager {
             })
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
-            this.instructionThrottler.add(instructionMessage, trackerId)
+            if (instructionMessage.counter === COUNTER_LONE_NODE) {
+                this.subscriber.emitJoinCompleted(instructionMessage.getStreamPartID(), 0)
+            } else {
+                this.instructionThrottler.add(instructionMessage, trackerId)
+            }
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => {
             logger.trace('disconnected from tracker %s', trackerId)
@@ -193,6 +198,7 @@ export class TrackerManager {
 
         this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
         const currentNodes = this.streamPartManager.getNeighborsForStreamPart(streamPartId)
+
         const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => !nodeIds.includes(nodeId))
 
         nodesToUnsubscribeFrom.forEach((nodeId) => {
@@ -223,9 +229,7 @@ export class TrackerManager {
         }
 
         if (newStream) {
-            if (nodeIds.length === 0) {
-                this.subscriber.emitJoinCompleted(streamPartId, nodeIds.length)
-            } else if (nodeIds.length > 0 && subscribedNodeIds.length === 0) {
+            if (subscribedNodeIds.length === 0) {
                 this.subscriber.emitJoinFailed(streamPartId,
                     `Failed initial join operation to stream partition ${streamPartId},
                             failed to form connections to all target neighbors`

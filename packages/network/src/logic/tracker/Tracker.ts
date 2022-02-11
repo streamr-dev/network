@@ -5,7 +5,7 @@ import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { Event as TrackerServerEvent, TrackerServer } from '../../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
-import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
+import { COUNTER_LONE_NODE, COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
@@ -232,15 +232,29 @@ export class Tracker extends EventEmitter {
         }
         if (this.overlayPerStreamPart[streamPartId]) {
             const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
-            Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
-                const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
-                await this.instructionSender.addInstruction({
-                    nodeId,
+
+            // Send empty instruction if and only if the node is alone in the topology
+            if (this.overlayPerStreamPart[streamPartId].hasNode(node)
+                && this.overlayPerStreamPart[streamPartId].getNumberOfNodes() === 1
+                && Object.keys(instructions).length === 0) {
+                this.instructionSender.bypassBuffer({
+                    nodeId: node,
                     streamPartId,
-                    newNeighbors,
-                    counterValue
+                    newNeighbors: [],
+                    counterValue: COUNTER_LONE_NODE
                 })
-            })
+            } else {
+                Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
+                    const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
+                    this.instructionSender.addInstruction({
+                        nodeId,
+                        streamPartId,
+                        newNeighbors,
+                        counterValue
+                    })
+                })
+            }
+
         }
     }
 

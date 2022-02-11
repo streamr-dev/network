@@ -157,7 +157,7 @@ describe('Group Key Persistence', () => {
             expect(received).toEqual(published.slice(0, 1))
         }, 2 * TIMEOUT)
 
-        it.only('subscriber persists group key with resend last', async () => {
+        it('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber

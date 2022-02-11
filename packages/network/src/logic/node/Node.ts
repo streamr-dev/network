@@ -364,14 +364,14 @@ export class Node extends EventEmitter {
         return this.metricsContext
     }
 
-    async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID): Promise<number> {
+    async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID, timeout = this.nodeConnectTimeout): Promise<number> {
         if (this.streamPartManager.isSetUp(streamPartId)) {
             return this.streamPartManager.getAllNodesForStreamPart(streamPartId).length
         }
         let resolveHandler: any
         let rejectHandler: any
         const res = await Promise.all([
-            promiseTimeout(this.nodeConnectTimeout, new Promise<number>((resolve, reject) => {
+            promiseTimeout(timeout, new Promise<number>((resolve, reject) => {
                 resolveHandler = (stream: StreamPartID, numOfNeighbors: number) => {
                     if (stream === streamPartId) {
                         resolve(numOfNeighbors)
