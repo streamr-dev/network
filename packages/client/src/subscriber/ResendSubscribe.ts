@@ -3,19 +3,19 @@
  */
 
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
-import { instanceId } from './utils'
-import { Context } from './utils/Context'
+import { instanceId } from '../utils'
+import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import Subscriber from './Subscriber'
-import { BrubeckContainer } from './Container'
-import { Config } from './Config'
+import { BrubeckContainer } from '../Container'
+import { Config } from '../Config'
 import OrderMessages from './OrderMessages'
 import Resends, { isResendOptions, ResendOptions, ResendOptionsStrict } from './Resends'
-import Signal from './utils/Signal'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import Signal from '../utils/Signal'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 export class ResendSubscription<T> extends Subscription<T> {
     onResent = Signal.once()

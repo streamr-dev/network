@@ -4,20 +4,20 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
-import { instanceId } from './utils'
-import { inspect } from './utils/log'
-import { Context, ContextError } from './utils/Context'
-import { CancelableGenerator, ICancelable } from './utils/iterators'
+import { instanceId } from '../utils'
+import { inspect } from '../utils/log'
+import { Context, ContextError } from '../utils/Context'
+import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
-import { StreamEndpoints } from './StreamEndpoints'
+import { StreamEndpoints } from '../StreamEndpoints'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
-import { Stoppable } from './utils/Stoppable'
-import { PublisherKeyExchange } from './encryption/KeyExchangePublisher'
-import Validator from './Validator'
-import BrubeckNode from './BrubeckNode'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
-import { Config, StrictStreamrClientConfig } from './Config'
+import { Stoppable } from '../utils/Stoppable'
+import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
+import Validator from '../Validator'
+import BrubeckNode from '../BrubeckNode'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
+import { Config, StrictStreamrClientConfig } from '../Config'
 
 export type { PublishMetadata }
 

@@ -4,19 +4,19 @@
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 
-import { instanceId, counterId } from './utils'
-import { Context, ContextError } from './utils/Context'
-import { inspect } from './utils/log'
+import { instanceId, counterId } from '../utils'
+import { Context, ContextError } from '../utils/Context'
+import { inspect } from '../utils/log'
 
 import MessageStream, { MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 
-import { StorageNodeRegistry } from './StorageNodeRegistry'
-import { StreamEndpoints } from './StreamEndpoints'
-import { BrubeckContainer } from './Container'
-import { createQueryString, Rest } from './Rest'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import { StorageNodeRegistry } from '../StorageNodeRegistry'
+import { StreamEndpoints } from '../StreamEndpoints'
+import { BrubeckContainer } from '../Container'
+import { createQueryString, Rest } from '../Rest'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

@@ -2,7 +2,7 @@ import { wait } from 'streamr-test-utils'
 import { counterId } from '../../src/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
-import MessageStream from '../../src/MessageStream'
+import MessageStream from '../../src/subscriber/MessageStream'
 import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 
 describe('MessageStream', () => {

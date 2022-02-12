@@ -4,7 +4,7 @@ import {
 
 import { uuid, instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import Subscriber from '../Subscriber'
+import Subscriber from '../subscriber/Subscriber'
 
 import {
     GroupKeyId,

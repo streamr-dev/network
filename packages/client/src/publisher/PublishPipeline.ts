@@ -4,20 +4,20 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
-import { inspect } from './utils/log'
-import { instanceId, Defer, Deferred } from './utils'
-import { Context, ContextError } from './utils/Context'
-import { PushPipeline, Pipeline } from './utils/Pipeline'
-import { Stoppable } from './utils/Stoppable'
+import { inspect } from '../utils/log'
+import { instanceId, Defer, Deferred } from '../utils'
+import { Context, ContextError } from '../utils/Context'
+import { PushPipeline, Pipeline } from '../utils/Pipeline'
+import { Stoppable } from '../utils/Stoppable'
 
 import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from './BrubeckNode'
+import BrubeckNode from '../BrubeckNode'
 import Signer from './Signer'
 import Encrypt from './Encrypt'
-import Validator from './Validator'
-import { DestroySignal } from './DestroySignal'
-import { formStreamDefinitionDescription, StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import Validator from '../Validator'
+import { DestroySignal } from '../DestroySignal'
+import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 export class FailedToPublishError extends Error {
     publishMetadata
