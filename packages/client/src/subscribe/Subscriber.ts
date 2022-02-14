@@ -14,14 +14,10 @@ import { StreamDefinition } from '../types'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
-    // @internal
     id
-    // @internal
     debug
-    // @internal
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
-    // @internal
     constructor(
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
@@ -31,7 +27,6 @@ export default class Subscriber implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    // @internal
     async subscribe<T>(
         streamDefinition: StreamDefinition,
         onMessage?: SubscriptionOnMessage<T>
@@ -40,7 +35,6 @@ export default class Subscriber implements Context {
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    /** @internal */
     async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(streamPartId)
         if (onMessage) {
@@ -162,7 +156,6 @@ export default class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
-    // @internal
     countSubscriptionSessions() {
         return this.subSessions.size
     }
@@ -188,7 +181,6 @@ export default class Subscriber implements Context {
         ]))
     }
 
-    // @internal
     async stop() {
         await this.removeAll()
     }
