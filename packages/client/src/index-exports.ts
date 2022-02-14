@@ -23,6 +23,8 @@ export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'
 
+export { StreamPartID } from 'streamr-client-protocol'
+
 // TODO should export these to support StreamMessageAsObject:
 // export {
 //   StreamMessageType, ContentType, EncryptionType, SignatureType
