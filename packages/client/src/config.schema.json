@@ -81,6 +81,51 @@
                 }
             }
         },
+        "_timeouts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "theGraph": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "storageNode": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "jsonRpc": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "httpFetchTimeout": {
+                    "type": "number"
+                }
+            }
+        },
         "binanceAdapterAddress": {
             "type": "string",
             "format": "ethereum-address"
