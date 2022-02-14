@@ -11,8 +11,8 @@ import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
 import Subscriber from './subscribe/Subscriber'
-import Resends from './subscribe/Resends'
-import ResendSubscribe, { ResendSubscription } from './subscribe/ResendSubscribe'
+import Resends, { ResendOptions } from './subscribe/Resends'
+import { ResendSubscription } from './subscribe/ResendSubscription'
 import BrubeckNode from './BrubeckNode'
 import Session from './Session'
 import { DestroySignal } from './DestroySignal'
@@ -270,7 +270,5 @@ export const Dependencies = {
     DestroySignal,
     DataUnions,
 }
-
-export { ResendOptionsStrict as ResendOptions } from './subscribe/Resends'
 
 export { BrubeckClientConfig as StreamrClientOptions } from './Config'

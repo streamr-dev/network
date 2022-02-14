@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { BrubeckClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/subscribe/Subscriber'
-import Subscription from '../../src/subscribe/Subscription'
+import { Subscription } from '../../src/subscribe/Subscription'
 
 import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
