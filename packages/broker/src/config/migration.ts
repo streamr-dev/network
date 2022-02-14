@@ -147,7 +147,7 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
         if (fileName === legacyTargetFile) {
             /*
              * User has not specified the config file location in the command line and we found
-             * the file from the legacy default location. We'll write the migrated the file to current 
+             * the file from the legacy default location. We'll write the migrated file to current 
              * default location instead of the legacy default location. There is no need to backup 
              * the file as we won't overwrite anything.
              */
