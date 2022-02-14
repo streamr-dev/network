@@ -117,20 +117,20 @@ describeRepeats('StreamrClient', () => {
 
         describe('subscribe/unsubscribe', () => {
             beforeEach(() => {
-                expect(client.getAllSubscriptions()).toHaveLength(0)
+                expect(client.getSubscriptions()).toHaveLength(0)
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
-                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0) // does not have subscription yet
+                expect(client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                expect(client.subscriber.getAllSubscriptions()).toHaveLength(0)
+                expect(client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -537,12 +537,12 @@ describeRepeats('StreamrClient', () => {
             const publishReq = await client.publish(stream.id, publishedMessage)
 
             await getWaitForStorage(client)(publishReq)
-            const sub = await client.resend({
-                stream: stream.id,
-                resend: {
+            const sub = await client.resend(
+                stream.id,
+                {
                     last: 3,
-                },
-            })
+                }
+            )
             const messages = await sub.collectContent()
             expect(messages).toEqual([publishedMessage])
         })

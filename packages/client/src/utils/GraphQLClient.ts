@@ -1,9 +1,9 @@
+import fetch from './fetch'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { instanceId } from './index'
 import { Config, StrictStreamrClientConfig } from '../Config'
 import { Context } from './Context'
 import { Debugger } from 'debug'
-import { HttpFetcher } from './HttpFetcher'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GraphQLClient {
@@ -12,7 +12,6 @@ export class GraphQLClient {
 
     constructor(
         context: Context,
-        @inject(HttpFetcher) private httpFetcher: HttpFetcher,
         @inject(Config.Root) private config: StrictStreamrClientConfig
     ) {
         this.debug = context.debug.extend(instanceId(this))
@@ -20,7 +19,7 @@ export class GraphQLClient {
 
     async sendQuery(gqlQuery: string): Promise<Object> {
         this.debug('GraphQL query: %s', gqlQuery)
-        const res = await this.httpFetcher.fetch(this.config.theGraphUrl, {
+        const res = await fetch(this.config.theGraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

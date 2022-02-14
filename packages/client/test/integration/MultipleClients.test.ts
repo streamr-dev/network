@@ -424,7 +424,9 @@ describeRepeats('PubSub with multiple clients', () => {
                     // late subscribe to stream from other client instance
                     const lateSub = await otherClient.subscribe({
                         stream: stream.id,
-                        from: lastMessage.getMessageRef()
+                        resend: {
+                            from: lastMessage.getMessageRef()
+                        }
                     }, (msg, streamMessage) => {
                         const key = streamMessage.getPublisherId().toLowerCase()
                         const msgs = receivedMessagesOther[key] || []
@@ -574,7 +576,7 @@ describeRepeats('PubSub with multiple clients', () => {
             msgs.push(msg)
             receivedMessagesMain[key] = msgs
             if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
-                mainSub.cancel()
+                mainSub.unsubscribe()
             }
         })
 
@@ -605,7 +607,9 @@ describeRepeats('PubSub with multiple clients', () => {
                 // late subscribe to stream from other client instance
                 const lateSub = await otherClient.subscribe({
                     stream: stream.id,
-                    from: lastMessage.getMessageRef()
+                    resend: {
+                        from: lastMessage.getMessageRef()
+                    }
                 }, (msg, streamMessage) => {
                     const key = streamMessage.getPublisherId().toLowerCase()
                     const msgs = receivedMessagesOther[key] || []

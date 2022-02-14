@@ -3,17 +3,21 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamPartID } from 'streamr-client-protocol'
-import MessageStream, { MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
 import SubscriptionSession from './SubscriptionSession'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
-export default class Subscription<T = unknown> extends MessageStream<T> {
+export class Subscription<T = unknown> extends MessageStream<T> {
+    // @internal
     context: SubscriptionSession<T>
-    public readonly streamPartId: StreamPartID
+    // TODO should we mark this internal and add a method to get the stream+partition of a subcription? (streamPartId is an internal data format)
+    readonly streamPartId: StreamPartID
     /** prevent buffered data from yielding */
+    // @internal
     isUnsubscribed = false
 
+    // @internal
     constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
         super(subSession, options)
         this.context = subSession
@@ -24,16 +28,9 @@ export default class Subscription<T = unknown> extends MessageStream<T> {
         // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
-    count() {
-        return this.context.count()
-    }
-
+    // @internal
     waitForNeighbours(numNeighbours?: number, timeout?: number) {
         return this.context.waitForNeighbours(numNeighbours, timeout)
-    }
-
-    cancel() {
-        return this.unsubscribe()
     }
 
     async unsubscribe() {

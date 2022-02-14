@@ -1,25 +1,27 @@
-/**
- * Public Subscribe APIs
- */
-
 import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
-import Subscription, { SubscriptionOnMessage } from './Subscription'
+import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 
-export { Subscription, SubscriptionSession }
+/**
+ * Public Subscribe APIs
+ */
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
+    // @internal
     id
+    // @internal
     debug
+    // @internal
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
+    // @internal
     constructor(
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
@@ -29,6 +31,7 @@ export default class Subscriber implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
+    // @internal
     async subscribe<T>(
         streamDefinition: StreamDefinition,
         onMessage?: SubscriptionOnMessage<T>
@@ -119,8 +122,7 @@ export default class Subscriber implements Context {
     /**
      * Count all subscriptions.
      */
-
-    countAll() {
+    private countAll() {
         let count = 0
         this.subSessions.forEach((s) => {
             count += s.count()
@@ -131,7 +133,7 @@ export default class Subscriber implements Context {
     /**
      * Count all matching subscriptions.
      */
-
+    // TODO rename this to something more specific?
     async count(streamDefinition?: StreamDefinition): Promise<number> {
         if (streamDefinition === undefined) { return this.countAll() }
         return (await this.getSubscriptions(streamDefinition)).length
@@ -140,8 +142,7 @@ export default class Subscriber implements Context {
     /**
      * Get all subscriptions.
      */
-
-    getAllSubscriptions(): Subscription<unknown>[] {
+    private getAllSubscriptions(): Subscription<unknown>[] {
         return [...this.subSessions.values()].reduce((o: Subscription<unknown>[], s: SubscriptionSession<unknown>) => {
             o.push(...s.subscriptions)
             return o
@@ -150,9 +151,8 @@ export default class Subscriber implements Context {
 
     /**
      * Get subscription session for matching sub options.
+     * @internal
      */
-
-    /** @internal */
     getSubscriptionSession<T = unknown>(streamPartId: StreamPartID): SubscriptionSession<T> | undefined {
         const subSession = this.subSessions.get(streamPartId)
         if (!subSession) {
@@ -162,6 +162,7 @@ export default class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
+    // @internal
     countSubscriptionSessions() {
         return this.subSessions.size
     }
@@ -169,7 +170,6 @@ export default class Subscriber implements Context {
     /**
      * Get subscriptions matching streamId or streamId + streamPartition
      */
-
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {
             return this.getAllSubscriptions()
@@ -188,6 +188,7 @@ export default class Subscriber implements Context {
         ]))
     }
 
+    // @internal
     async stop() {
         await this.removeAll()
     }

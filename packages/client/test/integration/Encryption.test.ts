@@ -12,7 +12,7 @@ import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/subscribe/Subscription'
+import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
@@ -433,12 +433,12 @@ describeRepeats('decryption', () => {
 
                 // resend without knowing the historical keys
                 await grantSubscriberPermissions()
-                const sub = await subscriber.resend({
-                    streamId: stream.id,
-                    resend: {
+                const sub = await subscriber.resend(
+                    stream.id,
+                    {
                         last: 2,
-                    },
-                })
+                    }
+                )
 
                 const received = await sub.collect()
 
@@ -531,7 +531,7 @@ describeRepeats('decryption', () => {
                         ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
                     ])
 
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(subscriber.getSubscriptions()).toHaveLength(0)
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
 
@@ -559,7 +559,7 @@ describeRepeats('decryption', () => {
                     expect(received).toEqual([
                         ...contentClear.slice(0, BAD_INDEX),
                     ])
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(subscriber.getSubscriptions()).toHaveLength(0)
 
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
@@ -793,7 +793,7 @@ describeRepeats('decryption', () => {
                             clearTimeout(t)
                             t = setTimeout(() => {
                                 timedOut()
-                                sub.cancel().catch(() => {})
+                                sub.unsubscribe().catch(() => {})
                             }, 600000)
                         }
 

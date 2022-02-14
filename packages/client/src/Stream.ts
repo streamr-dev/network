@@ -1,14 +1,15 @@
 /**
  * Wrapper for Stream metadata and (some) methods.
  */
+import fetch from './utils/fetch'
 import { DependencyContainer, inject } from 'tsyringe'
 
 export { GroupKey } from './encryption/Encryption'
 import { until } from './utils'
 
 import { Rest } from './Rest'
-import Resends from './subscribe/Resends'
-import Publisher from './publish/Publisher'
+import Resends from './subscriber/Resends'
+import Publisher from './publisher/Publisher'
 import { StreamRegistry } from './StreamRegistry'
 import Ethereum from './Ethereum'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
@@ -18,9 +19,6 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { AddressZero } from '@ethersproject/constants'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StrictStreamrClientConfig } from './ConfigBase'
-import { Config } from './Config'
-import { HttpFetcher } from './utils/HttpFetcher'
 
 export interface StreamPermissions {
     canEdit: boolean
@@ -98,8 +96,6 @@ class StreamrStream implements StreamMetadata {
     protected _streamRegistry: StreamRegistry
     protected _nodeRegistry: StorageNodeRegistry
     protected _ethereuem: Ethereum
-    private readonly httpFetcher: HttpFetcher
-    private clientConfig: StrictStreamrClientConfig
 
     /** @internal */
     constructor(
@@ -117,8 +113,6 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
-        this.httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
-        this.clientConfig = _container.resolve<StrictStreamrClientConfig>(Config.Root)
     }
 
     /**
@@ -333,12 +327,12 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields() {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend({
-            id: this.id,
-            resend: {
+        const sub = await this._resends.resend(
+            this.id,
+            {
                 last: 1,
             },
-        })
+        )
 
         const receivedMsgs = await sub.collectContent()
 
@@ -373,27 +367,22 @@ class StreamrStream implements StreamMetadata {
     }
 
     async waitUntilStorageAssigned({
-        timeout,
-        pollInterval
+        timeout = 30000,
+        pollInterval = 500
     }: {
         timeout?: number,
         pollInterval?: number
     } = {}, url: string) {
         // wait for propagation: the storage node sees the change and
         // is ready to store the any stream data which we publish
-        await until(
-            () => this.isStreamStoredInStorageNode(this.id, url),
-            // eslint-disable-next-line no-underscore-dangle
-            timeout ?? this.clientConfig._timeouts.storageNode.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            pollInterval ?? this.clientConfig._timeouts.storageNode.retryInterval,
-            () => `Propagation timeout when adding stream to a storage node: ${this.id}`
-        )
+        await until(() => StreamrStream.isStreamStoredInStorageNode(this.id, url), timeout, pollInterval, () => (
+            `Propagation timeout when adding stream to a storage node: ${this.id}`
+        ))
     }
 
-    private async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
+    private static async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
         const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/${DEFAULT_PARTITION}`
-        const response = await this.httpFetcher.fetch(url)
+        const response = await fetch(url)
         if (response.status === 200) {
             return true
         }
