@@ -3,14 +3,14 @@
  */
 
 import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
-import { allSettledValues, instanceId } from './utils'
-import { Context } from './utils/Context'
+import { allSettledValues, instanceId } from '../utils'
+import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import Subscription, { SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
-import { BrubeckContainer } from './Container'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import { BrubeckContainer } from '../Container'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 export { Subscription, SubscriptionSession }
 

@@ -12,7 +12,7 @@ import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
+import Subscription from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 

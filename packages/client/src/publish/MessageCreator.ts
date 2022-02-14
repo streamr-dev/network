@@ -10,12 +10,12 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 
-import { LimitAsyncFnByKey } from './utils'
-import { Stoppable } from './utils/Stoppable'
+import { LimitAsyncFnByKey } from '../utils'
+import { Stoppable } from '../utils/Stoppable'
 
 import { getCachedMessageChain } from './MessageChain'
-import { Config, CacheConfig } from './Config'
-import Ethereum from './Ethereum'
+import { Config, CacheConfig } from '../Config'
+import Ethereum from '../Ethereum'
 import StreamPartitioner from './StreamPartitioner'
 
 export type MessageCreateOptions<T = unknown> = {

@@ -6,9 +6,9 @@ import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from '
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
-import { pLimitFn, sleep } from './utils'
-import type { AuthenticatedConfig } from './Ethereum'
-import { Config } from './Config'
+import { pLimitFn, sleep } from '../utils'
+import type { AuthenticatedConfig } from '../Ethereum'
+import { Config } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Signer {

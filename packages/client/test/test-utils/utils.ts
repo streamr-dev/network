@@ -16,7 +16,7 @@ import { StreamProperties } from '../../src/Stream'
 import clientOptions from '../../src/ConfigTest'
 
 import Signal from '../../src/utils/Signal'
-import { PublishMetadata } from '../../src/Publisher'
+import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 
 export { clientOptions }
