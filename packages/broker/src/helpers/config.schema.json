@@ -4,11 +4,15 @@
     "description": "Broker configuration format",
     "type": "object",
     "required": [
+        "$schema",
         "client",
         "plugins"
     ],
     "additionalProperties": false,
     "properties": {
+        "$schema": {
+            "type": "string"
+        },
         "client": {
             "type": "object",
             "description": "Client configuration",

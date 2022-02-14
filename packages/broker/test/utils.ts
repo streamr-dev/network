@@ -5,8 +5,9 @@ import { Wallet } from 'ethers'
 import { Tracker, startTracker } from 'streamr-network'
 import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { ApiAuthenticationConfig, Config } from '../src/config'
+import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
+import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migration'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -54,6 +55,7 @@ export const formConfig = ({
     }
 
     return {
+        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
         client: {
             ...ConfigTest,
             auth: {

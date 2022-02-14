@@ -1,6 +1,6 @@
-import { Config } from './config'
+import { Config } from './config/config'
 import express from 'express'
-import { validateConfig } from './helpers/validateConfig'
+import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
 import { NetworkNodeStub, StreamrClient } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
