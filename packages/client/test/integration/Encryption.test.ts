@@ -531,7 +531,7 @@ describeRepeats('decryption', () => {
                         ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
                     ])
 
-                    expect(subscriber.getSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
 
@@ -559,7 +559,7 @@ describeRepeats('decryption', () => {
                     expect(received).toEqual([
                         ...contentClear.slice(0, BAD_INDEX),
                     ])
-                    expect(subscriber.getSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
 
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })

@@ -116,21 +116,21 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
 
         describe('subscribe/unsubscribe', () => {
-            beforeEach(() => {
-                expect(client.getSubscriptions()).toHaveLength(0)
+            beforeEach(async () => {
+                expect(await client.getSubscriptions()).toHaveLength(0)
             })
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
-                expect(client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
+                expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                expect(client.subscriber.getSubscriptions()).toHaveLength(0)
+                expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -566,7 +566,7 @@ describeRepeats('StreamrClient', () => {
                     unsubTask,
                     subTask,
                 ])
-                expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await wait(WAIT_TIME)
                 expect(events.onResent).toHaveBeenCalledTimes(0)
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
@@ -587,11 +587,11 @@ describeRepeats('StreamrClient', () => {
 
                     const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
 
-                    expect(client.getSubscriptions()).toHaveLength(1)
+                    expect(await client.getSubscriptions()).toHaveLength(1)
 
                     const unsubTask = client.unsubscribe(stream)
 
-                    expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                    expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                     await unsubTask
                     await subTask
                     await wait(WAIT_TIME * 2)
@@ -613,7 +613,7 @@ describeRepeats('StreamrClient', () => {
 
                     const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream)!)
                     const unsubTask = client.unsubscribe(stream)
-                    expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                    expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
 
                     const msg = Msg()
                     const publishReq = await stream.publish(msg)
@@ -635,12 +635,12 @@ describeRepeats('StreamrClient', () => {
                     streamId: stream.id,
                 }, onMessage)
 
-                expect(client.getSubscriptions()).toHaveLength(1)
+                expect(await client.getSubscriptions()).toHaveLength(1)
                 const events = attachSubListeners(sub)
                 const t = client.unsubscribe(sub)
                 await stream.publish(Msg())
                 await t
-                expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
+                expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await wait(WAIT_TIME)
                 expect(events.onResent).toHaveBeenCalledTimes(0)
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
@@ -696,7 +696,7 @@ describeRepeats('StreamrClient', () => {
             expect(received).toEqual(published)
             // All good, unsubscribe
             await client.unsubscribe(sub)
-            expect(client.getSubscriptions()).toHaveLength(0)
+            expect(await client.getSubscriptions()).toHaveLength(0)
         }, TIMEOUT)
 
         it('client.subscribe with resend last', async () => {
@@ -727,7 +727,7 @@ describeRepeats('StreamrClient', () => {
             // All good, unsubscribe
             await client.unsubscribe(sub)
             expect(received).toEqual(published.slice(-2))
-            expect(client.getSubscriptions()).toHaveLength(0)
+            expect(await client.getSubscriptions()).toHaveLength(0)
         }, TIMEOUT)
 
         it('client.subscribe (realtime with resend)', async () => {
@@ -760,7 +760,7 @@ describeRepeats('StreamrClient', () => {
             // All good, unsubscribe
             await client.unsubscribe(sub)
             expect(received).toEqual([...published.slice(-2), msg])
-            expect(client.getSubscriptions()).toHaveLength(0)
+            expect(await client.getSubscriptions()).toHaveLength(0)
         }, TIMEOUT)
     })
 
