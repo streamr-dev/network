@@ -78,7 +78,8 @@ const sub = await client.resend(
     'streamId',
     {
         last: 5,
-    }, (message) => {
+    }, 
+    (message) => {
         // This is the message handler which gets called for every received message in the stream.
         // Do something with the message here!
     }
