@@ -22,6 +22,22 @@ export type CacheConfig = {
     maxAge: number
 }
 
+type TimeoutsConfig = {
+    theGraph: {
+        timeout: number
+        retryInterval: number
+    }
+    storageNode: {
+        timeout: number
+        retryInterval: number
+    }
+    jsonRpc: {
+        timeout: number
+        retryInterval: number
+    }
+    httpFetchTimeout: number
+}
+
 export type SubscribeConfig = {
     /** Attempt to order messages */
     orderMessages: boolean
@@ -78,6 +94,8 @@ export type StrictStreamrClientConfig = {
     ensCacheChainAddress: EthereumAddress,
     dataUnion: DataUnionConfig
     cache: CacheConfig,
+    /** @internal */
+    _timeouts: TimeoutsConfig
 } & (
     EthereumConfig
     & ConnectionConfig
@@ -123,17 +141,26 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     dataUnionChainRPCs: {
         name: 'gnosis',
         chainId: 100,
-        rpcs: [{ url: 'https://rpc.xdaichain.com/' }]
+        rpcs: [{
+            url: 'https://rpc.xdaichain.com/',
+            timeout: 120 * 1000
+        }]
     },
     dataUnionBinanceWithdrawalChainRPCs: {
         name: 'binance',
         chainId: 56,
-        rpcs: [{ url: 'https://bsc-dataseed.binance.org/' }]
+        rpcs: [{
+            url: 'https://bsc-dataseed.binance.org/',
+            timeout: 120 * 1000,
+        }]
     },
     streamRegistryChainRPCs: {
         name: 'polygon',
         chainId: 137,
-        rpcs: [{ url: 'https://polygon-rpc.com' }]
+        rpcs: [{
+            url: 'https://polygon-rpc.com',
+            timeout: 120 * 1000
+        }]
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
@@ -152,17 +179,30 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateMainnetAddress: '0x67352e3F7dBA907aF877020aE7E9450C0029C70c',
         templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
-
     ethereumNetworks: {
         polygon: {
             chainId: 137,
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
-
     cache: {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes
+    },
+    _timeouts: {
+        theGraph: {
+            timeout: 60 * 1000,
+            retryInterval: 1000
+        },
+        storageNode: {
+            timeout: 30 * 1000,
+            retryInterval: 1000
+        },
+        jsonRpc: {
+            timeout: 30 * 1000,
+            retryInterval: 1000
+        },
+        httpFetchTimeout: 30 * 1000
     }
 }
 
