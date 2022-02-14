@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../utils'
+import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 

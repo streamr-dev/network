@@ -4,7 +4,7 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
-import { uid, addAfterFn, describeRepeats, mockContext } from '../utils'
+import { uid, addAfterFn, describeRepeats, mockContext } from '../test-utils/utils'
 import LeakDetector from 'jest-leak-detector'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 

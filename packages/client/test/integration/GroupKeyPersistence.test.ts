@@ -1,27 +1,32 @@
 /* eslint-disable no-await-in-loop */
-import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, fetchPrivateKeyWithGas } from '../utils'
+import { getPublishTestStreamMessages, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
 
-describeRepeats('Group Key Persistence', () => {
+describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
+    let clientFactory: ClientFactory
 
-    const createClient = getCreateClient()
+    beforeEach(() => {
+        clientFactory = createClientFactory()
+    })
 
     describe('with encrypted streams', () => {
         let stream: Stream
 
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
-            const client = await createClient(opts)
+            const client = clientFactory.createClient(opts)
             await Promise.all([
                 client.connect(),
             ])
@@ -34,8 +39,8 @@ describeRepeats('Group Key Persistence', () => {
             return client
         }
         beforeEach(async () => {
-            publisherPrivateKey = await fetchPrivateKeyWithGas()
-            subscriberPrivateKey = await fetchPrivateKeyWithGas()
+            publisherPrivateKey = fastPrivateKey()
+            subscriberPrivateKey = fastPrivateKey()
 
             publisher = await setupPublisher({
                 id: 'publisher',
@@ -43,7 +48,7 @@ describeRepeats('Group Key Persistence', () => {
                     privateKey: publisherPrivateKey,
                 }
             })
-            subscriber = await createClient({
+            subscriber = clientFactory.createClient({
                 id: 'subscriber',
                 autoConnect: true,
                 autoDisconnect: true,
@@ -70,14 +75,13 @@ describeRepeats('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
                 published = await publishTestMessages(5, {
                     waitForLast: true,
                 })
 
                 await publisher.destroy()
-                publisher2 = await createClient({
+                publisher2 = clientFactory.createClient({
                     id: 'publisher2',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -132,7 +136,7 @@ describeRepeats('Group Key Persistence', () => {
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             await subscriber.destroy()
 
-            const subscriber2 = await createClient({
+            const subscriber2 = clientFactory.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -142,15 +146,18 @@ describeRepeats('Group Key Persistence', () => {
             const sub2 = await subscriber2.subscribe({
                 stream: stream.id,
             })
+            await sub2.waitForNeighbours()
 
-            published.push(...await publishTestMessages(3))
-            await sub2.collect(2) // either one old and one new or 2 new messages
+            await Promise.all([
+                sub2.collect(3),
+                published.push(...await publishTestMessages(3)),
+            ])
+
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
         }, 2 * TIMEOUT)
 
-        // TODO: fix flaky test in NET-641b
-        it.skip('subscriber persists group key with resend last', async () => {
+        it('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
             // persisted by another subscriber:
             // 1. create publisher and subscriber
@@ -178,7 +185,7 @@ describeRepeats('Group Key Persistence', () => {
             await subscriber.destroy()
             await publisher.destroy()
 
-            const subscriber2 = await createClient({
+            const subscriber2 = clientFactory.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -202,7 +209,7 @@ describeRepeats('Group Key Persistence', () => {
             }
             expect(received2).toEqual(published)
             expect(received).toEqual(published.slice(0, 1))
-        }, 2 * TIMEOUT)
+        }, 3 * TIMEOUT)
 
         it('can run multiple publishers in parallel', async () => {
             const sub = await subscriber.subscribe({
@@ -210,7 +217,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             // ensure publishers don't clobber each others data
-            const publisher2 = await createClient({
+            const publisher2 = clientFactory.createClient({
                 id: 'publisher2',
                 auth: {
                     privateKey: publisherPrivateKey,
@@ -250,7 +257,7 @@ describeRepeats('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = await createClient({
+                publisher = clientFactory.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -291,7 +298,7 @@ describeRepeats('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = await createClient({
+                publisher = clientFactory.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -334,7 +341,7 @@ describeRepeats('Group Key Persistence', () => {
         const streams: Stream[] = []
 
         beforeEach(async () => {
-            publisher = await createClient({
+            publisher = clientFactory.createClient({
                 id: 'publisher',
                 auth: {
                     privateKey: publisherPrivateKey,

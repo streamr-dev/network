@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
