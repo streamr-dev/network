@@ -11,7 +11,6 @@ export { MessageStreamOnMessage as SubscriptionOnMessage }
 export class Subscription<T = unknown> extends MessageStream<T> {
     // @internal
     context: SubscriptionSession<T>
-    // TODO should we mark this internal and add a method to get the stream+partition of a subcription? (streamPartId is an internal data format)
     readonly streamPartId: StreamPartID
     /** prevent buffered data from yielding */
     // @internal
