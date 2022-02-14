@@ -17,6 +17,7 @@ import Validator from '../Validator'
 import BrubeckNode from '../BrubeckNode'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { Config, StrictStreamrClientConfig } from '../Config'
 
 export type { PublishMetadata }
 

@@ -21,6 +21,7 @@ export type ApiAuthenticationConfig = { keys: string[] } | null
 export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
 
 export interface Config {
+    $schema: string,
     client: ClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>
@@ -29,5 +30,10 @@ export interface Config {
 
 export const getDefaultFile = (): string => {
     const relativePath = '.streamr/config/default.json'
+    return path.join(os.homedir(), relativePath)
+}
+
+export const getLegacyDefaultFile = (): string => {
+    const relativePath = '/.streamr/broker-config.json'
     return path.join(os.homedir(), relativePath)
 }

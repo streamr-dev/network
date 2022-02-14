@@ -5,7 +5,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import { Stream } from '../../src/Stream'
-import { Subscription } from '../../src/subscribe/Subscription'
+import Subscription from '../../src/subscribe/Subscription'
 import Subscriber from '../../src/subscribe/Subscriber'
 
 const MAX_ITEMS = 3
