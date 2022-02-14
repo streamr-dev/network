@@ -16,10 +16,8 @@ export type MessageStreamOptions = {
     name?: string
 }
 
-/**
- * @category Important
- */
-export default class MessageStream<
+// @internal
+export class MessageStream<
     T = unknown,
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType

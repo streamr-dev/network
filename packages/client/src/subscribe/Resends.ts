@@ -8,7 +8,7 @@ import { instanceId, counterId } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
-import MessageStream, { MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
@@ -53,7 +53,7 @@ export type ResendRangeOptions = {
     publisherId?: string
 }
 
-export type ResendOptionsStrict = ResendLastOptions | ResendFromOptions | ResendRangeOptions
+export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -65,22 +65,6 @@ function isResendFrom<T extends ResendFromOptions>(options: any): options is T {
 
 function isResendRange<T extends ResendRangeOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
-}
-
-export type ResendOptions = StreamDefinition & (ResendOptionsStrict | { resend: ResendOptionsStrict })
-
-export function isResendOptions(options: any): options is ResendOptions {
-    if (options && typeof options === 'object' && 'resend' in options && options.resend) {
-        return isResendOptions(options.resend)
-    }
-
-    if (!options || typeof options !== 'object') { return false }
-
-    return !!(
-        isResendLast(options)
-        || isResendFrom(options)
-        || isResendRange(options)
-    )
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -103,17 +87,14 @@ export default class Resend implements Context {
     /**
      * Call last/from/range as appropriate based on arguments
      */
-
     async resend<T>(
+        streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
-        const resendOptions = (
-            (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
-        )
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
 
-        const sub = await this.resendMessages<T>(streamPartId, resendOptions)
+        const sub = await this.resendMessages<T>(streamPartId, options)
 
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -122,7 +103,7 @@ export default class Resend implements Context {
         return sub
     }
 
-    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
+    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(streamPartId, {
                 count: options.last,

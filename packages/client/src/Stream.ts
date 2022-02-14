@@ -333,12 +333,12 @@ class StreamrStream implements StreamMetadata {
 
     async detectFields() {
         // Get last message of the stream to be used for field detecting
-        const sub = await this._resends.resend({
-            id: this.id,
-            resend: {
+        const sub = await this._resends.resend(
+            this.id,
+            {
                 last: 1,
-            },
-        })
+            }
+        )
 
         const receivedMsgs = await sub.collectContent()
 

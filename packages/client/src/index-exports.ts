@@ -5,7 +5,10 @@ export * from './StreamrClient'
 export * from './Config'
 export * from './Stream'
 export * from './encryption/Encryption'
-export * from './subscribe/Subscriber'
+export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
+export { MessageStreamOnMessage } from './subscribe/MessageStream'
+export { ResendSubscription } from './subscribe/ResendSubscription'
+export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions } from './subscribe/Resends'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
@@ -19,6 +22,8 @@ export { ConfigTest, validateConfig, NetworkNodeStub }
 export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'
+
+export { StreamPartID } from 'streamr-client-protocol'
 
 // TODO should export these to support StreamMessageAsObject:
 // export {
