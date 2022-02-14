@@ -352,7 +352,8 @@
                                 "type": "boolean"
                             },
                             "timeout": {
-                                "type": "number"
+                                "type": "number",
+                                "default": 120000
                             },
                             "headers": {
                                 "type": "object"
