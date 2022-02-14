@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 import { get, omitBy, set } from 'lodash'
 import { Config, getDefaultFile, getLegacyDefaultFile } from './config'
 import { isValidConfig } from './validateConfig'
@@ -168,6 +169,12 @@ export const readConfigAndMigrateIfNeeded = (fileName: string | undefined): Conf
             // eslint-disable-next-line no-console
             console.log(`Migrating config ${fileName} to ${explicitTargetFile} (archiving the original file to ${backupFile})`)
             content = createMigratedConfig(content)
+            const directory = path.dirname(explicitTargetFile)
+            if (!fs.existsSync(directory)) {
+                fs.mkdirSync(directory, {
+                    recursive: true
+                })
+            }
             fs.writeFileSync(explicitTargetFile, JSON.stringify(content, undefined, 4))
             // read permissions from the source file and set the same permissions to the target file
             fs.chmodSync(explicitTargetFile, (fs.statSync(fileName).mode & parseInt('777', 8)).toString(8))
