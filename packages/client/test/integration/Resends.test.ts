@@ -9,7 +9,7 @@ import {
     clientOptions
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Resend from '../../src/subscriber/Resends'
+import Resend from '../../src/subscribe/Resends'
 
 import { Stream } from '../../src/Stream'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
