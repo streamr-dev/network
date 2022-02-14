@@ -137,24 +137,30 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainChainRPC: undefined, // Default to ethers.js default provider settings
-    dataUnionChainRPC: {
+    mainChainRPCs: undefined, // Default to ethers.js default provider settings
+    dataUnionChainRPCs: {
         name: 'gnosis',
-        url: 'https://rpc.xdaichain.com/',
         chainId: 100,
-        timeout: 120 * 1000
+        rpcs: [{
+            url: 'https://rpc.xdaichain.com/',
+            timeout: 120 * 1000
+        }]
     },
-    dataUnionBinanceWithdrawalChainRPC: {
+    dataUnionBinanceWithdrawalChainRPCs: {
         name: 'binance',
-        url: 'https://bsc-dataseed.binance.org/',
         chainId: 56,
-        timeout: 120 * 1000
+        rpcs: [{
+            url: 'https://bsc-dataseed.binance.org/',
+            timeout: 120 * 1000,
+        }]
     },
-    streamRegistryChainRPC: {
+    streamRegistryChainRPCs: {
         name: 'polygon',
-        url: 'https://polygon-rpc.com',
         chainId: 137,
-        timeout: 120 * 1000
+        rpcs: [{
+            url: 'https://polygon-rpc.com',
+            timeout: 120 * 1000
+        }]
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',

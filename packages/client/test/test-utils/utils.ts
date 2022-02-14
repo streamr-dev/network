@@ -233,6 +233,7 @@ export class LeaksDetector {
         '/container',
         '/childContainer',
         'rovider/formatter',
+        'chainProviders/0/formatter'
     ])
 
     private counter = CounterId(this.id, { maxPrefixes: 1024 })
