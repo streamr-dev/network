@@ -2,61 +2,25 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import AbortController from 'node-abort-controller'
-import split2 from 'split2'
-import { Readable } from 'stream'
+import { MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 
-import { instanceId, counterId } from './utils'
-import { Context, ContextError } from './utils/Context'
-import { inspect } from './utils/log'
+import { instanceId, counterId } from '../utils'
+import { Context, ContextError } from '../utils/Context'
+import { inspect } from '../utils/log'
 
-import MessageStream, { MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
-import { authRequest } from './authFetch'
 
-import { StorageNodeRegistry } from './StorageNodeRegistry'
-import { StreamEndpoints } from './StreamEndpoints'
-import { BrubeckContainer } from './Container'
-import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
-import { createQueryString } from './Rest'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import { StorageNodeRegistry } from '../StorageNodeRegistry'
+import { StreamEndpoints } from '../StreamEndpoints'
+import { BrubeckContainer } from '../Container'
+import { createQueryString, Rest } from '../Rest'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
-
-async function fetchStream(url: string, opts = {}, abortController = new AbortController()) {
-    const startTime = Date.now()
-    const response = await authRequest(url, {
-        signal: abortController.signal,
-        ...opts,
-    })
-    if (!response.body) {
-        throw new Error('No Response Body')
-    }
-
-    try {
-        // in the browser, response.body will be a web stream. Convert this into a node stream.
-        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
-
-        const stream = source.pipe(split2((message: string) => {
-            return StreamMessage.deserialize(message)
-        }))
-
-        stream.once('close', () => {
-            abortController.abort()
-        })
-
-        return Object.assign(stream, {
-            startTime,
-        })
-    } catch (err) {
-        abortController.abort()
-        throw err
-    }
-}
 
 const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
     const queryMap = {
@@ -89,7 +53,7 @@ export type ResendRangeOptions = {
     publisherId?: string
 }
 
-export type ResendOptionsStrict = ResendLastOptions | ResendFromOptions | ResendRangeOptions
+export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
 
 function isResendLast<T extends ResendLastOptions>(options: any): options is T {
     return options && typeof options === 'object' && 'last' in options && options.last != null
@@ -103,22 +67,6 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
     return options && typeof options === 'object' && 'from' in options && 'to' in options && options.to && options.from != null
 }
 
-export type ResendOptions = StreamDefinition & (ResendOptionsStrict | { resend: ResendOptionsStrict })
-
-export function isResendOptions(options: any): options is ResendOptions {
-    if (options && typeof options === 'object' && 'resend' in options && options.resend) {
-        return isResendOptions(options.resend)
-    }
-
-    if (!options || typeof options !== 'object') { return false }
-
-    return !!(
-        isResendLast(options)
-        || isResendFrom(options)
-        || isResendRange(options)
-    )
-}
-
 @scoped(Lifecycle.ContainerScoped)
 export default class Resend implements Context {
     id
@@ -129,6 +77,7 @@ export default class Resend implements Context {
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
+        @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
         this.id = instanceId(this)
@@ -138,17 +87,14 @@ export default class Resend implements Context {
     /**
      * Call last/from/range as appropriate based on arguments
      */
-
     async resend<T>(
+        streamDefinition: StreamDefinition,
         options: ResendOptions,
         onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
-        const resendOptions = (
-            (options && typeof options === 'object' && 'resend' in options && options.resend ? options.resend : options) as ResendOptionsStrict
-        )
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(options)
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
 
-        const sub = await this.resendMessages<T>(streamPartId, resendOptions)
+        const sub = await this.resendMessages<T>(streamPartId, options)
 
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -157,7 +103,7 @@ export default class Resend implements Context {
         return sub
     }
 
-    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptionsStrict): Promise<MessageStream<T>> {
+    private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
         if (isResendLast(options)) {
             return this.last<T>(streamPartId, {
                 count: options.last,
@@ -214,7 +160,7 @@ export default class Resend implements Context {
             count += 1
         })
 
-        const dataStream = await fetchStream(url)
+        const dataStream = await this.rest.fetchStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream

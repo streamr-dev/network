@@ -4,7 +4,7 @@ import { NotFoundError, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { until } from '../../src/utils'
 import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
-import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../utils'
+import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'

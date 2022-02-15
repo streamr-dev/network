@@ -5,7 +5,7 @@ import cors from 'cors'
 import express, { Request, Response } from 'express'
 import { Logger } from 'streamr-network'
 import { once } from 'events'
-import { HttpServerConfig } from './config'
+import { HttpServerConfig } from './config/config'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 const logger = new Logger(module)

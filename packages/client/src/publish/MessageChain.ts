@@ -8,8 +8,8 @@ import {
     StreamID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { CacheConfig } from './Config'
-import { randomString, CacheFn } from './utils'
+import { CacheConfig } from '../Config'
+import { randomString, CacheFn } from '../utils'
 
 export type MessageChainOptions = {
     publisherId: string

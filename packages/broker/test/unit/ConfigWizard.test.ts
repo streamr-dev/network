@@ -10,7 +10,7 @@ import {
     getPrivateKey,
     getNodeIdentity,
     start
-} from '../../src/ConfigWizard'
+} from '../../src/config/ConfigWizard'
 import { readFileSync } from 'fs'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'

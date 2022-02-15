@@ -4,14 +4,14 @@
 import { injectable } from 'tsyringe'
 import { OrderingUtil, StreamMessage, StreamPartID, MessageRef } from 'streamr-client-protocol'
 
-import { PushBuffer } from './utils/PushBuffer'
-import { Context } from './utils/Context'
-import Signal from './utils/Signal'
-import { instanceId } from './utils'
+import { PushBuffer } from '../utils/PushBuffer'
+import { Context } from '../utils/Context'
+import Signal from '../utils/Signal'
+import { instanceId } from '../utils'
 
 import Resends from './Resends'
-import MessageStream from './MessageStream'
-import { SubscribeConfig } from './Config'
+import { MessageStream } from './MessageStream'
+import { SubscribeConfig } from '../Config'
 
 /**
  * Wraps OrderingUtil into a PushBuffer.

@@ -3,11 +3,11 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
-import { PushPipeline, PipelineTransform } from './utils/Pipeline'
-import { instanceId } from './utils'
-import { Context } from './utils/Context'
+import { PushPipeline, PipelineTransform } from '../utils/Pipeline'
+import { instanceId } from '../utils'
+import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
-import * as G from './utils/GeneratorUtils'
+import * as G from '../utils/GeneratorUtils'
 
 export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
@@ -16,10 +16,8 @@ export type MessageStreamOptions = {
     name?: string
 }
 
-/**
- * @category Important
- */
-export default class MessageStream<
+// @internal
+export class MessageStream<
     T = unknown,
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType

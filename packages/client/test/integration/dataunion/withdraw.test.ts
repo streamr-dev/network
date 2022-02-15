@@ -13,15 +13,15 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
-import { expectInvalidAddress } from '../../utils'
+import { expectInvalidAddress } from '../../test-utils/utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus, DataUnion } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
 import BrubeckConfig from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
+const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPCs[0])
+const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPCs[0])
 const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
 const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
 

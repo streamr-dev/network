@@ -2,19 +2,18 @@ import 'reflect-metadata'
 import { container } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
 import BrubeckNode from '../../src/BrubeckNode'
-import Publisher from '../../src/Publisher'
+import Publisher from '../../src/publish/Publisher'
 import { initContainer } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'
-import { BrubeckContainer } from '../../src/Container'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
-import { FakeStreamRegistry } from './FakeStreamRegistry'
+import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
 
 const AUTHENTICATED_USER = '0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf'
 const PRIVATE_KEY = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 
-const createMockContainer = (
+const createMockContainer = async (
     brubeckNode: Pick<BrubeckNode, 'publishToNode'>,
 ) => {
     const { childContainer } = initContainer({
@@ -22,11 +21,9 @@ const createMockContainer = (
             privateKey: PRIVATE_KEY
         }
     }, container)
-    const streamRegistry = new FakeStreamRegistry(STREAM_ID, AUTHENTICATED_USER, childContainer)
     return childContainer
-        .registerInstance(StreamRegistry, streamRegistry as any)
-        .registerInstance(BrubeckNode, brubeckNode)
-        .registerInstance(BrubeckContainer, childContainer)
+        .registerSingleton(StreamRegistry, FakeStreamRegistry as any)
+        .register(BrubeckNode, { useValue: brubeckNode as any })
 }
 
 describe('Publisher', () => {
@@ -34,12 +31,14 @@ describe('Publisher', () => {
     let publisher: Pick<Publisher, 'publish' | 'stop'>
     let brubeckNode: Pick<BrubeckNode, 'publishToNode'>
 
-    beforeEach(() => {
+    beforeEach(async () => {
         brubeckNode = {
             publishToNode: jest.fn()
         }
-        const mockContainer = createMockContainer(brubeckNode)
+        const mockContainer = await createMockContainer(brubeckNode)
         publisher = mockContainer.resolve(Publisher)
+        const streamRegistry = mockContainer.resolve(StreamRegistry)
+        await streamRegistry.createStream(STREAM_ID)
     })
 
     it('happy path', async () => {
@@ -73,7 +72,6 @@ describe('Publisher', () => {
 
     it('partition and partitionKey', async () => {
         // eslint-disable-next-line max-len
-        const errorMessage = `Failed to publish to stream {"streamId":"${STREAM_ID}","partition":0} due to: Error: Invalid combination of "partition" and "partitionKey`
         return expect(() => {
             return publisher.publish({
                 streamId: STREAM_ID,
@@ -81,6 +79,6 @@ describe('Publisher', () => {
             }, {
                 foo: 'bar'
             }, TIMESTAMP, 'mockPartitionKey')
-        }).rejects.toThrow(errorMessage)
+        }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
     })
 })

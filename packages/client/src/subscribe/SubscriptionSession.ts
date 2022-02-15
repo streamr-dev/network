@@ -1,18 +1,17 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { NetworkNode } from 'streamr-network'
 
-import { Scaffold, instanceId, until } from './utils'
-import { Stoppable } from './utils/Stoppable'
-import { Context } from './utils/Context'
-import Signal from './utils/Signal'
-import MessageStream from './MessageStream'
+import { Scaffold, instanceId, until } from '../utils'
+import { Stoppable } from '../utils/Stoppable'
+import { Context } from '../utils/Context'
+import Signal from '../utils/Signal'
+import { MessageStream } from './MessageStream'
 
-import Subscription from './Subscription'
+import { Subscription } from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
-import { BrubeckContainer } from './Container'
-import BrubeckNode from './BrubeckNode'
+import { BrubeckContainer } from '../Container'
+import BrubeckNode, { NetworkNodeStub } from '../BrubeckNode'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -90,7 +89,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         await this.pipeline.push(msg as StreamMessage<T>)
     }
 
-    private async subscribe() {
+    private async subscribe(): Promise<NetworkNodeStub> {
         this.debug('subscribe')
         const node = await this.node.getNode()
         node.addMessageListener(this.onMessageInput)
@@ -98,7 +97,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
         return node
     }
 
-    private async unsubscribe(node: NetworkNode) {
+    private async unsubscribe(node: NetworkNodeStub) {
         this.debug('unsubscribe')
         this.pipeline.end()
         this.pipeline.return()
@@ -108,7 +107,7 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     }
 
     updateNodeSubscriptions = (() => {
-        let node: NetworkNode | undefined
+        let node: NetworkNodeStub | undefined
         return Scaffold([
             async () => {
                 node = await this.subscribe()
@@ -208,7 +207,6 @@ export default class SubscriptionSession<T> implements Context, Stoppable {
     /**
      * How many subscriptions
      */
-
     count(): number {
         return this.subscriptions.size
     }

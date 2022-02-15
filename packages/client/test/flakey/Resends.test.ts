@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../utils'
+import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
@@ -80,19 +80,20 @@ describeRepeats('StreamrClient resends', () => {
 
                 const receivedMessages: any[] = []
                 const onGotFirstMessage = Defer()
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
+                const sub = await client.resend(
+                    stream.id,
+                    {
                         from: {
                             timestamp: 0,
-                        },
+                        }
                     },
-                }, (msg) => {
-                    receivedMessages.push(msg)
-                    if (receivedMessages.length === 1) {
-                        onGotFirstMessage.resolve(undefined)
+                    (msg) => {
+                        receivedMessages.push(msg)
+                        if (receivedMessages.length === 1) {
+                            onGotFirstMessage.resolve(undefined)
+                        }
                     }
-                })
+                )
 
                 await pTimeout(onGotFirstMessage, 5000, 'waiting for first resent message')
                 client.debug('got first message')

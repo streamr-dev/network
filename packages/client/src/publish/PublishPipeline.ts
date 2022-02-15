@@ -4,27 +4,27 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
-import { inspect } from './utils/log'
-import { instanceId, Defer, Deferred } from './utils'
-import { Context, ContextError } from './utils/Context'
-import { PushPipeline, Pipeline } from './utils/Pipeline'
-import { Stoppable } from './utils/Stoppable'
+import { inspect } from '../utils/log'
+import { instanceId, Defer, Deferred } from '../utils'
+import { Context, ContextError } from '../utils/Context'
+import { PushPipeline, Pipeline } from '../utils/Pipeline'
+import { Stoppable } from '../utils/Stoppable'
 
 import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from './BrubeckNode'
+import BrubeckNode from '../BrubeckNode'
 import Signer from './Signer'
 import Encrypt from './Encrypt'
-import Validator from './Validator'
-import { DestroySignal } from './DestroySignal'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
+import Validator from '../Validator'
+import { DestroySignal } from '../DestroySignal'
+import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamDefinition } from '../types'
 
 export class FailedToPublishError extends Error {
     publishMetadata
     reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
-        super(`Failed to publish to stream ${JSON.stringify(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
+        super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
         this.publishMetadata = publishMetadata
         this.reason = reason
         if (Error.captureStackTrace) {
@@ -186,6 +186,8 @@ export default class PublishPipeline implements Context, Stoppable {
      * Creates a Defer to be resolved when message gets sent to node.
      */
     async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
+        // TODO the logged object contains a huge streamDefiniton if a Stream object is
+        // used -> truncate to minimal e.g. with streamDefinitionToString?
         this.debug('publish >> %o', publishMetadata)
         this.startQueue()
 

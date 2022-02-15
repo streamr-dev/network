@@ -3,13 +3,13 @@
  */
 import { StreamMessage } from 'streamr-client-protocol'
 
-import EncryptionUtil, { UnableToDecryptError } from './encryption/Encryption'
-import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { Context } from './utils/Context'
-import { DestroySignal } from './DestroySignal'
-import { Stoppable } from './utils/Stoppable'
-import { instanceId } from './utils'
+import EncryptionUtil, { UnableToDecryptError } from '../encryption/Encryption'
+import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { Context } from '../utils/Context'
+import { DestroySignal } from '../DestroySignal'
+import { Stoppable } from '../utils/Stoppable'
+import { instanceId } from '../utils'
 
 type IDecrypt<T> = {
     decrypt: (streamMessage: StreamMessage<T>) => Promise<void>

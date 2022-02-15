@@ -81,6 +81,51 @@
                 }
             }
         },
+        "_timeouts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "theGraph": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "storageNode": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "jsonRpc": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "timeout": {
+                            "type": "number"
+                        },
+                        "retryInterval": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "httpFetchTimeout": {
+                    "type": "number"
+                }
+            }
+        },
         "binanceAdapterAddress": {
             "type": "string",
             "format": "ethereum-address"
@@ -93,22 +138,22 @@
             "type": "string",
             "format": "uri"
         },
-        "mainChainRPC": {
+        "mainChainRPCs": {
             "anyOf": [{
-                "$ref": "#/definitions/chainConnectionInfo"
+                "$ref": "#/definitions/chainConnectionInfoList"
             }, {
                 "type": "string",
                 "format": "uri"
             }]
         },
-        "streamRegistryChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "streamRegistryChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
-        "dataUnionBinanceWithdrawalChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "dataUnionBinanceWithdrawalChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
-        "dataUnionChainRPC": {
-            "$ref": "#/definitions/chainConnectionInfo"
+        "dataUnionChainRPCs": {
+            "$ref": "#/definitions/chainConnectionInfoList"
         },
         "tokenAddress": {
             "type": "string",
@@ -272,11 +317,11 @@
         }
     },
     "definitions": {
-        "chainConnectionInfo": {
+        "chainConnectionInfoList": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "url"
+                "rpcs"
             ],
             "properties": {
                 "chainId": {
@@ -285,27 +330,38 @@
                 "name": {
                     "type": "string"
                 },
-                "url": {
-                    "type": "string",
-                    "format": "uri"
-                },
-                "user": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "allowInsecureAuthentication": {
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "type": "number"
-                },
-                "headers": {
-                    "type": "object"
+                "rpcs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "url"
+                        ],
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "user": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "type": "string"
+                            },
+                            "allowInsecureAuthentication": {
+                                "type": "boolean"
+                            },
+                            "timeout": {
+                                "type": "number",
+                                "default": 120000
+                            },
+                            "headers": {
+                                "type": "object"
+                            }
+                        }
+                    }
                 }
             }
         }
-
     }
 }
