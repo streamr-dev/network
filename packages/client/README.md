@@ -567,7 +567,7 @@ sub.on('resent', () => {
 You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```typescript
-import { StorageNode } from 'streamr-client')
+import { StorageNode } from 'streamr-client'
 ...
 // assign a stream to storage
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
@@ -650,7 +650,7 @@ All the below functions return a Promise which gets resolved with the result.
 | revokeAllPublicPermissions() | Removes all public permissions
 | setPermissionsForUser (user, canEdit, canDelete, canPublish, canSubscribe, canShare) | Defines the permissions for `user` by providing booleans for `canEdit`, `canPublish`, `canSubscribe` and `canShare` |
 | setPermissions(users[], permissions[]) | Grants each set of `StreamPermission` to their corresponding `users` element
- 
+
 ### Stream Operations and Permissions 
 The matrix below outlines the role types and permissions for streams.
 
