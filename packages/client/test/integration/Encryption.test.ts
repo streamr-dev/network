@@ -7,15 +7,14 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-    getCreateClient,
-    getPrivateKey
-} from '../utils'
+} from '../test-utils/utils'
 import { Defer, pLimitFn, until } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import { storageNodeTestConfig } from './devEnvironment'
+import { Subscription } from '../../src/subscribe/Subscription'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -31,8 +30,7 @@ describeRepeats('decryption', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
-
-    const createClient = getCreateClient()
+    let clientFactory: ClientFactory
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
@@ -53,6 +51,7 @@ describeRepeats('decryption', () => {
     }
 
     beforeEach(() => {
+        clientFactory = createClientFactory()
         errors = []
         expectErrors = 0
     })
@@ -64,7 +63,7 @@ describeRepeats('decryption', () => {
     })
 
     async function setupClient(opts?: any) {
-        const client = await createClient(opts)
+        const client = clientFactory.createClient(opts)
         await Promise.all([
             client.connect(),
         ])
@@ -72,15 +71,8 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-
-        stream = await createTestStream(publisher, module, {
-            requireEncryptedData: true,
-        })
-
-        await stream.addToStorageNode(await storageNodeClient.getAddress())
+        stream = await createTestStream(publisher, module)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 
@@ -98,8 +90,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await getPrivateKey() } }),
-            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await getPrivateKey() } }),
+            setupClient({ id: 'publisher', ...opts }),
+            setupClient({ id: 'subscriber', ...opts }),
         ])
     }
 
@@ -126,7 +118,7 @@ describeRepeats('decryption', () => {
 
         beforeEach(async () => {
             await setupStream()
-        })
+        }, 60000)
 
         describe('subscriber has permissions', () => {
             beforeEach(async () => {
@@ -250,9 +242,7 @@ describeRepeats('decryption', () => {
             }, TIMEOUT * 2)
 
             it('does not encrypt messages in stream without groupkey', async () => {
-                const stream2 = await createTestStream(publisher, module, {
-                    requireEncryptedData: false,
-                })
+                const stream2 = await createTestStream(publisher, module)
 
                 let didFindStream2 = false
 
@@ -296,7 +286,7 @@ describeRepeats('decryption', () => {
 
                     const published: any[] = []
                     publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                        if (!streamMessage.spid.matches(testStream.id)) { return }
+                        if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
                     })
                     await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
@@ -335,7 +325,7 @@ describeRepeats('decryption', () => {
 
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
                 await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
@@ -361,7 +351,7 @@ describeRepeats('decryption', () => {
                 await publisher.rotateGroupKey(stream.id)
                 const publishedStreamMessages: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
                     await publisher.rotateGroupKey(stream.id)
                 })
@@ -401,11 +391,11 @@ describeRepeats('decryption', () => {
                 const contentClear: any[] = []
                 const streamMessagesPublished: StreamMessage<any>[] = []
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
                 publisher.publisher.publishQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     streamMessagesPublished.push(streamMessage)
                 })
 
@@ -434,7 +424,7 @@ describeRepeats('decryption', () => {
                 })
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(stream.id)) { return }
+                    if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
                 await publishTestMessages(NUM_MESSAGES, {
@@ -443,12 +433,12 @@ describeRepeats('decryption', () => {
 
                 // resend without knowing the historical keys
                 await grantSubscriberPermissions()
-                const sub = await subscriber.resend({
-                    streamId: stream.id,
-                    resend: {
+                const sub = await subscriber.resend(
+                    stream.id,
+                    {
                         last: 2,
-                    },
-                })
+                    }
+                )
 
                 const received = await sub.collect()
 
@@ -472,12 +462,12 @@ describeRepeats('decryption', () => {
                     resend: {
                         last: 2,
                     },
-                })
+                }, (_msg: any) => {})
 
                 const received = await sub.collectContent(2)
 
                 expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
-            }, TIMEOUT * 2)
+            }, TIMEOUT * 3)
 
             describe('error handling', () => {
                 let sub: Subscription<any>
@@ -497,7 +487,7 @@ describeRepeats('decryption', () => {
                     contentClear = []
 
                     publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
-                        if (!streamMessage.spid.matches(stream.id)) { return }
+                        if (streamMessage.getStreamId() !== stream.id) { return }
                         contentClear.push(streamMessage.getParsedContent())
                     })
 
@@ -510,7 +500,7 @@ describeRepeats('decryption', () => {
                         // @ts-expect-error
                         groupKeys: keys,
                     })
-                    const subSession = subscriber.getSubscriptionSession(sub)
+                    const subSession = subscriber.getSubscriptionSession(sub.streamPartId)
                     if (!subSession) { throw new Error('no subsession?') }
                     subSession.pipeline.forEachBefore((streamMessage, index) => {
                         if (index === BAD_INDEX) {
@@ -541,7 +531,7 @@ describeRepeats('decryption', () => {
                         ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
                     ])
 
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
 
@@ -569,7 +559,7 @@ describeRepeats('decryption', () => {
                     expect(received).toEqual([
                         ...contentClear.slice(0, BAD_INDEX),
                     ])
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
 
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
@@ -593,7 +583,7 @@ describeRepeats('decryption', () => {
         it('client.subscribe can not decrypt encrypted messages if does not know the group key', async () => {
             const sub = await subscriber.subscribe({
                 stream: stream.id,
-            })
+            }, (_msg: any) => {})
 
             await publishTestMessages(3, {
                 timestamp: 1111111,
@@ -605,9 +595,7 @@ describeRepeats('decryption', () => {
         })
 
         it('does encrypt messages in stream that does not require encryption but groupkey is set anyway', async () => {
-            const stream2 = await createTestStream(publisher, module, {
-                requireEncryptedData: false,
-            })
+            const stream2 = await createTestStream(publisher, module)
 
             let didFindStream2 = false
 
@@ -642,7 +630,7 @@ describeRepeats('decryption', () => {
                 await publisher.rotateGroupKey(testStream.id)
                 const published: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
-                    if (!streamMessage.spid.matches(testStream.id)) { return }
+                    if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
                     await publisher.rotateGroupKey(testStream.id)
                 })
@@ -667,9 +655,7 @@ describeRepeats('decryption', () => {
         }, TIMEOUT * 2)
 
         it('sets group key per-stream', async () => {
-            const stream2 = await createTestStream(publisher, module, {
-                requireEncryptedData: false,
-            })
+            const stream2 = await createTestStream(publisher, module)
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
@@ -713,7 +699,7 @@ describeRepeats('decryption', () => {
 
                 const contentClear: any[] = []
                 publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
-                    if (!streamMessage.spid.matches(testStream.id)) { return }
+                    if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
                 await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
@@ -807,7 +793,7 @@ describeRepeats('decryption', () => {
                             clearTimeout(t)
                             t = setTimeout(() => {
                                 timedOut()
-                                sub.cancel().catch(() => {})
+                                sub.unsubscribe().catch(() => {})
                             }, 600000)
                         }
 

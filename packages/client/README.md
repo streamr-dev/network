@@ -19,9 +19,9 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 
 ## Important information
 
-The current stable version of the Streamr Client is `5.x` (at the time of writing, December 2021) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-alpha.19](https://www.npmjs.com/package/streamr-client/v/6.0.0-alpha.19) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-alpha.19` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
+The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.2](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.2) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.2` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
 
-----
+---
 
 ## Table of contents
 
@@ -42,8 +42,13 @@ npm install streamr-client
 ### Importing `streamr-client`
 When using Node.js remember to import the library with:
 
-```js
+```typescript
 import { StreamrClient } from 'streamr-client'
+```
+
+Or 
+```typescript
+const { StreamrClient } = require('streamr-client')
 ```
 
 For usage in the browser include the latest build:
@@ -54,11 +59,11 @@ For usage in the browser include the latest build:
 <script src="https://unpkg.com/streamr-client@5.5.7/streamr-client.web.js"></script>
 
 <!-- for Brubeck package (6x) -->
-<script src="https://unpkg.com/streamr-client@6.0.0-alpha.19/streamr-client.web.js"></script>
+<script src="https://unpkg.com/streamr-client@6.0.0-beta.2/streamr-client.web.js"></script>
 ```
 
 ### Creating a StreamrClient instance
-```js
+```typescript
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-ethereum-private-key'
@@ -118,22 +123,23 @@ const sub = await client.subscribe({
 ### Resending historical data
 
 ```typescript
-const sub = await client.resend({
+const sub = await client.resendSubscribe({
     stream: STREAM_ID,
     resend: {
         last: 5,
-    },
-}, (message) => {
-    // This is the message handler which gets called for every received message in the stream.
-    // Do something with the message here!
-})
+    }, 
+    (message) => {
+        // This is the message handler which gets called for every received message in the stream.
+        // Do something with the message here!
+    }
+)
 ```
 
 See "Subscription options" for resend options
 
 ### Publishing data points to a stream
 
-```js
+```typescript
 // Here's our example data point
 const msg = {
     temperature: 25.4,
@@ -166,6 +172,7 @@ await stream.publish(msg)
 ----
 
 ## Client configuration
+> ⚠️ Probably not all possible configurations should be detailed to developers?
 
 |   Option    | Possible Values | Default value  |  Description |
 | :--- | :--- | :--- | :--- |
@@ -360,7 +367,7 @@ If you don't have an Ethereum account you can use the utility function `StreamrC
 
 Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn't already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:
 
-```js
+```typescript
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
@@ -370,7 +377,7 @@ const client = new StreamrClient({
 
 Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:
 
-```js
+```typescript
 const client = new StreamrClient({
     auth: {
         ethereum: window.ethereum,
@@ -391,7 +398,7 @@ const client = new StreamrClient({
 
 Authenticating with a pre-existing session token (used internally by the Streamr app):
 
-```js
+```typescript
 const client = new StreamrClient({
     auth: {
         sessionToken: 'session-token'
@@ -401,12 +408,12 @@ const client = new StreamrClient({
 
 To extract the session token from an authenticated client:
 
-```js
+```typescript
 const bearerToken = await client.session.getSessionToken()
 ```
 
 Then for example,
-```js
+```typescript
     axios({
         headers: {
             Authorization: `Bearer ${bearerToken}`,
@@ -434,7 +441,7 @@ Calls that need a connection, such as `publish` or `subscribe` will fail with an
 | enableAutoConnect(enable = true)    | Enables autoConnect if it wasn't already enabled. Does not connect immediately. Use `enableAutoConnect(false)` to disable autoConnect.                                                              |
 | enableAutoDisconnect(enable = true) | Enables autoDisconnect if it wasn't already enabled. Does not disconnect immediately. Use `enableAutoConnect(false)` to disable autoDisconnect.                                                     |
 
-```js
+```typescript
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
@@ -503,9 +510,9 @@ Note that only one of the resend options can be used for a particular subscripti
 | resend    | Object defining the resend options. Below are examples of its contents.            |
 | groupKeys | Object defining the group key as a hex string for each publisher id of the stream. |
 
-```js
+```typescript
 // Resend N most recent messages
-const sub1 = await client.subscribe({
+const sub1 = await client.subscribeResend({
     streamId: STREAM_ID,
     resend: {
         last: 10,
@@ -513,7 +520,7 @@ const sub1 = await client.subscribe({
 }, onMessage)
 
 // Resend from a specific message reference up to the newest message
-const sub2 = await client.subscribe({
+const sub2 = await client.subscribeResend({
     streamId: STREAM_ID,
     resend: {
         from: {
@@ -526,7 +533,7 @@ const sub2 = await client.subscribe({
 }, onMessage)
 
 // Resend a limited range of messages
-const sub3 = await client.subscribe({
+const sub3 = await client.subscribeResend({
     streamId: STREAM_ID,
     resend: {
         from: {
@@ -546,7 +553,7 @@ const sub3 = await client.subscribe({
 
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
-```js
+```typescript
 // THIS CODE DOES NOT CURRENTLY WORK! 
 // COULD NOT FIND A REPLACEMENT
 const sub = await client.subscribe(options)
@@ -564,8 +571,6 @@ import { StorageNode } from 'streamr-client')
 ...
 // assign a stream to storage
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
-// wait for the operation to complete
-await stream.waitUntilStorageNodeAssigned()
 // fetch the storage nodes for a stream
 const storageNodes = stream.getStorageNodes()
 // remove the stream from a storage node
@@ -624,67 +629,51 @@ const stream = await client.getOrCreateStream({
 
 All the below functions return a Promise which gets resolved with the result.
 
+
+
+
 | Name                                      | Description                                                                                                                                                                                                                                                                   |
 | :---------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | update()                                  | Updates the properties of this stream object by sending them to the API.                                                                                                                                                                                                      |
 | delete()                                  | Deletes this stream.                                                                                                                                                                                                                                                          |
 | getPermissions()                          | Returns the list of permissions for this stream.                                                                                                                                                                                                                              |
-| hasPermission(operation, user)            | Returns a permission object, or null if no such permission was found. Valid `operation` values for streams are: `stream_get`, `stream_edit`, `stream_delete`, `stream_publish`, `stream_subscribe`, and `stream_share`. `user` is the address of a user, or null for public permissions. |
-| hasPermissions(operations[], user) | Returns an array of permissions |
-| grantPermission(operation, user)          | Grants the permission to do `operation` to `user`, which are defined as above.                                                                                                                                                                                                |
-| grantPermissions(operations[], user)          | Grants the permissions to do `operation` array to `user`, which are defined as above.                                                                                                                                                                                    |
-| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                       |
-| revokeUserPermission(operation, user)            | Revokes the permission for `operation` previously granted to `user`        |
-| revokeUserPermissions(operations[], user)            | Revokes the permissions for `operation` array previously granted to `user`        |
-| revokeAllUserPermissions(user) | Revokes all permissions to `user` for that stream |
+| revokeUserPermission(operation, user)            | Revokes the permission for `operation` previously granted to `user`        |       
 | revokeAllPublicPermissions() | Revokes all permissions to `user` for that stream |
 | detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream.                                                                                                                                                                                        |
 | publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                                                                                                                                                                                                                                       |
-| getMyPermissions() | returns an array of `StreamPermission` |
 | hasUserPermission(operation, user) | Returns the StreamPermission for `user` on `operation`, if found, or `undefined` |
-| hasUserPermissions(operations[], user) |  Returns an array of StreamPermissions for `user` under `operations`
 | hasPublicPermission(operation) | Checks if the public permission for `operation` exists on the stream |
-| hasPublicPermissions(operations[]) | Checks all `operations` array for the public permission
 | grantUserPermission | Alias of `grantPermission`
-| grantUserPermissions | Alias of `grantPermissions`
 | grantPublicPermission(operation) | Grants public permission to the `operation`
-| grantPublicPermissions(operations[]) | Grants public permissions to the `operations` array
 | revokePublicPermission(operation) | Removes the public permission on the `operation`
-| revokePublicPermissions(operations[]) | Removes the public permissions for the `operations` array
-| revokePermissions(operations[], user) | Removes the `operations` array permissions from `user`
-| getUserPermissions(user) | Returns a `Promise` with an array of `StreamPermission` for `user`
-| getPublicPermissions | Returns public permissions for the stream
-| getMatchingPermissions(operations[], user) | Finds permissions matching `operations` array and `user` for the stream
-| revokeMatchingPermissions(operations[], user) | Removes permissions matching `operations` array and `user`
-| revokeAllPermissions(user) | Removes all permissions for `user`
+| revokeAllUserPermissions(user) | Removes all permissions for `user`
+| revokeAllPublicPermissions() | Removes all public permissions
+| setPermissionsForUser (user, canEdit, canDelete, canPublish, canSubscribe, canShare) | Defines the permissions for `user` by providing booleans for `canEdit`, `canPublish`, `canSubscribe` and `canShare` |
+| setPermissions(users[], permissions[]) | Grants each set of `StreamPermission` to their corresponding `users` element
+ 
 ### Stream Operations and Permissions 
 The matrix below outlines the role types and permissions for streams.
 
 |Permissions | User can | Subscriber | Publisher | Editor | Owner |
 |:--|:--|:--|:--|:--|:--|
-| stream_get | Fetch stream details|✔️|✔️|✔️|✔️|
-| stream_edit | Edit stream details| | |✔️|✔️|
-| stream_delete | Delete the stream| | | |✔️|
-| stream_publish | Publish to stream| |✔️|✔️|✔️|
-| stream_subscribe | Subscribe to stream|✔️| |✔️|✔️|
-| stream_share | Edit stream permissions| | | |✔️|
+| canEdit | Edit stream details| | |✔️|✔️|
+| canDelete | Delete the stream| | | |✔️|
+| canPublish | Publish to stream| |✔️|✔️|✔️|
+| canSubscribe | Subscribe to stream|✔️| |✔️|✔️|
+| canGrant | Edit stream permissions| | | |✔️|
+
 ## Data Unions
 
 This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
-```js
+```typescript
 const dataUnion = await client.deployDataUnion()
 ```
 
 To get an existing (previously deployed) `DataUnion` instance:
-```js
-const dataUnion = client.getDataUnion(dataUnionAddress)
-```
-
-Or to verify untrusted (e.g. user) input, use:
-```js
-const dataUnion = await client.safeGetDataUnion(dataUnionAddress)
+```typescript
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 ```
 
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
@@ -708,17 +697,16 @@ Adding members using admin functions is not at feature parity with the member fu
 | createSecret(\[name])             | string              | Create a secret for a Data Union                               |
 | addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
-| setAdminFee(newFeeFraction[, ethersOptions]) `**`                                                     | Transaction receipt     | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 | withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
 
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.<br>
-`**` `ethersOptions` that `setAdminFee` takes can be found as ["overrides" documented in docs.ethers.io](https://docs.ethers.io/v5/api/contract/contract/#contract-functionsSend).
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
-```js
+```typescript
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
@@ -752,32 +740,32 @@ const receipt = await dataUnion.addMembers([
 
 Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
-```js
+```typescript
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
     auth: { privateKey },
 })
 
-const dataUnion = client.getDataUnion(dataUnionAddress)
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 ```
 
 Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
 
-```js
+```typescript
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
     auth: { privateKey },
 })
 
-const dataUnion = client.getDataUnion(dataUnionAddress)
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
 ```
 
 The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
-```js
+```typescript
 const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
     payForTransport: false,
     waitUntilTransportIsComplete: false,
@@ -800,10 +788,11 @@ These are available for everyone and anyone, to query publicly available info fr
 
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
-```js
+```typescript
 import { StreamrClient } from 'streamr-client'
 
-const dataUnion = new StreamrClient().getDataUnion(dataUnionAddress)
+const client = new StreamrClient()
+const dataUnion = await client.getDataUnion(dataUnionAddress)
 const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 ```
 
@@ -904,7 +893,7 @@ You can bind to them using `on`.
 | disconnected |                   | Fired when the client has disconnected (or paused).              |
 | error        | Error             | Fired when the client encounters an error e.g. connection issues |
 
-```js
+```typescript
 // The StreamrClient emits various events
 client.on('connected', () => {
     // note no need to wait for this before doing work,
@@ -929,7 +918,7 @@ Partitioning (sharding) enables streams to scale horizontally. This section desc
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
 
-```js
+```typescript
 const stream = await client.createStream({
     id: `${await client.getAddress()}/partitioned-stream`,
     partitions: 10,
@@ -945,7 +934,7 @@ The library allows the user to choose a _partition key_, which simplifies publis
 
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
-```js
+```typescript
 await client.publish(STREAM_ID, msg, Date.now(), msg.vehicleId)
 
 // or, equivalently
@@ -956,7 +945,7 @@ await stream.publish(msg, Date.now(), msg.vehicleId)
 
 By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
 
-```js
+```typescript
 const sub = await client.subscribe({
     stream: STREAM_ID,
     partition: 4, // defaults to 0
@@ -967,7 +956,7 @@ const sub = await client.subscribe({
 
 Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
 
-```js
+```typescript
 const handler = (payload, streamMessage) => {
     console.log('Got message %o from partition %d', payload, streamMessage.getStreamPartition())
 }
@@ -986,7 +975,7 @@ In some cases the client might be interested in publishing data without particip
 
 Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
-```js
+```typescript
 // Open publish proxy to a node on stream
 await publishingClient.setPublishProxy(stream, 'proxyNodeId')
 

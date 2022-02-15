@@ -4,11 +4,11 @@ import { wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { BrubeckClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/Subscriber'
-import Subscription from '../../src/Subscription'
+import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../utils'
-import { storageNodeTestConfig } from './devEnvironment'
+import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../test-utils/utils'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -52,13 +52,9 @@ describeRepeats('GapFill', () => {
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
-        // const storageNodeClient = await createClient({ auth: {
-        //     privateKey: storageNodeTestConfig.privatekey
-        // } })
-        // await storageNodeClient.setNode(storageNodeTestConfig.url)
-        await stream.addToStorageNode(storageNodeTestConfig.address)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestStreamMessages(client, stream, { waitForLast: true })
+        publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client
     }
 
@@ -67,11 +63,11 @@ describeRepeats('GapFill', () => {
         onError = jest.fn()
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         if (!subscriber || !stream) { return }
-        expect(subscriber.count(stream.id)).toBe(0)
+        expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(subscriber.getSubscriptions()).toEqual([])
+        expect(await subscriber.getSubscriptions()).toEqual([])
     })
 
     afterEach(async () => {
@@ -111,7 +107,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -136,7 +132,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -158,7 +154,7 @@ describeRepeats('GapFill', () => {
                     return undefined
                 })
 
-                expect(subscriber.count(stream.id)).toBe(1)
+                expect(await subscriber.count(stream.id)).toBe(1)
 
                 const published = await publishTestMessages(MAX_MESSAGES)
 
@@ -180,10 +176,12 @@ describeRepeats('GapFill', () => {
                     waitForLast: true,
                 })
 
-                const sub = await client.resend<typeof Msg>({
-                    stream,
-                    last: MAX_MESSAGES,
-                })
+                const sub = await client.resend<typeof Msg>(
+                    stream.id,
+                    {
+                        last: MAX_MESSAGES
+                    }
+                )
 
                 sub.pipeBefore(async function* DropMessages(src) {
                     for await (const msg of src) {
@@ -226,10 +224,12 @@ describeRepeats('GapFill', () => {
                     }
                 })
 
-                const sub = await client.resend({
-                    stream,
-                    last: MAX_MESSAGES,
-                })
+                const sub = await client.resend(
+                    stream.id,
+                    {
+                        last: MAX_MESSAGES
+                    }
+                )
 
                 const received = []
                 for await (const m of sub) {
@@ -246,10 +246,12 @@ describeRepeats('GapFill', () => {
                 })
 
                 await expect(async () => {
-                    await client.resend({
-                        stream,
-                        last: MAX_MESSAGES,
-                    })
+                    await client.resend(
+                        stream.id,
+                        {
+                            last: MAX_MESSAGES
+                        }
+                    )
                 }).rejects.toThrow('storage')
             })
         })
@@ -279,7 +281,7 @@ describeRepeats('GapFill', () => {
             }
 
             const sub = await client.subscribe({
-                stream,
+                id: stream.id
             })
 
             const publishedTask = publishTestMessages(MAX_MESSAGES)
@@ -322,10 +324,12 @@ describeRepeats('GapFill', () => {
                 waitForLast: true,
             })
 
-            const sub = await client.resend({
-                stream,
-                last: MAX_MESSAGES,
-            })
+            const sub = await client.resend(
+                stream.id,
+                {
+                    last: MAX_MESSAGES
+                }
+            )
 
             const received: any[] = []
             for await (const m of sub) {

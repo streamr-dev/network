@@ -3,15 +3,13 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { Protocol, Tracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
-    StorageAssignmentEventManager,
-    waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     startTestTracker
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
@@ -22,8 +20,7 @@ const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
-const NODE_HOST = '127.0.0.1'
-const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
+const REST_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`
 const HTTP_PORT = 17770
 const TRACKER_PORT = 17772
 
@@ -34,15 +31,14 @@ describe('StorageConfig', () => {
     let broker: Broker
     let client: StreamrClient
     let stream: Stream
-    let assignmentEventManager: StorageAssignmentEventManager
     let publisherAccount: Wallet
     let storageNodeAccount: Wallet
     let brokerAccount: Wallet
 
     beforeAll(async () => {
-        publisherAccount = new Wallet(await getPrivateKey())
-        storageNodeAccount = new Wallet(await getPrivateKey())
-        brokerAccount = new Wallet(await getPrivateKey())
+        publisherAccount = new Wallet(await fetchPrivateKeyWithGas())
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
+        brokerAccount = fastWallet()
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -55,17 +51,15 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         tracker = await startTestTracker(TRACKER_PORT)
         const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${HTTP_PORT}/api/v1"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${HTTP_PORT}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort: TRACKER_PORT,
             httpPort: HTTP_PORT,
             restUrl: REST_URL,
-            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
         broker = await startBroker({
@@ -76,19 +70,20 @@ describe('StorageConfig', () => {
             enableCassandra: false
         })
         client = await createClient(tracker, publisherAccount.privateKey)
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
-        await assignmentEventManager.createStream()
     })
 
     afterEach(async () => {
         await client.destroy()
-        await Promise.allSettled([storageNode.stop(), broker.stop(), tracker.stop(), assignmentEventManager.close()])
+        await Promise.allSettled([
+            storageNode?.stop(),
+            broker?.stop(),
+            tracker?.stop()
+        ])
     })
 
     it('when client publishes a message, it is written to the store', async () => {
         stream = await createTestStream(client, module)
-        await assignmentEventManager.addStreamToStorageNode(stream.id, storageNodeAccount.address, client)
-        await waitForStreamPersistedInStorageNode(stream.id, 0, NODE_HOST, HTTP_PORT)
+        await stream.addToStorageNode(storageNodeAccount.address)
         const publishMessage = await client.publish(stream.id, {
             foo: 'bar'
         })

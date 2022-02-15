@@ -1,15 +1,15 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
 import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
-import { STREAMR_DOCKER_DEV_HOST, createTestStream, getPrivateKey } from "../../../utils"
+import { STREAMR_DOCKER_DEV_HOST } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
 import { Protocol } from 'streamr-network'
-import { ConfigTest, StreamrClient } from 'streamr-client'
-import { StreamIDUtils } from 'streamr-client-protocol'
+import { toStreamID } from 'streamr-client-protocol'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(30000)
 
-const { StreamMessage, MessageIDStrict } = Protocol.MessageLayer
+const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
 
@@ -56,7 +56,7 @@ async function storeMockMessages({
     for (let i = 0; i < count; i++) {
         const timestamp = Math.floor((i / (count - 1)) * (1E10))
         const msg = new StreamMessage({
-            messageId: new MessageIDStrict(StreamIDUtils.toStreamID(streamId), 0, timestamp, 0, '', ''),
+            messageId: new MessageID(toStreamID(streamId), 0, timestamp, 0, '', ''),
             content: JSON.stringify({})
         })
         storePromises.push(storage.store(msg))
@@ -97,20 +97,9 @@ describe('CassandraNullPayloads', () => {
         await storage.close()
     })
 
-    test('insert a null payload and retreve n-1 messages (null not included in return set)', async () => {
+    test('insert a null payload and retrieve n-1 messages (null not included in return set)', async () => {
         const HEALTHY_MESSAGE_COUNT = 9
-
-        const streamrClient = new StreamrClient({
-            ...ConfigTest,
-            auth: {
-                privateKey: await getPrivateKey()
-            },
-            restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-        })
-
-        const stream = await createTestStream(streamrClient, module)
-        await streamrClient.destroy()
-        const streamId = stream.id
+        const streamId = toStreamID('/CassandraNullPayloads', randomEthereumAddress())
 
         const bucketId = await insertBucket(cassandraClient, streamId)
 

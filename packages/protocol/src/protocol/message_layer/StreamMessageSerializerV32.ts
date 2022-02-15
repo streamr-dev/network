@@ -1,6 +1,6 @@
 import StreamMessage from './StreamMessage'
 import MessageRef from './MessageRef'
-import MessageIDStrict from './MessageIDStrict'
+import MessageID from './MessageID'
 import EncryptedGroupKey from './EncryptedGroupKey'
 
 import { Serializer } from '../../Serializer'
@@ -40,7 +40,7 @@ export default class StreamMessageSerializerV32 extends Serializer<StreamMessage
         ] = arr
 
         return new StreamMessage({
-            messageId: MessageIDStrict.fromArray(messageIdArr),
+            messageId: MessageID.fromArray(messageIdArr),
             prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
             content: serializedContent,
             messageType,

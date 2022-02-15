@@ -3,10 +3,12 @@ const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
 const bytes = require('bytes')
 const fetch = require('node-fetch')
-const keyserver = require('../keyserver')
+const { KeyServer } = require('streamr-test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
+
+const keyserver = new KeyServer()
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
 async function getPrivateKey() {
@@ -86,12 +88,12 @@ async function run() {
     async function test(client, stream, batchSize) {
         return async function Fn(deferred) {
             this.BATCH_SIZE = batchSize
-            const sub = await client.resend({
-                streamId: stream.id,
-                resend: {
+            const sub = await client.resend(
+                stream.id,
+                {
                     last: batchSize,
                 }
-            })
+            )
             await sub.collect(batchSize)
             deferred.resolve()
         }
@@ -115,16 +117,8 @@ async function run() {
 
     log('setting up...')
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
-        setup({
-            publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: false,
-        }),
-        setup({
-            publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: true,
-        })
+        setup(),
+        setup()
     ])
 
     for (const payloadBytes of PAYLOAD_SIZES) {
@@ -168,7 +162,7 @@ async function run() {
     })
 
     suite.on('complete', () => {
-        keyserver.close()
+        keyserver.destroy()
     })
 
     log('starting')

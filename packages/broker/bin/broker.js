@@ -1,12 +1,9 @@
 #!/usr/bin/env node
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-
 const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version
 const { createBroker } = require('../dist/src/broker')
+const { readConfigAndMigrateIfNeeded } = require('../dist/src/config/migration')
 
 program
     .version(CURRENT_VERSION)
@@ -17,23 +14,15 @@ program
     .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
-        if (configFile == null) {
-            configFile = path.join(os.homedir(), '/.streamr/broker-config.json')
-            if (!fs.existsSync(configFile)) {
-                // eslint-disable-next-line max-len
-                console.error('Config file not found in the default location ~/.streamr/broker-config.json. You can run "streamr-broker-init" to generate a config file interactively, or specify the config file as argument: "streamr-broker path-to-config/file.json"')
-                process.exit(1)
-            }
-        }
-        let config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
-        if (program.opts().restUrl) {
-            config.client.restUrl = program.opts().restUrl
-        }
-        if (program.opts().networkId) {
-            config.network.id = program.opts().networkId
-        }
-
         try {
+            const config = readConfigAndMigrateIfNeeded(configFile)
+            if (program.opts().restUrl) {
+                config.client.restUrl = program.opts().restUrl
+            }
+            if (program.opts().networkId) {
+                config.network.id = program.opts().networkId
+            }
+
             const broker = await createBroker(config, true)
             if (!program.opts().test) {
                 await broker.start()

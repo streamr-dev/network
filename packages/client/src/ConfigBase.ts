@@ -11,8 +11,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-import type { Todo } from './types'
-
 import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
@@ -24,11 +22,20 @@ export type CacheConfig = {
     maxAge: number
 }
 
-export type PublishConfig = {
-    maxPublishQueueSize: number
-    publishWithSignature: Todo
-    publisherStoreKeyHistory: boolean
-    publishAutoDisconnectDelay: number,
+type TimeoutsConfig = {
+    theGraph: {
+        timeout: number
+        retryInterval: number
+    }
+    storageNode: {
+        timeout: number
+        retryInterval: number
+    }
+    jsonRpc: {
+        timeout: number
+        retryInterval: number
+    }
+    httpFetchTimeout: number
 }
 
 export type SubscribeConfig = {
@@ -37,7 +44,7 @@ export type SubscribeConfig = {
     gapFill: boolean
     maxGapRequests: number
     maxRetries: number
-    verifySignatures: Todo
+    verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
@@ -81,17 +88,17 @@ export type StrictStreamrClientConfig = {
     /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
     streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    nodeRegistryChainAddress: EthereumAddress, // this saves sorage nodes with their urls
     streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
         // noderegistry contracts and saves what streams are stored by which storagenodes
+    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
     ensCacheChainAddress: EthereumAddress,
-    keyExchange: Todo
     dataUnion: DataUnionConfig
     cache: CacheConfig,
+    /** @internal */
+    _timeouts: TimeoutsConfig
 } & (
     EthereumConfig
     & ConnectionConfig
-    & PublishConfig
     & SubscribeConfig
     & EncryptionConfig
 )
@@ -109,8 +116,8 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    restUrl: 'https://streamr.network/api/v1/',
-    theGraphUrl: 'needs chaging once server is up in production',
+    restUrl: 'https://streamr.network/api/v2',
+    theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
@@ -123,40 +130,47 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFill: true,
     maxGapRequests: 5,
     maxRetries: 5,
-    maxPublishQueueSize: 10000,
-    publishAutoDisconnectDelay: 5000,
 
     // Encryption options
-    publishWithSignature: 'auto',
     verifySignatures: 'auto',
-    publisherStoreKeyHistory: true,
     groupKeys: {}, // {streamId: groupKey}
-    keyExchange: {},
 
     // Ethereum and Data Union related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainChainRPC: undefined, // Default to ethers.js default provider settings
-    dataUnionChainRPC: {
-        url: 'https://rpc.xdaichain.com/',
-        chainId: 100
+    mainChainRPCs: undefined, // Default to ethers.js default provider settings
+    dataUnionChainRPCs: {
+        name: 'gnosis',
+        chainId: 100,
+        rpcs: [{
+            url: 'https://rpc.xdaichain.com/',
+            timeout: 120 * 1000
+        }]
     },
-    dataUnionBinanceWithdrawalChainRPC: {
-        url: 'https://bsc-dataseed.binance.org/',
-        chainId: 56
+    dataUnionBinanceWithdrawalChainRPCs: {
+        name: 'binance',
+        chainId: 56,
+        rpcs: [{
+            url: 'https://bsc-dataseed.binance.org/',
+            timeout: 120 * 1000,
+        }]
     },
-    streamRegistryChainRPC: {
-        url: 'https://rpc.xdaichain.com/',
-        chainId: 100
+    streamRegistryChainRPCs: {
+        name: 'polygon',
+        chainId: 137,
+        rpcs: [{
+            url: 'https://polygon-rpc.com',
+            timeout: 120 * 1000
+        }]
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
     tokenSidechainAddress: '0x256eb8a51f382650B2A1e946b8811953640ee47D',
     binanceAdapterAddress: '0x193888692673b5dD46e6BC90bA8cBFeDa515c8C1',
     binanceSmartChainAMBAddress: '0x05185872898b6f94aa600177ef41b9334b1fa48b',
     withdrawServerUrl: 'https://streamr.com:3000',
-    streamRegistryChainAddress: '0xa86863053cECFD9f6f861e0Fd39a042238411b75',
-    nodeRegistryChainAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-    streamStorageRegistryChainAddress: '0xE4eA76e830a659282368cA2e7E4d18C4AE52D8B3',
-    ensCacheChainAddress: '',
+    streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
+    streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
+    storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
+    ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
     dataUnion: {
         minimumWithdrawTokenWei: '1000000',
         payForTransport: true,
@@ -165,9 +179,30 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateMainnetAddress: '0x67352e3F7dBA907aF877020aE7E9450C0029C70c',
         templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
+    ethereumNetworks: {
+        polygon: {
+            chainId: 137,
+            gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
+        }
+    },
     cache: {
         maxSize: 10000,
         maxAge: 30 * 60 * 1000, // 30 minutes
+    },
+    _timeouts: {
+        theGraph: {
+            timeout: 60 * 1000,
+            retryInterval: 1000
+        },
+        storageNode: {
+            timeout: 30 * 1000,
+            retryInterval: 1000
+        },
+        jsonRpc: {
+            timeout: 30 * 1000,
+            retryInterval: 1000
+        },
+        httpFetchTimeout: 30 * 1000
     }
 }
 

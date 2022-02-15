@@ -1,17 +1,14 @@
-import { getCreate2Address, isAddress } from '@ethersproject/address'
-import { arrayify, BytesLike, hexZeroPad } from '@ethersproject/bytes'
+import { isAddress } from '@ethersproject/address'
+import { arrayify, BytesLike } from '@ethersproject/bytes'
 import { Contract, ContractReceipt } from '@ethersproject/contracts'
-import { keccak256 } from '@ethersproject/keccak256'
-import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
-import { Todo } from '../types'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
-import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import DataUnionAPI from './index'
 import { EthereumAddress } from 'streamr-client-protocol'
+import { AmbMessageHash } from './DataUnion'
 
 const log = Debug('Contracts')
 
@@ -29,7 +26,7 @@ export default class Contracts {
     templateSidechainAddress: EthereumAddress
     binanceAdapterAddress: EthereumAddress
     binanceSmartChainAMBAddress: EthereumAddress
-    cachedSidechainAmb?: Todo
+    cachedSidechainAmb?: Contract | Promise<Contract>
 
     constructor(client: DataUnionAPI) {
         this.ethereum = client.ethereum
@@ -41,67 +38,62 @@ export default class Contracts {
         this.binanceSmartChainAMBAddress = client.options.binanceSmartChainAMBAddress
     }
 
-    async fetchDataUnionMainnetAddress(
-        dataUnionName: string,
-        deployerAddress: EthereumAddress
-    ): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
-    }
-
-    getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
-        validateAddress("deployer's address", deployerAddress)
-        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
-        const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
-        return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
-    }
-
-    async fetchDataUnionSidechainAddress(duMainnetAddress: EthereumAddress): Promise<EthereumAddress> {
-        const provider = this.ethereum.getMainnetProvider()
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, provider)
-        return factoryMainnet.sidechainAddress(duMainnetAddress)
-    }
-
-    getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
-        validateAddress('DU mainnet address', mainnetAddress)
-        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
-        const codeHash = keccak256(code)
-        return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
-    }
-
-    getMainnetContractReadOnly(contractAddress: EthereumAddress) {
+    /**
+     * Check if there is a data union in given address, return its version
+     * @returns 0 if target address is not a Data Union contract
+     */
+    async getVersion(contractAddress: EthereumAddress): Promise<number> {
         validateAddress('contractAddress', contractAddress)
+        const provider = this.ethereum.getMainnetProvider()
+        const du = new Contract(contractAddress, [{
+            name: 'version',
+            inputs: [],
+            outputs: [{ type: 'uint256' }],
+            stateMutability: 'view',
+            type: 'function'
+        }], provider)
+        try {
+            const version = await du.version() as BigNumber
+            return version.toNumber()
+        } catch (e) {
+            // "not a data union"
+            return 0
+        }
+    }
+
+    async getMainnetContractReadOnly(contractAddress: EthereumAddress) {
+        const version = await this.getVersion(contractAddress)
+        if (version === 0) {
+            throw new Error(`${contractAddress} is not a Data Union contract`)
+        }
         const provider = this.ethereum.getMainnetProvider()
         return new Contract(contractAddress, dataUnionMainnetABI, provider)
     }
 
-    getMainnetContract(contractAddress: EthereumAddress) {
-        const du = this.getMainnetContractReadOnly(contractAddress)
+    async getMainnetContract(contractAddress: EthereumAddress) {
+        const du = await this.getMainnetContractReadOnly(contractAddress)
         const signer = this.ethereum.getSigner()
         return du.connect(signer)
     }
 
     async getSidechainContract(contractAddress: EthereumAddress) {
         const signer = await this.ethereum.getDataUnionChainSigner()
-        const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duMainnet = await this.getMainnetContractReadOnly(contractAddress)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
         return duSidechain
     }
 
     async getSidechainContractReadOnly(contractAddress: EthereumAddress) {
         const provider = this.ethereum.getDataUnionChainProvider()
-        const duMainnet = this.getMainnetContractReadOnly(contractAddress)
-        const duSidechainAddress = this.getDataUnionSidechainAddress(duMainnet.address)
+        const duMainnet = await this.getMainnetContractReadOnly(contractAddress)
+        const duSidechainAddress = await duMainnet.sidechainAddress()
         const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
         return duSidechain
     }
 
     // Find the Asyncronous Message-passing Bridge sidechain ("home") contract
-    async getSidechainAmb() {
+    async getSidechainAmb(): Promise<Contract> {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
                 const sidechainProvider = this.ethereum.getDataUnionChainProvider()
@@ -141,7 +133,7 @@ export default class Contracts {
         return new Contract(this.binanceSmartChainAMBAddress, mainnetAmbABI, signer)
     }
 
-    async requiredSignaturesHaveBeenCollected(messageHash: Todo) {
+    async requiredSignaturesHaveBeenCollected(messageHash: AmbMessageHash) {
         const sidechainAmb = await this.getSidechainAmb()
         const requiredSignatureCount = await sidechainAmb.requiredSignatures()
 
@@ -155,7 +147,10 @@ export default class Contracts {
         return markedComplete
     }
 
-    // move signatures from sidechain to mainnet
+    /**
+     * Move signatures from sidechain to mainnet
+     * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
+     */
     async transportSignaturesForMessage(messageHash: string, ethersOptions = {}): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
@@ -166,7 +161,7 @@ export default class Contracts {
         log(`${collectedSignatureCount} signatures reported, getting them from the sidechain AMB...`)
         const signatures = await Promise.all(Array(collectedSignatureCount).fill(0).map(async (_, i) => sidechainAmb.signature(messageHash, i)))
 
-        const [vArray, rArray, sArray]: Todo = [[], [], []]
+        const [vArray, rArray, sArray]: [string[], string[], string[]] = [[], [], []]
         signatures.forEach((signature: string, i) => {
             log(`  Signature ${i}: ${signature} (len=${signature.length} = ${signature.length / 2 - 1} bytes)`)
             rArray.push(signature.substr(2, 64))
@@ -235,70 +230,5 @@ export default class Contracts {
         const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures, ethersOptions)
         const trAMB = await txAMB.wait()
         return trAMB
-    }
-
-    async deployDataUnion({
-        ownerAddress,
-        agentAddressList,
-        duName,
-        deployerAddress,
-        adminFeeBN,
-        sidechainRetryTimeoutMs,
-        sidechainPollingIntervalMs,
-        confirmations,
-        gasPrice
-    }: {
-        ownerAddress: EthereumAddress,
-        agentAddressList: EthereumAddress[]
-        duName: string
-        deployerAddress: EthereumAddress
-        adminFeeBN: BigNumber
-        sidechainRetryTimeoutMs: number
-        sidechainPollingIntervalMs: number
-        confirmations: number
-        gasPrice?: BigNumber,
-    }) {
-        const mainnetProvider = this.ethereum.getMainnetProvider()
-        const mainnetWallet = this.ethereum.getSigner()
-        const duChainProvider = this.ethereum.getDataUnionChainProvider()
-
-        const duMainnetAddress = await this.fetchDataUnionMainnetAddress(duName, deployerAddress)
-        const duSidechainAddress = await this.fetchDataUnionSidechainAddress(duMainnetAddress)
-
-        if (await mainnetProvider.getCode(duMainnetAddress) !== '0x') {
-            throw new Error(`Mainnet data union "${duName}" contract ${duMainnetAddress} already exists!`)
-        }
-
-        if (await mainnetProvider.getCode(this.factoryMainnetAddress) === '0x') {
-            throw new Error(
-                `Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.dataUnion.factoryMainnetAddress!`
-            )
-        }
-
-        const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, mainnetWallet)
-        const ethersOptions: any = {}
-        if (gasPrice) {
-            ethersOptions.gasPrice = gasPrice
-        }
-        const tx = await factoryMainnet.deployNewDataUnion(
-            ownerAddress,
-            adminFeeBN,
-            agentAddressList,
-            duName,
-            ethersOptions
-        )
-        await tx.wait(confirmations)
-
-        log(`Data Union "${duName}" (mainnet: ${duMainnetAddress}, sidechain: ${duSidechainAddress}) deployed to mainnet, waiting for side-chain...`)
-        await until(
-            async () => await duChainProvider.getCode(duSidechainAddress) !== '0x',
-            sidechainRetryTimeoutMs,
-            sidechainPollingIntervalMs
-        )
-
-        const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
-        // @ts-expect-error
-        dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, duChainProvider)
-        return dataUnion
     }
 }

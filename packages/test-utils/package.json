@@ -27,8 +27,15 @@
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
+  "dependencies": {
+    "@ethersproject/wallet": "^5.5.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",

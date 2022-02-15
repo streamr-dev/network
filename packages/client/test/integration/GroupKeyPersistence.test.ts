@@ -1,44 +1,46 @@
 /* eslint-disable no-await-in-loop */
-import { describeRepeats, getCreateClient, getPublishTestStreamMessages, createTestStream, getPrivateKey } from '../utils'
+import { getPublishTestStreamMessages, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/Encryption'
-import { Wallet } from 'ethers'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
 
-describeRepeats('Group Key Persistence', () => {
+describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
+    let clientFactory: ClientFactory
 
-    const createClient = getCreateClient()
+    beforeEach(() => {
+        clientFactory = createClientFactory()
+    })
 
-    describe('with requireEncryptedData true', () => {
+    describe('with encrypted streams', () => {
         let stream: Stream
 
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
-            const client = await createClient(opts)
+            const client = clientFactory.createClient(opts)
             await Promise.all([
                 client.connect(),
             ])
 
             stream = await createTestStream(client, module, {
-                requireEncryptedData: true,
                 ...streamOpts,
             })
-            const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-            await stream.addToStorageNode(await storageNodeWallet.getAddress())
+            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
         beforeEach(async () => {
-            publisherPrivateKey = await getPrivateKey()
-            subscriberPrivateKey = await getPrivateKey()
+            publisherPrivateKey = fastPrivateKey()
+            subscriberPrivateKey = fastPrivateKey()
 
             publisher = await setupPublisher({
                 id: 'publisher',
@@ -46,7 +48,7 @@ describeRepeats('Group Key Persistence', () => {
                     privateKey: publisherPrivateKey,
                 }
             })
-            subscriber = await createClient({
+            subscriber = clientFactory.createClient({
                 id: 'subscriber',
                 autoConnect: true,
                 autoDisconnect: true,
@@ -73,15 +75,13 @@ describeRepeats('Group Key Persistence', () => {
                 // subscriber will need to ask new publisher
                 // for group keys, which the new publisher will have to read from
                 // persistence
-                const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-                await stream.addToStorageNode(await storageNodeWallet.getAddress())
 
                 published = await publishTestMessages(5, {
                     waitForLast: true,
                 })
 
                 await publisher.destroy()
-                publisher2 = await createClient({
+                publisher2 = clientFactory.createClient({
                     id: 'publisher2',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -97,10 +97,12 @@ describeRepeats('Group Key Persistence', () => {
                 await publisher2.publisher.startKeyExchange()
 
                 const received = []
-                const sub = await subscriber.resend({
-                    stream: stream.id,
-                    last: published.length
-                })
+                const sub = await subscriber.resend(
+                    stream.id,
+                    {
+                        last: published.length
+                    }
+                )
 
                 for await (const m of sub) {
                     received.push(m)
@@ -136,7 +138,7 @@ describeRepeats('Group Key Persistence', () => {
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             await subscriber.destroy()
 
-            const subscriber2 = await createClient({
+            const subscriber2 = clientFactory.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -146,9 +148,13 @@ describeRepeats('Group Key Persistence', () => {
             const sub2 = await subscriber2.subscribe({
                 stream: stream.id,
             })
+            await sub2.waitForNeighbours()
 
-            published.push(...await publishTestMessages(3))
-            await sub2.collect(2) // either one old and one new or 2 new messages
+            await Promise.all([
+                sub2.collect(3),
+                published.push(...await publishTestMessages(3)),
+            ])
+
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received).toEqual(published.slice(0, 1))
         }, 2 * TIMEOUT)
@@ -181,7 +187,7 @@ describeRepeats('Group Key Persistence', () => {
             await subscriber.destroy()
             await publisher.destroy()
 
-            const subscriber2 = await createClient({
+            const subscriber2 = clientFactory.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -189,12 +195,12 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             await subscriber2.connect()
-            const sub2 = await subscriber2.resend({
-                stream: stream.id,
-                resend: {
+            const sub2 = await subscriber2.resend(
+                stream.id,
+                {
                     last: 5
                 }
-            })
+            )
 
             const received2 = []
             for await (const m of sub2) {
@@ -205,7 +211,7 @@ describeRepeats('Group Key Persistence', () => {
             }
             expect(received2).toEqual(published)
             expect(received).toEqual(published.slice(0, 1))
-        }, 2 * TIMEOUT)
+        }, 3 * TIMEOUT)
 
         it('can run multiple publishers in parallel', async () => {
             const sub = await subscriber.subscribe({
@@ -213,7 +219,7 @@ describeRepeats('Group Key Persistence', () => {
             })
 
             // ensure publishers don't clobber each others data
-            const publisher2 = await createClient({
+            const publisher2 = clientFactory.createClient({
                 id: 'publisher2',
                 auth: {
                     privateKey: publisherPrivateKey,
@@ -253,7 +259,7 @@ describeRepeats('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = await createClient({
+                publisher = clientFactory.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -294,7 +300,7 @@ describeRepeats('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = await createClient({
+                publisher = clientFactory.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -304,8 +310,7 @@ describeRepeats('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
-                    await s.addToStorageNode(await storageNodeWallet.getAddress())
+                    await s.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
                     // eslint-disable-next-line no-loop-func
                     streams.push(s)
                 }
@@ -333,12 +338,12 @@ describeRepeats('Group Key Persistence', () => {
         })
     })
 
-    describe('with requireEncryptedData = false', () => {
+    describe('with unencrypted data (public subscribe)', () => {
         const NUM_STREAMS = 5
         const streams: Stream[] = []
 
         beforeEach(async () => {
-            publisher = await createClient({
+            publisher = clientFactory.createClient({
                 id: 'publisher',
                 auth: {
                     privateKey: publisherPrivateKey,
@@ -346,9 +351,8 @@ describeRepeats('Group Key Persistence', () => {
             })
             for (let i = 0; i < NUM_STREAMS; i++) {
                 // eslint-disable-next-line no-await-in-loop
-                const stream = await createTestStream(publisher, module, {
-                    requireEncryptedData: false,
-                })
+                const stream = await createTestStream(publisher, module)
+                await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
                 streams.push(stream)
             }
         }, 2 * TIMEOUT)

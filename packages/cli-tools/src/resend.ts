@@ -19,17 +19,16 @@ export const resend = async (
     subscribe: boolean
 ): Promise<void> => {
     try {
-        const subscribeOpts = {
-            stream: streamId,
-            resend: resendOpts
-        }
         const handler = (message: any) => {
             console.info(JSON.stringify(message))
         }
         if (subscribe) {
-            await client.subscribe(subscribeOpts, handler)
+            await client.subscribe({
+                stream: streamId,
+                resend: resendOpts
+            }, handler)
         } else {
-            await client.resend(subscribeOpts, handler)
+            await client.resend(streamId, resendOpts, handler)
         }
     } catch (err) {
         console.error(err.message ? err.message : err)

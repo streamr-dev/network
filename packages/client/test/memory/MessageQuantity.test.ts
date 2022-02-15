@@ -3,7 +3,7 @@ import { Debug } from '../../src/utils/log'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
-import { Subscription } from '../../src/subscribe'
+import { Subscription } from '../../src/subscribe/Subscription'
 import { fakePrivateKey, addAfterFn } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
@@ -107,14 +107,14 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
             test(`can get a resend of size ${size}`, async () => {
                 const id = `TEST ${size}`
                 let count = 0
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
+                const sub = await client.resend(
+                    stream.id,
+                    {
                         last: size
-                    },
-                }, () => {
-                    count += 1
-                })
+                    }, 
+                    () => {
+                        count += 1
+                    })
                 await sub.onDone()
                 client.debug(id, { count })
                 if (size < MAX_RESEND_SIZE) {
@@ -238,8 +238,8 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                 const end = 1616509054932
                 const start = end - (1 * 60 * 60 * 1000) // 1 hour
                 sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
+                    stream.id,
+                    {
                         from: {
                             timestamp: start,
                         },
@@ -247,7 +247,7 @@ describe.skip('no memleaks when processing a high quantity of large messages', (
                             timestamp: end,
                         }
                     },
-                }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
+                    onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
 
                 const t = setTimeout(() => {
                     sub.unsubscribe()

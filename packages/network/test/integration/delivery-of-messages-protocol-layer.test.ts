@@ -1,4 +1,10 @@
-import { MessageLayer, ControlLayer, TrackerLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import {
+    MessageLayer,
+    ControlLayer,
+    TrackerLayer,
+    toStreamID,
+    StreamPartIDUtils
+} from 'streamr-client-protocol'
 import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -97,7 +103,7 @@ describe('delivery of messages in protocol layer', () => {
 
     it('sendData is delivered', async () => {
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'),
             prevMsgRef: new MessageRef(665, 0),
             content: {
                 hello: 'world'
@@ -113,7 +119,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg).toBeInstanceOf(ControlLayer.BroadcastMessage)
         expect(source).toEqual('node2')
         expect(msg.requestId).toEqual('')
-        expect(msg.streamMessage.messageId).toEqual(new MessageID(StreamIDUtils.toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'))
+        expect(msg.streamMessage.messageId).toEqual(new MessageID(toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'))
         expect(msg.streamMessage.prevMsgRef).toEqual(new MessageRef(665, 0))
         expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
@@ -124,7 +130,7 @@ describe('delivery of messages in protocol layer', () => {
 
     it('sendInstruction is delivered', async () => {
         const messagePromise = waitForEvent(nodeToTracker, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED)
-        trackerServer.sendInstruction('node1', new SPID('stream', 10), ['node1'], 15)
+        trackerServer.sendInstruction('node1', StreamPartIDUtils.parse('stream#10'), ['node1'], 15)
         const [msg, trackerId]: any = await messagePromise
 
         expect(trackerId).toEqual('trackerServer')

@@ -1,13 +1,13 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { SPID, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { RtcSubTypes } from '../identifiers'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { ServerWsEndpoint } from "../connection/ws/ServerWsEndpoint"
-import { Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { NodeId } from '../logic/node/Node'
 
 export enum Event {
@@ -43,13 +43,14 @@ export class TrackerServer extends EventEmitter {
 
     async sendInstruction(
         receiverNodeId: NodeId, 
-        spid: SPID, 
+        streamPartId: StreamPartID, 
         nodeIds: NodeId[], counter: number
     ): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
             requestId: uuidv4(),
-            streamId: spid.streamId,
-            streamPartition: spid.streamPartition,
+            streamId,
+            streamPartition,
             nodeIds,
             counter
         }))
@@ -169,6 +170,10 @@ export class TrackerServer extends EventEmitter {
         if (peerInfo.isNode()) {
             this.emit(Event.NODE_DISCONNECTED, peerInfo.peerId)
         }
+    }
+
+    disconnectFromPeer(peerId: string, code = DisconnectionCode.GRACEFUL_SHUTDOWN, reason = DisconnectionReason.GRACEFUL_SHUTDOWN): void {
+        this.endpoint.close(peerId, code, reason)
     }
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {

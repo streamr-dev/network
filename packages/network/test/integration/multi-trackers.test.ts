@@ -1,21 +1,21 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
-import { SPID, StreamIDUtils, TrackerLayer } from 'streamr-client-protocol'
+import { TrackerLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 import { createNetworkNode, startTracker } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { getSPIDKeys } from '../utils'
+import { getStreamParts } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
-const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)
-const SECOND_STREAM = 'stream-3' // assigned to trackerTwo
-const THIRD_STREAM = 'stream-2' // assigned to trackerThree
+const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
+const SECOND_STREAM = toStreamID('stream-8') // assigned to trackerTwo
+const THIRD_STREAM = toStreamID('stream-1') // assigned to trackerThree
 
-const FIRST_STREAM_2 = 'stream-13' // assigned to trackerOne
-const SECOND_STREAM_2 = 'stream-10' // assigned to trackerTwo
-const THIRD_STREAM_2 = 'stream-15' // assigned to trackerThree
+const FIRST_STREAM_2 = toStreamID('stream-13') // assigned to trackerOne
+const SECOND_STREAM_2 = toStreamID('stream-17') // assigned to trackerTwo
+const THIRD_STREAM_2 = toStreamID('stream-21') // assigned to trackerThree
 
 // Leave out WebRTC related events
 const TRACKER_NODE_EVENTS_OF_INTEREST = [
@@ -82,31 +82,31 @@ describe('multi trackers', () => {
 
     test('node sends stream status to specific tracker', async () => {
         // first stream, first tracker
-        nodeOne.subscribe(new SPID(FIRST_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(FIRST_STREAM, 0))
 
         await wait(500)
 
-        expect(getSPIDKeys(trackerOne)).toContain(`${FIRST_STREAM}#0`)
-        expect(getSPIDKeys(trackerTwo)).not.toContain(`${FIRST_STREAM}#0`)
-        expect(getSPIDKeys(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).not.toContain(`${FIRST_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).not.toContain(`${FIRST_STREAM}#0`)
 
         // second stream, second tracker
-        nodeOne.subscribe(new SPID(SECOND_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(SECOND_STREAM, 0))
 
         await wait(500)
 
-        expect(getSPIDKeys(trackerOne)).not.toContain(`${SECOND_STREAM}#0`)
-        expect(getSPIDKeys(trackerTwo)).toContain(`${SECOND_STREAM}#0`)
-        expect(getSPIDKeys(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).not.toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).toContain(`${SECOND_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).not.toContain(`${SECOND_STREAM}#0`)
 
         // third stream, third tracker
-        nodeOne.subscribe(new SPID(THIRD_STREAM, 0))
+        nodeOne.subscribe(toStreamPartID(THIRD_STREAM, 0))
 
         await wait(500)
 
-        expect(getSPIDKeys(trackerOne)).not.toContain(`${THIRD_STREAM}#0`)
-        expect(getSPIDKeys(trackerTwo)).not.toContain(`${THIRD_STREAM}#0`)
-        expect(getSPIDKeys(trackerThree)).toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerOne)).not.toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerTwo)).not.toContain(`${THIRD_STREAM}#0`)
+        expect(getStreamParts(trackerThree)).toContain(`${THIRD_STREAM}#0`)
     })
 
     test('only one specific tracker sends instructions about stream', async () => {
@@ -122,8 +122,8 @@ describe('multi trackers', () => {
         let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // first stream, first tracker
-        nodeOne.subscribe(new SPID(FIRST_STREAM_2, 0))
-        nodeTwo.subscribe(new SPID(FIRST_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(FIRST_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(FIRST_STREAM_2, 0))
 
         await nodePromise
 
@@ -143,8 +143,8 @@ describe('multi trackers', () => {
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // second stream, second tracker
-        nodeOne.subscribe(new SPID(SECOND_STREAM_2, 0))
-        nodeTwo.subscribe(new SPID(SECOND_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(SECOND_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(SECOND_STREAM_2, 0))
 
         await nodePromise2
 
@@ -164,8 +164,8 @@ describe('multi trackers', () => {
         nodeTwoEvents = eventsWithArgsToArray(nodeTwo.trackerManager.nodeToTracker, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         // third stream, third tracker
-        nodeOne.subscribe(new SPID(THIRD_STREAM_2, 0))
-        nodeTwo.subscribe(new SPID(THIRD_STREAM_2, 0))
+        nodeOne.subscribe(toStreamPartID(THIRD_STREAM_2, 0))
+        nodeTwo.subscribe(toStreamPartID(THIRD_STREAM_2, 0))
 
         await nodePromise3
 
@@ -178,7 +178,7 @@ describe('multi trackers', () => {
     test('node ignores instructions from unexpected tracker', async () => {
         const unexpectedInstruction = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID('stream-2'),
+            streamId: toStreamID('stream-2'),
             streamPartition: 0,
             nodeIds: [
                 'node-address-1',
@@ -188,6 +188,6 @@ describe('multi trackers', () => {
         })
         // @ts-expect-error private field
         await nodeOne.trackerManager.handleTrackerInstruction(unexpectedInstruction, trackerOne.getTrackerId())
-        expect(getSPIDKeys(nodeOne)).not.toContain('stream-2#0')
+        expect(getStreamParts(nodeOne)).not.toContain('stream-2#0')
     })
 })

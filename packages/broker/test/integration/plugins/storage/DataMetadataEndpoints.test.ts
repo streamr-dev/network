@@ -2,8 +2,13 @@ import http from 'http'
 import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
 import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
-import { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode,
-    createTestStream, getPrivateKey, startTestTracker } from '../../../utils'
+import {
+    startBroker,
+    createClient,
+    createTestStream,
+    fetchPrivateKeyWithGas,
+    startTestTracker
+} from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
 jest.setTimeout(30000)
@@ -28,48 +33,37 @@ describe('DataMetadataEndpoints', () => {
     let storageNode: Broker
     let client1: StreamrClient
     let storageNodeAccount: Wallet
-    let assignmentEventManager: StorageAssignmentEventManager
 
     beforeAll(async () => {
-        storageNodeAccount = new Wallet(await getPrivateKey())
-        const storageNodeRegistry = {
-            contractAddress: '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-            jsonRpcProvider: `http://127.0.0.1:8546`
-        }
+        storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(trackerPort)
-        const engineAndEditorAccount = new Wallet(await getPrivateKey())
         const storageNodeClient = new StreamrClient({
             ...ConfigTest,
             auth: {
                 privateKey: storageNodeAccount.privateKey
             },
         })
-        await storageNodeClient.setNode(`{"http": "http://127.0.0.1:${httpPort1}/api/v1"}`)
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,
             trackerPort,
             httpPort: httpPort1,
             enableCassandra: true,
-            streamrAddress: engineAndEditorAccount.address,
-            storageNodeRegistry
         })
-        client1 = await createClient(tracker, await getPrivateKey(), {
-            storageNodeRegistry: storageNodeRegistry,
-        })
-        assignmentEventManager = new StorageAssignmentEventManager(tracker, engineAndEditorAccount, storageNodeAccount)
-        await assignmentEventManager.createStream()
+        client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
     })
 
     afterAll(async () => {
-        await tracker.stop()
-        await client1.destroy()
-        await storageNode.stop()
-        await assignmentEventManager.close()
+        await Promise.allSettled([
+            tracker?.stop(),
+            client1?.destroy(),
+            storageNode?.stop()
+        ])
     })
 
     it('returns http error 400 if given non-numeric partition', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/stream/metadata/partitions/non-numeric`
+        const url = `http://localhost:${httpPort1}/streams/stream/metadata/partitions/non-numeric`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -80,7 +74,7 @@ describe('DataMetadataEndpoints', () => {
     })
 
     it('returns zero values for non-existing stream', async () => {
-        const url = `http://localhost:${httpPort1}/api/v1/streams/non-existing-stream/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/non-existing-stream/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 
@@ -93,8 +87,7 @@ describe('DataMetadataEndpoints', () => {
 
     async function setUpStream(): Promise<Stream> {
         const freshStream = await createTestStream(client1, module)
-        await assignmentEventManager.addStreamToStorageNode(freshStream.id, storageNodeAccount.address, client1)
-        await waitForStreamPersistedInStorageNode(freshStream.id, 0, '127.0.0.1', httpPort1)
+        await freshStream.addToStorageNode(storageNodeAccount.address)
         return freshStream
     }
 
@@ -114,7 +107,7 @@ describe('DataMetadataEndpoints', () => {
         })
         await client1.waitForStorage(lastItem)
 
-        const url = `http://localhost:${httpPort1}/api/v1/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
+        const url = `http://localhost:${httpPort1}/streams/${encodeURIComponent(stream.id)}/metadata/partitions/0`
         const [status, json] = await httpGet(url)
         const res = JSON.parse(json)
 

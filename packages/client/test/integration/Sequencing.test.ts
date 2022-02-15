@@ -1,6 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../utils'
+import { uid, getCreateClient, getWaitForStorage, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -159,14 +159,14 @@ describe('Sequencing', () => {
             timeout: 6000,
         })
         await waitForStorage(lastRequest)
-        const sub = await client.resend({
-            stream: stream.id,
-            resend: {
+        const sub = await client.resend(
+            stream.id,
+            {
                 from: {
                     timestamp: 0
-                },
-            },
-        })
+                }
+            }
+        )
         const msgsResent = await sub.collectContent()
 
         expect(msgsReceieved).toEqual(msgsResent)
@@ -228,14 +228,14 @@ describe('Sequencing', () => {
         })
         await waitForStorage(lastRequest)
 
-        const sub = await client.resend({
-            stream: stream.id,
-            resend: {
+        const sub = await client.resend(
+            stream.id,
+            {
                 from: {
                     timestamp: 0
-                },
-            },
-        })
+                }
+            }
+        )
         const msgsResent = await sub.collectContent()
 
         expect(msgsReceieved).toEqual(msgsResent)

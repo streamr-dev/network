@@ -1,15 +1,16 @@
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
-const { humanize } = require('debug')
 const bytes = require('bytes')
 const fetch = require('node-fetch')
-const keyserver = require('../keyserver')
+const { KeyServer } = require('streamr-test-utils')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
 
 const { StorageNode, ConfigTest: clientOptions } = StreamrClient
+
+const keyserver = new KeyServer()
 
 async function getPrivateKey() {
     const response = await fetch('http://localhost:45454/key')
@@ -96,7 +97,7 @@ async function run() {
         node.unsubscribe = () => {}
         const startTime = Date.now()
         try {
-            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6))
+            log('publishing %d %s%s messages to %s… >>', batchSize, bytes(payloadBytes), stream.id.slice(0, 6))
             const published = await client.collectMessages(client.publishFrom(stream, (async function* Generate() {
                 for (let i = 0; i < batchSize; i++) {
                     yield Msg(payloadBytes)
@@ -104,7 +105,7 @@ async function run() {
             }())), batchSize)
             return published
         } finally {
-            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.requireEncryptedData ? ' encrypted' : '', stream.id.slice(0, 6), Date.now() - startTime)
+            log('publishing %d %s%s messages to %s…: %sms <<', batchSize, bytes(payloadBytes), stream.id.slice(0, 6), Date.now() - startTime)
         }
     }
 
@@ -168,16 +169,8 @@ async function run() {
     log('setting up...')
     log('using mocked network node')
     const [[client1, stream1], [client2, stream2]] = await Promise.all([
-        setup({
-            publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: false,
-        }),
-        setup({
-            publishWithSignature: 'always',
-        }, {
-            requireEncryptedData: true,
-        })
+        setup({}),
+        setup({})
     ])
 
     for (const payloadBytes of PAYLOAD_SIZES) {
@@ -226,7 +219,7 @@ async function run() {
     })
 
     suite.on('complete', () => {
-        keyserver.close()
+        keyserver.destroy()
     })
 
     log('starting')

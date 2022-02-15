@@ -1,6 +1,6 @@
 import { Tracker } from '../../src/logic/tracker/Tracker'
 import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { MessageLayer, SPID, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { Event as NodeEvent } from '../../src/logic/node/Node'
@@ -85,8 +85,9 @@ describe('message propagation in network', () => {
             payload: streamMessage.getParsedContent()
         }))
 
-        n2.subscribe(new SPID('stream-1', 0))
-        n3.subscribe(new SPID('stream-1', 0))
+        const streamPartId = StreamPartIDUtils.parse('stream-1#0')
+        n2.subscribe(streamPartId)
+        n3.subscribe(streamPartId)
 
         await Promise.all([
             waitForEvent(n2, NodeEvent.NODE_SUBSCRIBED),
@@ -95,7 +96,7 @@ describe('message propagation in network', () => {
 
         for (let i = 1; i <= 5; ++i) {
             n1.publish(new StreamMessage({
-                messageId: new MessageID(StreamIDUtils.toStreamID('stream-1'), 0, i, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('stream-1'), 0, i, 0, 'publisherId', 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef(i - 1, 0),
                 content: {
                     messageNo: i
@@ -103,7 +104,7 @@ describe('message propagation in network', () => {
             }))
 
             n4.publish(new StreamMessage({
-                messageId: new MessageID(StreamIDUtils.toStreamID('stream-2'), 0, i * 100, 0, 'publisherId', 'msgChainId'),
+                messageId: new MessageID(toStreamID('stream-2'), 0, i * 100, 0, 'publisherId', 'msgChainId'),
                 prevMsgRef: i === 1 ? null : new MessageRef((i - 1) * 100, 0),
                 content: {
                     messageNo: i * 100

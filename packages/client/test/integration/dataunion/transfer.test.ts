@@ -36,7 +36,7 @@ async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
             privateKey
         }
     } as any)
-    const memberDataUnion = memberClient.getDataUnion(dataUnionAddress) // TODO: await safeGetDataUnion
+    const memberDataUnion = await memberClient.getDataUnion(dataUnionAddress)
     const res = await memberDataUnion.join(secret)
     log('Member joined data union: %O', res)
 
@@ -129,7 +129,8 @@ describe('DataUnion earnings transfer methods', () => {
                 beneficiaryAddress: dataUnion.getAddress(),
                 type: 'DATAUNION',
                 dataUnionVersion: 2
-            })
+            }),
+            session: adminClient.session,
         })
 
         const memberWallet = await addMember(dataUnionAddress, secret)
@@ -173,7 +174,7 @@ describe('DataUnion earnings transfer methods', () => {
                 privateKey: memberWallet.privateKey,
             },
         })
-        const memberDataUnion = memberClient.getDataUnion(dataUnion.getAddress())
+        const memberDataUnion = await memberClient.getDataUnion(dataUnion.getAddress())
 
         const statsBefore = await dataUnion.getMemberStats(memberWallet.address)
         const stats2Before = await dataUnion.getMemberStats(member2Wallet.address)

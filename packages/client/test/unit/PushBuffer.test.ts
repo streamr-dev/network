@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { counterId } from '../../src/utils'
-import { LeaksDetector } from '../utils'
+import { LeaksDetector } from '../test-utils/utils'
 
 import IteratorTest, { expected } from './IteratorTest'
 
@@ -17,7 +17,8 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
-describe('PushBuffer', () => {
+// TODO: fix flaky test in NET-664 / 621
+describe.skip('PushBuffer', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(async () => {
@@ -67,7 +68,8 @@ describe('PushBuffer', () => {
             expect(await pushBuffer.push(expected[1])).toBe(false)
         })
 
-        it('push resolves false if errored', async () => {
+        // TODO: fix flaky test in NET-664
+        it.skip('push resolves false if errored', async () => {
             const err = new Error(counterId('expected error'))
             const pushBuffer = new PushBuffer(3)
             leaksDetector.add('PushBuffer', pushBuffer)

@@ -1,145 +1,178 @@
-/* eslint-disable no-underscore-dangle, object-curly-newline */
-import StreamrClient, { Stream } from 'streamr-client'
-import { StorageConfig, StorageConfigListener } from '../../../../src/plugins/storage/StorageConfig'
-import { NetworkNode, Protocol } from 'streamr-network'
+import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient } from 'streamr-client'
+import { StreamPartID, StreamPartIDUtils, toStreamID} from 'streamr-client-protocol'
+import { wait } from 'streamr-test-utils'
 
-describe('StorageConfig', () => {
-    let client: StreamrClient
-    beforeAll(async () => {
-        client = {} as StreamrClient
-        client.getStoredStreamsOf = () => Promise.resolve([
-            {
-                id: 'foo',
-                partitions: 2
-            } as Stream,
-            {
-                id: 'bar',
-                partitions: 1
-            } as Stream,
-        ])
-    })
+const { parse } = StreamPartIDUtils
 
-    describe('single storage node', () => {
-        let config: StorageConfig
-        let listener: StorageConfigListener
+const POLL_TIME = 10
 
-        beforeEach(async () => {
-            config = new StorageConfig('nodeId', 1, 0, client, {} as NetworkNode)
-            // @ts-expect-error private
-            config.setSPIDKeys(new Set(['existing1#0', 'existing2#0', 'existing2#1', 'existing3#0']))
-            listener = {
-                onSPIDAdded: jest.fn(),
-                onSPIDRemoved: jest.fn()
+const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
+    'stream-1': 2,
+    'stream-2': 4,
+    'stream-3': 1
+})
+
+function makeStubStream(streamId: string): Stream {
+    return {
+        id: toStreamID(streamId),
+        partitions: PARTITION_COUNT_LOOKUP[streamId]
+    } as Stream
+}
+
+describe(StorageConfig, () => {
+    let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: string]>
+    let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
+    let stubClient: Pick<StreamrClient, 'getStream'
+        | 'getStoredStreamsOf'
+        | 'registerStorageEventListener'
+        | 'unRegisterStorageEventListeners' >
+    let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
+    let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>
+    let storageConfig: StorageConfig
+
+    beforeEach(async () => {
+        getStoredStreamsOf = jest.fn()
+        storageEventListener = undefined
+        stubClient = {
+            getStoredStreamsOf,
+            async getStream(streamIdOrPath: string) {
+                return makeStubStream(streamIdOrPath, )
+            },
+            async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any) {
+                storageEventListener = cb
+            },
+            unRegisterStorageEventListeners: async () => {
+                storageEventListener = undefined
             }
-            config.addChangeListener(listener)
+        }
+        onStreamPartAdded = jest.fn()
+        onStreamPartRemoved = jest.fn()
+        storageConfig = new StorageConfig('clusterId', 1, 0, POLL_TIME, stubClient as StreamrClient, {
+            onStreamPartAdded,
+            onStreamPartRemoved
         })
-
-        it('setStreams', () => {
-            // @ts-expect-error private
-            config.setSPIDKeys(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
-            expect(listener.onSPIDAdded).toBeCalledTimes(2)
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new1', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('new2', 0))
-            // doesn't remove immediately
-            expect(listener.onSPIDRemoved).toBeCalledTimes(0)
-            // calling it again will remove it
-            // @ts-expect-error private
-            config.setSPIDKeys(new Set(['existing2#0', 'existing3#0', 'new1#0', 'new2#0']))
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing1', 0))
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
-            expect(config.hasSPID(new Protocol.SPID('new1', 0))).toBeTruthy()
-            expect(config.hasSPID(new Protocol.SPID('existing1', 0))).toBeFalsy()
-            expect(config.hasSPID(new Protocol.SPID('other', 0))).toBeFalsy()
-        })
-
-        it('addStream', () => {
-            // @ts-expect-error private
-            config.addSPIDKeys(new Set(['loremipsum#0', 'foo#0', 'bar#0']))
-            expect(listener.onSPIDAdded).toBeCalledTimes(3)
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('loremipsum', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('foo', 0))
-            expect(listener.onSPIDAdded).toHaveBeenCalledWith(new Protocol.SPID('bar', 0))
-        })
-
-        it('removeStreams', () => {
-            // @ts-expect-error private
-            config.removeSPIDKeys(new Set(['existing2#0', 'existing2#1']))
-            expect(listener.onSPIDRemoved).toBeCalledTimes(2)
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 0))
-            expect(listener.onSPIDRemoved).toHaveBeenCalledWith(new Protocol.SPID('existing2', 1))
-        })
-
-        it('refresh', async () => {
-            await config.refresh()
-            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
-            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
-            expect(config.hasSPID(new Protocol.SPID('bar', 0))).toBeTruthy()
-        })
-
-        it('onAssignmentEvent', () => {
-            config.onAssignmentEvent({
-                storageNode: 'nodeId',
-                stream: {
-                    id: 'foo',
-                    partitions: 2
-                },
-                event: 'STREAM_ADDED'
-            })
-            expect(config.hasSPID(new Protocol.SPID('foo', 0))).toBeTruthy()
-            expect(config.hasSPID(new Protocol.SPID('foo', 1))).toBeTruthy()
-        })
+        getStoredStreamsOf.mockRejectedValue(new Error('results not available'))
     })
 
-    describe('storage cluster', () => {
-        let configs: StorageConfig[]
+    afterEach(async () => {
+        await storageConfig?.destroy()
+    })
 
-        beforeAll(async () => {
-            client = {} as StreamrClient
-            client.getStoredStreamsOf = () => Promise.resolve([
-                {
-                    id: 'foo',
-                    partitions: 100
-                } as Stream,
-                {
-                    id: 'bar',
-                    partitions: 100
-                } as Stream,
+    it('state starts empty', () => {
+        expect(storageConfig.getStreamParts()).toBeEmpty()
+    })
+
+    describe('on polled results', () => {
+        beforeEach(async () => {
+            getStoredStreamsOf.mockResolvedValue({
+                streams: [
+                    makeStubStream('stream-1'),
+                    makeStubStream('stream-2')
+                ],
+                blockNumber: 10
+            })
+            await storageConfig.start()
+            await wait(POLL_TIME * 2)
+        })
+
+        it('stream part listeners invoked', () => {
+            expect(onStreamPartAdded).toBeCalledTimes(6)
+            expect(onStreamPartRemoved).toBeCalledTimes(0)
+            expect(onStreamPartAdded.mock.calls).toEqual([
+                [parse('stream-1#0')],
+                [parse('stream-1#1')],
+                [parse('stream-2#0')],
+                [parse('stream-2#1')],
+                [parse('stream-2#2')],
+                [parse('stream-2#3')],
             ])
         })
-    
-        beforeEach(() => {
-            configs = [
-                new StorageConfig('nodeId', 3, 0, client, {} as NetworkNode),
-                new StorageConfig('nodeId', 3, 1, client, {} as NetworkNode),
-                new StorageConfig('nodeId', 3, 2, client, {} as NetworkNode),
-            ]
+
+        it('state is updated', () => {
+            expect(storageConfig.getStreamParts().size).toEqual(6)
+        })
+    })
+
+    describe('on event-based results', () => {
+        beforeEach(async () => {
+            await storageConfig.start()
+            storageEventListener!({
+                streamId: 'stream-1',
+                nodeAddress: 'clusterId',
+                type: 'added',
+                blockNumber: 10,
+            })
+            await wait(0)
+            storageEventListener!({
+                streamId: 'stream-3',
+                nodeAddress: 'clusterId',
+                type: 'added',
+                blockNumber: 15,
+            })
+            await wait(0)
+            storageEventListener!({
+                streamId: 'stream-1',
+                nodeAddress: 'clusterId',
+                type: 'removed',
+                blockNumber: 13,
+            })
+            await wait(0)
         })
 
-        it('refresh', async () => {
-            await Promise.all(configs.map((config) => config.refresh()))
-            // @ts-expect-error private field
-            expect(configs[0].spidKeys.size).toBe(61)
-            // @ts-expect-error private field
-            expect(configs[1].spidKeys.size).toBe(67)
-            // @ts-expect-error private field
-            expect(configs[2].spidKeys.size).toBe(72)
+        it('stream part listeners invoked', () => {
+            expect(onStreamPartAdded).toBeCalledTimes(2 + 1)
+            expect(onStreamPartRemoved).toBeCalledTimes(2)
+            expect(onStreamPartAdded.mock.calls).toEqual([
+                [parse('stream-1#0')],
+                [parse('stream-1#1')],
+                [parse('stream-3#0')],
+            ])
+            expect(onStreamPartRemoved.mock.calls).toEqual([
+                [parse('stream-1#0')],
+                [parse('stream-1#1')],
+            ])
         })
 
-        it('onAssignmentEvent', () => {
-            configs.forEach((config) => config.onAssignmentEvent({
-                storageNode: 'nodeId',
-                stream: {
-                    id: 'foo',
-                    partitions: 100
-                },
-                event: 'STREAM_ADDED'
-            }))
-            // @ts-expect-error private field
-            expect(configs[0].spidKeys.size).toBe(23)
-            // @ts-expect-error private field
-            expect(configs[1].spidKeys.size).toBe(42)
-            // @ts-expect-error private field
-            expect(configs[2].spidKeys.size).toBe(35)
+        it('state is updated', () => {
+            expect(storageConfig.getStreamParts().size).toEqual(1)
         })
+    })
+
+    it('updates do not occur if start has not been invoked', async () => {
+        getStoredStreamsOf.mockResolvedValue({
+            streams: [
+                makeStubStream('stream-1'),
+                makeStubStream('stream-2')
+            ],
+            blockNumber: 10
+        })
+        await wait(POLL_TIME * 2)
+
+        expect(storageEventListener).toBeUndefined()
+        expect(getStoredStreamsOf).toHaveBeenCalledTimes(0)
+        expect(onStreamPartAdded).toHaveBeenCalledTimes(0)
+        expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
+    })
+
+    it('updates do not occur after destroy has been invoked', async () => {
+        await storageConfig.start()
+        await wait(POLL_TIME)
+        await storageConfig.destroy()
+
+        getStoredStreamsOf.mockClear()
+        getStoredStreamsOf.mockResolvedValue({
+            streams: [
+                makeStubStream('stream-1'),
+                makeStubStream('stream-2')
+            ],
+            blockNumber: 10
+        })
+        expect(storageEventListener).toBeUndefined()
+        await wait(POLL_TIME * 2)
+
+        expect(getStoredStreamsOf).toHaveBeenCalledTimes(0)
+        expect(onStreamPartAdded).toHaveBeenCalledTimes(0)
+        expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
     })
 })

@@ -1,9 +1,9 @@
-import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../utils'
+import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/Subscriber'
-import Subscription from '../../src/Subscription'
+import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscription } from '../../src/subscribe/Subscription'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)
@@ -22,18 +22,18 @@ describeRepeats('Validation', () => {
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
-            requireSignedData: client.options.publishWithSignature !== 'never'
+            requireSignedData: true
         })
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
         return client
     }
 
-    afterEach(() => {
+    afterEach(async () => {
         if (!subscriber) { return }
-        expect(subscriber.count(stream.id)).toBe(0)
+        expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(client.getSubscriptions(stream.id)).toEqual([])
+        expect(await client.getSubscriptions(stream.id)).toEqual([])
     })
 
     let subs: Subscription[] = []

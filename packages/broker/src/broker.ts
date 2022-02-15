@@ -1,23 +1,24 @@
 import { Logger } from 'streamr-network'
-import StreamrClient, { validateConfig as validateClientConfig} from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { createPlugin } from './pluginRegistry'
-import { validateConfig } from './helpers/validateConfig'
+import { validateConfig } from './config/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { ClientConfig, Config, NetworkSmartContract } from './config'
+import { ClientConfig, Config, NetworkSmartContract } from './config/config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
+import { StreamPartID } from 'streamr-client-protocol'
 
 const logger = new Logger(module)
 
 export interface Broker {
     getNeighbors: () => readonly string[]
-    getSPIDs: () => Iterable<Protocol.SPID>
+    getStreamParts: () => Iterable<StreamPartID>
     getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
@@ -26,7 +27,7 @@ export interface Broker {
 const transformClientConfig = async (config: ClientConfig) => {
     const trackerConfig = config.network?.trackers
     if ((trackerConfig as NetworkSmartContract)?.contractAddress !== undefined) {
-        const registry = await Protocol.Utils.getTrackerRegistryFromContract({
+        const registry = await getTrackerRegistryFromContract({
             contractAddress: (trackerConfig as NetworkSmartContract).contractAddress,
             jsonRpcProvider: (trackerConfig as NetworkSmartContract).jsonRpcProvider
         })
@@ -67,7 +68,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
     return {
         getNeighbors: () => networkNode.getNeighbors(),
-        getSPIDs: () => networkNode.getSPIDs(),
+        getStreamParts: () => networkNode.getStreamParts(),
         getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
@@ -104,7 +105,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (streamrClient !== undefined) {
                 await streamrClient.destroy()
             }
-            await networkNode.stop()
         }
     }
 }

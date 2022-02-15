@@ -9,43 +9,30 @@ import {
     EncryptionType,
     SignatureType,
     StreamMessageType,
-    SIDLike,
-    SPID,
-    EthereumAddress
+    EthereumAddress,
+    StreamPartIDUtils,
+    StreamPartID,
+    toStreamPartID
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
-import { Stream, StreamPermission } from './Stream'
+import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
 import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
-import { NodeRegistry } from './NodeRegistry'
+import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
-
-export interface StreamListQuery {
-    name?: string
-    uiChannel?: boolean
-    noConfig?: boolean
-    search?: string
-    sortBy?: string
-    order?: 'asc'|'desc'
-    max?: number
-    offset?: number
-    grantedAccess?: boolean
-    publicAccess?: boolean
-    permission?: StreamPermission
-}
+import { StreamDefinition } from './types'
 
 export interface StreamValidationInfo {
     id: string
     partitions: number
     requireSignedData: boolean
-    requireEncryptedData: boolean
     storageDays: number
 }
 
@@ -98,21 +85,13 @@ export class StreamEndpoints implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
-        @inject(NodeRegistry) private readonly nodeRegistry: NodeRegistry,
+        @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
         private readonly ethereum: StreamrEthereum
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-    }
-
-    async getStreamByName(name: string): Promise<Stream> {
-        this.debug('getStreamByName %o', {
-            name,
-        })
-        const streams = await this.streamRegistry.listStreams({ name })
-        return streams[0] ? streams[0] : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
     /**
@@ -135,11 +114,11 @@ export class StreamEndpoints implements Context {
         }
     }
 
-    async getStreamLast(streamObjectOrId: Stream|SIDLike|string, count = 1): Promise<StreamMessageAsObject> {
-        const { streamId, streamPartition = 0 } = SPID.parse(streamObjectOrId)
+    async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject[]> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.debug('getStreamLast %o', {
-            streamId,
-            streamPartition,
+            streamPartId,
             count,
         })
         const stream = await this.streamRegistry.getStream(streamId)
@@ -148,9 +127,9 @@ export class StreamEndpoints implements Context {
             throw new NotFoundError('Stream: id=' + streamId + ' has no storage nodes!')
         }
         const chosenNode = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-        const nodeUrl = await this.nodeRegistry.getStorageNodeUrl(chosenNode)
+        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(chosenNode)
         const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
-        const json = await this.rest.get<StreamMessageAsObject>([
+        const json = await this.rest.get<StreamMessageAsObject[]>([
             'streams', normalizedStreamId, 'data', 'partitions', streamPartition, 'last',
         ], {
             query: { count },
@@ -160,33 +139,32 @@ export class StreamEndpoints implements Context {
         return json
     }
 
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<SPID[]> {
-        const streams = await this.nodeRegistry.getStoredStreamsOf(nodeAddress)
+    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
+        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
 
-        const result: SPID[] = []
+        const result: StreamPartID[] = []
         streams.forEach((stream: Stream) => {
             for (let i = 0; i < stream.partitions; i++) {
-                result.push(new SPID(stream.id, i))
+                result.push(toStreamPartID(stream.id, i))
             }
         })
         return result
     }
 
-    async publishHttp(nodeUrl: string, streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
-        let streamId
-        if (streamObjectOrId instanceof Stream) {
-            streamId = streamObjectOrId.id
-        } else {
-            streamId = streamObjectOrId
-        }
+    async publishHttp(
+        nodeUrl: string,
+        streamIdOrPath: string,
+        data: any,
+        requestOptions: any = {},
+        keepAlive: boolean = true
+    ) {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('publishHttp %o', {
             streamId, data,
         })
 
-        // Send data to the stream
-        const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
         await this.rest.post(
-            ['streams', normalizedStreamId, 'data'],
+            ['streams', streamId, 'data'],
             data,
             {
                 ...requestOptions,

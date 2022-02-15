@@ -1,4 +1,4 @@
-import { Config } from './config'
+import { Config } from './config/config'
 
 export interface ApiAuthenticator {
     isValidAuthentication: (apiKey?: string) => boolean

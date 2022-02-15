@@ -1,16 +1,13 @@
-import { Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
-import { getRandomClient, expectInvalidAddress } from '../../utils'
+import { getRandomClient, expectInvalidAddress } from '../../test-utils/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 
-const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
-
 // This test will fail when new docker images are pushed with updated DU smart contracts
-// -> generate new codehashes for getDataUnionMainnetAddress() and getDataUnionSidechainAddress()
+// -> generate new codehashes for calculateDataUnionMainnetAddress() and calculateDataUnionSidechainAddress()
 
 describe('DataUnion calculate', () => {
 
@@ -22,28 +19,24 @@ describe('DataUnion calculate', () => {
         log('Connected to sidechain network: ', JSON.stringify(network2))
 
         const adminClient = new StreamrClient(clientOptions as any)
-
         const dataUnionName = 'test-' + Date.now()
-        // eslint-disable-next-line no-underscore-dangle
-        const dataUnionPredicted = adminClient._getDataUnionFromName({ dataUnionName, deployerAddress: adminWalletMainnet.address })
+        const {
+            mainnetAddress,
+            sidechainAddress,
+        } = await adminClient.calculateDataUnionAddresses(dataUnionName)
 
         const dataUnionDeployed = await adminClient.deployDataUnion({ dataUnionName })
         const version = await dataUnionDeployed.getVersion()
 
-        expect(dataUnionPredicted.getAddress()).toBe(dataUnionDeployed.getAddress())
-        expect(dataUnionPredicted.getSidechainAddress()).toBe(dataUnionDeployed.getSidechainAddress())
+        expect(dataUnionDeployed.getAddress()).toBe(mainnetAddress)
+        expect(dataUnionDeployed.getSidechainAddress()).toBe(sidechainAddress)
         expect(version).toBe(2)
     }, 60000)
 
-    it('get DataUnion: invalid address', () => {
+    it('getDataUnion fails for bad addresses', async () => {
         const client = getRandomClient()
-        return expectInvalidAddress(async () => client.getDataUnion('invalid-address'))
-    })
-
-    it('safeGetDataUnion fails for bad addresses', async () => {
-        const client = getRandomClient()
-        await expectInvalidAddress(async () => client.safeGetDataUnion('invalid-address'))
-        return expect(client.safeGetDataUnion('0x2222222222222222222222222222222222222222'))
+        await expectInvalidAddress(async () => client.getDataUnion('invalid-address'))
+        return expect(client.getDataUnion('0x2222222222222222222222222222222222222222'))
             .rejects
             .toThrow('0x2222222222222222222222222222222222222222 is not a Data Union!')
     })

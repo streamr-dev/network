@@ -4,8 +4,8 @@ import { id } from 'ethers/lib/utils'
 import clientOptionsConfig from './config'
 
 export const clientOptions = clientOptionsConfig
-export const providerSidechain = new JsonRpcProvider(clientOptions.streamRegistryChainRPC)
-export const providerMainnet = new JsonRpcProvider(clientOptions.mainChainRPC)
+export const providerSidechain = new JsonRpcProvider(clientOptions.streamRegistryChainRPCs[0])
+export const providerMainnet = new JsonRpcProvider(clientOptions.mainChainRPCs![0])
 
 export const tokenMediatorAddress = '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F'
 
@@ -63,9 +63,3 @@ export const relayTokensAbi = [
         type: 'function'
     }
 ]
-
-export const storageNodeTestConfig = {
-    privatekey: 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966',
-    address: '0xde1112f631486CfC759A50196853011528bC5FA0',
-    url: `{"http": "http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8891/api/v1"}`
-}

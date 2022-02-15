@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const startBrokerConfigWizard = require('../dist/src/ConfigWizard').start
+const startBrokerConfigWizard = require('../dist/src/config/ConfigWizard').start
 
 const program = require('commander')
 

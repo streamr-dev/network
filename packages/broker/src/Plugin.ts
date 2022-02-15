@@ -1,14 +1,13 @@
-import { NetworkNode } from 'streamr-network'
-import { Config } from './config'
+import { Config } from './config/config'
 import express from 'express'
-import { validateConfig } from './helpers/validateConfig'
+import { validateConfig } from './config/validateConfig'
 import { Schema } from 'ajv'
-import { StreamrClient } from 'streamr-client'
+import { NetworkNodeStub, StreamrClient } from 'streamr-client'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 export interface PluginOptions {
     name: string
-    networkNode: NetworkNode
+    networkNode: NetworkNodeStub
     streamrClient: StreamrClient
     apiAuthenticator: ApiAuthenticator
     brokerConfig: Config
@@ -18,7 +17,7 @@ export interface PluginOptions {
 export abstract class Plugin<T> {
 
     readonly name: string
-    readonly networkNode: NetworkNode
+    readonly networkNode: NetworkNodeStub
     readonly streamrClient: StreamrClient
     readonly apiAuthenticator: ApiAuthenticator
     readonly brokerConfig: Config

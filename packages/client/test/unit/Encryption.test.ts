@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 
 import { ethers } from 'ethers'
-import { MessageLayer, StreamIDUtils } from 'streamr-client-protocol'
+import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
 import EncryptionUtil, { GroupKey } from '../../src/encryption/Encryption'
 
@@ -9,7 +9,7 @@ const { StreamMessage, MessageID } = MessageLayer
 
 // wrap these tests so can run same tests as if in browser
 function TestEncryptionUtil({ isBrowser = false } = {}) {
-    const streamId = StreamIDUtils.toStreamID('streamId')
+    const streamId = toStreamID('streamId')
     describe(`EncryptionUtil ${isBrowser ? 'Browser' : 'Server'}`, () => {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to
@@ -102,67 +102,6 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             expect(newKey).toBe(null)
             expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
             expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-        })
-
-        it('throws if invalid public key passed in the constructor', () => {
-            const keys = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            expect(() => {
-                // eslint-disable-next-line no-new
-                new EncryptionUtil({
-                    privateKey: keys.privateKey,
-                    publicKey: 'wrong public key',
-                })
-            }).toThrow()
-        })
-
-        it('throws if invalid private key passed in the constructor', () => {
-            const keys = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            expect(() => {
-                // eslint-disable-next-line no-new
-                new EncryptionUtil({
-                    privateKey: 'wrong private key',
-                    publicKey: keys.publicKey,
-                })
-            }).toThrow()
-        })
-
-        it('does not throw if valid key pair passed in the constructor', () => {
-            const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: {
-                    type: 'pkcs8',
-                    format: 'pem',
-                },
-            })
-            // eslint-disable-next-line no-new
-            new EncryptionUtil({
-                privateKey,
-                publicKey,
-            })
         })
 
         describe('GroupKey.validate', () => {

@@ -26,8 +26,6 @@ function getSubtle() {
     return subtle
 }
 
-getSubtle()
-
 export class StreamMessageProcessingError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
         super(`Could not process. ${message}`, streamMessage)
@@ -230,14 +228,6 @@ class EncryptionUtilBase {
         }
     }
 
-    static validatePrivateKey(privateKey: crypto.KeyLike) {
-        const keyString = typeof privateKey === 'string' ? privateKey : privateKey.toString('utf8')
-        if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PRIVATE KEY-----')
-            || !keyString.endsWith('-----END PRIVATE KEY-----\n')) {
-            throw new Error('"privateKey" must be a PKCS#8 RSA public key in the PEM format')
-        }
-    }
-
     /**
      * Returns a Buffer or a hex String
      */
@@ -362,28 +352,15 @@ export default class EncryptionUtil extends EncryptionUtilBase {
      * Convenience.
      */
 
-    static async create(...args: ConstructorParameters<typeof EncryptionUtil>) {
-        const encryptionUtil = new EncryptionUtil(...args)
+    static async create() {
+        const encryptionUtil = new EncryptionUtil()
         await encryptionUtil.onReady()
         return encryptionUtil
     }
 
-    privateKey
-    publicKey
+    privateKey: string | undefined
+    publicKey: string | undefined
     private _generateKeyPairPromise: Promise<void> | undefined
-
-    constructor(options: {
-        privateKey: string,
-        publicKey: string,
-    } | {} = {}) {
-        super()
-        if ('privateKey' in options && 'publicKey' in options) {
-            EncryptionUtil.validatePrivateKey(options.privateKey)
-            EncryptionUtil.validatePublicKey(options.publicKey)
-            this.privateKey = options.privateKey
-            this.publicKey = options.publicKey
-        }
-    }
 
     async onReady() {
         if (this.isReady()) { return undefined }
@@ -391,7 +368,7 @@ export default class EncryptionUtil extends EncryptionUtilBase {
     }
 
     isReady(this: EncryptionUtil): this is InitializedEncryptionUtil {
-        return !!(this.privateKey && this.publicKey)
+        return (this.privateKey !== undefined && this.publicKey !== undefined)
     }
 
     // Returns a Buffer

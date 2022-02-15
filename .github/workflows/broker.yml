@@ -10,6 +10,11 @@ on:
   pull_request:
     branches:
       - '*'
+  schedule:
+    # run every day at 00:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
 concurrency:
   group: broker-build-${{ github.head_ref }}
   cancel-in-progress: true
@@ -53,9 +58,9 @@ jobs:
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "cassandra init-keyspace nginx parity-sidechain-node0 graph-deploy-streamregistry-subgraph parity-node0"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph parity-node0"
       - run: npm run test-integration
         env:
           CI: true
@@ -76,16 +81,16 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-buildx-v1-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
         with:
           driver-opts: |
             network=host
       - name: Build
-        uses: docker/build-push-action@v2.7.0
+        uses: docker/build-push-action@v2.9.0
         with:
           context: .
           file: ./Dockerfile
@@ -94,14 +99,21 @@ jobs:
           load: true
           tags: streamr/broker-node:dev
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "nginx trackers parity-node0 parity-sidechain-node0 broker-node-no-storage-1 graph-deploy-streamregistry-subgraph"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
-              curl -s http://localhost:8791/api/v1/volume;
+              curl -s http://localhost:8791/volume;
               res=$?;
               if test "$res" != "0"; then
                   echo "Attempting to connect to broker retrying in $wait_time seconds";
@@ -133,8 +145,8 @@ jobs:
     name: Build + Push Docker images
     needs: [test-unit, test-integration, test-docker]
     runs-on: self-hosted
-    # only push for main and tags
-    if: ${{ always() && github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+    # only push for nightly runs and manual triggers
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - uses: actions/checkout@v2.4.0
@@ -142,9 +154,9 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-buildx-v1-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
         with:
@@ -189,7 +201,7 @@ jobs:
           driver-opts: |
             network=host
       - name: Build & Push
-        uses: docker/build-push-action@v2.7.0
+        uses: docker/build-push-action@v2.9.0
         with:
           context: .
           file: ./Dockerfile
@@ -200,4 +212,11 @@ jobs:
           tags: ${{ steps.docker_meta_success.outputs.tags }}${{ steps.docker_meta_failure.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache

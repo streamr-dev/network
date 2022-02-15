@@ -1,11 +1,13 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../utils'
+import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
 
-jest.setTimeout(15000)
+const TEST_TIMEOUT = 60 * 1000
+
+jest.setTimeout(TEST_TIMEOUT)
 
 describeRepeats('StreamrClient', () => {
     const MAX_MESSAGES = 10
@@ -42,7 +44,7 @@ describeRepeats('StreamrClient', () => {
             partitions: 1,
             ...opts,
         })
-        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
+        await until(async () => { return client.streamExistsOnTheGraph(s.id) }, TEST_TIMEOUT - 5000, 1000)
 
         // await s.addToStorageNode(StorageNode.STREAMR_DOCKER_DEV)
 

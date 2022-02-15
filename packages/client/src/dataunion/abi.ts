@@ -1,117 +1,34 @@
-// TODO: remove the commented-out ABI portions when merging to main
-export const binanceAdapterABI = [
-    // {
-    //     inputs: [{ type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }, { type: 'address' }],
-    //     stateMutability: 'nonpayable',
-    //     type: 'constructor'
-    // },
-    // {
-    //     anonymous: false,
-    //     inputs: [{ indexed: true, type: 'address' }, { indexed: true, type: 'address' }],
-    //     name: 'SetBinanceRecipient',
-    //     type: 'event'
-    // },
-    // {
-    //     anonymous: false,
-    //     inputs: [
-    //         { indexed: true, type: 'address' },
-    //         { indexed: true, type: 'address' },
-    //         { indexed: false, type: 'uint256' },
-    //         { indexed: false, type: 'uint256' }
-    //     ],
-    //     name: 'WithdrawToBinance',
-    //     type: 'event'
-    // },
-    {
-        inputs: [{ type: 'address' }],
-        name: 'binanceRecipient',
-        outputs: [{ type: 'address' }, { type: 'uint256' }],
-        stateMutability: 'view',
-        type: 'function'
-    },
-    // {
-    //     inputs: [],
-    //     name: 'bscBridge',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [],
-    //     name: 'convertToCoin',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [],
-    //     name: 'dataCoin',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [],
-    //     name: 'datacoinPassed',
-    //     outputs: [{ type: 'uint256' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [],
-    //     name: 'honeyswapRouter',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [],
-    //     name: 'liquidityToken',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // },
-    // {
-    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
-    //     name: 'onTokenTransfer',
-    //     outputs: [{ type: 'bool' }],
-    //     stateMutability: 'nonpayable',
-    //     type: 'function'
-    // },
-    {
-        inputs: [{ type: 'address' }],
-        name: 'setBinanceRecipient',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    {
-        inputs: [{ type: 'address' }, { type: 'address' }, { type: 'bytes' }],
-        name: 'setBinanceRecipientFromSig',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function'
-    },
-    // {
-    //     inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'bytes' }],
-    //     name: 'getSigner',
-    //     outputs: [{ type: 'address' }],
-    //     stateMutability: 'view',
-    //     type: 'function'
-    // }
-]
+export const binanceAdapterABI = [{
+    inputs: [{ type: 'address' }],
+    name: 'binanceRecipient',
+    outputs: [{ type: 'address' }, { type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    inputs: [{ type: 'address' }],
+    name: 'setBinanceRecipient',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, {
+    inputs: [{ type: 'address' }, { type: 'address' }, { type: 'bytes' }],
+    name: 'setBinanceRecipientFromSig',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}]
 
 export const dataUnionMainnetABI = [{
+    name: 'sidechainAddress',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
     name: 'sendTokensToBridge',
     inputs: [],
     outputs: [{ type: 'uint256' }],
     stateMutability: 'nonpayable',
-    type: 'function'
-}, {
-    name: 'token',
-    inputs: [],
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
     type: 'function'
 }, {
     name: 'owner',
@@ -120,20 +37,51 @@ export const dataUnionMainnetABI = [{
     stateMutability: 'view',
     type: 'function'
 }, {
-    name: 'setAdminFee',
+    name: 'tokenMainnet', // this changed in 2.2, before that it was just "token"
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'tokenSidechain',
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'setAdminFee', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
     inputs: [{ type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
 }, {
+    name: 'adminFeeFraction', // NOT AVAILABLE since v2.2, moved to sidechain (see below)
+    inputs: [],
+    outputs: [{ type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+}]
+
+// In DU v2.2, fees were moved to the sidechain (admin fee and added DU fee that goes to the DU DAO)
+export const dataUnionSidechainABI = [{
     name: 'adminFeeFraction',
     inputs: [],
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function'
-}]
-
-export const dataUnionSidechainABI = [{
+}, {
+    name: 'dataUnionFeeFraction',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function'
+}, {
+    name: 'setFees',
+    inputs: [{ type: 'uint256' }, { type: 'uint256' }], // newAdminfee, newDataUnionFee
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+}, { // The rest of the functions are common to DU v2.0 and v2.2
     name: 'addMembers',
     inputs: [{ type: 'address[]', internalType: 'address payable[]', }],
     outputs: [],
@@ -185,7 +133,7 @@ export const dataUnionSidechainABI = [{
 }, {
     inputs: [],
     name: 'getStats',
-    outputs: [{ type: 'uint256[6]' }],
+    outputs: [{ type: 'uint256[9]' }],
     stateMutability: 'view',
     type: 'function'
 }, {
@@ -267,7 +215,7 @@ export const factoryMainnetABI = [{
     type: 'function'
 }, {
     name: 'deployNewDataUnion',
-    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'address[]' }, { type: 'string' }],
+    inputs: [{ type: 'address' }, { type: 'uint256' }, { type: 'uint256' }, { type: 'address' }, { type: 'address[]' }, { type: 'string' }],
     outputs: [{ type: 'address' }],
     stateMutability: 'nonpayable',
     type: 'function'

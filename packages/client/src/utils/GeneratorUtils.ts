@@ -149,3 +149,17 @@ export async function consume<InType>(
 ): Promise<void> {
     return noopConsume(forEach(src, fn, onError))
 }
+
+export async function* unique<T>(
+    source: AsyncGenerator<T>,
+    getIdentity: (item: T) => string
+): AsyncGenerator<T> {
+    const seenIdentities = new Set<string>()
+    for await (const item of source) {
+        const identity = getIdentity(item)
+        if (!seenIdentities.has(identity)) {
+            seenIdentities.add(identity)
+            yield item
+        }
+    }
+}

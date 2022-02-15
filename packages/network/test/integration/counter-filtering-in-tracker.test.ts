@@ -8,12 +8,13 @@ import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeId } from '../../src/logic/node/Node'
+import { toStreamID } from "streamr-client-protocol"
 
 const WAIT_TIME = 2000
 
 const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
-    stream: {
-        id: 'stream-1',
+    streamPart: {
+        id: toStreamID('stream-1'),
         partition: 0,
         neighbors: nodes1,
         counter: counter1
@@ -97,17 +98,17 @@ describe('tracker: instruction counter filtering', () => {
     })
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
-        const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+        const topologyBefore = getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
-        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
-        const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
+        const topologyBefore = getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())
         await runAndWaitForEvents(
             () => {
                 nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(1, []) as Status)
@@ -115,6 +116,6 @@ describe('tracker: instruction counter filtering', () => {
             // @ts-expect-error trackerServer is private
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         )
-        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 })

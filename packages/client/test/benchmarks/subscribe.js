@@ -4,7 +4,9 @@ const fetch = require('node-fetch')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
-const keyserver = require('../keyserver')
+const { KeyServer } = require('streamr-test-utils')
+
+const keyserver = new KeyServer()
 
 const { ConfigTest: clientOptions } = StreamrClient
 // note this is not the number of messages, just the start number
@@ -56,24 +58,21 @@ async function run() {
     const [client1, stream1] = await setupClientAndStream({
         auth: {
             privateKey: account1.privateKey,
-        },
-        publishWithSignature: 'always',
+        }
     })
 
     const account2 = StreamrClient.generateEthereumAccount()
     const [client2, stream2] = await setupClientAndStream({
         auth: {
             privateKey: account2.privateKey,
-        },
-        publishWithSignature: 'never',
+        }
     })
 
     const account3 = StreamrClient.generateEthereumAccount()
     const [client3, stream3] = await setupClientAndStream({
         auth: {
             privateKey: account3.privateKey,
-        },
-        publishWithSignature: 'always',
+        }
     }, {
         requiresEncryption: true,
     })
@@ -144,7 +143,7 @@ async function run() {
     })
 
     suite.on('complete', async () => {
-        keyserver.close()
+        keyserver.destroy()
         log('Disconnecting clients')
         const tasks = [
             client1.disconnect(),

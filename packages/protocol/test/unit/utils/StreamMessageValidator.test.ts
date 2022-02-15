@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import { StreamMessageValidator, SigningUtil, StreamIDUtils } from '../../../src'
+import { StreamMessageValidator, SigningUtil, toStreamID } from '../../../src'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageID from '../../../src/protocol/message_layer/MessageID'
 import GroupKeyRequest from '../../../src/protocol/message_layer/GroupKeyRequest'
@@ -33,8 +33,7 @@ describe('StreamMessageValidator', () => {
 
     const defaultGetStreamResponse = {
         partitions: 10,
-        requireSignedData: true,
-        requireEncryptedData: false,
+        requireSignedData: true
     }
 
     const getValidator = (customConfig?: any) => {
@@ -65,14 +64,14 @@ describe('StreamMessageValidator', () => {
         verify = undefined // use default impl by default
 
         msg = new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             content: '{}',
         })
 
         await sign(msg, publisherPrivateKey)
 
         msgWithNewGroupKey = new StreamMessage({
-            messageId: new MessageID(StreamIDUtils.toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
+            messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             content: '{}',
             newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
         })
@@ -81,45 +80,45 @@ describe('StreamMessageValidator', () => {
 
         groupKeyRequest = new GroupKeyRequest({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID('streamId'),
+            streamId: toStreamID('streamId'),
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
         }).toStreamMessage(
-            new MessageID(StreamIDUtils.toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null,
+            new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null,
         )
         await sign(groupKeyRequest, subscriberPrivateKey)
 
         groupKeyResponse = new GroupKeyResponse({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID('streamId'),
+            streamId: toStreamID('streamId'),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
         }).toStreamMessage(
-            new MessageID(StreamIDUtils.toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
+            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
         await sign(groupKeyResponse, publisherPrivateKey)
 
         groupKeyAnnounce = new GroupKeyAnnounce({
-            streamId: StreamIDUtils.toStreamID('streamId'),
+            streamId: toStreamID('streamId'),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
         }).toStreamMessage(
-            new MessageID(StreamIDUtils.toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
+            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
         await sign(groupKeyAnnounce, publisherPrivateKey)
 
         groupKeyErrorResponse = new GroupKeyErrorResponse({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID('streamId'),
+            streamId: toStreamID('streamId'),
             errorCode: 'ErrorCode',
             errorMessage: 'errorMessage',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
         }).toStreamMessage(
-            new MessageID(StreamIDUtils.toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
+            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
         await sign(groupKeyErrorResponse, publisherPrivateKey)
     })
@@ -192,8 +191,7 @@ describe('StreamMessageValidator', () => {
 
         it('accepts valid encrypted messages', async () => {
             getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireEncryptedData: true,
+                ...defaultGetStreamResponse
             })
             msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             await getValidator().validate(msg)
@@ -235,21 +233,6 @@ describe('StreamMessageValidator', () => {
                 verify,
                 requireBrubeckValidation: true
             }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('rejects unencrypted messages if encryption is required', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireEncryptedData: true,
-            })
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)

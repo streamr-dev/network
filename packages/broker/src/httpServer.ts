@@ -5,12 +5,10 @@ import cors from 'cors'
 import express, { Request, Response } from 'express'
 import { Logger } from 'streamr-network'
 import { once } from 'events'
-import { HttpServerConfig } from './config'
+import { HttpServerConfig } from './config/config'
 import { ApiAuthenticator } from './apiAuthenticator'
 
 const logger = new Logger(module)
-
-export const LEGACY_API_ROUTE_PREFIX = '/api/v1'
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403

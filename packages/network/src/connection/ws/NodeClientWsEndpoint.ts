@@ -56,6 +56,8 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
             this.onClose(connection, code, reason as DisconnectionReason)
             if (code === DisconnectionCode.DUPLICATE_SOCKET) {
                 this.logger.warn('Connection refused: Duplicate nodeId detected, are you running multiple nodes with the same private key?')
+            } else if (code === DisconnectionCode.INVALID_PROTOCOL_MESSAGE) {
+                this.logger.warn('Connection refused: Invalid protocol message format detected, are you running an outdated version?')
             }
         })
 

@@ -2,7 +2,7 @@ import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 import clientOptions from '../config'
-import { createMockAddress } from '../../utils'
+import { createMockAddress } from '../../test-utils/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')
 
@@ -19,7 +19,7 @@ describe('DataUnion deploy', () => {
 
         it('not specified: defaults to deployer', async () => {
             const dataUnion = await adminClient.deployDataUnion()
-            expect(await dataUnion.getAdminAddress()).toBe(await adminClient.getAddress())
+            expect(await dataUnion.getAdminAddress().then((a) => a.toLowerCase())).toBe(await adminClient.getAddress())
         }, 60000)
 
         it('specified', async () => {

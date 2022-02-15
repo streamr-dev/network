@@ -1,10 +1,9 @@
 import 'reflect-metadata'
-import { StreamMessage, MessageID, MessageRef, StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'streamr-client-protocol'
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-import Signer from '../../src/Signer'
-import { Todo } from '../../src/types'
+import Signer from '../../src/publish/Signer'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -21,8 +20,8 @@ describe('Signer', () => {
     })
 
     describe('signing', () => {
-        let signer: Todo
-        const streamId: StreamID = StreamIDUtils.toStreamID('streamId')
+        let signer: Signer
+        const streamId: StreamID = toStreamID('streamId')
         const data = {
             field: 'some-data',
         }

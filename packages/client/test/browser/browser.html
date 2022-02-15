@@ -173,8 +173,8 @@
 
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
-    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
-    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
+    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v2/ws'
+    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v2'
     let firstTime
     let lastTime
     function log(content, className = '') {
@@ -253,10 +253,7 @@
 
     $('#create').on('click', async () => {
         log('Creating...')
-        stream = await publisher.getOrCreateStream({
-            id: '/' + streamName,
-            requireEncryptedData: true,
-        })
+        stream = await publisher.getOrCreateStream({id: '/' + streamName})
         log(`Created: ${stream.id}`, 'createResult')
     })
 
@@ -311,10 +308,12 @@
         messages = []
         log(`Resending...`)
 
-        const sub = await subscriber.resend({
-            stream: stream.id,
-            last: 10,
-        })
+        const sub = await subscriber.resend(
+            stream.id,
+            {
+                last: 10
+            }
+        )
         sub.onMessage((message) => {
             messages.push(message)
             log(`Received Resent: ${JSON.stringify(message)}`)

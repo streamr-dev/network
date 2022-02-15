@@ -3,7 +3,7 @@ import debug from 'debug'
 import { StreamrClient } from '../../../src/StreamrClient'
 import clientOptions from '../config'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
-import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../utils'
+import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../test-utils/utils'
 import { BigNumber } from '@ethersproject/bignumber'
 
 const log = debug('StreamrClient::DataUnion::integration-test-stats')
@@ -31,7 +31,8 @@ describe('DataUnion stats', () => {
     }, 60000)
 
     it('DataUnion stats', async () => {
-        const stats = await queryClient.getDataUnion(dataUnion.getAddress()).getStats()
+        const du = await queryClient.getDataUnion(dataUnion.getAddress())
+        const stats = await du.getStats()
         expect(stats.activeMemberCount).toEqual(BigNumber.from(3))
         expect(stats.inactiveMemberCount).toEqual(BigNumber.from(1))
         expect(stats.joinPartAgentCount).toEqual(BigNumber.from(2))
@@ -41,10 +42,11 @@ describe('DataUnion stats', () => {
     }, 150000)
 
     it('member stats', async () => {
+        const du = await queryClient.getDataUnion(dataUnion.getAddress())
         const memberStats = await Promise.all(
             activeMemberAddressList
                 .concat([inactiveMember])
-                .map((m) => queryClient.getDataUnion(dataUnion.getAddress()).getMemberStats(m))
+                .map((m) => du.getMemberStats(m))
         )
 
         const ZERO = BigNumber.from(0)
@@ -72,7 +74,8 @@ describe('DataUnion stats', () => {
     }, 150000)
 
     it('member stats: no member', async () => {
-        const memberStats = await queryClient.getDataUnion(dataUnion.getAddress()).getMemberStats(createMockAddress())
+        const du = await queryClient.getDataUnion(dataUnion.getAddress())
+        const memberStats = await du.getMemberStats(createMockAddress())
         const ZERO = BigNumber.from(0)
         expect(memberStats).toMatchObject({
             status: MemberStatus.NONE,

@@ -12,21 +12,17 @@
     "consoleAndPM2IntervalInSeconds": {
       "type": "integer",
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
-      "minimum": 0
+      "minimum": 0,
+      "default": 0
     },
     "nodeMetrics" : {
       "type": [
         "object",
         "null"
       ],
-      "required": [
-        "storageNode"
-      ],
       "additionalProperties": false,
+      "default": {},
       "properties": {
-        "storageNode":{
-          "type": "string"
-        },
         "streamIdPrefix": {
           "type": "string",
           "description": "Base streamId before granularities (sec, min, hour) for the firehose metrics stream",

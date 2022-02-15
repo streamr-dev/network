@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { StreamIDUtils, TrackerLayer } from 'streamr-client-protocol'
+import { toStreamID, StreamPartID, TrackerLayer } from 'streamr-client-protocol'
 
 import { InstructionRetryManager } from '../../src/logic/node/InstructionRetryManager'
 
@@ -19,7 +19,7 @@ describe('InstructionRetryManager', () => {
     function createInstruction(streamId: string, counter: number) {
         return new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
-            streamId: StreamIDUtils.toStreamID(streamId),
+            streamId: toStreamID(streamId),
             streamPartition: 0,
             nodeIds: [],
             counter
@@ -98,7 +98,7 @@ describe('InstructionRetryManager', () => {
             [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
 
-        instructionRetryManager.removeStream('stream-1#0')
+        instructionRetryManager.removeStreamPart('stream-1#0' as StreamPartID)
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
             [createInstruction('stream-1', 1), 'tracker-1', false],

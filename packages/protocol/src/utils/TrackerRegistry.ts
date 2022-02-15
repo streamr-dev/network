@@ -1,12 +1,5 @@
-import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider } from '@ethersproject/providers'
-
 import { keyToArrayIndex } from './HashUtil'
-
-import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
-import { SPID } from './SPID'
-
-type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
+import { StreamPartID } from "./StreamPartID"
 
 export type SmartContractRecord = {
     id: string
@@ -21,12 +14,10 @@ export class TrackerRegistry<T extends TrackerInfo> {
 
     constructor(records: T[]) {
         this.records = records.slice() // copy before mutating
-        this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(spid: SPID): T {
-        const key = spid.toKey().replace('#', '::') // TODO temporary backwards compatibility
-        const index = keyToArrayIndex(this.records.length, key)
+    getTracker(streamPartId: StreamPartID): T {
+        const index = keyToArrayIndex(this.records.length, streamPartId)
         return this.records[index]
     }
 
@@ -35,48 +26,6 @@ export class TrackerRegistry<T extends TrackerInfo> {
     }
 }
 
-async function fetchTrackers(contractAddress: string, jsonRpcProvider: ProviderConnectionInfo) {
-    const provider = new JsonRpcProvider(jsonRpcProvider)
-    // check that provider is connected and has some valid blockNumber
-    await provider.getBlockNumber()
-
-    const contract = new Contract(contractAddress, trackerRegistryConfig.abi, provider)
-    // check that contract is connected
-    await contract.addressPromise
-
-    if (typeof contract.getNodes !== 'function') {
-        throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
-    }
-
-    return await contract.getNodes()
-}
-
 export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]): TrackerRegistry<T> {
     return new TrackerRegistry(servers)
-}
-
-export async function getTrackerRegistryFromContract({
-    contractAddress,
-    jsonRpcProvider
-}: {
-    contractAddress: string,
-    jsonRpcProvider: ProviderConnectionInfo
-}): Promise<TrackerRegistry<SmartContractRecord>> {
-    const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
-    const records: SmartContractRecord[] = []
-    for (let i = 0; i < trackers.length; ++i) {
-        const { metadata, url, nodeAddress } = trackers[i]
-        try {
-            // The field is tracker.metadata in newer contracts and tracker.url in old contracts.
-            // It's safe to clean up tracker.url when no such contract is used anymore.
-            const urls = JSON.parse(metadata || url)
-            records.push({
-                id: nodeAddress,
-                ...urls
-            })
-        } catch (e) {
-            throw new Error(`Element trackers[${i}] not parsable as object: ${trackers[i]}`)
-        }
-    }
-    return createTrackerRegistry(records)
 }

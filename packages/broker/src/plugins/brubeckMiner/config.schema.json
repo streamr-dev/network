@@ -1,0 +1,42 @@
+{
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "description": "Brubeck miner plugin configuration",
+    "additionalProperties": false,
+    "properties": {
+        "rewardStreamIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true,
+            "default": [
+                "streamr.eth/brubeck-mainnet/rewards/001ae9",
+                "streamr.eth/brubeck-mainnet/rewards/b82a43",
+                "streamr.eth/brubeck-mainnet/rewards/d72f1a",
+                "streamr.eth/brubeck-mainnet/rewards/d1aed2",
+                "streamr.eth/brubeck-mainnet/rewards/14aptk",
+                "streamr.eth/brubeck-mainnet/rewards/b2ab22",
+                "streamr.eth/brubeck-mainnet/rewards/7cd249",
+                "streamr.eth/brubeck-mainnet/rewards/af81e2",
+                "streamr.eth/brubeck-mainnet/rewards/52ada6",
+                "streamr.eth/brubeck-mainnet/rewards/cbab52"
+            ]
+        },
+        "claimServerUrl": {
+            "type": "string",
+            "default": "http://brubeck1.streamr.network:3011"
+        },
+        "maxClaimDelay": {
+            "type": "number",
+            "description": "Maximum time for delaying the claim in milliseconds",
+            "default": 120000
+        },
+        "stunServerHost": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "default": "stun.sipgate.net"
+        }
+    }
+}
