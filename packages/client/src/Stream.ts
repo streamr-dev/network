@@ -98,8 +98,8 @@ class StreamrStream implements StreamMetadata {
     protected _streamRegistry: StreamRegistry
     protected _nodeRegistry: StorageNodeRegistry
     protected _ethereuem: Ethereum
-    private readonly httpFetcher: HttpFetcher
-    private clientConfig: StrictStreamrClientConfig
+    private readonly _httpFetcher: HttpFetcher
+    private _clientConfig: StrictStreamrClientConfig
 
     /** @internal */
     constructor(
@@ -117,8 +117,8 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
-        this.httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
-        this.clientConfig = _container.resolve<StrictStreamrClientConfig>(Config.Root)
+        this._httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
+        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(Config.Root)
     }
 
     /**
@@ -384,16 +384,16 @@ class StreamrStream implements StreamMetadata {
         await until(
             () => this.isStreamStoredInStorageNode(this.id, url),
             // eslint-disable-next-line no-underscore-dangle
-            timeout ?? this.clientConfig._timeouts.storageNode.timeout,
+            timeout ?? this._clientConfig._timeouts.storageNode.timeout,
             // eslint-disable-next-line no-underscore-dangle
-            pollInterval ?? this.clientConfig._timeouts.storageNode.retryInterval,
+            pollInterval ?? this._clientConfig._timeouts.storageNode.retryInterval,
             () => `Propagation timeout when adding stream to a storage node: ${this.id}`
         )
     }
 
     private async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
         const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/${DEFAULT_PARTITION}`
-        const response = await this.httpFetcher.fetch(url)
+        const response = await this._httpFetcher.fetch(url)
         if (response.status === 200) {
             return true
         }
