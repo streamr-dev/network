@@ -7,7 +7,7 @@ import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { CacheConfig, Config } from './Config'
 import { StreamRegistry } from './StreamRegistry'
-import { StreamPermission } from './Stream'
+import { StreamPermission } from './permission'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -70,7 +70,11 @@ export class StreamEndpointsCached implements Context {
     })
 
     async isPublicSubscriptionStream(streamId: StreamID) {
-        return this.streamRegistry.hasPublicPermission(streamId, StreamPermission.SUBSCRIBE)
+        return this.streamRegistry.hasPermission({
+            streamId,
+            public: true,
+            permission: StreamPermission.SUBSCRIBE
+        })
     }
 
     isPublic = CacheAsyncFn(this.isPublicSubscriptionStream.bind(this), {

@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import { getPublishTestStreamMessages, createTestStream } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Stream, StreamPermission } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
 import { GroupKey } from '../../src/encryption/Encryption'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
@@ -57,7 +58,10 @@ describe('Group Key Persistence', () => {
                 }
             })
             const otherUser = await subscriber.getAddress()
-            await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
+            await stream.grantPermissions({
+                user: otherUser,
+                permissions: [StreamPermission.SUBSCRIBE]
+            })
             const groupKey = GroupKey.generate()
             await publisher.setNextGroupKey(stream.id, groupKey)
         })
@@ -352,7 +356,10 @@ describe('Group Key Persistence', () => {
             for (let i = 0; i < NUM_STREAMS; i++) {
                 // eslint-disable-next-line no-await-in-loop
                 const stream = await createTestStream(publisher, module)
-                await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
+                await stream.grantPermissions({
+                    public: true,
+                    permissions: [StreamPermission.SUBSCRIBE]
+                })
                 streams.push(stream)
             }
         }, 2 * TIMEOUT)

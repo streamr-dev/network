@@ -9,6 +9,15 @@ export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export { ResendSubscription } from './subscribe/ResendSubscription'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions } from './subscribe/Resends'
+export {
+    StreamPermission,
+    PermissionQuery,
+    UserPermissionQuery,
+    PublicPermissionQuery,
+    PermissionAssignment,
+    UserPermissionAssignment,
+    PublicPermissionAssignment
+} from './permission'
 export * from './LoginEndpoints'
 export * from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'

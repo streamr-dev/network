@@ -1,7 +1,7 @@
 /* eslint-disable padding-line-between-statements */
 import { EthereumAddress } from 'streamr-client-protocol'
-import { StreamPermission } from './Stream'
-import { ChainPermissions, PUBLIC_PERMISSION_ADDRESS, StreamQueryResult, StreamRegistry } from './StreamRegistry'
+import { StreamQueryResult } from './StreamRegistry'
+import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from './permission'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { filter, unique } from './utils/GeneratorUtils'
 
@@ -55,7 +55,7 @@ export async function* fetchSearchStreamsResultFromTheGraph(
          */
         const anyOf = permissionFilter.anyOf ?? Object.values(StreamPermission) as StreamPermission[]
         yield* filter(withoutDuplicates, (item: SearchStreamsResultItem) => {
-            const actual = StreamRegistry.convertChainPermissionsToStreamPermissions(item)
+            const actual = convertChainPermissionsToStreamPermissions(item)
             return anyOf.some((p) => actual.includes(p))
         })
     } else {
