@@ -230,12 +230,10 @@
 
     const publisher = new StreamrClient({
         ...StreamrClient.ConfigTest,
-        id: 'publisher',
         auth: publisherAuth,
     })
     const subscriber = new StreamrClient({
         ...StreamrClient.ConfigTest,
-        id: 'subscriber',
         auth: subscriberAuth,
     })
     publisher.enableDebugLogging()
@@ -314,8 +312,7 @@
             {
                 last: 10
             }
-        )
-        sub.onMessage((message) => {
+        , (message) => {
             messages.push(message)
             console.log("here")
             log(`Received Resent: ${JSON.stringify(message)}`)
@@ -324,9 +321,10 @@
             }
         })
 
-        // sub.onConsumed(() => {
-        //     log('Resend Consumed.', 'resendResult')
-        // })
+
+        sub.onConsumed(() => {
+            log('Resend Consumed.', 'resendResult')
+        })
     })
 
     $('#disconnect').on('click', async () => {
