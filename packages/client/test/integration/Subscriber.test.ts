@@ -5,8 +5,8 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import { Stream } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import Subscriber from '../../src/Subscriber'
+import { Subscription } from '../../src/subscribe/Subscription'
+import Subscriber from '../../src/subscribe/Subscriber'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8

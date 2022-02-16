@@ -88,12 +88,12 @@ async function run() {
     async function test(client, stream, batchSize) {
         return async function Fn(deferred) {
             this.BATCH_SIZE = batchSize
-            const sub = await client.resend({
-                streamId: stream.id,
-                resend: {
+            const sub = await client.resend(
+                stream.id,
+                {
                     last: batchSize,
                 }
-            })
+            )
             await sub.collect(batchSize)
             deferred.resolve()
         }

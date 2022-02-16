@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
-import fetch from '../../src/utils/fetch'
+import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
@@ -16,7 +16,7 @@ import { StreamProperties } from '../../src/Stream'
 import clientOptions from '../../src/ConfigTest'
 
 import Signal from '../../src/utils/Signal'
-import { PublishMetadata } from '../../src/Publisher'
+import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 
 export { clientOptions }
@@ -233,6 +233,7 @@ export class LeaksDetector {
         '/container',
         '/childContainer',
         'rovider/formatter',
+        'chainProviders/0/formatter'
     ])
 
     private counter = CounterId(this.id, { maxPrefixes: 1024 })

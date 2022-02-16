@@ -1,9 +1,9 @@
 import Ajv, { Schema, ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string): void|never => {
+export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): void|never => {
     const ajv = new Ajv({
-        useDefaults: true
+        useDefaults
     })
     addFormats(ajv)
     if (!ajv.validate(schema, data)) {
@@ -15,5 +15,14 @@ export const validateConfig = (data: unknown, schema: Schema, contextName?: stri
             }
             return text
         }).join('\n'))
+    }
+}
+
+export const isValidConfig = (data: unknown, schema: Schema): boolean => {
+    try {
+        validateConfig(data, schema, undefined, false)
+        return true
+    } catch (_e) {
+        return false
     }
 }

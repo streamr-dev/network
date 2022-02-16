@@ -97,10 +97,12 @@ describe('Group Key Persistence', () => {
                 await publisher2.publisher.startKeyExchange()
 
                 const received = []
-                const sub = await subscriber.resend({
-                    stream: stream.id,
-                    last: published.length
-                })
+                const sub = await subscriber.resend(
+                    stream.id,
+                    {
+                        last: published.length
+                    }
+                )
 
                 for await (const m of sub) {
                     received.push(m)
@@ -193,12 +195,12 @@ describe('Group Key Persistence', () => {
             })
 
             await subscriber2.connect()
-            const sub2 = await subscriber2.resend({
-                stream: stream.id,
-                resend: {
+            const sub2 = await subscriber2.resend(
+                stream.id,
+                {
                     last: 5
                 }
-            })
+            )
 
             const received2 = []
             for await (const m of sub2) {

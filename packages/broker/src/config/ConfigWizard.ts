@@ -6,10 +6,11 @@ import chalk from 'chalk'
 import { v4 as uuid } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 
-import * as WebsocketConfigSchema from './plugins/websocket/config.schema.json'
-import * as MqttConfigSchema from './plugins/mqtt/config.schema.json'
-import * as BrokerConfigSchema from './helpers/config.schema.json'
+import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
+import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
+import * as BrokerConfigSchema from '../helpers/config.schema.json'
 import { getDefaultFile } from './config'
+import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
 
 const createLogger = () => {
     return {
@@ -44,6 +45,7 @@ const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
     client: {
+        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
         auth: {
         }
     },
@@ -197,8 +199,8 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
             recursive: true
         })
     }
-    writeFileSync(answers.storagePath, JSON.stringify(config, null, 2))
-    chmodSync(answers.storagePath, '0600')
+    writeFileSync(answers.storagePath, JSON.stringify(config, null, 4))
+    chmodSync(answers.storagePath, '600')
     return answers.storagePath
 }
 

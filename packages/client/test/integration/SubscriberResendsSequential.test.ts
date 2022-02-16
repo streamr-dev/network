@@ -84,9 +84,11 @@ describeRepeats('sequential resend subscribe', () => {
         const id = (i + 2) * 111111 // start at 222222
         // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
-            const sub = await subscriber.resendSubscribe({
+            const sub = await subscriber.subscribe({
                 streamId: stream.id,
-                last: published.length,
+                resend: {
+                    last: published.length,
+                }
             })
 
             const onResent = jest.fn()

@@ -5,17 +5,17 @@
 import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
 
 import OrderMessages from './OrderMessages'
-import MessageStream from './MessageStream'
+import { MessageStream } from './MessageStream'
 
-import Validator from './Validator'
+import Validator from '../Validator'
 import { Decrypt } from './Decrypt'
-import { SubscriberKeyExchange } from './encryption/KeyExchangeSubscriber'
-import { Context } from './utils/Context'
-import { Config } from './Config'
+import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
+import { Context } from '../utils/Context'
+import { Config } from '../Config'
 import Resends from './Resends'
-import { DestroySignal } from './DestroySignal'
+import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
 export default function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,

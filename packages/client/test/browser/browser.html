@@ -308,10 +308,12 @@
         messages = []
         log(`Resending...`)
 
-        const sub = await subscriber.resend({
-            stream: stream.id,
-            last: 10,
-        })
+        const sub = await subscriber.resend(
+            stream.id,
+            {
+                last: 10
+            }
+        )
         sub.onMessage((message) => {
             messages.push(message)
             log(`Received Resent: ${JSON.stringify(message)}`)

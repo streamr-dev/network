@@ -2,10 +2,10 @@
  * Derive partitions for StreamMessages.
  */
 import { StreamID, Utils } from 'streamr-client-protocol'
-import { CacheFn } from './utils'
-import { Config, CacheConfig } from './Config'
+import { CacheFn } from '../utils'
+import { Config, CacheConfig } from '../Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
 export type PartitionKey = string | number | undefined
 

@@ -9,10 +9,10 @@ import { Context } from './utils/Context'
 import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
-import Publisher from './Publisher'
-import Subscriber from './Subscriber'
-import Resends from './Resends'
-import ResendSubscribe, { ResendSubscription } from './ResendSubscribe'
+import Publisher from './publish/Publisher'
+import Subscriber from './subscribe/Subscriber'
+import Resends, { ResendOptions } from './subscribe/Resends'
+import { ResendSubscription } from './subscribe/ResendSubscription'
 import BrubeckNode from './BrubeckNode'
 import Session from './Session'
 import { DestroySignal } from './DestroySignal'
@@ -24,6 +24,9 @@ import GroupKeyStoreFactory from './encryption/GroupKeyStoreFactory'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
+import { StreamDefinition } from './types'
+import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
+import { StreamIDBuilder } from './StreamIDBuilder'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -37,7 +40,6 @@ let uid: string = process.pid != null
 export interface StreamrClient extends Ethereum,
     Methods<StreamEndpoints>,
     Methods<Omit<Subscriber, 'subscribe'>>,
-    Methods<ResendSubscribe>,
     Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
@@ -46,10 +48,7 @@ export interface StreamrClient extends Ethereum,
     Methods<StorageNodeRegistry>,
     Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
-    // Omit sessionTokenPromise because TS complains:
-    // Type 'undefined' is not assignable to type 'keyof Session'
-    // MethodNames's [K in keyof T] doesn't work if K is optional?
-    Methods<Omit<Session, 'sessionTokenPromise'>>,
+    Methods<Session>,
     Methods<Resends> {
 }
 
@@ -58,7 +57,6 @@ class StreamrClientBase implements Context {
 
     id
     debug
-    subscribe
     onDestroy
     isDestroyed
 
@@ -75,12 +73,12 @@ class StreamrClientBase implements Context {
         public resends: Resends,
         public publisher: Publisher,
         public subscriber: Subscriber,
-        public resendSubscriber: ResendSubscribe,
         public groupKeyStore: GroupKeyStoreFactory,
         protected destroySignal: DestroySignal,
         public dataunions: DataUnions,
         public streamRegistry: StreamRegistry,
-        public storageNodeRegistry: StorageNodeRegistry
+        public storageNodeRegistry: StorageNodeRegistry,
+        private streamIdBuilder: StreamIDBuilder
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
@@ -90,7 +88,6 @@ class StreamrClientBase implements Context {
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.resends)
-        Plugin(this, this.resendSubscriber)
         Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
@@ -98,10 +95,42 @@ class StreamrClientBase implements Context {
         Plugin(this, this.streamRegistry)
         Plugin(this, this.storageNodeRegistry)
 
-        // override subscribe with resendSubscriber's subscribe+resend
-        this.subscribe = resendSubscriber.subscribe.bind(resendSubscriber)
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
+    }
+
+    subscribe<T>(
+        options: StreamDefinition & { resend: ResendOptions },
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<ResendSubscription<T>>
+    subscribe<T>(
+        options: StreamDefinition,
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<Subscription<T>>
+    subscribe<T>(
+        options: StreamDefinition & { resend?: ResendOptions },
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<Subscription<T> | ResendSubscription<T>> {
+        if (options.resend !== undefined) {
+            return this.resendSubscribe(options, options.resend, onMessage)
+        }
+
+        return this.subscriber.subscribe(options, onMessage)
+    }
+
+    private async resendSubscribe<T>(
+        streamDefinition: StreamDefinition,
+        resendOptions: ResendOptions,
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<ResendSubscription<T>> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
+        const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
+        if (onMessage) {
+            sub.useLegacyOnMessageHandler(onMessage)
+        }
+        await this.subscriber.addSubscription<T>(sub)
+        return sub
     }
 
     connect = pOnce(async () => {
@@ -216,12 +245,12 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
-            c.resolve<ResendSubscribe>(ResendSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
             c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
+            c.resolve<StreamIDBuilder>(StreamIDBuilder)
         )
     }
 }
@@ -242,8 +271,4 @@ export const Dependencies = {
     DataUnions,
 }
 
-export { ResendOptionsStrict as ResendOptions } from './Resends'
-
 export { BrubeckClientConfig as StreamrClientOptions } from './Config'
-
-export { ResendSubscription }

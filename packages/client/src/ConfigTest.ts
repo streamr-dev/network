@@ -4,8 +4,10 @@ function toNumber(value: any): number | undefined {
 
 const sideChainConfig = {
     name: 'streamr',
-    url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
-    timeout: toNumber(process.env.TEST_TIMEOUT),
+    rpcs: [{
+        url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
+    }]
 }
 
 /**
@@ -48,16 +50,33 @@ export default {
             }
         ],
     },
-    mainChainRPC: {
+    mainChainRPCs: {
         name: 'dev_ethereum',
-        url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
-        timeout: toNumber(process.env.TEST_TIMEOUT),
+        rpcs: [{
+            url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
+            timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        }]
     },
-    streamRegistryChainRPC: sideChainConfig,
-    dataUnionChainRPC: sideChainConfig,
+    streamRegistryChainRPCs: sideChainConfig,
+    dataUnionChainRPCs: sideChainConfig,
     autoConnect: false,
     autoDisconnect: false,
     maxRetries: 2,
+    _timeouts: {
+        theGraph: {
+            timeout: 10 * 1000,
+            retryInterval: 500
+        },
+        storageNode: {
+            timeout: 30 * 1000,
+            retryInterval: 500
+        },
+        jsonRpc: {
+            timeout: 20 * 1000,
+            retryInterval: 500
+        },
+        httpFetchTimeout: 30 * 1000
+    }
 }
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'
