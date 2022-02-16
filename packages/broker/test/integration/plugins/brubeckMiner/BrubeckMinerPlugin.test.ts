@@ -52,7 +52,7 @@ class MockClaimServer {
 
 const createRewardStream = async (client: StreamrClient): Promise<Stream> => {
     const stream = await createTestStream(client, module)
-    await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
+    await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
     return stream
 }
 
