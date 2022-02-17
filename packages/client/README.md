@@ -88,9 +88,9 @@ const stream = await client.createStream({
 
 In order to  enable historical data `resends` add first the stream to a storage node:
 ```typescript
-import { StorageNode, StreamrClient } from StreamrClient
+import { STREAMR_STORAGE_NODE_GERMANY, StreamrClient } from StreamrClient
 
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 ```
 > ℹ️ Visit the [Storage section](#storage) for more options.
 
