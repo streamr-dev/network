@@ -21,12 +21,12 @@ enum State {
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Session extends EventEmitter {
-    state: State
-    sessionTokenPromise?: Promise<string>
+    private state: State
+    private sessionTokenPromise?: Promise<string>
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Auth) public options: AuthConfig
+        @inject(Config.Auth) private options: AuthConfig
     ) {
         super()
         this.state = State.LOGGED_OUT
@@ -46,7 +46,7 @@ export default class Session extends EventEmitter {
         this.emit(newState)
     }
 
-    get loginEndpoints() {
+    private get loginEndpoints() {
         return this.container.resolve<LoginEndpoints>(LoginEndpoints)
     }
 
