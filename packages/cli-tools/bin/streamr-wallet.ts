@@ -6,5 +6,5 @@ program
     .version(pkg.version)
     .usage('<command> [<args>]')
     .description('wallet subcommands')
-    .command('whoami', 'subscribe to a stream')
+    .command('whoami', 'displays your public address')
     .parse()
