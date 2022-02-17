@@ -259,9 +259,7 @@ const client = new StreamrClient({
 })
 ```
 
-
-
-## Connecting
+### Connecting
 
 By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
 Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no
@@ -270,13 +268,6 @@ StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disa
 be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
 
 Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
-
-| Name                                | Description                                                                                                                                                                                         |
-| :---------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| connect()                           | Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.                                                  |
-| disconnect()                        | Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection. |
-| enableAutoConnect(enable = true)    | Enables autoConnect if it wasn't already enabled. Does not connect immediately. Use `enableAutoConnect(false)` to disable autoConnect.                                                              |
-| enableAutoDisconnect(enable = true) | Enables autoDisconnect if it wasn't already enabled. Does not disconnect immediately. Use `enableAutoConnect(false)` to disable autoDisconnect.                                                     |
 
 ```js
 const client = new StreamrClient({
@@ -287,7 +278,11 @@ const client = new StreamrClient({
     autoDisconnect: false,
 })
 
+// Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.    
 await client.connect()
+
+// Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection.
+await client.disconnect()
 ```
 
 ## Stream subscriptions
