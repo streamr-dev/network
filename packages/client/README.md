@@ -443,12 +443,75 @@ await client.publish(
 const stream = await client.getStream(STREAM_ID)
 
 // publishing to a stream using it's object
-await stream.publish(STREAM_ID, { foo: 'bar' }, Date.now(), msg.vehicleId)
+await stream.publish({ foo: 'bar' }, Date.now(), msg.vehicleId)
 
 // [GAS REQUIRED] deletes the stream
 await stream.delete()
 
-```                  
+// Updates the properties of this stream object by sending them to the API
+await stream.update()
+
+// Checking user permissions
+const hasUserPermissions = await stream.hasPermissions({
+    permission: StreamPermission.SUBSCRIBE,
+    user: address,
+    allowPublic: true
+})
+
+// Checking public streams
+const hasPublicPermissions = await stream.hasPermissions({
+    permission: StreamPermission.SUBSCRIBE
+    public: true
+})
+
+// Getting existent permissions
+// the returned permissions are an array containing an item for each user, and one for public permissions
+const permissions = await stream.getPermissions()
+/*
+    permissions = [
+        { user: '0x...', permissions: ['subscribe', 'publish'] },
+        { public: true, permissions: ['subscribe']}
+    ]
+*/
+
+export interface UserPermissionAssignment {
+    permissions: StreamPermission[]
+    user: EthereumAddress
+}
+
+export interface PublicPermissionAssignment {
+    permissions: StreamPermission[]
+    public: true
+}
+// Grant permissions for users and public
+await stream.grantPermissions(
+    [
+        {
+            user: '0x...',
+            permissions: [StreamPermission.PUBLISH]
+        },
+        { 
+            public: true,
+            permissions: [StreamPermission.SUBSCRIBE]
+        }
+    ]
+)
+
+// Revokes the set of permissions 
+await stream.revokePermissions(
+    [
+        {
+            user: '0x...',
+            permissions: [StreamPermission.PUBLISH]
+        },
+        { 
+            public: true,
+            permissions: [StreamPermission.SUBSCRIBE]
+        }
+    ]
+)
+
+```            
 
 ### Stream Operations and Permissions 
 The matrix below outlines the role types and permissions for streams.
