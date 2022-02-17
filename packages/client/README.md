@@ -704,8 +704,8 @@ a Data Union deployed by a particular address with particular "name" will have a
 ## Utility functions
 ```js 
 // The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
-// Generates a random Ethereum account with fields {address, privateKey}
 const wallet = StreamrClient.generateEthereumAccount()
+// Generates a random Ethereum account with fields {address, privateKey}
 
 // retrieve the address for the streamr-client instance
 const client = new StreamrClient({ auth: { privateKey: wallet.privateKey }})
