@@ -46,6 +46,7 @@ client.subscribe(STREAM_ID, (message) => {
 ```
 ### Creating & publishing to a stream
 ```js 
+// [GAS REQUIRED]
 const stream = await client.createStream({
     id: '/foo/bar'
 })
@@ -96,6 +97,7 @@ const address = await client.getAddress()
 
 ### Creating a stream 
 ```js
+// [GAS REQUIRED]
 const stream = await client.createStream({
     id: '/foo/bar'
 })
@@ -119,6 +121,7 @@ const stream = await client.getStream(STREAM_ID)
 
 The method `getOrCreateStream` allows for a seamless creation/fetching process:
 ```js
+// [MAY REQUIRE GAS UPON STREAM CREATION]
 const stream = await client.getOrCreateStream({
     id: `${address}/doc-tests`
 })
@@ -313,13 +316,6 @@ const sub = await client.subscribe(
 ### Resend functionality with subscriptions
 Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
 
-| Name      | Description                                                                        |
-| :-------- | :--------------------------------------------------------------------------------- |
-| stream    | Stream id to subscribe to                                                          |
-| partition | Partition number to subscribe to. Defaults to partition 0.                         |
-| resend    | Object defining the resend options. Below are examples of its contents.            |
-| groupKeys | Object defining the group key as a hex string for each publisher id of the stream. |
-
 ```js
 // Resend N most recent messages
 const sub1 = await client.subscribe({
@@ -338,7 +334,6 @@ const sub2 = await client.subscribe({
             sequenceNumber: 0, // optional
         },
         publisher: 'publisherId', // optional
-        msgChainId: 'msgChainId', // optional
     }
 }, onMessage)
 
@@ -425,30 +420,16 @@ await client.publish(
 ```
 
 ### Stream object
+```js
+// getting a stream object 
+const stream = await client.getStream(STREAM_ID)
 
-All the below functions return a Promise which gets resolved with the result.
+await stream.publish(STREAM_ID, { foo: 'bar' }, Date.now(), msg.vehicleId)
 
+// [GAS REQUIRED] deletes the stream
+await stream.delete()
 
-
-
-| Name                                      | Description                                                                                                                                                                                                                                                                   |
-| :---------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| update()                                  | Updates the properties of this stream object by sending them to the API.                                                                                                                                                                                                      |
-| delete()                                  | Deletes this stream.                                                                                                                                                                                                                                                          |
-| getPermissions()                          | Returns the list of permissions for this stream.                                                                                                                                                                                                                              |
-| revokeUserPermission(operation, user)            | Revokes the permission for `operation` previously granted to `user`        |       
-| revokeAllPublicPermissions() | Revokes all permissions to `user` for that stream |
-| detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream.                                                                                                                                                                                        |
-| publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                                                                                                                                                                                                                                       |
-| hasUserPermission(operation, user) | Returns the StreamPermission for `user` on `operation`, if found, or `undefined` |
-| hasPublicPermission(operation) | Checks if the public permission for `operation` exists on the stream |
-| grantUserPermission | Alias of `grantPermission`
-| grantPublicPermission(operation) | Grants public permission to the `operation`
-| revokePublicPermission(operation) | Removes the public permission on the `operation`
-| revokeAllUserPermissions(user) | Removes all permissions for `user`
-| revokeAllPublicPermissions() | Removes all public permissions
-| setPermissionsForUser (user, canEdit, canDelete, canPublish, canSubscribe, canShare) | Defines the permissions for `user` by providing booleans for `canEdit`, `canPublish`, `canSubscribe` and `canShare` |
-| setPermissions(users[], permissions[]) | Grants each set of `StreamPermission` to their corresponding `users` element
+```                  
 
 ### Stream Operations and Permissions 
 The matrix below outlines the role types and permissions for streams.
@@ -460,6 +441,8 @@ The matrix below outlines the role types and permissions for streams.
 | canPublish | Publish to stream| |✔️|✔️|✔️|
 | canSubscribe | Subscribe to stream|✔️| |✔️|✔️|
 | canGrant | Edit stream permissions| | | |✔️|
+
+> ⚠️ Permission snippets are [in this PR](https://github.com/streamr-dev/network-monorepo/pull/450). If it lands to main before this PR, please merge those snippets to this PR.
 
 ## Data Unions
 
@@ -718,6 +701,7 @@ Partitioning (sharding) enables streams to scale horizontally. This section desc
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
 
 ```js
+// [GAS REQUIRED]
 const stream = await client.createStream({
     id: `${await client.getAddress()}/partitioned-stream`,
     partitions: 10,
