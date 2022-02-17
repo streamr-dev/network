@@ -34,7 +34,8 @@ import {
     PermissionQueryResult,
     PUBLIC_PERMISSION_ADDRESS,
     SingleStreamQueryResult,
-    streamPermissionToSolidityType
+    streamPermissionToSolidityType,
+    ChainPermissions
 } from './permission'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
@@ -422,17 +423,29 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async setPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+    async setPermissions(streams: {
+        streamId: string,
+        assignments: PermissionAssignment[]
+    }[]): Promise<void> {
+        const streamIds: StreamID[] = []
+        const targets: string[][] = []
+        const chainPermissions: ChainPermissions[][] = []
+        for (const stream of streams) {
+            // eslint-disable-next-line no-await-in-loop
+            const streamId = await this.streamIdBuilder.toStreamID(stream.streamId)
+            this.streamEndpointsCached.clearStream(streamId)
+            streamIds.push(streamId)
+            targets.push(stream.assignments.map((assignment) => {
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
+            }))
+            chainPermissions.push(stream.assignments.map((assignment) => {
+                return convertStreamPermissionsToChainPermission(assignment.permissions)
+            }))
+        }
         await this.connectToStreamRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
-        const targets = assignments.map((assignment) => {
-            return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
-        })
-        const chainPermissions = assignments.map((assignment) => convertStreamPermissionsToChainPermission(assignment.permissions))
-        const txToSubmit = this.streamRegistryContract!.setPermissions(
-            streamId,
+        const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreans(
+            streamIds,
             targets,
             chainPermissions,
             ethersOverrides

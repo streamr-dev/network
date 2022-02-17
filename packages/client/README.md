@@ -624,19 +624,24 @@ await stream.revokePermissions({
 })
 ```
 
-There is also a `client.setPermissions` method which is otherwise equal to `grantPermission()`, but if there are existing permissions for the same users in that stream, the previous permissions are overwritten:
+There is also a `client.setPermissions`. You can use it to set an exact set of permissions for multiple streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten:
 
 ```js
-await client.setPermissions(streamId, {
-    user: '0x1111111111111111111111111111111111111111',
-    permissions: [StreamPermission.EDIT]
-}, {
-    user: '0x2222222222222222222222222222222222222222',
-    permissions: [StreamPermission.GRANT]
-}, {
-    public: true,
-    permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
-})
+await client.setPermissions([{
+    streamId,
+    assignments: [
+        {
+            user: '0x1111111111111111111111111111111111111111',
+            permissions: [StreamPermission.EDIT]
+        }, {
+            user: '0x2222222222222222222222222222222222222222',
+            permissions: [StreamPermission.GRANT]
+        }, {
+            public: true,
+            permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
+        }
+    ]
+}])
 ```
 
 You can query the existence of a permission with `hasPermission()`. Usually you want to use `allowPublic: true` flag so that also the existence of a public permission is checked:
