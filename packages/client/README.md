@@ -385,47 +385,54 @@ await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 
 ## Stream API
 
+## Stream API
+
 All the below functions return a Promise which gets resolved with the result.
 
 | Name                                                | Description                                                                                                                                          |
 | :-------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
 | getStream(streamId)                                 | Fetches a stream object from the API.                                                                                                                |
-| listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).                     |
-| getStreamByName(name)                               | Fetches a stream which exactly matches the given name.                                                                                               |
-| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). You must specify the `id`. It must start with your ethereum address.|
-| getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
+| searchStreams(term)                                 | Fetches an array of stream objects      |
+| createStream(\[properties])                         | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). If you specify `id`, it can be a full streamId or a path (e.g. `/foo/bar` will create a stream with id `<your-ethereum-address>/foo/bar` if you have authenticated with a private key)|
+| getOrCreateStream(properties)                       | Gets a stream with the id given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
 
+
 ```js
-// getStream
+// getStream -- Fetches a stream object from the
 const stream: Stream = await client.getStream(STREAM_ID)
 
-// getStreamByName
-const stream = await client.getStreamByName('stream-name')
+// searchStreams -- Using a term to be matched in the stream's id
+const streams = await client.searchStreams('foo')
 
-// listStreams
-const streams: Stream[] = await client.listStreams({
-    name?: string;
-    uiChannel?: boolean;
-    noConfig?: boolean;
-    search?: string;
-    sortBy?: string;
-    order?: 'asc' | 'desc';
-    max?: number;
-    offset?: number;
-    grantedAccess?: boolean;
-    publicAccess?: boolean;
-    operation?: StreamOperation;
+// searchStreams -- Using a term and a permissions filter 
+const streams = await client.searchStreams('foo', {
+    allOf: [StreamPermission.canSubscribe, ...], // optional, matches exact stream permissions with the provided array
+    anyOf: [StreamPermission.canSubscribe, ...], // optional, matches any of the given permissions
+    allowPublic: true
 })
 
-// createStream
+
+// createStream -- Create a stream with id `<your-ethereum-address>/foo/bar`
 const stream = await client.createStream({
-    id: `${await client.getAddress()}/stream-01`
+    id: '/foo/bar'
 })
-// getOrCreateStream
+
+// getOrCreateStream -- Gets a stream with the id given in `properties`, or creates it if one is not found
 const stream = await client.getOrCreateStream({
-    id: `${await client.getAddress()}/stream-01`
+    id: `/foo/bar`
 })
+```
+
+The client exposes a `publish` method as well as the `stream` object. Read more about the publish functionality [here](#publishing-data-points-to-a-stream)
+```js
+// publish --  Publishes a new message to the given stream
+await client.publish(
+    STREAM_ID, 
+    { foo: 'bar' }, // message: payload
+    Date.now(), // (optional) timestamp 
+    'fooBar' // (optional) partitionKey
+)
 
 ```
 
