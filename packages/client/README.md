@@ -246,7 +246,7 @@ const client = new StreamrClient({
 
 
 ### Message ordering
-[REQUIRES EXPLANATION AND DEVELOPMENT]
+You can disable message ordering with the `orderMessages` option:
 ```js
 const client = new StreamrClient({
     auth: { ... },
@@ -254,14 +254,14 @@ const client = new StreamrClient({
 })
 ```
 ### Gap Filling
-[REQUIRES EXPLANATION AND DEVELOPMENT]
+You can disable or customize the behavior for gap filling:
 ```js
 const client = new StreamrClient({
     auth: { ... },
-    gapFill: boolean
-    maxGapRequests: number
-    maxRetries: number
-    gapFillTimeout: number
+    gapFill: false,
+    maxGapRequests: 1,
+    maxRetries: 1,
+    gapFillTimeout: 1
 })
 ```
 
