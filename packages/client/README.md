@@ -295,22 +295,20 @@ const streams = await client.unsubscribe()
 ```
 
 ### Message handler callback
-
 The second argument to `client.subscribe(options, callback)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
 
-| Argument      | Description                                                                                                                                                                                                                      |
-| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| payload       | A JS object containing the message payload itself                                                                                                                                                                                |
-| streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc. |
+The `payload` method on the callback will be a JS object containing the published message itself.
 
+The `streamMessage` argument is of type [`StreamMessage`](https://github.com/streamr-dev/network-monorepo/blob/04bb2df5b246c502de8e13fbb51b9db1ffb4f668/packages/protocol/src/protocol/message_layer/StreamMessage.ts#L109).
 ```js
-const sub = await client.subscribe({
-    streamId: STREAM_ID,
-}, (payload: any, streamMessage: StreamMessage) => {
-    console.log({
-        payload, streamMessage
-    })
-})
+const sub = await client.subscribe(
+    STREAM_ID,
+    (payload: any, streamMessage: StreamMessage) => {
+        console.log({
+            payload, streamMessage
+        })
+    }
+)
 
 ```
 
