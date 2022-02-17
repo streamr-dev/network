@@ -39,7 +39,7 @@ describe('local propagation', () => {
     beforeEach(async () => {
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
-        await freshStream.grantUserPermission(StreamPermission.PUBLISH, brokerWallet.address)
+        await freshStream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: brokerWallet.address })
 
         await wait(3000)
     })

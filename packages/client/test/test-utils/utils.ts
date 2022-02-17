@@ -653,4 +653,12 @@ export class Multimap<K, V> {
             }
         }
     }
+
+    removeAll(key: K, values: V[]): void {
+        values.forEach((value) => this.remove(key, value))
+    }
+
+    keys(): K[] {
+        return Array.from(this.values.keys())
+    }
 }
