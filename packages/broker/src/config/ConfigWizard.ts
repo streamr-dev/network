@@ -135,6 +135,13 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
     return [selectPrompt, ...portPrompts]
 }
 
+const enableMinerPluginPrompt: inquirer.DistinctQuestion = {
+    type: 'confirm',
+    name:'enableMinerPlugin',
+    message: 'Do you want to participate in mining and staking?',
+    default: true
+}
+
 export const PROMPTS = {
     privateKey: PRIVATE_KEY_PROMPTS,
     plugins: createPluginPrompts(),
@@ -154,7 +161,7 @@ export const storagePathPrompts = [{
     when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
 }]
 
-export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
+export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers, minerPluginAnswer: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.client.auth.privateKey = privateKey
 
@@ -178,6 +185,10 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
             config.plugins![pluginName] = pluginConfig
         }
     })
+
+    if (!minerPluginAnswer.enableMinerPlugin) {
+        delete config.plugins.brubeckMiner
+    }
 
     return config
 }
@@ -224,6 +235,7 @@ export const getNodeIdentity = (privateKey: string): {
 export const start = async (
     getPrivateKeyAnswers = () => inquirer.prompt(PRIVATE_KEY_PROMPTS),
     getPluginAnswers = () => inquirer.prompt(createPluginPrompts()),
+    getMinerPluginAnswer = () => inquirer.prompt(enableMinerPluginPrompt),
     getStorageAnswers = selectStoragePath,
     logger = createLogger()
 ): Promise<void> => {
@@ -234,7 +246,8 @@ export const start = async (
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
         const pluginsAnswers = await getPluginAnswers()
-        const config = getConfig(privateKey, pluginsAnswers)
+        const minerPluginAnswer = await getMinerPluginAnswer()
+        const config = getConfig(privateKey, pluginsAnswers, minerPluginAnswer)
         const storageAnswers = await getStorageAnswers()
         const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')

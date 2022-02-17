@@ -130,10 +130,13 @@ describe('ConfigWizard', () => {
         const assertValidPort = (port: number | string, pluginName = 'websocket') => {
             const numericPort = (typeof port === 'string') ? parseInt(port) : port
             const pluginsAnswers = {
-                selectPlugins:[pluginName],
+                selectPlugins: [pluginName],
                 websocketPort: port,
             }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
+            const minerPluginAnswer = {
+                enableMinerPlugin: true,
+            }
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers, minerPluginAnswer)
             expect(config.plugins[pluginName].port).toBe(numericPort)
         }
 
@@ -152,11 +155,15 @@ describe('ConfigWizard', () => {
                 mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
                 publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
             }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
+            const minerPluginAnswer = {
+                enableMinerPlugin: true,
+            }
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers, minerPluginAnswer)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.httpServer).toBe(undefined)
+            expect(config.plugins.brubeckMiner).toEqual({})
         })
 
         it('should exercise the happy path with user-provided data', () => {
@@ -166,11 +173,26 @@ describe('ConfigWizard', () => {
                 mqttPort: '3171',
                 publishHttpPort: '3172'
             }
-            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
+            const minerPluginAnswer = {
+                enableMinerPlugin: true,
+            }
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers, minerPluginAnswer)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
             expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.plugins.brubeckMiner).toEqual({})
+        })
+
+        it('disable miner plugin', () => {
+            const pluginsAnswers = {
+                selectPlugins: [],
+            }
+            const minerPluginAnswer = {
+                enableMinerPlugin: false,
+            }
+            const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers, minerPluginAnswer)
+            expect(config.plugins.brubeckMiner).toBeUndefined()
         })
     })
 
@@ -204,6 +226,9 @@ describe('ConfigWizard', () => {
                     publishHttpPort,
                 }),
                 jest.fn().mockResolvedValue({
+                    enableMinerPlugin: true
+                }),
+                jest.fn().mockResolvedValue({
                     storagePath: configPath
                 }),
                 logger
@@ -221,6 +246,7 @@ describe('ConfigWizard', () => {
             expect(config.client.auth.privateKey).toBe(privateKey)
             expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
             expect(config.plugins.mqtt.port).toBe(parseInt(mqttPort))
+            expect(config.plugins.brubeckMiner).toEqual({})
             expect(config.httpServer.port).toBe(parseInt(publishHttpPort))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.apiAuthentication).toBeDefined()
