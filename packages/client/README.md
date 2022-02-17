@@ -723,7 +723,9 @@ await stream.publish(msg, Date.now(), msg.vehicleId)
 
 ### Subscribing to partitioned streams
 
-By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
+By default, the JS client subscribes to the first partition (partition `0`) in a stream. This behavior will change in the future so that it will subscribe to all partitions by default.
+
+The partition number can be explicitly given in the subscribe call:
 
 ```js
 const sub = await client.subscribe({
