@@ -65,7 +65,7 @@ npm install streamr-client
 When using Node.js remember to import the library with:
 
 ```js
-import { StreamrClient } from 'streamr-client'
+const { StreamrClient } = require('streamr-client')
 ```
 
 Or 
@@ -373,7 +373,7 @@ sub.onResent(() => {
 You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```js
-import { StorageNode } from 'streamr-client'
+const { StorageNode } = require('streamr-client')
 ...
 // assign a stream to storage
 await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
@@ -513,7 +513,7 @@ Adding members using admin functions is not at feature parity with the member fu
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
 ```js
-import { StreamrClient } from 'streamr-client'
+const { StreamrClient } = require('streamr-client')
 
 const client = new StreamrClient({
     auth: { privateKey },
@@ -547,7 +547,7 @@ const receipt = await dataUnion.addMembers([
 Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
 ```js
-import { StreamrClient } from 'streamr-client'
+const { StreamrClient } = require('streamr-client')
 
 const client = new StreamrClient({
     auth: { privateKey },
@@ -560,7 +560,7 @@ const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
 
 ```js
-import { StreamrClient } from 'streamr-client'
+const { StreamrClient } = require('streamr-client')
 
 const client = new StreamrClient({
     auth: { privateKey },
@@ -595,7 +595,7 @@ These are available for everyone and anyone, to query publicly available info fr
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
 ```js
-import { StreamrClient } from 'streamr-client'
+const { StreamrClient } = require('streamr-client')
 
 const client = new StreamrClient()
 const dataUnion = await client.getDataUnion(dataUnionAddress)
