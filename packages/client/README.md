@@ -391,21 +391,17 @@ await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 // getStream -- Fetches a stream object from the
 const stream: Stream = await client.getStream(STREAM_ID)
 
-// searchStreams -- Using a term to be matched in the stream's id
-const streams = await client.searchStreams('foo')
-```
-___
-> ⚠️ Works alright for `6.0.0-beta.2`. May need to upgrade API to:
-```js
-const streams: Stream[] = await client.searchStreams({
-    term: '/foo',
-    permissionFilter: {
-        allowPublic: true
-    }
-})
-```
-___
-```js
+/*
+    ⚠️ Works alright for `6.0.0-beta.2`. May need to upgrade API to:
+
+    const streams: Stream[] = await client.searchStreams({
+        term: '/foo',
+        permissionFilter: {
+            allowPublic: true
+        }
+    })
+*/
+
 // searchStreams -- Using a term and a permissions filter 
 const streams = await client.searchStreams('foo', {
     allOf: [StreamPermission.canSubscribe, ...], // optional, matches exact stream permissions with the provided array
