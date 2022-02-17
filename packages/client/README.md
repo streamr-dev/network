@@ -30,7 +30,11 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 ## Get Started
 Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
->In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+> To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
+
+> In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+
+
 
 ### Subscribing to a stream
 ```js 
@@ -124,7 +128,7 @@ const stream = await client.getOrCreateStream({
 
 ```js
 const sub = await client.subscribe({
-    stream: STREAM_ID,
+    id: STREAM_ID,
     partition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
     // optional resend options here
 }, (message, metadata) => {
@@ -185,194 +189,7 @@ await stream.publish(msg)
 ----
 
 ## Client configuration
-> ⚠️ Probably not all possible configurations should be detailed to developers?
-
-|   Option    | Possible Values | Default value  |  Description |
-| :--- | :--- | :--- | :--- |
-| restUrl  | string | <https://streamr.network/api/v1> | Base URL of the Streamr REST API.   |
-| auth | AUTH_OBJECT | Object that can contain different information to authenticate. More details below.  |
-| publishWithSignature | 'auto', 'always', 'never' | 'auto'   | Determines if data points published to streams are signed or not. Signing requires `auth.privateKey` or `auth.ethereum`.  'auto' will sign only if one of them is set. 'always' will throw an exception if none of them is set.  |
-| verifySignatures | 'auto', 'always', 'never' | 'auto'   | Determines under which conditions signed and unsigned data points are accepted or rejected. 'always' accepts only signed and verified data points. 'never' accepts all data points. 'auto' verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data. |
-| autoConnect  | boolean | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.  |
-| autoDisconnect | boolean  | true | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.|
-| orderMessages| boolean | true | If set to `true`, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.  |
-| maxPublishQueueSize  | number | 10000| Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.  |
-| publisherGroupKeys   | {}   | Object defining the group key as a hex string used to encrypt for each stream id.   |
-| publisherStoreKeyHistory | true | If `true`, the client will locally store every key used to encrypt messages at some point. If set to `false`, the client will not be able to answer subscribers asking for historical keys during resend requests.  |
-| groupKeys  | {}   | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id. Not needed if `keyExchange` is defined.  |
-| keyExchange  | {}   | Defines RSA key pair to use for group key exchange. Can define `publicKey` and `privateKey` fields as strings in the PEM format, or stay empty to generate a key pair automatically. Can be set to `null` if no key exchange is required. |
-| debug| TODO |
-| network| TODO |
-| storageNodeRegistry| TODO |
-| streamrNodeAddress| TODO |
-| dataUnion| TODO |
-| cache| TODO |
-| binanceRPC| TODO |
-| binanceAdapterAddress| TODO |
-| binanceSmartChainAMBAddress| TODO |
-| withdrawServerUrl| TODO |
-| mainnet| TODO |
-| sidechain| TODO |
-| tokenAddress| TODO |
-| tokenSidechainAddress| TODO |
-| publishAutoDisconnectDelay| TODO |
-| gapFill| TODO |
-| maxGapRequests| TODO |
-| maxRetries| TODO |
-| retryResendAfter| TODO |
-| gapFillTimeout| TODO |
-
-```js
-// this is what a user should be altering, at most, from their configs:
-const client = new StreamrClient({
-    id: 
-    auth: {
-        privateKey?: string,
-        ethereum?: window.provider()
-    },
-    groupKeys: {
-        'foo': 'bar'
-    },
-    debug: {
-        inspectOpts: {
-            depth: number, // max 88
-            maxStringLength: number // max 3
-        }
-    },
-    // PublishConfig
-    maxPublishQueueSize: number,
-    publishWithSignature: Todo,
-    publisherStoreKeyHistory: boolean,
-    publishAutoDisconnectDelay: number,
-    // SubscribeConfig
-    orderMessages: boolean,
-    gapFill: boolean,
-    maxGapRequests: number,
-    maxRetries: number,
-    verifySignatures: Todo,
-    retryResendAfter: number,
-    gapFillTimeout: number,
-})
-
-// the following should, imo, come from preset configs exported by streamr-client 
-import {
-    NetworkMainnetConfig,
-    StorageNodeRegistryMainnetConfig,
-    DataUnionMainnetConfig,
-    EthereumMainnetConfig,  
-    
-    NetworkTestnetConfig,
-    StorageNodeRegistryTestnetConfig,
-    DataUnionTestnetConfig,
-    EthereumTestnetConfig,  
-} from 'streamr-client'
-
-const mainnetClient = new StreamrClient({
-    network: NetworkMainnetConfig,
-    storageNodeRegistry: StorageNodeRegistryMainnetConfig,
-    // needs to be broken down to individual parameters
-    binanceRPC: EthereumMainnetConfig.binanceRPC,
-    binanceAdapterAddress: EthereumMainnetConfig.binanceAdapterAddress,
-    binanceSmartChainAMBAddress: EthereumMainnetConfig.binanceSmartChainAMBAddress,
-    withdrawServerUrl: EthereumMainnetConfig.withdrawServerUrl,
-    mainnet: EthereumMainnetConfig.mainnet,
-    sidechain: EthereumMainnetConfig.sidechain,
-    tokenAddress: EthereumMainnetConfig.tokenAddress,
-    tokenSidechainAddress: EthereumMainnetConfig.tokenSidechainAddress,
-})
-
-const testnetClient = new StreamrClient({
-    network: NetworkTestnetConfig,
-    storageNodeRegistry: StorageNodeRegistryTestnetConfig,
-    // needs to be broken down to individual parameters
-    binanceRPC: EthereumTestnetConfig.binanceRPC,
-    binanceAdapterAddress: EthereumTestnetConfig.binanceAdapterAddress,
-    binanceSmartChainAMBAddress: EthereumTestnetConfig.binanceSmartChainAMBAddress,
-    withdrawServerUrl: EthereumTestnetConfig.withdrawServerUrl,
-    mainnet: EthereumTestnetConfig.mainnet,
-    sidechain: EthereumTestnetConfig.sidechain,
-    tokenAddress: EthereumTestnetConfig.tokenAddress,
-    tokenSidechainAddress: EthereumTestnetConfig.tokenSidechainAddress,
-})
-// this is the homunculus config that the client can take in
-// most of these fields should never be modified by users
-// and some others, such as `storageNodeRegistry` or 
-// `dataUnion` should come from pre-packed configuration objects
-const client = new StreamrClient({
-    id: 'client-id', // used to identify the client on logs
-    auth: {
-        privateKey: string,
-        ethereum: window.provider()
-    },
-    debug: {},
-    network: {
-        trackers: TrackerInfo[],
-        disconnectionWaitTime?: number,
-        peerPingInterval?: number,
-        newWebrtcConnectionTimeout?: number,
-        webrtcDatachannelBufferThresholdLow?: number,
-        webrtcDatachannelBufferThresholdHigh?: number,
-        stunUrls?: string[],
-        rttUpdateTimeout?: number,
-        trackerConnectionMaintenanceInterval?: number,
-        webrtcDisallowPrivateAddresses?: boolean,
-        acceptProxyConnections?: boolean,
-    },
-    storageNodeRegistry: [{
-        contractAddress: string,
-        jsonRpcProvider: string,
-    }],
-    streamrNodeAddress: string,
-    keyExchange: {},
-    dataUnion: {
-        minimumWithdrawTokenWei: BigNumber | number | string,
-        payForTransport: boolean,
-        factoryMainnetAddress: EthereumAddress,
-        factorySidechainAddress: EthereumAddress,
-        templateMainnetAddress: EthereumAddress,
-        templateSidechainAddress: EthereumAddress,
-    },
-    cache: {
-        maxSize: number,
-        maxAge: number,
-    },
-    // EthereumConfig
-    binanceRPC: ConnectionInfo & {
-        chainId?: number,
-    },
-    binanceAdapterAddress: EthereumAddress,
-    binanceSmartChainAMBAddress: EthereumAddress,
-    withdrawServerUrl: string,
-    mainnet?: ConnectionInfo | string,
-    sidechain: ConnectionInfo & {
-        chainId?: number,
-    },
-    tokenAddress: EthereumAddress,
-    tokenSidechainAddress: EthereumAddress,
-    // ConnectionConfig
-    restUrl: string,
-    autoConnect: boolean,
-    autoDisconnect: boolean,
-    // PublishConfig
-    maxPublishQueueSize: number,
-    publishWithSignature: Todo,
-    publisherStoreKeyHistory: boolean,
-    publishAutoDisconnectDelay: number,
-    // SubscribeConfig
-    orderMessages: boolean,
-    gapFill: boolean,
-    maxGapRequests: number,
-    maxRetries: number,
-    verifySignatures: Todo,
-    retryResendAfter: number,
-    gapFillTimeout: number,
-    // EncryptionConfig
-    groupKeys: {},
-
-})    
-```
-
-## Authentication
+### Authentication
 
 Note: **Authenticating with an API key has been deprecated. Cryptographic keys/wallets is the only supported authentication method.**
 
@@ -409,33 +226,28 @@ const client = new StreamrClient({
 })
 ```
 
-Authenticating with a pre-existing session token (used internally by the Streamr app):
 
+### Message ordering
+[REQUIRES EXPLANATION AND DEVELOPMENT]
 ```js
 const client = new StreamrClient({
-    auth: {
-        sessionToken: 'session-token'
-    }
+    auth: { ... },
+    orderMessages: false, // defaults to true
+})
+```
+### Gap Filling
+[REQUIRES EXPLANATION AND DEVELOPMENT]
+```js
+const client = new StreamrClient({
+    auth: { ... },
+    gapFill: boolean
+    maxGapRequests: number
+    maxRetries: number
+    gapFillTimeout: number
 })
 ```
 
-To extract the session token from an authenticated client:
 
-```js
-const bearerToken = await client.session.getSessionToken()
-```
-
-Then for example,
-```js
-    axios({
-        headers: {
-            Authorization: `Bearer ${bearerToken}`,
-        },
-        ...
-    )}
-```
-
-Note, session tokens expire after four hours and may need to be refreshed.
 
 ## Connecting
 
@@ -467,29 +279,18 @@ await client.connect()
 ```
 
 ## Stream subscriptions
-
-| Name                         | Description                                                                                                                                                                     |
-| :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a Promise resolving a `Subscription` object. |
-| unsubscribe(Subscription)    | Unsubscribes the given `Subscription`. Returns a promise.                                                                                                                       |
-| unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.                                                                                                             |
-| getSubscriptions() | Returns a list of all active `Subscriptions` on this client. Returns a promise.                                                                                                            |
-
 ```js
 // subscribing to a stream:
-const subscription = await client.subscribe(
-    { stream: STREAM_ID },
-    (message) => { ... }
-)
+const subscription = await client.subscribe(STREAM_ID, (message) => { ... })
 
 // fetching all streams the client is subscribed to:
 const subscriptions = client.getSubscriptions()
 
 // unsubscribing from an existent subscription:
-await client.unsubscribe({stream: STREAM_ID})
+await client.unsubscribe(STREAM_ID)
 
 // or, unsubscribe them all:
-const streams = await client.removeAll()
+const streams = await client.unsubscribe()
 ```
 
 ### Message handler callback
@@ -961,7 +762,7 @@ By default, the JS client subscribes to the first partition (partition `0`) in a
 
 ```js
 const sub = await client.subscribe({
-    stream: STREAM_ID,
+    id: STREAM_ID,
     partition: 4, // defaults to 0
 }, (payload) => {
     console.log('Got message %o', payload)
@@ -977,7 +778,7 @@ const handler = (payload, streamMessage) => {
 
 await Promise.all([2, 3, 4].map(async (partition) => {
     await client.subscribe({
-        stream: STREAM_ID,
+        id: STREAM_ID,
         partition,
     }, handler)
 }))
