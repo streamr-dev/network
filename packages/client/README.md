@@ -518,18 +518,6 @@ The matrix below outlines the role types and permissions for streams.
 | canSubscribe | Subscribe to stream|✔️| |✔️|✔️|
 | canGrant | Edit stream permissions| | | |✔️|
 
-
-| Name                                      | Description                                                                                                                                                                                                                                                                   |
-| :---------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| update()                                  | Updates the properties of this stream object by sending them to the API.                                                                                                                                                                                                      |
-| delete()                                  | Deletes this stream.                                                                                                                                                                                                                                                          |
-| getPermissions()                          |                                                                                                                                                                                                                               |
-| hasPermissions()                          | |
-| grantPermissions(              )          | |
-| revokePermissions()                       | |
-| detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream.                                                                                                                                                                                        |
-| publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                                                                                                                                                                                                                                       |
-
 ## Data Unions
 
 This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
