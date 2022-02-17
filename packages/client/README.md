@@ -18,6 +18,7 @@ This library allows you to easily interact with the [Streamr Network](https://st
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Important information
+> ⚠️ This section is to be removed before launch 
 
 The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.2](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.2) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.2` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
 
@@ -30,10 +31,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 ## Get Started
 Here are some usage examples. More examples can be found [here](https://github.com/streamr-dev/examples).
 
-> To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
-
 > In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
-
 
 
 ### Subscribing to a stream
@@ -69,16 +67,36 @@ When using Node.js remember to import the library with:
 const { StreamrClient } = require('streamr-client')
 ```
 
-Or 
-```js
-const { StreamrClient } = require('streamr-client')
-```
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
 <!-- for Brubeck package (6x) -->
 <script src="https://unpkg.com/streamr-client@6.0.0-beta.2/streamr-client.web.js"></script>
 ```
+
+To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
+
+### StreamId and the StreamDefinition type
+The [StreamDefinition type](https://github.com/streamr-dev/network-monorepo/blob/04bb2df5b246c502de8e13fbb51b9db1ffb4f668/packages/client/src/types.ts#L9) defines what a stream id should be:
+```typescript
+export type StreamDefinition = string
+    { id: string, partition?: number },
+    ...
+}
+```
+
+This means one can define a stream id for our known `address` at `partition: 1` as either:
+```js
+const streamId = `${address}/foo/bar#1'
+```
+Or:
+```js
+const streamId = {
+    id: `${address}/foo/bar`,
+    partition: 1
+}
+```
+Providing the address on a streamId is optional. Whenever a plain path, ie `/foo/bar` is provided the streamr-client will prepend the Ethereum address used for authentication
 
 ### Creating a StreamrClient instance
 ```js
@@ -88,7 +106,7 @@ const client = new StreamrClient({
     }
 })
 ```
-> ℹ️ More `StreamrClient` creation options can be found in the [Installation](#installation) section.
+> ℹ️ More `StreamrClient` creation options can be found in the [Client configuration](#client-configuration) section.
 
 ### Getting the client's address
 ```js
