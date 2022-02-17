@@ -310,8 +310,7 @@ const sub = await client.subscribe(
 
 ```
 
-### Subscription Options
-
+### Resend functionality with subscriptions
 Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
 
 | Name      | Description                                                                        |
@@ -323,7 +322,7 @@ Note that only one of the resend options can be used for a particular subscripti
 
 ```js
 // Resend N most recent messages
-const sub1 = await client.subscribeResend({
+const sub1 = await client.subscribe({
     streamId: STREAM_ID,
     resend: {
         last: 10,
@@ -331,7 +330,7 @@ const sub1 = await client.subscribeResend({
 }, onMessage)
 
 // Resend from a specific message reference up to the newest message
-const sub2 = await client.subscribeResend({
+const sub2 = await client.subscribe({
     streamId: STREAM_ID,
     resend: {
         from: {
@@ -344,7 +343,7 @@ const sub2 = await client.subscribeResend({
 }, onMessage)
 
 // Resend a limited range of messages
-const sub3 = await client.subscribeResend({
+const sub3 = await client.subscribe({
     streamId: STREAM_ID,
     resend: {
         from: {
@@ -360,15 +359,11 @@ const sub3 = await client.subscribeResend({
     }
 }, onMessage)
 ```
-> ⚠️ Seems like the `subscribe` method no longer returns and eventEmitter and the `.on('resend', ...)` expected behavior is not available
-
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
 ```js
-// THIS CODE DOES NOT CURRENTLY WORK! 
-// COULD NOT FIND A REPLACEMENT
 const sub = await client.subscribe(options)
-sub.on('resent', () => {
+sub.onResent(() => {
     console.log('All caught up and received all requested historical messages! Now switching to real time!')
 })
 ```
