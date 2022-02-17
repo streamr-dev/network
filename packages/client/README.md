@@ -699,7 +699,7 @@ By default, streams only have 1 partition when they are created. The partition c
 ```js
 // [GAS REQUIRED]
 const stream = await client.createStream({
-    id: `${await client.getAddress()}/partitioned-stream`,
+    id: `/partitioned-stream`,
     partitions: 10,
 })
 console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
@@ -728,7 +728,7 @@ By default, the JS client subscribes to the first partition (partition `0`) in a
 ```js
 const sub = await client.subscribe({
     id: STREAM_ID,
-    partition: 4, // defaults to 0
+    partition: 4
 }, (payload) => {
     console.log('Got message %o', payload)
 })
