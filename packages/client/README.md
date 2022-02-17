@@ -190,10 +190,7 @@ await stream.publish(msg)
 
 ## Client configuration
 ### Authentication
-
-Note: **Authenticating with an API key has been deprecated. Cryptographic keys/wallets is the only supported authentication method.**
-
-If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+If you don't have an Ethereum account you can use the utility function [StreamrClient.generateEthereumAccount()](#utility-functions), which returns the address and private key of a fresh Ethereum account.
 
 Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn't already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:
 
