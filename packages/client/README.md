@@ -105,7 +105,7 @@ const stream = await client.createStream({
 
 In order to  enable historical data `resends` add first the stream to a storage node:
 ```js
-import { STREAMR_STORAGE_NODE_GERMANY, StreamrClient } from StreamrClient
+const { STREAMR_STORAGE_NODE_GERMANY, StreamrClient } = require('streamr-client')
 
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 ```
@@ -373,17 +373,15 @@ sub.onResent(() => {
 You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```js
-const { StorageNode } = require('streamr-client')
+const { STREAMR_STORAGE_NODE_GERMANY, StreamrClient } = require('streamr-client')
 ...
 // assign a stream to storage
-await stream.addToStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 // fetch the storage nodes for a stream
 const storageNodes = stream.getStorageNodes()
 // remove the stream from a storage node
-await stream.removeFromStorageNode(StorageNode.STREAMR_GERMANY)
+await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 ```
-
-
 
 ## Stream API
 
