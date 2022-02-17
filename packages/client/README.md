@@ -424,6 +424,7 @@ await client.publish(
 // getting a stream object 
 const stream = await client.getStream(STREAM_ID)
 
+// publishing to a stream using it's object
 await stream.publish(STREAM_ID, { foo: 'bar' }, Date.now(), msg.vehicleId)
 
 // [GAS REQUIRED] deletes the stream
