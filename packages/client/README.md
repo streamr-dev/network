@@ -303,10 +303,8 @@ The `streamMessage` argument is of type [`StreamMessage`](https://github.com/str
 ```js
 const sub = await client.subscribe(
     STREAM_ID,
-    (payload: any, streamMessage: StreamMessage) => {
-        console.log({
-            payload, streamMessage
-        })
+    (payload, streamMessage) => {
+        // streamMessage is of type StreamMessage
     }
 )
 
