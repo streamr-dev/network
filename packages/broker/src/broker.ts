@@ -1,5 +1,5 @@
 import { Logger } from 'streamr-network'
-import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract } from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
@@ -7,10 +7,10 @@ import { Server as HttpsServer } from 'https'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './config/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { ClientConfig, Config, NetworkSmartContract } from './config/config'
+import { Config } from './config/config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
-import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
+import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StreamPartID } from 'streamr-client-protocol'
 
@@ -24,24 +24,12 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const transformClientConfig = async (config: ClientConfig) => {
-    const trackerConfig = config.network?.trackers
-    if ((trackerConfig as NetworkSmartContract)?.contractAddress !== undefined) {
-        const registry = await getTrackerRegistryFromContract({
-            contractAddress: (trackerConfig as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (trackerConfig as NetworkSmartContract).jsonRpcProvider
-        })
-        config.network!.trackers = registry.getAllTrackers()
-    }
-}
-
 const getNameDescription = (name: string|undefined, id: string) => {
     return (name !== undefined) ? `${name} (id=${id})` : id
 }
 
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
-    await transformClientConfig(config.client)
     validateClientConfig(config.client)
 
     const wallet = new Wallet(config.client.auth!.privateKey!)
@@ -83,9 +71,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            if (config.client.network?.trackers !== undefined) {
-                logger.info(`Configured with trackers: [${config.client.network.trackers.map((tracker) => tracker.http).join(', ')}]`)
-            }
+            const trackerList = await streamrClient.getTrackerList()
+            logger.info(`Configured with trackers: [${trackerList.map((tracker: Protocol.SmartContractRecord) => tracker.http).join(', ')}]`)
+
             if (config.client.restUrl !== undefined) {
                 logger.info(`Configured with Streamr: ${config.client.restUrl}`)
             }

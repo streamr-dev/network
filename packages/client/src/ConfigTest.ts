@@ -50,13 +50,7 @@ export default {
             }
         ],
     },
-    mainChainRPCs: {
-        name: 'dev_ethereum',
-        rpcs: [{
-            url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
-            timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-        }]
-    },
+    mainChainRPCs: undefined,
     streamRegistryChainRPCs: sideChainConfig,
     dataUnionChainRPCs: sideChainConfig,
     autoConnect: false,

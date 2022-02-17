@@ -233,30 +233,48 @@
                     "type": "number"
                 },
                 "trackers": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                            "id",
-                            "http",
-                            "ws"
-                        ],
-                        "properties": {
-                            "id": {
-                                "type": "string",
-                                "format": "ethereum-address"
-                            },
-                            "http": {
-                                "type": "string",
-                                "format": "uri"
-                            },
-                            "ws": {
-                                "type": "string",
-                                "format": "uri"
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "id",
+                                    "http",
+                                    "ws"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "format": "ethereum-address"
+                                    },
+                                    "http": {
+                                        "type": "string",
+                                        "format": "uri"
+                                    },
+                                    "ws": {
+                                        "type": "string",
+                                        "format": "uri"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "type": "object",
+                            "required": [ "contractAddress" ],
+                            "properties": {
+                                "contractAddress": {
+                                    "type": "string",
+                                    "format": "ethereum-address"
+                                },
+                                "jsonRpcProvider": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
                             }
                         }
-                    }
+                    ]
                 },
                 "disconnectionWaitTime": {
                     "type": "number"

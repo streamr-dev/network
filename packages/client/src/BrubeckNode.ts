@@ -5,10 +5,11 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { Config } from './Config'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { BrubeckNodeOptions, Config, TrackerRegistrySmartContract } from './Config'
+import { SmartContractRecord, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
+import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -38,12 +39,13 @@ export default class BrubeckNode implements Context {
     debug
     private startNodeCalled = false
     private startNodeComplete = false
+    private trackers: SmartContractRecord[] = []
 
     constructor(
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
-        @inject(Config.Network) options: NetworkNodeOptions
+        @inject(Config.Network) options: BrubeckNodeOptions
     ) {
         this.options = options
         this.id = instanceId(this)
@@ -62,6 +64,14 @@ export default class BrubeckNode implements Context {
         const { options } = this
         let { id } = options
 
+        if ((options.trackers as TrackerRegistrySmartContract).contractAddress) {
+            const trackerRegistry = await getTrackerRegistryFromContract((options.trackers as TrackerRegistrySmartContract))
+            this.trackers = trackerRegistry.getAllTrackers()
+            options.trackers = this.trackers
+        } else {
+            this.trackers = (options.trackers as SmartContractRecord[])
+        }
+
         // generate id if none supplied
         if (id == null || id === '') {
             id = await this.generateId()
@@ -78,7 +88,7 @@ export default class BrubeckNode implements Context {
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             name: id,
-            ...options,
+            ...(options as NetworkNodeOptions),
             id,
             metricsContext: new MetricsContext(options.name ?? id)
         })
@@ -211,6 +221,19 @@ export default class BrubeckNode implements Context {
             await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
+        }
+    }
+
+    async getTrackerList(): Promise<SmartContractRecord[]> {
+        try {
+            this.destroySignal.assertNotDestroyed(this)
+
+            if (!this.cachedNode || !this.startNodeComplete) {
+                await this.startNodeTask()
+            }
+            return this.trackers
+        } finally {
+            this.debug('getTrackerList << %o', this.trackers)
         }
     }
 }
