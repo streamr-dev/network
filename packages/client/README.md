@@ -108,11 +108,6 @@ const client = new StreamrClient({
 ```
 > ℹ️ More `StreamrClient` creation options can be found in the [Client configuration](#client-configuration) section.
 
-### Getting the client's address
-```js
-const address = await client.getAddress()
-```
-
 ### Creating a stream 
 ```js
 // [GAS REQUIRED]
@@ -707,50 +702,16 @@ Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/e
 a Data Union deployed by a particular address with particular "name" will have a predictable address.
 
 ## Utility functions
+```js 
+// The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
+// Generates a random Ethereum account with fields {address, privateKey}
+const wallet = StreamrClient.generateEthereumAccount()
 
-| Name                                    | Returns                 |   Description    |
-| :-------------------------------------- | :---------------------- | :--------------- |
-| `*` generateEthereumAccount()           | `{address, privatekey}` | Generates a random Ethereum account  |
-| client.getAddress() | `Promise<string>` | The client's Ethereum address
-
-`*` The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
-
-## Events
-> ⚠️ Events for `streamr-client` seem to be used internally and the very few that remain should not be of use to users.
-
-The client and the subscriptions can fire events as detailed below.
-You can bind to them using `on`.
-
-| Name                                | Description                                                                              |
-| :---------------------------------- | :--------------------------------------------------------------------------------------- |
-| on(eventName, function)             | Binds a `function` to an event called `eventName`                                        |
-| once(eventName, function)           | Binds a `function` to an event called `eventName`. It gets called once and then removed. |
-| removeListener(eventName, function) | Unbinds the `function` from events called `eventName`                                    |
-
-### Events on the StreamrClient instance
-
-| Name         | Handler Arguments | Description                                                      |
-| :----------- | :---------------- | :--------------------------------------------------------------- |
-| connected    |                   | Fired when the client has connected (or reconnected).            |
-| disconnected |                   | Fired when the client has disconnected (or paused).              |
-| error        | Error             | Fired when the client encounters an error e.g. connection issues |
-
-```js
-// The StreamrClient emits various events
-client.on('connected', () => {
-    // note no need to wait for this before doing work,
-    // with autoconnect enabled the client will happily establish a connection for you as required.
-    console.log('Yeah, we are connected now!')
-})
+// retrieve the address for the streamr-client instance
+const client = new StreamrClient({ auth: { privateKey: wallet.privateKey }})
+const address = await client.getAddress()
+// address === wallet.address
 ```
-
-### Events on the Subscription object
-
-| Name         | Handler Arguments                                                                                                                                                         | Description                                                                                         |
-| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
-| unsubscribed |                                                                                                                                                                           | Fired when an unsubscription is acknowledged by the server.                                         |
-| resent       | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending and message has been processed |
-| error        | Error object                                                                                                                                                              | Reports errors, for example problems with message content                                           |
 
 ## Stream permissions
 
