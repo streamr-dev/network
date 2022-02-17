@@ -277,6 +277,10 @@ await client.connect()
 
 ## Stream subscriptions
 ```js
+const STREAM_ID = {
+    id: `${address}/foo/bar`,
+    partition: 0
+}
 // subscribing to a stream:
 const subscription = await client.subscribe(STREAM_ID, (message) => { ... })
 
