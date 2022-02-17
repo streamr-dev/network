@@ -74,7 +74,7 @@ For usage in the browser include the latest build, e.g. by including a `<script>
 <script src="https://unpkg.com/streamr-client@6.0.0-beta.2/streamr-client.web.js"></script>
 ```
 
-To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
+> [IMPORTANT:READ](https://github.com/streamr-dev/network-monorepo/pull/353#discussion_r807849192)To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 
 ### StreamId and the StreamDefinition type
 The [StreamDefinition type](https://github.com/streamr-dev/network-monorepo/blob/04bb2df5b246c502de8e13fbb51b9db1ffb4f668/packages/client/src/types.ts#L9) defines what a stream id should be:
@@ -233,15 +233,9 @@ const client = new StreamrClient({
 })
 ```
 
-Authenticating with Metamask's Ethereum private key contained in an Ethereum (web3) provider:
+You can also create an anonymous client instance that will be allowed to interact with public streams using an internally-generated disposable wallet:
 ```js
-import detectEthereumProvider from '@metamask/detect-provider'
-
-const client = new StreamrClient({
-    auth: {
-        ethereum: detectEthereumProvider()
-    }
-})
+const client = new StreamrClient()
 ```
 
 
