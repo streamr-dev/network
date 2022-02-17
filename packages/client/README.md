@@ -647,14 +647,9 @@ a Data Union deployed by a particular address with particular "name" will have a
 | Name                                    | Returns                 |   Description    |
 | :-------------------------------------- | :---------------------- | :--------------- |
 | `*` generateEthereumAccount()           | `{address, privatekey}` | Generates a random Ethereum account  |
-| getTokenBalance(address)                | `Promise<BigNumber>`             | Mainnet DATA token balance |
-| getSidechainTokenBalance(address)       | `Promise<BigNumber>`             | Sidechain DATA token balance |
 | client.getAddress() | `Promise<string>` | The client's Ethereum address
 
-`*` The static function `StreamrClient.generateEthereumAccount()` generates a new
-Ethereum private key and returns an object with fields `address` and `privateKey`.
-Note that this private key can be used to authenticate to the Streamr API
-by passing it in the authentication options, as described earlier in this document.
+`*` The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
 
 ## Events
 > ⚠️ Events for `streamr-client` seem to be used internally and the very few that remain should not be of use to users.
