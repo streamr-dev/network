@@ -50,7 +50,6 @@ export const CONFIG_TEMPLATE: any = {
         }
     },
     plugins: {
-        brubeckMiner: {},
         metrics: {}
     },
     apiAuthentication: {
@@ -94,9 +93,9 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
 ]
 
 const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
-    const selectPrompt: inquirer.CheckboxQuestion = {
+    const selectApiPluginsPrompt: inquirer.CheckboxQuestion = {
         type: 'checkbox',
-        name:'selectPlugins',
+        name: 'enabledApiPlugins',
         message: 'Select the plugins to enable',
         choices: Object.values(PLUGIN_NAMES)
     }
@@ -109,7 +108,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
             name: `${name}Port`,
             message: `Provide a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
             when: (answers: inquirer.Answers) => {
-                return answers.selectPlugins.includes(name)
+                return answers.enabledApiPlugins.includes(name)
             },
             validate: (input: string | number): string | boolean => {
                 const MIN_PORT_VALUE = 1024
@@ -132,14 +131,14 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         }
     })
 
-    return [selectPrompt, ...portPrompts]
-}
+    const minerPluginPrompt: inquirer.DistinctQuestion = {
+        type: 'confirm',
+        name: 'enableMinerPlugin',
+        message: 'Do you want to participate in mining and staking?',
+        default: true
+    }
 
-const enableMinerPluginPrompt: inquirer.DistinctQuestion = {
-    type: 'confirm',
-    name:'enableMinerPlugin',
-    message: 'Do you want to participate in mining and staking?',
-    default: true
+    return [selectApiPluginsPrompt, ...portPrompts, minerPluginPrompt]
 }
 
 export const PROMPTS = {
@@ -161,7 +160,7 @@ export const storagePathPrompts = [{
     when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
 }]
 
-export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers, minerPluginAnswer: inquirer.Answers): any => {
+export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.client.auth.privateKey = privateKey
 
@@ -169,7 +168,7 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers, 
     pluginKeys.forEach((pluginKey) => {
         const pluginName = PLUGIN_NAMES[pluginKey]
         const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
+        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)){
             let pluginConfig = {}
             const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
             if (portNumber !== defaultPort){
@@ -186,8 +185,8 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers, 
         }
     })
 
-    if (!minerPluginAnswer.enableMinerPlugin) {
-        delete config.plugins.brubeckMiner
+    if (pluginsAnswers.enableMinerPlugin) {
+        config.plugins.brubeckMiner = {}
     }
 
     return config
@@ -235,7 +234,6 @@ export const getNodeIdentity = (privateKey: string): {
 export const start = async (
     getPrivateKeyAnswers = () => inquirer.prompt(PRIVATE_KEY_PROMPTS),
     getPluginAnswers = () => inquirer.prompt(createPluginPrompts()),
-    getMinerPluginAnswer = () => inquirer.prompt(enableMinerPluginPrompt),
     getStorageAnswers = selectStoragePath,
     logger = createLogger()
 ): Promise<void> => {
@@ -246,8 +244,7 @@ export const start = async (
             logger.info(`This is your node\'s private key: ${privateKey}`)
         }
         const pluginsAnswers = await getPluginAnswers()
-        const minerPluginAnswer = await getMinerPluginAnswer()
-        const config = getConfig(privateKey, pluginsAnswers, minerPluginAnswer)
+        const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await getStorageAnswers()
         const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
