@@ -32,6 +32,24 @@ Here are some usage examples. More examples can be found [here](https://github.c
 
 >In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
+### Subscribing to a stream
+```js 
+
+client.subscribe(STREAM_ID, (message) => {
+    // handle for individual messages
+})
+
+```
+### Creating & publishing to a stream
+```js 
+const stream = await client.createStream({
+    id: '/foo/bar'
+})
+
+await stream.publish({foo: 'bar'})
+```
+
+
 ### Installation
 The client is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
 
@@ -42,28 +60,23 @@ npm install streamr-client
 ### Importing `streamr-client`
 When using Node.js remember to import the library with:
 
-```typescript
+```js
 import { StreamrClient } from 'streamr-client'
 ```
 
 Or 
-```typescript
+```js
 const { StreamrClient } = require('streamr-client')
 ```
+For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
-For usage in the browser include the latest build:
 ```html
-<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
-
-<!-- for Corea package (5x) -->
-<script src="https://unpkg.com/streamr-client@5.5.7/streamr-client.web.js"></script>
-
 <!-- for Brubeck package (6x) -->
 <script src="https://unpkg.com/streamr-client@6.0.0-beta.2/streamr-client.web.js"></script>
 ```
 
 ### Creating a StreamrClient instance
-```typescript
+```js
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-ethereum-private-key'
@@ -73,21 +86,21 @@ const client = new StreamrClient({
 > ℹ️ More `StreamrClient` creation options can be found in the [Installation](#installation) section.
 
 ### Getting the client's address
-```typescript
+```js
 const address = await client.getAddress()
 ```
 
 ### Creating a stream 
-```typescript
-const STREAM_ID = `${address}/some-stream-id`
-
+```js
 const stream = await client.createStream({
-    id: STREAM_ID
+    id: '/foo/bar'
 })
+
+// stream.id = `${address}/foo/bar`
 ```
 
 In order to  enable historical data `resends` add first the stream to a storage node:
-```typescript
+```js
 import { STREAMR_STORAGE_NODE_GERMANY, StreamrClient } from StreamrClient
 
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
@@ -96,12 +109,12 @@ await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 
 ### Fetching existent streams
 Getting an existent stream is pretty straight-forward
-```typescript
+```js
 const stream = await client.getStream(STREAM_ID)
 ```
 
 The method `getOrCreateStream` allows for a seamless creation/fetching process:
-```typescript
+```js
 const stream = await client.getOrCreateStream({
     id: `${address}/doc-tests`
 })
@@ -109,10 +122,10 @@ const stream = await client.getOrCreateStream({
 
 ### Subscribing to real-time events in a stream
 
-```typescript
+```js
 const sub = await client.subscribe({
     stream: STREAM_ID,
-    streamPartition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
+    partition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
     // optional resend options here
 }, (message, metadata) => {
     // This is the message handler which gets called for every incoming message in the stream.
@@ -122,9 +135,9 @@ const sub = await client.subscribe({
 
 ### Resending historical data
 
-```typescript
-const sub = await client.resendSubscribe({
-    stream: STREAM_ID,
+```js
+const sub = await client.resend(
+    STREAM_ID,
     resend: {
         last: 5,
     }, 
@@ -139,7 +152,7 @@ See "Subscription options" for resend options
 
 ### Publishing data points to a stream
 
-```typescript
+```js
 // Here's our example data point
 const msg = {
     temperature: 25.4,
@@ -209,7 +222,7 @@ await stream.publish(msg)
 | retryResendAfter| TODO |
 | gapFillTimeout| TODO |
 
-```typescript
+```js
 // this is what a user should be altering, at most, from their configs:
 const client = new StreamrClient({
     id: 
@@ -367,7 +380,7 @@ If you don't have an Ethereum account you can use the utility function `StreamrC
 
 Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn't already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:
 
-```typescript
+```js
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
@@ -377,7 +390,7 @@ const client = new StreamrClient({
 
 Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:
 
-```typescript
+```js
 const client = new StreamrClient({
     auth: {
         ethereum: window.ethereum,
@@ -386,7 +399,7 @@ const client = new StreamrClient({
 ```
 
 Authenticating with Metamask's Ethereum private key contained in an Ethereum (web3) provider:
-```typescript
+```js
 import detectEthereumProvider from '@metamask/detect-provider'
 
 const client = new StreamrClient({
@@ -398,7 +411,7 @@ const client = new StreamrClient({
 
 Authenticating with a pre-existing session token (used internally by the Streamr app):
 
-```typescript
+```js
 const client = new StreamrClient({
     auth: {
         sessionToken: 'session-token'
@@ -408,12 +421,12 @@ const client = new StreamrClient({
 
 To extract the session token from an authenticated client:
 
-```typescript
+```js
 const bearerToken = await client.session.getSessionToken()
 ```
 
 Then for example,
-```typescript
+```js
     axios({
         headers: {
             Authorization: `Bearer ${bearerToken}`,
@@ -441,7 +454,7 @@ Calls that need a connection, such as `publish` or `subscribe` will fail with an
 | enableAutoConnect(enable = true)    | Enables autoConnect if it wasn't already enabled. Does not connect immediately. Use `enableAutoConnect(false)` to disable autoConnect.                                                              |
 | enableAutoDisconnect(enable = true) | Enables autoDisconnect if it wasn't already enabled. Does not disconnect immediately. Use `enableAutoConnect(false)` to disable autoDisconnect.                                                     |
 
-```typescript
+```js
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
@@ -462,7 +475,7 @@ await client.connect()
 | unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.                                                                                                             |
 | getSubscriptions() | Returns a list of all active `Subscriptions` on this client. Returns a promise.                                                                                                            |
 
-```typescript
+```js
 // subscribing to a stream:
 const subscription = await client.subscribe(
     { stream: STREAM_ID },
@@ -488,7 +501,7 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 | payload       | A JS object containing the message payload itself                                                                                                                                                                                |
 | streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc. |
 
-```typescript
+```js
 const sub = await client.subscribe({
     streamId: STREAM_ID,
 }, (payload: any, streamMessage: StreamMessage) => {
@@ -510,7 +523,7 @@ Note that only one of the resend options can be used for a particular subscripti
 | resend    | Object defining the resend options. Below are examples of its contents.            |
 | groupKeys | Object defining the group key as a hex string for each publisher id of the stream. |
 
-```typescript
+```js
 // Resend N most recent messages
 const sub1 = await client.subscribeResend({
     streamId: STREAM_ID,
@@ -553,7 +566,7 @@ const sub3 = await client.subscribeResend({
 
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
-```typescript
+```js
 // THIS CODE DOES NOT CURRENTLY WORK! 
 // COULD NOT FIND A REPLACEMENT
 const sub = await client.subscribe(options)
@@ -566,7 +579,7 @@ sub.on('resent', () => {
 
 You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
-```typescript
+```js
 import { StorageNode } from 'streamr-client'
 ...
 // assign a stream to storage
@@ -592,7 +605,7 @@ All the below functions return a Promise which gets resolved with the result.
 | getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found.                                                          |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                                                                                                         |
 
-```typescript
+```js
 // getStream
 const stream: Stream = await client.getStream(STREAM_ID)
 
@@ -667,12 +680,12 @@ The matrix below outlines the role types and permissions for streams.
 This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
-```typescript
+```js
 const dataUnion = await client.deployDataUnion()
 ```
 
 To get an existing (previously deployed) `DataUnion` instance:
-```typescript
+```js
 const dataUnion = await client.getDataUnion(dataUnionAddress)
 ```
 
@@ -706,7 +719,7 @@ Adding members using admin functions is not at feature parity with the member fu
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
-```typescript
+```js
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
@@ -740,7 +753,7 @@ const receipt = await dataUnion.addMembers([
 
 Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
-```typescript
+```js
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
@@ -753,7 +766,7 @@ const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 
 Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
 
-```typescript
+```js
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient({
@@ -765,7 +778,7 @@ const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddr
 ```
 
 The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
-```typescript
+```js
 const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
     payForTransport: false,
     waitUntilTransportIsComplete: false,
@@ -788,7 +801,7 @@ These are available for everyone and anyone, to query publicly available info fr
 
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
-```typescript
+```js
 import { StreamrClient } from 'streamr-client'
 
 const client = new StreamrClient()
@@ -893,7 +906,7 @@ You can bind to them using `on`.
 | disconnected |                   | Fired when the client has disconnected (or paused).              |
 | error        | Error             | Fired when the client encounters an error e.g. connection issues |
 
-```typescript
+```js
 // The StreamrClient emits various events
 client.on('connected', () => {
     // note no need to wait for this before doing work,
@@ -918,7 +931,7 @@ Partitioning (sharding) enables streams to scale horizontally. This section desc
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
 
-```typescript
+```js
 const stream = await client.createStream({
     id: `${await client.getAddress()}/partitioned-stream`,
     partitions: 10,
@@ -934,10 +947,11 @@ The library allows the user to choose a _partition key_, which simplifies publis
 
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
-```typescript
+```js
+// msg.vehicleId being the partition key
 await client.publish(STREAM_ID, msg, Date.now(), msg.vehicleId)
 
-// or, equivalently
+// or, equivalently, using the stream object
 await stream.publish(msg, Date.now(), msg.vehicleId)
 ```
 
@@ -945,7 +959,7 @@ await stream.publish(msg, Date.now(), msg.vehicleId)
 
 By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
 
-```typescript
+```js
 const sub = await client.subscribe({
     stream: STREAM_ID,
     partition: 4, // defaults to 0
@@ -956,7 +970,7 @@ const sub = await client.subscribe({
 
 Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
 
-```typescript
+```js
 const handler = (payload, streamMessage) => {
     console.log('Got message %o from partition %d', payload, streamMessage.getStreamPartition())
 }
@@ -975,7 +989,7 @@ In some cases the client might be interested in publishing data without particip
 
 Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
-```typescript
+```js
 // Open publish proxy to a node on stream
 await publishingClient.setPublishProxy(stream, 'proxyNodeId')
 
