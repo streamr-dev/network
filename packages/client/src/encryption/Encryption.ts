@@ -10,12 +10,6 @@ import { inspect } from '../utils/log'
 
 const { webcrypto } = crypto
 
-// @ts-expect-error webcrypto.subtle does not currently exist in node types
-if (typeof window === 'undefined' && !webcrypto?.subtle) {
-    const url = 'https://nodejs.org/api/webcrypto.html'
-    throw new Error(`Node WebCrypto support required. Please update to Node 16+. ${url}`)
-}
-
 function getSubtle() {
     // @ts-expect-error webcrypto.subtle does not currently exist in node types
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
