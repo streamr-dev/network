@@ -279,8 +279,7 @@
         log('Subscribing...')
         await subscriber.subscribe({
             stream: stream.id
-        }, (message, metadata) => {
-            console.log({ message, metadata })
+        }, (message) => {
             messages.push(message)
             log(`Received: ${JSON.stringify(message)}`, 'realtime-msg')
             if (messages.length === 10) {
@@ -314,7 +313,6 @@
             }
         , (message) => {
             messages.push(message)
-            console.log("here")
             log(`Received Resent: ${JSON.stringify(message)}`)
             if (messages.length === 10) {
                 log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
