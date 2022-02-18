@@ -270,9 +270,12 @@
     $('#permissions').on('click', async () => {
         log('Setting Permissions...')
         const subscriberAddress = await subscriber.getAddress()
-        await publisher.setPermissions(stream.id, {
-            user: subscriberAddress,
-            permissions: [StreamrClient.StreamPermission.SUBSCRIBE, StreamrClient.StreamPermission.PUBLISH]
+        await publisher.setPermissions({
+            streamId: stream.id,
+            assignments: [{
+                user: subscriberAddress,
+                permissions: [StreamrClient.StreamPermission.SUBSCRIBE, StreamrClient.StreamPermission.PUBLISH]
+            }]
         })
         log('Set Permissions.')
         log('Loading permissions...')
