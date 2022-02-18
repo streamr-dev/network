@@ -69,7 +69,7 @@ export class Node extends EventEmitter {
     /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
-    protected readonly nodeConnectTimeout: number
+    private readonly nodeConnectTimeout: number
     private readonly started: string
 
     protected readonly streamPartManager: StreamPartManager
