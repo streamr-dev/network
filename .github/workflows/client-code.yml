@@ -118,7 +118,7 @@ jobs:
 
   flakey:
     if: ${{ false }}
-    name: Flakey Tests
+    name: Test Flakey
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -158,18 +158,12 @@ jobs:
 
   memory:
     if: ${{ false }}
-    name: Memory Tests
+    name: Test Memory
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [16.x]
-
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.5.1
         with:
-          node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
