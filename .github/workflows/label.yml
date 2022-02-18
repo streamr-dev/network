@@ -10,6 +10,7 @@ on:
   pull_request_target:
 
 jobs:
+  name: ""
   label:
     runs-on: ubuntu-latest
     steps:

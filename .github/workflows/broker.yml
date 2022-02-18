@@ -1,5 +1,6 @@
 ---
-name: Broker – Lint, Test and Publish
+# Lint, Test and Publish
+name: Broker
 
 on:
   push:
@@ -24,7 +25,7 @@ defaults:
 
 jobs:
   test-unit:
-    name: Unit Tests
+    name: Test Unit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
@@ -43,7 +44,7 @@ jobs:
       - run: npm run test-unit
 
   test-integration:
-    name: Integration Tests
+    name: Test Integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
@@ -72,7 +73,7 @@ jobs:
           docker rm $(docker ps -a -q)
 
   test-docker:
-    name: Build + Test Docker images
+    name: "Docker image: test"
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -142,7 +143,7 @@ jobs:
           docker rm $(docker ps -a -q)
 
   docker-push:
-    name: Build + Push Docker images
+    name: "Docker image: push"
     needs: [test-unit, test-integration, test-docker]
     runs-on: self-hosted
     # only push for nightly runs and manual triggers

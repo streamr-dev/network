@@ -1,5 +1,6 @@
 ---
-name: Test-utils – Lint, Test and Publish
+Lint, Test and Publish
+name: Test-utils
 
 on:
   push:

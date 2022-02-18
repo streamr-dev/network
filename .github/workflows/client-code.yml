@@ -1,6 +1,7 @@
 ---
+# Lint, Unit, Integration Tests
 # Any tests that can run without building should go in here.
-name: Client – Lint, Unit, Integration Tests
+name: Client
 
 # Be sure to update both workflow files if you edit any env or trigger config
 env:
@@ -25,7 +26,7 @@ defaults:
 
 jobs:
   lint:
-    name: Run Linter
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
@@ -67,15 +68,15 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }}
+    name: "Test Integration: ${{ matrix.test-name }}""
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [16.x]
         test-name: [
-          "test-integration-no-resend",
-          "test-integration-resend",
+          "no-resend",
+          "resend",
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
@@ -101,7 +102,7 @@ jobs:
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: Run Test
-        run: npm run $TEST_NAME
+        run: npm run test-integration-$TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2

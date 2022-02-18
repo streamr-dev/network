@@ -1,5 +1,6 @@
 ---
-name: Protocol – Lint, Test and Publish
+# Lint, Test and Publish
+name: Protocol
 
 on:
   push:
