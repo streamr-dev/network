@@ -237,7 +237,7 @@ export class Tracker extends EventEmitter {
             if (this.overlayPerStreamPart[streamPartId].hasNode(node)
                 && this.overlayPerStreamPart[streamPartId].getNumberOfNodes() === 1
                 && Object.keys(instructions).length === 0) {
-                this.instructionSender.bypassBuffer({
+                this.instructionSender.addInstruction({
                     nodeId: node,
                     streamPartId,
                     newNeighbors: [],

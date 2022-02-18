@@ -129,13 +129,4 @@ export class InstructionSender {
             })
         await Promise.allSettled(promises)
     }
-
-    public async bypassBuffer(instruction: Instruction): Promise<void> {
-        await this.sendInstruction(
-            instruction.nodeId,
-            instruction.streamPartId,
-            instruction.newNeighbors,
-            instruction.counterValue
-        )
-    }
 }
