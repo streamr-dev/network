@@ -50,7 +50,7 @@ jobs:
           path: packages/client/dist
 
   test-exports:
-    name: Test Exports using Node ${{ matrix.node-version }}
+    name: Test Exports
     strategy:
       matrix:
         node-version: [16.x]
@@ -155,7 +155,7 @@ jobs:
           docker rm $(docker ps -a -q)
 
   benchmarks:
-    name: Test Benchmark using Node ${{ matrix.node-version }}
+    name: Test Benchmark
     runs-on: ubuntu-latest
     needs: build
 

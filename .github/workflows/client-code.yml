@@ -42,7 +42,7 @@ jobs:
       - run: npm run eslint
 
   test:
-    name: Test Unit using Node ${{ matrix.node-version }}
+    name: Test Unit
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -67,7 +67,7 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -161,7 +161,7 @@ jobs:
 
   memory:
     if: ${{ false }}
-    name: Memory Tests using Node ${{ matrix.node-version }}
+    name: Memory Tests
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
