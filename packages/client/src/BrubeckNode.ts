@@ -56,6 +56,15 @@ export default class BrubeckNode implements Context {
         this.destroySignal.assertNotDestroyed(this)
     }
 
+    private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
+        const networkOptions = this.options
+        if ((networkOptions.trackers as TrackerRegistrySmartContract).contractAddress) {
+            const trackerRegistry = await getTrackerRegistryFromContract((networkOptions.trackers as TrackerRegistrySmartContract))
+            networkOptions.trackers = trackerRegistry.getAllTrackers()
+        }
+        return networkOptions as NetworkNodeOptions
+    }
+
     private async initNode() {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
@@ -63,10 +72,7 @@ export default class BrubeckNode implements Context {
         const { options } = this
         let { id } = options
 
-        if ((options.trackers as TrackerRegistrySmartContract).contractAddress) {
-            const trackerRegistry = await getTrackerRegistryFromContract((options.trackers as TrackerRegistrySmartContract))
-            options.trackers = trackerRegistry.getAllTrackers()
-        }
+        const networkOptions = await this.getNormalizedNetworkOptions()
 
         // generate id if none supplied
         if (id == null || id === '') {
@@ -84,7 +90,7 @@ export default class BrubeckNode implements Context {
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             name: id,
-            ...(options as NetworkNodeOptions),
+            ...networkOptions,
             id,
             metricsContext: new MetricsContext(options.name ?? id)
         })
