@@ -94,8 +94,11 @@ export class TrackerManager {
             })
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
+            const streamPartID = instructionMessage.getStreamPartID()
             if (instructionMessage.counter === COUNTER_LONE_NODE) {
-                this.subscriber.emitJoinCompleted(instructionMessage.getStreamPartID(), 0)
+                if (this.streamPartManager.isSetUp(streamPartID) && this.streamPartManager.isNewStream(streamPartID)) {
+                    this.subscriber.emitJoinCompleted(instructionMessage.getStreamPartID(), 0)
+                }
             } else {
                 this.instructionThrottler.add(instructionMessage, trackerId)
             }
