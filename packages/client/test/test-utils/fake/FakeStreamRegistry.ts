@@ -161,7 +161,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async setPermissions(_streams: {
+    async setPermissions(..._streams: {
         streamId: string,
         assignments: PermissionAssignment[]
     }[]): Promise<void> {

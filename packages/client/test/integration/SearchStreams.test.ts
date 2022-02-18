@@ -32,7 +32,7 @@ describe('SearchStreams', () => {
             // eslint-disable-next-line no-await-in-loop
             streams.push(await client.createStream(item.streamId))
         }
-        await client.setPermissions(items)
+        await client.setPermissions(...items)
         return streams
     }
 

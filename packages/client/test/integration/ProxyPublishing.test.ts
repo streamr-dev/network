@@ -59,13 +59,13 @@ describe('PubSub with proxy connections', () => {
         stream = await createTestStream(publishingClient, module)
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
-        await publishingClient.setPermissions([{
+        await publishingClient.setPermissions({
             streamId: stream.id,
             assignments: [
                 { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser1 },
                 { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser2 }
             ]
-        }])
+        })
     }, 60000)
 
     it('Publish only connections work', async () => {

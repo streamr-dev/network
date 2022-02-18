@@ -423,22 +423,22 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async setPermissions(streams: {
+    async setPermissions(...items: {
         streamId: string,
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []
         const targets: string[][] = []
         const chainPermissions: ChainPermissions[][] = []
-        for (const stream of streams) {
+        for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
-            const streamId = await this.streamIdBuilder.toStreamID(stream.streamId)
+            const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
             this.streamEndpointsCached.clearStream(streamId)
             streamIds.push(streamId)
-            targets.push(stream.assignments.map((assignment) => {
+            targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
             }))
-            chainPermissions.push(stream.assignments.map((assignment) => {
+            chainPermissions.push(item.assignments.map((assignment) => {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
             }))
         }

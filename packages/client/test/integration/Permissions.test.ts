@@ -168,7 +168,7 @@ describe('Stream permissions', () => {
             user: user2,
             permissions: [StreamPermission.EDIT]
         })
-        await client.setPermissions([{
+        await client.setPermissions({
             streamId: stream.id,
             assignments: [
                 {
@@ -187,7 +187,7 @@ describe('Stream permissions', () => {
                     permissions: [StreamPermission.PUBLISH]
                 }
             ]
-        }])
+        })
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user1 })).toBe(true)
         expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, user: user1 })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user2 })).toBe(false)
