@@ -12,6 +12,14 @@ export interface TokenObject {
     token: string
 }
 
+export interface UserDetails {
+    name: string
+    username: string
+    imageUrlSmall?: string
+    imageUrlLarge?: string
+    lastLogin?: string
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class LoginEndpoints implements Context {
     id
@@ -52,6 +60,11 @@ export class LoginEndpoints implements Context {
         const challenge = await this.getChallenge(address)
         const signature = await this.ethereum.getSigner().signMessage(challenge.challenge)
         return this.sendChallengeResponse(challenge, signature, address)
+    }
+
+    async getUserInfo() {
+        this.debug('getUserInfo')
+        return this.rest.get<UserDetails>(['users', 'me'])
     }
 
     /** @internal */

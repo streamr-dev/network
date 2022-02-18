@@ -4,6 +4,15 @@ import { toStreamID } from 'streamr-client-protocol'
 
 export default class StubbedStreamrClient extends StreamrClient {
     // @ts-expect-error
+    // eslint-disable-next-line class-methods-use-this
+    getUserInfo() {
+        return Promise.resolve({
+            name: '',
+            username: 'username',
+        })
+    }
+
+    // @ts-expect-error
     async getStream(): Promise<Stream> {
         return new Stream({
             id: toStreamID('streamId'),
