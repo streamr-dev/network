@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 const { v4: uuidv4 } = require('uuid')
+const { wait } = require('streamr-test-utils')
 
 describe('StreamrClient Resend', () => {
     const streamName = uuidv4()
@@ -14,7 +15,7 @@ describe('StreamrClient Resend', () => {
         return browser.url(browserUrl)
     })
 
-    test('Test StreamrClient in Chrome Browser', (browser) => {
+    test('Test StreamrClient in Chrome Browser', async (browser) => {
         browser.resizeWindow(10000, 10000)
         browser
             .waitForElementVisible('body')
@@ -35,6 +36,14 @@ describe('StreamrClient Resend', () => {
             // TODO remove hardcoded address
             .assert.containsText('#result', '0xde1112f631486CfC759A50196853011528bC5FA0'.toLowerCase())
             .assert.not.elementPresent('.error')
+            .click('button[id=subscribe]')
+            .waitForElementPresent('.subscribeResult')
+            .assert.containsText('#result', 'Subscribed')
+            .assert.not.elementPresent('.error')
+
+        await wait(2000)
+        browser
+            .waitForElementVisible('body')
             .click('button[id=publish]')
             .waitForElementPresent('.publishResult', 20000)
             .assert.not.elementPresent('.error')
