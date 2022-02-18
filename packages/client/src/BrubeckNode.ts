@@ -57,12 +57,14 @@ export default class BrubeckNode implements Context {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        const networkOptions = this.options
-        if ((networkOptions.trackers as TrackerRegistrySmartContract).contractAddress) {
-            const trackerRegistry = await getTrackerRegistryFromContract((networkOptions.trackers as TrackerRegistrySmartContract))
-            networkOptions.trackers = trackerRegistry.getAllTrackers()
+        if ((this.options.trackers as TrackerRegistrySmartContract).contractAddress) {
+            const trackerRegistry = await getTrackerRegistryFromContract((this.options.trackers as TrackerRegistrySmartContract))
+            return {
+                ...this.options,
+                trackers: trackerRegistry.getAllTrackers()
+            }
         }
-        return networkOptions as NetworkNodeOptions
+        return this.options as NetworkNodeOptions
     }
 
     private async initNode() {
