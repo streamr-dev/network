@@ -1,4 +1,4 @@
-name: Network Browser Build
+name: Network Browser
 
 on:
   push:
