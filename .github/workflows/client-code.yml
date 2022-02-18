@@ -97,7 +97,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "cassandra parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph chainlink"
+          services-to-start: "cassandra init-keyspace parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: Run Test
@@ -143,7 +143,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "cassandra parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph"
+          services-to-start: "cassandra init-keyspace parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2
@@ -184,7 +184,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "cassandra parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph"
+          services-to-start: "cassandra init-keyspace parity-node0 parity-sidechain-node0 bridge nginx graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2
