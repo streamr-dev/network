@@ -111,7 +111,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "trackers parity-node0 parity-sidechain-node0 broker-node-no-storage-1 graph-deploy-streamregistry-subgraph"
+          services-to-start: "parity-node0 parity-sidechain-node0 broker-node-no-storage-1"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
               curl -s http://localhost:8791/volume;
