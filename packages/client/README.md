@@ -386,17 +386,6 @@ await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 // getStream -- Fetches a stream object from the
 const stream: Stream = await client.getStream(STREAM_ID)
 
-/*
-    ⚠️ Works alright for `6.0.0-beta.2`. May need to upgrade API to:
-
-    const streams: Stream[] = await client.searchStreams({
-        term: '/foo',
-        permissionFilter: {
-            allowPublic: true
-        }
-    })
-*/
-
 // searchStreams -- Using a term and a permissions filter 
 const streams = await client.searchStreams('foo', {
     allOf: [StreamPermission.canSubscribe, ...], // optional, matches exact stream permissions with the provided array
@@ -454,43 +443,29 @@ const permissions = await stream.getPermissions()
     ]
 */
 
-export interface UserPermissionAssignment {
-    permissions: StreamPermission[]
-    user: EthereumAddress
-}
+// Grant permissions for users
+await stream.grantPermissions({
+    user: address,
+    permissions: [StreamPermission.PUBLISH],
+})
 
-export interface PublicPermissionAssignment {
-    permissions: StreamPermission[]
+// And for public streams
+await stream.grantPermissions({
     public: true
-}
-// Grant permissions for users and public
-await stream.grantPermissions(
-    [
-        {
-            user: '0x...',
-            permissions: [StreamPermission.PUBLISH]
-        },
-        { 
-            public: true,
-            permissions: [StreamPermission.SUBSCRIBE]
-        }
-    ]
-)
+    permissions: [StreamPermission.SUBSCRIBE],
+})
 
-// Revokes the set of permissions 
-await stream.revokePermissions(
-    [
-        {
-            user: '0x...',
-            permissions: [StreamPermission.PUBLISH]
-        },
-        { 
-            public: true,
-            permissions: [StreamPermission.SUBSCRIBE]
-        }
-    ]
-)
+// Revokes user permissions
+await stream.revokePermissions({
+    user: address,
+    permissions: [StreamPermission.PUBLISH],
+})
 
+// Or revoke public permissions
+await stream.revokePermissions({
+    public: true
+    permissions: [StreamPermission.SUBSCRIBE],
+})
 ```            
 
 ### Stream Operations and Permissions 
