@@ -1,4 +1,4 @@
-name: Network Browser
+name: Network
 
 on:
   push:
@@ -20,7 +20,7 @@ defaults:
 
 jobs:
   test-browser:
-    name: Test
+    name: Browser Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
