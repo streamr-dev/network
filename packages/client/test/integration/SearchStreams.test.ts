@@ -29,6 +29,7 @@ describe('SearchStreams', () => {
     }[]) => {
         const streams: Stream[] = []
         for (const item of items) {
+            // eslint-disable-next-line no-await-in-loop
             streams.push(await client.createStream(item.streamId))
         }
         await client.setPermissions(items)
@@ -53,6 +54,7 @@ describe('SearchStreams', () => {
         return ids
     }
 
+    /* eslint-disable prefer-destructuring, object-property-newline */
     beforeAll(async () => {
         client = new StreamrClient({
             ...ConfigTest,
@@ -62,23 +64,22 @@ describe('SearchStreams', () => {
             autoConnect: false
         })
         const streams = await createTestStreams([
-            { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [
-            ]},
+            { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },
             { streamId: `/${SEARCH_TERM}/2-user-permission`, assignments: [
                 { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] }
-            ]},
+            ] },
             { streamId: `/${SEARCH_TERM}/3-public-permissions`, assignments: [
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
-            ]},
+            ] },
             { streamId: `/${SEARCH_TERM}/4-user-and-public-permissions`, assignments: [
                 { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
-            ]},
+            ] },
             { streamId: `/${SEARCH_TERM}/5-granted-and-revoked-permissions`, assignments: [
                 { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
                 { public: true, permissions: [StreamPermission.SUBSCRIBE] }
-            ]},
-            { streamId: `/${Date.now()}`, assignments: []}
+            ] },
+            { streamId: `/${Date.now()}`, assignments: [] }
         ])
         streamWithoutPermission = streams[0]
         streamWithUserPermission = streams[1]
