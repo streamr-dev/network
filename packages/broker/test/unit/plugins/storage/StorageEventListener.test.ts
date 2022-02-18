@@ -1,5 +1,5 @@
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
-import { EthereumStorageEvent, Stream, StreamrClient } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient } from 'streamr-client'
 import { afterEach } from 'jest-circus'
 import { wait } from 'streamr-test-utils'
 
@@ -7,7 +7,7 @@ describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream'
         | 'registerStorageEventListener'
         | 'unRegisterStorageEventListeners'>
-    let storageEventListener: ((event: EthereumStorageEvent) => any) | undefined
+    let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
     let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
@@ -19,7 +19,7 @@ describe(StorageEventListener, () => {
                     partitions: 3
                 } as Stream
             },
-            async registerStorageEventListener(cb: (arg0: EthereumStorageEvent) => any): Promise<void> {
+            async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any): Promise<void> {
                 storageEventListener = cb
             },
             unRegisterStorageEventListeners: jest.fn()

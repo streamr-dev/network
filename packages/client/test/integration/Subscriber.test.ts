@@ -1,13 +1,12 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../utils'
+import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import { Stream } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import Subscriber from '../../src/Subscriber'
-import { Todo } from '../../src/types'
+import { Subscription } from '../../src/subscribe/Subscription'
+import Subscriber from '../../src/subscribe/Subscriber'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -132,7 +131,7 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                const received: Todo[] = []
+                const received: unknown[] = []
                 await expect(async () => {
                     for await (const msg of sub) {
                         received.push(msg.getParsedContent())
@@ -432,7 +431,7 @@ describeRepeats('Subscriber', () => {
                         ...stream,
                         // @ts-expect-error not in type but works
                         beforeSteps: [
-                            async function* ThrowError(s: AsyncIterable<Todo>) {
+                            async function* ThrowError(s: AsyncIterable<any>) {
                                 let count = 0
                                 for await (const msg of s) {
                                     if (count === MAX_ITEMS) {
@@ -454,7 +453,7 @@ describeRepeats('Subscriber', () => {
                         timestamp: 111111,
                     })
 
-                    const received: Todo[] = []
+                    const received: unknown[] = []
                     await expect(async () => {
                         for await (const m of sub) {
                             received.push(m.getParsedContent())
@@ -590,7 +589,7 @@ describeRepeats('Subscriber', () => {
             await publishTestMessages()
 
             const err = new Error('expected error')
-            const received: Todo[] = []
+            const received: unknown[] = []
             await expect(async () => {
                 for await (const m of sub) {
                     received.push(m.getParsedContent())
@@ -800,9 +799,9 @@ describeRepeats('Subscriber', () => {
     })
 
     describe('mid-stream stop methods', () => {
-        let sub1: Subscription<Todo>
-        let sub2: Subscription<Todo>
-        let published: Todo[]
+        let sub1: Subscription<unknown>
+        let sub2: Subscription<unknown>
+        let published: unknown[]
 
         beforeEach(async () => {
             sub1 = await M.subscribe(stream.id)
@@ -811,8 +810,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can subscribe to stream multiple times then unsubscribe all mid-stream', async () => {
-            let sub1Received: Todo[] = []
-            let sub1ReceivedAtUnsubscribe: Todo[] = []
+            let sub1Received: unknown[] = []
+            let sub1ReceivedAtUnsubscribe: unknown[] = []
             const gotOne = Defer()
             let didGetOne = false
             const [received1, received2] = await Promise.all([

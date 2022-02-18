@@ -3,8 +3,7 @@ import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'stre
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-import Signer from '../../src/Signer'
-import { Todo } from '../../src/types'
+import Signer from '../../src/publish/Signer'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -21,7 +20,7 @@ describe('Signer', () => {
     })
 
     describe('signing', () => {
-        let signer: Todo
+        let signer: Signer
         const streamId: StreamID = toStreamID('streamId')
         const data = {
             field: 'some-data',

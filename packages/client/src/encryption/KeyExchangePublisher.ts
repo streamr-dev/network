@@ -11,7 +11,7 @@ import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
 import { pOnce, instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import Publisher from '../Publisher'
+import Publisher from '../publish/Publisher'
 import GroupKeyStoreFactory from './GroupKeyStoreFactory'
 
 import EncryptionUtil, { GroupKey, StreamMessageProcessingError } from './Encryption'

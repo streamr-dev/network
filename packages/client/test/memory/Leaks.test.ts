@@ -3,7 +3,7 @@ import LeakDetector from 'jest-leak-detector'
 
 import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Subscription from '../../src/Subscription'
+import { Subscription } from '../../src/subscriber/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import clientOptions from '../../src/ConfigTest'

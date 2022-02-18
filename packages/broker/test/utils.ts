@@ -1,17 +1,15 @@
-import crypto from 'crypto'
 import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
-import { ApiAuthenticationConfig, Config } from '../src/config'
-import { NodeRegistryOptions } from 'streamr-client/src/NodeRegistry'
+import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
+import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migration'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
-// const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 interface TestConfig {
     name: string
@@ -24,7 +22,6 @@ interface TestConfig {
     privateKeyFileName?: null | string
     certFileName?: null | string
     restUrl?: string
-    storageNodeRegistry?: NodeRegistryOptions
     storageConfigRefreshInterval?: number
 }
 
@@ -36,8 +33,7 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
-    storageNodeRegistry,
+    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
     const plugins: Record<string,any> = { ...extraPlugins }
@@ -59,6 +55,7 @@ export const formConfig = ({
     }
 
     return {
+        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
         client: {
             ...ConfigTest,
             auth: {
@@ -82,8 +79,7 @@ export const formConfig = ({
                     city: 'Helsinki'
                 },
                 webrtcDisallowPrivateAddresses: false,
-            },
-            storageNodeRegistry,
+            }
         },
         httpServer: {
             port: httpPort ? httpPort : 7171,
@@ -105,8 +101,21 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
     })
 }
 
-export async function getPrivateKey(): Promise<string> {
-    const response = await fetch('http://localhost:45454/key')
+export async function fetchPrivateKeyWithGas(): Promise<string> {
+    let response
+    try {
+        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            timeout: 9 * 1000
+        })
+    } catch (_e) {
+        try {
+            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
+        } finally {
+            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+                timeout: 9 * 1000
+            })
+        }
+    }
     return response.text()
 }
 
@@ -116,55 +125,26 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
     return broker
 }
 
-export const getWsUrl = (port: number, ssl = false): string => {
-    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
-}
-
-// generates a private key
-// equivalent to Wallet.createRandom().privateKey but much faster
-// the slow part seems to be deriving the address from the key so if you can avoid this, just use
-// fastPrivateKey instead of createMockUser
-export const fastPrivateKey = (): string => {
-    return `0x${crypto.randomBytes(32).toString('hex')}`
-}
-
 export const createEthereumAddress = (id: number): string => {
     return '0x' + _.padEnd(String(id), 40, '0')
 }
 
-export const createMockUser = (): Wallet => Wallet.createRandom()
-
 export const createClient = async (
     tracker: Tracker,
-    privateKey?: string,
+    privateKey: string,
     clientOptions?: StreamrClientOptions
 ): Promise<StreamrClient> => {
-    const newPrivateKey = privateKey ? privateKey :  await getPrivateKey()
     return new StreamrClient({
         ...ConfigTest,
         auth: {
-            privateKey: newPrivateKey
+            privateKey
         },
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
+        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
         network: {
             trackers: [tracker.getConfigRecord()]
         },
         ...clientOptions,
     })
-}
-
-export const waitForStreamPersistedInStorageNode = async (
-    streamId: string,
-    partition: number,
-    nodeHost: string,
-    nodeHttpPort: number
-): Promise<void> => {
-    const isPersistent = async () => {
-        // eslint-disable-next-line max-len
-        const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
-        return (response.status === 200)
-    }
-    await waitForCondition(() => isPersistent(), 20000, 500)
 }
 
 export const getTestName = (module: NodeModule): string => {
@@ -183,7 +163,7 @@ export const createTestStream = async (
         id,
         ...props
     })
-    await until(async () => { return streamrClient.streamExistsOnTheGraph(id) }, 100000, 1000)
+    await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
 

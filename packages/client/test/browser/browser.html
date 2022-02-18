@@ -173,8 +173,8 @@
 
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
-    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
-    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
+    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v2/ws'
+    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v2'
     let firstTime
     let lastTime
     function log(content, className = '') {
@@ -269,11 +269,16 @@
 
     $('#permissions').on('click', async () => {
         log('Setting Permissions...')
-        await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
+        const subscriberAddress = await subscriber.getAddress()
+        await publisher.setPermissions(stream.id, {
+            user: subscriberAddress,
+            permissions: [StreamrClient.StreamPermission.SUBSCRIBE, StreamrClient.StreamPermission.PUBLISH]
+        })
         log('Set Permissions.')
         log('Loading permissions...')
-        const permissions = await stream.getUserPermissions(await subscriber.getAddress())
-        log(`Permissions: ${JSON.stringify(permissions)}`, 'permissionsResult')
+        const allAssignments = await stream.getPermissions()
+        const modifiedAssignment = allAssignments.find(p => (p.user.toLowerCase() === subscriberAddress.toLowerCase()))
+        log(`Permissions: [${modifiedAssignment.permissions.join(',')}]`, 'permissionsResult')
     })
 
     $('#subscribe').on('click', async () => {
@@ -308,10 +313,12 @@
         messages = []
         log(`Resending...`)
 
-        const sub = await subscriber.resend({
-            stream: stream.id,
-            last: 10,
-        })
+        const sub = await subscriber.resend(
+            stream.id,
+            {
+                last: 10
+            }
+        )
         sub.onMessage((message) => {
             messages.push(message)
             log(`Received Resent: ${JSON.stringify(message)}`)

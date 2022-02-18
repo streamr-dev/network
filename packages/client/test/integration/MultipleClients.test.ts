@@ -1,14 +1,14 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, getPrivateKey,
-} from '../utils'
+    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
-import { Stream, StreamPermission } from '../../src/Stream'
-import { Wallet } from '@ethersproject/wallet'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
 import { StreamMessage } from 'streamr-client-protocol'
-import { storageNodeTestConfig } from './devEnvironment'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
@@ -26,17 +26,15 @@ describeRepeats('PubSub with multiple clients', () => {
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        privateKey = await getPrivateKey()
+        privateKey = await fetchPrivateKeyWithGas()
         mainClient = await createClient({
             id: 'main',
             auth: {
                 privateKey
             }
         })
-
-        const storageNodeWallet = new Wallet(storageNodeTestConfig.privatekey)
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(await storageNodeWallet.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
     })
 
     afterEach(async () => {
@@ -46,7 +44,7 @@ describeRepeats('PubSub with multiple clients', () => {
     async function createPublisher(opts = {}) {
         const pubClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             ...opts
         })
@@ -58,9 +56,9 @@ describeRepeats('PubSub with multiple clients', () => {
 
         // pubClient.on('error', getOnError(errors))
         const pubUser = await pubClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.PUBLISH, pubUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: pubUser })
         // needed to check last
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, pubUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: pubUser })
         await pubClient.connect()
 
         return pubClient
@@ -78,7 +76,7 @@ describeRepeats('PubSub with multiple clients', () => {
         // client.on('error', getOnError(errors))
         const user = await client.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, user)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
         await client.connect()
         return client
     }
@@ -427,7 +425,9 @@ describeRepeats('PubSub with multiple clients', () => {
                     // late subscribe to stream from other client instance
                     const lateSub = await otherClient.subscribe({
                         stream: stream.id,
-                        from: lastMessage.getMessageRef()
+                        resend: {
+                            from: lastMessage.getMessageRef()
+                        }
                     }, (msg, streamMessage) => {
                         const key = streamMessage.getPublisherId().toLowerCase()
                         const msgs = receivedMessagesOther[key] || []
@@ -480,12 +480,12 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -556,13 +556,13 @@ describeRepeats('PubSub with multiple clients', () => {
 
         otherClient = await createClient({
             auth: {
-                privateKey: await getPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -577,7 +577,7 @@ describeRepeats('PubSub with multiple clients', () => {
             msgs.push(msg)
             receivedMessagesMain[key] = msgs
             if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
-                mainSub.cancel()
+                mainSub.unsubscribe()
             }
         })
 
@@ -608,7 +608,9 @@ describeRepeats('PubSub with multiple clients', () => {
                 // late subscribe to stream from other client instance
                 const lateSub = await otherClient.subscribe({
                     stream: stream.id,
-                    from: lastMessage.getMessageRef()
+                    resend: {
+                        from: lastMessage.getMessageRef()
+                    }
                 }, (msg, streamMessage) => {
                     const key = streamMessage.getPublisherId().toLowerCase()
                     const msgs = receivedMessagesOther[key] || []

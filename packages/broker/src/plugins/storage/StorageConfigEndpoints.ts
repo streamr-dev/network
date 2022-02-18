@@ -1,6 +1,5 @@
 import express, { Request, Response, Router } from 'express'
 import { StorageConfig } from './StorageConfig'
-import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 import { toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 const createHandler = (storageConfig: StorageConfig) => {
@@ -23,6 +22,6 @@ const createHandler = (storageConfig: StorageConfig) => {
 export const router = (storageConfig: StorageConfig): Router => {
     const router = express.Router()
     const handler = createHandler(storageConfig)
-    router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/storage/partitions/:partition`, handler)
+    router.get('/streams/:id/storage/partitions/:partition', handler)
     return router
 }

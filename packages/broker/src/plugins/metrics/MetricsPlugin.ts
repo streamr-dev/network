@@ -12,7 +12,6 @@ const logger = new Logger(module)
 export interface MetricsPluginConfig {
     consoleAndPM2IntervalInSeconds: number
     nodeMetrics: {
-        storageNode: string
         streamIdPrefix: string
     } | null
 }
@@ -36,7 +35,6 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
             const metricsPublisher = new MetricsPublisher(
                 this.nodeId,
                 this.streamrClient!,
-                this.pluginConfig.nodeMetrics.storageNode,
                 this.pluginConfig.nodeMetrics.streamIdPrefix
             )
             this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)

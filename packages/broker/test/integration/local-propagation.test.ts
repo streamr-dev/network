@@ -3,7 +3,7 @@ import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
-import { startBroker, createClient, createTestStream, getPrivateKey, startTestTracker } from '../utils'
+import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, startTestTracker } from '../utils'
 
 jest.setTimeout(30000)
 
@@ -21,9 +21,9 @@ describe('local propagation', () => {
     let brokerWallet: Wallet
 
     beforeAll(async () => {
-        privateKey = await getPrivateKey()
+        privateKey = await fetchPrivateKeyWithGas()
         tracker = await startTestTracker(trackerPort)
-        brokerWallet = new Wallet(await getPrivateKey())
+        brokerWallet = new Wallet(await fetchPrivateKeyWithGas())
 
         broker = await startBroker({
             name: 'broker1',
@@ -39,7 +39,7 @@ describe('local propagation', () => {
     beforeEach(async () => {
         freshStream = await createTestStream(client1, module)
         freshStreamId = freshStream.id
-        await freshStream.grantUserPermission(StreamPermission.PUBLISH, brokerWallet.address)
+        await freshStream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: brokerWallet.address })
 
         await wait(3000)
     })

@@ -1,8 +1,13 @@
 import { Wallet } from 'ethers'
-import StreamrClient, { ConfigTest, SearchStreamsPermissionFilter, Stream, StreamPermission } from '../../src'
+import { randomEthereumAddress } from 'streamr-test-utils'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Stream } from '../../src/Stream'
+import { PermissionAssignment, StreamPermission } from '../../src/permission'
+import ConfigTest from '../../src/ConfigTest'
+import { SearchStreamsPermissionFilter } from '../../src/searchStreams'
 import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { fakeAddress, getPrivateKey } from '../utils'
+import { fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 jest.setTimeout(2 * 60 * 1000)
 
@@ -17,6 +22,12 @@ describe('SearchStreams', () => {
     let streamWithUserAndPublicPermission: Stream
     let streamWithGrantedAndRevokedPermission: Stream
     const searcher = Wallet.createRandom()
+
+    const createTestStream = async (path: string, assignments: PermissionAssignment[]) => {
+        const stream = await client.createStream(path)
+        await stream.grantPermissions(...assignments)
+        return stream
+    }
 
     const waitUntilStreamsExistOnTheGraph = async (streams: Stream[]) => {
         return Promise.all(streams.map((stream: Stream) => {
@@ -40,24 +51,30 @@ describe('SearchStreams', () => {
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
             autoConnect: false
         })
-        streamWithoutPermission = await client.createStream(`/${SEARCH_TERM}/1-no-permissions`)
-        streamWithUserPermission = await client.createStream(`/${SEARCH_TERM}/2-user-permission`)
-        await streamWithUserPermission.grantUserPermission(StreamPermission.SUBSCRIBE, searcher.address)
-        streamWithPublicPermission = await client.createStream(`/${SEARCH_TERM}/3-public-permissions`)
-        await streamWithPublicPermission.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        streamWithUserAndPublicPermission = await client.createStream(`/${SEARCH_TERM}/4-user-and-public-permission`)
-        await streamWithUserAndPublicPermission.grantUserPermission(StreamPermission.SUBSCRIBE, searcher.address)
-        await streamWithUserAndPublicPermission.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        streamWithGrantedAndRevokedPermission = await client.createStream(`/${SEARCH_TERM}/5-granted-and-revoked-permission`)
-        await streamWithGrantedAndRevokedPermission.grantUserPermission(StreamPermission.SUBSCRIBE, searcher.address)
-        await streamWithGrantedAndRevokedPermission.grantPublicPermission(StreamPermission.SUBSCRIBE)
-        await streamWithGrantedAndRevokedPermission.revokeUserPermission(StreamPermission.SUBSCRIBE, searcher.address)
-        await streamWithGrantedAndRevokedPermission.revokePublicPermission(StreamPermission.SUBSCRIBE)
-        const noSearchTermMatchStream = await client.createStream(`/${Date.now()}`)
+        streamWithoutPermission = await createTestStream(`/${SEARCH_TERM}/1-no-permissions`, [])
+        streamWithUserPermission = await createTestStream(`/${SEARCH_TERM}/2-user-permission`, [
+            { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] }
+        ])
+        streamWithPublicPermission = await createTestStream(`/${SEARCH_TERM}/3-public-permissions`, [
+            { public: true, permissions: [StreamPermission.SUBSCRIBE] }
+        ])
+        streamWithUserAndPublicPermission = await createTestStream(`/${SEARCH_TERM}/4-user-and-public-permission`, [
+            { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
+            { public: true, permissions: [StreamPermission.SUBSCRIBE] }
+        ])
+        streamWithGrantedAndRevokedPermission = await createTestStream(`/${SEARCH_TERM}/5-granted-and-revoked-permission`, [
+            { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
+            { public: true, permissions: [StreamPermission.SUBSCRIBE] }
+        ])
+        await streamWithGrantedAndRevokedPermission.revokePermissions(
+            { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
+            { public: true, permissions: [StreamPermission.SUBSCRIBE] }
+        )
+        const noSearchTermMatchStream = await createTestStream(`/${Date.now()}`, [])
         await waitUntilStreamsExistOnTheGraph([
             streamWithoutPermission,
             streamWithUserPermission,
@@ -122,7 +139,7 @@ describe('SearchStreams', () => {
 
         it('public permissions', async () => {
             const streamIds = await searchStreamIds(SEARCH_TERM, {
-                user: fakeAddress(),
+                user: randomEthereumAddress(),
                 allowPublic: true
             })
             expect(streamIds).toEqual([

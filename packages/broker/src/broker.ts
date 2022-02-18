@@ -5,9 +5,9 @@ import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
 import { createPlugin } from './pluginRegistry'
-import { validateConfig } from './helpers/validateConfig'
+import { validateConfig } from './config/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { ClientConfig, Config, NetworkSmartContract } from './config'
+import { ClientConfig, Config, NetworkSmartContract } from './config/config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -105,7 +105,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (streamrClient !== undefined) {
                 await streamrClient.destroy()
             }
-            await networkNode.stop()
         }
     }
 }

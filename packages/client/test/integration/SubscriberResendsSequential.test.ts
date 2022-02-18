@@ -2,15 +2,15 @@ import {
     Msg,
     clientOptions,
     describeRepeats,
-    getPrivateKey,
+    fetchPrivateKeyWithGas,
     getWaitForStorage,
     getPublishTestStreamMessages,
     createTestStream,
-} from '../utils'
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { storageNodeTestConfig } from './devEnvironment'
-
-import { Stream, StreamPermission } from '../../src/Stream'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5
@@ -33,7 +33,7 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestPublisher',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 
@@ -41,15 +41,18 @@ describeRepeats('sequential resend subscribe', () => {
             ...clientOptions,
             id: 'TestSubscriber',
             auth: {
-                privateKey: await getPrivateKey(),
+                privateKey: await fetchPrivateKeyWithGas(),
             },
         })
 
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(storageNodeTestConfig.address)
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
+        await stream.grantPermissions({
+            user: await subscriber.getAddress(),
+            permissions: [StreamPermission.SUBSCRIBE]
+        })
 
         waitForStorage = getWaitForStorage(publisher, {
             stream,
@@ -84,9 +87,11 @@ describeRepeats('sequential resend subscribe', () => {
         const id = (i + 2) * 111111 // start at 222222
         // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
-            const sub = await subscriber.resendSubscribe({
+            const sub = await subscriber.subscribe({
                 streamId: stream.id,
-                last: published.length,
+                resend: {
+                    last: published.length,
+                }
             })
 
             const onResent = jest.fn()

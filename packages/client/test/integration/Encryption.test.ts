@@ -7,15 +7,15 @@ import {
     getPublishTestStreamMessages,
     publishTestMessagesGenerator,
     createTestStream,
-    getCreateClient,
-    getPrivateKey
-} from '../utils'
-import { Defer, pLimitFn, until } from '../../src/utils'
+} from '../test-utils/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
-import { Stream, StreamPermission } from '../../src/Stream'
-import Subscription from '../../src/Subscription'
-import { storageNodeTestConfig } from './devEnvironment'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
+import { Subscription } from '../../src/subscribe/Subscription'
+import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -31,8 +31,7 @@ describeRepeats('decryption', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
-
-    const createClient = getCreateClient()
+    let clientFactory: ClientFactory
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
@@ -53,6 +52,7 @@ describeRepeats('decryption', () => {
     }
 
     beforeEach(() => {
+        clientFactory = createClientFactory()
         errors = []
         expectErrors = 0
     })
@@ -64,7 +64,7 @@ describeRepeats('decryption', () => {
     })
 
     async function setupClient(opts?: any) {
-        const client = await createClient(opts)
+        const client = clientFactory.createClient(opts)
         await Promise.all([
             client.connect(),
         ])
@@ -72,13 +72,8 @@ describeRepeats('decryption', () => {
     }
 
     async function setupStream() {
-        const storageNodeClient = await createClient({ auth: {
-            privateKey: storageNodeTestConfig.privatekey
-        } })
-
         stream = await createTestStream(publisher, module)
-
-        await stream.addToStorageNode(await storageNodeClient.getAddress())
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 
@@ -96,8 +91,8 @@ describeRepeats('decryption', () => {
 
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts, auth: { privateKey: await getPrivateKey() } }),
-            setupClient({ id: 'subscriber', ...opts, auth: { privateKey: await getPrivateKey() } }),
+            setupClient({ id: 'publisher', ...opts }),
+            setupClient({ id: 'subscriber', ...opts }),
         ])
     }
 
@@ -106,14 +101,7 @@ describeRepeats('decryption', () => {
         stream: s = stream,
         client: c = subscriber,
     }: { stream?: Stream, client?: StreamrClient } = {}) => {
-        const p2 = await s.grantUserPermission(StreamPermission.SUBSCRIBE, await c.getAddress())
-        await until(async () => {
-            try {
-                return await s.hasUserPermission(StreamPermission.SUBSCRIBE, await c.getAddress())
-            } catch (err) {
-                return false
-            }
-        }, 100000, 1000)
+        const p2 = await s.grantPermissions({ user: await c.getAddress(), permissions: [StreamPermission.SUBSCRIBE] })
         return [p2]
     })
 
@@ -439,12 +427,12 @@ describeRepeats('decryption', () => {
 
                 // resend without knowing the historical keys
                 await grantSubscriberPermissions()
-                const sub = await subscriber.resend({
-                    streamId: stream.id,
-                    resend: {
+                const sub = await subscriber.resend(
+                    stream.id,
+                    {
                         last: 2,
-                    },
-                })
+                    }
+                )
 
                 const received = await sub.collect()
 
@@ -537,7 +525,7 @@ describeRepeats('decryption', () => {
                         ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
                     ])
 
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
 
@@ -565,7 +553,7 @@ describeRepeats('decryption', () => {
                     expect(received).toEqual([
                         ...contentClear.slice(0, BAD_INDEX),
                     ])
-                    expect(subscriber.getAllSubscriptions()).toHaveLength(0)
+                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
 
                     expect(onSubError).toHaveBeenCalledTimes(1)
                 })
@@ -753,7 +741,10 @@ describeRepeats('decryption', () => {
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
+            await stream.grantPermissions({
+                user: await subscriber.getAddress(),
+                permissions: [StreamPermission.SUBSCRIBE]
+            })
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -779,7 +770,10 @@ describeRepeats('decryption', () => {
                     publisher.debug('PUBLISHED %d of %d', count, maxMessages)
                     if (count === revokeAfter) {
                         await gotMessages
-                        await stream.revokeUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
+                        await stream.revokePermissions({
+                            user: await subscriber.getAddress(),
+                            permissions: [StreamPermission.SUBSCRIBE]
+                        })
                         await publisher.rekey(stream.id)
                     }
                 }
@@ -799,7 +793,7 @@ describeRepeats('decryption', () => {
                             clearTimeout(t)
                             t = setTimeout(() => {
                                 timedOut()
-                                sub.cancel().catch(() => {})
+                                sub.unsubscribe().catch(() => {})
                             }, 600000)
                         }
 

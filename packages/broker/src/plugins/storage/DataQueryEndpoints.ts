@@ -7,7 +7,6 @@ import { Logger, Metrics, MetricsContext } from 'streamr-network'
 import { Readable, Transform } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
-import { LEGACY_API_ROUTE_PREFIX } from '../../httpServer'
 
 const logger = new Logger(module)
 
@@ -66,7 +65,7 @@ const createEndpointRoute = (
     metrics: Metrics,
     processRequest: (req: Request, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => void
 ) => {
-    router.get(`${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
+    router.get(`/streams/:id/data/partitions/:partition/${name}`, (req: Request, res: Response) => {
         const format = getFormat(req.query.format as string)
         if (format === undefined) {
             sendError(`Query parameter "format" is invalid: ${req.query.format}`, res)
@@ -135,7 +134,7 @@ export const router = (storage: Storage, metricsContext: MetricsContext): Router
         .addRecordedMetric('rangeRequests')
 
     router.use(
-        `${LEGACY_API_ROUTE_PREFIX}/streams/:id/data/partitions/:partition`,
+        `/streams/:id/data/partitions/:partition`,
         // partition parsing middleware
         (req, res, next) => {
             if (Number.isNaN(parseInt(req.params.partition))) {

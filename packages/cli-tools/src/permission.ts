@@ -1,16 +1,8 @@
 import { Argument } from 'commander'
-import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
+import { PermissionAssignment, Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { createClientCommand } from './command'
 
 const PUBLIC_USER_ID = 'public'
-
-const getTarget = (user: string): string|undefined => {
-    if (user === PUBLIC_USER_ID) {
-        return undefined
-    } else {
-        return user
-    }
-}
 
 export const PERMISSIONS = new Map<string,StreamPermission>([
     ['subscribe', StreamPermission.SUBSCRIBE],
@@ -33,21 +25,25 @@ export const getPermissionId = (permission: StreamPermission): string => {
 }
 
 export const runModifyPermissionsCommand = (
-    modifyUserPermission: (stream: Stream, permission: StreamPermission, target: string) => Promise<void>,
-    modifyPublicPermission: (stream: Stream, permission: StreamPermission) => Promise<void>,
+    modify: (stream: Stream, assignment: PermissionAssignment) => Promise<void>,
     modification: string,
 ): void => {
     createClientCommand(async (client: StreamrClient, streamId: string, user: string, permissionIds: string[]) => {
-        const target = getTarget(user)
         const stream = await client.getStream(streamId)
-        for await (const permissionId of permissionIds) {
-            const permission = PERMISSIONS.get(permissionId)!
-            if (target !== undefined) {
-                await modifyUserPermission(stream, permission, target) 
-            } else {
-                await modifyPublicPermission(stream, permission)
+        const permissions: StreamPermission[] = permissionIds.map((permissionId) => getPermission(permissionId))
+        let assignment: PermissionAssignment
+        if (user === PUBLIC_USER_ID) {
+            assignment = {
+                permissions,
+                public: true
+            }
+        } else {
+            assignment = {
+                permissions,
+                user
             }
         }
+        await modify(stream, assignment) 
     })
         .addArgument(new Argument('<streamId>'))
         .addArgument(new Argument('<user>'))
