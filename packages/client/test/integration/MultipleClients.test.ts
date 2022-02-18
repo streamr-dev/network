@@ -56,11 +56,14 @@ describeRepeats('PubSub with multiple clients', () => {
 
         // pubClient.on('error', getOnError(errors))
         const pubUser = await pubClient.getAddress()
-        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: pubUser })
-        // needed to check last
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: pubUser })
+        await mainClient.setPermissions([{
+            streamId: stream.id,
+            assignments: [
+                // StreamPermission.SUBSCRIBE needed to check last
+                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: pubUser }
+            ]
+        }])
         await pubClient.connect()
-
         return pubClient
     }
 
