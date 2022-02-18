@@ -20,7 +20,7 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
-interface StreamRegistryInterface extends ethers.utils.Interface {
+interface StreamRegistryV3Interface extends ethers.utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "ENScreateStreamCallback(address,string,string,string)": FunctionFragment;
@@ -55,12 +55,15 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     "setExpirationTime(string,address,uint8,uint256)": FunctionFragment;
     "setPermissions(string,address[],tuple[])": FunctionFragment;
     "setPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
+    "setPermissionsMultipleStreans(string[],address[][],tuple[][])": FunctionFragment;
     "setPublicPermission(string,uint256,uint256)": FunctionFragment;
     "streamIdToMetadata(string)": FunctionFragment;
     "streamIdToPermissions(string,bytes32)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "transferAllPermissionsToUser(string,address)": FunctionFragment;
     "transferPermissionToUser(string,address,uint8)": FunctionFragment;
+    "trustedCreateStreams(string[],string[])": FunctionFragment;
+    "trustedSetPermissions(string[],address[],tuple[])": FunctionFragment;
     "trustedSetPermissionsForUser(string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
     "trustedSetStreamMetadata(string,string)": FunctionFragment;
     "trustedSetStreamWithPermission(string,string,address,bool,bool,uint256,uint256,bool)": FunctionFragment;
@@ -212,6 +215,20 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
+    functionFragment: "setPermissionsMultipleStreans",
+    values: [
+      string[],
+      string[][],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setPublicPermission",
     values: [string, BigNumberish, BigNumberish]
   ): string;
@@ -234,6 +251,24 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "transferPermissionToUser",
     values: [string, string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "trustedCreateStreams",
+    values: [string[], string[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "trustedSetPermissions",
+    values: [
+      string[],
+      string[],
+      {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "trustedSetPermissionsForUser",
@@ -404,6 +439,10 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setPermissionsMultipleStreans",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setPublicPermission",
     data: BytesLike
   ): Result;
@@ -425,6 +464,14 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferPermissionToUser",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "trustedCreateStreams",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "trustedSetPermissions",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -478,7 +525,7 @@ interface StreamRegistryInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
-export class StreamRegistry extends Contract {
+export class StreamRegistryV3 extends Contract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -519,7 +566,7 @@ export class StreamRegistry extends Contract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: StreamRegistryInterface;
+  interface: StreamRegistryV3Interface;
 
   functions: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
@@ -527,7 +574,7 @@ export class StreamRegistry extends Contract {
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
 
     ENScreateStreamCallback(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -535,7 +582,7 @@ export class StreamRegistry extends Contract {
     ): Promise<ContractTransaction>;
 
     "ENScreateStreamCallback(address,string,string,string)"(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -980,6 +1027,32 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setPermissionsMultipleStreans(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setPermissionsMultipleStreans(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setPublicPermission(
       streamId: string,
       publishExpiration: BigNumberish,
@@ -1065,6 +1138,44 @@ export class StreamRegistry extends Contract {
       streamId: string,
       recipient: string,
       permissionType: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    trustedCreateStreams(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "trustedCreateStreams(string[],string[])"(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    trustedSetPermissions(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "trustedSetPermissions(string[],address[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -1194,7 +1305,7 @@ export class StreamRegistry extends Contract {
   "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
   ENScreateStreamCallback(
-    requestorAddress: string,
+    ownerAddress: string,
     ensName: string,
     streamIdPath: string,
     metadataJsonString: string,
@@ -1202,7 +1313,7 @@ export class StreamRegistry extends Contract {
   ): Promise<ContractTransaction>;
 
   "ENScreateStreamCallback(address,string,string,string)"(
-    requestorAddress: string,
+    ownerAddress: string,
     ensName: string,
     streamIdPath: string,
     metadataJsonString: string,
@@ -1604,6 +1715,32 @@ export class StreamRegistry extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setPermissionsMultipleStreans(
+    streamIds: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setPermissionsMultipleStreans(string[],address[][],tuple[][])"(
+    streamIds: string[],
+    users: string[][],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[][],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setPublicPermission(
     streamId: string,
     publishExpiration: BigNumberish,
@@ -1686,6 +1823,44 @@ export class StreamRegistry extends Contract {
     streamId: string,
     recipient: string,
     permissionType: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  trustedCreateStreams(
+    streamIds: string[],
+    metadatas: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "trustedCreateStreams(string[],string[])"(
+    streamIds: string[],
+    metadatas: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  trustedSetPermissions(
+    streamids: string[],
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "trustedSetPermissions(string[],address[],tuple[])"(
+    streamids: string[],
+    users: string[],
+    permissions: {
+      canEdit: boolean;
+      canDelete: boolean;
+      publishExpiration: BigNumberish;
+      subscribeExpiration: BigNumberish;
+      canGrant: boolean;
+    }[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1815,7 +1990,7 @@ export class StreamRegistry extends Contract {
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
     ENScreateStreamCallback(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -1823,7 +1998,7 @@ export class StreamRegistry extends Contract {
     ): Promise<void>;
 
     "ENScreateStreamCallback(address,string,string,string)"(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -2222,6 +2397,32 @@ export class StreamRegistry extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setPermissionsMultipleStreans(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "setPermissionsMultipleStreans(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setPublicPermission(
       streamId: string,
       publishExpiration: BigNumberish,
@@ -2307,6 +2508,44 @@ export class StreamRegistry extends Contract {
       streamId: string,
       recipient: string,
       permissionType: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    trustedCreateStreams(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "trustedCreateStreams(string[],string[])"(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    trustedSetPermissions(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "trustedSetPermissions(string[],address[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2515,7 +2754,7 @@ export class StreamRegistry extends Contract {
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     ENScreateStreamCallback(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -2523,7 +2762,7 @@ export class StreamRegistry extends Contract {
     ): Promise<BigNumber>;
 
     "ENScreateStreamCallback(address,string,string,string)"(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -2899,6 +3138,32 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setPermissionsMultipleStreans(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setPermissionsMultipleStreans(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setPublicPermission(
       streamId: string,
       publishExpiration: BigNumberish,
@@ -2968,6 +3233,44 @@ export class StreamRegistry extends Contract {
       streamId: string,
       recipient: string,
       permissionType: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    trustedCreateStreams(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "trustedCreateStreams(string[],string[])"(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    trustedSetPermissions(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "trustedSetPermissions(string[],address[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -3102,7 +3405,7 @@ export class StreamRegistry extends Contract {
     ): Promise<PopulatedTransaction>;
 
     ENScreateStreamCallback(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -3110,7 +3413,7 @@ export class StreamRegistry extends Contract {
     ): Promise<PopulatedTransaction>;
 
     "ENScreateStreamCallback(address,string,string,string)"(
-      requestorAddress: string,
+      ownerAddress: string,
       ensName: string,
       streamIdPath: string,
       metadataJsonString: string,
@@ -3491,6 +3794,32 @@ export class StreamRegistry extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setPermissionsMultipleStreans(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setPermissionsMultipleStreans(string[],address[][],tuple[][])"(
+      streamIds: string[],
+      users: string[][],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[][],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setPublicPermission(
       streamId: string,
       publishExpiration: BigNumberish,
@@ -3560,6 +3889,44 @@ export class StreamRegistry extends Contract {
       streamId: string,
       recipient: string,
       permissionType: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    trustedCreateStreams(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "trustedCreateStreams(string[],string[])"(
+      streamIds: string[],
+      metadatas: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    trustedSetPermissions(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "trustedSetPermissions(string[],address[],tuple[])"(
+      streamids: string[],
+      users: string[],
+      permissions: {
+        canEdit: boolean;
+        canDelete: boolean;
+        publishExpiration: BigNumberish;
+        subscribeExpiration: BigNumberish;
+        canGrant: boolean;
+      }[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

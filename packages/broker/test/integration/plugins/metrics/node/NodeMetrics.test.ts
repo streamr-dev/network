@@ -28,7 +28,7 @@ describe('NodeMetrics', () => {
             id: `/metrics/nodes/${uuid()}/sec`,
             partitions: NUM_OF_PARTITIONS
         })
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, nodeAddress)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: nodeAddress })
         streamIdPrefix = stream.id.replace('sec', '')
 
         metricsGeneratingBroker = await startBroker({

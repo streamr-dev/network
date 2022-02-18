@@ -15,28 +15,12 @@ import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { AddressZero } from '@ethersproject/constants'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
 import { StrictStreamrClientConfig } from './ConfigBase'
 import { Config } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
-
-export interface StreamPermissions {
-    canEdit: boolean
-    canDelete: boolean
-    canPublish: boolean // BigNumber to have expiring permissions
-    canSubscribe: boolean // BigNumber to have expiring permissions
-    canGrant: boolean
-}
-
-export enum StreamPermission {
-    EDIT = 'canEdit',
-    DELETE = 'canDelete',
-    PUBLISH = 'canPublish',
-    SUBSCRIBE = 'canSubscribe',
-    GRANT = 'canGrant'
-}
+import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 
 export interface StreamProperties {
     id: string
@@ -150,187 +134,6 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async getPermissions() {
-        return this._streamRegistry.getAllPermissionsForStream(this.id)
-    }
-
-    async getMyPermissions() {
-        return this._streamRegistry.getPermissionsForUser(this.id, await this._ethereuem.getAddress())
-    }
-
-    async getUserPermissions(userId: EthereumAddress) {
-        return this._streamRegistry.getPermissionsForUser(this.id, userId)
-    }
-
-    async getPublicPermissions() {
-        return this._streamRegistry.getPermissionsForUser(this.id, AddressZero)
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    assertUserId(userId: string) {
-        if (!userId || typeof userId !== 'string') {
-            throw new Error(`Invalid UserId: ${userId}`)
-        }
-    }
-
-    assertUserIdOrPublic(userId: string | undefined) {
-        if (typeof userId === 'string') {
-            this.assertUserId(userId)
-            return
-        }
-
-        if (userId != null) {
-            throw new Error(`Invalid UserId: ${userId}`)
-        }
-    }
-
-    async hasUserPermission(permission: StreamPermission, userId: string) {
-        this.assertUserId(userId)
-        return this._streamRegistry.hasPermission(this.id, userId, permission)
-    }
-
-    async hasPublicPermission(permission: StreamPermission) {
-        return this._streamRegistry.hasPublicPermission(this.id, permission)
-    }
-
-    // async hasUserPermissions(operations: StreamPermission[], userId: string) {
-    //     this.assertUserId(userId)
-    //     const permissions = this._streamRegistry.getPermissionsForUser(this.id, userId, )
-    //     return this.hasPermissions(operations, userId)
-    // }
-    // async hasPermissions(operations: StreamPermission[], userId: string) {
-    //     const permissions = await this._streamRegistry.getPermissionsForUser(this.id, userId)
-
-    //     if (operation === StreamPermission.PUBLISH || operation === StreamPermission.SUBSCRIBE) {
-    //         return permissions[operation].gt(Date.now())
-    //     }
-    //     return permissions[operation]
-    // }
-
-    // async hasPermission(operation: StreamPermission, userId: string|undefined) {
-    //     const permissions = await this.hasPermissions([operation], userId)
-    //     if (!Array.isArray(permissions) || !permissions.length) { return undefined }
-    //     return permissions[0]
-    // }
-
-    async grantUserPermission(permission: StreamPermission, userId: string) {
-        try {
-            await this._streamRegistry.grantPermission(this.id, permission, userId)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    // private async grantUserPermissions(permissions: StreamPermissions, userId: string) {
-    //     this.assertUserIdOrPublic(userId)
-    //     try {
-    //         await this.setPermissions(userId, permissions.edit, permissions.canDelete,
-    //             permissions.publishExpiration, permissions.subscribeExpiration, permissions.share)
-    //     } finally {
-    //         this._streamEndpointsCached.clearStream(this.id)
-    //     }
-    // }
-
-    async grantPublicPermission(permission: StreamPermission) {
-        try {
-            await this._streamRegistry.grantPublicPermission(this.id, permission)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    async revokeUserPermission(permission: StreamPermission, userId: string) {
-        this.assertUserId(userId)
-        try {
-            return this._streamRegistry.revokePermission(this.id, permission, userId)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    async revokePublicPermission(permission: StreamPermission) {
-        try {
-            return this._streamRegistry.revokePublicPermission(this.id, permission)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    // async getMatchingPermissions(operations: StreamPermission[]|false, userId: string|undefined|false): Promise<StreamPermision[]> {
-    //     if (operations && !operations.length) { return [] }
-
-    //     if (userId !== false) {
-    //         this.assertUserIdOrPublic(userId)
-    //     }
-
-    //     const permissions = await this.getPermissions()
-    //     // eth addresses may be in checksumcase, but userId from server has no case
-    //     const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
-    //     const operationSet = new Set<StreamPermission>(operations === false ? [] : operations)
-    //     return permissions.filter((p) => {
-    //         if (operations !== false) {
-    //             if (!operationSet.has(p.operation)) {
-    //                 return false
-    //             }
-    //         }
-
-    //         if (userId !== false) {
-    //             if (userIdCaseInsensitive === undefined) {
-    //                 return !!('anonymous' in p && p.anonymous) // match nullish userId against p.anonymous
-    //             }
-    //             return 'user' in p && p.user && p.user.toLowerCase() === userIdCaseInsensitive // match against userId
-    //         }
-
-    //         return true
-    //     })
-    // }
-
-    // async revokeMatchingPermissions(operations: StreamPermission[], userId: string|undefined) {
-    //     this.assertUserIdOrPublic(userId)
-    //     const matchingPermissions = await this.getMatchingPermissions(operations, userId)
-
-    //     const tasks = matchingPermissions.map(async (p: any) => {
-    //         await this.revokePermission(p.id)
-    //     })
-    //     await Promise.allSettled(tasks)
-    //     await Promise.all(tasks)
-    // }
-
-    async revokeAllUserPermissions(userId: string) {
-        this.assertUserId(userId)
-        try {
-            return this._streamRegistry.revokeAllUserPermission(this.id, userId)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    async revokeAllPublicPermissions() {
-        try {
-            return this._streamRegistry.revokeAllPublicPermissions(this.id)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    async setPermissionsForUser(recipientId: EthereumAddress, edit: boolean,
-        deletePerm: boolean, publish: boolean, subscribe: boolean, share: boolean) {
-        try {
-            await this._streamRegistry.setPermissionsForUser(this.id, recipientId, edit,
-                deletePerm, publish, subscribe, share)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    async setPermissions(recipientIds: EthereumAddress[], permissions: StreamPermissions[]) {
-        try {
-            await this._streamRegistry.setPermissions(this.id, recipientIds, permissions)
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
     async detectFields() {
         // Get last message of the stream to be used for field detecting
         const sub = await this._resends.resend(
@@ -426,6 +229,25 @@ class StreamrStream implements StreamMetadata {
         } catch (error) {
             throw new Error(`Could not parse properties from onchain metadata: ${propsString}`)
         }
+    }
+
+    async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
+        return this._streamRegistry.hasPermission({
+            streamId: this.id,
+            ...query
+        })
+    }
+
+    async getPermissions(): Promise<PermissionAssignment[]> {
+        return this._streamRegistry.getPermissions(this.id)
+    }
+
+    async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
+        return this._streamRegistry.grantPermissions(this.id, ...assignments)
+    }
+
+    async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
+        return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 }
 

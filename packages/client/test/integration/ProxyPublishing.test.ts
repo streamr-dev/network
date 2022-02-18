@@ -1,5 +1,8 @@
 import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../test-utils/utils'
-import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
+import ConfigTest from '../../src/ConfigTest'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
 
@@ -58,11 +61,11 @@ describe('PubSub with proxy connections', () => {
         const proxyUser = await proxyClient1.getUserInfo()
         const proxyUser2 = await proxyClient2.getUserInfo()
 
-        await stream.grantUserPermission(StreamPermission.PUBLISH, pubUser.username)
-        await stream.grantUserPermission(StreamPermission.PUBLISH, proxyUser.username)
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser.username)
-        await stream.grantUserPermission(StreamPermission.PUBLISH, proxyUser2.username)
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, proxyUser2.username)
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: pubUser.username })
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: proxyUser.username })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: proxyUser.username })
+        await stream.grantPermissions({ permissions: [StreamPermission.PUBLISH], user: proxyUser2.username })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: proxyUser2.username })
     }, 60000)
 
     it('Publish only connections work', async () => {

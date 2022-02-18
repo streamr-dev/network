@@ -269,11 +269,16 @@
 
     $('#permissions').on('click', async () => {
         log('Setting Permissions...')
-        await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
+        const subscriberAddress = await subscriber.getAddress()
+        await publisher.setPermissions(stream.id, {
+            user: subscriberAddress,
+            permissions: [StreamrClient.StreamPermission.SUBSCRIBE, StreamrClient.StreamPermission.PUBLISH]
+        })
         log('Set Permissions.')
         log('Loading permissions...')
-        const permissions = await stream.getUserPermissions(await subscriber.getAddress())
-        log(`Permissions: ${JSON.stringify(permissions)}`, 'permissionsResult')
+        const allAssignments = await stream.getPermissions()
+        const modifiedAssignment = allAssignments.find(p => (p.user.toLowerCase() === subscriberAddress.toLowerCase()))
+        log(`Permissions: [${modifiedAssignment.permissions.join(',')}]`, 'permissionsResult')
     })
 
     $('#subscribe').on('click', async () => {

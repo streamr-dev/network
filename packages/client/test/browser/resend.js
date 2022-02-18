@@ -29,7 +29,7 @@ describe('StreamrClient Resend', () => {
             .assert.not.elementPresent('.error')
             .click('button[id=permissions]')
             .waitForElementPresent('.permissionsResult')
-            .assert.containsText('#result', '"canSubscribe":true')
+            .assert.containsText('#result', '[publish,subscribe]')
             .assert.not.elementPresent('.error')
             .click('button[id=store]')
             .waitForElementPresent('.storeResult')
