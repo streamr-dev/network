@@ -45,16 +45,12 @@ jobs:
   test:
     name: Test Unit
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     env:
       TEST_REPEATS: 1
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v2.5.1
         with:
-          node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
