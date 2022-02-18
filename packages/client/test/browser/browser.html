@@ -212,7 +212,6 @@
     const subscriberAuth = {
         privateKey: urlParams.get('SUBSCRIBE_KEY') || await getPrivateKey()
     }
-    log(`${publisherAuth.privateKey}, ${subscriberAuth.privateKey}`)
 
     if (subscriberAuth.privateKey !==  urlParams.get('SUBSCRIBE_KEY') || publisherAuth.privateKey !== urlParams.get('PUBLISHER_KEY')) {
         const newURL = new URL(document.URL)
@@ -230,10 +229,12 @@
 
     const publisher = new StreamrClient({
         ...StreamrClient.ConfigTest,
+        id: 'publisher',
         auth: publisherAuth,
     })
     const subscriber = new StreamrClient({
         ...StreamrClient.ConfigTest,
+        id: 'subscriber',
         auth: subscriberAuth,
     })
     publisher.enableDebugLogging()
