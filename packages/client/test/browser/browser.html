@@ -279,7 +279,8 @@
         log('Subscribing...')
         await subscriber.subscribe({
             stream: stream.id
-        }, (message) => {
+        }, (message, metadata) => {
+            console.log({ message, metadata })
             messages.push(message)
             log(`Received: ${JSON.stringify(message)}`, 'realtime-msg')
             if (messages.length === 10) {
@@ -306,19 +307,16 @@
         messages = []
         log(`Resending...`)
 
-        const sub = await subscriber.resend(
-            stream.id,
-            {
-                last: 10
+        const sub = await subscriber.resend(stream.id,
+            { last: 10 },
+            (message) => {
+                messages.push(message)
+                log(`Received Resent: ${JSON.stringify(message)}`)
+                if (messages.length === 10) {
+                    log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
+                }
             }
-        , (message) => {
-            messages.push(message)
-            log(`Received Resent: ${JSON.stringify(message)}`)
-            if (messages.length === 10) {
-                log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
-            }
-        })
-
+        )
 
         sub.onConsumed(() => {
             log('Resend Consumed.', 'resendResult')

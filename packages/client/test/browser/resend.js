@@ -11,12 +11,12 @@ describe('StreamrClient Resend', () => {
         const restUrl = process.env.REST_URL ? `&REST_URL=${encodeURIComponent(process.env.REST_URL)}` : ''
         const browserUrl = `http://localhost:8880?streamName=${streamName}${url}${restUrl}`
         console.info(browserUrl)
-        await browser.maximizeWindow()
         return browser.url(browserUrl)
     })
 
     test('Test StreamrClient in Chrome Browser', async (browser) => {
-        browser.resizeWindow(10000, 10000)
+        // Make viewport huge to ensure that all buttons are inside it
+        browser.resizeWindow(4000, 4000)
         await browser
             .waitForElementVisible('body')
             .assert.titleContains('Test StreamrClient in Chrome Browser')
