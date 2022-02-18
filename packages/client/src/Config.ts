@@ -10,9 +10,10 @@ import merge from 'lodash/merge'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
+import type { ConnectionInfo } from '@ethersproject/web'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: string, contractAddress: string }
+export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: string }
 export type BrubeckNodeOptions = Omit<NetworkNodeOptions, 'trackers'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
 }

@@ -71,8 +71,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            const trackerList = await streamrClient.getTrackerList()
-            logger.info(`Configured with trackers: [${trackerList.map((tracker: Protocol.SmartContractRecord) => tracker.http).join(', ')}]`)
+            logger.info(`Tracker Configuration: ${
+                config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'
+            }`)
 
             if (config.client.restUrl !== undefined) {
                 logger.info(`Configured with Streamr: ${config.client.restUrl}`)

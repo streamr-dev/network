@@ -2,7 +2,7 @@ import { getTrackerRegistryFromContract } from '../../src/getTrackerRegistryFrom
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
-const jsonRpcProvider = `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545`
+const jsonRpcProvider = { url: `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}:8545` }
 
 describe('TrackerRegistry', () => {
     test('throw exception if address is wrong (ENS)', async () => {
@@ -24,7 +24,7 @@ describe('TrackerRegistry', () => {
     test('throw exception if jsonRpcProvider is wrong', async () => {
         await expect(async () => (
             getTrackerRegistryFromContract({
-                contractAddress, jsonRpcProvider: 'jsonRpcProvider'
+                contractAddress, jsonRpcProvider: { url: 'rpcprovider' }
             })
         )).rejects.toThrow('could not detect network')
     })

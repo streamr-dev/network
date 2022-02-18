@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } fr
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { BrubeckNodeOptions, Config, TrackerRegistrySmartContract } from './Config'
-import { SmartContractRecord, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
@@ -39,7 +39,6 @@ export default class BrubeckNode implements Context {
     debug
     private startNodeCalled = false
     private startNodeComplete = false
-    private trackers: SmartContractRecord[] = []
 
     constructor(
         context: Context,
@@ -66,10 +65,7 @@ export default class BrubeckNode implements Context {
 
         if ((options.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract((options.trackers as TrackerRegistrySmartContract))
-            this.trackers = trackerRegistry.getAllTrackers()
-            options.trackers = this.trackers
-        } else {
-            this.trackers = (options.trackers as SmartContractRecord[])
+            options.trackers = trackerRegistry.getAllTrackers()
         }
 
         // generate id if none supplied
@@ -221,19 +217,6 @@ export default class BrubeckNode implements Context {
             await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
-        }
-    }
-
-    async getTrackerList(): Promise<SmartContractRecord[]> {
-        try {
-            this.destroySignal.assertNotDestroyed(this)
-
-            if (!this.cachedNode || !this.startNodeComplete) {
-                await this.startNodeTask()
-            }
-            return this.trackers
-        } finally {
-            this.debug('getTrackerList << %o', this.trackers)
         }
     }
 }

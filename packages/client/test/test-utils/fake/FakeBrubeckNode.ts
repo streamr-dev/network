@@ -1,6 +1,6 @@
 import debug from 'debug'
 import { pull } from 'lodash'
-import { EthereumAddress, SmartContractRecord, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
 import BrubeckNode, { NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
@@ -139,11 +139,6 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
 
     // eslint-disable-next-line class-methods-use-this
     async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async getTrackerList(): Promise<SmartContractRecord[]> {
         throw new Error('not implemented')
     }
 }
