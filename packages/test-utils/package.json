@@ -5,6 +5,7 @@
   "main": "./dist/src/utils.js",
   "types": "./dist/src/utils.d.ts",
   "scripts": {
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",

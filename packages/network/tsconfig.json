@@ -10,6 +10,7 @@
         "test/**/*"
     ],
     "exclude": [
+        "src/**/BrowserWebRtcConnection.ts",
         "test/**/BrowserWebRtcConnection.test.ts",
         "test/**/IntegrationBrowserWebRtcConnection.test.ts"
     ],
