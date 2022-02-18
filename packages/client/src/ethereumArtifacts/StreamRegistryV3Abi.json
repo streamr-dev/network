@@ -236,7 +236,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "requestorAddress",
+        "name": "ownerAddress",
         "type": "address"
       },
       {
@@ -445,7 +445,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct StreamRegistry.Permission",
+        "internalType": "struct StreamRegistryV3.Permission",
         "name": "permission",
         "type": "tuple"
       }
@@ -496,7 +496,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct StreamRegistry.Permission",
+        "internalType": "struct StreamRegistryV3.Permission",
         "name": "permission",
         "type": "tuple"
       }
@@ -568,7 +568,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -586,7 +586,7 @@
         "type": "string"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -627,7 +627,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -656,7 +656,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -680,7 +680,7 @@
         "type": "string"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -806,7 +806,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -824,7 +824,7 @@
         "type": "string"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
@@ -878,7 +878,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       },
@@ -933,7 +933,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct StreamRegistry.Permission[]",
+        "internalType": "struct StreamRegistryV3.Permission[]",
         "name": "permissions",
         "type": "tuple[]"
       }
@@ -982,6 +982,56 @@
       }
     ],
     "name": "setPermissionsForUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "streamIds",
+        "type": "string[]"
+      },
+      {
+        "internalType": "address[][]",
+        "name": "users",
+        "type": "address[][]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "canEdit",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "canDelete",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishExpiration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "subscribeExpiration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "canGrant",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct StreamRegistryV3.Permission[][]",
+        "name": "permissions",
+        "type": "tuple[][]"
+      }
+    ],
+    "name": "setPermissionsMultipleStreans",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1122,12 +1172,80 @@
         "type": "address"
       },
       {
-        "internalType": "enum StreamRegistry.PermissionType",
+        "internalType": "enum StreamRegistryV3.PermissionType",
         "name": "permissionType",
         "type": "uint8"
       }
     ],
     "name": "transferPermissionToUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "streamIds",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "metadatas",
+        "type": "string[]"
+      }
+    ],
+    "name": "trustedCreateStreams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "streamids",
+        "type": "string[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "users",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "canEdit",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "canDelete",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "publishExpiration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "subscribeExpiration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "canGrant",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct StreamRegistryV3.Permission[]",
+        "name": "permissions",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "trustedSetPermissions",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1286,7 +1404,7 @@
             "type": "bool"
           }
         ],
-        "internalType": "struct StreamRegistry.Permission[]",
+        "internalType": "struct StreamRegistryV3.Permission[]",
         "name": "permissions",
         "type": "tuple[]"
       }

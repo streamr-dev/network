@@ -44,13 +44,11 @@ const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
 const PRIVATE_KEY_SOURCE_IMPORT = 'Import'
 
 export const CONFIG_TEMPLATE: any = {
+    $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
     client: {
-        $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
-        auth: {
-        }
+        auth: {}
     },
     plugins: {
-        brubeckMiner: {},
         metrics: {}
     },
     apiAuthentication: {
@@ -94,9 +92,9 @@ const PRIVATE_KEY_PROMPTS: Array<inquirer.Question | inquirer.ListQuestion | inq
 ]
 
 const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion | inquirer.CheckboxQuestion> => {
-    const selectPrompt: inquirer.CheckboxQuestion = {
+    const selectApiPluginsPrompt: inquirer.CheckboxQuestion = {
         type: 'checkbox',
-        name:'selectPlugins',
+        name: 'enabledApiPlugins',
         message: 'Select the plugins to enable',
         choices: Object.values(PLUGIN_NAMES)
     }
@@ -109,7 +107,7 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
             name: `${name}Port`,
             message: `Provide a port for the ${name} Plugin [Enter for default: ${defaultPort}]`,
             when: (answers: inquirer.Answers) => {
-                return answers.selectPlugins.includes(name)
+                return answers.enabledApiPlugins.includes(name)
             },
             validate: (input: string | number): string | boolean => {
                 const MIN_PORT_VALUE = 1024
@@ -132,7 +130,14 @@ const createPluginPrompts = (): Array<inquirer.Question | inquirer.ListQuestion 
         }
     })
 
-    return [selectPrompt, ...portPrompts]
+    const minerPluginPrompt: inquirer.DistinctQuestion = {
+        type: 'confirm',
+        name: 'enableMinerPlugin',
+        message: 'Do you want to participate in mining and staking?',
+        default: true
+    }
+
+    return [selectApiPluginsPrompt, ...portPrompts, minerPluginPrompt]
 }
 
 export const PROMPTS = {
@@ -162,7 +167,7 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
     pluginKeys.forEach((pluginKey) => {
         const pluginName = PLUGIN_NAMES[pluginKey]
         const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.selectPlugins && pluginsAnswers.selectPlugins.includes(pluginName)){
+        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)){
             let pluginConfig = {}
             const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
             if (portNumber !== defaultPort){
@@ -178,6 +183,10 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
             config.plugins![pluginName] = pluginConfig
         }
     })
+
+    if (pluginsAnswers.enableMinerPlugin) {
+        config.plugins.brubeckMiner = {}
+    }
 
     return config
 }

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import '../src/logLevel'
-import _ from 'lodash'
-import StreamrClient, { StreamPermission } from 'streamr-client'
+import StreamrClient from 'streamr-client'
 import { createClientCommand } from '../src/command'
 import { getPermissionId } from '../src/permission'
 
@@ -9,8 +8,13 @@ createClientCommand(async (client: StreamrClient, streamId: string, options: any
     const stream = await client.getStream(streamId)
     const obj: any = stream.toObject()
     if (options.includePermissions) {
-        const permissions = await stream.getPermissions()
-        obj.permissions = _.mapValues(permissions, (p: StreamPermission[]) => p.map(getPermissionId))
+        const assigments = await stream.getPermissions()
+        obj.permissions = assigments.map((assignment) => {
+            return {
+                ...assignment,
+                permissions: assignment.permissions.map(getPermissionId)
+            }
+        })
     }
     console.info(JSON.stringify(obj, null, 2))
 })

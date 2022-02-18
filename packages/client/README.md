@@ -25,7 +25,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 ## Table of contents
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Storage](#storage) ·[Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream permissions](#stream-permissions) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -346,10 +346,10 @@ All the below functions return a Promise which gets resolved with the result.
 | :---------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | update()                                  | Updates the properties of this stream object by sending them to the API.                                                                                                                                                                                                      |
 | delete()                                  | Deletes this stream.                                                                                                                                                                                                                                                          |
-| getPermissions()                          | Returns the list of permissions for this stream.                                                                                                                                                                                                                              |
-| hasPermission(operation, user)            | Returns a permission object, or null if no such permission was found. Valid `operation` values for streams are: stream_get, stream_edit, stream_delete, stream_publish, stream_subscribe, and stream_share. `user` is the username of a user, or null for public permissions. |
-| grantPermission(operation, user)          | Grants the permission to do `operation` to `user`, which are defined as above.                                                                                                                                                                                                |
-| revokePermission(permissionId)            | Revokes a permission identified by its `id`.                                                                                                                                                                                                                                  |
+| getPermissions()                          |                                                                                                                                                                                                                               |
+| hasPermissions()                          | |
+| grantPermissions(              )          | |
+| revokePermissions()                       | |
 | detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream.                                                                                                                                                                                        |
 | publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                                                                                                                                                                                                                                       |
 
@@ -381,7 +381,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 
 Admin functions require xDai tokens on the xDai network. To get xDai you can either use a [faucet](https://www.xdaichain.com/for-users/get-xdai-tokens/xdai-faucet) or you can reach out on the [Streamr Discord #dev channel](https://discord.gg/gZAm8P7hK8).
 
-Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermission(stream_publish, user)`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermission(permissionId)`.
+Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermissions()`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermissions()`.
 
 | Name                              | Returns             | Description                                                    |
 | :-------------------------------- | :------------------ | :------------------------------------------------------------- |
@@ -598,6 +598,66 @@ client.on('connected', () => {
 | unsubscribed |                                                                                                                                                                           | Fired when an unsubscription is acknowledged by the server.                                         |
 | resent       | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending and message has been processed |
 | error        | Error object                                                                                                                                                              | Reports errors, for example problems with message content                                           |
+
+## Stream permissions
+
+There are 5 different permissions:
+- StreamPermission.PUBLISH
+- StreamPermission.SUBSCRIBE
+- StreamPermission.EDIT
+- StreamPermission.DELETE
+- StreamPermission.GRANT
+
+For each stream + user there can be a permission assignment containing a subset of those permissions. It is also possible to grant public permissions for streams (only `StreamPermission.PUBLISH` and `StreamPermission.SUBSCRIBE`). If a stream has e.g. a public subscribe permissions, it means that anyone can subscribe to that stream.
+
+To grant and revoke permissions:
+
+```js
+await stream.grantPermissions({ 
+    user: '0x1234567890123456789012345678901234567890',  // or "public: true" to grant a public permission
+    permissions: [StreamPermission.PUBLISH, StreamPermission.EDIT]
+})
+
+await stream.revokePermissions({ 
+    user: '0x1234567890123456789012345678901234567890',  // or "public: true" to revoke a public permission
+    permissions: [StreamPermission.SUBSCRIBE]
+})
+```
+
+There is also a `client.setPermissions` method which is otherwise equal to `grantPermission()`, but if there are existing permissions for the same users in that stream, the previous permissions are overwritten:
+
+```js
+await client.setPermissions(streamId, {
+    user: '0x1111111111111111111111111111111111111111',
+    permissions: [StreamPermission.EDIT]
+}, {
+    user: '0x2222222222222222222222222222222222222222',
+    permissions: [StreamPermission.GRANT]
+}, {
+    public: true,
+    permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
+})
+```
+
+You can query the existence of a permission with `hasPermission()`. Usually you want to use `allowPublic: true` flag so that also the existence of a public permission is checked:
+```js
+await stream.hasPermission({
+    permission: StreamPermission.PUBLISH,
+    user,
+    allowPublic: true
+}
+```
+
+To query your own permissions:
+```js
+await stream.hasPermission({
+    permission: StreamPermission.PUBLISH,
+    user: await client.getAddress(),
+    allowPublic: true
+}
+```
+
+All streams permissions can be queried by calling `stream.getPermissions()`.
 
 ## Stream Partitioning
 
