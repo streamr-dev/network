@@ -68,7 +68,7 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: "Test Integration: ${{ matrix.test-name }}""
+    name: "Test Integration: ${{ matrix.test-name }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
