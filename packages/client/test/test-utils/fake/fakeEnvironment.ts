@@ -16,7 +16,7 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 
 export interface ClientFactory {
-    createClient: (opts: any) => StreamrClient
+    createClient: (opts?: any) => StreamrClient
 }
 
 export const createClientFactory = (): ClientFactory => {
@@ -52,7 +52,7 @@ export const createClientFactory = (): ClientFactory => {
     } })
 
     return {
-        createClient: (opts: BrubeckClientConfig) => {
+        createClient: (opts?: BrubeckClientConfig) => {
             let authOpts
             if (opts?.auth?.privateKey === undefined) {
                 authOpts = {
