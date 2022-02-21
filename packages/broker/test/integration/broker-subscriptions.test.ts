@@ -93,20 +93,20 @@ describe('broker subscriptions', () => {
         await mqttClient1.subscribe(freshStream1.id)
         await mqttClient2.subscribe(freshStream2.id)
 
-        await waitForCondition(() => getStreamParts(broker1).length === 1)
-        await waitForCondition(() => getStreamParts(broker2).length === 1)
+        await waitForCondition(() => await getStreamParts(broker1).length === 1)
+        await waitForCondition(() => await getStreamParts(broker2).length === 1)
 
-        expect(getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0'])
-        expect(getStreamParts(broker2)).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream2.id + '#0'])
 
         await mqttClient1.subscribe(freshStream2.id)
         await mqttClient2.subscribe(freshStream1.id)
 
-        await waitForCondition(() => getStreamParts(broker1).length === 2)
-        await waitForCondition(() => getStreamParts(broker2).length === 2)
+        await waitForCondition(() => await getStreamParts(broker1).length === 2)
+        await waitForCondition(() => await getStreamParts(broker2).length === 2)
 
-        expect(getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-        expect(getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         // client boots own node, so broker streams should not change
         await client1.subscribe(freshStream1, () => {})
@@ -115,21 +115,21 @@ describe('broker subscriptions', () => {
 
         await wait(500) // give some time for client1 to subscribe.
 
-        expect(getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
-        expect(getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream1.id)
 
-        await waitForCondition(() => getStreamParts(broker2).length === 2)
+        await waitForCondition(() => await getStreamParts(broker2).length === 2)
 
-        expect(getStreamParts(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
-        expect(getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([freshStream2.id + '#0'])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
 
         await mqttClient1.unsubscribe(freshStream2.id)
 
-        await waitForCondition(() => getStreamParts(broker2).length === 2)
+        await waitForCondition(() => await getStreamParts(broker2).length === 2)
 
-        expect(getStreamParts(broker1)).toIncludeSameMembers([])
-        expect(getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
+        expect(await getStreamParts(broker1)).toIncludeSameMembers([])
+        expect(await getStreamParts(broker2)).toIncludeSameMembers([freshStream1.id + '#0', freshStream2.id + '#0'])
     })
 })

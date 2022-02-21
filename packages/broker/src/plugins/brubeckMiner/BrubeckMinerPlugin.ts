@@ -124,9 +124,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     private async claimRewardCode(rewardCode: string, peers: Peer[], delay: number): Promise<void> {
+        const nodeId = await this.streamrClient.getNodeId()
         const body = {
             rewardCode,
-            nodeAddress: this.nodeId,
+            nodeAddress: nodeId,
             streamId: this.streamId,
             clientServerLatency: this.latestLatency,
             waitTime: delay,

@@ -17,7 +17,7 @@ import { StreamPartID } from 'streamr-client-protocol'
 const logger = new Logger(module)
 
 export interface Broker {
-    getStreamParts: () => Iterable<StreamPartID>
+    getStreamParts: () => Promise<Iterable<StreamPartID>>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -46,8 +46,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const brokerAddress = wallet.address
 
     const streamrClient = new StreamrClient(config.client)
-    const networkNode = await streamrClient.getNode()
-    const nodeId = networkNode.getNodeId()
     const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
@@ -55,8 +53,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             name,
             streamrClient,
             apiAuthenticator,
-            brokerConfig: config,
-            nodeId,
+            brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
     })
@@ -64,7 +61,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     let httpServer: HttpServer|HttpsServer|undefined
 
     return {
-        getStreamParts: () => networkNode.getStreamParts(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
@@ -76,6 +72,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${brokerAddress}`)
 
+            const nodeId = await streamrClient.getNodeId()
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             if (config.client.network?.trackers !== undefined) {
@@ -100,6 +97,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (streamrClient !== undefined) {
                 await streamrClient.destroy()
             }
+        },
+        getStreamParts: async () => {
+            const node = await streamrClient.getNode()
+            return node.getStreamParts()
         }
     }
 }
