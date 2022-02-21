@@ -58,7 +58,10 @@ export default class BrubeckNode implements Context {
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
         if ((this.options.trackers as TrackerRegistrySmartContract).contractAddress) {
-            const trackerRegistry = await getTrackerRegistryFromContract((this.options.trackers as TrackerRegistrySmartContract))
+            const trackerRegistry = await getTrackerRegistryFromContract({
+                contractAddress: (this.options.trackers as TrackerRegistrySmartContract).contractAddress,
+                jsonRpcProvider: this.ethereum.getMainnetProvider()
+            })
             return {
                 ...this.options,
                 trackers: trackerRegistry.getAllTrackers()
