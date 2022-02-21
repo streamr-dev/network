@@ -267,9 +267,6 @@
                                 "contractAddress": {
                                     "type": "string",
                                     "format": "ethereum-address"
-                                },
-                                "jsonRpcProvider": {
-                                    "$ref": "#/definitions/rpcProviderConfig"
                                 }
                             }
                         }
