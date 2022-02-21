@@ -40,10 +40,6 @@ createClientCommand(async (client: StreamrClient, term: string | undefined, opti
         options.any,
         client
     )
-    if ((term === undefined) && (permissionFilter === undefined)) {
-        console.error('specify a search term or a permission filter')
-        process.exit(1)
-    }
     const streams = client.searchStreams(term, permissionFilter)
     for await (const stream of streams) {
         console.log(stream.id)
