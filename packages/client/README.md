@@ -17,13 +17,53 @@ This library allows you to easily interact with the [Streamr Network](https://st
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
+## Contents
+- Important information
+- Get Started
+    - Subscribing to a stream
+    - Creating & publishing to a stream
+- Quick Lookup
+    - Creating a StreamrClient instance
+    - Fetching existent streams
+    - Resending historical data
+    - Searching streams
+- Setup
+    - Installation
+    - Importing `streamr-client`
+- The Streamr Client API
+    - Authentication
+    - Message ordering
+    - Connecting
+    - Creating a stream 
+    - Subscribing to real-time events in a stream
+    - Publishing data points to a stream
+    - Resend functionality with subscriptions
+    - Search Streams
+- The Stream Object API
+    - Deleting a stream
+    - Updating a stream
+    - Stream Permissions
+    - Stream Partitioning
+        - Creating partitioned streams
+        - Publishing to partitioned streams
+        - Subscribing to partitioned streams
+- Storage Options
+- Data Unions
+    - Admin Functions
+    - Member functions
+    - Query functions
+    - Withdraw options
+    - Deployment options
+- Utility functions
+- Proxy publishing
+- Logging
+
 ## Important information
 > ⚠️ This section is to be removed before launch 
 
 The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.3](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.3) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.3` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
 
 ---
-
 
 
 ## Get Started
@@ -49,9 +89,8 @@ const stream = await client.createStream({
 
 await stream.publish({ timestamp: Date.now() })
 ```
-
-## Quick Lookup (?)
-
+___
+## Quick Lookup
 ### Creating a StreamrClient instance
 ```js
 const client = new StreamrClient({
@@ -60,9 +99,7 @@ const client = new StreamrClient({
     }
 })
 ```
-> ℹ️ More `StreamrClient` creation options can be found in the [Client configuration](#client-configuration) section.
-
-
+> ℹ️ Read more about `StreamrClient` creation options in the [Client configuration](#client-configuration) section
 
 ### Fetching existent streams
 Getting an existent stream is pretty straight-forward
@@ -93,17 +130,16 @@ const sub = await client.resend(
 )
 ```
 
-See [Resend functionality with subscriptions](#resend-functionality-with-subscriptions) for resend options
+> ℹ️ Read more about message resend in the [Resend functionality with subscriptions](#resend-functionality-with-subscriptions) section
 
-
-### Resending data and storage
 In order to  enable historical data `resends` add first the stream to a storage node:
 ```js
 const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client')
 
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 ```
-> ℹ️ Visit the [Storage section](#storage) for more options.
+
+> ℹ️ Read more about Storage options in the [Storage section](#storage)
 
 ### Searching streams
 You can search for streams using a portion of a string contained in it's stream id:
@@ -111,11 +147,7 @@ You can search for streams using a portion of a string contained in it's stream 
 const streams = await client.searchStreams('foo')
 ```
 
-See (?) for more stream search options
-
-
-
-
+> ℹ️ Read more about stream searching in the [Search Streams section](#search-streams)
 
 ___
 
@@ -268,9 +300,6 @@ await client.publish(STREAM_ID, msg, 54365472)
 
 // Publish with a specific timestamp as a ISO8601 string
 await client.publish(STREAM_ID, msg, '2019-01-01T00:00:00.123Z')
-
-// Publish with a specific partition key (read more about partitioning further down this readme)
-await client.publish(STREAM_ID, msg, Date.now(), 'my-partition-key')
 
 // For convenience, stream.publish(...) equals client.publish(stream, ...)
 await stream.publish(msg)
@@ -575,3 +604,246 @@ const storageNodes = stream.getStorageNodes()
 // remove the stream from a storage node
 await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 ```
+
+
+## Data Unions
+
+This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
+
+To deploy a new DataUnion with default [deployment options](#deployment-options):
+```js
+const dataUnion = await client.deployDataUnion()
+```
+
+To get an existing (previously deployed) `DataUnion` instance:
+```js
+const dataUnion = await client.getDataUnion(dataUnionAddress)
+```
+
+<!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
+These DataUnion-specific options can be given to `new StreamrClient` options:
+
+| Property                            | Default                                                | Description                                                                                |
+| :---------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge    |
+| dataUnion.payForTransport           | true                                                   | true = client does the transport as self-service and pays the mainnet gas costs            |
+|                                     |                                                        | false = someone else pays for the gas when transporting the withdraw tx to mainnet         |
+-->
+
+### Admin Functions
+
+Admin functions require xDai tokens on the xDai network. To get xDai you can either use a [faucet](https://www.xdaichain.com/for-users/get-xdai-tokens/xdai-faucet) or you can reach out on the [Streamr Discord #dev channel](https://discord.gg/gZAm8P7hK8).
+
+Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermissions()`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermissions()`.
+
+| Name                              | Returns             | Description                                                    |
+| :-------------------------------- | :------------------ | :------------------------------------------------------------- |
+| createSecret(\[name])             | string              | Create a secret for a Data Union                               |
+| addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
+| removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
+| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
+| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+| withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
+
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.<br>
+
+Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
+
+```js
+const { StreamrClient } = require('streamr-client')
+
+const client = new StreamrClient({
+    auth: { privateKey },
+})
+
+const dataUnion = await client.deployDataUnion({
+    adminFee: 0.3,
+})
+const receipt = await dataUnion.addMembers([
+    "0x1234567890123456789012345678901234567890",
+    "0x1234567890123456789012345678901234567891",
+    "0x1234567890123456789012345678901234567892",
+])
+```
+
+### Member functions
+
+| Name                                                                  | Returns                   | Description                                                                 |
+| :-------------------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
+| join(\[secret])                                                       | JoinRequest               | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| part()                                                                | Transaction receipt       | Leave the Data Union
+| isMember(memberAddress)                                               | boolean                   |                                                                             |
+| withdrawAll(\[[options](#withdraw-options)\])                         | Transaction receipt `*`   | Withdraw funds from Data Union                                              |
+| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |
+| signWithdrawAllTo(recipientAddress)                                   | Signature (string)        | Signature that can be used to withdraw all available tokens to given recipientAddress        |
+| signWithdrawAmountTo(recipientAddress, amountTokenWei)                | Signature (string)        | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
+| transportMessage(messageHash[, pollingIntervalMs[, retryTimeoutMs]])  | Transaction receipt       | Send the mainnet transaction to withdraw tokens from the sidechain |
+
+`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.
+
+Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
+
+```js
+const { StreamrClient } = require('streamr-client')
+
+const client = new StreamrClient({
+    auth: { privateKey },
+})
+
+const dataUnion = await client.getDataUnion(dataUnionAddress)
+const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
+```
+
+Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
+
+```js
+const { StreamrClient } = require('streamr-client')
+
+const client = new StreamrClient({
+    auth: { privateKey },
+})
+
+const dataUnion = await client.getDataUnion(dataUnionAddress)
+const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
+```
+
+The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
+```js
+const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
+    payForTransport: false,
+    waitUntilTransportIsComplete: false,
+}) // only pay for sidechain gas
+const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
+```
+
+### Query functions
+
+These are available for everyone and anyone, to query publicly available info from a Data Union:
+
+| Name                                                       | Returns                                        | Description                             |
+| :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
+| getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
+| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
+| getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
+| getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
+| getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |
+| getVersion()                                               | `0`, `1` or `2`                                | `0` if the contract is not a data union |
+
+Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
+
+```js
+const { StreamrClient } = require('streamr-client')
+
+const client = new StreamrClient()
+const dataUnion = await client.getDataUnion(dataUnionAddress)
+const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
+```
+
+### Withdraw options
+
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
+
+| Name              | Default               | Description                                                                               |
+| :---------------- | :-------------------- | :--------------------------------------------------------------------------------------   |
+| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)       |
+| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge|
+| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
+| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
+| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
+| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    |
+
+These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
+but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
+
+The return values from the withdraw functions also depend on the options.
+
+If `sendToMainnet: false`, other options don't apply at all, and **sidechain transaction receipt** is returned as soon as the withdraw transaction is done. This should be fairly quick in the sidechain.
+
+The use cases corresponding to the different combinations of the boolean flags:
+
+| `transport` | `wait`  | Returns | Effect |
+| :---------- | :------ | :------ | :----- |
+| `true`      | `true`  | Transaction receipt | *(default)* Self-service bridge to mainnet, client pays for mainnet gas |
+| `true`      | `false` | Transaction receipt | Self-service bridge to mainnet (but **skip** the wait that double-checks the withdraw succeeded and tokens arrived to destination) |
+| `false`     | `true`  | `null`              | Someone else pays for the mainnet gas automatically, e.g. the bridge operator (in this case the transaction receipt can't be returned) |
+| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first |
+
+### Deployment options
+
+`deployDataUnion` can take an options object as the argument. It's an object that can contain the following parameters:
+
+| Name                      | Type      | Default               | Description                                                                           |
+| :------------------------ | :-------- | :-------------------- | :------------------------------------------------------------------------------------ |
+| owner                     | Address   |`*`you                 | Owner / admin of the newly created Data Union                                         |
+| joinPartAgents            | Address[] |`*`you, Streamr Core   | Able to add and remove members to/from the Data Union                                 |
+| dataUnionName             | string    | Generated             | NOT stored anywhere, only used for address derivation                                 |
+| adminFee                  | number    | 0 (no fee)            | Must be between 0...1 (inclusive)                                                     |
+| sidechainPollingIntervalMs| number    | 1000 (1&nbsp;second)  | How often requests are sent to find out if the deployment has completed               |
+| sidechainRetryTimeoutMs   | number    | 60000 (1&nbsp;minute) | When to give up when waiting for the deployment to complete                           |
+| confirmations             | number    | 1                     | Blocks to wait after Data Union mainnet contract deployment to consider it final      |
+| gasPrice                  | BigNumber | network estimate      | Ethereum Mainnet gas price to use when deploying the Data Union mainnet contract      |
+
+`*`you here means the address of the authenticated StreamrClient
+(that corresponds to the `auth.privateKey` given in constructor)
+
+Streamr Core is added as a `joinPartAgent` by default
+so that joining with secret works using the [member function](#member-functions) `join`.
+If you don't plan to use `join` for "self-service joining",
+you can leave out Streamr Core agent by calling `deployDataUnion`
+e.g. with your own address as the sole joinPartAgent:
+```
+const dataUnion = await client.deployDataUnion({
+    joinPartAgents: [yourAddress],
+    adminFee,
+})
+```
+
+`dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed.
+Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means
+a Data Union deployed by a particular address with particular "name" will have a predictable address.
+
+## Utility functions
+The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
+```js 
+const wallet = StreamrClient.generateEthereumAccount()
+```
+Generates a random Ethereum account object:
+```js
+    wallet = {address, privateKey}
+```
+In order to retrieve the client's address an async call must me made to `client.getAddress`
+```js
+const address = await client.getAddress()
+```
+
+
+## Proxy publishing
+
+In some cases the client might be interested in publishing data without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
+
+Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
+
+```js
+// Open publish proxy to a node on stream
+await publishingClient.setPublishProxy(stream, 'proxyNodeId')
+
+// Open publish proxy to multiple nodes on stream
+await publishingClient.setPublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+
+// Remove publish proxy to a node on stream
+await publishingClient.removePublishProxy(stream, proxyNodeId1)
+
+// Remove publish proxy to multiple nodes on stream
+await publishingClient.removePublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+```
+
+IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
+
+## Logging
+
+The Streamr JS client library supports [debug](https://github.com/visionmedia/debug) for logging.
+
+In node.js, start your app like this: `DEBUG=StreamrClient* node your-app.js`
+
+In the browser, set `localStorage.debug = 'StreamrClient*'`
