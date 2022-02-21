@@ -23,11 +23,11 @@ The broker node extends the minimal network node provided by the
 
 ## Install
 
-Prerequisites are [Node.js](https://nodejs.org/) `14.x` and npm version `>=6.14`.
+Prerequisites are [Node.js](https://nodejs.org/) `16.x` and npm version `8.x`.
 
 To install streamr-broker:
 ```bash
-npm install streamr-broker --global
+npm install -g streamr-broker
 ```
 
 ## Configure
@@ -42,7 +42,11 @@ If instead you want to run a broker node by itself without Docker, follow the st
 
 First install the package
 ```
-npm install streamr-broker --global
+npm install -g streamr-broker
+```
+Optionally, create a configuration file with interactive tool:
+```
+broker-init 
 ```
 Then run the command broker with the desired configuration file
 ```

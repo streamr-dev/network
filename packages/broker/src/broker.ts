@@ -1,5 +1,5 @@
 import { Logger } from 'streamr-network'
-import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract } from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract, NetworkNodeStub } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
@@ -12,14 +12,11 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StreamPartID } from 'streamr-client-protocol'
 
 const logger = new Logger(module)
 
 export interface Broker {
-    getNeighbors: () => readonly string[]
-    getStreamParts: () => Iterable<StreamPartID>
-    getNodeId: () => string
+    getNode: () => Promise<NetworkNodeStub>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -48,18 +45,14 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const brokerAddress = wallet.address
 
     const streamrClient = new StreamrClient(config.client)
-    const networkNode = await streamrClient.getNode()
-    const nodeId = networkNode.getNodeId()
     const apiAuthenticator = createApiAuthenticator(config)
 
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
-            networkNode,
             streamrClient,
             apiAuthenticator,
-            brokerConfig: config,
-            nodeId,
+            brokerConfig: config
         }
         return createPlugin(name, pluginOptions)
     })
@@ -67,9 +60,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     let httpServer: HttpServer|HttpsServer|undefined
 
     return {
-        getNeighbors: () => networkNode.getNeighbors(),
-        getStreamParts: () => networkNode.getStreamParts(),
-        getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
@@ -78,9 +68,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
 
-            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
-            logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${brokerAddress}`)
+            const nodeId = await streamrClient.getNodeId()
 
+            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
+            logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
             if (config.client.network?.trackers !== undefined) {
@@ -105,6 +96,9 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             if (streamrClient !== undefined) {
                 await streamrClient.destroy()
             }
+        },
+        getNode: async () => {
+            return streamrClient.getNode()
         }
     }
 }
