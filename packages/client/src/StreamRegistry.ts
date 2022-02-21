@@ -257,6 +257,9 @@ export class StreamRegistry implements Context {
     }
 
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        if ((term === undefined) && (permissionFilter === undefined)) {
+            throw new Error('Requires a search term or a permission filter')
+        }
         this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
         return map(
             fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
