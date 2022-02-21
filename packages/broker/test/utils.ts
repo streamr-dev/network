@@ -181,8 +181,8 @@ export class Queue<T> {
 }
 
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
-    const items = await broker.getStreamParts()
-    return Array.from(items)
+    const node = await broker.getNode()
+    return Array.from(node.getStreamParts())
 }
 
 export async function sleep(ms = 0): Promise<void> {

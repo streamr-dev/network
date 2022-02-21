@@ -1,5 +1,5 @@
 import { Logger } from 'streamr-network'
-import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract } from 'streamr-client'
+import StreamrClient, { validateConfig as validateClientConfig, getTrackerRegistryFromContract, NetworkNodeStub } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
@@ -12,12 +12,11 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
-import { StreamPartID } from 'streamr-client-protocol'
 
 const logger = new Logger(module)
 
 export interface Broker {
-    getStreamParts: () => Promise<Iterable<StreamPartID>>
+    getNode: () => Promise<NetworkNodeStub>
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -98,9 +97,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 await streamrClient.destroy()
             }
         },
-        getStreamParts: async () => {
-            const node = await streamrClient.getNode()
-            return node.getStreamParts()
+        getNode: async () => {
+            return streamrClient.getNode()
         }
     }
 }
