@@ -519,6 +519,24 @@ The returned permissions are an array containing an item for each user, and one 
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
+#### A note on Stream ids and partitions
+The public methods of the client generally support the following three ways of defining a stream:
+```js
+Stream id as a string:
+const streamId = `${address}/foo/bar`
+
+// Stream id + partition as a string
+const streamId = `${address}/foo/bar#4`
+
+// Stream id + partition as an object
+const streamId = { 
+    id: `${address}/foo/bar`, 
+    partition: 4 
+}
+```
+    
+
+
 #### Creating partitioned streams
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (max 100). An example of creating a partitioned stream using the JS client:
