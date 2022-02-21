@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import { BrubeckConfig, Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'

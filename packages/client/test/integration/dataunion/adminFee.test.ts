@@ -7,7 +7,7 @@ import * as Token from '../../../contracts/TestToken.json'
 import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
-import BrubeckConfig from '../../../src/Config'
+import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 

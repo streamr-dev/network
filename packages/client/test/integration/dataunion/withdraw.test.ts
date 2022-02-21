@@ -16,7 +16,7 @@ import authFetch from '../../../src/authFetch'
 import { expectInvalidAddress } from '../../test-utils/utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus, DataUnion } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
-import BrubeckConfig from '../../../src/Config'
+import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 

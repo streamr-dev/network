@@ -10,7 +10,7 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { clientOptions, providerSidechain } from '../devEnvironment'
 import authFetch from '../../../src/authFetch'
-import BrubeckConfig from '../../../src/Config'
+import { BrubeckConfig } from '../../../src/Config'
 import { DataUnion } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
