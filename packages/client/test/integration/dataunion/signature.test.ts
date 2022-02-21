@@ -8,7 +8,7 @@ import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { providerSidechain } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, providerSidechain } from '../devEnvironment'
 import { ConfigTest } from '../../../src/ConfigTest'
 import authFetch from '../../../src/authFetch'
 import { BrubeckConfig } from '../../../src/Config'
@@ -16,7 +16,7 @@ import { DataUnion } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-const adminWalletSidechain = new Wallet(ConfigTest.auth.privateKey, providerSidechain)
+const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 
 describe('DataUnion signature', () => {
 

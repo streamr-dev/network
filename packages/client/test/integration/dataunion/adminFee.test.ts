@@ -6,7 +6,7 @@ import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
-import { tokenAdminPrivateKey } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, tokenAdminPrivateKey } from '../devEnvironment'
 import { ConfigTest } from '../../../src/ConfigTest'
 import { BrubeckConfig } from '../../../src/Config'
 
@@ -14,7 +14,7 @@ const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
 const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPC)
 const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPC)
-const adminWalletMainnet = new Wallet(ConfigTest.auth.privateKey, providerMainnet)
+const adminWalletMainnet = new Wallet(dataUnionAdminPrivateKey, providerMainnet)
 
 describe('DataUnion admin fee', () => {
     let adminClient: StreamrClient

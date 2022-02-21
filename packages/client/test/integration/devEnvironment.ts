@@ -13,6 +13,8 @@ export const tokenAdminPrivateKey = '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b8
 export const tokenAdminWalletMainnet = new Wallet(tokenAdminPrivateKey, providerMainnet)
 export const tokenAdminWalletSidechain = new Wallet(tokenAdminPrivateKey, providerSidechain)
 
+export const dataUnionAdminPrivateKey = '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
+
 afterAll(() => {
     providerMainnet.removeAllListeners()
     providerSidechain.removeAllListeners()

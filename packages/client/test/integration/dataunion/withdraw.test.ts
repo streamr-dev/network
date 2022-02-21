@@ -11,7 +11,7 @@ import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { tokenAdminPrivateKey } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, tokenAdminPrivateKey } from '../devEnvironment'
 import { ConfigTest } from '../../../src/ConfigTest'
 import authFetch from '../../../src/authFetch'
 import { expectInvalidAddress } from '../../test-utils/utils'
@@ -23,8 +23,8 @@ const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
 const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs[0])
 const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs[0])
-const adminWalletMainnet = new Wallet(ConfigTest.auth.privateKey, providerMainnet)
-const adminWalletSidechain = new Wallet(ConfigTest.auth.privateKey, providerSidechain)
+const adminWalletMainnet = new Wallet(dataUnionAdminPrivateKey, providerMainnet)
+const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 
 const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
 const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminWallet)

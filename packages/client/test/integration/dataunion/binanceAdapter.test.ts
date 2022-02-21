@@ -1,10 +1,10 @@
 import { Wallet } from 'ethers'
 import { StreamrClient } from '../../../src/StreamrClient'
-import { providerSidechain } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, providerSidechain } from '../devEnvironment'
 import { ConfigTest } from '../../../src/ConfigTest'
 
 // const log = debug('StreamrClient::DataUnion::binanceAdapter')
-const adminWalletSidechain = new Wallet(ConfigTest.auth.privateKey, providerSidechain)
+const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 
 // config representing another user
 const privateKey = '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
