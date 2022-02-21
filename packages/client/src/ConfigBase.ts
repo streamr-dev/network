@@ -226,19 +226,6 @@ export function ClientConfig(inputOptions: StreamrClientConfig = {}) {
         // NOTE: sidechain and storageNode settings are not merged with the defaults
     }
 
-    // Backwards compatibility for option 'authKey' => 'apiKey'
-    // @ts-expect-error
-    if (options.authKey && !options.apiKey) {
-        // @ts-expect-error
-        options.apiKey = options.authKey
-    }
-
-    // @ts-expect-error
-    if (options.apiKey) {
-        // @ts-expect-error
-        options.auth.apiKey = options.apiKey
-    }
-
     options.auth = options.auth || {}
 
     if ('privateKey' in options.auth) {

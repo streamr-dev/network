@@ -39,23 +39,10 @@ export type SessionTokenAuthConfig = {
     sessionToken: string
 }
 
-// Deprecated Auth Config
-export type APIKeyAuthConfig = {
-    apiKey: string
-}
-
-export type UsernamePasswordAuthConfig = {
-    username: string
-    password: string
-}
-
 export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
-
-export type DeprecatedAuthConfig = XOR<APIKeyAuthConfig, UsernamePasswordAuthConfig>
 
 export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & Partial<SessionTokenAuthConfig>
 export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
-export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 
 // Ethereum Config
 
@@ -101,7 +88,7 @@ class StreamrEthereum {
     _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
-        @inject(Config.Auth) authConfig: AllAuthConfig,
+        @inject(Config.Auth) authConfig: AuthConfig,
         @inject(Config.Ethereum) private ethereumConfig: EthereumConfig
     ) {
         if ('privateKey' in authConfig && authConfig.privateKey) {
