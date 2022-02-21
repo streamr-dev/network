@@ -33,7 +33,7 @@ describe('Stream permissions', () => {
 
     beforeEach(async () => {
         stream = await client.createStream({
-            id: createRelativeTestStreamId(module),
+            id: createRelativeTestStreamId(module)
         })
     })
 
@@ -155,27 +155,46 @@ describe('Stream permissions', () => {
     })
 
     it('set permissions', async () => {
+        const otherStream = await client.createStream({
+            id: createRelativeTestStreamId(module)
+        })
         const user1 = randomEthereumAddress()
         const user2 = randomEthereumAddress()
         await stream.grantPermissions({
             user: user1,
-            permissions: [StreamPermission.PUBLISH]
+            permissions: [StreamPermission.GRANT]
         })
         await stream.grantPermissions({
             user: user2,
             permissions: [StreamPermission.EDIT]
         })
-        await client.setPermissions(stream.id, {
-            user: user1,
-            permissions: [StreamPermission.SUBSCRIBE]
+        await client.setPermissions({
+            streamId: stream.id,
+            assignments: [
+                {
+                    user: user1,
+                    permissions: [StreamPermission.SUBSCRIBE]
+                }, {
+                    user: user2,
+                    permissions: []
+                }
+            ]
         }, {
-            user: user2,
-            permissions: []
+            streamId: otherStream.id,
+            assignments: [
+                {
+                    public: true,
+                    permissions: [StreamPermission.PUBLISH]
+                }
+            ]
         })
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user1 })).toBe(true)
-        expect(await stream.hasPermission({ permission: StreamPermission.PUBLISH, allowPublic: false, user: user1 })).toBe(false)
+        expect(await stream.hasPermission({ permission: StreamPermission.GRANT, allowPublic: false, user: user1 })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.SUBSCRIBE, allowPublic: false, user: user2 })).toBe(false)
         expect(await stream.hasPermission({ permission: StreamPermission.EDIT, allowPublic: false, user: user2 })).toBe(false)
+        expect(await otherStream.hasPermission(
+            { permission: StreamPermission.PUBLISH, allowPublic: true, user: randomEthereumAddress() }
+        )).toBe(true)
     })
 
     // TODO: fix flaky test when we have NET-606
