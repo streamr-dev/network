@@ -12,8 +12,8 @@ import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
-const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPC)
-const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPC)
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs.rpcs[0])
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs.rpcs[0])
 const adminWalletMainnet = new Wallet(dataUnionAdminPrivateKey, providerMainnet)
 
 describe('DataUnion admin fee', () => {

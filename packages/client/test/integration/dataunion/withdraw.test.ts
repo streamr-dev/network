@@ -21,8 +21,8 @@ import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs[0])
-const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs[0])
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs.rpcs[0])
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs.rpcs[0])
 const adminWalletMainnet = new Wallet(dataUnionAdminPrivateKey, providerMainnet)
 const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 

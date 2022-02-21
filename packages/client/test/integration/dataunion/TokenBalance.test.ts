@@ -12,8 +12,8 @@ import { until } from '../../../src/utils'
 import debug from 'debug'
 import StreamrClient from '../../../src'
 
-const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPC)
-const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPC)
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs.rpcs[0])
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs.rpcs[0])
 const tokenAdminMainnetWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
 const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
 const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminMainnetWallet)
