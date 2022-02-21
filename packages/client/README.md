@@ -9,8 +9,8 @@
 </h1>
 
 [![Build status](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
-[![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
-[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
+![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
+![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
