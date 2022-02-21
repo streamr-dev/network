@@ -125,10 +125,9 @@ describe('SearchStreams', () => {
     })
 
     it('no filters', async () => {
-        const iterable = client.searchStreams(undefined, undefined)
-        // most likely many items created by various tests, check that we can read some item
-        const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
-        expect(firstItem.id).toBeDefined()
+        return expect(async () => {
+            await client.searchStreams(undefined, undefined)
+        }).rejects.toThrow('Requires a search term or a permission filter')
     })
 
     describe('permission filter', () => {
