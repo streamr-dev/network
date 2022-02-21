@@ -314,12 +314,13 @@ Note that only one of the resend options can be used for a particular subscripti
 One can either fetch the historical sent messages with the `resend` method:
 ```js
 // Fetches the last 10 messages stored for the stream
-const resend1 = await client.resend({
-    streamId: STREAM_ID,
-    resend: {
+const resend1 = await client.resend(
+    STREAM_ID,
+    {
         last: 10,
-    }
-}, messageCallback)
+    }, 
+    messageCallback
+)
 ```
 
 Or fetch them and subscribe to new messages in the same call via a `subscribe` call:
