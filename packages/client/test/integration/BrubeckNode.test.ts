@@ -1,4 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
+import ConfigTest from '../../src/ConfigTest'
 import { getCreateClient } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
 
@@ -37,6 +38,7 @@ describe('BrubeckNode', () => {
                     privateKey: wallet.privateKey
                 },
                 network: {
+                    ...ConfigTest.network,
                     id: nodeId,
                 }
             })
@@ -49,6 +51,7 @@ describe('BrubeckNode', () => {
             const client = await createClient({
                 network: {
                     id: nodeId,
+                    ...ConfigTest.network,
                 }
             })
             await expect(async () => {
@@ -61,6 +64,7 @@ describe('BrubeckNode', () => {
             const client = new StreamrClient({
                 network: {
                     id: nodeId,
+                    ...ConfigTest.network,
                 }
             })
             await expect(async () => {

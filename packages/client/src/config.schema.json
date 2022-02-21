@@ -263,6 +263,7 @@
                         {
                             "type": "object",
                             "required": [ "contractAddress" ],
+                            "additionalProperties": false,
                             "properties": {
                                 "contractAddress": {
                                     "type": "string",
