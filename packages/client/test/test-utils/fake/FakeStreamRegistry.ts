@@ -1,17 +1,28 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
 import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
-import { Stream, StreamPermission, StreamPermissions, StreamProperties } from '../../../src/Stream'
+import { Stream, StreamProperties } from '../../../src/Stream'
+import {
+    StreamPermission,
+    isPublicPermissionAssignment,
+    isPublicPermissionQuery,
+    PermissionAssignment,
+    PermissionQuery
+} from '../../../src/permission'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
 import Ethereum from '../../../src/Ethereum'
 import { NotFoundError } from '../../../src/authFetch'
-import { PUBLIC_PERMISSION_ADDRESS, StreamRegistry } from '../../../src/StreamRegistry'
+import { StreamRegistry } from '../../../src/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
+import { StreamEndpointsCached } from '../../../src/StreamEndpointsCached'
+
+type PublicPermissionTarget = 'public'
+const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>
-    permissions: Multimap<EthereumAddress, StreamPermission>
+    permissions: Multimap<EthereumAddress|PublicPermissionTarget, StreamPermission>
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -24,15 +35,18 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly ethereum: Ethereum
     private readonly container: DependencyContainer
+    private readonly streamEndpointsCached: StreamEndpointsCached
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         @inject(Ethereum) ethereum: Ethereum,
-        @inject(BrubeckContainer) container: DependencyContainer
+        @inject(BrubeckContainer) container: DependencyContainer,
+        @inject(StreamEndpointsCached) streamEndpointsCached: StreamEndpointsCached
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.ethereum = ethereum
         this.container = container
+        this.streamEndpointsCached = streamEndpointsCached
     }
 
     async createStream(propsOrStreamIdOrPath: StreamProperties | string) {
@@ -84,53 +98,82 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         return this.registryItems.has(streamId)
     }
 
-    async grantPermission(streamIdOrPath: string, permission: StreamPermission, receivingUser: string) {
+    /* eslint-disable padding-line-between-statements */
+    async hasPermission(query: PermissionQuery): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
+        const registryItem = this.registryItems.get(streamId)
+        if (registryItem === undefined) {
+            return false
+        }
+        const targets = []
+        if (isPublicPermissionQuery(query) || query.allowPublic) {
+            targets.push(PUBLIC_PERMISSION_TARGET)
+        }
+        if ((query as any).user !== undefined) {
+            targets.push((query as any).user.toLowerCase())
+        }
+        return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async getPermissions(_streamIdOrPath: string): Promise<PermissionAssignment[]> {
+        throw new Error('not implemented')
+    }
+
+    async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        return this.updatePermissions(
+            streamIdOrPath,
+            assignments,
+            (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => {
+                registryItem.permissions.addAll(target, permissions)
+            }
+        )
+    }
+
+    async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        return this.updatePermissions(
+            streamIdOrPath,
+            assignments,
+            (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => {
+                registryItem.permissions.removeAll(target, permissions)
+            }
+        )
+    }
+
+    async updatePermissions(
+        streamIdOrPath: string,
+        assignments: PermissionAssignment[],
+        modifyRegistryItem: (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => void
+    ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        this.streamEndpointsCached.clearStream(streamId)
         const registryItem = this.registryItems.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
-            const userKey = receivingUser.toLowerCase()
-            registryItem.permissions.add(userKey, permission)
+            for (const assignment of assignments) {
+                const target = isPublicPermissionAssignment(assignment)
+                    ? PUBLIC_PERMISSION_TARGET
+                    : assignment.user.toLowerCase()
+                modifyRegistryItem(registryItem, target, assignment.permissions)
+            }
         }
     }
 
-    async revokePermission(streamIdOrPath: string, permission: StreamPermission, receivingUser: string) {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const registryItem = this.registryItems.get(streamId)
-        if (registryItem === undefined) {
-            throw new Error('Stream not found')
-        } else {
-            const userKey = receivingUser.toLowerCase()
-            registryItem.permissions.remove(userKey, permission)
-        }
+    // eslint-disable-next-line class-methods-use-this
+    async setPermissions(..._streams: {
+        streamId: string,
+        assignments: PermissionAssignment[]
+    }[]): Promise<void> {
+        throw new Error('not implemented')
     }
 
-    async hasPermission(streamIdOrPath: string, userAddress: EthereumAddress, permission: StreamPermission) {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const registryItem = this.registryItems.get(streamId)
-        if (registryItem === undefined) {
-            throw new Error('Stream not found')
-        } else {
-            const userKey = userAddress.toLowerCase()
-            return registryItem.permissions.has(userKey, permission)
-        }
+    async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
-    async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
-        return this.hasPermission(streamIdOrPath, userAddress, StreamPermission.PUBLISH)
-    }
-
-    async isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress) {
-        return this.hasPermission(streamIdOrPath, userAddress, StreamPermission.SUBSCRIBE)
-    }
-
-    async grantPublicPermission(streamIdOrPath: string, permission: StreamPermission) {
-        return this.grantPermission(streamIdOrPath, permission, PUBLIC_PERMISSION_ADDRESS)
-    }
-
-    async hasPublicPermission(streamIdOrPath: string, permission: StreamPermission): Promise<boolean> {
-        return this.hasPermission(streamIdOrPath, PUBLIC_PERMISSION_ADDRESS, permission)
+    async isStreamSubscriber(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+        return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -139,55 +182,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    hasDirectPermission(_streamIdOrPath: string, _userAddess: string, _permission: StreamPermission): Promise<boolean> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getPermissionsForUser(_streamIdOrPath: string, _userAddress?: string): Promise<StreamPermissions> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     updateStream(_props: StreamProperties): Promise<Stream> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    setPermissionsForUser(
-        _streamIdOrPath: string,
-        _receivingUser: string,
-        _edit: boolean,
-        _deletePermission: boolean,
-        _publish: boolean,
-        _subscribe: boolean,
-        _share: boolean
-    ): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    setPermissions(_streamIdOrPath: string, _users: string[], _permissions: StreamPermissions[]): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    revokeAllMyPermission(_streamIdOrPath: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    revokeAllUserPermission(_streamIdOrPath: string, _userId: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    revokePublicPermission(_streamIdOrPath: string, _permission: StreamPermission): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    revokeAllPublicPermissions(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
 
@@ -208,11 +203,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
 
     // eslint-disable-next-line class-methods-use-this
     getAllStreams(): AsyncGenerator<Stream, any, unknown> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getAllPermissionsForStream(_streamIdOrPath: string): Promise<Record<string, StreamPermission[]>> {
         throw new Error('not implemented')
     }
 

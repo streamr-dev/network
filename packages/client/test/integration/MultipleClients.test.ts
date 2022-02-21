@@ -5,7 +5,8 @@ import {
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
-import { Stream, StreamPermission } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
 import { StreamMessage } from 'streamr-client-protocol'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
@@ -55,11 +56,14 @@ describeRepeats('PubSub with multiple clients', () => {
 
         // pubClient.on('error', getOnError(errors))
         const pubUser = await pubClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.PUBLISH, pubUser)
-        // needed to check last
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, pubUser)
+        await mainClient.setPermissions({
+            streamId: stream.id,
+            assignments: [
+                // StreamPermission.SUBSCRIBE needed to check last
+                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: pubUser }
+            ]
+        })
         await pubClient.connect()
-
         return pubClient
     }
 
@@ -75,7 +79,7 @@ describeRepeats('PubSub with multiple clients', () => {
         // client.on('error', getOnError(errors))
         const user = await client.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, user)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
         await client.connect()
         return client
     }
@@ -484,7 +488,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}
@@ -561,7 +565,7 @@ describeRepeats('PubSub with multiple clients', () => {
         // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
 
-        await stream.grantUserPermission(StreamPermission.SUBSCRIBE, otherUser)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}

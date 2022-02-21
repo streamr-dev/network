@@ -18,9 +18,10 @@ const createMqttClient = (mqttPort: number) => {
 
 const grantPermissions = async (streams: Stream[], brokerUsers: Wallet[]) => {
     for await (const s of streams) {
-        for await (const u of brokerUsers) {
-            await s.grantUserPermission(StreamPermission.SUBSCRIBE, u.address)
-        }
+        const assignments = brokerUsers.map((user) => {
+            return { permissions: [StreamPermission.SUBSCRIBE], user: user.address }
+        })
+        await s.grantPermissions(...assignments)
     }
 }
 

@@ -198,6 +198,10 @@
         $('#result').append($(`<div class="row"><div class="content ${className}">${content}</div><div class='timestamp'>+${duration}ms</div></div>`))
     }
 
+    function wait(ms) { // TODO use from test-utils?
+        return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+
     function logError(content) {
         log(content, 'error')
     }
@@ -269,11 +273,22 @@
 
     $('#permissions').on('click', async () => {
         log('Setting Permissions...')
-        await stream.setPermissionsForUser(await subscriber.getAddress(), false, false, false, true, false)
+        const subscriberAddress = await subscriber.getAddress()
+        await publisher.setPermissions({
+            streamId: stream.id,
+            assignments: [{
+                user: subscriberAddress,
+                permissions: [StreamrClient.StreamPermission.SUBSCRIBE, StreamrClient.StreamPermission.PUBLISH]
+            }]
+        })
         log('Set Permissions.')
         log('Loading permissions...')
-        const permissions = await stream.getUserPermissions(await subscriber.getAddress())
-        log(`Permissions: ${JSON.stringify(permissions)}`, 'permissionsResult')
+        // we should wait until permissions are propagated to TheGraph
+        // replace the time-based wait in NET-606
+        await wait(5000)
+        const allAssignments = await stream.getPermissions()
+        const modifiedAssignment = allAssignments.find(p => (p.user.toLowerCase() === subscriberAddress.toLowerCase()))
+        log(`Permissions: [${modifiedAssignment.permissions.join(',')}]`, 'permissionsResult')
     })
 
     $('#subscribe').on('click', async () => {

@@ -8,10 +8,11 @@ import {
     publishTestMessagesGenerator,
     createTestStream,
 } from '../test-utils/utils'
-import { Defer, pLimitFn, until } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/Encryption'
-import { Stream, StreamPermission } from '../../src/Stream'
+import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
@@ -100,14 +101,7 @@ describeRepeats('decryption', () => {
         stream: s = stream,
         client: c = subscriber,
     }: { stream?: Stream, client?: StreamrClient } = {}) => {
-        const p2 = await s.grantUserPermission(StreamPermission.SUBSCRIBE, await c.getAddress())
-        await until(async () => {
-            try {
-                return await s.hasUserPermission(StreamPermission.SUBSCRIBE, await c.getAddress())
-            } catch (err) {
-                return false
-            }
-        }, 100000, 1000)
+        const p2 = await s.grantPermissions({ user: await c.getAddress(), permissions: [StreamPermission.SUBSCRIBE] })
         return [p2]
     })
 
@@ -747,7 +741,10 @@ describeRepeats('decryption', () => {
 
             await publisher.rotateGroupKey(stream.id)
 
-            await stream.grantUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
+            await stream.grantPermissions({
+                user: await subscriber.getAddress(),
+                permissions: [StreamPermission.SUBSCRIBE]
+            })
 
             const sub = await subscriber.subscribe({
                 stream: stream.id,
@@ -773,7 +770,10 @@ describeRepeats('decryption', () => {
                     publisher.debug('PUBLISHED %d of %d', count, maxMessages)
                     if (count === revokeAfter) {
                         await gotMessages
-                        await stream.revokeUserPermission(StreamPermission.SUBSCRIBE, await subscriber.getAddress())
+                        await stream.revokePermissions({
+                            user: await subscriber.getAddress(),
+                            permissions: [StreamPermission.SUBSCRIBE]
+                        })
                         await publisher.rekey(stream.id)
                     }
                 }
