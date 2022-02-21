@@ -421,10 +421,12 @@ await stream.delete()
 ```
 
 ### Updating a stream
+Updates the description locally set for the stream
 ```js
-// Updates the properties of this stream object by sending them to the API
+stream.description = 'New description!'
 await stream.update()
 ```
+
 ### Stream Permissions
 
 There are 5 different permissions:
