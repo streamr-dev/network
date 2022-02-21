@@ -17,9 +17,7 @@ import { StreamPartID } from 'streamr-client-protocol'
 const logger = new Logger(module)
 
 export interface Broker {
-    getNeighbors: () => readonly string[]
     getStreamParts: () => Iterable<StreamPartID>
-    getNodeId: () => string
     start: () => Promise<unknown>
     stop: () => Promise<unknown>
 }
@@ -66,9 +64,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     let httpServer: HttpServer|HttpsServer|undefined
 
     return {
-        getNeighbors: () => networkNode.getNeighbors(),
         getStreamParts: () => networkNode.getStreamParts(),
-        getNodeId: () => networkNode.getNodeId(),
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
