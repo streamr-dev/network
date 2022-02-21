@@ -67,7 +67,8 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         if (this.pluginConfig.stunServerHost !== null) {
             this.natType = await this.getNatType()
         }
-        this.networkNode.setExtraMetadata({
+        const node = await this.streamrClient.getNode()
+        node.setExtraMetadata({
             natType: this.natType || null,
             brokerVersion: CURRENT_VERSION,
         })
@@ -82,7 +83,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
         this.metrics!.set(METRIC_LATEST_CODE, Date.now())
-        const peers = this.getPeers()
+        const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
         await this.claimRewardCode(rewardCode, peers, delay)
@@ -113,11 +114,12 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         })
     }
 
-    private getPeers(): Peer[] {
-        const neighbors = this.networkNode.getNeighborsForStreamPart(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
+    private async getPeers(): Promise<Peer[]> {
+        const networkNode = await this.streamrClient.getNode()
+        const neighbors = networkNode.getNeighborsForStreamPart(toStreamPartID(this.streamId, REWARD_STREAM_PARTITION))
         return neighbors.map((nodeId: string) => ({
             id: nodeId,
-            rtt: this.networkNode.getRtt(nodeId)
+            rtt: networkNode.getRtt(nodeId)
         }))
     }
 

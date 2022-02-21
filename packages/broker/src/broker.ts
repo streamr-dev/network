@@ -55,7 +55,6 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     const plugins: Plugin<any>[] = Object.keys(config.plugins).map((name) => {
         const pluginOptions: PluginOptions = {
             name,
-            networkNode,
             streamrClient,
             apiAuthenticator,
             brokerConfig: config,
