@@ -3,7 +3,8 @@ import { Wallet } from '@ethersproject/wallet'
 
 import { getRandomClient, createMockAddress } from '../../test-utils/utils'
 import * as Token from '../../../contracts/TestToken.json'
-import { clientOptions, tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
+import { tokenAdminPrivateKey, tokenMediatorAddress } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -11,12 +12,12 @@ import { until } from '../../../src/utils'
 import debug from 'debug'
 import StreamrClient from '../../../src'
 
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPC)
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPC)
 const tokenAdminMainnetWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
 const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
-const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminMainnetWallet)
-const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
+const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminMainnetWallet)
+const tokenSidechain = new Contract(ConfigTest.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
 const log = debug('StreamrClient::test::token-balance')
 

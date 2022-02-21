@@ -23,11 +23,11 @@ export * from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
-import ConfigTest from './ConfigTest'
+export { ConfigTest } from './ConfigTest'
 import { validateConfig } from './ConfigBase'
 import { NetworkNodeStub } from './BrubeckNode'
 
-export { ConfigTest, validateConfig, NetworkNodeStub }
+export { validateConfig, NetworkNodeStub }
 export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'

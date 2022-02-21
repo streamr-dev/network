@@ -1,11 +1,10 @@
 import { Wallet } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { id } from 'ethers/lib/utils'
-import clientOptionsConfig from './config'
+import { ConfigTest } from '../../src/ConfigTest'
 
-export const clientOptions = clientOptionsConfig
-export const providerSidechain = new JsonRpcProvider(clientOptions.streamRegistryChainRPCs[0])
-export const providerMainnet = new JsonRpcProvider(clientOptions.mainChainRPCs![0])
+export const providerSidechain = new JsonRpcProvider(ConfigTest.streamRegistryChainRPCs[0])
+export const providerMainnet = new JsonRpcProvider(ConfigTest.mainChainRPCs![0])
 
 export const tokenMediatorAddress = '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F'
 

@@ -6,23 +6,24 @@ import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
-import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
+import { tokenAdminPrivateKey } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-adminFee')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPC)
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPC)
-const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPC)
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPC)
+const adminWalletMainnet = new Wallet(ConfigTest.auth.privateKey, providerMainnet)
 
 describe('DataUnion admin fee', () => {
     let adminClient: StreamrClient
 
     const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
-    const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+    const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminWallet)
 
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
+        log('Connecting to Ethereum networks, clientOptions: %O', ConfigTest)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
@@ -30,7 +31,7 @@ describe('DataUnion admin fee', () => {
         log(`Minting 100 tokens to ${adminWalletMainnet.address}`)
         const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
         await tx1.wait()
-        adminClient = new StreamrClient(clientOptions as any)
+        adminClient = new StreamrClient(ConfigTest)
     }, 10000)
 
     it('can set admin fee', async () => {
@@ -52,7 +53,7 @@ describe('DataUnion admin fee', () => {
 
         const amount = parseEther('2')
 
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(ConfigTest)))
         const contract = await contracts.getMainnetContract(dataUnion.getAddress())
         const tokenAddress = await contract.tokenMainnet()
         const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)

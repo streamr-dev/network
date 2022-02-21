@@ -2,7 +2,8 @@ import { utils, Wallet } from 'ethers'
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import { clientOptions, getSidechainTestWallet, tokenAdminWalletSidechain } from '../devEnvironment'
+import { getSidechainTestWallet, tokenAdminWalletSidechain } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress } from '../../test-utils/utils'
 import authFetch from '../../../src/authFetch'
@@ -19,12 +20,12 @@ describe('DataUnion member', () => {
     let secret: string
 
     beforeAll(async () => {
-        log('clientOptions: %O', clientOptions)
-        const adminClient = new StreamrClient(clientOptions as any)
+        log('clientOptions: %O', ConfigTest)
+        const adminClient = new StreamrClient(ConfigTest)
         dataUnion = await adminClient.deployDataUnion()
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(ConfigTest.restUrl, 'products')
         await authFetch(
             createProductUrl,
             {
@@ -52,7 +53,7 @@ describe('DataUnion member', () => {
 
     async function getMemberDuObject(memberWallet: Wallet): Promise<DataUnion> {
         const memberClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: memberWallet.privateKey,
             }

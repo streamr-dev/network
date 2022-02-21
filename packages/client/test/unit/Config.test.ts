@@ -1,6 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { DEFAULTS } from '../../src/Config'
-import config from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 
 describe('Config', () => {
     describe('validate', () => {
@@ -92,9 +92,9 @@ describe('Config', () => {
 
         it('can override network.trackers arrays', () => {
             const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient(config)
+            const clientOverrides = new StreamrClient(ConfigTest)
             expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
-            expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
+            expect(clientOverrides.options.network.trackers).toEqual(ConfigTest.network.trackers)
         })
 
         it('network can be empty', () => {

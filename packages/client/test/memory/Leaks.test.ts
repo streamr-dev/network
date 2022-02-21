@@ -6,7 +6,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Subscription } from '../../src/subscriber/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
-import clientOptions from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 
 const MAX_MESSAGES = 5
 
@@ -24,7 +24,7 @@ describeRepeats('Leaks', () => {
     describe('StreamrClient', () => {
         const createClient = (opts = {}) => {
             const c = new StreamrClient({
-                ...clientOptions,
+                ...ConfigTest,
                 auth: {
                     privateKey: fakePrivateKey(),
                 },

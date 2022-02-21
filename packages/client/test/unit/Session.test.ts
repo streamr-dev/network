@@ -4,7 +4,7 @@ import { container, DependencyContainer } from 'tsyringe'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 
 describe('Session', () => {
@@ -15,7 +15,7 @@ describe('Session', () => {
     let logoutFunction: jest.MockedFunction<any>
 
     const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
-        ...clientOptions,
+        ...ConfigTest,
         autoConnect: false,
         autoDisconnect: false,
         ...opts,

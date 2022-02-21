@@ -13,7 +13,7 @@ const sideChainConfig = {
 /**
  * Streamr client constructor options that work in the test environment
  */
-export default {
+export const ConfigTest = {
     auth: {
         privateKey: process.env.ETHEREUM_PRIVATE_KEY || '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb',
     },

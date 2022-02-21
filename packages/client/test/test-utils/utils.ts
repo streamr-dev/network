@@ -13,13 +13,11 @@ import { counterId, CounterId, AggregatedError, instanceId } from '../../src/uti
 import { Debug, format } from '../../src/utils/log'
 import { MaybeAsync, StreamDefinition } from '../../src/types'
 import { StreamProperties } from '../../src/Stream'
-import clientOptions from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 
 import Signal from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
-
-export { clientOptions }
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -137,7 +135,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 export function getRandomClient() {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
     return new StreamrClient({
-        ...clientOptions,
+        ...ConfigTest,
         auth: {
             privateKey: wallet.privateKey
         }
@@ -188,7 +186,7 @@ export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: Depen
             key = await fetchPrivateKeyWithGas()
         }
         const c = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: key,
             },

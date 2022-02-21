@@ -5,7 +5,7 @@ import { container, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
-import clientOptions from './config'
+import { ConfigTest } from '../../src/ConfigTest'
 import { StrictBrubeckClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
@@ -39,7 +39,7 @@ describe('MemoryLeaks', () => {
                 childContainer: DependencyContainer;
                 rootContext: any;}> => {
                 return initContainer({
-                    ...clientOptions,
+                    ...ConfigTest,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
@@ -99,7 +99,7 @@ describe('MemoryLeaks', () => {
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient({
-                    ...clientOptions,
+                    ...ConfigTest,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
