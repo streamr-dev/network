@@ -9,7 +9,7 @@
 </h1>
 
 [![Build status](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/client-build.yml)
-![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
+[![latest npm package version](https://img.shields.io/npm/v/streamr-client?label=latest)
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
