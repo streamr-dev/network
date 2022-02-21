@@ -4,7 +4,7 @@
  * TODO: Disolve ConfigBase.
  */
 import 'reflect-metadata'
-import Config from './ConfigBase'
+import { ClientConfig } from './ConfigBase'
 import cloneDeep from 'lodash/cloneDeep'
 import merge from 'lodash/merge'
 import type { NetworkNodeOptions } from 'streamr-network'
@@ -126,7 +126,7 @@ export { BRUBECK_CLIENT_DEFAULTS as DEFAULTS }
 export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
     const clonedConfig = cloneDeep(config)
     const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
-    const userConfig = Config(clonedConfig)
+    const userConfig = ClientConfig(clonedConfig)
     const result: StrictBrubeckClientConfig = {
         ...defaults,
         ...userConfig,
