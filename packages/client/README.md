@@ -234,7 +234,7 @@ Or fetch them and subscribe to new messages in the same call via a `subscribe` c
 ```js
 // Fetches the last 10 messages and subscribes to the stream
 const sub1 = await client.subscribe({
-    streamId: streamId,
+    id: streamId,
     resend: {
         last: 10,
     }
@@ -244,7 +244,7 @@ const sub1 = await client.subscribe({
 Resend from a specific message reference up to the newest message:
 ```js
 const sub2 = await client.subscribe({
-    streamId: streamId,
+    id: streamId,
     resend: {
         from: {
             timestamp: (Date.now() - 1000 * 60 * 5), // 5 minutes ago
@@ -256,7 +256,7 @@ const sub2 = await client.subscribe({
 Resend a limited range of messages:
 ```js
 const sub3 = await client.subscribe({
-    streamId: streamId,
+    id: streamId,
     resend: {
         from: {
             timestamp: (Date.now() - 1000 * 60 * 10), // 10 minutes ago
@@ -353,6 +353,11 @@ There are 5 different permissions:
 - StreamPermission.EDIT
 - StreamPermission.DELETE
 - StreamPermission.GRANT
+
+You can import the `StreamPermission` enum with:
+```js
+const { StreamPermission } = require('streamr-client')
+```
 
 For each stream + user there can be a permission assignment containing a subset of those permissions. It is also possible to grant public permissions for streams (only `StreamPermission.PUBLISH` and `StreamPermission.SUBSCRIBE`). If a stream has e.g. a public subscribe permissions, it means that anyone can subscribe to that stream.
 
