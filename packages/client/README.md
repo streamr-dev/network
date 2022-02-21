@@ -31,9 +31,10 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - Installation
     - Importing `streamr-client`
 - The Streamr Client API
-    - Authentication
-    - Message ordering
-    - Connecting
+    - Client Creation
+        - Authentication
+        - Message ordering
+        - Connecting
     - Creating a stream 
     - Subscribing to real-time events in a stream
     - Publishing data points to a stream
@@ -178,8 +179,8 @@ For usage in the browser include the latest build, e.g. by including a `<script>
 
 __
 ## The Streamr Client API
-
-### Authentication
+### Client Creation
+#### Authentication
 If you don't have an Ethereum account you can use the utility function [StreamrClient.generateEthereumAccount()](#utility-functions), which returns the address and private key of a fresh Ethereum account.
 
 ```js
@@ -206,7 +207,7 @@ const client = new StreamrClient()
 ```
 
 
-### Message ordering
+#### Message ordering
 If your use-case doesn't require message order to be enforced or if you want it to be tolerant to out-of-sync messages you can turn off the message ordering upon client creation:
 ```js
 const client = new StreamrClient({
@@ -217,7 +218,7 @@ const client = new StreamrClient({
 ```
 Both of these flags should be disabled in tandem for message ordering to be properly turned off.
 
-### Connecting
+#### Connecting
 
 By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
 
