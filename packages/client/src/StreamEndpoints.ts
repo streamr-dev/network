@@ -74,7 +74,6 @@ function getKeepAliveAgentForUrl(url: string) {
     throw new Error(`Unknown protocol in URL: ${url}`)
 }
 
-/** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpoints implements Context {
     /** @internal */

@@ -18,8 +18,8 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export * from './LoginEndpoints'
-export * from './StreamEndpoints'
+export { UserDetails } from './LoginEndpoints'
+export { StreamValidationInfo, StreamMessageAsObject } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
@@ -29,7 +29,7 @@ import { NetworkNodeStub } from './BrubeckNode'
 
 export { ConfigTest, validateConfig, NetworkNodeStub }
 export * from './dataunion/DataUnion'
-export * from './authFetch'
+export { NotFoundError } from './authFetch'
 export * from './types'
 
 export { StreamPartID } from 'streamr-client-protocol'
