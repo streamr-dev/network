@@ -75,7 +75,7 @@ describe('createNode', () => {
         await client.registerStorageEventListener(callback)
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)
         await promise
-        await client.unRegisterStorageEventListeners()
+        await client.unregisterStorageEventListeners()
     })
 
     it('getStorageNodesOf', async () => {

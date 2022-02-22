@@ -256,7 +256,7 @@ export class StorageNodeRegistry {
         })
     }
 
-    async unRegisterStorageEventListeners() {
+    async unregisterStorageEventListeners() {
         this.streamStorageRegistryContractReadonly.removeAllListeners()
     }
 

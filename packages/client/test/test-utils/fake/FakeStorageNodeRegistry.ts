@@ -120,7 +120,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    unRegisterStorageEventListeners(): Promise<void> {
+    unregisterStorageEventListeners(): Promise<void> {
         throw new Error('not implemented')
     }
 }
