@@ -58,7 +58,7 @@ export default function SubscribePipeline<T = unknown>(
             ignoreMessages.add(error.streamMessage)
         }
 
-        //throw error
+        // throw error
     }
 
     const decrypt = new Decrypt<T>(
