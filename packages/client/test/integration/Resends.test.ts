@@ -1,4 +1,4 @@
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
@@ -6,6 +6,7 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
+    fetchPrivateKeyWithGas,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/subscribe/Resends'
@@ -34,7 +35,7 @@ describeRepeats('resends', () => {
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey: await fetchPrivateKeyWithGas()
             }
         })
         subscriber = client.resends
