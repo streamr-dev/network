@@ -35,6 +35,7 @@ describeRepeats('resends', () => {
         client = new StreamrClient({
             ...clientOptions
         })
+        // @ts-expect-error
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates

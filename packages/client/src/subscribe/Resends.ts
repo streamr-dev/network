@@ -185,7 +185,7 @@ export default class Resend implements Context {
         })
     }
 
-    async from<T>(streamPartId: StreamPartID, {
+    private async from<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId

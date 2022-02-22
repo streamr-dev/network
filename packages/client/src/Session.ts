@@ -41,7 +41,7 @@ export default class Session {
         return !this.options.privateKey && !this.options.ethereum && !this.options.sessionToken
     }
 
-    updateState(newState: State) {
+    private updateState(newState: State) {
         debug('updateState %s -> %s', this.state, newState)
         this.state = newState
         this.eventEmitter.emit(newState)

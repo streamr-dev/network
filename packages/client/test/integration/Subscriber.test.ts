@@ -30,6 +30,7 @@ describeRepeats('Subscriber', () => {
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient()
+        // @ts-expect-error
         M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
@@ -386,6 +387,7 @@ describeRepeats('Subscriber', () => {
                 sub2.onError(onSuppressError)
 
                 const client2 = await createClient({
+                    // @ts-expect-error
                     auth: client.options.auth,
                 })
 

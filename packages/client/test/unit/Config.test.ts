@@ -93,7 +93,9 @@ describe('Config', () => {
         it('can override network.trackers arrays', () => {
             const clientDefaults = new StreamrClient()
             const clientOverrides = new StreamrClient(config)
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
         })
 
@@ -102,8 +104,11 @@ describe('Config', () => {
             const clientOverrides = new StreamrClient({
                 network: {}
             })
+            // @ts-expect-error
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
+            // @ts-expect-error
             expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
         })
 
@@ -120,8 +125,11 @@ describe('Config', () => {
                     trackers,
                 }
             })
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).toEqual(trackers)
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).not.toBe(trackers)
+            // @ts-expect-error
             expect(clientOverrides.options.network.trackers[0]).not.toBe(trackers[0])
         })
 
@@ -145,16 +153,22 @@ describe('Config', () => {
             const clientOverrides2 = new StreamrClient({
                 debug: debugFull,
             })
+            // @ts-expect-error
             expect(clientOverrides1.options.debug).toEqual({
+                // @ts-expect-error
                 ...clientDefaults.options.debug,
                 inspectOpts: {
+                    // @ts-expect-error
                     ...clientDefaults.options.debug.inspectOpts,
                     ...debugPartial.inspectOpts,
                 }
             })
+            // @ts-expect-error
             expect(clientOverrides2.options.debug).toEqual({
+                // @ts-expect-error
                 ...clientDefaults.options.debug,
                 inspectOpts: {
+                    // @ts-expect-error
                     ...clientDefaults.options.debug.inspectOpts,
                     ...debugFull.inspectOpts,
                 }

@@ -98,6 +98,7 @@ async function testWithdraw(
             type: 'DATAUNION',
             dataUnionVersion: 2
         }),
+        // @ts-expect-error
         session: adminClient.session,
     })
     const res1 = await dataUnion.join(secret)

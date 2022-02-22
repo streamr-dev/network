@@ -35,7 +35,7 @@ export default class Subscriber implements Context {
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(streamPartId)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)

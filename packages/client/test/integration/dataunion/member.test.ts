@@ -34,6 +34,7 @@ describe('DataUnion member', () => {
                     type: 'DATAUNION',
                     dataUnionVersion: 2
                 }),
+                // @ts-expect-error
                 session: adminClient.session,
             }
         )

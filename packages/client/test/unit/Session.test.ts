@@ -39,6 +39,7 @@ describe('Session', () => {
 
         clientSessionToken = createClient(opts, childContainer)
 
+        // @ts-expect-error
         session = clientSessionToken.session
     }
 
@@ -59,6 +60,7 @@ describe('Session', () => {
                 },
             })
             const sessionToken = await clientNone.getSessionToken()
+            // @ts-expect-error
             expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
         })
 
@@ -79,6 +81,7 @@ describe('Session', () => {
                 },
             })
             await expect(async () => (
+                // @ts-expect-error
                 clientNone.session.sendLogin()
             )).rejects.toThrow(
                 'Need either "privateKey", "ethereum" or "sessionToken" to login.'

@@ -95,10 +95,10 @@ class StreamrEthereum {
         }
     }
 
-    _getAddress?: () => Promise<string>
-    _getSigner?: () => Signer
-    _getDataUnionChainSigner?: () => Promise<Signer>
-    _getStreamRegistryChainSigner?: () => Promise<Signer>
+    private _getAddress?: () => Promise<string>
+    private _getSigner?: () => Signer
+    private _getDataUnionChainSigner?: () => Promise<Signer>
+    private _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
         @inject(Config.Auth) authConfig: AllAuthConfig,

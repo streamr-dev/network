@@ -46,6 +46,7 @@ describe('DataUnion signature', () => {
                 type: 'DATAUNION',
                 dataUnionVersion: 2
             }),
+            // @ts-expect-error
             session: adminClient.session,
         })
         await memberDataUnion.join(secret)
@@ -91,8 +92,10 @@ describe('DataUnion signature', () => {
         const to = '0x3333333333333333333333333333333333333333'
         const withdrawn = BigNumber.from('4000000000000000')
         const amounts = [5000000000000000, '5000000000000000', BigNumber.from('5000000000000000')]
+        // @ts-expect-error
+        const signer = client.ethereum.getSigner()
         // eslint-disable-next-line no-underscore-dangle
-        const signaturePromises = amounts.map((amount) => dataUnion._createWithdrawSignature(amount, to, withdrawn, client.ethereum.getSigner()))
+        const signaturePromises = amounts.map((amount) => dataUnion._createWithdrawSignature(amount, to, withdrawn, signer))
         const actualSignatures = await Promise.all(signaturePromises)
         const expectedSignature = '0xcaec648e19b71df9e14ae7c313c7a2b268356648bcfd5c5a0e82a76865d1e4a500890d71e7aa6e2dbf961251329b4528915036f1c484db8ee4ce585fd7cb05531c' // eslint-disable-line max-len
         expect(actualSignatures.every((actual) => actual === expectedSignature))

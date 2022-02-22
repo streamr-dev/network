@@ -35,6 +35,7 @@ describeRepeats('decryption', () => {
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
+        // @ts-expect-error
         testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
             // check encryption is as expected
             if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
@@ -242,6 +243,7 @@ describeRepeats('decryption', () => {
 
                 function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                     const onSendTest = Defer()
+                    // @ts-expect-error
                     testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                         // check encryption is as expected
                         if (streamMessage.getStreamId() === stream2.id) {
@@ -279,6 +281,7 @@ describeRepeats('decryption', () => {
                     })
 
                     const published: any[] = []
+                    // @ts-expect-error
                     publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                         if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
@@ -318,6 +321,7 @@ describeRepeats('decryption', () => {
                 await publisher.setNextGroupKey(stream.id, groupKey)
 
                 const published: any[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -344,6 +348,7 @@ describeRepeats('decryption', () => {
 
                 await publisher.rotateGroupKey(stream.id)
                 const publishedStreamMessages: any[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
@@ -372,22 +377,26 @@ describeRepeats('decryption', () => {
 
                 // eslint-disable-next-line require-atomic-updates
                 publisher = await setupClient({
+                    // @ts-expect-error
                     auth: publisher.options.auth,
                     groupKeys,
                 })
 
                 // eslint-disable-next-line require-atomic-updates
                 subscriber = await setupClient({
+                    // @ts-expect-error
                     auth: subscriber.options.auth,
                     groupKeys,
                 })
 
                 const contentClear: any[] = []
                 const streamMessagesPublished: StreamMessage<any>[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
+                // @ts-expect-error
                 publisher.publisher.publishQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     streamMessagesPublished.push(streamMessage)
@@ -413,10 +422,12 @@ describeRepeats('decryption', () => {
             it('client.resend last can get the historical keys for previous encrypted messages', async () => {
                 // Publish encrypted messages with different keys
                 await publisher.rotateGroupKey(stream.id)
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.forEach(async () => {
                     await publisher.rotateGroupKey(stream.id)
                 })
                 const published: any[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -442,6 +453,7 @@ describeRepeats('decryption', () => {
             it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
                 // Publish encrypted messages with different keys
                 await publisher.rotateGroupKey(stream.id)
+                // @ts-expect-error
                 publisher.publisher.publishQueue.forEach(async () => {
                     await publisher.rotateGroupKey(stream.id)
                 })
@@ -480,11 +492,13 @@ describeRepeats('decryption', () => {
                     await publisher.setNextGroupKey(stream.id, groupKey)
                     contentClear = []
 
+                    // @ts-expect-error
                     publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                         if (streamMessage.getStreamId() !== stream.id) { return }
                         contentClear.push(streamMessage.getParsedContent())
                     })
 
+                    // @ts-expect-error
                     publisher.publisher.publishQueue.forEach(async () => {
                         await publisher.rotateGroupKey(stream.id)
                     })
@@ -595,6 +609,7 @@ describeRepeats('decryption', () => {
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
+                // @ts-expect-error
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() === stream2.id) {
                         didFindStream2 = true
@@ -623,6 +638,7 @@ describeRepeats('decryption', () => {
 
                 await publisher.rotateGroupKey(testStream.id)
                 const published: any[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -653,6 +669,7 @@ describeRepeats('decryption', () => {
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
+                // @ts-expect-error
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     testClient.debug({ streamMessage })
 
@@ -692,6 +709,7 @@ describeRepeats('decryption', () => {
                 })
 
                 const contentClear: any[] = []
+                // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())

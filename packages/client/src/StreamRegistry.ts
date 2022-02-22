@@ -247,7 +247,7 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
+    private async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s from theGraph', streamId)
         if (StreamIDUtils.isKeyExchangeStream(streamId)) {

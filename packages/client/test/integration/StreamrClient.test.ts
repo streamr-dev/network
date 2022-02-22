@@ -124,12 +124,14 @@ describeRepeats('StreamrClient', () => {
                 const subTask = client.subscribe<{ test: string }>({
                     streamId: stream.id,
                 }, () => {})
+                // @ts-expect-error
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
+                // @ts-expect-error
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
@@ -425,6 +427,7 @@ describeRepeats('StreamrClient', () => {
 
         it('destroying stops publish', async () => {
             const subscriber = await createClient({
+                // @ts-expect-error
                 auth: client.options.auth,
             })
             const sub = await subscriber.subscribe({
@@ -434,6 +437,7 @@ describeRepeats('StreamrClient', () => {
             const onMessage = jest.fn()
             const gotMessages = Defer()
             const published: any[] = []
+            // @ts-expect-error
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
                 if (stream.id !== streamMessage.getStreamId()) { return }
                 onMessage()
@@ -472,6 +476,7 @@ describeRepeats('StreamrClient', () => {
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
             const subscriber = await createClient({
+                // @ts-expect-error
                 auth: client.options.auth,
             })
 
@@ -487,12 +492,12 @@ describeRepeats('StreamrClient', () => {
             const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
 
             const publishTasks = [
-                client.publishMessage(stream.id, msgs[0]).finally(async () => {
+                client.publish(stream.id, msgs[0]).finally(async () => {
                     await client.destroy()
                 }),
-                client.publishMessage(stream.id, msgs[1]),
-                client.publishMessage(stream.id, msgs[2]),
-                client.publishMessage(stream.id, msgs[3]),
+                client.publish(stream.id, msgs[1]),
+                client.publish(stream.id, msgs[2]),
+                client.publish(stream.id, msgs[3]),
             ]
             const results = await Promise.allSettled(publishTasks)
             client.debug('publishTasks', results.map(({ status }) => status))

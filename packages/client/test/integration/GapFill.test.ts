@@ -47,6 +47,7 @@ describeRepeats('GapFill', () => {
     async function setupClient(opts: BrubeckClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient(opts)
+        // @ts-expect-error
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
@@ -97,6 +98,7 @@ describeRepeats('GapFill', () => {
 
         describe('realtime (uses resend)', () => {
             it('can fill single gap', async () => {
+                // @ts-expect-error
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
@@ -266,6 +268,7 @@ describeRepeats('GapFill', () => {
                 maxGapRequests: 99 // would time out test if doesn't give up
             })
 
+            // @ts-expect-error
             const calledResend = jest.spyOn(client.resends, 'range')
 
             const node = await client.getNode()
@@ -307,6 +310,7 @@ describeRepeats('GapFill', () => {
 
             await client.connect()
 
+            // @ts-expect-error
             const calledResend = jest.spyOn(client.resends, 'range')
             const node = await client.getNode()
             let publishCount = 0

@@ -40,6 +40,7 @@ describe('authFetch', () => {
         })
         await client.connect()
         expect(fetch).not.toHaveBeenCalled() // will get called in background though (questionable behaviour)
+        // @ts-expect-error
         await client.session.getSessionToken() // this ensures authentication completed
         expect(fetch).toHaveBeenCalled()
         // @ts-expect-error
