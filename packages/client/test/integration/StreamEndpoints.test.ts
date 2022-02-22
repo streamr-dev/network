@@ -230,8 +230,9 @@ describe('StreamEndpoints', () => {
 
     describe('Stream.update', () => {
         it('can change stream description', async () => {
-            createdStream.description = `description-${Date.now()}`
-            await createdStream.update()
+            await createdStream.update({
+                description: `description-${Date.now()}`
+            })
             await until(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).description === createdStream.description
