@@ -66,21 +66,21 @@ type EthereumNetworkConfig = {
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
-export abstract class EthereumConfig {
-    abstract dataUnionBinanceWithdrawalChainRPCs: ChainConnectionInfo
+export type EthereumConfig = {
+    dataUnionBinanceWithdrawalChainRPCs: ChainConnectionInfo
     // address on sidechain
-    abstract binanceAdapterAddress: EthereumAddress
+    binanceAdapterAddress: EthereumAddress
     // AMB address on BSC. used to port TXs to BSC
-    abstract binanceSmartChainAMBAddress: EthereumAddress
-    abstract withdrawServerUrl: string
-    abstract mainChainRPCs?: ChainConnectionInfo
-    abstract dataUnionChainRPCs: ChainConnectionInfo
-    abstract tokenAddress: EthereumAddress
-    abstract tokenSidechainAddress: EthereumAddress
-    abstract streamRegistryChainRPCs: ChainConnectionInfo
+    binanceSmartChainAMBAddress: EthereumAddress
+    withdrawServerUrl: string
+    mainChainRPCs?: ChainConnectionInfo
+    dataUnionChainRPCs: ChainConnectionInfo
+    tokenAddress: EthereumAddress
+    tokenSidechainAddress: EthereumAddress
+    streamRegistryChainRPCs: ChainConnectionInfo
 
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-    abstract ethereumNetworks?: {
+    ethereumNetworks?: {
         [networkName: string]: EthereumNetworkConfig
     }
 }
