@@ -1,11 +1,12 @@
 module.exports = {
     entryPoints: [
-        'src/dataunion/DataUnion.ts',
-        'src/Config.ts',
-        'src/StreamrClient.ts'
+        'src/index-exports.ts'
     ],
     tsconfig: 'tsconfig.node.json',
-    readme: false,
+    readme: 'none',
+    excludePrivate: true,
+    excludeProtected: true,
     excludeInternal: true,
     includeVersion: true,
+    disableSources: true
 }
