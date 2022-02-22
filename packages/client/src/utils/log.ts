@@ -5,7 +5,7 @@ import util from 'util'
 import Debug from 'debug'
 
 // add global support for pretty millisecond formatting with %n
-Debug.formatters.n = (v) => {
+Debug.formatters.n = (v: any) => {
     if (v == null || Number.isNaN(v)) { return String(v) }
     return Debug.humanize(v)
 }
@@ -14,29 +14,32 @@ export const DEFAULT_INSPECT_OPTS = {
     maxStringLength: 256
 }
 
-// override default formatters for node
-if (typeof window === 'undefined') {
+declare const process: any
+
+const D: any = Debug
+
+// Override default formatters for environments with defined `Debug.inspectOpts` (only node atm).
+if ('inspectOpts' in D) {
     // monkeypatch default log function to use current `inspectOpts`.  This
     // ensures values logged without placeholders e.g. %o, %O will have the
     // same inspect options applied. Without this only values with a
     // placeholder will use the `inspectOpts` config.
     // e.g.
     // `debug('msg', obj)` should use same `inspectOpts` as `debug('msg %O', msg)`
-    Debug.log = function log(...args) {
-        // @ts-expect-error inspectOpts/useColors not in debug types
-        if (this.inspectOpts.colors === undefined) {
-            // @ts-expect-error inspectOpts/useColors not in debug types
-            this.inspectOpts.colors = this.useColors // need this to get colours when no placeholder
+    D.log = function log(...args: any[]) {
+        const { inspectOpts, useColors } = this
+
+        if (inspectOpts.colors === undefined) {
+            inspectOpts.colors = useColors // need this to get colours when no placeholder
         }
+
         return process.stderr.write(formatWithOptions({
-            // @ts-expect-error inspectOpts not in debug types
-            ...this.inspectOpts,
+            ...inspectOpts,
         }, ...args) + '\n')
     }
 
     // mutate inspectOpts rather than replace, otherwise changes are lost
-    // @ts-expect-error inspectOpts not in debug types
-    Object.assign(Debug.inspectOpts, {
+    Object.assign(D.inspectOpts, {
         ...DEFAULT_INSPECT_OPTS,
     })
 }

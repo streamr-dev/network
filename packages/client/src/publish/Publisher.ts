@@ -49,12 +49,6 @@ export default class BrubeckPublisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    /** @internal */
-    async validateAndPublishStreamMessage<T>(streamMessage: StreamMessage<T>) {
-        // await this.validator.validate(streamMessage)
-        await this.node.publishToNode(streamMessage)
-    }
-
     /**
      * @category Important
      */
