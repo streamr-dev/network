@@ -19,9 +19,7 @@ export type StreamrClientOptions = StreamrClientConfig & {
     debug?: Partial<DebugConfig>
 }
 
-export {
-    NetworkNodeOptions as NetworkNodeConfig
-}
+export type NetworkNodeConfig = NetworkNodeOptions
 
 export type DebugConfig = {
     inspectOpts: InspectOptions
@@ -41,7 +39,6 @@ export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
  *
  * For example:
  * config.ethereum can be injected with a token like: @inject(Config.Ethereum)
- * @internal
  */
 const BrubeckConfigInjection = {
     Root: Symbol('Config.Root'),

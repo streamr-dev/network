@@ -3,7 +3,6 @@
  */
 import { DependencyContainer, inject } from 'tsyringe'
 
-export { GroupKey } from './encryption/Encryption'
 import { until } from './utils'
 
 import { Rest } from './Rest'

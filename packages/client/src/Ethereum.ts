@@ -15,9 +15,9 @@ import type { Overrides } from '@ethersproject/contracts'
 import { Config } from './Config'
 import { EthereumAddress } from 'streamr-client-protocol'
 
-type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
-type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
-type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
+export type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
+export type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
+export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
 
 export type ProviderConfig = ExternalProvider
 
@@ -52,7 +52,7 @@ export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 // Ethereum Config
 
 // these should come from ETH-184 config package when it's ready
-type EthereumNetworkConfig = {
+export type EthereumNetworkConfig = {
     chainId: number
     overrides?: Overrides
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber

@@ -74,6 +74,7 @@ export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<type
 
 // eslint-disable-next-line no-redeclare
 class GroupKey {
+    /** @internal */
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     static validate(maybeGroupKey: GroupKey) {
