@@ -85,7 +85,6 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 }
 
-/** @internal */
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
     /** @internal */
     id

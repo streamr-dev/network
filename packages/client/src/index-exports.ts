@@ -64,6 +64,7 @@ import { NetworkNodeStub } from './BrubeckNode'
 export { ConfigTest, NetworkNodeStub }
 export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
+export { SignalListener } from './utils/Signal'
 export * from './types'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'

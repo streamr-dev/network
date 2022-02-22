@@ -1,7 +1,7 @@
 import { pOnce, pLimitFn, pOne } from './index'
 import { Plugin } from './Plugin'
 
-type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
+export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
     listener: SignalListener<T>
 }
