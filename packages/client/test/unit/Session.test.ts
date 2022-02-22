@@ -6,6 +6,7 @@ import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
 import { ConfigTest } from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 describe('Session', () => {
     let session: Session
@@ -14,12 +15,18 @@ describe('Session', () => {
     let loginFunction: jest.MockedFunction<any>
     let logoutFunction: jest.MockedFunction<any>
 
-    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
-        ...ConfigTest,
-        autoConnect: false,
-        autoDisconnect: false,
-        ...opts,
-    }, parentContainer)
+    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => {
+        const foobar = {
+            ...ConfigTest,
+            auth: {
+                privateKey: fastPrivateKey(),
+            },
+            autoConnect: false,
+            autoDisconnect: false,
+            ...opts,
+        }
+        return new StreamrClient(foobar, parentContainer)
+    }
 
     function setup(opts?: any) {
         const childContainer = container.createChildContainer()

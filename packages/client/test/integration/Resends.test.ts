@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
@@ -32,7 +32,10 @@ describeRepeats('resends', () => {
 
     beforeAll(async () => {
         client = new StreamrClient({
-            ...ConfigTest
+            ...ConfigTest,
+            auth: {
+                privateKey: fastPrivateKey()
+            }
         })
         subscriber = client.resends
 
