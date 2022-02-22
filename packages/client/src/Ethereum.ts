@@ -39,11 +39,6 @@ export type SessionTokenAuthConfig = {
     sessionToken: string
 }
 
-export type UsernamePasswordAuthConfig = {
-    username: string
-    password: string
-}
-
 export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
 
 export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & Partial<SessionTokenAuthConfig>
