@@ -9,7 +9,7 @@ import Signal from '../utils/Signal'
 
 export class ResendSubscription<T> extends Subscription<T> {
     private onResentSignal = Signal.once()
-    onResent: (callback: () => void) => void = this.onResentSignal
+    onResent: (callback: () => void) => Signal = this.onResentSignal
 
     private orderMessages
     // @internal
