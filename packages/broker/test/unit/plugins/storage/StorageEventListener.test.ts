@@ -6,7 +6,7 @@ import { wait } from 'streamr-test-utils'
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream'
         | 'registerStorageEventListener'
-        | 'unRegisterStorageEventListeners'>
+        | 'unregisterStorageEventListeners'>
     let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
     let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
@@ -22,7 +22,7 @@ describe(StorageEventListener, () => {
             async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any): Promise<void> {
                 storageEventListener = cb
             },
-            unRegisterStorageEventListeners: jest.fn()
+            unregisterStorageEventListeners: jest.fn()
         }
         storageEventListener = undefined
         onEvent = jest.fn()
@@ -40,9 +40,9 @@ describe(StorageEventListener, () => {
     })
 
     it('destroy() unregisters storage event listener on client', async () => {
-        expect(stubClient.unRegisterStorageEventListeners).toHaveBeenCalledTimes(0)
+        expect(stubClient.unregisterStorageEventListeners).toHaveBeenCalledTimes(0)
         await listener.destroy()
-        expect(stubClient.unRegisterStorageEventListeners).toHaveBeenCalledTimes(1)
+        expect(stubClient.unregisterStorageEventListeners).toHaveBeenCalledTimes(1)
     })
 
     function assignStorageNode(recipient: string) {
