@@ -175,8 +175,8 @@ describe('NodeMetrics', () => {
         expect(publishListener).toBeCalledTimes(1)
         expect(publishListener).toBeCalledWith({
             broker: {
-                messagesToNetworkPerSec: 123,
-                bytesToNetworkPerSec: 123
+                messagesToNetworkPerSec: MOCK_METRICS_VALUE,
+                bytesToNetworkPerSec: MOCK_METRICS_VALUE
             },
             network: {
                 avgLatencyMs: MOCK_METRICS_VALUE,
