@@ -32,7 +32,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
         )
 
         if (this.pluginConfig.nodeMetrics !== null) {
-            const nodeId = await this.streamrClient.getNodeId()
+            const nodeId = (await this.streamrClient.getNode()).getNodeId()
             const metricsPublisher = new MetricsPublisher(
                 nodeId,
                 this.streamrClient!,

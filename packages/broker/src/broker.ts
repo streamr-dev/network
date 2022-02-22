@@ -68,7 +68,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                 httpServer = await startHttpServer(httpServerRoutes, config.httpServer, apiAuthenticator)
             }
 
-            const nodeId = await streamrClient.getNodeId()
+            const nodeId = (await streamrClient.getNode()).getNodeId()
 
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
