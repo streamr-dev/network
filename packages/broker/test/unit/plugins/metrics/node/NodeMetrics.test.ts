@@ -44,8 +44,8 @@ describe('NodeMetrics', () => {
             nodeMetricsProducer.set('latency', value)
             storageMetricsProducer.record('readBytes', value)
             storageMetricsProducer.record('writeBytes', value)
-            nodePublishMetricsProducer.record('kb', value)
-            nodePublishMetricsProducer.record('amount', value)
+            nodePublishMetricsProducer.record('bytes', value)
+            nodePublishMetricsProducer.record('count', value)
         }
         publishListener = jest.fn()
         nodeMetrics = new NodeMetrics(metricsContext, {
