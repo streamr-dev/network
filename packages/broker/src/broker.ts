@@ -1,7 +1,4 @@
 import { Logger } from 'streamr-network'
-// <<<<<<< HEAD
-// import StreamrClient, { validateConfig as validateClientConfig } from 'streamr-client'
-// =======
 import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
