@@ -44,7 +44,7 @@ class InvalidGroupKeyError extends ValidationError {
     }
 }
 
-type GroupKeyObject = {
+export type GroupKeyObject = {
     id: string,
     hex: string,
     data: Uint8Array,

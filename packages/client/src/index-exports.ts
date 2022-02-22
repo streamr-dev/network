@@ -7,8 +7,9 @@ export * from './Stream'
 export * from './encryption/Encryption'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
+export type { MessageStream } from './subscribe/MessageStream'
 export { ResendSubscription } from './subscribe/ResendSubscription'
-export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions } from './subscribe/Resends'
+export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,
     PermissionQuery,
@@ -28,10 +29,10 @@ import { NetworkNodeStub } from './BrubeckNode'
 
 export { ConfigTest, validateConfig, NetworkNodeStub }
 export * from './dataunion/DataUnion'
-export { NotFoundError } from './authFetch'
+export { NotFoundError, ErrorCode } from './authFetch'
 export * from './types'
 
-export { StreamPartID } from 'streamr-client-protocol'
+export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 
 // TODO should export these to support StreamMessageAsObject:
 // export {

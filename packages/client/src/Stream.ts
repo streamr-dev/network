@@ -39,7 +39,7 @@ export interface StreamrStreamConstructorOptions extends StreamProperties {
     id: StreamID
 }
 
-const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
+export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
 export type Field = {
     name: string;
