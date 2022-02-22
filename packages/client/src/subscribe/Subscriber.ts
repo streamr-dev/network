@@ -92,6 +92,9 @@ export default class Subscriber implements Context {
         await subSession.remove(sub)
     }
 
+    /**
+     * @category Important
+     */
     async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
         if (streamDefinitionOrSubscription instanceof Subscription) {
             return this.remove(streamDefinitionOrSubscription)
@@ -162,6 +165,7 @@ export default class Subscriber implements Context {
 
     /**
      * Get subscriptions matching streamId or streamId + streamPartition
+     * @category Important
      */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {

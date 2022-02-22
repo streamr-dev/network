@@ -86,6 +86,7 @@ export default class Resend implements Context {
 
     /**
      * Call last/from/range as appropriate based on arguments
+     * @category Important
      */
     async resend<T>(
         streamDefinition: StreamDefinition,

@@ -54,6 +54,9 @@ export default class BrubeckPublisher implements Context, Stoppable {
         await this.node.publishToNode(streamMessage)
     }
 
+    /**
+     * @category Important
+     */
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,

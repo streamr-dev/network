@@ -8,6 +8,9 @@ import SubscriptionSession from './SubscriptionSession'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
+/**
+ * @category Important
+ */
 export class Subscription<T = unknown> extends MessageStream<T> {
     // @internal
     context: SubscriptionSession<T>

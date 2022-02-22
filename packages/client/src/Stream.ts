@@ -64,6 +64,9 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
+/**
+ * @category Important
+ */
 class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
@@ -162,6 +165,9 @@ class StreamrStream implements StreamMetadata {
         await this.update()
     }
 
+    /**
+     * @category Important
+     */
     async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
@@ -206,6 +212,9 @@ class StreamrStream implements StreamMetadata {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
+    /**
+     * @category Important
+     */
     async removeFromStorageNode(nodeAddress: EthereumAddress) {
         try {
             return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
@@ -218,6 +227,9 @@ class StreamrStream implements StreamMetadata {
         return this._nodeRegistry.getStorageNodesOf(this.id)
     }
 
+    /**
+     * @category Important
+     */
     async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
@@ -231,6 +243,9 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
+    /**
+     * @category Important
+     */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
         return this._streamRegistry.hasPermission({
             streamId: this.id,
@@ -238,14 +253,23 @@ class StreamrStream implements StreamMetadata {
         })
     }
 
+    /**
+     * @category Important
+     */
     async getPermissions(): Promise<PermissionAssignment[]> {
         return this._streamRegistry.getPermissions(this.id)
     }
 
+    /**
+     * @category Important
+     */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
         return this._streamRegistry.grantPermissions(this.id, ...assignments)
     }
 
+    /**
+     * @category Important
+     */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }

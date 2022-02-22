@@ -117,6 +117,9 @@ export class StreamRegistry implements Context {
         }
     }
 
+    /**
+     * @category Important
+     */
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
@@ -220,10 +223,9 @@ export class StreamRegistry implements Context {
         }
     }
 
-    // --------------------------------------------------------------------------------------------
-    // GraphQL queries
-    // --------------------------------------------------------------------------------------------
-
+    /**
+     * @category Important
+     */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)

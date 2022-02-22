@@ -99,6 +99,9 @@ class StreamrClientBase implements Context {
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
     }
 
+    /**
+     * @category Important
+     */
     subscribe<T>(
         options: StreamDefinition & { resend: ResendOptions },
         onMessage?: SubscriptionOnMessage<T>
@@ -229,6 +232,9 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
     }
 }
 
+/**
+ * @category Important
+ */
 export class StreamrClient extends StreamrClientBase {
     constructor(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
         const { childContainer: c, config } = initContainer(options, parentContainer)
