@@ -20,17 +20,18 @@ enum State {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Session extends EventEmitter {
+export default class Session {
     private state: State
     private sessionTokenPromise?: Promise<string>
+    private eventEmitter: EventEmitter
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Config.Auth) private options: AuthConfig
     ) {
-        super()
         this.state = State.LOGGED_OUT
         this.options = options
+        this.eventEmitter = new EventEmitter()
         if (!this.options.sessionToken) {
             this.options.unauthenticated = true
         }
@@ -43,7 +44,7 @@ export default class Session extends EventEmitter {
     updateState(newState: State) {
         debug('updateState %s -> %s', this.state, newState)
         this.state = newState
-        this.emit(newState)
+        this.eventEmitter.emit(newState)
     }
 
     private get loginEndpoints() {
@@ -83,7 +84,7 @@ export default class Session extends EventEmitter {
         if (this.state !== State.LOGGING_IN) {
             if (this.state === State.LOGGING_OUT) {
                 this.sessionTokenPromise = new Promise((resolve) => {
-                    this.once(State.LOGGED_OUT, () => resolve(this.getSessionToken(requireNewToken)))
+                    this.eventEmitter.once(State.LOGGED_OUT, () => resolve(this.getSessionToken(requireNewToken)))
                 })
             } else {
                 this.updateState(State.LOGGING_IN)
@@ -112,7 +113,7 @@ export default class Session extends EventEmitter {
 
         if (this.state === State.LOGGING_IN) {
             await new Promise((resolve) => {
-                this.once(State.LOGGED_IN, () => resolve(this.logout()))
+                this.eventEmitter.once(State.LOGGED_IN, () => resolve(this.logout()))
             })
             return
         }

@@ -66,7 +66,8 @@ describe('Session', () => {
             const clientNone = createClient({
                 auth: {},
             })
-            const sessionToken = await clientNone.session.getSessionToken()
+            // @ts-expect-error
+            const sessionToken = await clientNone.eventEmitter.session.getSessionToken()
             expect(sessionToken).toBe('')
         })
 
@@ -88,7 +89,8 @@ describe('Session', () => {
             const clientNone = createClient({
                 auth: {},
             })
-            await clientNone.session.sendLogin().catch((err) => {
+            // @ts-expect-error
+            await clientNone.eventEmitter.session.sendLogin().catch((err) => {
                 expect(err.message).toEqual(
                     'Need either "privateKey", "ethereum" or "sessionToken" to login.'
                 )
@@ -201,7 +203,8 @@ describe('Session', () => {
 
         it('can logout while logging in', async () => {
             const done = Defer()
-            session.once('logging in', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging in', done.wrap(async () => {
                 await session.logout()
             }))
             await session.getSessionToken()
@@ -210,7 +213,8 @@ describe('Session', () => {
 
         it('can login while logging out', async () => {
             const done = Defer()
-            session.once('logging out', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging out', done.wrap(async () => {
                 await session.getSessionToken()
             }))
             await session.getSessionToken()
