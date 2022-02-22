@@ -300,8 +300,8 @@ export class Node extends EventEmitter {
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, source)
             if (source === null) {
-                this.publishMetrics.record('amount', 1)
-                this.publishMetrics.record('kb', streamMessage.getSerializedContent().length)
+                this.publishMetrics.record('count', 1)
+                this.publishMetrics.record('bytes', streamMessage.getSerializedContent().length)
             }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
