@@ -31,6 +31,9 @@ describe('NodeMetrics', () => {
             .addRecordedMetric('failedConnection')
         const nodeMetricsProducer = metricsContext.create('node')
             .addFixedMetric('latency')
+        const nodePublishMetricsProducer = metricsContext.create('node/publish')
+            .addRecordedMetric('kb')
+            .addRecordedMetric('amount')
         const storageMetricsProducer = metricsContext.create('broker/cassandra')
             .addRecordedMetric('readBytes')
             .addRecordedMetric('writeBytes')
@@ -41,6 +44,8 @@ describe('NodeMetrics', () => {
             nodeMetricsProducer.set('latency', value)
             storageMetricsProducer.record('readBytes', value)
             storageMetricsProducer.record('writeBytes', value)
+            nodePublishMetricsProducer.record('kb', value)
+            nodePublishMetricsProducer.record('amount', value)
         }
         publishListener = jest.fn()
         nodeMetrics = new NodeMetrics(metricsContext, {
@@ -143,8 +148,8 @@ describe('NodeMetrics', () => {
         expect(publishListener).toBeCalledTimes(1)
         expect(publishListener).toBeCalledWith({
             broker: {
-                messagesToNetworkPerSec: -1,
-                bytesToNetworkPerSec: -1
+                messagesToNetworkPerSec: 0,
+                bytesToNetworkPerSec: 0
             },
             network: {
                 avgLatencyMs: 0,
@@ -170,8 +175,8 @@ describe('NodeMetrics', () => {
         expect(publishListener).toBeCalledTimes(1)
         expect(publishListener).toBeCalledWith({
             broker: {
-                messagesToNetworkPerSec: -1,
-                bytesToNetworkPerSec: -1
+                messagesToNetworkPerSec: 123,
+                bytesToNetworkPerSec: 123
             },
             network: {
                 avgLatencyMs: MOCK_METRICS_VALUE,
