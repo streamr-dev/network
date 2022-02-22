@@ -46,16 +46,18 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 this.cassandra!.store(msg)
             }
         }
-        this.networkNode.addMessageListener(this.messageListener)
+        const node = await this.streamrClient.getNode()
+        node.addMessageListener(this.messageListener)
         this.addHttpServerRouter(dataQueryEndpoints(this.cassandra, metricsContext))
         this.addHttpServerRouter(dataMetadataEndpoint(this.cassandra))
         this.addHttpServerRouter(storageConfigEndpoints(this.storageConfig))
     }
 
     async stop(): Promise<void> {
-        this.networkNode.removeMessageListener(this.messageListener!)
+        const node = await this.streamrClient.getNode()
+        node.removeMessageListener(this.messageListener!)
         this.storageConfig!.getStreamParts().forEach((streamPart) => {
-            this.networkNode.unsubscribe(streamPart)
+            node.unsubscribe(streamPart)
         })
         await Promise.all([
             this.cassandra!.close(),
@@ -83,6 +85,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     private async startStorageConfig(): Promise<StorageConfig> {
+        const node = await this.streamrClient.getNode()
         const storageConfig = new StorageConfig(
             this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress(),
             this.pluginConfig.cluster.clusterSize,
@@ -91,10 +94,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             this.streamrClient,
             {
                 onStreamPartAdded: (streamPart) => {
-                    this.networkNode.subscribe(streamPart)
+                    node.subscribe(streamPart)
                 },
                 onStreamPartRemoved: (streamPart) => {
-                    this.networkNode.unsubscribe(streamPart)
+                    node.unsubscribe(streamPart)
                 }
             }
         )
