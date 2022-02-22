@@ -102,9 +102,6 @@ export default class Subscriber implements Context {
         return this.removeAll(streamDefinitionOrSubscription)
     }
 
-    /** @internal */
-    unsubscribeAll = this.removeAll.bind(this)
-
     /**
      * Remove all subscriptions, optionally only those matching options.
      */

@@ -150,11 +150,6 @@ class StreamrClientBase implements Context {
         await Promise.all(tasks)
     })
 
-    /** @deprecated */
-    disconnect() {
-        return this.destroy()
-    }
-
     destroy = pOnce(async () => {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [

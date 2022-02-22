@@ -88,24 +88,6 @@ export class StreamRegistry implements Context {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Read from the StreamRegistry contract
-    // --------------------------------------------------------------------------------------------
-
-    async getStreamFromContract(streamIdOrPath: string): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('getStream %s', streamId)
-        try {
-            const metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
-                return contract.getStreamMetadata(streamId) || '{}'
-            })
-            return this.parseStream(streamId, metadata)
-        } catch (error) {
-            this.debug(error)
-        }
-        throw new NotFoundError('Stream: id=' + streamId)
-    }
-
-    // --------------------------------------------------------------------------------------------
     // Send transactions to the StreamRegistry contract
     // --------------------------------------------------------------------------------------------
 
