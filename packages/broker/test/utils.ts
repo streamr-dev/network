@@ -163,6 +163,7 @@ export const createTestStream = async (
         id,
         ...props
     })
+    // @ts-expect-error internal method (let's use a parameter to createStream when we have NET-606)
     await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
