@@ -568,7 +568,7 @@ describeRepeats('StreamrClient', () => {
                 ])
                 expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await wait(WAIT_TIME)
-                expect(events.onOnResentListener).toHaveBeenCalledTimes(0)
+                expect(events.onResent).toHaveBeenCalledTimes(0)
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                 expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
             }, TIMEOUT)
@@ -595,7 +595,7 @@ describeRepeats('StreamrClient', () => {
                     await unsubTask
                     await subTask
                     await wait(WAIT_TIME * 2)
-                    expect(events.onOnResentListener).toHaveBeenCalledTimes(0)
+                    expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                 }, TIMEOUT)
@@ -622,7 +622,7 @@ describeRepeats('StreamrClient', () => {
                     await unsubTask
                     await subTask
                     await wait(WAIT_TIME)
-                    expect(events.onOnResentListener).toHaveBeenCalledTimes(0)
+                    expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                     expect(onMessage).toHaveBeenCalledTimes(0)
@@ -642,7 +642,7 @@ describeRepeats('StreamrClient', () => {
                 await t
                 expect(await client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                 await wait(WAIT_TIME)
-                expect(events.onOnResentListener).toHaveBeenCalledTimes(0)
+                expect(events.onResent).toHaveBeenCalledTimes(0)
                 expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                 expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
             }, TIMEOUT)
