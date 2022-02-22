@@ -113,7 +113,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             }
         })
         subscription.onError((err) => {
-            logger.warn('Failed to claim reward code due to validation error.')
+            logger.warn('Failed to claim reward code due to error %s', err?.message)
             logger.debug('', err)
         })
     }
