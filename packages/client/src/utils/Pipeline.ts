@@ -166,14 +166,11 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Triggers once when pipeline starts flowing.
      * Usage: `pipeline.onStart(callback)`
-     * @internal
      */
     onStart = Signal.once()
 
-    /** @internal */
     onMessage = Signal.create<[OutType]>()
 
-    /** @internal */
     // eslint-disable-next-line func-call-spacing, no-spaced-func
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
