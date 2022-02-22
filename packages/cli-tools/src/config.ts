@@ -1,10 +1,10 @@
 import path from 'path'
 import os from 'os'
 import { readFileSync } from 'fs'
-import { BrubeckClientConfig } from 'streamr-client'
+import { StreamrClientOptions } from 'streamr-client'
 
 interface Config {
-    client: BrubeckClientConfig
+    client: StreamrClientOptions
 }
 
 /*
