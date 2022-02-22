@@ -2,7 +2,7 @@ import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Event, Node, NodeId, NodeOptions } from './Node'
 
 /*
-Convenience wrapper for building client-facing functionality. Used by broker.
+Convenience wrapper for building client-facing functionality. Used by client.
  */
 export class NetworkNode extends Node {
     constructor(opts: NodeOptions) {
