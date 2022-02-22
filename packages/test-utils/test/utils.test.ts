@@ -7,7 +7,6 @@ import {
     waitForCondition,
     eventsToArray, eventsWithArgsToArray
 } from "../src/utils"
-import { performance } from 'perf_hooks'
 import { Readable } from "stream"
 import { EventEmitter } from "events"
 
