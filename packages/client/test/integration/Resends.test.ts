@@ -145,7 +145,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
                 const publishedStream2 = await publishTestMessagesStream2(3)
 
                 const receivedMsgs: any[] = []
@@ -185,7 +185,7 @@ describeRepeats('resends', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
 
                 await publishTestMessagesStream2(3)
                 await expect(async () => {
@@ -215,7 +215,7 @@ describeRepeats('resends', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
                 const onSubError = jest.fn(() => {})
                 sub.onError(onSubError) // suppress
 
@@ -254,7 +254,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -423,7 +423,7 @@ describeRepeats('resends', () => {
                 expect(await client.count(stream.id)).toBe(1)
 
                 const onResent = jest.fn()
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
 
                 // eslint-disable-next-line no-await-in-loop
                 published.push(...await publishTestMessages(2))
@@ -461,7 +461,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual(publishedBefore)
                 })
 
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -581,7 +581,7 @@ describeRepeats('resends', () => {
                 expect(await client.count(nonStoredStream.id)).toBe(1)
 
                 const onResent = jest.fn()
-                sub.onResent(onResent)
+                sub.addOnResentListener(onResent)
 
                 const publishedMessages = await getPublishTestStreamMessages(client, nonStoredStream.id)(2)
 

@@ -9,7 +9,6 @@ import Signal from '../utils/Signal'
 
 export class ResendSubscription<T> extends Subscription<T> {
     private onResentSignal = Signal.once()
-    onResent: (callback: () => void) => Signal = this.onResentSignal
 
     private orderMessages
     // @internal
@@ -32,6 +31,14 @@ export class ResendSubscription<T> extends Subscription<T> {
         this.onBeforeFinally(async () => {
             this.orderMessages.stop()
         })
+    }
+
+    addOnResentListener(cb: () => void): void {
+        this.onResentSignal.listen(cb)
+    }
+
+    removeOnResentListener(cb: () => void): void {
+        this.onResentSignal.unlisten(cb)
     }
 
     private async getResent() {
