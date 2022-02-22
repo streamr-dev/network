@@ -88,7 +88,7 @@ describeRepeats('Subscriber', () => {
         })
 
         // it('errors if not connected', async () => {
-        // await client.disconnect()
+        // await client.destroy()
         // await expect(() => (
         // M.subscribe(stream)
         // )).rejects.toThrow('connect')

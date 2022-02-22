@@ -184,7 +184,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
                 const onConnectionMessage = jest.fn(() => {
                     // disconnect after every message
-                    disconnect()
+                    destroy()
                 })
 
                 const onConnected = jest.fn()
@@ -248,7 +248,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 const onConnectionMessage = jest.fn(() => {
                     disconnect.clear()
                     // disconnect after every message
-                    disconnect()
+                    destroy()
                 })
 
                 otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)

@@ -580,7 +580,7 @@ describeRepeats('StreamrClient', () => {
 
             describe('with resend', () => {
                 it('client.subscribe then unsubscribe before subscribed', async () => {
-                    client.connection.enableAutoDisconnect(false)
+                    client.connection.enableAutodestroy(false)
                     const subTask = client.subscribe({
                         streamId: stream.id,
                         resend: {
@@ -654,14 +654,14 @@ describeRepeats('StreamrClient', () => {
         })
 
         test('publish does not disconnect after each message with autoDisconnect', async () => {
-            await client.disconnect()
+            await client.destroy()
             const onConnected = jest.fn()
             const onDisconnected = jest.fn()
             client.on('disconnected', onDisconnected)
             client.on('connected', onConnected)
 
             client.enableAutoConnect()
-            client.enableAutoDisconnect()
+            client.enableAutodestroy()
             await publishTestMessages(3, {
                 delay: 150,
             })
