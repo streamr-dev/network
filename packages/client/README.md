@@ -19,26 +19,26 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 
 ## Contents
 - Important information
-- Get Started
-    - Subscribing to a stream
-    - Creating & publishing to a stream
+- Getting started
+        - Authenticating
+        - Creating a stream and publishing data to it
+        - Subscribing
 - Setup
     - Installation
     - Importing `streamr-client`
 - Usage
-    - Client Creation
-        - Authentication
+    - Client creation
     - Creating a stream 
-    - Subscribing to real-time events in a stream
-    - Publishing data points to a stream
-    - Resend functionality with subscriptions
-    - Search Streams
+    - Subscribing to a stream
+    - Publishing to a stream
+    - Requesting a resend of historical events with subscriptions
+    - Searching for streams
     - Interacting with the `Stream` object
-        - Fetching existent streams
+        - Getting existing streams
         - Updating a stream
-        - Stream Permissions
+        - Stream permissions
         - Deleting a stream
-    - Storage Options
+    - Storage options
     - Data Unions
         - Admin Functions
         - Member functions
@@ -46,10 +46,10 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
         - Withdraw options
         - Deployment options
     - Utility functions
-- Advanced Usage
+- Advanced usage
     - Manual connection management
     - Disable message ordering
-    - Stream Partitioning
+    - Stream partitioning
         - A note on Stream ids and partitions
         - Creating partitioned streams
         - Publishing to partitioned streams
@@ -69,7 +69,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 #### Authenticating
 
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public data on the Network. See more about [Authentication](#client-creation)
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public data on the Network. See more about [Client creation](#client-creation)
 
 ```js
 const streamr = new StreamrClient({
@@ -115,11 +115,11 @@ npm install streamr-client
 ### Importing `streamr-client`
 To use with react please see [streamr-client-react](https://github.com/streamr-dev/streamr-client-react)
 
-If using typescript you can import the library with:
+If using TypeScript you can import the library with:
 ```js
 import { StreamrClient } from 'streamr-client'
 ```
-When using Node.js you can import the library with:
+If using Node.js you can import the library with:
 
 ```js
 const { StreamrClient } = require('streamr-client')
@@ -128,15 +128,12 @@ const { StreamrClient } = require('streamr-client')
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<!-- for Brubeck package (6x) -->
 <script src="https://unpkg.com/streamr-client@beta/streamr-client.web.js"></script>
 ```
 ___
 ## Usage
-### Client Creation
+### Client creation
 If you don't have an Ethereum account you can use the utility function [StreamrClient.generateEthereumAccount()](#utility-functions), which returns the address and private key of a fresh Ethereum account.
-
-More information on Stream IDs under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
 
 ```js
 const streamr = new StreamrClient({
@@ -168,22 +165,20 @@ const stream = await streamr.createStream({
     id: '/foo/bar'
 })
 
-console.log(stream.id) // `${address}/foo/bar`
+console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
 ```
+More information on Stream IDs under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
 
-### Subscribing to real-time events in a stream
-The callback's first parameter, `payload`, will contain the value given to the `publish` method. The second parameter `streamrMessage` is of type StreamrObject. [You can read more about it here](../protocol/src/protocol/message_layer/StreamMessage.ts)
+### Subscribing to a stream
+The callback's first parameter, `content`, will contain the value given to the `publish` method. The second parameter `streamrMessage` is of type StreamrObject. [You can read more about it here](../protocol/src/protocol/message_layer/StreamMessage.ts)
 ```js
 // subscribing to a stream:
 const subscription = await streamr.subscribe(
     streamId, 
-    (payload, streamrMessage) => {
-        console.log(payload) // the value passed to the publish method
-        console.log(streamrMessage) // the complete StreamrObject sent
-    }
+    (content, streamrMessage) => { ... }
 )
 ```
-Fetching all streams the client is subscribed to:
+Getting all streams the client is subscribed to:
 ```js
 const subscriptions = streamr.getSubscriptions()
 ```
@@ -194,7 +189,7 @@ await streamr.unsubscribe(streamId)
 const streams = await streamr.unsubscribe()
 ```
 
-### Publishing data points to a stream
+### Publishing to a stream
 
 ```js
 // Here's our example data point
@@ -211,10 +206,10 @@ await streamr.publish(streamId, msg)
 await streamr.publish(stream, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-await streamr.publish(streamId, msg, new Date(54365472))
+await streamr.publish(streamId, msg, new Date(1546300800123))
 
 // Publish with a specific timestamp in ms
-await streamr.publish(streamId, msg, 54365472)
+await streamr.publish(streamId, msg, 1546300800123)
 
 // Publish with a specific timestamp as a ISO8601 string
 await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
@@ -223,7 +218,7 @@ await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
 await stream.publish(msg)
 ```
 
-### Resend functionality with subscriptions
+### Requesting a resend of historical events with subscriptions
 By default `subscribe` will not resend historical data, only subscribe to real time messages. In order to fetch historical messages the stream needs to have [storage enabled](#storage).
 
 Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
@@ -236,7 +231,7 @@ const resend1 = await streamr.resend(
     {
         last: 10,
     }, 
-    messageCallback
+    onMessage
 )
 ```
 
@@ -248,26 +243,27 @@ const sub1 = await streamr.subscribe({
     resend: {
         last: 10,
     }
-}, messageCallback)
+}, onMessage)
 ```
 
 Resend from a specific message reference up to the newest message:
 ```js
-const sub2 = await streamr.subscribe({
-    id: streamId,
-    resend: {
+const sub2 = await streamr.resend(
+    streamId,
+    {
         from: {
             timestamp: (Date.now() - 1000 * 60 * 5), // 5 minutes ago
+            sequenceNumber: 0, // optional
         },
         publisher: '0x12345...', // optional
     }
-}, onMessage)
+)
 ```
 Resend a limited range of messages:
 ```js
-const sub3 = await streamr.subscribe({
-    id: streamId,
-    resend: {
+const sub3 = await streamr.resend(
+    streamId,
+    {
         from: {
             timestamp: (Date.now() - 1000 * 60 * 10), // 10 minutes ago
         },
@@ -279,25 +275,25 @@ const sub3 = await streamr.subscribe({
         publisher: '0x12345...', 
         msgChainId: 'ihuzetvg0c88ydd82z5o', 
     }
-}, onMessage)
+)
 ```
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
 ```js
-const sub = await streamr.subscribe(options)
+const sub = await streamr.resend(options)
 sub.onResent(() => {
     console.log('All caught up and received all requested historical messages! Now switching to real time!')
 })
 ```
 
-### Search Streams
+### Searching for streams
 You can search for a stream which has the `term` string in it's id as follows:
 ```js
 const streams = await streamr.searchStreams('foo')
 ```
 You can query for the streams using an optional second parameter to fine-tune your search. A permission query searches over stream permissions. You can either query by direct permissions (which are explicitly granted to a user), or by all permissions (including public permissions, which apply to all users).
 
-To get all streams where a user has some direct permission. The `user` option can be omitted. In that case, it defaults to the authenticated user:
+To get all streams where a user has some direct permission.
 ```js 
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...'
@@ -325,16 +321,10 @@ const streams = await streamr.searchStreams('foo', {
     anyOf: [StreamPermission.PUBLISH],
 })
 ```
-The `allOf` method will return streams which permissions exactly match the provided array:
-```js 
-const streams = await streamr.searchStreams('foo', {
-    allOf: [StreamPermission.SUBSCRIBE, StreamPermission.PUBLISH]
-})
-```
 ___
 ### Interacting with the `Stream` object
 
-#### Fetching existent streams
+#### Getting existing streams
 Getting an existent stream is pretty straight-forward
 ```js
 const stream = await streamr.getStream(streamId)
@@ -355,7 +345,7 @@ stream.description = 'New description!'
 await stream.update()
 ```
 
-#### Stream Permissions
+#### Stream permissions
 
 There are 5 different permissions:
 - StreamPermission.PUBLISH
@@ -451,19 +441,19 @@ await stream.delete()
 
 
 
-### Storage Options
+### Storage options
 
-You can enable data storage on your streams to retain historical data in one or more geographic locations of your choice and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
+You can enable data storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```js
 const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client')
 ...
 // assign a stream to storage
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
-// fetch the storage nodes for a stream
-const storageNodes = stream.getStorageNodes()
 // remove the stream from a storage node
 await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
+// fetch the storage nodes for a stream
+const storageNodes = stream.getStorageNodes()
 ```
 
 
@@ -678,7 +668,7 @@ In order to retrieve the client's address an async call must me made to `streamr
 const address = await streamr.getAddress()
 ```
 
-## Advanced Usage
+## Advanced usage
 
 
 ### Manual connection management
@@ -720,7 +710,7 @@ Both of these flags should be disabled in tandem for message ordering to be prop
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
 
-### Stream Partitioning
+### Stream partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
@@ -746,12 +736,12 @@ const streamId = {
 
 #### Creating partitioned streams
 
-By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (max 100). An example of creating a partitioned stream using the JS client:
+By default, streams only have 1 partition when they are created. The partition count can be set to any number between 1 and 100. An example of creating a partitioned stream:
 
 ```js
 // Requires gas
 const stream = await streamr.createStream({
-    id: `/partitioned-stream`,
+    id: `/foo/bar`,
     partitions: 10,
 })
 console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
@@ -774,20 +764,18 @@ await stream.publish(msg, Date.now(), msg.vehicleId)
 You can also specify the partition number as the last parameter:
 ```js 
 await streamr.publish(streamId, msg, Date.now(), 4)
-// or, equivalently, using the stream object
-await stream.publish(msg, Date.now(), 4)
 ```
-Alternatively, you can specify the partition number as part of the stream id:
+Alternatively, you can specify the partition number explicitly:
 ```js
 await streamr.publish({
     id: `${address}/foo/bar`,
     partition: 4
-}, msg, Date.now())
+}, msg)
 ```
 
 #### Subscribing to partitioned streams
 
-By default, the JS client subscribes to the first partition (partition `0`) in a stream. This behavior will change in the future so that it will subscribe to all partitions by default.
+By default, the client subscribes to the first partition (partition `0`) of a stream. Be aware: this behavior will change in the future so that it will subscribe to _all_ partitions by default.
 
 The partition number can be explicitly given in the subscribe call:
 
@@ -803,7 +791,7 @@ const sub = await streamr.subscribe({
 Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
 
 ```js
-const messageCallback = (payload, streamMessage) => {
+const onMessage = (payload, streamMessage) => {
     console.log('Got message %o from partition %d', payload, streamMessage.getStreamPartition())
 }
 
@@ -811,7 +799,7 @@ await Promise.all([2, 3, 4].map(async (partition) => {
     await streamr.subscribe({
         id: streamId,
         partition,
-    }, messageCallback)
+    }, onMessage)
 }))
 ```
 
