@@ -74,9 +74,6 @@ export type DataUnionConfig = {
     templateSidechainAddress: EthereumAddress
 }
 
-/**
- * @category Important
- */
 export type StrictStreamrClientConfig = {
   /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
     id?: string,
@@ -109,9 +106,6 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataU
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
-/**
- * @category Important
- */
 export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 

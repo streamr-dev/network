@@ -11,7 +11,10 @@ import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
 
-export type BrubeckClientConfig = StreamrClientConfig & {
+/**
+ * @category Important
+ */
+export type StreamrClientOptions = StreamrClientConfig & {
     network?: Omit<Partial<NetworkNodeOptions>, 'metricsContext'>
     debug?: Partial<DebugConfig>
 }
@@ -122,7 +125,7 @@ const BRUBECK_CLIENT_DEFAULTS = {
     },
 }
 
-export default function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
+export default function BrubeckConfig(config: StreamrClientOptions): StrictBrubeckClientConfig {
     const clonedConfig = cloneDeep(config)
     const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
     const userConfig = Config(clonedConfig)

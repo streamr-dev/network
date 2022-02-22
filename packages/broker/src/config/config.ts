@@ -1,4 +1,4 @@
-import { BrubeckClientConfig } from 'streamr-client'
+import { StreamrClientOptions } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
 import path from 'path'
 import * as os from 'os'
@@ -18,7 +18,7 @@ export interface HttpServerConfig {
 
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
-export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
+export type ClientConfig = StreamrClientOptions & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
 
 export interface Config {
     $schema: string,

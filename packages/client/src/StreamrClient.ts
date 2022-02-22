@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import BrubeckConfig, { Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import BrubeckConfig, { Config, StrictBrubeckClientConfig, StreamrClientOptions } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -177,7 +177,7 @@ class StreamrClientBase implements Context {
 /**
  * @internal
  */
-export function initContainer(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+export function initContainer(options: StreamrClientOptions = {}, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
     const config = BrubeckConfig(options)
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
@@ -237,7 +237,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
  * @category Important
  */
 export class StreamrClient extends StreamrClientBase {
-    constructor(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+    constructor(options: StreamrClientOptions = {}, parentContainer = rootContainer) {
         const { childContainer: c, config } = initContainer(options, parentContainer)
         super(
             c,
@@ -278,5 +278,3 @@ export const Dependencies = {
     DestroySignal,
     DataUnions,
 }
-
-export { BrubeckClientConfig as StreamrClientOptions } from './Config'
