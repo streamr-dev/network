@@ -36,8 +36,8 @@ async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encry
 
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     encryptionUtil
     isStopped = false
 

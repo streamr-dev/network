@@ -39,8 +39,9 @@ export const createQueryString = (query: Record<string, any>) => {
 
 @scoped(Lifecycle.ContainerScoped)
 export class Rest implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
+
     constructor(
         context: Context,
         @inject(BrubeckContainer) private container: DependencyContainer,

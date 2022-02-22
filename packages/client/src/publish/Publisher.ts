@@ -25,8 +25,8 @@ const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms
 
 @scoped(Lifecycle.ContainerScoped)
 export default class BrubeckPublisher implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     streamMessageQueue
     publishQueue
     isStopped = false
@@ -71,7 +71,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         })
     }
 
-    async publishMessage<T>(streamDefinition: StreamDefinition, {
+    private async publishMessage<T>(streamDefinition: StreamDefinition, {
         content,
         timestamp = Date.now(),
         partitionKey

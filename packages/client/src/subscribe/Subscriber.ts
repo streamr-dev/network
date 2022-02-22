@@ -14,8 +14,8 @@ import { StreamDefinition } from '../types'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
     constructor(
