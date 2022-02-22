@@ -102,6 +102,7 @@ export default class Subscriber implements Context {
         return this.removeAll(streamDefinitionOrSubscription)
     }
 
+    /** @internal */
     unsubscribeAll = this.removeAll.bind(this)
 
     /**
@@ -129,6 +130,7 @@ export default class Subscriber implements Context {
 
     /**
      * Count all matching subscriptions.
+     * @internal
      */
     // TODO rename this to something more specific?
     async count(streamDefinition?: StreamDefinition): Promise<number> {
@@ -159,6 +161,7 @@ export default class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
+    /** @internal */
     countSubscriptionSessions() {
         return this.subSessions.size
     }
@@ -185,6 +188,7 @@ export default class Subscriber implements Context {
         ]))
     }
 
+    /** @internal */
     async stop() {
         await this.removeAll()
     }

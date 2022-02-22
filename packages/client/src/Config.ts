@@ -38,6 +38,7 @@ export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
  *
  * For example:
  * config.ethereum can be injected with a token like: @inject(Config.Ethereum)
+ * @internal
  */
 const BrubeckConfigInjection = {
     Root: Symbol('Config.Root'),

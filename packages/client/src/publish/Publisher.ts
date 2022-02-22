@@ -49,6 +49,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
+    /** @internal */
     async validateAndPublishStreamMessage<T>(streamMessage: StreamMessage<T>) {
         // await this.validator.validate(streamMessage)
         await this.node.publishToNode(streamMessage)
@@ -84,6 +85,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         })
     }
 
+    /** @internal */
     async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -100,6 +102,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return msgs
     }
 
+    /** @internal */
     async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -201,10 +204,12 @@ export default class BrubeckPublisher implements Context, Stoppable {
         /* eslint-enable no-await-in-loop */
     }
 
+    /** @internal */
     startKeyExchange() {
         return this.keyExchange.start()
     }
 
+    /** @internal */
     stopKeyExchange() {
         return this.keyExchange.stop()
     }
@@ -233,11 +238,13 @@ export default class BrubeckPublisher implements Context, Stoppable {
         ])
     }
 
+    /** @internal */
     async start() {
         this.isStopped = false
         this.pipeline.start()
     }
 
+    /** @internal */
     async stop() {
         this.isStopped = true
         await Promise.allSettled([

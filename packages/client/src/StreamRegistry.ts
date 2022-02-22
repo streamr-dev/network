@@ -52,8 +52,10 @@ type StreamPublisherOrSubscriberItem = {
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
     private streamRegistryContract?: StreamRegistryContract
     private streamRegistryContractsReadonly: StreamRegistryContract[]
     private chainProviders: Provider[]
@@ -199,6 +201,7 @@ export class StreamRegistry implements Context {
         ))
     }
 
+    /** @internal */
     async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking if stream exists on chain %s', streamId)
@@ -209,6 +212,7 @@ export class StreamRegistry implements Context {
         ])
     }
 
+    /** @internal */
     async streamExistsOnTheGraph(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking if stream exists on theGraph %s', streamId)
@@ -316,11 +320,12 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
+    /** @internal */
     static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    // @internal
+    /** @internal */
     static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {

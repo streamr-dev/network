@@ -55,9 +55,13 @@ export interface StreamrClient extends Ethereum,
 class StreamrClientBase implements Context {
     static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
 
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
+    /** @internal */
     onDestroy
+    /** @internal */
     isDestroyed
 
     constructor(
@@ -164,10 +168,12 @@ class StreamrClientBase implements Context {
         await Promise.all(tasks)
     })
 
+    /** @internal */
     enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
         Debug.enable(prefix)
     }
 
+    /** @internal */
     disableDebugLogging() { // eslint-disable-line class-methods-use-this
         Debug.disable()
     }
@@ -261,6 +267,7 @@ export class StreamrClient extends StreamrClientBase {
     }
 }
 
+/** @internal */
 export const Dependencies = {
     Context,
     BrubeckNode,

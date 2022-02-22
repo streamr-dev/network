@@ -34,6 +34,7 @@ export interface StreamProperties {
     inactivityThresholdHours?: number
 }
 
+/** @internal */
 export interface StreamrStreamConstructorOptions extends StreamProperties {
     id: StreamID
 }

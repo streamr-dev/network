@@ -12,7 +12,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     onResent: (callback: () => void) => void = this.onResentSignal
 
     private orderMessages
-    // @internal
+    /** @internal */
     constructor(
         subSession: SubscriptionSession<T>,
         private resends: Resends,
@@ -49,7 +49,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    // @internal
+    /** @internal */
     async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
         try {
             yield* await this.getResent()

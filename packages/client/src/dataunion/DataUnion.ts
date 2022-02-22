@@ -418,6 +418,7 @@ export class DataUnion {
      * Figure out if given mainnet address is old DataUnion (v 1.0) or current 2.0
      * NOTE: Current version of streamr-client-javascript can only handle current version!
      */
+    /** @internal */
     static async getVersion(contractAddress: EthereumAddress, client: DataUnionAPI): Promise<number> {
         return new Contracts(client).getVersion(contractAddress)
     }

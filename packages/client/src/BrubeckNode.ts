@@ -34,8 +34,10 @@ export interface NetworkNodeStub {
 export default class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
 
@@ -152,6 +154,7 @@ export default class BrubeckNode implements Context {
         }
     })
 
+    /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
     /**
@@ -159,6 +162,7 @@ export default class BrubeckNode implements Context {
      */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
+    /** @internal */
     async getNodeId() {
         const node = await this.getNode()
         return node.getNodeId()
@@ -169,6 +173,7 @@ export default class BrubeckNode implements Context {
      * Basically a wrapper around: (await getNode()).publish(…)
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
+     * @internal
      */
     publishToNode(streamMessage: StreamMessage): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.

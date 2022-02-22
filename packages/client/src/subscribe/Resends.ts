@@ -201,6 +201,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
@@ -226,6 +227,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async stop() {
         await this.storageNodeRegistry.stop()
     }

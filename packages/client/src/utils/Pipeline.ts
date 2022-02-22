@@ -85,14 +85,19 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 }
 
+/** @internal */
 export class Pipeline<InType, OutType = InType> implements IPipeline<InType, OutType> {
-    debug
+    /** @internal */
     id
+    /** @internal */
+    debug
     protected iterator: AsyncGenerator<OutType>
-    isIterating = false
+    private isIterating = false
+    /** @internal */
     isCleaningUp = false
-    definition: PipelineDefinition<InType, OutType>
+    private definition: PipelineDefinition<InType, OutType>
 
+    /** @internal */
     constructor(public source: AsyncGenerator<InType>, definition?: PipelineDefinition<InType, OutType>) {
         this.id = instanceId(this)
         this.debug = Debug(this.id)
@@ -105,6 +110,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Append a transformation step to this pipeline.
      * Changes the pipeline's output type to output type of this generator.
+     * @internal
      */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): Pipeline<InType, NewOutType> {
         if (this.isIterating) {
@@ -119,6 +125,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Inject pipeline step before other transforms.
      * Note must return same type as source, otherwise we can't be type-safe.
+     * @internal
      */
     pipeBefore(fn: PipelineTransform<InType, InType>): Pipeline<InType, OutType> {
         if (this.isIterating) {
@@ -131,6 +138,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     /**
      * Fires this callback the moment this part of the pipeline starts returning.
+     * @internal
      */
     onConsumed(fn: () => void | Promise<void>) {
         return this.pipe(async function* onConsumed(src) {
@@ -145,61 +153,76 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     /**
      * Triggers once when pipeline ends.
      * Usage: `pipeline.onFinally(callback)`
+     * @internal
      */
     onFinally = Signal.once<[Error | void]>()
 
     /**
      * Triggers once when pipeline is about to end.
+     * @internal
      */
     onBeforeFinally = Signal.once()
 
     /**
      * Triggers once when pipeline starts flowing.
      * Usage: `pipeline.onStart(callback)`
+     * @internal
      */
     onStart = Signal.once()
 
+    /** @internal */
     onMessage = Signal.create<[OutType]>()
 
+    /** @internal */
     // eslint-disable-next-line func-call-spacing, no-spaced-func
     onError = ErrorSignal.create<[Error, (InType | OutType)?, number?]>()
 
+    /** @internal */
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>) {
         return this.pipe((src) => G.map(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     mapBefore(fn: G.GeneratorMap<InType, InType>) {
         return this.pipeBefore((src) => G.map(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     forEach(fn: G.GeneratorForEach<OutType>) {
         return this.pipe((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     filter(fn: G.GeneratorFilter<OutType>) {
         return this.pipe((src) => G.filter(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     reduce<NewOutType>(fn: G.GeneratorReduce<OutType, NewOutType>, initialValue: NewOutType) {
         return this.pipe((src) => G.reduce(src, fn, initialValue, this.onError.trigger))
     }
 
+    /** @internal */
     forEachBefore(fn: G.GeneratorForEach<InType>) {
         return this.pipeBefore((src) => G.forEach(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     filterBefore(fn: G.GeneratorFilter<InType>) {
         return this.pipeBefore((src) => G.filter(src, fn, this.onError.trigger))
     }
 
+    /** @internal */
     async consume(fn?: G.GeneratorForEach<OutType>): Promise<void> {
         return G.consume(this, fn, this.handleError)
     }
 
+    /** @internal */
     collect(n?: number) {
         return G.collect(this, n, this.handleError)
     }
 
+    /** @internal */
     flow() {
         setImmediate(() => {
             // consume if not already doing so
@@ -211,6 +234,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this
     }
 
+    /** @internal */
     private async cleanup(error?: Error) {
         this.isCleaningUp = true
         try {
@@ -228,6 +252,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         }
     }
 
+    /** @internal */
     async handleError(err: Error) {
         await this.onError.trigger(err)
     }
@@ -270,6 +295,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
 
     // AsyncGenerator implementation
 
+    /** @internal */
     async throw(err: Error) {
         if (this.isCleaningUp) {
             throw err
@@ -284,6 +310,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.iterator.throw(err)
     }
 
+    /** @internal */
     async return(v?: OutType) {
         if (this.isCleaningUp) {
             return Promise.resolve({ done: true, value: v } as IteratorReturnResult<OutType>)
@@ -297,6 +324,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
         return this.iterator.return(v)
     }
 
+    /** @internal */
     async next() {
         return this.iterator.next()
     }
@@ -322,6 +350,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
  */
 
 export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, OutType> implements IPushBuffer<InType, OutType> {
+    /** @internal */
     readonly source: PushBuffer<InType>
 
     constructor(bufferSize = DEFAULT_BUFFER_SIZE, options?: PushBufferOptions) {
@@ -330,52 +359,62 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         this.source = inputBuffer
     }
 
+    /** @internal */
     pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         super.pipe(fn)
         return this as PushPipeline<InType, unknown> as PushPipeline<InType, NewOutType>
     }
 
+    /** @internal */
     map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): PushPipeline<InType, NewOutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.map(fn) as PushPipeline<InType, NewOutType>
     }
 
+    /** @internal */
     mapBefore(fn: G.GeneratorMap<InType, InType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.mapBefore(fn) as PushPipeline<InType, OutType>
     }
 
+    /** @internal */
     filterBefore(fn: G.GeneratorFilter<InType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.filterBefore(fn) as PushPipeline<InType, OutType>
     }
 
+    /** @internal */
     filter(fn: G.GeneratorFilter<OutType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.filter(fn) as PushPipeline<InType, OutType>
     }
 
+    /** @internal */
     forEach(fn: G.GeneratorForEach<OutType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.forEach(fn) as PushPipeline<InType, OutType>
     }
 
+    /** @internal */
     forEachBefore(fn: G.GeneratorForEach<InType>): PushPipeline<InType, OutType> {
         // this method override just fixes the output type to be PushPipeline rather than Pipeline
         return super.forEachBefore(fn) as PushPipeline<InType, OutType>
     }
 
+    /** @internal */
     pull(source: AsyncGenerator<InType>) {
         return pull(source, this)
     }
 
     // wrapped PushBuffer methods below here
 
+    /** @internal */
     async push(item: InType | Error) {
         return this.source.push(item)
     }
 
+    /** @internal */
     async handleError(err: Error) {
         try {
             await this.onError.trigger(err)
@@ -388,26 +427,32 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
         }
     }
 
+    /** @internal */
     end(err?: Error) {
         return this.source.end(err)
     }
 
+    /** @internal */
     endWrite(err?: Error) {
         return this.source.endWrite(err)
     }
 
+    /** @internal */
     isDone() {
         return this.source.isDone()
     }
 
+    /** @internal */
     get length() {
         return this.source.length || 0
     }
 
+    /** @internal */
     isFull() {
         return this.source.isFull()
     }
 
+    /** @internal */
     clear() {
         return this.source.clear()
     }

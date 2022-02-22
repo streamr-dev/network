@@ -51,6 +51,7 @@ export default class Session {
         return this.container.resolve<LoginEndpoints>(LoginEndpoints)
     }
 
+    /** @internal */
     async sendLogin(): Promise<TokenObject> {
         const auth = this.options
         debug('sendLogin()')
@@ -62,6 +63,7 @@ export default class Session {
         throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
     }
 
+    /** @internal */
     async getSessionToken(requireNewToken = false): Promise<string> {
         // @ts-expect-error
         if (typeof this.options.apiKey !== 'undefined') {
@@ -102,6 +104,7 @@ export default class Session {
         return this.sessionTokenPromise!
     }
 
+    /** @internal */
     async logout() {
         if (this.state === State.LOGGED_OUT) {
             throw new Error('Already logged out!')

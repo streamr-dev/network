@@ -91,6 +91,7 @@ export class StorageNodeRegistry {
     // Read from the NodeRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
+    /** @internal */
     async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
@@ -172,6 +173,7 @@ export class StorageNodeRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
+    /** @internal */
     async getStorageNodeUrl(nodeAddress: string): Promise<string> {
         log('getnode %s ', nodeAddress)
         const res = await this.sendNodeQuery(StorageNodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult

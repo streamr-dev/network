@@ -24,8 +24,12 @@ export interface TokenObject {
 
 @scoped(Lifecycle.ContainerScoped)
 export class LoginEndpoints implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
+
+    /** @internal */
     constructor(
         context: Context,
         private ethereum: Ethereum,
