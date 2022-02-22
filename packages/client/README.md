@@ -18,44 +18,44 @@ This library allows you to easily interact with the [Streamr Network](https://st
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Contents
-- Important information
-- Getting started
-        - Authenticating
-        - Creating a stream and publishing data to it
-        - Subscribing
-- Setup
-    - Installation
-    - Importing `streamr-client`
-- Usage
-    - Client creation
-    - Creating a stream 
-    - Subscribing to a stream
-    - Publishing to a stream
-    - Requesting a resend of historical events with subscriptions
-    - Searching for streams
-    - Interacting with the `Stream` object
-        - Getting existing streams
-        - Updating a stream
-        - Stream permissions
-        - Deleting a stream
-    - Storage options
-    - Data Unions
-        - Admin Functions
-        - Member functions
-        - Query functions
-        - Withdraw options
-        - Deployment options
-    - Utility functions
-- Advanced usage
-    - Manual connection management
-    - Disable message ordering
-    - Stream partitioning
-        - A note on Stream ids and partitions
-        - Creating partitioned streams
-        - Publishing to partitioned streams
-        - Subscribing to partitioned streams
-    - Proxy publishing
-    - Logging
+- [Important information](#important-information)
+- [Getting started](#getting-started)
+        - [Authenticating](#authenticating)
+        - [Creating a stream and publishing data to it](#creating-a-stream-and-publishing-data-to-it)
+        - [Subscribing](#subscribing)
+- [Setup](#setup)
+    - [Installation](#installation)
+    - [Importing `streamr-client`](#importing-streamr-client)
+- [Usage](#usage)
+    - [Client creation](#client-creation)
+    - [Creating a stream ](#creating-a-stream-)
+    - [Subscribing to a stream](#subscribing-to-a-stream)
+    - [Publishing to a stream](#publishing-to-a-stream)
+    - [Requesting a resend of historical events with subscriptions](#requesting-a-resend-of-historical-events-with-subscriptions)
+    - [Searching for streams](#searching-for-streams)
+    - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
+        - [Getting existing streams](#getting-existing-streams)
+        - [Updating a stream](#updating-a-stream)
+        - [Stream permissions](#stream-permissions)
+        - [Deleting a stream](#deleting-a-stream)
+    - [Storage options](#storage-options)
+    - [Data Unions](#data-unions)
+        - [Admin Functions](#admin-Functions)
+        - [Member functions](#member-functions)
+        - [Query functions](#query-functions)
+        - [Withdraw options](#withdraw-options)
+        - [Deployment options](#deployment-options)
+    - [Utility functions](#utility-functions)
+- [Advanced usage](#advanced-usage)
+    - [Stream partitioning](#stream-partitioning)
+        - [A note on Stream ids and partitions](#a-note-on-stream-ids-and-partitions)
+        - [Creating partitioned streams](#creating-partitioned-streams)
+        - [Publishing to partitioned streams](#publishing-to-partitioned-streams)
+        - [Subscribing to partitioned streams](#subscribing-to-partitioned-streams)
+    - [Disable message ordering](#disable-message-ordering)
+    - [Manual connection management](#manual-connection-management)
+    - [Proxy publishing](#proxy-publishing)
+    - [Logging](#logging)
 
 ## Important information
 > ⚠️ This section is to be removed before launch 
@@ -332,7 +332,7 @@ const stream = await streamr.getStream(streamId)
 
 The method getOrCreateStream allows for a seamless creation/fetching process:
 ```js
-// May require gas upon stream creation
+// May require MATIC tokens (Polygon blockchain gas token) upon stream creation
 const stream = await streamr.getOrCreateStream({
     id: streamId
 })
@@ -341,6 +341,7 @@ const stream = await streamr.getOrCreateStream({
 #### Updating a stream
 Updates the description locally set for the stream
 ```js
+// Requires MATIC tokens (Polygon blockchain gas token)
 stream.description = 'New description!'
 await stream.update()
 ```
@@ -364,6 +365,7 @@ For each stream + user there can be a permission assignment containing a subset 
 
 To grant permissions for users:
 ```js
+// Requires MATIC tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
     user: '0x12345...',
     permissions: [StreamPermission.PUBLISH],
@@ -377,6 +379,7 @@ await stream.grantPermissions({
 ```
 And to revoke them:
 ```js
+// Requires MATIC tokens (Polygon blockchain gas token)
 await stream.revokePermissions({
     user: '0x12345...',
     permissions: [StreamPermission.PUBLISH]
@@ -393,6 +396,7 @@ await stream.revokePermissions({
 There is also method `streamr.setPermissions`. You can use it to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten:
 
 ```js
+// Requires MATIC tokens (Polygon blockchain gas token)
 await streamr.setPermissions({
     streamId,
     assignments: [
@@ -435,7 +439,7 @@ The returned permissions are an array containing an item for each user, and one 
 #### Deleting a stream
 Deletes the stream from the on-chain registry:
 ```js
-// Requires gas
+// Requires MATIC tokens (Polygon blockchain gas token)
 await stream.delete()
 ```
 
@@ -669,47 +673,6 @@ const address = await streamr.getAddress()
 ```
 
 ## Advanced usage
-
-
-### Manual connection management
-
-By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
-
-
-Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behaviour can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disable all `autoConnect` & `autoDisconnect` functionality, but they can be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
-
-Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
-
-```js
-const streamr = new StreamrClient({
-    auth: {
-        privateKey: 'your-private-key'
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-})
-
-// Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.    
-await streamr.connect()
-
-// Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection.
-await streamr.disconnect()
-```
-
-
-### Disable message ordering
-If your use-case doesn't require message order to be enforced or if you want it to be tolerant to out-of-sync messages you can turn off the message ordering upon client creation:
-```js
-const streamr = new StreamrClient({
-    auth: { ... },
-    orderMessages: false,
-    gapFill: false
-})
-```
-Both of these flags should be disabled in tandem for message ordering to be properly turned off.
-
-By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
-
 ### Stream partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
@@ -730,16 +693,12 @@ const streamId = {
 }
 ```
 
-
-    
-
-
 #### Creating partitioned streams
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any number between 1 and 100. An example of creating a partitioned stream:
 
 ```js
-// Requires gas
+// Requires MATIC tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
     id: `/foo/bar`,
     partitions: 10,
@@ -801,6 +760,44 @@ await Promise.all([2, 3, 4].map(async (partition) => {
         partition,
     }, onMessage)
 }))
+```
+
+### Disable message ordering
+If your use-case doesn't require message order to be enforced or if you want it to be tolerant to out-of-sync messages you can turn off the message ordering upon client creation:
+```js
+const streamr = new StreamrClient({
+    auth: { ... },
+    orderMessages: false,
+    gapFill: false
+})
+```
+Both of these flags should be disabled in tandem for message ordering to be properly turned off.
+
+By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
+
+### Manual connection management
+
+By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
+
+
+Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behaviour can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disable all `autoConnect` & `autoDisconnect` functionality, but they can be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
+
+Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
+
+```js
+const streamr = new StreamrClient({
+    auth: {
+        privateKey: 'your-private-key'
+    },
+    autoConnect: false,
+    autoDisconnect: false,
+})
+
+// Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.    
+await streamr.connect()
+
+// Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection.
+await streamr.disconnect()
 ```
 
 ### Proxy publishing
