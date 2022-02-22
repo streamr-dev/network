@@ -160,13 +160,10 @@ describe(waitForCondition, () => {
 })
 
 describe(wait, () => {
-    // flaky, fix in NET-645
-    it.skip("waits at least the predetermined time", async () => {
-        // use performance.now instead of Date.now
-        // Date.now may not be accurate enough for low wait values e.g. 10ms
-        const start = performance.now()
+    it("waits at least the predetermined time", async () => {
+        const start = Date.now()
         await wait(20)
-        const end = performance.now()
+        const end = Date.now()
         expect(end - start).toBeGreaterThanOrEqual(20)
     })
 })
