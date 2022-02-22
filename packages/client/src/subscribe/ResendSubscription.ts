@@ -8,8 +8,7 @@ import Resends, { ResendOptions } from './Resends'
 import Signal from '../utils/Signal'
 
 export class ResendSubscription<T> extends Subscription<T> {
-    private onResentSignal = Signal.once()
-    onResent: (callback: () => void) => void = this.onResentSignal
+    onResent = Signal.once()
 
     private orderMessages
     /** @internal */
@@ -60,7 +59,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             }
         }
 
-        await this.onResentSignal.trigger()
+        await this.onResent.trigger()
         yield* src
     }
 }
