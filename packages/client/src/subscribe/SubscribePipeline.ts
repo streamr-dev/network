@@ -58,7 +58,7 @@ export default function SubscribePipeline<T = unknown>(
             ignoreMessages.add(error.streamMessage)
         }
 
-        // throw error
+        throw error
     }
 
     const decrypt = new Decrypt<T>(
@@ -88,7 +88,7 @@ export default function SubscribePipeline<T = unknown>(
         })
         // validate
         .forEach(async (streamMessage) => {
-            await validate.validate(streamMessage).catch(onError)
+            await validate.validate(streamMessage)
         })
         // decrypt
         .forEach(decrypt.decrypt)

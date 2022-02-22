@@ -102,7 +102,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     private async subscribe(): Promise<void> {
-        await this.streamrClient!.subscribe(this.streamId, (message: any) => {
+        const subscription = await this.streamrClient!.subscribe(this.streamId, (message: any) => {
             if (message.rewardCode) {
                 this.onRewardCodeReceived(message.rewardCode)
             } if (message.info) {
@@ -111,6 +111,10 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logger.trace(`Dummy message (#${this.dummyMessagesReceived}) received: ${message}`)
                 this.dummyMessagesReceived += 1
             }
+        })
+        subscription.onError((err) => {
+            logger.warn('Failed to claim reward code due to validation error.')
+            logger.debug('', err)
         })
     }
 
