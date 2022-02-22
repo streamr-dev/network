@@ -58,7 +58,7 @@ export * from './ConfigBase'
 export { BrubeckConfigInjection as Config }
 
 // TODO: Production values
-const BRUBECK_CLIENT_DEFAULTS = {
+export const BRUBECK_CLIENT_DEFAULTS = {
     debug: {
         inspectOpts: {
             depth: 5,

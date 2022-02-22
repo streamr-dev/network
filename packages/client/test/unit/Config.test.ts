@@ -1,5 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { DEFAULTS } from '../../src/Config'
+import { BRUBECK_CLIENT_DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
 
 describe('Config', () => {
@@ -109,7 +109,7 @@ describe('Config', () => {
             // @ts-expect-error
             expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
             // @ts-expect-error
-            expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
+            expect(clientOverrides.options.network.trackers).toEqual(BRUBECK_CLIENT_DEFAULTS.network.trackers)
         })
 
         it('can override trackers', () => {

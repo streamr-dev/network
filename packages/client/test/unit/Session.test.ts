@@ -69,7 +69,7 @@ describe('Session', () => {
                 auth: {},
             })
             // @ts-expect-error
-            const sessionToken = await clientNone.eventEmitter.session.getSessionToken()
+            const sessionToken = await clientNone.session.getSessionToken()
             expect(sessionToken).toBe('')
         })
 
@@ -93,7 +93,7 @@ describe('Session', () => {
                 auth: {},
             })
             // @ts-expect-error
-            await clientNone.eventEmitter.session.sendLogin().catch((err) => {
+            await clientNone.session.sendLogin().catch((err) => {
                 expect(err.message).toEqual(
                     'Need either "privateKey", "ethereum" or "sessionToken" to login.'
                 )

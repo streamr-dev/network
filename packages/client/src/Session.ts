@@ -37,6 +37,11 @@ export default class Session {
         }
     }
 
+    /** @internal */
+    isUnauthenticated() {
+        return !this.options.privateKey && !this.options.ethereum && !this.options.sessionToken
+    }
+
     private updateState(newState: State) {
         debug('updateState %s -> %s', this.state, newState)
         this.state = newState
