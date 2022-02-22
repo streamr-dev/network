@@ -100,8 +100,8 @@ export class Node extends EventEmitter {
             .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
         this.publishMetrics = this.metricsContext.create('node/publish')
-            .addRecordedMetric('kb')
-            .addRecordedMetric('amount')
+            .addRecordedMetric('bytes')
+            .addRecordedMetric('count')
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
