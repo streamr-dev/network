@@ -38,6 +38,6 @@ describe('StorageNode', () => {
     })
 
     it('has node id same as address', async () => {
-        expect(storageNode.getNodeId()).toEqual(storageNodeAccount.address)
+        expect((await storageNode.getNode()).getNodeId()).toEqual(storageNodeAccount.address)
     })
 })
