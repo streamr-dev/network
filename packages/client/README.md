@@ -167,6 +167,16 @@ const stream = await streamr.createStream({
 console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
 ```
 
+You can also create a stream by defining the address in the provided id. Please note that the creation will only succeed if you specify the same address as provided for authentication when creating the `streamr` instance:
+```js
+// Requires MATIC tokens (Polygon blockchain gas token)
+const stream = await client.createStream({
+    id: `${address}/foo/bar`
+})
+
+console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
+```
+
 More information on Stream IDs can be found under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
 
 ### Subscribing to a stream
