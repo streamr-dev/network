@@ -21,8 +21,8 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Important information](#important-information)
 - [Getting started](#getting-started)
         - [Authenticating](#authenticating)
-        - [Creating a stream and publishing messages to it](#creating-a-stream-and-publishing-messages-to-it)
         - [Subscribing](#subscribing)
+        - [Creating a stream and publishing messages to it](#creating-a-stream-and-publishing-messages-to-it)
 - [Setup](#setup)
     - [Installation](#installation)
     - [Importing `streamr-client`](#importing-streamr-client)
@@ -79,15 +79,6 @@ const streamr = new StreamrClient({
 })
 ```
 
-#### Creating a stream and publishing messages to it
-```js 
-// Requires MATIC tokens (Polygon blockchain gas token)
-const stream = await streamr.createStream({
-    id: '/foo/bar'
-})
-
-await stream.publish({ timestamp: Date.now() })
-```
 
 #### Subscribing
 ```js 
@@ -98,6 +89,17 @@ streamr.subscribe(streamId, (message) => {
 })
 
 ```
+
+#### Creating a stream and publishing messages to it
+```js 
+// Requires MATIC tokens (Polygon blockchain gas token)
+const stream = await streamr.createStream({
+    id: '/foo/bar'
+})
+
+await stream.publish({ timestamp: Date.now() })
+```
+
 
 More examples can be found in the [examples repo](https://github.com/streamr-dev/examples).
 ___
