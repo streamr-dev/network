@@ -751,16 +751,16 @@ The partition number can be explicitly given in the subscribe call:
 const sub = await streamr.subscribe({
     id: streamId,
     partition: 4
-}, (payload) => {
-    console.log('Got message %o', payload)
+}, (content) => {
+    console.log('Got message %o', content)
 })
 ```
 
 Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
 
 ```js
-const onMessage = (payload, streamMessage) => {
-    console.log('Got message %o from partition %d', payload, streamMessage.getStreamPartition())
+const onMessage = (content, streamMessage) => {
+    console.log('Got message %o from partition %d', content, streamMessage.getStreamPartition())
 }
 
 await Promise.all([2, 3, 4].map(async (partition) => {
