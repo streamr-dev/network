@@ -77,8 +77,6 @@ export default class BrubeckNode implements Context {
         const { options } = this
         let { id } = options
 
-        const networkOptions = await this.getNormalizedNetworkOptions()
-
         // generate id if none supplied
         if (id == null || id === '') {
             id = await this.generateId()
@@ -92,6 +90,7 @@ export default class BrubeckNode implements Context {
         }
 
         this.debug('initNode', id)
+        const networkOptions = await this.getNormalizedNetworkOptions()
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             name: id,

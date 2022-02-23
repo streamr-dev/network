@@ -51,7 +51,6 @@ describe('BrubeckNode', () => {
             const client = await createClient({
                 network: {
                     id: nodeId,
-                    ...ConfigTest.network,
                 }
             })
             await expect(async () => {
@@ -64,7 +63,6 @@ describe('BrubeckNode', () => {
             const client = new StreamrClient({
                 network: {
                     id: nodeId,
-                    ...ConfigTest.network,
                 }
             })
             await expect(async () => {
