@@ -315,7 +315,7 @@ It is also possible to filter by specific permissions by using `allOf` and `anyO
 
 If you want to find the streams you can subscribe to:
 ```js 
-const streams = await streamr.searchStreams('foo', {
+const streams = await streamr.searchStreams(undefined, {
     user: '0x12345...',
     allOf: [StreamPermission.SUBSCRIBE],
     allowPublic: true
@@ -323,7 +323,7 @@ const streams = await streamr.searchStreams('foo', {
 ```
 If you want to find any streams you can publish to, regardless of the other permissions assigned:
 ```js
-const streams = await streamr.searchStreams('foo', {
+const streams = await streamr.searchStreams(undefined, {
     user: '0x12345...',
     anyOf: [StreamPermission.PUBLISH],
     allowPublic: true
