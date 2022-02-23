@@ -21,14 +21,14 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Important information](#important-information)
 - [Getting started](#getting-started)
     - [Subscribing](#subscribing)
-    - [Creating a stream and publishing messages to it](#creating-a-stream-and-publishing-messages-to-it)
+    - [Publishing](#publishing)
 - [Setup](#setup)
 - [Usage](#usage)
     - [Client creation](#client-creation)
     - [Creating a stream ](#creating-a-stream-)
     - [Subscribing to a stream](#subscribing-to-a-stream)
     - [Publishing to a stream](#publishing-to-a-stream)
-    - [Requesting historical messages with subscriptions](#requesting-historical-messages-with-subscriptions)
+    - [Requesting historical messages](#requesting-historical-messages)
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
     - [Enabling storage](#enabling-storage)
@@ -60,7 +60,7 @@ streamr.subscribe(streamId, (message) => {
 
 ```
 
-### Creating a stream and publishing messages to it
+### Publishing
 ```js 
 // Requires MATIC tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
@@ -199,7 +199,7 @@ await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
 await stream.publish(msg)
 ```
 
-### Requesting historical messages with subscriptions
+### Requesting historical messages
 By default `subscribe` will not perform a resend of historical messages, but only subscribe to real time messages. 
 
 One can either fetch historical messages with the `resend` method:
