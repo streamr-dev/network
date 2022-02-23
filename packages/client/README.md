@@ -731,8 +731,7 @@ The library allows the user to choose a _partition key_, which simplifies publis
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
 ```js
-// msg.vehicleId being the partition key
-await streamr.publish(streamId, msg, Date.now(), msg.vehicleId)
+await streamr.publish(streamId, msg, Date.now(), msg.vehicleId) // msg.vehicleId is the partition key here
 // or, equivalently, using the stream object
 await stream.publish(msg, Date.now(), msg.vehicleId)
 ```
