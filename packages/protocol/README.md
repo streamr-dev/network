@@ -1,14 +1,8 @@
 # streamr-client-protocol
 
-ES6 JS implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by (at least):
- 
- - [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript)
- - [streamr-broker](https://github.com/streamr-dev/streamr-broker)
- - [streamr-network](https://github.com/streamr-dev/streamr-network)
+ES6 JS implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by other packages in this monorepo.
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-protocol/) for more detailed documentation.
-
- The package is available on npm as `streamr-client-protocol`.
+The package is available on npm as `streamr-client-protocol`.
  
  ## Table of Contents
 - [Use](#use)
