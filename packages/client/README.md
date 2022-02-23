@@ -200,9 +200,9 @@ await stream.publish(msg)
 ```
 
 ### Requesting historical messages
-By default `subscribe` will not perform a resend of historical messages, but only subscribe to real time messages. 
+By default `subscribe` will not request historical messages.
 
-One can either fetch historical messages with the `resend` method:
+You can fetch historical messages with the `resend` method:
 ```js
 // Fetches the last 10 messages stored for the stream
 const resend1 = await streamr.resend(
@@ -214,7 +214,7 @@ const resend1 = await streamr.resend(
 )
 ```
 
-Or fetch historical message and subscribe to real-time messages in the same call via a `subscribe` call:
+Alternatively you can fetch historical messages and subscribe to real-time messages:
 ```js
 // Fetches the last 10 messages and subscribes to the stream
 const sub1 = await streamr.subscribe({
@@ -224,7 +224,7 @@ const sub1 = await streamr.subscribe({
     }
 }, onMessage)
 ```
-In order to fetch historical messages the stream needs to have [storage enabled](#storage).
+In order to fetch historical messages the stream needs to have [storage enabled](#enabling-storage).
 
 Resend from a specific timestamp up to the newest message:
 ```js
