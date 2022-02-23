@@ -303,7 +303,6 @@ ___
 ### Interacting with the `Stream` object
 The `Stream` type provides a convenient way to interact with a stream without having to repeatedly pass Stream IDs.
 #### Getting existing streams
-Getting an existing stream:
 ```js
 const stream = await streamr.getStream(streamId)
 ```
@@ -340,8 +339,9 @@ await stream.grantPermissions({
     user: '0x12345...',
     permissions: [StreamPermission.PUBLISH],
 })
-
-// Or to grant a public permission
+```
+Or to grant a public permission:
+```js
 await stream.grantPermissions({
     public: true,
     permissions: [StreamPermission.SUBSCRIBE]
@@ -354,8 +354,9 @@ await stream.revokePermissions({
     user: '0x12345...',
     permissions: [StreamPermission.PUBLISH]
 })
-
-// Or revoke public permission:
+```
+Or revoke public permission:
+```js
 await stream.revokePermissions({
     public: true,
     permissions: [StreamPermission.SUBSCRIBE]
@@ -363,7 +364,7 @@ await stream.revokePermissions({
 ```        
 
 
-The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten:
+The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten. Note that this method cannot be used from a stream, but via the `StreamrClient` instance:
 
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
@@ -399,10 +400,10 @@ const permissions = await stream.getPermissions()
 ```
 The returned value is an array of permissions containing an item for each user, and possibly one for public permissions:
 ```js
-    permissions = [
-        { user: '0x12345...', permissions: ['subscribe', 'publish'] },
-        { public: true, permissions: ['subscribe']}
-    ]
+permissions = [
+    { user: '0x12345...', permissions: ['subscribe', 'publish'] },
+    { public: true, permissions: ['subscribe']}
+]
 ```
 
 #### Updating a stream
