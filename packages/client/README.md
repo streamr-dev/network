@@ -155,12 +155,12 @@ More information on Stream IDs can be found under the [stream creation project d
 ```js
 const subscription = await streamr.subscribe(
     streamId, 
-    (content, streamMessage) => { ... }
+    (content, metadata) => { ... }
 )
 ```
 The callback's first parameter, `content`, will contain the value given to the `publish` method. 
 
-The second parameter `streamMessage` is of type `StreamMessage`. It contains metadata as well as ownership information, encapsulating the sent message. 
+The second parameter `metadata` is of type `StreamMessage`. It contains metadata about the message, e.g. timestamp. 
 
 Unsubscribing from an existent subscription:
 ```js
