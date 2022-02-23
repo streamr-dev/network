@@ -13,7 +13,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network-monorepo?style=social)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
-This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to data, as well as contains convenience functions for creating and managing streams.
+This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
@@ -21,7 +21,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Important information](#important-information)
 - [Getting started](#getting-started)
         - [Authenticating](#authenticating)
-        - [Creating a stream and publishing data to it](#creating-a-stream-and-publishing-data-to-it)
+        - [Creating a stream and publishing messages to it](#creating-a-stream-and-publishing-messages-to-it)
         - [Subscribing](#subscribing)
 - [Setup](#setup)
     - [Installation](#installation)
@@ -60,7 +60,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 ## Important information
 > ⚠️ This section is to be removed before launch 
 
-The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.3](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.3) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.3` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing data to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
+The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.3](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.3) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.3` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing messages to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
 
 ---
 
@@ -69,7 +69,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 #### Authenticating
 
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public data on the Network. See more about [Client creation](#client-creation)
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network. See more about [Client creation](#client-creation)
 
 ```js
 const streamr = new StreamrClient({
@@ -79,7 +79,7 @@ const streamr = new StreamrClient({
 })
 ```
 
-#### Creating a stream and publishing data to it
+#### Creating a stream and publishing messages to it
 ```js 
 // Requires MATIC tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
@@ -218,7 +218,7 @@ await stream.publish(msg)
 ```
 
 ### Requesting a resend of historical events with subscriptions
-By default `subscribe` will not request a resend of historical data, but only subscribe to real time messages. 
+By default `subscribe` will not request a resend of historical messages, but only subscribe to real time messages. 
 
 One can either fetch historical messages with the `resend` method:
 ```js
@@ -451,7 +451,7 @@ await stream.delete()
 
 ### Message storage for historical data
 
-You can enable data storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
+You can enable message storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```js
 const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client')
@@ -808,7 +808,7 @@ await streamr.disconnect()
 
 ### Proxy publishing
 
-In some cases the client might be interested in publishing data without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
+In some cases the client might be interested in publishing messages without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
 
 Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
