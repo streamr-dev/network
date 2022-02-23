@@ -491,11 +491,6 @@ Checking if an address belongs to the Data Union:
 const isMember = await dataUnion.isMember('0x1234567890123456789012345678901234567890')
 ```
 
-Setting a new admin fee:
-```js
-// Any number between 0 and 1, inclusive
-const receipt = await dataUnion.setAdminFee(0.4) 
-```
 Send all withdrawable earnings to the member's address:
 ```js
 const receipt = await dataUnion.withdrawAllToMember('0x1234567890123456789012345678901234567890')
@@ -529,46 +524,45 @@ const receipt = await dataUnion.withdrawAmountToSigned(
 )
 ```
 
-Send the mainnet transaction to withdraw tokens from the sidechain
-
-The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
+Setting a new admin fee:
 ```js
-const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
-    payForTransport: false,
-    waitUntilTransportIsComplete: false,
-}) // only pay for sidechain gas
-const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
+// Any number between 0 and 1, inclusive
+const receipt = await dataUnion.setAdminFee(0.4) 
 ```
-
-#### Member functions
-
-| Name                                                                  | Returns                   | Description                                                                 |
-| :-------------------------------------------------------------------- | :------------------------ | :-------------------------------------------------------------------------- |
-| join(\[secret])                                                       | JoinRequest               | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
-| part()                                                                | Transaction receipt       | Leave the Data Union
-| isMember(memberAddress)                                               | boolean                   |                                                                             |
-| withdrawAll(\[[options](#withdraw-options)\])                         | Transaction receipt `*`   | Withdraw funds from Data Union                                              |
-| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |
-| signWithdrawAllTo(recipientAddress)                                   | Signature (string)        | Signature that can be used to withdraw all available tokens to given recipientAddress        |
-| signWithdrawAmountTo(recipientAddress, amountTokenWei)                | Signature (string)        | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
-| transportMessage(messageHash[, pollingIntervalMs[, retryTimeoutMs]])  | Transaction receipt       | Send the mainnet transaction to withdraw tokens from the sidechain |
-
-`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.
-
-
-
 #### Query functions
 
-These are available for everyone and anyone, to query publicly available info from a Data Union:
+These are available for everyone and anyone, to query publicly available info from a Data Union.
 
-| Name                                                       | Returns                                        | Description                             |
-| :--------------------------------------------------------- | :--------------------------------------------- | :-------------------------------------- |
-| getStats()                                                 | {activeMemberCount, totalEarnings, ...}        | Get Data Union's statistics             |
-| getMemberStats(memberAddress)                              | {status, totalEarnings, withdrawableEarnings}  | Get member's stats                      |
-| getWithdrawableEarnings(memberAddress)                     | `BigNumber` withdrawable DATA tokens in the DU |                                         |
-| getAdminFee()                                              | `Number` between 0.0 and 1.0 (inclusive)       | Admin's cut from revenues               |
-| getAdminAddress()                                          | Ethereum address                               | Data union admin's address              |
-| getVersion()                                               | `0`, `1` or `2`                                | `0` if the contract is not a data union |
+Get Data Union's statistics:
+```js
+const stats = await dataUnion.getStats()
+```
+Get a member's stats:
+```js
+const memberStats = await dataUnion.getMemberStats('0x1234567890123456789012345678901234567890')
+```
+Get the withdrawable DATA tokens in the DU for a member:
+```js
+// Returns a BigNumber
+const balance = await dataUnion.getWithdrawableEarnings('0x1234567890123456789012345678901234567890')
+```
+Getting the set admin fee:
+```js
+const adminFee = await dataUnion.getAdminFee()
+```
+Getting admin's address:
+```js
+const adminAddress = await dataUnion.getAdminAddress()
+```
+
+Getting the Data Union's version:
+```js
+const version = await dataUnion.getVersion()
+// Can be 0, 1 or 2
+// 0 if the contract is not a data union
+```
+
+___
 
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
@@ -582,16 +576,20 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 #### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
-
-| Name              | Default               | Description                                                                               |
-| :---------------- | :-------------------- | :--------------------------------------------------------------------------------------   |
-| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)       |
-| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge|
-| waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                    |
-| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                     |
-| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                                 |
-| gasPrice          | network estimate      | Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge    |
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters. The provided values are the default ones, used when not specified or when the options parameter is not provided:
+```js
+const receipt = await dataUnion.withdrawAll(
+    ...,
+    {
+        sendToMainnet: true, // Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)
+        payForTransport: true, //Whether to pay for the withdraw transaction signature transport to mainnet over the bridge
+        waitUntilTransportIsComplete: true, // Whether to wait until the withdrawn DATA tokens are visible in mainnet
+        pollingIntervalMs: 1000, // How often requests are sent to find out if the withdraw has completed, in ms
+        retryTimeoutMs: 60000, // When to give up when waiting for the withdraw to complete, in ms
+        gasPrice: /*Network Estimate*/ // Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge
+    }
+)
+```
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
 but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
@@ -611,37 +609,31 @@ The use cases corresponding to the different combinations of the boolean flags:
 
 #### Deployment options
 
-`deployDataUnion` can take an options object as the argument. It's an object that can contain the following parameters:
+`deployDataUnion` can take an options object as the argument. It's an object that can contain the following parameters. All shown values are the defaults for each property:
+```js
+const ownerAddress = await streamr.getAddress()
 
-| Name                      | Type      | Default               | Description                                                                           |
-| :------------------------ | :-------- | :-------------------- | :------------------------------------------------------------------------------------ |
-| owner                     | Address   |`*`you                 | Owner / admin of the newly created Data Union                                         |
-| joinPartAgents            | Address[] |`*`you, Streamr Core   | Able to add and remove members to/from the Data Union                                 |
-| dataUnionName             | string    | Generated             | NOT stored anywhere, only used for address derivation                                 |
-| adminFee                  | number    | 0 (no fee)            | Must be between 0...1 (inclusive)                                                     |
-| sidechainPollingIntervalMs| number    | 1000 (1&nbsp;second)  | How often requests are sent to find out if the deployment has completed               |
-| sidechainRetryTimeoutMs   | number    | 60000 (1&nbsp;minute) | When to give up when waiting for the deployment to complete                           |
-| confirmations             | number    | 1                     | Blocks to wait after Data Union mainnet contract deployment to consider it final      |
-| gasPrice                  | BigNumber | network estimate      | Ethereum Mainnet gas price to use when deploying the Data Union mainnet contract      |
-
-`*`you here means the address of the authenticated StreamrClient
-(that corresponds to the `auth.privateKey` given in constructor)
-
-Streamr Core is added as a `joinPartAgent` by default
-so that joining with secret works using the [member function](#member-functions) `join`.
-If you don't plan to use `join` for "self-service joining",
-you can leave out Streamr Core agent by calling `deployDataUnion`
-e.g. with your own address as the sole joinPartAgent:
-```
 const dataUnion = await streamr.deployDataUnion({
-    joinPartAgents: [yourAddress],
+    owner: ownerAddress, // Owner / admin of the newly created Data Union
+    joinPartsAgent: [ownerAddress], // Able to add and remove members to/from the Data Union
+    dataUnionName: /* Generated if not provided */, // NOT stored anywhere, only used for address derivation
+    adminFee: 0, // Must be between 0...1 
+    sidechainPollingIntervalMs: 1000, //How often requests are sent to find out if the deployment has completed
+    sidechainRetryTimeoutMs: 60000, // When to give up when waiting for the deployment to complete
+    confirmations: 1, // Blocks to wait after Data Union mainnet contract deployment to consider it final
+    gasPrice: /*Network Estimate*/ // Ethereum Mainnet gas price to use when deploying the Data Union mainnet contract
+})
+```
+
+Streamr Core is added as a `joinPartAgent` by default so that joining with secret works using the member function `join`. If you don't plan to use `join` for "self-service joining", you can leave out Streamr Core agent by calling `deployDataUnion` e.g. with your own address as the sole joinPartAgent:
+```js
+const dataUnion = await streamr.deployDataUnion({
+    joinPartAgents: [ownerAddress],
     adminFee,
 })
 ```
 
-`dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed.
-Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means
-a Data Union deployed by a particular address with particular "name" will have a predictable address.
+`dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed. Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means a Data Union deployed by a particular address with particular "name" will have a predictable address.
 
 ### Utility functions
 The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. 
