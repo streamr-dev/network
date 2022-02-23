@@ -25,7 +25,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Setup](#setup)
 - [Usage](#usage)
     - [Client creation](#client-creation)
-    - [Creating a stream ](#creating-a-stream-)
+    - [Creating a stream ](#creating-a-stream)
     - [Subscribing to a stream](#subscribing-to-a-stream)
     - [Publishing to a stream](#publishing-to-a-stream)
     - [Requesting historical messages](#requesting-historical-messages)
