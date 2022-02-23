@@ -448,7 +448,7 @@ const storageNodes = stream.getStorageNodes()
 
 
 ### Data Unions
-> This code examples in this section are not up to date.
+> ⚠️ This code examples in this section are not up to date.
 
 The Data Union framework is a data crowdsourcing and crowdselling solution. Working in tandem with the Streamr Network and Ethereum, the framework powers applications that enable people to earn by sharing valuable data. You can [read more about it here](https://streamr.network/docs/data-unions/intro-to-data-unions)
 
