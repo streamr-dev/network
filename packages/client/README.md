@@ -31,7 +31,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Creating a stream ](#creating-a-stream-)
     - [Subscribing to a stream](#subscribing-to-a-stream)
     - [Publishing to a stream](#publishing-to-a-stream)
-    - [Requesting a resend of historical events with subscriptions](#requesting-a-resend-of-historical-events-with-subscriptions)
+    - [Requesting historical events with subscriptions](#requesting-historical-events-with-subscriptions)
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
         - [Getting existing streams](#getting-existing-streams)
@@ -217,8 +217,8 @@ await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
 await stream.publish(msg)
 ```
 
-### Requesting a resend of historical events with subscriptions
-By default `subscribe` will not request a resend of historical messages, but only subscribe to real time messages. 
+### Requesting historical events with subscriptions
+By default `subscribe` will not perform a resend of historical messages, but only subscribe to real time messages. 
 
 One can either fetch historical messages with the `resend` method:
 ```js
