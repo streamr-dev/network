@@ -236,7 +236,7 @@ const sub2 = await streamr.resend(
             timestamp: (Date.now() - 1000 * 60 * 5), // 5 minutes ago
             sequenceNumber: 0, // optional
         },
-        publisher: '0x12345...', // optional
+        publisher: '0x1234567890123456789012345678901234567890', // optional
     }
 )
 ```
@@ -253,7 +253,7 @@ const sub3 = await streamr.resend(
         },
         // when using from and to the following parameters are optional
         // but, if specified, both must be present
-        publisher: '0x12345...', 
+        publisher: '0x1234567890123456789012345678901234567890', 
         msgChainId: 'ihuzetvg0c88ydd82z5o', 
     }
 )
@@ -279,13 +279,13 @@ Alternatively or additionally to the search term, you can search for streams bas
 To get all streams for which a user has any direct permission:
 ```js 
 const streams = await streamr.searchStreams('foo', {
-    user: '0x12345...'
+    user: '0x1234567890123456789012345678901234567890'
 })
 ```
 To get all streams for which a user has any permission (direct or public):
 ```js
 const streams = await streamr.searchStreams('foo', {
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     allowPublic: true
 })
 ```
@@ -295,7 +295,7 @@ It is also possible to filter by specific permissions by using `allOf` and `anyO
 If you want to find the streams you can subscribe to:
 ```js 
 const streams = await streamr.searchStreams(undefined, {
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     allOf: [StreamPermission.SUBSCRIBE],
     allowPublic: true
 })
@@ -303,7 +303,7 @@ const streams = await streamr.searchStreams(undefined, {
 If you want to find any streams you can publish to, regardless of the other permissions assigned:
 ```js
 const streams = await streamr.searchStreams(undefined, {
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     anyOf: [StreamPermission.PUBLISH],
     allowPublic: true
 })
@@ -346,7 +346,7 @@ To grant a permission for a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     permissions: [StreamPermission.PUBLISH],
 })
 
@@ -360,7 +360,7 @@ To revoke a permission from a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.revokePermissions({
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     permissions: [StreamPermission.PUBLISH]
 })
 
@@ -380,10 +380,10 @@ await streamr.setPermissions({
     streamId,
     assignments: [
         {
-            user: '0x12345...',
+            user: '0x1234567890123456789012345678901234567890',
             permissions: [StreamPermission.EDIT]
         }, {
-            user: '0x6789a...',
+            user: '0x6789a0x1234567890123456789012345678901234567891'
             permissions: [StreamPermission.GRANT]
         }, {
             public: true,
@@ -397,7 +397,7 @@ You can query the existence of a permission with `hasPermission()`. Usually you 
 ```js
 await stream.hasPermission({
     permission: StreamPermission.PUBLISH,
-    user: '0x12345...',
+    user: '0x1234567890123456789012345678901234567890',
     allowPublic: true
 }
 ```
@@ -409,7 +409,7 @@ const permissions = await stream.getPermissions()
 The returned value is an array of permissions containing an item for each user, and possibly one for public permissions:
 ```js
     permissions = [
-        { user: '0x12345...', permissions: ['subscribe', 'publish'] },
+        { user: '0x1234567890123456789012345678901234567890', permissions: ['subscribe', 'publish'] },
         { public: true, permissions: ['subscribe']}
     ]
 ```
@@ -449,8 +449,8 @@ const storageNodes = stream.getStorageNodes()
 
 
 ### Data Unions
+The Data Union framework is a data crowdsourcing and crowdselling solution. Working in tandem with the Streamr Network and Ethereum, the framework powers applications that enable people to earn by sharing valuable data. You can [read more about it here](https://streamr.network/docs/data-unions/intro-to-data-unions)
 
-This library provides functions for working with Data Unions. Please see the [TypeScript generated function documentation](https://streamr-dev.github.io/streamr-client-javascript/classes/dataunion_dataunion.dataunion.html) for information on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
 ```js
@@ -459,18 +459,9 @@ const dataUnion = await streamr.deployDataUnion()
 
 To get an existing (previously deployed) `DataUnion` instance:
 ```js
-const dataUnion = await streamr.getDataUnion(dataUnionAddress)
+const dataUnion = await streamr.getDataUnion('0x1234567890123456789012345678901234567890')
 ```
 
-<!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
-These DataUnion-specific options can be given to `new StreamrClient` options:
-
-| Property                            | Default                                                | Description                                                                                |
-| :---------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge    |
-| dataUnion.payForTransport           | true                                                   | true = client does the transport as self-service and pays the mainnet gas costs            |
-|                                     |                                                        | false = someone else pays for the gas when transporting the withdraw tx to mainnet         |
--->
 
 #### Admin Functions
 
@@ -478,35 +469,44 @@ Admin functions require xDai tokens on the xDai network. To get xDai you can eit
 
 Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermissions()`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermissions()`.
 
-| Name                              | Returns             | Description                                                    |
-| :-------------------------------- | :------------------ | :------------------------------------------------------------- |
-| createSecret(\[name])             | string              | Create a secret for a Data Union                               |
-| addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
-| removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
-| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
-| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
-| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
-| withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send some of the withdrawable earnings to the address signed off by the member |
-
-`*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.<br>
-
-Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
-
+Adding members:
 ```js
-const { StreamrClient } = require('streamr-client')
-
-const streamr = new StreamrClient({
-    auth: { privateKey },
-})
-
-const dataUnion = await streamr.deployDataUnion({
-    adminFee: 0.3,
-})
 const receipt = await dataUnion.addMembers([
     "0x1234567890123456789012345678901234567890",
     "0x1234567890123456789012345678901234567891",
     "0x1234567890123456789012345678901234567892",
 ])
+```
+Removing members:
+```js
+const receipt = await dataUnion.removeMembers([
+    "0x1234567890123456789012345678901234567890",
+    "0x1234567890123456789012345678901234567891",
+    "0x1234567890123456789012345678901234567892",
+])
+```
+
+Setting a new admin fee:
+```js
+// Any number between 0 and 1, inclusive
+const receipt = await dataUnion.setAdminFee(0.4) 
+```
+Send all withdrawable earnings to the member's address:
+```js
+const receipt = await dataUnion.withdrawAllToMember('0x1234567890123456789012345678901234567890')
+```
+Send all withdrawable earnings to the address signed off by the member:
+```js
+const receipt = await dataUnion.withdrawAllToSigned(
+    '0x1234567890123456789012345678901234567890', // member address
+    '0x1234567890123456789012345678901234567891', // recipient address
+    '0x21fbf0696d5e0aa2ef41a2b4ffb623bcaf070461d61cf7251c74161f82fec3a4370854bc0a34b3ab487c1bc021cd318c734c51ae29374f2beb0e6f2dd49b4bf41c' // signature
+
+)
+```
+Send some of the withdrawable earnings to the address signed off by the member
+```js
+const receipt = await dataUnion.withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature, options)
 ```
 
 #### Member functions
