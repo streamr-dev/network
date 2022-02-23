@@ -48,11 +48,11 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
     - [Stream partitioning](#stream-partitioning)
-        - [A note on Stream ids and partitions](#a-note-on-stream-ids-and-partitions)
+        - [A note on stream ids and partitions](#a-note-on-stream-ids-and-partitions)
         - [Creating partitioned streams](#creating-partitioned-streams)
         - [Publishing to partitioned streams](#publishing-to-partitioned-streams)
         - [Subscribing to partitioned streams](#subscribing-to-partitioned-streams)
-    - [Disable message ordering](#disable-message-ordering)
+    - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
     - [Manual connection management](#manual-connection-management)
     - [Proxy publishing](#proxy-publishing)
     - [Logging](#logging)
@@ -69,7 +69,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 #### Authenticating
 
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public data on the Network. See more about [Client creation](#client-creation)
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public data on the Network. See more about [Client creation](#client-creation)
 
 ```js
 const streamr = new StreamrClient({
@@ -143,8 +143,7 @@ const streamr = new StreamrClient({
 })
 ```
 
-Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:
-
+Authenticating with an Ethereum private key contained in an Ethereum (web3) provider (e.g. MetaMask):
 ```js
 const streamr = new StreamrClient({
     auth: {
@@ -153,7 +152,7 @@ const streamr = new StreamrClient({
 })
 ```
 
-You can also create an anonymous client instance that will be allowed to interact with public streams:
+You can also create an anonymous client instance that can interact with public streams:
 ```js
 const streamr = new StreamrClient()
 ```
@@ -167,21 +166,21 @@ const stream = await streamr.createStream({
 
 console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
 ```
-More information on Stream IDs under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
+
+More information on Stream IDs can be found under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
 
 ### Subscribing to a stream
-The callback's first parameter, `content`, will contain the value given to the `publish` method. The second parameter `streamrMessage` is of type StreamrObject. [You can read more about it here](../protocol/src/protocol/message_layer/StreamMessage.ts)
 ```js
-// subscribing to a stream:
 const subscription = await streamr.subscribe(
     streamId, 
     (content, streamrMessage) => { ... }
 )
 ```
-Getting all streams the client is subscribed to:
-```js
-const subscriptions = streamr.getSubscriptions()
-```
+The callback's first parameter, `content`, will contain the value given to the `publish` method. 
+
+The second parameter `streamrMessage` is of type StreamrObject. It contains metadata as well as ownership information, encapsulating the sent message. You can read [more about it here](../protocol/src/protocol/message_layer/StreamMessage.ts)
+
+
 Unsubscribing from an existent subscription:
 ```js
 await streamr.unsubscribe(streamId)
@@ -189,6 +188,10 @@ await streamr.unsubscribe(streamId)
 const streams = await streamr.unsubscribe()
 ```
 
+Getting all streams the client is subscribed to:
+```js
+const subscriptions = streamr.getSubscriptions()
+```
 ### Publishing to a stream
 
 ```js
@@ -219,11 +222,9 @@ await stream.publish(msg)
 ```
 
 ### Requesting a resend of historical events with subscriptions
-By default `subscribe` will not resend historical data, only subscribe to real time messages. In order to fetch historical messages the stream needs to have [storage enabled](#storage).
+By default `subscribe` will not request a resend of historical data, but only subscribe to real time messages. 
 
-Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
-
-One can either fetch the historical sent messages with the `resend` method:
+One can either fetch historical messages with the `resend` method:
 ```js
 // Fetches the last 10 messages stored for the stream
 const resend1 = await streamr.resend(
@@ -235,7 +236,7 @@ const resend1 = await streamr.resend(
 )
 ```
 
-Or fetch them and subscribe to new messages in the same call via a `subscribe` call:
+Or fetch historical message and subscribe to real-time messages in the same call via a `subscribe` call:
 ```js
 // Fetches the last 10 messages and subscribes to the stream
 const sub1 = await streamr.subscribe({
@@ -245,6 +246,7 @@ const sub1 = await streamr.subscribe({
     }
 }, onMessage)
 ```
+In order to fetch historical messages the stream needs to have [storage enabled](#storage).
 
 Resend from a specific message reference up to the newest message:
 ```js
@@ -259,7 +261,7 @@ const sub2 = await streamr.resend(
     }
 )
 ```
-Resend a limited range of messages:
+Resend a range of messages:
 ```js
 const sub3 = await streamr.resend(
     streamId,
@@ -282,36 +284,41 @@ If you choose one of the above resend options when subscribing, you can listen o
 ```js
 const sub = await streamr.resend(options)
 sub.onResent(() => {
-    console.log('All caught up and received all requested historical messages! Now switching to real time!')
+    console.log('Received all requested historical messages! Now switching to real time!')
 })
 ```
 
+Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
+
 ### Searching for streams
-You can search for a stream which has the `term` string in it's id as follows:
+You can search for streams by specifying a search term:
 ```js
 const streams = await streamr.searchStreams('foo')
 ```
-You can query for the streams using an optional second parameter to fine-tune your search. A permission query searches over stream permissions. You can either query by direct permissions (which are explicitly granted to a user), or by all permissions (including public permissions, which apply to all users).
+Alternatively or additionally to the search term, you can search for streams based on permissions.
 
-To get all streams where a user has some direct permission.
+To get all streams for which a user has any direct permission:
 ```js 
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...'
 })
-// Or, to query for all the streams accessible by the user
+```
+To get all streams for which a user has any permission (direct or public):
+```js
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...',
     allowPublic: true
 })
 ```
 
-It is also possible to filter by specific permissions by using `allOf` and `anyOf` flags. Please prefer `allOf` to `anyOf` when possible as it has better query performance.
+It is also possible to filter by specific permissions by using `allOf` and `anyOf` flags. Flag `allOf` should be preferred over `anyOf` when possible due to better query performance.
 
-If you want to find the streams you can exclusively subscribe to:
+If you want to find the streams you can subscribe to:
 ```js 
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...',
     allOf: [StreamPermission.SUBSCRIBE],
+    allowPublic: true
 })
 ```
 If you want to find any streams you can publish to, regardless of the other permissions assigned:
@@ -319,18 +326,19 @@ If you want to find any streams you can publish to, regardless of the other perm
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...',
     anyOf: [StreamPermission.PUBLISH],
+    allowPublic: true
 })
 ```
 ___
 ### Interacting with the `Stream` object
-
+The `Stream` type provides a convenient way to interact with a stream without having to repeatedly pass Stream IDs.
 #### Getting existing streams
-Getting an existent stream is pretty straight-forward
+Getting an existing stream:
 ```js
 const stream = await streamr.getStream(streamId)
 ```
 
-The method getOrCreateStream allows for a seamless creation/fetching process:
+The method getOrCreateStream fetches the stream if it exists, and if not, creates it:
 ```js
 // May require MATIC tokens (Polygon blockchain gas token) upon stream creation
 const stream = await streamr.getOrCreateStream({
@@ -339,7 +347,7 @@ const stream = await streamr.getOrCreateStream({
 ```
 
 #### Updating a stream
-Updates the description locally set for the stream
+To update the description of a stream:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 stream.description = 'New description!'
@@ -363,7 +371,7 @@ const { StreamPermission } = require('streamr-client')
 For each stream + user there can be a permission assignment containing a subset of those permissions. It is also possible to grant public permissions for streams (only `StreamPermission.PUBLISH` and `StreamPermission.SUBSCRIBE`). If a stream has e.g. a public subscribe permissions, it means that anyone can subscribe to that stream.
 
 
-To grant permissions for users:
+To grant a permission for a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
@@ -371,13 +379,13 @@ await stream.grantPermissions({
     permissions: [StreamPermission.PUBLISH],
 })
 
-// And for public streams:
+// Or to grant a public permission
 await stream.grantPermissions({
     public: true,
     permissions: [StreamPermission.SUBSCRIBE]
 })
 ```
-And to revoke them:
+To revoke a permission from a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.revokePermissions({
@@ -385,7 +393,7 @@ await stream.revokePermissions({
     permissions: [StreamPermission.PUBLISH]
 })
 
-// Or revoke public permissions:
+// Or revoke public permission:
 await stream.revokePermissions({
     public: true,
     permissions: [StreamPermission.SUBSCRIBE]
@@ -393,7 +401,7 @@ await stream.revokePermissions({
 ```        
 
 
-There is also method `streamr.setPermissions`. You can use it to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten:
+The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten:
 
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
@@ -423,11 +431,11 @@ await stream.hasPermission({
 }
 ```
 
-All streams permissions can be queried by calling `stream.getPermissions()`:
+The full list of permissions for a stream can be queried by calling `stream.getPermissions()`:
 ```js
 const permissions = await stream.getPermissions()
 ```
-The returned permissions are an array containing an item for each user, and one for public permissions:
+The returned value is an array of permissions containing an item for each user, and possibly one for public permissions:
 ```js
     permissions = [
         { user: '0x12345...', permissions: ['subscribe', 'publish'] },
@@ -437,7 +445,7 @@ The returned permissions are an array containing an item for each user, and one 
 
 
 #### Deleting a stream
-Deletes the stream from the on-chain registry:
+To delete a stream:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.delete()
@@ -452,7 +460,7 @@ You can enable data storage on your streams to retain historical data and access
 ```js
 const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client')
 ...
-// assign a stream to storage
+// assign a stream to a storage node
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 // remove the stream from a storage node
 await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
@@ -659,13 +667,15 @@ Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/e
 a Data Union deployed by a particular address with particular "name" will have a predictable address.
 
 ### Utility functions
-The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
+The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. 
 ```js 
-const wallet = StreamrClient.generateEthereumAccount()
+const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
-Generates a random Ethereum account object:
+Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document:
 ```js
-    wallet = {address, privateKey}
+const streamr = new StreamrClient({
+    auth: { privateKey }
+})
 ```
 In order to retrieve the client's address an async call must me made to `streamr.getAddress`
 ```js
@@ -677,10 +687,10 @@ const address = await streamr.getAddress()
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
-#### A note on Stream ids and partitions
+#### A note on stream ids and partitions
 The public methods of the client generally support the following three ways of defining a stream:
 ```js
-Stream id as a string:
+// Stream id as a string:
 const streamId = `${address}/foo/bar`
 
 // Stream id + partition as a string
@@ -762,8 +772,8 @@ await Promise.all([2, 3, 4].map(async (partition) => {
 }))
 ```
 
-### Disable message ordering
-If your use-case doesn't require message order to be enforced or if you want it to be tolerant to out-of-sync messages you can turn off the message ordering upon client creation:
+### Disable message ordering and gap filling
+If your use case tolerates missing messages and message arriving out-of-order, you can turn off message ordering and gap filling when creating a instance of the client:
 ```js
 const streamr = new StreamrClient({
     auth: { ... },
@@ -771,13 +781,13 @@ const streamr = new StreamrClient({
     gapFill: false
 })
 ```
-Both of these flags should be disabled in tandem for message ordering to be properly turned off.
+Both of these flags should be disabled in tandem for message ordering and gap filling to be properly turned off.
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
 
 ### Manual connection management
 
-By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
+By default the client will automatically connect and disconnect as needed, you should not need to manage connection state manually.
 
 
 Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behaviour can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disable all `autoConnect` & `autoDisconnect` functionality, but they can be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
