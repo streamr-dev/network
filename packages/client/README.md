@@ -763,8 +763,7 @@ By disabling message ordering your application won't perform any filling nor sor
 
 By default the client will automatically connect and disconnect as needed, you should not need to manage connection state manually.
 
-
-Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behaviour can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disable all `autoConnect` & `autoDisconnect` functionality, but they can be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
+Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behavior can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` will disable all `autoConnect` & `autoDisconnect` functionality.
 
 Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
 
@@ -779,9 +778,6 @@ const streamr = new StreamrClient({
 
 // Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.    
 await streamr.connect()
-
-// Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection.
-await streamr.disconnect()
 ```
 
 ### Proxy publishing
