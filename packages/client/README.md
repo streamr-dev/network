@@ -640,12 +640,6 @@ The static function `StreamrClient.generateEthereumAccount()` generates a new Et
 ```js 
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
-Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document:
-```js
-const streamr = new StreamrClient({
-    auth: { privateKey }
-})
-```
 In order to retrieve the client's address an async call must me made to `streamr.getAddress`
 ```js
 const address = await streamr.getAddress()
