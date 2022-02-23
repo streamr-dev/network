@@ -1,6 +1,6 @@
 # streamr-client-protocol
 
-ES6 JS implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by other packages in this monorepo.
+TypeScript implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages and their serialization and deserialization. This is shared code used by other packages in this monorepo.
 
 The package is available on npm as `streamr-client-protocol`.
  
