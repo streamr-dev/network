@@ -35,8 +35,8 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
         - [Getting existing streams](#getting-existing-streams)
-        - [Updating a stream](#updating-a-stream)
         - [Stream permissions](#stream-permissions)
+        - [Updating a stream](#updating-a-stream)
         - [Deleting a stream](#deleting-a-stream)
     - [Storage options](#storage-options)
     - [Data Unions](#data-unions)
@@ -346,14 +346,6 @@ const stream = await streamr.getOrCreateStream({
 })
 ```
 
-#### Updating a stream
-To update the description of a stream:
-```js
-// Requires MATIC tokens (Polygon blockchain gas token)
-stream.description = 'New description!'
-await stream.update()
-```
-
 #### Stream permissions
 
 There are 5 different permissions:
@@ -441,6 +433,14 @@ The returned value is an array of permissions containing an item for each user, 
         { user: '0x12345...', permissions: ['subscribe', 'publish'] },
         { public: true, permissions: ['subscribe']}
     ]
+```
+
+#### Updating a stream
+To update the description of a stream:
+```js
+// Requires MATIC tokens (Polygon blockchain gas token)
+stream.description = 'New description!'
+await stream.update()
 ```
 
 
