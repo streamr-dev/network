@@ -472,18 +472,23 @@ Adding members using admin functions is not at feature parity with the member fu
 Adding members:
 ```js
 const receipt = await dataUnion.addMembers([
-    "0x1234567890123456789012345678901234567890",
-    "0x1234567890123456789012345678901234567891",
-    "0x1234567890123456789012345678901234567892",
+    '0x1234567890123456789012345678901234567890',
+    '0x1234567890123456789012345678901234567891',
+    '0x1234567890123456789012345678901234567892',
 ])
 ```
 Removing members:
 ```js
 const receipt = await dataUnion.removeMembers([
-    "0x1234567890123456789012345678901234567890",
-    "0x1234567890123456789012345678901234567891",
-    "0x1234567890123456789012345678901234567892",
+    '0x1234567890123456789012345678901234567890',
+    '0x1234567890123456789012345678901234567891',
+    '0x1234567890123456789012345678901234567892',
 ])
+```
+
+Checking if an address belongs to the Data Union:
+```js
+const isMember = await dataUnion.isMember('0x1234567890123456789012345678901234567890')
 ```
 
 Setting a new admin fee:
@@ -497,16 +502,42 @@ const receipt = await dataUnion.withdrawAllToMember('0x1234567890123456789012345
 ```
 Send all withdrawable earnings to the address signed off by the member:
 ```js
+const recipientAddress = '0x1234567890123456789012345678901234567891'
+
+const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 const receipt = await dataUnion.withdrawAllToSigned(
     '0x1234567890123456789012345678901234567890', // member address
-    '0x1234567890123456789012345678901234567891', // recipient address
-    '0x21fbf0696d5e0aa2ef41a2b4ffb623bcaf070461d61cf7251c74161f82fec3a4370854bc0a34b3ab487c1bc021cd318c734c51ae29374f2beb0e6f2dd49b4bf41c' // signature
-
+    recipientAddress,
+    signature
 )
 ```
 Send some of the withdrawable earnings to the address signed off by the member
 ```js
-const receipt = await dataUnion.withdrawAmountToSigned(memberAddress, recipientAddress, amountTokenWei, signature, options)
+const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
+const receipt = await dataUnion.withdrawAllToSigned(
+    '0x1234567890123456789012345678901234567890', // member address
+    recipientAddress,
+    signature
+)
+
+// Or to authorize a fixed amount:
+const receipt = await dataUnion.withdrawAmountToSigned(
+    '0x1234567890123456789012345678901234567890', // member address
+    recipientAddress, 
+    100, // token amount, in wei 
+    signature, 
+)
+```
+
+Send the mainnet transaction to withdraw tokens from the sidechain
+
+The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
+```js
+const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
+    payForTransport: false,
+    waitUntilTransportIsComplete: false,
+}) // only pay for sidechain gas
+const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
 ```
 
 #### Member functions
@@ -524,40 +555,7 @@ const receipt = await dataUnion.withdrawAmountToSigned(memberAddress, recipientA
 
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.
 
-Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
-```js
-const { StreamrClient } = require('streamr-client')
-
-const streamr = new StreamrClient({
-    auth: { privateKey },
-})
-
-const dataUnion = await streamr.getDataUnion(dataUnionAddress)
-const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
-```
-
-Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
-
-```js
-const { StreamrClient } = require('streamr-client')
-
-const streamr = new StreamrClient({
-    auth: { privateKey },
-})
-
-const dataUnion = await streamr.getDataUnion(dataUnionAddress)
-const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
-```
-
-The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
-```js
-const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
-    payForTransport: false,
-    waitUntilTransportIsComplete: false,
-}) // only pay for sidechain gas
-const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
-```
 
 #### Query functions
 
