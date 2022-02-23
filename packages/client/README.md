@@ -248,7 +248,7 @@ const sub1 = await streamr.subscribe({
 ```
 In order to fetch historical messages the stream needs to have [storage enabled](#storage).
 
-Resend from a specific message reference up to the newest message:
+Resend from a specific message timestamp up to the newest message:
 ```js
 const sub2 = await streamr.resend(
     streamId,
