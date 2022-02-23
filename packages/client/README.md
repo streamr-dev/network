@@ -530,7 +530,6 @@ Setting a new admin fee:
 const receipt = await dataUnion.setAdminFee(0.4) 
 ```
 #### Query functions
-
 These are available for everyone and anyone, to query publicly available info from a Data Union.
 
 Get Data Union's statistics:
@@ -560,18 +559,6 @@ Getting the Data Union's version:
 const version = await dataUnion.getVersion()
 // Can be 0, 1 or 2
 // 0 if the contract is not a data union
-```
-
-___
-
-Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
-
-```js
-const { StreamrClient } = require('streamr-client')
-
-const streamr = new StreamrClient()
-const dataUnion = await streamr.getDataUnion(dataUnionAddress)
-const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 ```
 
 #### Withdraw options
