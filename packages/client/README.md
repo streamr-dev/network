@@ -334,7 +334,7 @@ Getting an existing stream:
 const stream = await streamr.getStream(streamId)
 ```
 
-The method getOrCreateStream fetches the stream if it exists, and if not, creates it:
+The method getOrCreateStream gets the stream if it exists, and if not, creates it:
 ```js
 // May require MATIC tokens (Polygon blockchain gas token) upon stream creation
 const stream = await streamr.getOrCreateStream({
