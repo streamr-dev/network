@@ -31,13 +31,12 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Requesting historical events with subscriptions](#requesting-historical-events-with-subscriptions)
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
-    - [Message storage for historical data](#message-storage-for-historical-data)
+    - [Enabling storage](#enabling-storage)
     - [Data Unions](#data-unions)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
-    - [Manual connection management](#manual-connection-management)
     - [Proxy publishing](#proxy-publishing)
     - [Logging](#logging)
 
@@ -432,7 +431,7 @@ await stream.delete()
 
 
 
-### Message storage for historical data
+### Enabling storage
 
 You can enable message storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
@@ -730,26 +729,6 @@ Both of these flags should be disabled in tandem for message ordering and gap fi
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
 
-### Manual connection management
-
-By default the client will automatically connect and disconnect as needed, you should not need to manage connection state manually.
-
-Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no messages were recently published. This behavior can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new StreamrClient`. Explicit calls to either `connect()` will disable all `autoConnect` & `autoDisconnect` functionality.
-
-Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
-
-```js
-const streamr = new StreamrClient({
-    auth: {
-        privateKey: 'your-private-key'
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-})
-
-// Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.    
-await streamr.connect()
-```
 
 ### Proxy publishing
 
