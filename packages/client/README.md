@@ -137,7 +137,7 @@ const stream = await streamr.createStream({
     id: '/foo/bar'
 })
 
-console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
+console.log(stream.id) // e.g. `0x12345.../foo/bar`
 ```
 
 You can also create a stream by defining the address in the provided id. Please note that the creation will only succeed if you specify the same address as provided for authentication when creating the `streamr` instance:
@@ -147,7 +147,7 @@ const stream = await client.createStream({
     id: `${address}/foo/bar`
 })
 
-console.log(stream.id) // e.g. `0x1234567890123456789012345678901234567890/foo/bar`
+console.log(stream.id) // e.g. `0x12345.../foo/bar`
 ```
 
 More information on Stream IDs can be found under the [stream creation project docs](https://streamr.network/docs/streams/creating-streams)
@@ -236,7 +236,7 @@ const sub2 = await streamr.resend(
             timestamp: (Date.now() - 1000 * 60 * 5), // 5 minutes ago
             sequenceNumber: 0, // optional
         },
-        publisher: '0x1234567890123456789012345678901234567890', // optional
+        publisher: '0x12345...', // optional
     }
 )
 ```
@@ -253,7 +253,7 @@ const sub3 = await streamr.resend(
         },
         // when using from and to the following parameters are optional
         // but, if specified, both must be present
-        publisher: '0x1234567890123456789012345678901234567890', 
+        publisher: '0x12345...', 
         msgChainId: 'ihuzetvg0c88ydd82z5o', 
     }
 )
@@ -279,13 +279,13 @@ Alternatively or additionally to the search term, you can search for streams bas
 To get all streams for which a user has any direct permission:
 ```js 
 const streams = await streamr.searchStreams('foo', {
-    user: '0x1234567890123456789012345678901234567890'
+    user: '0x12345...'
 })
 ```
 To get all streams for which a user has any permission (direct or public):
 ```js
 const streams = await streamr.searchStreams('foo', {
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     allowPublic: true
 })
 ```
@@ -295,7 +295,7 @@ It is also possible to filter by specific permissions by using `allOf` and `anyO
 If you want to find the streams you can subscribe to:
 ```js 
 const streams = await streamr.searchStreams(undefined, {
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     allOf: [StreamPermission.SUBSCRIBE],
     allowPublic: true
 })
@@ -303,7 +303,7 @@ const streams = await streamr.searchStreams(undefined, {
 If you want to find any streams you can publish to, regardless of the other permissions assigned:
 ```js
 const streams = await streamr.searchStreams(undefined, {
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     anyOf: [StreamPermission.PUBLISH],
     allowPublic: true
 })
@@ -346,7 +346,7 @@ To grant a permission for a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.grantPermissions({
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     permissions: [StreamPermission.PUBLISH],
 })
 
@@ -360,7 +360,7 @@ To revoke a permission from a user:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 await stream.revokePermissions({
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     permissions: [StreamPermission.PUBLISH]
 })
 
@@ -380,10 +380,10 @@ await streamr.setPermissions({
     streamId,
     assignments: [
         {
-            user: '0x1234567890123456789012345678901234567890',
+            user: '0x11111...',
             permissions: [StreamPermission.EDIT]
         }, {
-            user: '0x6789a0x1234567890123456789012345678901234567891'
+            user: '0x22222...'
             permissions: [StreamPermission.GRANT]
         }, {
             public: true,
@@ -397,7 +397,7 @@ You can query the existence of a permission with `hasPermission()`. Usually you 
 ```js
 await stream.hasPermission({
     permission: StreamPermission.PUBLISH,
-    user: '0x1234567890123456789012345678901234567890',
+    user: '0x12345...',
     allowPublic: true
 }
 ```
@@ -409,7 +409,7 @@ const permissions = await stream.getPermissions()
 The returned value is an array of permissions containing an item for each user, and possibly one for public permissions:
 ```js
     permissions = [
-        { user: '0x1234567890123456789012345678901234567890', permissions: ['subscribe', 'publish'] },
+        { user: '0x12345...', permissions: ['subscribe', 'publish'] },
         { public: true, permissions: ['subscribe']}
     ]
 ```
@@ -459,7 +459,7 @@ const dataUnion = await streamr.deployDataUnion()
 
 To get an existing (previously deployed) `DataUnion` instance:
 ```js
-const dataUnion = await streamr.getDataUnion('0x1234567890123456789012345678901234567890')
+const dataUnion = await streamr.getDataUnion('0x12345...')
 ```
 
 
@@ -472,36 +472,36 @@ Adding members using admin functions is not at feature parity with the member fu
 Adding members:
 ```js
 const receipt = await dataUnion.addMembers([
-    '0x1234567890123456789012345678901234567890',
-    '0x1234567890123456789012345678901234567891',
-    '0x1234567890123456789012345678901234567892',
+    '0x11111...',
+    '0x22222...',
+    '0x33333...',
 ])
 ```
 Removing members:
 ```js
 const receipt = await dataUnion.removeMembers([
-    '0x1234567890123456789012345678901234567890',
-    '0x1234567890123456789012345678901234567891',
-    '0x1234567890123456789012345678901234567892',
+    '0x11111...',
+    '0x22222...',
+    '0x33333...',
 ])
 ```
 
 Checking if an address belongs to the Data Union:
 ```js
-const isMember = await dataUnion.isMember('0x1234567890123456789012345678901234567890')
+const isMember = await dataUnion.isMember('0x12345...')
 ```
 
 Send all withdrawable earnings to the member's address:
 ```js
-const receipt = await dataUnion.withdrawAllToMember('0x1234567890123456789012345678901234567890')
+const receipt = await dataUnion.withdrawAllToMember('0x12345...')
 ```
 Send all withdrawable earnings to the address signed off by the member:
 ```js
-const recipientAddress = '0x1234567890123456789012345678901234567891'
+const recipientAddress = '0x22222...'
 
 const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 const receipt = await dataUnion.withdrawAllToSigned(
-    '0x1234567890123456789012345678901234567890', // member address
+    '0x11111...', // member address
     recipientAddress,
     signature
 )
@@ -510,14 +510,14 @@ Send some of the withdrawable earnings to the address signed off by the member
 ```js
 const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
 const receipt = await dataUnion.withdrawAllToSigned(
-    '0x1234567890123456789012345678901234567890', // member address
+    '0x12345...', // member address
     recipientAddress,
     signature
 )
 
 // Or to authorize a fixed amount:
 const receipt = await dataUnion.withdrawAmountToSigned(
-    '0x1234567890123456789012345678901234567890', // member address
+    '0x12345...', // member address
     recipientAddress, 
     100, // token amount, in wei 
     signature, 
@@ -539,12 +539,12 @@ const stats = await dataUnion.getStats()
 ```
 Get a member's stats:
 ```js
-const memberStats = await dataUnion.getMemberStats('0x1234567890123456789012345678901234567890')
+const memberStats = await dataUnion.getMemberStats('0x12345...')
 ```
 Get the withdrawable DATA tokens in the DU for a member:
 ```js
 // Returns a BigNumber
-const balance = await dataUnion.getWithdrawableEarnings('0x1234567890123456789012345678901234567890')
+const balance = await dataUnion.getWithdrawableEarnings('0x12345...')
 ```
 Getting the set admin fee:
 ```js
