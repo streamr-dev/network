@@ -433,6 +433,9 @@ const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client'
 ...
 // assign a stream to a storage node
 await stream.addToStorageNode(STREAMR_STORAGE_NODE_GERMANY)
+```
+Other operations with storage:
+```js
 // remove the stream from a storage node
 await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 // fetch the storage nodes for a stream
@@ -664,16 +667,7 @@ console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partition
 
 In most use cases, a user wants related messages (e.g. messages from a particular device) to be assigned to the same partition, so that the messages retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
-The library allows the user to choose a _partition key_, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on.
-
-The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
-
-```js
-await streamr.publish(streamId, msg, Date.now(), msg.vehicleId) // msg.vehicleId is the partition key here
-// or, equivalently, using the stream object
-await stream.publish(msg, Date.now(), msg.vehicleId)
-```
-Alternatively, you can specify the partition number explicitly:
+You can specify the partition number as follows:
 ```js
 await streamr.publish({
     id: `${address}/foo/bar`,
@@ -681,11 +675,23 @@ await streamr.publish({
 }, msg)
 ```
 
+The library alternatively allows the user to choose a _partition key_, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on.
+
+The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
+
+```js
+await stream.publish(
+    msg, 
+    Date.now(), 
+    msg.vehicleId // msg.vehicleId is the partition key here
+)
+```
+
 #### Subscribing to partitioned streams
 
 By default, the client subscribes to the first partition (partition `0`) of a stream. Be aware: this behavior will change in the future so that it will subscribe to _all_ partitions by default.
 
-The partition number can be explicitly given in the subscribe call:
+The partition number can be explicitly given in `subscribe`:
 
 ```js
 const sub = await streamr.subscribe({
@@ -696,8 +702,7 @@ const sub = await streamr.subscribe({
 })
 ```
 
-Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
-
+If you want to subscribe to multiple partitions:
 ```js
 const onMessage = (content, streamMessage) => {
     console.log('Got message %o from partition %d', content, streamMessage.getStreamPartition())
@@ -720,7 +725,7 @@ const streamr = new StreamrClient({
     gapFill: false
 })
 ```
-Both of these flags should be disabled in tandem for message ordering and gap filling to be properly turned off.
+Both of these properties should be disabled in tandem for message ordering and gap filling to be properly turned off.
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
 
@@ -733,23 +738,23 @@ Proxy publishing is done on the network overlay level. This means that there is 
 
 ```js
 // Open publish proxy to a node on stream
-await publishingClient.setPublishProxy(stream, 'proxyNodeId')
+await publishingClient.setPublishProxy(stream, '0x12345...')
 
 // Open publish proxy to multiple nodes on stream
-await publishingClient.setPublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+await publishingClient.setPublishProxies(stream, ['0x11111...', '0x22222...'])
 
 // Remove publish proxy to a node on stream
-await publishingClient.removePublishProxy(stream, proxyNodeId1)
+await publishingClient.removePublishProxy(stream, '0x12345...')
 
 // Remove publish proxy to multiple nodes on stream
-await publishingClient.removePublishProxies(stream, ['proxyNodeId1', 'proxyNodeId2'])
+await publishingClient.removePublishProxies(stream, ['0x11111...', '0x22222...'])
 ```
 
 IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
 
 ### Logging
 
-The Streamr JS client library supports [debug](https://github.com/visionmedia/debug) for logging.
+The library supports [debug](https://github.com/visionmedia/debug) for logging.
 
 In node.js, start your app like this: `DEBUG=StreamrClient* node your-app.js`
 
