@@ -7,7 +7,8 @@ COPY . .
 RUN npm run bootstrap-pkg -- streamr-broker && npm run prune-pkg -- streamr-broker
 
 FROM node:16-bullseye-slim
-RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
+RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
+	curl=7.74.0-1.3+deb11u1 \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 COPY --from=build /usr/src/monorepo /usr/src/monorepo
