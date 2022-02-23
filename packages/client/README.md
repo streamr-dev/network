@@ -726,10 +726,6 @@ await streamr.publish(streamId, msg, Date.now(), msg.vehicleId)
 // or, equivalently, using the stream object
 await stream.publish(msg, Date.now(), msg.vehicleId)
 ```
-You can also specify the partition number as the last parameter:
-```js 
-await streamr.publish(streamId, msg, Date.now(), 4)
-```
 Alternatively, you can specify the partition number explicitly:
 ```js
 await streamr.publish({
