@@ -266,7 +266,7 @@ sub.onResent(() => {
 })
 ```
 
-Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
+Note that only one of the resend options can be used for a particular subscription. 
 
 ### Searching for streams
 You can search for streams by specifying a search term:
@@ -289,21 +289,13 @@ const streams = await streamr.searchStreams('foo', {
 })
 ```
 
-It is also possible to filter by specific permissions by using `allOf` and `anyOf` flags. Flag `allOf` should be preferred over `anyOf` when possible due to better query performance.
+It is also possible to filter by specific permissions by using `allOf` and `anyOf` properties. The `allOf` property should be preferred over `anyOf` when possible due to better query performance.
 
 If you want to find the streams you can subscribe to:
 ```js 
 const streams = await streamr.searchStreams(undefined, {
     user: '0x12345...',
     allOf: [StreamPermission.SUBSCRIBE],
-    allowPublic: true
-})
-```
-If you want to find any streams you can publish to, regardless of the other permissions assigned:
-```js
-const streams = await streamr.searchStreams(undefined, {
-    user: '0x12345...',
-    anyOf: [StreamPermission.PUBLISH],
     allowPublic: true
 })
 ```
