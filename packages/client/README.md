@@ -178,8 +178,7 @@ const subscription = await streamr.subscribe(
 ```
 The callback's first parameter, `content`, will contain the value given to the `publish` method. 
 
-The second parameter `streamrMessage` is of type StreamrObject. It contains metadata as well as ownership information, encapsulating the sent message. You can read [more about it here](../protocol/src/protocol/message_layer/StreamMessage.ts)
-
+The second parameter `streamrMessage` is of type `StreamrObject`. It contains metadata as well as ownership information, encapsulating the sent message. 
 
 Unsubscribing from an existent subscription:
 ```js
