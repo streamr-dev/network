@@ -59,8 +59,6 @@ export default {
     },
     streamRegistryChainRPCs: sideChainConfig,
     dataUnionChainRPCs: sideChainConfig,
-    autoConnect: false,
-    autoDisconnect: false,
     maxRetries: 2,
     _timeouts: {
         theGraph: {
