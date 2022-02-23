@@ -28,7 +28,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Creating a stream ](#creating-a-stream-)
     - [Subscribing to a stream](#subscribing-to-a-stream)
     - [Publishing to a stream](#publishing-to-a-stream)
-    - [Requesting historical events with subscriptions](#requesting-historical-events-with-subscriptions)
+    - [Requesting historical messages with subscriptions](#requesting-historical-messages-with-subscriptions)
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
     - [Enabling storage](#enabling-storage)
@@ -199,7 +199,7 @@ await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
 await stream.publish(msg)
 ```
 
-### Requesting historical events with subscriptions
+### Requesting historical messages with subscriptions
 By default `subscribe` will not perform a resend of historical messages, but only subscribe to real time messages. 
 
 One can either fetch historical messages with the `resend` method:
@@ -667,7 +667,7 @@ console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partition
 
 #### Publishing to partitioned streams
 
-In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
+In most use cases, a user wants related messages (e.g. messages from a particular device) to be assigned to the same partition, so that the messages retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
 The library allows the user to choose a _partition key_, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on.
 
