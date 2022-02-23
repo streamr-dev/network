@@ -204,9 +204,6 @@ const msg = {
 // Publish using the stream id only
 await streamr.publish(streamId, msg)
 
-// The first argument can also be the stream object
-await streamr.publish(stream, msg)
-
 // Publish with a specific timestamp as a Date object (default is now)
 await streamr.publish(streamId, msg, new Date(1546300800123))
 
