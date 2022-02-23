@@ -3,10 +3,12 @@ import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import SubscriptionSession from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { StreamDefinition } from '../types'
+import { MessageStream } from './MessageStream'
 
 /**
  * Public Subscribe APIs
@@ -21,7 +23,8 @@ export default class Subscriber implements Context {
     constructor(
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(BrubeckContainer) private container: DependencyContainer
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        private streamEndpoints: StreamEndpointsCached,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -33,6 +36,58 @@ export default class Subscriber implements Context {
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         return this.subscribeTo(streamPartId, onMessage)
+    }
+
+    /**
+     * Subscribe to all partitions for stream.
+     */
+    async subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
+        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        if (partitions === 1) {
+            // nothing interesting to do, treat as regular subscription
+            return this.subscribe<T>(streamId, onMessage)
+        }
+
+        const messageStream = new MessageStream<T>(this)
+
+        if (onMessage) {
+            messageStream.useLegacyOnMessageHandler(onMessage)
+        }
+
+        const eachPartition = Array(partitions).fill(0).map((_, streamPartition) => streamPartition)
+        const subs = await Promise.all(eachPartition.map(async (streamPartition) => {
+            const sub = await this.subscribe<T>({
+                streamId,
+                partition: streamPartition,
+            })
+            sub.onError((err) => messageStream.handleError(err))
+            return sub
+        }))
+
+        function shouldEnd(): boolean {
+            if (messageStream.isDone()) {
+                return true
+            }
+
+            return subs.every((sub) => sub.isDone())
+        }
+
+        function maybeEnd(): void {
+            if (!shouldEnd()) { return }
+            subs.forEach((sub) => {
+                if (!sub.isCleaningUp) {
+                    sub.end()
+                }
+            })
+            messageStream.end()
+            messageStream.return()
+        }
+
+        for (const sub of subs) {
+            sub.onFinally(() => maybeEnd())
+            messageStream.pull(sub, { endDest: false })
+        }
+        return messageStream
     }
 
     private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
@@ -116,8 +171,9 @@ export default class Subscriber implements Context {
 
     /**
      * Count all subscriptions.
+    * @internal
      */
-    private countAll() {
+    countAll() {
         let count = 0
         this.subSessions.forEach((s) => {
             count += s.count()

@@ -1,0 +1,155 @@
+import { wait, waitForCondition } from 'streamr-test-utils'
+
+import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats } from '../test-utils/utils'
+import { StreamrClient } from '../../src/StreamrClient'
+
+import { Stream } from '../../src/Stream'
+import Subscriber from '../../src/subscribe/Subscriber'
+
+const NUM_MESSAGES = 8
+const MAX_MESSAGES = 4
+const PARTITIONS = 3
+jest.setTimeout(60000)
+
+describeRepeats('SubscribeAll', () => {
+    let expectErrors = 0 // check no errors by default
+    let onError = jest.fn()
+    let client: StreamrClient
+    let stream: Stream
+    let M: Subscriber
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+
+    const createClient = getCreateClient()
+
+    beforeEach(async () => {
+        expectErrors = 0
+        onError = jest.fn()
+    })
+
+    beforeEach(async () => {
+        // eslint-disable-next-line require-atomic-updates
+        client = await createClient()
+        M = client.subscriber
+        client.debug('connecting before test >>')
+        await Promise.all([
+            client.connect(),
+        ])
+        stream = await createTestStream(client, module, {
+            partitions: PARTITIONS,
+        })
+        client.debug('connecting before test <<')
+        publishTestMessages = getPublishTestMessages(client, stream)
+    })
+
+    afterEach(async () => {
+        client.debug('after test')
+        expect(await M.count()).toBe(0)
+        expect(await M.count(stream.id)).toBe(0)
+        expect(M.countSubscriptionSessions()).toBe(0)
+    })
+
+    afterEach(async () => {
+        await wait(0)
+        // ensure no unexpected errors
+        expect(onError).toHaveBeenCalledTimes(expectErrors)
+    })
+
+    it('subscribes to all partitions', async () => {
+        const subMsgs: any[] = []
+        await client.subscribeAll(stream.id, (msg) => {
+            subMsgs.push(msg)
+        })
+        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+            return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+        }))
+        const publishedMsgs = pubs.flat()
+        expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
+        await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
+        for (const msg of publishedMsgs) {
+            expect(subMsgs).toContainEqual(msg)
+        }
+        await client.unsubscribeAll()
+        expect(client.countAll()).toBe(0)
+    })
+
+    it('can stop prematurely', async () => {
+        const subMsgs: any[] = []
+        const sub = await client.subscribeAll(stream.id, (msg) => {
+            subMsgs.push(msg)
+            if (subMsgs.length === MAX_MESSAGES) {
+                sub.return()
+            }
+        })
+        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+            return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+        }))
+        const publishedMsgs = pubs.flat()
+        expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
+        await sub.onFinally()
+        // got the messages
+        expect(subMsgs).toHaveLength(MAX_MESSAGES)
+        // unsubscribed from everything
+        expect(client.countAll()).toBe(0)
+    })
+
+    it('stops with unsubscribeAll', async () => {
+        const subMsgs: any[] = []
+        const sub = await client.subscribeAll(stream.id, (msg) => {
+            subMsgs.push(msg)
+            if (subMsgs.length === MAX_MESSAGES) {
+                client.unsubscribeAll()
+            }
+        })
+        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+            return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+        }))
+        const publishedMsgs = pubs.flat()
+        expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
+        await sub.onFinally()
+        // got the messages
+        expect(subMsgs).toHaveLength(MAX_MESSAGES)
+        // unsubscribed from everything
+        expect(client.countAll()).toBe(0)
+    })
+
+    it('stops only when all subs are unsubbed', async () => {
+        const subMsgs: any[] = []
+        const sub = await client.subscribeAll(stream.id, (msg) => {
+            subMsgs.push(msg)
+        })
+        const onFinallyCalled = jest.fn()
+        sub.onFinally(onFinallyCalled)
+
+        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
+        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+            return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+        }))
+        const publishedMsgs = pubs.flat()
+        expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
+        await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
+        expect(onFinallyCalled).toHaveBeenCalledTimes(0)
+        // unsub from each partition
+        // should only onFinally once all unsubbed
+        for (const p of eachPartition) {
+            // eslint-disable-next-line no-await-in-loop
+            await client.unsubscribe({ streamId: stream.id, partition: p })
+            if (p === eachPartition.at(-1)) {
+                // should have ended after last partition unsubbed
+                expect(onFinallyCalled).toHaveBeenCalledTimes(1)
+            } else {
+                expect(onFinallyCalled).toHaveBeenCalledTimes(0)
+            }
+        }
+
+        for (const msg of publishedMsgs) {
+            expect(subMsgs).toContainEqual(msg)
+        }
+        // got the messages
+        expect(subMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
+        // unsubscribed from everything
+        expect(client.countAll()).toBe(0)
+    })
+})
