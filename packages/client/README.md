@@ -433,7 +433,7 @@ await stream.delete()
 
 ### Enabling storage
 
-You can enable message storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
+You can enable storage on your streams to retain historical messages and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
 ```js
 const { StreamrClient, STREAMR_STORAGE_NODE_GERMANY } = require('streamr-client')
