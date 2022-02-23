@@ -38,7 +38,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
         - [Stream permissions](#stream-permissions)
         - [Updating a stream](#updating-a-stream)
         - [Deleting a stream](#deleting-a-stream)
-    - [Storage options](#storage-options)
+    - [Message storage for historical data](#message-storage-for-historical-data)
     - [Data Unions](#data-unions)
         - [Admin Functions](#admin-Functions)
         - [Member functions](#member-functions)
@@ -453,7 +453,7 @@ await stream.delete()
 
 
 
-### Storage options
+### Message storage for historical data
 
 You can enable data storage on your streams to retain historical data and access it later via `resend`. By default storage is not enabled on streams. You can enable it with:
 
