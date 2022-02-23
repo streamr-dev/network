@@ -20,7 +20,6 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 ## Contents
 - [Important information](#important-information)
 - [Getting started](#getting-started)
-    - [Authenticating](#authenticating)
     - [Subscribing](#subscribing)
     - [Creating a stream and publishing messages to it](#creating-a-stream-and-publishing-messages-to-it)
 - [Setup](#setup)
@@ -52,20 +51,7 @@ The current stable version of the Streamr Client is `5.x` (at the time of writin
 
 ## Getting started
 
-#### Authenticating
-
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network. See more about [Client creation](#client-creation)
-
-```js
-const streamr = new StreamrClient({
-    auth: {
-        privateKey: 'your-private-key'
-    }
-})
-```
-
-
-#### Subscribing
+### Subscribing
 ```js 
 const streamId = 'binance-streamr.eth/ETHUSDT/ticker'
 
@@ -75,7 +61,7 @@ streamr.subscribe(streamId, (message) => {
 
 ```
 
-#### Creating a stream and publishing messages to it
+### Creating a stream and publishing messages to it
 ```js 
 // Requires MATIC tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
