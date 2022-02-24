@@ -1,6 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 describe('Config', () => {
     describe('validate', () => {
@@ -103,7 +104,6 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
-            expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
             expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
         })
 
@@ -122,7 +122,7 @@ describe('Config', () => {
             })
             expect(clientOverrides.options.network.trackers).toEqual(trackers)
             expect(clientOverrides.options.network.trackers).not.toBe(trackers)
-            expect(clientOverrides.options.network.trackers[0]).not.toBe(trackers[0])
+            expect((clientOverrides.options.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
         })
 
         it('can override debug settings', () => {
