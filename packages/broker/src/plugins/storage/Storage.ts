@@ -330,55 +330,50 @@ export class Storage extends EventEmitter {
         })
 
         const hasPublisher = (msgChainId !== undefined)
-        const publisherQuerySuffix = hasPublisher ? ' AND publisher_id = ? AND msg_chain_id = ?' : ''
-        const query1 = [
-            'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ?',
-            'AND sequence_no >= ?' + publisherQuerySuffix,
-            'ALLOW FILTERING'
-        ].join(' ')
-        const query2 = [
-            'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ?',
-            'AND ts > ? AND ts < ?' + publisherQuerySuffix,
-            'ALLOW FILTERING'
-        ].join(' ')
-        const query3 = [
-            'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ?',
-            'AND sequence_no <= ?' + publisherQuerySuffix,
-            'ALLOW FILTERING'
-        ].join(' ')
-
+    
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) {
                 resultStream.end()
                 return
             }
 
-            const bucketsForQuery = bucketsToIds(buckets)
+            const bucketIds = bucketsToIds(buckets)
 
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, toTimestamp]
-            const queryParams3 = [streamId, partition, bucketsForQuery, toTimestamp, toSequenceNo]
+            const queries = [
+                { 
+                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ?',
+                    params: [streamId, partition, bucketIds, fromTimestamp, fromSequenceNo]
+                },
+                {
+                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND ts < ?',
+                    params: [streamId, partition, bucketIds, fromTimestamp, toTimestamp]
+                },
+                {
+                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ?',
+                    params: [streamId, partition, bucketIds, toTimestamp, toSequenceNo]
+                }
+            ]
             if (hasPublisher) {
-                [queryParams1, queryParams2, queryParams3].forEach((p) => p.push(publisherId!, msgChainId))
+                queries.forEach((q) => {
+                    q.where += ' AND publisher_id = ? AND msg_chain_id = ?'
+                    q.params.push(publisherId!, msgChainId)
+                })
             }
-            const stream1 = this.queryWithStreamingResults(query1, queryParams1)
-            const stream2 = this.queryWithStreamingResults(query2, queryParams2)
-            const stream3 = this.queryWithStreamingResults(query3, queryParams3)
+
+            const streams = queries.map((q) => {
+                const select = `SELECT payload FROM stream_data ${q.where} ALLOW FILTERING`
+                return this.queryWithStreamingResults(select, q.params)
+            })
 
             return pipeline(
-                merge2(stream1, stream2, stream3, {
+                merge2(...streams, {
                     // @ts-expect-error options not in type
                     pipeError: true,
                 }),
                 resultStream,
                 (err: Error | null) => {
                     resultStream.destroy(err || undefined)
-                    stream1.destroy(err || undefined)
-                    stream2.destroy(err || undefined)
-                    stream3.destroy(err || undefined)
+                    streams.forEach((s) => s.destroy(err || undefined))
                 }
             )
         })
