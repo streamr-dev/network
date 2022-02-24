@@ -10,6 +10,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { BucketManager, BucketManagerOptions } from './BucketManager'
 import { Logger } from 'streamr-network'
 import { Bucket, BucketId } from './Bucket'
+import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './DataQueryEndpoints'
 
 const logger = new Logger(module)
 
@@ -339,20 +340,31 @@ export class Storage extends EventEmitter {
 
             const bucketIds = bucketsToIds(buckets)
 
-            const queries = [
-                { 
-                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ?',
-                    params: [streamId, partition, bucketIds, fromTimestamp, fromSequenceNo]
-                },
-                {
-                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND ts < ?',
-                    params: [streamId, partition, bucketIds, fromTimestamp, toTimestamp]
-                },
-                {
-                    where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ?',
-                    params: [streamId, partition, bucketIds, toTimestamp, toSequenceNo]
-                }
-            ]
+            let queries
+            // optimize the typical case where the sequenceNumber doesn't filter out anything
+            if ((fromSequenceNo === MIN_SEQUENCE_NUMBER_VALUE) && (toSequenceNo === MAX_SEQUENCE_NUMBER_VALUE)) {
+                queries = [
+                    {
+                        where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?',
+                        params: [streamId, partition, bucketIds, fromTimestamp, toTimestamp]
+                    }
+                ]
+            } else {
+                queries = [
+                    { 
+                        where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ?',
+                        params: [streamId, partition, bucketIds, fromTimestamp, fromSequenceNo]
+                    },
+                    {
+                        where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND ts < ?',
+                        params: [streamId, partition, bucketIds, fromTimestamp, toTimestamp]
+                    },
+                    {
+                        where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ?',
+                        params: [streamId, partition, bucketIds, toTimestamp, toSequenceNo]
+                    }
+                ]
+            }
             if (hasPublisher) {
                 queries.forEach((q) => {
                     q.where += ' AND publisher_id = ? AND msg_chain_id = ?'
