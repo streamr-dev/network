@@ -146,6 +146,19 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 | `npm run fix`                                                      | Runs `eslint --fix` in all packages and `manypkg fix`.                                                                                                                                        |
 | `npm run clean-package-locks`                                      | Removes only top-level package-lock.  There should only be a single top-level package-lock.                                                                                                   |
 
+## Releasing
+
+### Client
+```
+git checkout main
+cd packages/client
+npm version <SEMVER_OPTION>
+git add package.json
+git commit -m "release(client): vX.Y.Z"
+git tag client/vX.Y.Z
+git push origin
+git push origin client/vX.Y.Z
+```
 
 ## Important changes to the bootstrap/install scripts as of 48e165f:
 
