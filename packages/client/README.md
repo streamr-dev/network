@@ -18,7 +18,6 @@ This library allows you to easily interact with the [Streamr Network](https://st
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Contents
-- [Important information](#important-information)
 - [Getting started](#getting-started)
     - [Subscribing](#subscribing)
     - [Publishing](#publishing)
@@ -39,14 +38,6 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
     - [Proxy publishing](#proxy-publishing)
     - [Logging](#logging)
-
-## Important information
-> ⚠️ This section is to be removed before launch 
-
-The current stable version of the Streamr Client is `5.x` (at the time of writing, February 2022) which is connected to the [Corea Network](https://streamr.network/roadmap). The Brubeck Network Streamr Client is the [6.0.0-beta.4](https://www.npmjs.com/package/streamr-client/v/6.0.0-beta.4) build along with the `testnet` builds of the Broker node. The developer experience of the two networks is the same, however, the `6.0.0-beta.4` client also runs as a light node in the network, whereas the `5.x` era client communicates remotely to a Streamr run node. When the Streamr Network transitions into the Brubeck era (ETA Jan/Feb 2022), data guarantees of `5.x` clients will need to be reassessed. Publishing messages to the Brubeck network will only be visible in the [Brubeck Core UI](https://brubeck.streamr.network). The Marketplace, Core app and CLI tool are currently all configured to interact with the Corea Network only. Take care not to mix networks during this transition period.
-
----
-
 
 ## Getting started
 
@@ -100,7 +91,7 @@ const { StreamrClient } = require('streamr-client')
 For usage in the browser include the latest build, e.g. by including a `<script>` tag pointing at a CDN:
 
 ```html
-<script src="https://unpkg.com/streamr-client@beta/streamr-client.web.js"></script>
+<script src="https://unpkg.com/streamr-client@latest/streamr-client.web.js"></script>
 ```
 ___
 ## Usage
