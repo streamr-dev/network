@@ -133,12 +133,10 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    // eslint-disable-next-line class-methods-use-this
     async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     // eslint-disable-next-line class-methods-use-this
     async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')

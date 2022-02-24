@@ -1,16 +1,14 @@
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { Contract } from '@ethersproject/contracts'
+import type { Provider } from '@ethersproject/providers'
+
 import { createTrackerRegistry, SmartContractRecord, TrackerRegistry } from 'streamr-client-protocol'
 import * as trackerRegistryConfig from '../contracts/TrackerRegistry.json'
 
-type ProviderConnectionInfo = ConstructorParameters<typeof JsonRpcProvider>[0]
-
-async function fetchTrackers(contractAddress: string, jsonRpcProvider: ProviderConnectionInfo) {
-    const provider = new JsonRpcProvider(jsonRpcProvider)
+async function fetchTrackers(contractAddress: string, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber
-    await provider.getBlockNumber()
+    await jsonRpcProvider.getBlockNumber()
 
-    const contract = new Contract(contractAddress, trackerRegistryConfig.abi, provider)
+    const contract = new Contract(contractAddress, trackerRegistryConfig.abi, jsonRpcProvider)
     // check that contract is connected
     await contract.addressPromise
 
@@ -26,7 +24,7 @@ export async function getTrackerRegistryFromContract({
     jsonRpcProvider
 }: {
     contractAddress: string,
-    jsonRpcProvider: ProviderConnectionInfo
+    jsonRpcProvider: Provider
 }): Promise<TrackerRegistry<SmartContractRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
     const records: SmartContractRecord[] = []
