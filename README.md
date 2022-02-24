@@ -158,6 +158,11 @@ git commit -m "release(client): vX.Y.Z"
 git tag client/vX.Y.Z
 git push origin
 git push origin client/vX.Y.Z
+
+# If everything above went thru
+npm run build-production
+cd dist
+npm publish
 ```
 
 ## Important changes to the bootstrap/install scripts as of 48e165f:
