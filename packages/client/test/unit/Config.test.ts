@@ -1,6 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { BRUBECK_CLIENT_DEFAULTS } from '../../src/Config'
 import config from '../../src/ConfigTest'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 describe('Config', () => {
     describe('validate', () => {
@@ -107,8 +108,6 @@ describe('Config', () => {
             // @ts-expect-error
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
             // @ts-expect-error
-            expect(Array.isArray(clientOverrides.options.network.trackers)).toBeTruthy()
-            // @ts-expect-error
             expect(clientOverrides.options.network.trackers).toEqual(BRUBECK_CLIENT_DEFAULTS.network.trackers)
         })
 
@@ -130,7 +129,7 @@ describe('Config', () => {
             // @ts-expect-error
             expect(clientOverrides.options.network.trackers).not.toBe(trackers)
             // @ts-expect-error
-            expect(clientOverrides.options.network.trackers[0]).not.toBe(trackers[0])
+            expect((clientOverrides.options.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
         })
 
         it('can override debug settings', () => {
