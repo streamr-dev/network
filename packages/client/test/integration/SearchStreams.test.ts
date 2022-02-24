@@ -1,5 +1,5 @@
 import { Wallet } from 'ethers'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { randomEthereumAddress, wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -91,6 +91,9 @@ describe('SearchStreams', () => {
             { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
+        // we should wait until revoked permission are propagated to TheGraph
+        // replace the time-based wait in NET-606
+        await wait(5000)
         await waitUntilStreamsExistOnTheGraph([
             streamWithoutPermission,
             streamWithUserPermission,
@@ -122,10 +125,9 @@ describe('SearchStreams', () => {
     })
 
     it('no filters', async () => {
-        const iterable = client.searchStreams(undefined, undefined)
-        // most likely many items created by various tests, check that we can read some item
-        const firstItem = (await iterable[Symbol.asyncIterator]().next()).value
-        expect(firstItem.id).toBeDefined()
+        return expect(async () => {
+            await client.searchStreams(undefined, undefined)
+        }).rejects.toThrow('Requires a search term or a permission filter')
     })
 
     describe('permission filter', () => {
