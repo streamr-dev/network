@@ -14,6 +14,7 @@ describe('subscribe and wait for the node to join the stream', () => {
     let nodes: NetworkNode[]
     const stream1 = toStreamPartID(toStreamID('stream-1'), 0)
     const stream2 = toStreamPartID(toStreamID('stream-2'), 0)
+    const stream3 = toStreamPartID(toStreamID('stream-3'), 0)
     const TIMEOUT = 5000
 
     beforeAll(async () => {
@@ -103,5 +104,18 @@ describe('subscribe and wait for the node to join the stream', () => {
         ])
         expect(firstNeighbors).toEqual(0)
         expect(result[1]).toEqual(1)
+    })
+
+    test('Simultaneous joins return valid neighbor counts (depends on tracker debouncing)', async () => {
+        const ret = await Promise.all([
+            nodes[0].subscribeAndWaitForJoin(stream3, TIMEOUT),
+            nodes[1].subscribeAndWaitForJoin(stream3, TIMEOUT),
+            nodes[2].subscribeAndWaitForJoin(stream3, TIMEOUT),
+            nodes[3].subscribeAndWaitForJoin(stream3, TIMEOUT),
+            nodes[4].subscribeAndWaitForJoin(stream3, TIMEOUT)
+        ])
+        ret.map((numOfNeighbors) => {
+            expect(numOfNeighbors).toEqual(4)
+        })
     })
 })
