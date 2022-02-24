@@ -5,10 +5,11 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { Config } from './Config'
+import { BrubeckNodeOptions, Config, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
+import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -45,7 +46,7 @@ export default class BrubeckNode implements Context {
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
-        @inject(Config.Network) options: NetworkNodeOptions
+        @inject(Config.Network) options: BrubeckNodeOptions
     ) {
         this.options = options
         this.id = instanceId(this)
@@ -55,6 +56,20 @@ export default class BrubeckNode implements Context {
 
     private assertNotDestroyed() {
         this.destroySignal.assertNotDestroyed(this)
+    }
+
+    private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
+        if ((this.options.trackers as TrackerRegistrySmartContract).contractAddress) {
+            const trackerRegistry = await getTrackerRegistryFromContract({
+                contractAddress: (this.options.trackers as TrackerRegistrySmartContract).contractAddress,
+                jsonRpcProvider: this.ethereum.getMainnetProvider()
+            })
+            return {
+                ...this.options,
+                trackers: trackerRegistry.getAllTrackers()
+            }
+        }
+        return this.options as NetworkNodeOptions
     }
 
     private async initNode() {
@@ -77,10 +92,11 @@ export default class BrubeckNode implements Context {
         }
 
         this.debug('initNode', id)
+        const networkOptions = await this.getNormalizedNetworkOptions()
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             name: id,
-            ...options,
+            ...networkOptions,
             id,
             metricsContext: new MetricsContext(options.name ?? id)
         })

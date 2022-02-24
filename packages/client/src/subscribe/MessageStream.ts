@@ -16,7 +16,6 @@ export type MessageStreamOptions = {
     name?: string
 }
 
-// @internal
 export class MessageStream<
     T = unknown,
     InType = StreamMessage<T>,

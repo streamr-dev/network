@@ -100,19 +100,23 @@ describe('Session', () => {
         it('should set sessionToken', async () => {
             await session.getSessionToken()
             expect(loginFunction).toHaveBeenCalledTimes(1)
+            // @ts-expect-error private
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
 
         it('should not call sendLogin if token set', async () => {
+            // @ts-expect-error private
             session.options.sessionToken = 'session-token1'
             await session.getSessionToken()
             expect(loginFunction).toHaveBeenCalledTimes(0)
         })
 
         it('should call sendLogin if new token required', async () => {
+            // @ts-expect-error private
             session.options.sessionToken = 'expired-session-token'
             await session.getSessionToken(true)
             expect(loginFunction).toHaveBeenCalledTimes(1)
+            // @ts-expect-error private
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
     })

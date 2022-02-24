@@ -79,6 +79,7 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
+    private readonly publishMetrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
@@ -102,6 +103,9 @@ export class Node extends EventEmitter {
             .addRecordedMetric('propagateMessage')
             .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
+        this.publishMetrics = this.metricsContext.create('node/publish')
+            .addRecordedMetric('bytes')
+            .addRecordedMetric('count')
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
@@ -302,6 +306,10 @@ export class Node extends EventEmitter {
             logger.trace('received from %s data %j', source, streamMessage.messageId)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, source)
+            if (source === null) {
+                this.publishMetrics.record('count', 1)
+                this.publishMetrics.record('bytes', streamMessage.getSerializedContent().length)
+            }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.record('onDataReceived:ignoredDuplicate', 1)
