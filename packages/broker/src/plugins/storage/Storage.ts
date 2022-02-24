@@ -212,6 +212,8 @@ export class Storage extends EventEmitter {
     ): Readable {
         logger.trace('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
 
+        // TODO is there any reason why we shouldn't allow range queries which contain publisherId, but not msgChainId?
+        // (or maybe even queries with msgChain but without publisherId)
         const isValidRequest = (publisherId !== undefined && msgChainId !== undefined) || (publisherId === undefined && msgChainId === undefined)
         if (!isValidRequest) {
             throw new Error('Invalid combination of requestFrom arguments')
@@ -329,8 +331,6 @@ export class Storage extends EventEmitter {
             publisherId,
             msgChainId,
         })
-
-        const hasPublisher = (msgChainId !== undefined)
     
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) {
@@ -365,12 +365,17 @@ export class Storage extends EventEmitter {
                     }
                 ]
             }
-            if (hasPublisher) {
-                queries.forEach((q) => {
-                    q.where += ' AND publisher_id = ? AND msg_chain_id = ?'
-                    q.params.push(publisherId!, msgChainId)
-                })
-            }
+            
+            queries.forEach((q) => {
+                if (publisherId !== undefined) {
+                    q.where += ' AND publisher_id = ?'
+                    q.params.push(publisherId)
+                }
+                if (msgChainId !== undefined) {
+                    q.where += ' AND msg_chain_id = ?'
+                    q.params.push(msgChainId)
+                }    
+            })
 
             const streams = queries.map((q) => {
                 const select = `SELECT payload FROM stream_data ${q.where} ALLOW FILTERING`
