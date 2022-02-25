@@ -109,14 +109,14 @@ class StreamrStream implements StreamMetadata {
      * Persist stream metadata updates.
      */
     async update(props: Omit<StreamProperties, 'id'>) {
-        for (const key of Object.keys(props)) {
-            // @ts-expect-error
-            this[key] = props[key]
-        }
         try {
             await this._streamRegistry.updateStream(this.toObject())
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
+        }
+        for (const key of Object.keys(props)) {
+            // @ts-expect-error
+            this[key] = props[key]
         }
     }
 
