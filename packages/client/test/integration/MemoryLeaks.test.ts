@@ -126,23 +126,6 @@ describe('MemoryLeaks', () => {
                 leaksDetector.addAll(client.id, client)
                 await client.destroy()
             })
-
-            test('connect + destroy + session token', async () => {
-                const client = await createClient()
-                await client.connect()
-                leaksDetector.addAll(client.id, client)
-                await client.getSessionToken()
-                await client.destroy()
-            })
-
-            test('connect + disconnect + getAddress', async () => {
-                const client = await createClient()
-                await client.connect()
-                await client.getSessionToken()
-                await client.getAddress()
-                leaksDetector.addAll(client.id, client)
-                await client.destroy()
-            })
         })
 
         describe('stream', () => {
