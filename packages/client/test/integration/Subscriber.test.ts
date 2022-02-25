@@ -1,12 +1,21 @@
-import { wait } from 'streamr-test-utils'
+import { StreamPartID } from 'streamr-client-protocol'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats, collect } from '../test-utils/utils'
+import {
+    getPublishTestMessages,
+    getCreateClient,
+    describeRepeats,
+    collect,
+    toStreamDefinition,
+    createPartitionedTestStream,
+    createStreamPartIterator
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
-import { Stream } from '../../src/Stream'
 import { Subscription } from '../../src/subscribe/Subscription'
 import Subscriber from '../../src/subscribe/Subscriber'
+import { ConfigTest, StreamDefinition } from '../../src'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -16,34 +25,45 @@ describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
-    let stream: Stream
+    let streamParts: AsyncGenerator<StreamPartID>
+    let streamDefinition: StreamDefinition
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     const createClient = getCreateClient()
 
+    beforeAll(async () => {
+        const stream = await createPartitionedTestStream(module)
+        streamParts = createStreamPartIterator(stream)
+    })
+
     beforeEach(async () => {
+        streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
         expectErrors = 0
         onError = jest.fn()
     })
 
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
-        client = await createClient()
+        client = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: fastPrivateKey()
+            }
+        })
         M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
         ])
-        stream = await createTestStream(client, module)
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestMessages(client, stream)
+        publishTestMessages = getPublishTestMessages(client, streamDefinition)
     })
 
     afterEach(async () => {
         client.debug('after test')
         expect(await M.count()).toBe(0)
-        expect(await M.count(stream.id)).toBe(0)
+        expect(await M.count(streamDefinition)).toBe(0)
         expect(M.countSubscriptionSessions()).toBe(0)
     })
 
@@ -55,8 +75,8 @@ describeRepeats('Subscriber', () => {
 
     describe('basics', () => {
         it('works when passing stream', async () => {
-            const sub = await M.subscribe(stream)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages(NUM_MESSAGES)
 
@@ -66,8 +86,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('works when passing { stream: stream }', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages()
 
@@ -76,26 +96,26 @@ describeRepeats('Subscriber', () => {
         })
 
         it('works when passing streamId as string', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages()
 
             const received = await sub.collectContent(published.length)
             expect(received).toEqual(published)
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         // it('errors if not connected', async () => {
         // await client.disconnect()
         // await expect(() => (
-        // M.subscribe(stream)
+        // M.subscribe(streamDefinition)
         // )).rejects.toThrow('connect')
-        // expect(await M.count(stream.id)).toBe(0)
+        // expect(await M.count(streamDefinition)).toBe(0)
         // })
 
         it('errors if iterating twice', async () => {
-            const sub = await M.subscribe(stream)
+            const sub = await M.subscribe(streamDefinition)
             const c1 = sub.collect()
 
             await expect(async () => (
@@ -106,15 +126,13 @@ describeRepeats('Subscriber', () => {
 
             expect(m).toEqual([])
 
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         describe('subscription error handling', () => {
             it('works when error thrown inline', async () => {
                 const err = new Error('expected')
-                const sub = (await M.subscribe({
-                    ...stream,
-                })).pipe(async function* ThrowError(s) {
+                const sub = (await M.subscribe(streamDefinition)).pipe(async function* ThrowError(s) {
                     let count = 0
                     for await (const msg of s) {
                         if (count === MAX_ITEMS) {
@@ -125,7 +143,7 @@ describeRepeats('Subscriber', () => {
                     }
                 })
 
-                expect(await M.count(stream.id)).toBe(1)
+                expect(await M.count(streamDefinition)).toBe(1)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -144,9 +162,7 @@ describeRepeats('Subscriber', () => {
             it('works when multiple steps error', async () => {
                 const err = new Error('expected')
 
-                const sub = await M.subscribe({
-                    ...stream,
-                })
+                const sub = await M.subscribe(streamDefinition)
 
                 const v = sub
                     .pipe(async function* ThrowError1(s) {
@@ -170,7 +186,7 @@ describeRepeats('Subscriber', () => {
                         }
                     })
 
-                expect(await M.count(stream.id)).toBe(1)
+                expect(await M.count(streamDefinition)).toBe(1)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -187,8 +203,8 @@ describeRepeats('Subscriber', () => {
 
             it('keeps other subscriptions running if one subscription errors', async () => {
                 const err = new Error('expected')
-                const sub1 = await M.subscribe(stream.id)
-                const sub2 = await M.subscribe(stream.id)
+                const sub1 = await M.subscribe(streamDefinition)
+                const sub2 = await M.subscribe(streamDefinition)
 
                 let count = 0
                 sub1.pipe(async function* ThrowError(s) {
@@ -216,7 +232,7 @@ describeRepeats('Subscriber', () => {
 
             it('errors subscription iterator do not trigger onError', async () => {
                 const err = new Error('expected')
-                const sub1 = await M.subscribe(stream.id)
+                const sub1 = await M.subscribe(streamDefinition)
 
                 const onError1 = jest.fn()
                 sub1.onError(onError1)
@@ -245,7 +261,7 @@ describeRepeats('Subscriber', () => {
                 const err = new Error('expected')
                 let count = 0
                 const received1: any[] = []
-                const sub1 = await M.subscribe(stream.id, (content) => {
+                const sub1 = await M.subscribe(streamDefinition, (content) => {
                     if (count === MAX_ITEMS) {
                         sub1.debug('throwing...')
                         throw err
@@ -269,7 +285,7 @@ describeRepeats('Subscriber', () => {
                 const err = new Error('expected')
                 let count = 0
                 const received1: any[] = []
-                const sub1 = await M.subscribe(stream.id, (content) => {
+                const sub1 = await M.subscribe(streamDefinition, (content) => {
                     if (count === MAX_ITEMS) {
                         sub1.debug('throwing...')
                         throw err
@@ -278,7 +294,7 @@ describeRepeats('Subscriber', () => {
                     received1.push(content)
                 })
 
-                const sub2 = await M.subscribe(stream.id)
+                const sub2 = await M.subscribe(streamDefinition)
 
                 const onError1 = jest.fn()
                 sub1.onError(onError1)
@@ -295,14 +311,14 @@ describeRepeats('Subscriber', () => {
                 expect(onError1).toHaveBeenCalledWith(err)
                 expect(onError2).toHaveBeenCalledTimes(0)
                 expect(count).toEqual(MAX_ITEMS)
-                expect(await M.count(stream.id)).toBe(0)
+                expect(await M.count(streamDefinition)).toBe(0)
             })
 
             it('keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
                 const THROW_AFTER = MAX_ITEMS
                 const err = new Error('expected')
-                const sub1 = await M.subscribe(stream.id)
-                const sub2 = await M.subscribe(stream.id)
+                const sub1 = await M.subscribe(streamDefinition)
+                const sub2 = await M.subscribe(streamDefinition)
 
                 expect(sub1.context).toBe(sub2.context)
                 sub1.context.pipeline.forEachBefore((s, count) => {
@@ -347,8 +363,8 @@ describeRepeats('Subscriber', () => {
 
             it('multiple publishers: keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
                 const THROW_AFTER = MAX_ITEMS
-                const sub1 = await M.subscribe(stream.id)
-                const sub2 = await M.subscribe(stream.id)
+                const sub1 = await M.subscribe(streamDefinition)
+                const sub2 = await M.subscribe(streamDefinition)
 
                 expect(sub1.context).toBe(sub2.context)
                 let msgChainId: string
@@ -389,7 +405,7 @@ describeRepeats('Subscriber', () => {
                     auth: client.options.auth,
                 })
 
-                const publishTestMessages2 = getPublishTestMessages(client2, stream)
+                const publishTestMessages2 = getPublishTestMessages(client2, streamDefinition)
                 const publishTask = publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
@@ -421,7 +437,7 @@ describeRepeats('Subscriber', () => {
             })
 
             /*
-            describe.skip('error is bad groupkey', () => {
+            describe('error is bad groupkey', () => {
                 let sub: Subscription
                 const BAD_GROUP_KEY_ID = 'BAD_GROUP_KEY_ID'
 
@@ -445,7 +461,7 @@ describeRepeats('Subscriber', () => {
                         ]
                     })
 
-                    expect(await M.count(stream.id)).toBe(1)
+                    expect(await M.count(streamDefinition)).toBe(1)
                 })
 
                 it('throws subscription loop when encountering bad message', async () => {
@@ -468,9 +484,7 @@ describeRepeats('Subscriber', () => {
             it('will skip bad message if error handler attached', async () => {
                 const err = new Error('expected')
 
-                const sub = await M.subscribe({
-                    ...stream,
-                })
+                const sub = await M.subscribe(streamDefinition)
                 sub.forEach((_item, index) => {
                     if (index === MAX_ITEMS) {
                         sub.debug('THROWING ERR')
@@ -514,9 +528,7 @@ describeRepeats('Subscriber', () => {
             it('will not skip bad message if error handler attached & throws', async () => {
                 const err = new Error('expected')
 
-                const sub = await M.subscribe({
-                    ...stream,
-                })
+                const sub = await M.subscribe(streamDefinition)
 
                 sub.forEach((_item, index) => {
                     if (index === MAX_ITEMS) {
@@ -551,8 +563,8 @@ describeRepeats('Subscriber', () => {
 
     describe('ending a subscription', () => {
         it('can kill stream using async unsubscribe', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             await publishTestMessages()
             let unsubscribeTask!: Promise<any>
@@ -583,8 +595,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can kill stream with throw', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             await publishTestMessages()
 
@@ -604,10 +616,10 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can subscribe to stream multiple times, get updates then unsubscribe', async () => {
-            const sub1 = await M.subscribe(stream.id)
-            const sub2 = await M.subscribe(stream.id)
+            const sub1 = await M.subscribe(streamDefinition)
+            const sub2 = await M.subscribe(streamDefinition)
 
-            expect(await M.count(stream.id)).toBe(2)
+            expect(await M.count(streamDefinition)).toBe(2)
 
             const published = await publishTestMessages()
 
@@ -630,11 +642,11 @@ describeRepeats('Subscriber', () => {
 
         it('can subscribe to stream multiple times in parallel, get updates then unsubscribe', async () => {
             const [sub1, sub2] = await Promise.all([
-                M.subscribe(stream.id),
-                M.subscribe(stream.id),
+                M.subscribe(streamDefinition),
+                M.subscribe(streamDefinition),
             ])
 
-            expect(await M.count(stream.id)).toBe(2)
+            expect(await M.count(streamDefinition)).toBe(2)
             const published = await publishTestMessages()
 
             const [received1, received2] = await Promise.all([
@@ -655,8 +667,8 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can subscribe to stream and get some updates then unsubscribe mid-stream with end', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages()
 
@@ -669,11 +681,11 @@ describeRepeats('Subscriber', () => {
             }
 
             expect(received).toEqual(published.slice(0, 1))
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         it('finishes unsubscribe before returning', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await M.subscribe(streamDefinition)
 
             const published = await publishTestMessages()
 
@@ -682,7 +694,7 @@ describeRepeats('Subscriber', () => {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
                     await sub.return()
-                    expect(await M.count(stream.id)).toBe(0)
+                    expect(await M.count(streamDefinition)).toBe(0)
                 }
             }
             expect(received).toHaveLength(MAX_ITEMS)
@@ -690,7 +702,7 @@ describeRepeats('Subscriber', () => {
         })
 
         it('finishes unsubscribe before returning from cancel', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await M.subscribe(streamDefinition)
 
             const published = await publishTestMessages()
 
@@ -699,7 +711,7 @@ describeRepeats('Subscriber', () => {
                 received.push(m.getParsedContent())
                 if (received.length === MAX_ITEMS) {
                     await sub.unsubscribe()
-                    expect(await M.count(stream.id)).toBe(0)
+                    expect(await M.count(streamDefinition)).toBe(0)
                 }
             }
             expect(received).toHaveLength(MAX_ITEMS)
@@ -707,7 +719,7 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can unsubscribe + return and it will wait for unsubscribe', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await M.subscribe(streamDefinition)
 
             const published = await publishTestMessages()
 
@@ -719,7 +731,7 @@ describeRepeats('Subscriber', () => {
                         sub.return(),
                         sub.unsubscribe(),
                     ])
-                    expect(await M.count(stream.id)).toBe(0)
+                    expect(await M.count(streamDefinition)).toBe(0)
                 }
             }
             expect(received).toHaveLength(MAX_ITEMS)
@@ -727,7 +739,7 @@ describeRepeats('Subscriber', () => {
         })
 
         it('can cancel multiple times and it will wait for unsubscribe', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await M.subscribe(streamDefinition)
 
             const published = await publishTestMessages()
 
@@ -741,7 +753,7 @@ describeRepeats('Subscriber', () => {
                         sub.unsubscribe(),
                     ]
                     await Promise.all(tasks)
-                    expect(await M.count(stream.id)).toBe(0)
+                    expect(await M.count(streamDefinition)).toBe(0)
                 }
             }
             expect(received).toHaveLength(MAX_ITEMS)
@@ -749,10 +761,10 @@ describeRepeats('Subscriber', () => {
         })
 
         it('will clean up if iterator returned before start', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(await M.count(stream.id)).toBe(1)
+            const sub = await M.subscribe(streamDefinition)
+            expect(await M.count(streamDefinition)).toBe(1)
             await sub.return()
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
 
             await publishTestMessages()
 
@@ -762,39 +774,39 @@ describeRepeats('Subscriber', () => {
             }
             expect(received).toHaveLength(0)
 
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         it('can subscribe then unsubscribe in parallel', async () => {
             const [sub] = await Promise.all([
-                M.subscribe(stream.id),
-                M.unsubscribe(stream.id),
+                M.subscribe(streamDefinition),
+                M.unsubscribe(streamDefinition),
             ])
 
-            expect(await M.count(stream.id)).toBe(1)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages(3)
 
             const received = await sub.collectContent(3)
 
             expect(received).toEqual(published)
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         it('can unsubscribe then subscribe in parallel', async () => {
             const [_, sub] = await Promise.all([
-                M.unsubscribe(stream.id),
-                M.subscribe(stream.id),
+                M.unsubscribe(streamDefinition),
+                M.subscribe(streamDefinition),
             ])
 
-            expect(await M.count(stream.id)).toBe(1)
+            expect(await M.count(streamDefinition)).toBe(1)
 
             const published = await publishTestMessages(3)
 
             const received = await sub.collectContent(3)
 
             expect(received).toEqual(published)
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
     })
 
@@ -804,8 +816,8 @@ describeRepeats('Subscriber', () => {
         let published: unknown[]
 
         beforeEach(async () => {
-            sub1 = await M.subscribe(stream.id)
-            sub2 = await M.subscribe(stream.id)
+            sub1 = await M.subscribe(streamDefinition)
+            sub2 = await M.subscribe(streamDefinition)
             published = await publishTestMessages(5, { delay: 50 })
         })
 
@@ -826,7 +838,7 @@ describeRepeats('Subscriber', () => {
                     }
 
                     if (received.length === MAX_ITEMS) {
-                        await M.unsubscribe(stream.id)
+                        await M.unsubscribe(streamDefinition)
                         sub1ReceivedAtUnsubscribe = sub1Received.slice()
                     }
                 }),
@@ -834,7 +846,7 @@ describeRepeats('Subscriber', () => {
             expect(received1).toEqual(published.slice(0, sub1ReceivedAtUnsubscribe.length))
             expect(received2).toEqual(published.slice(0, MAX_ITEMS))
             expect(sub1ReceivedAtUnsubscribe).toEqual(sub1Received)
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         it('can subscribe to stream multiple times then unsubscribe one mid-stream', async () => {
@@ -855,7 +867,7 @@ describeRepeats('Subscriber', () => {
             expect(received2).toEqual(published.slice(0, MAX_ITEMS))
             expect(received1).toEqual(published)
             expect(sub2ReceivedAtUnsubscribe).toEqual(received2)
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
 
         it('can subscribe to stream multiple times then return mid-stream', async () => {
@@ -874,7 +886,7 @@ describeRepeats('Subscriber', () => {
 
             expect(received1).toEqual(published.slice(0, MAX_ITEMS - 1))
             expect(received2).toEqual(published.slice(0, MAX_ITEMS))
-            expect(await M.count(stream.id)).toBe(0)
+            expect(await M.count(streamDefinition)).toBe(0)
         })
     })
 })
