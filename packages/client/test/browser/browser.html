@@ -198,6 +198,10 @@
         $('#result').append($(`<div class="row"><div class="content ${className}">${content}</div><div class='timestamp'>+${duration}ms</div></div>`))
     }
 
+    function wait(ms) { // TODO use from test-utils?
+        return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+
     function logError(content) {
         log(content, 'error')
     }
@@ -279,6 +283,9 @@
         })
         log('Set Permissions.')
         log('Loading permissions...')
+        // we should wait until permissions are propagated to TheGraph
+        // replace the time-based wait in NET-606
+        await wait(5000)
         const allAssignments = await stream.getPermissions()
         const modifiedAssignment = allAssignments.find(p => (p.user.toLowerCase() === subscriberAddress.toLowerCase()))
         log(`Permissions: [${modifiedAssignment.permissions.join(',')}]`, 'permissionsResult')

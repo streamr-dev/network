@@ -2,9 +2,9 @@ import assert from 'assert'
 
 import { ethers } from 'ethers'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import { getCreateClient } from '../test-utils/utils'
+import { getCreateClient } from '../../test-utils/utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
@@ -57,22 +57,6 @@ describe('LoginEndpoints', () => {
             // assert(sessionToken.token)
             /// / @ts-expect-error
             // assert(sessionToken.expires)
-        })
-    })
-
-    describe('API key login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithApiKey('apikey')
-            }).rejects.toThrow()
-        })
-    })
-
-    describe('Username/password login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithUsernamePassword('username', 'password')
-            }).rejects.toThrow('no longer supported')
         })
     })
 

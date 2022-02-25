@@ -1,6 +1,6 @@
 {
   "name": "streamr-network",
-  "version": "34.0.0",
+  "version": "35.0.0",
   "description": "Minimal and extendable implementation of the Streamr Network network node.",
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "scripts": {
     "build": "npm run prepare",
     "build-browser": "webpack --mode=development --progress",
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -38,7 +39,7 @@
     "test-flakey": "jest test/flakey",
     "test-integration": "jest test/integration/",
     "test-simulator": "jest --projects simulator.jest.config.js -- test/",
-    "test-types": "tsc --noEmit -b ./tsconfig.json ",
+    "test-types": "npm run check",
     "test-unit": "jest test/unit",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },

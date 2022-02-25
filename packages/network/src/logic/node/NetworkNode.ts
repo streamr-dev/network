@@ -2,7 +2,7 @@ import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Event, Node, NodeId, NodeOptions } from './Node'
 
 /*
-Convenience wrapper for building client-facing functionality. Used by broker.
+Convenience wrapper for building client-facing functionality. Used by client.
  */
 export class NetworkNode extends Node {
     constructor(opts: NodeOptions) {
@@ -59,6 +59,16 @@ export class NetworkNode extends Node {
 
     subscribe(streamPartId: StreamPartID): void {
         this.subscribeToStreamIfHaveNotYet(streamPartId)
+    }
+
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
+        return this.subscribeAndWaitForJoinOperation(streamPartId, timeout)
+    }
+
+    async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
+        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamMessage.getStreamPartID(), timeout)
+        this.onDataReceived(streamMessage)
+        return numOfNeighbors
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
