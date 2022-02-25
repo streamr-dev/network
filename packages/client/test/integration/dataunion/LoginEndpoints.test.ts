@@ -2,9 +2,9 @@ import assert from 'assert'
 
 import { ethers } from 'ethers'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import { getCreateClient } from '../test-utils/utils'
+import { getCreateClient } from '../../test-utils/utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
@@ -60,22 +60,6 @@ describe('LoginEndpoints', () => {
         })
     })
 
-    describe('API key login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithApiKey('apikey')
-            }).rejects.toThrow()
-        })
-    })
-
-    describe('Username/password login', () => {
-        it('should fail', async () => {
-            await expect(async () => {
-                await client.loginWithUsernamePassword('username', 'password')
-            }).rejects.toThrow('no longer supported')
-        })
-    })
-
     describe('UserInfo', () => {
         it('should get user info', async () => {
             const userInfo = await client.getUserInfo()
@@ -87,9 +71,11 @@ describe('LoginEndpoints', () => {
     describe('logout', () => {
         it('should not be able to use the same session token after logout', async () => {
             await client.getUserInfo() // first fetches the session token, then requests the endpoint
+            // @ts-expect-error private
             const sessionToken1 = client.session.options.sessionToken
             await client.logoutEndpoint() // invalidates the session token in core-api
             await client.getUserInfo() // requests the endpoint with sessionToken1, receives 401, fetches a new session token
+            // @ts-expect-error private
             const sessionToken2 = client.session.options.sessionToken
             assert.notDeepStrictEqual(sessionToken1, sessionToken2)
         })

@@ -38,6 +38,18 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         this.subsciptions.delete(streamPartId)
     }
 
+    async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
+        this.subsciptions.add(streamPartId)
+        return this.getNeighborsForStreamPart(streamPartId).length
+    }
+
+    async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
+        const streamPartID = msg.getStreamPartID()
+        this.subsciptions.add(streamPartID)
+        this.publish(msg)
+        return this.getNeighborsForStreamPart(streamPartID).length
+    }
+
     publish(msg: StreamMessage): void {
         /*
          * This serialization+serialization is needed in test/integration/Encryption.ts
@@ -133,12 +145,10 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    // eslint-disable-next-line class-methods-use-this
     async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     // eslint-disable-next-line class-methods-use-this
     async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
         throw new Error('not implemented')

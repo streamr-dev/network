@@ -34,7 +34,8 @@ import {
     PermissionQueryResult,
     PUBLIC_PERMISSION_ADDRESS,
     SingleStreamQueryResult,
-    streamPermissionToSolidityType
+    streamPermissionToSolidityType,
+    ChainPermissions
 } from './permission'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 
@@ -256,9 +257,21 @@ export class StreamRegistry implements Context {
     }
 
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        if ((term === undefined) && (permissionFilter === undefined)) {
+            throw new Error('Requires a search term or a permission filter')
+        }
         this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
         return map(
-            fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+            filter(fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+                (item: SearchStreamsResultItem) => {
+                    try {
+                        Stream.parsePropertiesFromMetadata(item.stream.metadata)
+                        return true
+                    } catch (err) {
+                        this.debug('Omitting stream %s from result because %s', item.stream.id, err.message)
+                        return false
+                    }
+                }),
             (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
         )
     }
@@ -422,17 +435,29 @@ export class StreamRegistry implements Context {
         }
     }
 
-    async setPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+    async setPermissions(...items: {
+        streamId: string,
+        assignments: PermissionAssignment[]
+    }[]): Promise<void> {
+        const streamIds: StreamID[] = []
+        const targets: string[][] = []
+        const chainPermissions: ChainPermissions[][] = []
+        for (const item of items) {
+            // eslint-disable-next-line no-await-in-loop
+            const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
+            this.streamEndpointsCached.clearStream(streamId)
+            streamIds.push(streamId)
+            targets.push(item.assignments.map((assignment) => {
+                return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
+            }))
+            chainPermissions.push(item.assignments.map((assignment) => {
+                return convertStreamPermissionsToChainPermission(assignment.permissions)
+            }))
+        }
         await this.connectToStreamRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
-        const targets = assignments.map((assignment) => {
-            return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
-        })
-        const chainPermissions = assignments.map((assignment) => convertStreamPermissionsToChainPermission(assignment.permissions))
-        const txToSubmit = this.streamRegistryContract!.setPermissions(
-            streamId,
+        const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreans(
+            streamIds,
             targets,
             chainPermissions,
             ethersOverrides

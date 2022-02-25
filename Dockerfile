@@ -2,7 +2,7 @@ FROM node:16-bullseye as build
 WORKDIR /usr/src/monorepo
 RUN npm set unsafe-perm true && \
 	# explicitly use npm v8
-	npm install -g npm@8 --no-audit
+	npm install -g npm@8.4.1 --no-audit
 COPY . .
 RUN npm config set python "$(which python3)" && npm run bootstrap-pkg -- streamr-broker
 

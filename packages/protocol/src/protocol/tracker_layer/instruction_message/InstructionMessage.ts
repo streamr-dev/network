@@ -1,7 +1,7 @@
 import {
     validateIsNotEmptyString,
     validateIsNotNegativeInteger,
-    validateIsArray
+    validateIsArray, validateIsInteger
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 import { StreamID } from '../../../utils'
@@ -28,7 +28,7 @@ export default class InstructionMessage extends TrackerMessage {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsArray('nodeIds', nodeIds)
-        validateIsNotNegativeInteger('counter', counter)
+        validateIsInteger('counter', counter)
 
         this.streamId = streamId
         this.streamPartition = streamPartition

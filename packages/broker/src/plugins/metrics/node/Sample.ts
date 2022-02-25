@@ -68,8 +68,8 @@ export class SampleFactory {
         const metricsReport = await this.metricsContext.report(true)
         return {
             broker: {
-                messagesToNetworkPerSec: -1, // TODO: NET-636: can we get these from client somehow?
-                bytesToNetworkPerSec: -1,
+                messagesToNetworkPerSec: (metricsReport.metrics['node/publish'].count as any).rate as number,
+                bytesToNetworkPerSec: (metricsReport.metrics['node/publish'].bytes as any).rate as number,
             },
             network: {
                 avgLatencyMs: metricsReport.metrics.node.latency as number,
