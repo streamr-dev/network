@@ -44,7 +44,7 @@ describeRepeats('StreamrClient', () => {
     let streamDefinition: { id: string, partition: number }
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream()
+        const stream = await createPartitionedTestStream(module)
         streamParts = createStreamPartIterator(stream)
     })
 

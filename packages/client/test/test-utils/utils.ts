@@ -664,7 +664,8 @@ export class Multimap<K, V> {
     }
 }
 
-export const createPartitionedTestStream = async (): Promise<Stream> => {
+// eslint-disable-next-line no-undef
+export const createPartitionedTestStream = async (module: NodeModule): Promise<Stream> => {
     const client = new StreamrClient({
         ...clientOptions,
         auth: {

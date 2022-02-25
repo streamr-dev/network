@@ -33,7 +33,7 @@ describeRepeats('Subscriber', () => {
     const createClient = getCreateClient()
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream()
+        const stream = await createPartitionedTestStream(module)
         streamParts = createStreamPartIterator(stream)
     })
 
