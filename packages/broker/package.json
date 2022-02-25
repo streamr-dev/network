@@ -15,6 +15,7 @@
   },
   "main": "bin/broker.js",
   "scripts": {
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "prepare": "npm run build",
     "test": "jest --forceExit test/unit test/integration && npm run test-sequential",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",

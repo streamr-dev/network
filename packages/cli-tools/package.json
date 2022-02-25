@@ -6,6 +6,7 @@
     "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepare": "npm run eslint && npm run build",
     "build": "tsc -b tsconfig.json",
