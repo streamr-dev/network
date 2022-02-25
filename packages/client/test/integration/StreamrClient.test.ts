@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import { MessageLayer, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
 
 import {
     Msg,
@@ -62,7 +62,11 @@ describeRepeats('StreamrClient', () => {
     })
 
     beforeEach(async () => {
-        client = await createClient()
+        client = await createClient({
+            auth: {
+                privateKey: fastPrivateKey()
+            }
+        })
         await client.connect()
         publishTestMessages = getPublishTestMessages(client, streamDefinition)
         expect(onError).toHaveBeenCalledTimes(0)
