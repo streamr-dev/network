@@ -258,7 +258,16 @@ export class StreamRegistry implements Context {
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
         this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
         return map(
-            fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+            filter(fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+                (item: SearchStreamsResultItem) => {
+                    try {
+                        Stream.parsePropertiesFromMetadata(item.stream.metadata)
+                        return true
+                    } catch (err) {
+                        this.debug('Omitting stream %s from result because %s', item.stream.id, err.message)
+                        return false
+                    }
+                }),
             (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
         )
     }
