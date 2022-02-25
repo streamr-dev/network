@@ -240,6 +240,9 @@ describe('StreamEndpoints', () => {
                     return false
                 }
             }, 100000, 1000)
+            // check that other fields not overwritten
+            const updatedStream = await client.getStream(createdStream.id)
+            expect(updatedStream.requireSignedData).toBe(true)
         })
     })
 

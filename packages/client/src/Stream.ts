@@ -110,7 +110,11 @@ class StreamrStream implements StreamMetadata {
      */
     async update(props: Omit<StreamProperties, 'id'>) {
         try {
-            await this._streamRegistry.updateStream(this.toObject())
+            await this._streamRegistry.updateStream({
+                ...this.toObject(),
+                ...props,
+                id: this.id
+            })
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
