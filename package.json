@@ -2,6 +2,7 @@
     "name": "streamr-monorepo",
     "private": true,
     "scripts": {
+        "check": "npm run --workspaces --if-present check",
         "prepare": "husky install && npm run versions",
         "bootstrap": "npm ci --no-audit",
         "bootstrap-pkg": "npm ci --no-audit --include-workspace-root --workspace",
