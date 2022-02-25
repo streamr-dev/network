@@ -1,6 +1,6 @@
 {
   "name": "streamr-broker",
-  "version": "31.0.0-beta.3",
+  "version": "31.0.0",
   "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
@@ -15,6 +15,7 @@
   },
   "main": "bin/broker.js",
   "scripts": {
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "prepare": "npm run build",
     "test": "jest --forceExit test/unit test/integration && npm run test-sequential",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
@@ -60,9 +61,9 @@
     "p-limit": "^3.1.0",
     "pino-pretty": "^5.0.2",
     "qs": "^6.10.1",
-    "streamr-client": "^6.0.0-beta.3",
+    "streamr-client": "^6.0.0",
     "streamr-client-protocol": "^12.0.0",
-    "streamr-network": "^34.0.0",
+    "streamr-network": "^35.0.0",
     "streamr-test-utils": "^2.0.0",
     "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",

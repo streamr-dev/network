@@ -187,7 +187,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     },
     cache: {
         maxSize: 10000,
-        maxAge: 30 * 60 * 1000, // 30 minutes
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
     _timeouts: {
         theGraph: {
