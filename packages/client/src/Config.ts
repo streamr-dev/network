@@ -105,6 +105,7 @@ export type StrictStreamrClientConfig = {
     cache: CacheConfig,
     /** @internal */
     _timeouts: TimeoutsConfig
+    /** @internal */
     debug: DebugConfig
 } & (
     EthereumConfig
@@ -116,6 +117,7 @@ export type StrictStreamrClientConfig = {
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataUnion' | 'network' | 'debug'> & {
     dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
     network: Partial<StrictStreamrClientConfig['network']>
+    /** @internal */
     debug: Partial<StrictStreamrClientConfig['debug']>
 }>
 
