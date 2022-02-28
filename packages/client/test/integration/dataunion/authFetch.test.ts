@@ -3,9 +3,9 @@ jest.mock('node-fetch')
 import fetch from 'node-fetch'
 import { fastPrivateKey } from 'streamr-test-utils'
 
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 
-import clientOptions from './config'
+import clientOptions from '../config'
 
 describe('authFetch', () => {
     let client: StreamrClient

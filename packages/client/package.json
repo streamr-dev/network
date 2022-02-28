@@ -1,6 +1,6 @@
 {
     "name": "streamr-client",
-    "version": "6.0.0-beta.4",
+    "version": "6.0.1",
     "description": "JavaScript client library for Streamr",
     "private": true,
     "repository": {
@@ -21,6 +21,7 @@
     "scripts": {
         "build": "npm run bootstrap-dist && npm run build-node",
         "build-production": "npm run clean; npm run bootstrap-dist && NODE_ENV=production npm run build-node && npm run build-browser-production",
+        "check": "tsc -p ./tsconfig.json --noEmit",
         "prepare": "npm run build",
         "vendor": "SRCDIR=`node -p \"path.dirname(require.resolve('quick-lru'))\"` bash -c 'mkdir -p vendor/quick-lru; cp -n $SRCDIR/index.d.ts vendor/quick-lru; cp -n $SRCDIR/index.js vendor/quick-lru'; true",
         "copy-package": "mkdir -p dist/; node copy-package.js; cp -f README.md LICENSE readme-header-img.png dist; mkdir -p dist/src/encryption/migrations; cp -f ./src/encryption/migrations/* dist/src/encryption/migrations; true",

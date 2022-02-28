@@ -1,5 +1,6 @@
 ---
-name: Network – Lint, Test and Publish
+# Lint, Test and Publish
+name: Network
 
 on:
   push:

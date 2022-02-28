@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash'
 import { validateConfig as validateClientConfig } from 'streamr-client'
 import { createMigratedConfig, formSchemaUrl, needsMigration } from '../../src/config/migration'
-import BROKER_CONFIG_SCHEMA from '../../src/helpers/config.schema.json'
+import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import WEBSOCKER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/websocket/config.schema.json'
 import MQTT_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/mqtt/config.schema.json'
 import BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/brubeckMiner/config.schema.json'
