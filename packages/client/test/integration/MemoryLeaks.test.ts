@@ -43,8 +43,6 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    autoConnect: false,
-                    autoDisconnect: false,
                     maxRetries: 2,
                     ...opts,
                 })
@@ -103,8 +101,6 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    autoConnect: false,
-                    autoDisconnect: false,
                     maxRetries: 2,
                     ...opts,
                 })

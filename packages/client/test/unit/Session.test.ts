@@ -16,8 +16,6 @@ describe('Session', () => {
 
     const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
         ...clientOptions,
-        autoConnect: false,
-        autoDisconnect: false,
         ...opts,
     }, parentContainer)
 

@@ -38,8 +38,6 @@ describe.skip('no memleaks when publishing a high quantity of large messages', (
     // const afterFn = addAfterFn()
 
     const createClient = (opts = {}) => new StreamrClient({
-        autoConnect: false,
-        autoDisconnect: false,
         ...opts,
     })
 
