@@ -31,7 +31,7 @@ export type {
     NetworkConfig,
     DebugConfig,
     StrictStreamrClientConfig,
-    StreamrClientConfig as StreamrClientOptions
+    StreamrClientConfig
 } from './Config'
 export {
     STREAMR_STORAGE_NODE_GERMANY,

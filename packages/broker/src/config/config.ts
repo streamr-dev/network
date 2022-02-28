@@ -1,4 +1,4 @@
-import { StreamrClientOptions } from 'streamr-client'
+import { StreamrClientConfig } from 'streamr-client'
 import { SmartContractRecord } from 'streamr-client-protocol'
 import path from 'path'
 import * as os from 'os'
@@ -20,7 +20,7 @@ export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
     $schema: string,
-    client: StreamrClientOptions
+    client: StreamrClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig
