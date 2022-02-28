@@ -6,7 +6,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import { ConfigTest } from '../../src/ConfigTest'
-import { StrictStreamrClientConfig } from '../../src/Config'
+import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5
@@ -38,7 +38,7 @@ describe('MemoryLeaks', () => {
                 config: StrictStreamrClientConfig;
                 childContainer: DependencyContainer;
                 rootContext: any;}> => {
-                return initContainer({
+                const config = createStrictConfig({
                     ...ConfigTest,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
@@ -48,6 +48,8 @@ describe('MemoryLeaks', () => {
                     maxRetries: 2,
                     ...opts,
                 })
+                const { childContainer, rootContext } = initContainer(config)
+                return { config, childContainer, rootContext }
             }
         })
 
