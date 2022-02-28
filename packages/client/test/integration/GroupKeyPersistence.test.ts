@@ -51,8 +51,6 @@ describe('Group Key Persistence', () => {
             })
             subscriber = clientFactory.createClient({
                 id: 'subscriber',
-                autoConnect: true,
-                autoDisconnect: true,
                 auth: {
                     privateKey: subscriberPrivateKey,
                 }

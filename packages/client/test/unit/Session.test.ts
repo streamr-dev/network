@@ -16,16 +16,14 @@ describe('Session', () => {
     let logoutFunction: jest.MockedFunction<any>
 
     const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => {
-        const foobar = {
+        const config = {
             ...ConfigTest,
             auth: {
                 privateKey: fastPrivateKey(),
             },
-            autoConnect: false,
-            autoDisconnect: false,
             ...opts,
         }
-        return new StreamrClient(foobar, parentContainer)
+        return new StreamrClient(config, parentContainer)
     }
 
     function setup(opts?: any) {

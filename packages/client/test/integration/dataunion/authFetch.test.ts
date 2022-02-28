@@ -32,8 +32,6 @@ describe('authFetch', () => {
         fetch.mockImplementation(realFetch)
         client = new StreamrClient({
             ...ConfigTest,
-            autoConnect: false,
-            autoDisconnect: false,
             auth: {
                 privateKey: fastPrivateKey()
             },

@@ -107,15 +107,23 @@ class StreamrStream implements StreamMetadata {
     /**
      * Persist stream metadata updates.
      */
-    async update() {
+    async update(props: Omit<StreamProperties, 'id'>) {
         try {
-            await this._streamRegistry.updateStream(this.toObject())
+            await this._streamRegistry.updateStream({
+                ...this.toObject(),
+                ...props,
+                id: this.id
+            })
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
+        for (const key of Object.keys(props)) {
+            // @ts-expect-error
+            this[key] = props[key]
+        }
     }
 
-    toObject() : StreamProperties {
+    toObject(): StreamProperties {
         const result = {}
         Object.keys(this).forEach((key) => {
             if (key.startsWith('_') || typeof key === 'function') { return }
@@ -157,8 +165,11 @@ class StreamrStream implements StreamMetadata {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        this.config.fields = fields
-        await this.update()
+        await this.update({
+            config: {
+                fields
+            }
+        })
     }
 
     async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
