@@ -27,7 +27,7 @@ import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { ClientConfig } from '.'
+import { ClientConfig } from './ConfigBase'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -271,5 +271,3 @@ export const Dependencies = {
     DestroySignal,
     DataUnions,
 }
-
-export { StreamrClientConfig as StreamrClientOptions } from './Config'

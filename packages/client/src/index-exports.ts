@@ -2,7 +2,6 @@
  * This file captures named exports so we can manipulate them for cjs/browser builds.
  */
 export * from './StreamrClient'
-export * from './Config'
 export * from './Stream'
 export * from './encryption/Encryption'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
@@ -23,11 +22,27 @@ export * from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
+export type {
+    CacheConfig,
+    SubscribeConfig,
+    ConnectionConfig,
+    DataUnionConfig,
+    TrackerRegistrySmartContract,
+    NetworkConfig,
+    DebugConfig,
+    StrictStreamrClientConfig,
+    StreamrClientConfig as StreamrClientOptions
+} from './ConfigBase'
+export {
+    STREAMR_STORAGE_NODE_GERMANY,
+    STREAM_CLIENT_DEFAULTS,
+    validateConfig
+} from './ConfigBase'
+
 export { ConfigTest } from './ConfigTest'
-import { validateConfig } from './ConfigBase'
 import { NetworkNodeStub } from './BrubeckNode'
 
-export { validateConfig, NetworkNodeStub }
+export { NetworkNodeStub }
 export * from './dataunion/DataUnion'
 export * from './authFetch'
 export * from './types'

@@ -16,12 +16,11 @@ import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
 import CONFIG_SCHEMA from './config.schema.json'
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
-import { SmartContractRecord } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
