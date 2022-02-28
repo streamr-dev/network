@@ -57,10 +57,6 @@ describe('StreamrClient Resend', () => {
             .verify.containsText('#result', '{"msg":9}')
             .assert.containsText('#result', '[{"msg":0},{"msg":1},{"msg":2},{"msg":3},{"msg":4},{"msg":5},{"msg":6},{"msg":7},{"msg":8},{"msg":9}]')
             .assert.not.elementPresent('.error')
-
-        // Wait for published messages to arrive at the storage node
-        await wait(2000)
-        await browser
             .click('button[id=resend]')
             .waitForElementPresent('.resendResult')
             .waitForElementPresent('.resendMessagesResult')
