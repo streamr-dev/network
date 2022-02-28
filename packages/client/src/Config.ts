@@ -52,10 +52,6 @@ export type ConnectionConfig = {
     restUrl: string
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
-    /** Automatically connect on first subscribe */
-    autoConnect: boolean
-    /**  Automatically disconnect on last unsubscribe */
-    autoDisconnect: boolean
 }
 
 export type DataUnionConfig = {
