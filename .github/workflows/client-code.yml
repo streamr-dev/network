@@ -1,6 +1,7 @@
 ---
+# Lint, Unit, Integration Tests
 # Any tests that can run without building should go in here.
-name: Client – Lint, Unit, Integration Tests
+name: Client
 
 # Be sure to update both workflow files if you edit any env or trigger config
 env:
@@ -25,11 +26,11 @@ defaults:
 
 jobs:
   lint:
-    name: Run Linter
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -42,18 +43,14 @@ jobs:
       - run: npm run eslint
 
   test:
-    name: Test Unit using Node ${{ matrix.node-version }}
+    name: Test Unit
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     env:
       TEST_REPEATS: 1
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
@@ -67,15 +64,15 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
+    name: "Test Integration: ${{ matrix.test-name }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [16.x]
         test-name: [
-          "test-integration-no-resend",
-          "test-integration-resend",
+          "no-resend",
+          "resend",
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
@@ -83,7 +80,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
@@ -97,11 +94,11 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph chainlink"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: Run Test
-        run: npm run $TEST_NAME
+        run: npm run test-integration-$TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -121,7 +118,7 @@ jobs:
 
   flakey:
     if: ${{ false }}
-    name: Flakey Tests
+    name: Test Flakey
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -130,7 +127,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
@@ -143,7 +140,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2
@@ -161,18 +158,12 @@ jobs:
 
   memory:
     if: ${{ false }}
-    name: Memory Tests using Node ${{ matrix.node-version }}
+    name: Test Memory
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [16.x]
-
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
@@ -184,7 +175,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - uses: nick-invision/retry@v2

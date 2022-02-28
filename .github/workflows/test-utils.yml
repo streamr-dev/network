@@ -1,5 +1,6 @@
 ---
-name: test-utils – Lint, Test and Publish
+#Lint, Test and Publish
+name: Test-utils
 
 on:
   push:
@@ -19,7 +20,7 @@ defaults:
 
 jobs:
   test-unit:
-    name: Lint & Unit Test on Node ${{ matrix.node-version }}
+    name: Lint & Unit Test
     runs-on: ubuntu-latest
 
     strategy:
@@ -28,7 +29,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'

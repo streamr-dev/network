@@ -170,12 +170,6 @@
             "type": "string",
             "format": "uri"
         },
-        "autoConnect": {
-            "type": "boolean"
-        },
-        "autoDisconnect": {
-            "type": "boolean"
-        },
         "orderMessages": {
             "type": "boolean"
         },

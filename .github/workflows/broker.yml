@@ -1,5 +1,6 @@
 ---
-name: Broker – Lint, Test and Publish
+# Lint, Test and Publish
+name: Broker
 
 on:
   push:
@@ -24,11 +25,11 @@ defaults:
 
 jobs:
   test-unit:
-    name: Unit Tests
+    name: Test Unit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -43,11 +44,11 @@ jobs:
       - run: npm run test-unit
 
   test-integration:
-    name: Integration Tests
+    name: Test Integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v3
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -60,7 +61,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph parity-node0"
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
       - run: npm run test-integration
         env:
           CI: true
@@ -72,7 +73,7 @@ jobs:
           docker rm $(docker ps -a -q)
 
   test-docker:
-    name: Build + Test Docker images
+    name: "Docker Image: test"
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -110,7 +111,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "nginx trackers parity-node0 parity-sidechain-node0 broker-node-no-storage-1 graph-deploy-streamregistry-subgraph"
+          services-to-start: "parity-node0 broker-node-no-storage-1"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
               curl -s http://localhost:8791/volume;
@@ -142,7 +143,7 @@ jobs:
           docker rm $(docker ps -a -q)
 
   docker-push:
-    name: Build + Push Docker images
+    name: "Docker Image: push"
     needs: [test-unit, test-integration, test-docker]
     runs-on: self-hosted
     # only push for nightly runs and manual triggers

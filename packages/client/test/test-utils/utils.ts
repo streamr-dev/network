@@ -5,19 +5,20 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamPartID, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../../src/utils'
 import { Debug, format } from '../../src/utils/log'
 import { MaybeAsync, StreamDefinition } from '../../src/types'
-import { StreamProperties } from '../../src/Stream'
+import { Stream, StreamProperties } from '../../src/Stream'
 import clientOptions from '../../src/ConfigTest'
 
 import Signal from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
+import { StreamPermission } from '../../src/permission'
 
 export { clientOptions }
 
@@ -663,5 +664,38 @@ export class Multimap<K, V> {
 
     keys(): K[] {
         return Array.from(this.values.keys())
+    }
+}
+
+// eslint-disable-next-line no-undef
+export const createPartitionedTestStream = async (module: NodeModule): Promise<Stream> => {
+    const client = new StreamrClient({
+        ...clientOptions,
+        auth: {
+            privateKey: await fetchPrivateKeyWithGas()
+        }
+    })
+    const stream = await createTestStream(client, module, {
+        partitions: MAX_PARTITION_COUNT
+    })
+    await stream.grantPermissions({
+        public: true,
+        permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
+    })
+    await client.destroy()
+    return stream
+}
+
+export async function* createStreamPartIterator(stream: Stream): AsyncGenerator<StreamPartID> {
+    for (let partition = 0; partition < stream.partitions; partition++) {
+        yield toStreamPartID(stream.id, partition)
+    }
+}
+
+export const toStreamDefinition = (streamPart: StreamPartID): { id: string, partition: number } => {
+    const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPart)
+    return {
+        id,
+        partition
     }
 }

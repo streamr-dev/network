@@ -1,3 +1,5 @@
+import fs from 'fs'
+import path from 'path'
 import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
@@ -6,7 +8,8 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
-    clientOptions
+    clientOptions,
+    Msg
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/subscribe/Resends'
@@ -593,5 +596,20 @@ describeRepeats('resends', () => {
                 expect(await client.count(nonStoredStream.id)).toBe(0)
             })
         })
+    })
+
+    it('decodes resent messages correctly', async () => {
+        const publishedMessage = Msg({
+            content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+        })
+        const publishReq = await client.publish(stream, publishedMessage)
+
+        await getWaitForStorage(client)(publishReq)
+        const sub = await client.resend(stream.id,
+            {
+                last: 1
+            })
+        const messages = await sub.collectContent()
+        expect(messages).toEqual([publishedMessage])
     })
 })

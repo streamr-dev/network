@@ -51,6 +51,11 @@ describe('tracker: instruction counter filtering', () => {
 
         await runAndWaitForEvents([
             () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
+        ], [
+            [ nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
+        ])
+
+        await runAndWaitForEvents([
             () => { nodeToTracker2.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) }
         ], [
             [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
