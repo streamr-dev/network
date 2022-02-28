@@ -230,7 +230,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     }
 }
 
-/** @internal */
 export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): StrictStreamrClientConfig => {
     validateConfig(inputOptions)
     const opts = cloneDeep(inputOptions)
