@@ -112,7 +112,7 @@ jobs:
 
   browser-resend:
     # skip to get test suite green, not sure why failing.
-    name: Test Browser Realtime
+    name: Test Browser Resend
     runs-on: ubuntu-latest
     needs: build
     steps:
