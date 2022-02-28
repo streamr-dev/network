@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 const { v4: uuidv4 } = require('uuid')
-const { wait } = require('streamr-test-utils')
 
 describe('StreamrClient Resend', () => {
     const streamName = uuidv4()
@@ -17,7 +16,7 @@ describe('StreamrClient Resend', () => {
     test('Test StreamrClient in Chrome Browser', async (browser) => {
         // Make viewport huge to ensure that all buttons are inside it
         browser.resizeWindow(4000, 4000)
-        await browser
+        browser
             .waitForElementVisible('body')
             .assert.titleContains('Test StreamrClient in Chrome Browser')
             .click('button[id=connect]')
