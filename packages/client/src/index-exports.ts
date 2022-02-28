@@ -22,8 +22,6 @@ export { UserDetails } from './LoginEndpoints'
 export { StreamValidationInfo, StreamMessageAsObject } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
-// TODO remove this import when NET-683 is in main
-export { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 export {
     StreamrClientOptions,
     NetworkNodeConfig,
