@@ -41,7 +41,7 @@ export const createNetworkNode = ({
     webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.streamr.network:5349'],
     trackerConnectionMaintenanceInterval,
-    webrtcDisallowPrivateAddresses = false,
+    webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)

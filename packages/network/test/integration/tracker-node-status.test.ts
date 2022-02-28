@@ -40,7 +40,8 @@ describe('check status message flow between tracker and two nodes', () => {
             trackers: [trackerInfo],
             peerPingInterval: 100,
             trackerPingInterval: 100,
-            rttUpdateTimeout: 10
+            rttUpdateTimeout: 10,
+            webrtcDisallowPrivateAddresses: false
         })
 
         nodeTwo = createNetworkNode({
@@ -49,7 +50,8 @@ describe('check status message flow between tracker and two nodes', () => {
             location,
             peerPingInterval: 100,
             trackerPingInterval: 100,
-            rttUpdateTimeout: 10
+            rttUpdateTimeout: 10,
+            webrtcDisallowPrivateAddresses: false
         })
     })
 

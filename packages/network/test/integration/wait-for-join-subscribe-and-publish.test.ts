@@ -30,27 +30,33 @@ describe('subscribe and wait for the node to join the stream', () => {
             createNetworkNode({
                 id: 'node-0',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
+
             }),
             createNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             })
         ]
         await Promise.all([nodes.map((node) => node.start())])

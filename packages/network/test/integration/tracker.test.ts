@@ -25,11 +25,13 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         subscriberOne = createNetworkNode({
             id: 'subscriberOne',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
         subscriberTwo = createNetworkNode({
             id: 'subscriberTwo',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
 
         subscriberOne.start()
