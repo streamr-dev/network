@@ -12,7 +12,7 @@ import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
@@ -88,8 +88,8 @@ class StreamrEthereum {
     _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
-        @inject(Config.Auth) authConfig: AuthConfig,
-        @inject(Config.Ethereum) private ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Auth) authConfig: AuthConfig,
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
     ) {
         if ('privateKey' in authConfig && authConfig.privateKey) {
             const key = authConfig.privateKey

@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { Config, StrictStreamrClientConfig, StreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -64,7 +64,7 @@ class StreamrClientBase implements Context {
     constructor(
         public container: DependencyContainer,
         public context: Context,
-        @inject(Config.Root) public options: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken.Root) public options: StrictStreamrClientConfig,
         public node: BrubeckNode,
         public ethereum: Ethereum,
         public session: Session,
@@ -208,15 +208,15 @@ export function initContainer(options: StreamrClientConfig = {}, parentContainer
 
     // associate values to config tokens
     const configTokens: [symbol, object][] = [
-        [Config.Root, config],
-        [Config.Auth, config.auth],
-        [Config.Ethereum, config],
-        [Config.Network, config.network],
-        [Config.Connection, config],
-        [Config.Subscribe, config],
-        [Config.Publish, config],
-        [Config.Encryption, config],
-        [Config.Cache, config.cache],
+        [ConfigInjectionToken.Root, config],
+        [ConfigInjectionToken.Auth, config.auth],
+        [ConfigInjectionToken.Ethereum, config],
+        [ConfigInjectionToken.Network, config.network],
+        [ConfigInjectionToken.Connection, config],
+        [ConfigInjectionToken.Subscribe, config],
+        [ConfigInjectionToken.Publish, config],
+        [ConfigInjectionToken.Encryption, config],
+        [ConfigInjectionToken.Cache, config.cache],
     ]
 
     configTokens.forEach(([token, useValue]) => {

@@ -1,7 +1,7 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Debugger } from 'debug'
 import { Context } from './Context'
-import { Config, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { instanceId } from './index'
 import fetch, { Response } from 'node-fetch'
 
@@ -11,7 +11,7 @@ export class HttpFetcher {
 
     constructor(
         context: Context,
-        @inject(Config.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
     ) {
         this.debug = context.debug.extend(instanceId(this))
     }

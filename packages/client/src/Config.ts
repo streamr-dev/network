@@ -1,8 +1,3 @@
-/**
- * New Brubeck Configuration.
- * Old Config in ConfigBase.
- * TODO: Disolve ConfigBase.
- */
 import 'reflect-metadata'
 
 /**
@@ -13,9 +8,9 @@ import 'reflect-metadata'
  * These symbols represent subsections of the full config.
  *
  * For example:
- * config.ethereum can be injected with a token like: @inject(Config.Ethereum)
+ * config.ethereum can be injected with a token like: @inject(ConfigInjectionToken.Ethereum)
  */
-const BrubeckConfigInjection = {
+export const ConfigInjectionToken = {
     Root: Symbol('Config.Root'),
     Auth: Symbol('Config.Auth'),
     Ethereum: Symbol('Config.Ethereum'),
@@ -29,5 +24,3 @@ const BrubeckConfigInjection = {
 }
 
 export * from './ConfigBase'
-
-export { BrubeckConfigInjection as Config }
