@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import { StreamMessageValidator, SigningUtil, toStreamID } from '../../../src'
+import { StreamMessageValidator, SigningUtil, toStreamID, EthereumAddress } from '../../../src'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageID from '../../../src/protocol/message_layer/MessageID'
 import GroupKeyRequest from '../../../src/protocol/message_layer/GroupKeyRequest'
@@ -15,9 +15,9 @@ import { StreamMetadata } from '../../../src/utils/StreamMessageValidator'
 
 describe('StreamMessageValidator', () => {
     let getStream: (streamId: string) => Promise<StreamMetadata>
-    let isPublisher: (address: string, streamId: string) => Promise<boolean>
-    let isSubscriber: (address: string, streamId: string) => Promise<boolean>
-    let verify: ((address: string, payload: string, signature: string) => Promise<boolean>) | undefined
+    let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
+    let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
+    let verify: ((address: EthereumAddress, payload: string, signature: string) => Promise<boolean>) | undefined
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
 
@@ -55,10 +55,10 @@ describe('StreamMessageValidator', () => {
     beforeEach(async () => {
         // Default stubs
         getStream = sinon.stub().resolves(defaultGetStreamResponse)
-        isPublisher = async (address: string, streamId: string) => {
+        isPublisher = async (address: EthereumAddress, streamId: string) => {
             return address === publisher && streamId === 'streamId'
         }
-        isSubscriber = async (address: string, streamId: string) => {
+        isSubscriber = async (address: EthereumAddress, streamId: string) => {
             return address === subscriber && streamId === 'streamId'
         }
         verify = undefined // use default impl by default

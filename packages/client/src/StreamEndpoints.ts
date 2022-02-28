@@ -41,7 +41,7 @@ export interface StreamMessageAsObject { // TODO this could be in streamr-protoc
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
     messageType: StreamMessageType
     contentType: ContentType

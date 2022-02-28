@@ -17,7 +17,7 @@ export interface SearchStreamsPermissionFilter {
 
 export type SearchStreamsResultItem = {
     id: string
-    userAddress: string
+    userAddress: EthereumAddress
     stream: StreamQueryResult
 } & ChainPermissions
 

@@ -1,10 +1,10 @@
 import { BrubeckClientConfig } from 'streamr-client'
-import { SmartContractRecord } from 'streamr-client-protocol'
+import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import path from 'path'
 import * as os from 'os'
 
 export interface NetworkSmartContract {
-    contractAddress: string
+    contractAddress: EthereumAddress
     jsonRpcProvider: string
 }
 

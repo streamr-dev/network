@@ -322,13 +322,16 @@
             "format": "uri"
         },
         "streamRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         },
         "storageNodeRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         },
         "streamStorageRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         }
     },
     "definitions": {
