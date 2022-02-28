@@ -60,8 +60,7 @@ describe('SearchStreams', () => {
             ...ConfigTest,
             auth: {
                 privateKey: await fetchPrivateKeyWithGas(),
-            },
-            autoConnect: false
+            }
         })
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },

@@ -54,10 +54,6 @@ export type ConnectionConfig = {
     restUrl: string
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
-    /** Automatically connect on first subscribe */
-    autoConnect: boolean
-    /**  Automatically disconnect on last unsubscribe */
-    autoDisconnect: boolean
 }
 
 export type DataUnionConfig = {
@@ -122,8 +118,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
-    autoConnect: true,
-    autoDisconnect: true,
     orderMessages: true,
     retryResendAfter: 5000,
     gapFillTimeout: 5000,

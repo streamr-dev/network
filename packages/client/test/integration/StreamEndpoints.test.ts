@@ -194,14 +194,14 @@ describe('StreamEndpoints', () => {
         it('returns true for valid publishers', async () => {
             const address = await client.getAddress()
             const valid = await client.isStreamPublisher(createdStream.id, address)
-            return expect(valid).toBeTruthy()
+            return expect(valid).toBe(true)
         })
-        it('returns trow error for invalid udseraddress', async () => {
+        it('throws error for invalid udseraddress', async () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
-            return expect(!valid).toBeTruthy()
+            return expect(valid).toBe(false)
         })
     })
 
@@ -217,14 +217,14 @@ describe('StreamEndpoints', () => {
         it('returns true for valid subscribers', async () => {
             const address = await client.getAddress()
             const valid = await client.isStreamSubscriber(createdStream.id, address)
-            return expect(valid).toBeTruthy()
+            return expect(valid).toBe(true)
         })
-        it('returns trow error for invalid udseraddress', async () => {
+        it('throws error for invalid udseraddress', async () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
-            return expect(!valid).toBeTruthy()
+            return expect(valid).toBe(false)
         })
     })
 
