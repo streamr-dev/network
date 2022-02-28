@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, ClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, ClientConfig, createStrictConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -175,7 +175,7 @@ class StreamrClientBase implements Context {
  */
 export function initContainer(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
-    const config = ClientConfig(options)
+    const config = createStrictConfig(options)
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
