@@ -9,6 +9,9 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+### Removed
+-  Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
+
 ## [6.0.1] - 2022-02-24
 
 ### Fixed
