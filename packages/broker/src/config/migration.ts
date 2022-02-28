@@ -8,7 +8,7 @@ import TEST_CONFIG_SCHEMA from './config-testnet.schema.json'
 export const CURRENT_CONFIGURATION_VERSION = 1
 
 export const formSchemaUrl = (version: number): string => {
-    return `http://schema.streamr.network/config-v${version}.schema.json`
+    return `https://schema.streamr.network/config-v${version}.schema.json`
 }
 
 const getVersion = (config: any): number | undefined => {
