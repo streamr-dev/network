@@ -3,6 +3,7 @@ module.exports = {
         'src/index-exports.ts'
     ],
     tsconfig: 'tsconfig.node.json',
+    name: "Streamr Client",
     readme: 'none',
     excludePrivate: true,
     excludeProtected: true,
