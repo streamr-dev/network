@@ -230,8 +230,9 @@ describe('StreamEndpoints', () => {
 
     describe('Stream.update', () => {
         it('can change stream description', async () => {
-            createdStream.description = `description-${Date.now()}`
-            await createdStream.update()
+            await createdStream.update({
+                description: `description-${Date.now()}`
+            })
             await until(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).description === createdStream.description
@@ -239,6 +240,9 @@ describe('StreamEndpoints', () => {
                     return false
                 }
             }, 100000, 1000)
+            // check that other fields not overwritten
+            const updatedStream = await client.getStream(createdStream.id)
+            expect(updatedStream.requireSignedData).toBe(true)
         })
     })
 
