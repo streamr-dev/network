@@ -32,12 +32,12 @@ export type {
     DebugConfig,
     StrictStreamrClientConfig,
     StreamrClientConfig as StreamrClientOptions
-} from './ConfigBase'
+} from './Config'
 export {
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
-} from './ConfigBase'
+} from './Config'
 
 export { ConfigTest } from './ConfigTest'
 import { NetworkNodeStub } from './BrubeckNode'

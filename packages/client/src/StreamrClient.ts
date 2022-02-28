@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, ClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -27,7 +27,6 @@ import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { ClientConfig } from './ConfigBase'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
