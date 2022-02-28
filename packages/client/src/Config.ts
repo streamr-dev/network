@@ -4,37 +4,6 @@
  * TODO: Disolve ConfigBase.
  */
 import 'reflect-metadata'
-import { ClientConfig } from './ConfigBase'
-import cloneDeep from 'lodash/cloneDeep'
-import merge from 'lodash/merge'
-import type { NetworkNodeOptions } from 'streamr-network'
-import type { InspectOptions } from 'util'
-import type { StrictStreamrClientConfig, StreamrClientConfig } from './ConfigBase'
-import type { ConnectionInfo } from '@ethersproject/web'
-import { SmartContractRecord } from 'streamr-client-protocol'
-
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: string }
-export type BrubeckNodeOptions = Omit<NetworkNodeOptions, 'trackers'> & {
-    trackers: SmartContractRecord[] | TrackerRegistrySmartContract
-}
-
-export type BrubeckClientConfig = StreamrClientConfig & {
-    network?: Omit<Partial<BrubeckNodeOptions>, 'metricsContext'>
-    debug?: Partial<DebugConfig>
-}
-
-export {
-    NetworkNodeOptions as NetworkNodeConfig
-}
-
-export type DebugConfig = {
-    inspectOpts: InspectOptions
-}
-
-export type StrictBrubeckClientConfig = StrictStreamrClientConfig & {
-    network: BrubeckNodeOptions
-    debug: DebugConfig
-}
 
 /**
  * DI Injection tokens for pieces of config.
@@ -62,38 +31,3 @@ const BrubeckConfigInjection = {
 export * from './ConfigBase'
 
 export { BrubeckConfigInjection as Config }
-
-// TODO: Production values
-const BRUBECK_CLIENT_DEFAULTS = {
-    debug: {
-        inspectOpts: {
-            depth: 5,
-            maxStringLength: 512
-        }
-    },
-    network: {
-        trackers: {
-            contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
-        },
-        acceptProxyConnections: false
-    },
-}
-
-export { BRUBECK_CLIENT_DEFAULTS as DEFAULTS }
-
-export function BrubeckConfig(config: BrubeckClientConfig): StrictBrubeckClientConfig {
-    const clonedConfig = cloneDeep(config)
-    const defaults = cloneDeep(BRUBECK_CLIENT_DEFAULTS)
-    const userConfig = ClientConfig(clonedConfig)
-    const result: StrictBrubeckClientConfig = {
-        ...defaults,
-        ...userConfig,
-        network: {
-            ...merge(defaults.network || {}, clonedConfig.network),
-            trackers: clonedConfig.network?.trackers ?? defaults.network.trackers,
-        },
-        debug: merge(defaults.debug || {}, clonedConfig.debug),
-    }
-
-    return result
-}

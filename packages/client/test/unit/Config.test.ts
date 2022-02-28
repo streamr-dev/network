@@ -1,5 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { DEFAULTS } from '../../src/Config'
+import { STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
@@ -104,7 +104,7 @@ describe('Config', () => {
                 network: {}
             })
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
-            expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
+            expect(clientOverrides.options.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
         })
 
         it('can override trackers', () => {

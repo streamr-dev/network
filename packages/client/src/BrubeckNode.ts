@@ -5,7 +5,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { BrubeckNodeOptions, Config, TrackerRegistrySmartContract } from './Config'
+import { NetworkConfig, Config, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
@@ -46,7 +46,7 @@ export default class BrubeckNode implements Context {
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
-        @inject(Config.Network) options: BrubeckNodeOptions
+        @inject(Config.Network) options: NetworkConfig
     ) {
         this.options = options
         this.id = instanceId(this)

@@ -2,7 +2,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { BrubeckClientConfig } from '../../src/Config'
+import { StreamrClientConfig } from '../../src'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
@@ -44,7 +44,7 @@ describeRepeats('GapFill', () => {
         retryResendAfter: 1000,
     })
 
-    async function setupClient(opts: BrubeckClientConfig) {
+    async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient(opts)
         subscriber = client.subscriber

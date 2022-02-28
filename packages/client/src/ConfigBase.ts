@@ -10,12 +10,18 @@ import type { BigNumber } from '@ethersproject/bignumber'
 import cloneDeep from 'lodash/cloneDeep'
 import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
+import merge from 'lodash/merge'
 
 import type { AuthConfig, EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeUtils'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { EthereumAddress } from 'streamr-client-protocol'
+
+import type { NetworkNodeOptions } from 'streamr-network'
+import type { InspectOptions } from 'util'
+import type { ConnectionInfo } from '@ethersproject/web'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 export type CacheConfig = {
     maxSize: number,
@@ -74,6 +80,16 @@ export type DataUnionConfig = {
     templateSidechainAddress: EthereumAddress
 }
 
+export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: string }
+
+export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
+    trackers: SmartContractRecord[] | TrackerRegistrySmartContract
+}
+
+export type DebugConfig = {
+    inspectOpts: InspectOptions
+}
+
 /**
  * @category Important
  */
@@ -93,9 +109,11 @@ export type StrictStreamrClientConfig = {
     storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
     ensCacheChainAddress: EthereumAddress,
     dataUnion: DataUnionConfig
+    network: NetworkConfig
     cache: CacheConfig,
     /** @internal */
     _timeouts: TimeoutsConfig
+    debug: DebugConfig
 } & (
     EthereumConfig
     & ConnectionConfig
@@ -103,8 +121,10 @@ export type StrictStreamrClientConfig = {
     & EncryptionConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataUnion'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'dataUnion' | 'network' | 'debug'> & {
     dataUnion: Partial<StrictStreamrClientConfig['dataUnion']>
+    network: Partial<StrictStreamrClientConfig['network']>
+    debug: Partial<StrictStreamrClientConfig['debug']>
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -179,6 +199,12 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         templateMainnetAddress: '0x67352e3F7dBA907aF877020aE7E9450C0029C70c',
         templateSidechainAddress: '0xaCF9e8134047eDc671162D9404BF63a587435bAa',
     },
+    network: {
+        trackers: {
+            contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+        },
+        acceptProxyConnections: false
+    },
     ethereumNetworks: {
         polygon: {
             chainId: 137,
@@ -203,6 +229,12 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             retryInterval: 1000
         },
         httpFetchTimeout: 30 * 1000
+    },
+    debug: {
+        inspectOpts: {
+            depth: 5,
+            maxStringLength: 512
+        }
     }
 }
 
@@ -219,6 +251,11 @@ export function ClientConfig(inputOptions: StreamrClientConfig = {}) {
             ...defaults.dataUnion,
             ...opts.dataUnion
         },
+        network: {
+            ...merge(defaults.network || {}, opts.network),
+            trackers: opts.network?.trackers ?? defaults.network.trackers,
+        },
+        debug: merge(defaults.debug || {}, opts.debug),
         cache: {
             ...defaults.cache,
             ...opts.cache,

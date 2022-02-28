@@ -6,7 +6,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
 import { ConfigTest } from '../../src/ConfigTest'
-import { StrictBrubeckClientConfig } from '../../src/Config'
+import { StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5
@@ -35,7 +35,7 @@ describe('MemoryLeaks', () => {
         let createContainer: Function
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
-                config: StrictBrubeckClientConfig;
+                config: StrictStreamrClientConfig;
                 childContainer: DependencyContainer;
                 rootContext: any;}> => {
                 return initContainer({

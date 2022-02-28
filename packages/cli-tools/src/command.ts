@@ -1,5 +1,5 @@
 import commander, { Command } from 'commander'
-import { BrubeckClientConfig } from 'streamr-client'
+import { StreamrClientOptions } from 'streamr-client'
 import pkg from '../package.json'
 import { createClient } from './client'
 
@@ -12,7 +12,7 @@ export const createCommand = (): commander.Command => {
 
 export interface CommandOpts {
     autoDestroyClient?: boolean
-    clientOptionsFactory?: (options: any) => BrubeckClientConfig
+    clientOptionsFactory?: (options: any) => StreamrClientOptions
 }
 
 export const createClientCommand = (

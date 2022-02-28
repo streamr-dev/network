@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { BrubeckConfig, Config, StrictBrubeckClientConfig, BrubeckClientConfig } from './Config'
+import { Config, StrictStreamrClientConfig, StreamrClientConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -27,6 +27,7 @@ import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { ClientConfig } from '.'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -63,7 +64,7 @@ class StreamrClientBase implements Context {
     constructor(
         public container: DependencyContainer,
         public context: Context,
-        @inject(Config.Root) public options: StrictBrubeckClientConfig,
+        @inject(Config.Root) public options: StrictStreamrClientConfig,
         public node: BrubeckNode,
         public ethereum: Ethereum,
         public session: Session,
@@ -173,9 +174,9 @@ class StreamrClientBase implements Context {
 /**
  * @internal
  */
-export function initContainer(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+export function initContainer(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
-    const config = BrubeckConfig(options)
+    const config = ClientConfig(options)
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
@@ -230,7 +231,7 @@ export function initContainer(options: BrubeckClientConfig = {}, parentContainer
 }
 
 export class StreamrClient extends StreamrClientBase {
-    constructor(options: BrubeckClientConfig = {}, parentContainer = rootContainer) {
+    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const { childContainer: c, config } = initContainer(options, parentContainer)
         super(
             c,
@@ -271,4 +272,4 @@ export const Dependencies = {
     DataUnions,
 }
 
-export { BrubeckClientConfig as StreamrClientOptions } from './Config'
+export { StreamrClientConfig as StreamrClientOptions } from './Config'
