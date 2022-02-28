@@ -4,11 +4,13 @@ import { toStreamID } from 'streamr-client-protocol'
 import { initContainer } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/StreamRegistry'
+import { createStrictConfig } from '../../src/Config'
 
 describe('Stream', () => {
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
-            const { childContainer: mockContainer } = initContainer({}, container)
+            const config = createStrictConfig({})
+            const { childContainer: mockContainer } = initContainer(config, container)
             mockContainer.registerInstance(StreamRegistry, {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
             } as any)
