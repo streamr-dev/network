@@ -1,7 +1,7 @@
 import { StreamID, toStreamID } from "./StreamID"
 
 const DELIMITER = '#'
-const MAX_PARTITION_COUNT = 100
+export const MAX_PARTITION_COUNT = 100
 
 export type StreamPartID = string & { readonly __brand: 'streamPartID' } // Nominal typing
 
