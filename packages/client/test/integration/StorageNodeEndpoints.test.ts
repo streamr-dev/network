@@ -125,32 +125,3 @@ describe('createNode', () => {
         return expect(client.getStorageNodeUrl(nodeAddress)).rejects.toThrow()
     })
 })
-
-// these tests are the same as in StremEndpoints
-// describe('Storage node assignment', () => {
-//     it('add', async () => {
-//         const storageNode = StorageNode.STREAMR_DOCKER_DEV
-//         const stream = await client.createStream()
-//         await stream.addToStorageNode(storageNode)
-//         const storageNodes = await stream.getStorageNodes()
-//         expect(storageNodes.length).toBe(1)
-//         expect(storageNodes[0].getAddress()).toBe(storageNode.getAddress())
-//         const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
-//         expect(storedStreamParts.some(
-//             (sp) => (sp.getStreamId() === stream.id) && (sp.getStreamPartition() === 0)
-//         )).toBeTruthy()
-//     })
-
-//     it('remove', async () => {
-//         const storageNode = StorageNode.STREAMR_DOCKER_DEV
-//         const stream = await client.createStream()
-//         await stream.addToStorageNode(storageNode)
-//         await stream.removeFromStorageNode(storageNode)
-//         const storageNodes = await stream.getStorageNodes()
-//         expect(storageNodes).toHaveLength(0)
-//         const storedStreamParts = await client.getStreamPartsByStorageNode(storageNode)
-//         expect(storedStreamParts.some(
-//             (sp) => (sp.getStreamId() === stream.id)
-//         )).toBeFalsy()
-//     })
-// })

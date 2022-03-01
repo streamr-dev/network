@@ -7,12 +7,10 @@ import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 import {
     ContentType,
     EncryptionType,
+    EthereumAddress,
     SignatureType,
     StreamMessageType,
-    EthereumAddress,
-    StreamPartIDUtils,
-    StreamPartID,
-    toStreamPartID
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
@@ -41,7 +39,7 @@ export interface StreamMessageAsObject { // TODO this could be in streamr-protoc
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
     messageType: StreamMessageType
     contentType: ContentType
@@ -140,18 +138,6 @@ export class StreamEndpoints implements Context {
             restUrl: nodeUrl
         })
         return json
-    }
-
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
-
-        const result: StreamPartID[] = []
-        streams.forEach((stream: Stream) => {
-            for (let i = 0; i < stream.partitions; i++) {
-                result.push(toStreamPartID(stream.id, i))
-            }
-        })
-        return result
     }
 
     async publishHttp(

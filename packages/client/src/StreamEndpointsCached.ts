@@ -1,7 +1,7 @@
 /**
  * Cached Subset of StreamEndpoints.
  */
-import { StreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
@@ -47,7 +47,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: string) {
+    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
@@ -58,7 +58,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: string) {
+    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 

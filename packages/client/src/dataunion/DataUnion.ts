@@ -686,7 +686,7 @@ export class DataUnion {
     }
 
     /** @internal */
-    static async _getBinanceDepositAddress(userAddress: string, client: DataUnionAPI) {
+    static async _getBinanceDepositAddress(userAddress: EthereumAddress, client: DataUnionAPI) {
         const contracts = new Contracts(client)
         const adapter = contracts.getBinanceAdapterReadOnly()
         const recip = (await adapter.binanceRecipient(userAddress))[0]

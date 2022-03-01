@@ -1,4 +1,5 @@
 import { StreamrClient } from 'streamr-client'
+import { EthereumAddress } from 'streamr-client-protocol'
 import { Logger } from 'streamr-network'
 import { PERIOD_LENGTHS, Sample } from './Sample'
 
@@ -13,12 +14,12 @@ const logger = new Logger(module)
 
 export class MetricsPublisher {
 
-    private readonly nodeAddress: string
+    private readonly nodeId: EthereumAddress
     private readonly client: StreamrClient
     private readonly streamIdPrefix: string
 
-    constructor(nodeAddress: string, client: StreamrClient, streamIdPrefix: string) {
-        this.nodeAddress = nodeAddress
+    constructor(nodeId: string, client: StreamrClient, streamIdPrefix: string) {
+        this.nodeId = nodeId
         this.client = client
         this.streamIdPrefix = streamIdPrefix
     }
@@ -26,7 +27,7 @@ export class MetricsPublisher {
     async publish(sample: Sample): Promise<void> {
         const periodLength = sample.period.end - sample.period.start
         const streamId = this.getStreamId(periodLength)
-        const partitionKey = this.nodeAddress.toLowerCase()
+        const partitionKey = this.nodeId.toLowerCase()
         try {
             await this.client.publish(streamId, sample, undefined, partitionKey)
         } catch (e: any) {

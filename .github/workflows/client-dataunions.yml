@@ -51,7 +51,7 @@ jobs:
         run: npm run test-integration-dataunions
       - name: Collect docker logs on failure
         if: failure()
-        uses: jwalton/gh-docker-logs@v2.0.2
+        uses: jwalton/gh-docker-logs@v2.2.0
         with:
           dest: 'logs'
       - name: Upload logs to GitHub

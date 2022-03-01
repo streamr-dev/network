@@ -47,7 +47,7 @@ export type StreamQueryResult = {
 
 type StreamPublisherOrSubscriberItem = {
     id: string
-    userAddress: string
+    userAddress: EthereumAddress
 }
 
 @scoped(Lifecycle.ContainerScoped)

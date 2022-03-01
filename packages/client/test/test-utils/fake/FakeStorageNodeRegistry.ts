@@ -26,7 +26,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
         this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, 'storage'))
     }
 
-    private async hasAssignment(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+    private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const normalizedNodeAddress = nodeAddress.toLowerCase()
         const assignments = await this.getStorageNodesOf(streamIdOrPath)
         return assignments.includes(normalizedNodeAddress)
@@ -68,7 +68,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getStorageNodeUrl(_nodeAddress: string): Promise<string> {
+    async getStorageNodeUrl(_nodeAddress: EthereumAddress): Promise<string> {
         // return some dummy value: the receiving component passes the info to FakeRest,
         // and it is ignored there
         return ''
@@ -80,7 +80,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isStreamStoredInStorageNodeFromContract(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
+    isStreamStoredInStorageNodeFromContract(_streamIdOrPath: string, _nodeAddress: EthereumAddress): Promise<boolean> {
         throw new Error('not implemented')
     }
 
@@ -105,7 +105,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreamsOf(_nodeAddress: string): Promise<{ streams: Stream[]; blockNumber: number }> {
+    getStoredStreamsOf(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
         throw new Error('not implemented')
     }
 

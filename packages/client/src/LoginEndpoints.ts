@@ -7,6 +7,7 @@ import { instanceId } from './utils'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken } from './Config'
 import { Rest } from './Rest'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export interface TokenObject {
     token: string
@@ -39,7 +40,7 @@ export class LoginEndpoints implements Context {
     }
 
     /** @internal */
-    async getChallenge(address: string) {
+    async getChallenge(address: EthereumAddress) {
         this.debug('getChallenge %o', {
             address,
         })
@@ -47,7 +48,7 @@ export class LoginEndpoints implements Context {
     }
 
     /** @internal */
-    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: string) {
+    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: EthereumAddress) {
         const props = {
             challenge,
             signature,

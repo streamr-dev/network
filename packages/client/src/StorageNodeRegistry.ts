@@ -92,7 +92,7 @@ export class StorageNodeRegistry {
     // --------------------------------------------------------------------------------------------
 
     /** @internal */
-    async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+    async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
@@ -145,7 +145,7 @@ export class StorageNodeRegistry {
         await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
     }
 
-    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+    async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
@@ -161,7 +161,7 @@ export class StorageNodeRegistry {
         )
     }
 
-    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<void> {
+    async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
@@ -174,7 +174,7 @@ export class StorageNodeRegistry {
     // --------------------------------------------------------------------------------------------
 
     /** @internal */
-    async getStorageNodeUrl(nodeAddress: string): Promise<string> {
+    async getStorageNodeUrl(nodeAddress: EthereumAddress): Promise<string> {
         log('getnode %s ', nodeAddress)
         const res = await this.sendNodeQuery(StorageNodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult
         if (res.node === null) {
@@ -184,7 +184,7 @@ export class StorageNodeRegistry {
         return metadata.http
     }
 
-    async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: string): Promise<boolean> {
+    async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         const res = await this.sendNodeQuery(StorageNodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
@@ -205,7 +205,7 @@ export class StorageNodeRegistry {
         return res.stream.storageNodes.map((node) => node.id)
     }
 
-    async getStoredStreamsOf(nodeAddress: string): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreamsOf(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         log('Getting stored streams of node %s', nodeAddress)
         const res = await this.sendNodeQuery(StorageNodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
@@ -248,10 +248,10 @@ export class StorageNodeRegistry {
     }
 
     async registerStorageEventListener(callback: (event: StorageNodeAssignmentEvent) => any) {
-        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: string, extra: any) => {
+        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: EthereumAddress, extra: any) => {
             callback({ streamId, nodeAddress, type: 'added', blockNumber: extra.blockNumber })
         })
-        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: string, extra: any) => {
+        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: EthereumAddress, extra: any) => {
             callback({ streamId, nodeAddress, type: 'removed', blockNumber: extra.blockNumber })
         })
     }
@@ -278,7 +278,7 @@ export class StorageNodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildGetNodeQuery(nodeAddress: string): string {
+    private static buildGetNodeQuery(nodeAddress: EthereumAddress): string {
         const query = `{
             node (id: "${nodeAddress}") {
                 id,
