@@ -39,4 +39,30 @@ export class FakeStorageNode extends FakeBrubeckNode {
             return []
         }
     }
+
+    async getRange(streamPartId: StreamPartID, opts: {
+        fromTimestamp: number,
+        fromSequenceNumber: number,
+        toTimestamp: number,
+        toSequenceNumber: number,
+        publisherId: string,
+        msgChainId: string
+    }): Promise<StreamMessage[]> {
+        const messages = this.streamPartMessages.get(streamPartId)
+        if (messages !== undefined) {
+            return messages.filter((msg) => {
+                return (msg.getPublisherId() === opts.publisherId)
+                    && (msg.getMsgChainId() === opts.msgChainId)
+                    && (
+                        ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))
+                        || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= opts.fromSequenceNumber))
+                        || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= opts.toSequenceNumber))
+                    )
+            })
+            // eslint-disable-next-line no-else-return
+        } else {
+            // TODO throw an error if this storage node doesn't isn't configured to store the stream?
+            return []
+        }
+    }
 }
