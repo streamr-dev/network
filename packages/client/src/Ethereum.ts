@@ -12,7 +12,7 @@ import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
@@ -32,30 +32,17 @@ export type PrivateKeyAuthConfig = {
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.
-    address?: string
+    address?: EthereumAddress
 }
 
 export type SessionTokenAuthConfig = {
     sessionToken: string
 }
 
-// Deprecated Auth Config
-export type APIKeyAuthConfig = {
-    apiKey: string
-}
-
-export type UsernamePasswordAuthConfig = {
-    username: string
-    password: string
-}
-
 export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
-
-export type DeprecatedAuthConfig = XOR<APIKeyAuthConfig, UsernamePasswordAuthConfig>
 
 export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & Partial<SessionTokenAuthConfig>
 export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
-export type AllAuthConfig = XOR<AuthConfig, DeprecatedAuthConfig>
 
 // Ethereum Config
 
@@ -101,8 +88,8 @@ class StreamrEthereum {
     _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
-        @inject(Config.Auth) authConfig: AllAuthConfig,
-        @inject(Config.Ethereum) private ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Auth) authConfig: AuthConfig,
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
     ) {
         if ('privateKey' in authConfig && authConfig.privateKey) {
             const key = authConfig.privateKey
@@ -180,7 +167,7 @@ class StreamrEthereum {
         return !!(this._getAddress && this._getSigner)
     }
 
-    async getAddress(): Promise<string> {
+    async getAddress(): Promise<EthereumAddress> {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor
             throw new Error('StreamrClient is not authenticated with private key')

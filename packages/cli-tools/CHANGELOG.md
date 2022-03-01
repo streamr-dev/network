@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
 ## [6.0.0] - 2022-02-23
 - Add new command `stream wallet whoami` to display Ethereum address
 - (Breaking) `stream create` argument is a stream ID, not a name

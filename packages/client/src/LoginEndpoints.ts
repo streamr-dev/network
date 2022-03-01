@@ -5,8 +5,9 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import Ethereum, { AuthConfig } from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { Rest } from './Rest'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export interface TokenObject {
     token: string
@@ -28,14 +29,14 @@ export class LoginEndpoints implements Context {
         context: Context,
         private ethereum: Ethereum,
         @inject(delay(() => Rest)) private rest: Rest,
-        @inject(Config.Auth) private authConfig: AuthConfig,
+        @inject(ConfigInjectionToken.Auth) private authConfig: AuthConfig,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 
     /** @internal */
-    async getChallenge(address: string) {
+    async getChallenge(address: EthereumAddress) {
         this.debug('getChallenge %o', {
             address,
         })
@@ -43,7 +44,7 @@ export class LoginEndpoints implements Context {
     }
 
     /** @internal */
-    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: string) {
+    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: EthereumAddress) {
         const props = {
             challenge,
             signature,

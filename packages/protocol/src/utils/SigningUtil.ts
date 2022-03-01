@@ -1,5 +1,6 @@
 import secp256k1 from 'secp256k1'
 import { Keccak } from 'sha3'
+import { EthereumAddress } from './types'
 
 const SIGN_MAGIC = '\u0019Ethereum Signed Message:\n'
 const keccak = new Keccak(256)
@@ -54,7 +55,7 @@ export default class SigningUtil {
         return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
     }
 
-    static async verify(address: string, payload: string, signature: string): Promise<boolean> {
+    static async verify(address: EthereumAddress, payload: string, signature: string): Promise<boolean> {
         try {
             const recoveredAddress = await SigningUtil.recover(signature, payload)
             return recoveredAddress.toLowerCase() === address.toLowerCase()

@@ -1,11 +1,11 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
@@ -23,7 +23,7 @@ describe('StreamEndpoints', () => {
     beforeAll(async () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: wallet.privateKey,
             }
@@ -82,7 +82,7 @@ describe('StreamEndpoints', () => {
             it('domain owned by user', async () => {
                 const streamId = 'testdomain1.eth/foobar/' + Date.now()
                 const ensOwnerClient = new StreamrClient({
-                    ...clientOptions,
+                    ...ConfigTest,
                     auth: {
                         // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
@@ -278,9 +278,8 @@ describe('StreamEndpoints', () => {
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
             expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
-            const storedStreamParts = await client.getStreamPartsByStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const expectedStreamPartId = toStreamPartID(stream.id, 0)
-            return expect(storedStreamParts.some((sp) => sp === expectedStreamPartId)).toBeTruthy()
+            const { streams } = await client.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+            return expect(streams.some((s) => s.id === stream.id)).toBe(true)
         })
 
         it('remove', async () => {
@@ -290,8 +289,8 @@ describe('StreamEndpoints', () => {
             await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
-            const storedStreamParts = await client.getStreamPartsByStorageNode(DOCKER_DEV_STORAGE_NODE)
-            return expect(storedStreamParts.some((sp) => (StreamPartIDUtils.getStreamID(sp) === stream.id))).toBeFalsy()
+            const { streams } = await client.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+            return expect(streams.some((s) => s.id === stream.id)).toBe(false)
         })
     })
 })

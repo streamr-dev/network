@@ -5,7 +5,7 @@ import { fastPrivateKey } from 'streamr-test-utils'
 
 import { StreamrClient } from '../../../src/StreamrClient'
 
-import clientOptions from '../config'
+import { ConfigTest } from '../../../src/ConfigTest'
 
 describe('authFetch', () => {
     let client: StreamrClient
@@ -31,7 +31,7 @@ describe('authFetch', () => {
         // @ts-expect-error
         fetch.mockImplementation(realFetch)
         client = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: fastPrivateKey()
             },

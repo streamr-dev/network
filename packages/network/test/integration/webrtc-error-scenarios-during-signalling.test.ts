@@ -33,14 +33,16 @@ describe('Signalling error scenarios', () => {
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
             newWebrtcConnectionTimeout: 8000,
-            trackerPingInterval: 3000
+            trackerPingInterval: 3000,
+            webrtcDisallowPrivateAddresses: false
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
             disconnectionWaitTime: 4000,
             newWebrtcConnectionTimeout: 8000,
-            trackerPingInterval: 3000
+            trackerPingInterval: 3000,
+            webrtcDisallowPrivateAddresses: false
         })
 
         nodeOne.start()

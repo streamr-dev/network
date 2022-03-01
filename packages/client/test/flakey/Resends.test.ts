@@ -4,7 +4,7 @@ import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivate
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pTimeout } from '../../src/utils'
 
-import config, { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 
 /* eslint-disable no-await-in-loop */
@@ -16,7 +16,7 @@ describeRepeats('StreamrClient resends', () => {
 
         const createClient = async (opts: any = {}) => {
             const c = new StreamrClient({
-                ...config,
+                ...ConfigTest,
                 auth: {
                     privateKey: await fetchPrivateKeyWithGas(),
                 },

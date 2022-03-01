@@ -31,12 +31,14 @@ describe('check tracker, nodes and statuses from nodes', () => {
         node1 = createNetworkNode({
             id: 'node1',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
         node2 = createNetworkNode({
             id: 'node2',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
 
         await runAndWaitForEvents([

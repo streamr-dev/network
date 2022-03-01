@@ -33,7 +33,8 @@ describe('Publish only connection tests', () => {
             id: 'contact-node',
             trackers: [trackerInfo],
             stunUrls: [],
-            acceptProxyConnections: true
+            acceptProxyConnections: true,
+            webrtcDisallowPrivateAddresses: false
         })
         await contactNode.start()
 
@@ -41,7 +42,8 @@ describe('Publish only connection tests', () => {
             id: 'contact-node-2',
             trackers: [trackerInfo],
             stunUrls: [],
-            acceptProxyConnections: true
+            acceptProxyConnections: true,
+            webrtcDisallowPrivateAddresses: false
         })
         await contactNode2.start()
 
@@ -55,7 +57,8 @@ describe('Publish only connection tests', () => {
         onewayNode = createNetworkNode({
             id: 'publisher',
             trackers: [trackerInfo],
-            stunUrls: []
+            stunUrls: [],
+            webrtcDisallowPrivateAddresses: false
         })
         await onewayNode.start()
     })
@@ -158,7 +161,8 @@ describe('Publish only connection tests', () => {
         const nonContactNode = createNetworkNode({
             id: 'non-contact-node',
             trackers: [trackerInfo],
-            stunUrls: []
+            stunUrls: [],
+            webrtcDisallowPrivateAddresses: false
         })
         await nonContactNode.start()
 

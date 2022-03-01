@@ -4,7 +4,7 @@ import { Wallet } from 'ethers'
 import { createClient, fetchPrivateKeyWithGas, Queue, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 import { v4 as uuid } from 'uuid'
-import { keyToArrayIndex } from 'streamr-client-protocol'
+import { EthereumAddress, keyToArrayIndex } from 'streamr-client-protocol'
 
 const trackerPort = 47745
 
@@ -13,7 +13,7 @@ const NUM_OF_PARTITIONS = 10
 describe('NodeMetrics', () => {
     let tracker: Tracker
     let metricsGeneratingBroker: Broker
-    let nodeAddress: string
+    let nodeAddress: EthereumAddress
     let client: StreamrClient
     let streamIdPrefix: string
 

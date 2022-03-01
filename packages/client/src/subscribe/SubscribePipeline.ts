@@ -11,7 +11,7 @@ import Validator from '../Validator'
 import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
 import { Context } from '../utils/Context'
-import { Config } from '../Config'
+import { ConfigInjectionToken } from '../Config'
 import Resends from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
@@ -26,12 +26,12 @@ export default function SubscribePipeline<T = unknown>(
     const validate = new Validator(
         context,
         container.resolve(StreamEndpointsCached),
-        container.resolve(Config.Subscribe),
-        container.resolve(Config.Cache)
+        container.resolve(ConfigInjectionToken.Subscribe),
+        container.resolve(ConfigInjectionToken.Cache)
     )
 
     const gapFillMessages = new OrderMessages<T>(
-        container.resolve(Config.Subscribe),
+        container.resolve(ConfigInjectionToken.Subscribe),
         container.resolve(Context as any),
         container.resolve(Resends),
         streamPartId,
@@ -39,7 +39,7 @@ export default function SubscribePipeline<T = unknown>(
 
     const orderMessages = new OrderMessages<T>(
         {
-            ...container.resolve(Config.Subscribe),
+            ...container.resolve(ConfigInjectionToken.Subscribe),
             gapFill: false,
         },
         container.resolve(Context as any),

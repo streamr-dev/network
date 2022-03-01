@@ -2,7 +2,7 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { EthereumAddress, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils'
 import { Context, ContextError } from '../utils/Context'
@@ -43,14 +43,14 @@ export type ResendLastOptions = {
 
 export type ResendFromOptions = {
     from: ResendRef
-    publisherId?: string
+    publisherId?: EthereumAddress
 }
 
 export type ResendRangeOptions = {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: string
+    publisherId?: EthereumAddress
 }
 
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
@@ -191,7 +191,7 @@ export default class Resend implements Context {
     }: {
         fromTimestamp: number,
         fromSequenceNumber?: number,
-        publisherId?: string
+        publisherId?: EthereumAddress
     }): Promise<MessageStream<T>> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
@@ -212,7 +212,7 @@ export default class Resend implements Context {
         fromSequenceNumber?: number,
         toTimestamp: number,
         toSequenceNumber?: number,
-        publisherId?: string,
+        publisherId?: EthereumAddress,
         msgChainId?: string
     }): Promise<MessageStream<T>> {
         return this.fetchStream('range', streamPartId, {

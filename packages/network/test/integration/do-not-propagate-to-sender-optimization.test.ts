@@ -27,15 +27,18 @@ describe('optimization: do not propagate to sender', () => {
         const trackerInfo = tracker.getConfigRecord()
         n1 = createNetworkNode({
             id: 'node-1',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
         n2 = createNetworkNode({
             id: 'node-2',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
         n3 = createNetworkNode({
             id: 'node-3',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
 
         await n1.start()

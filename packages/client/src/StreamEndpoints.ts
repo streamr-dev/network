@@ -9,10 +9,7 @@ import {
     EncryptionType,
     SignatureType,
     StreamMessageType,
-    EthereumAddress,
-    StreamPartIDUtils,
-    StreamPartID,
-    toStreamPartID
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
@@ -21,7 +18,7 @@ import { Context } from './utils/Context'
 import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
-import { Config, ConnectionConfig } from './Config'
+import { ConfigInjectionToken, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
@@ -41,7 +38,7 @@ export interface StreamMessageAsObject { // TODO this could be in streamr-protoc
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
     messageType: StreamMessageType
     contentType: ContentType
@@ -83,7 +80,7 @@ export class StreamEndpoints implements Context {
     constructor(
         context: Context,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Connection) private readonly options: ConnectionConfig,
+        @inject(ConfigInjectionToken.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
@@ -137,18 +134,6 @@ export class StreamEndpoints implements Context {
             restUrl: nodeUrl
         })
         return json
-    }
-
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
-
-        const result: StreamPartID[] = []
-        streams.forEach((stream: Stream) => {
-            for (let i = 0; i < stream.partitions; i++) {
-                result.push(toStreamPartID(stream.id, i))
-            }
-        })
-        return result
     }
 
     async publishHttp(

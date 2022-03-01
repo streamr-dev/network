@@ -41,7 +41,7 @@ export const PUBLIC_PERMISSION_ADDRESS = '0x000000000000000000000000000000000000
 
 export type PermissionQueryResult = {
     id: string
-    userAddress: string
+    userAddress: EthereumAddress
 } & ChainPermissions
 
 export type SingleStreamQueryResult = {

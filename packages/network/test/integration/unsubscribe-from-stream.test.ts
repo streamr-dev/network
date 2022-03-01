@@ -29,12 +29,14 @@ describe('node unsubscribing from a stream', () => {
         nodeA = createNetworkNode({
             id: 'a',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
         nodeB = createNetworkNode({
             id: 'b',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
 
         nodeA.start()

@@ -4,8 +4,9 @@ import { container, DependencyContainer } from 'tsyringe'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 describe('Session', () => {
     let session: Session
@@ -14,10 +15,16 @@ describe('Session', () => {
     let loginFunction: jest.MockedFunction<any>
     let logoutFunction: jest.MockedFunction<any>
 
-    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
-        ...clientOptions,
-        ...opts,
-    }, parentContainer)
+    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => {
+        const config = {
+            ...ConfigTest,
+            auth: {
+                privateKey: fastPrivateKey(),
+            },
+            ...opts,
+        }
+        return new StreamrClient(config, parentContainer)
+    }
 
     function setup(opts?: any) {
         const childContainer = container.createChildContainer()

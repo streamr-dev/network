@@ -1,9 +1,9 @@
 import 'reflect-metadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Wallet } from 'ethers'
-import { clientOptions, createTestStream, fetchPrivateKeyWithGas, until } from '../test-utils/utils'
+import { createTestStream, fetchPrivateKeyWithGas, until } from '../test-utils/utils'
 import { Stream } from '../../src'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { afterAll } from 'jest-circus'
 
 const TEST_TIMEOUT = 60 * 1000
@@ -19,13 +19,13 @@ describe('StorageNodeRegistry', () => {
         creatorWallet = new Wallet(await fetchPrivateKeyWithGas())
         listenerWallet = new Wallet(await fetchPrivateKeyWithGas())
         creatorClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: creatorWallet.privateKey,
             },
         })
         listenerClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: listenerWallet.privateKey,
             },

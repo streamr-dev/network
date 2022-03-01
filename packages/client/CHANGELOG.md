@@ -6,12 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed 
+### Added
+
+### Changed
 
 - Method `stream.update()` now requires a parameter `props`
 
+### Deprecated
+
 ### Removed
 - Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
+
+### Fixed
+
+### Security
 
 ## [6.0.1] - 2022-02-24
 
