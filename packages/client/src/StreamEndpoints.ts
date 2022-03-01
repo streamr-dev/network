@@ -7,6 +7,7 @@ import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 import {
     ContentType,
     EncryptionType,
+    EthereumAddress,
     SignatureType,
     StreamMessageType,
     StreamPartIDUtils
