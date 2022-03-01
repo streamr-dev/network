@@ -49,6 +49,7 @@ export default {
                 http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
             }
         ],
+        webrtcDisallowPrivateAddresses: false
     },
     mainChainRPCs: {
         name: 'dev_ethereum',
