@@ -10,7 +10,7 @@ jest.setTimeout(50000)
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
-    let publishingClient: StreamrClient
+    let onewayClient: StreamrClient
     let proxyClient1: StreamrClient
     let proxyClient2: StreamrClient
     let pubPrivateKey: string
@@ -25,7 +25,7 @@ describe('PubSub with proxy connections', () => {
         proxyPrivateKey1 = fastPrivateKey()
         proxyPrivateKey2 = fastPrivateKey()
 
-        publishingClient = await createClient({
+        onewayClient = await createClient({
             id: 'publisher',
             auth: {
                 privateKey: pubPrivateKey
@@ -56,10 +56,10 @@ describe('PubSub with proxy connections', () => {
     beforeEach(async () => {
         proxyNodeId1 = await proxyClient1.node.getNodeId()
         proxyNodeId2 = await proxyClient2.node.getNodeId()
-        stream = await createTestStream(publishingClient, module)
+        stream = await createTestStream(onewayClient, module)
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
-        await publishingClient.setPermissions({
+        await onewayClient.setPermissions({
             streamId: stream.id,
             assignments: [
                 { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser1 },
@@ -74,26 +74,26 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy.push(msg)
         })
         await wait(2000)
-        await publishingClient.setPublishProxy(stream, proxyNodeId1)
+        await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
-        await publishingClient.publish(stream, {
+        await onewayClient.publish(stream, {
             msg: 'hellow'
         })
-        await publishingClient.publish(stream, {
+        await onewayClient.publish(stream, {
             msg: 'hellow'
         })
-        await publishingClient.publish(stream, {
+        await onewayClient.publish(stream, {
             msg: 'hellow'
         })
         await wait(2500)
         expect(receivedMessagesProxy.length).toEqual(3)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
@@ -105,16 +105,16 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy.push(msg)
         })
         await wait(1000)
-        await publishingClient.setPublishProxy(stream, proxyNodeId1)
+        await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
-        await publishingClient.removePublishProxy(stream, proxyNodeId1)
+        await onewayClient.removePublishProxy(stream, proxyNodeId1)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
@@ -130,26 +130,26 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy2.push(msg)
         })
         await wait(1000)
-        await publishingClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
-        await publishingClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
-        expect((await publishingClient.getNode())
+        expect((await onewayClient.getNode())
             // @ts-expect-error private
             .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)

@@ -15,6 +15,8 @@ export enum Event {
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
     PUBLISH_STREAM_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
     PUBLISH_STREAM_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
+    SUBSCRIBE_STREAM_REQUEST_RECEIVED = 'node-node:subscribe-only-stream-request-received',
+    SUBSCRIBE_STREAM_RESPONSE_RECEIVED = 'node-node:subscribe-only-stream-response-received',
     LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
 }
 
@@ -22,6 +24,8 @@ const eventPerType: { [key: number]: string } = {}
 eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.PublishStreamConnectionRequest] = Event.PUBLISH_STREAM_REQUEST_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.PublishStreamConnectionResponse] = Event.PUBLISH_STREAM_RESPONSE_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.SubscribeStreamConnectionRequest] = Event.SUBSCRIBE_STREAM_REQUEST_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.SubscribeStreamConnectionResponse] = Event.SUBSCRIBE_STREAM_RESPONSE_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
 
 export interface NodeToNode {
@@ -32,6 +36,8 @@ export interface NodeToNode {
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.PUBLISH_STREAM_REQUEST_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionRequest, nodeId: NodeId) => void): this
     on(event: Event.PUBLISH_STREAM_RESPONSE_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionResponse, nodeId: NodeId) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_REQUEST_RECEIVED, listener: (message: ControlLayer.SubscribeStreamConnectionRequest, nodeId: NodeId) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_RESPONSE_RECEIVED, listener: (message: ControlLayer.SubscribeStreamConnectionResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED, listener: (message: ControlLayer.UnsubscribeRequest, nodeId: NodeId) => void): this
 }
 
@@ -142,6 +148,16 @@ export class NodeToNode extends EventEmitter {
         }))
     }
 
+    async requestSubscribeOnlyStreamConnection(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        await this.send(nodeId, new ControlLayer.SubscribeStreamConnectionRequest({
+            requestId: '',
+            senderId: nodeId,
+            streamId,
+            streamPartition
+        }))
+    }
+
     async leaveStreamOnNode(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.UnsubscribeRequest({
@@ -154,6 +170,17 @@ export class NodeToNode extends EventEmitter {
     async respondToPublishOnlyStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ControlLayer.PublishStreamConnectionResponse({
+            requestId: '',
+            senderId: nodeId,
+            streamId,
+            streamPartition,
+            accepted
+        }))
+    }
+
+    async respondToSubscribeOnlyStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        await this.send(nodeId, new ControlLayer.SubscribeStreamConnectionResponse({
             requestId: '',
             senderId: nodeId,
             streamId,

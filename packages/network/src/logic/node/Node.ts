@@ -17,7 +17,7 @@ import type { TrackerId } from '../tracker/Tracker'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
-import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { Direction, ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 
 const logger = new Logger(module)
 
@@ -31,7 +31,9 @@ export enum Event {
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
     PUBLISH_STREAM_ACCEPTED = 'streamr:node:publish-stream-accepted',
-    PUBLISH_STREAM_REJECTED = 'streamr:node:node-stream-rejected',
+    PUBLISH_STREAM_REJECTED = 'streamr:node:publish-stream-rejected',
+    SUBSCRIBE_STREAM_ACCEPTED = 'streamr:node:subscribe-stream-accepted',
+    SUBSCRIBE_STREAM_REJECTED = 'streamr:node:subscribe-stream-rejected',
     ONE_WAY_CONNECTION_CLOSED = 'stream:node-one-way-connection-closed',
     JOIN_COMPLETED = 'stream:node-stream-join-operation-completed',
     JOIN_FAILED = 'stream:node-stream-join-operation-failed'
@@ -60,6 +62,8 @@ export interface Node {
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PUBLISH_STREAM_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PUBLISH_STREAM_REJECTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, reason?: string) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_REJECTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, reason?: string) => void): this
     on(event: Event.ONE_WAY_CONNECTION_CLOSED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.JOIN_COMPLETED, listener: (streamPartId: StreamPartID, numOfNeighbors: number) => void): this
     on(event: Event.JOIN_FAILED, listener: (streamPartId: StreamPartID, error: string) => void): this
@@ -193,6 +197,12 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.PUBLISH_STREAM_RESPONSE_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processPublishStreamResponse(message, nodeId)
         })
+        this.nodeToNode.on(NodeToNodeEvent.SUBSCRIBE_STREAM_REQUEST_RECEIVED, (message,  nodeId) => {
+            this.proxyStreamConnectionManager.processSubscribeStreamRequest(message, nodeId)
+        })
+        this.nodeToNode.on(NodeToNodeEvent.SUBSCRIBE_STREAM_RESPONSE_RECEIVED, (message, nodeId) => {
+            this.proxyStreamConnectionManager.processSubscribeStreamResponse(message, nodeId)
+        })
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
         })
@@ -255,11 +265,61 @@ export class Node extends EventEmitter {
     }
 
     async openOutgoingStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.proxyStreamConnectionManager.openOutgoingStreamConnection(streamPartId, contactNodeId)
+        let resolveHandler: any
+        let rejectHandler: any
+        await Promise.all([
+            new Promise<void>((resolve, reject) => {
+                resolveHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        resolve()
+                    }
+                }
+                rejectHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        reject(`Joining stream as pure publisher failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
+                    }
+                }
+                this.on(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
+                this.on(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
+            }),
+            this.proxyStreamConnectionManager.openOnewayStreamConnection(streamPartId, contactNodeId, Direction.OUT)
+        ]).finally(() => {
+            this.off(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
+            this.off(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
+        })
     }
 
-    closeOutgoingStreamConnection(streamPartId: StreamPartID, contactNodeId: string): void {
-        this.proxyStreamConnectionManager.closeOutgoingStreamConnection(streamPartId, contactNodeId)
+    async closeOutgoingStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.proxyStreamConnectionManager.closeOnewayStreamConnection(streamPartId, contactNodeId, Direction.OUT)
+    }
+
+    async openInboundStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        let resolveHandler: any
+        let rejectHandler: any
+        await Promise.all([
+            new Promise<void>((resolve, reject) => {
+                resolveHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        resolve()
+                    }
+                }
+                rejectHandler = (node: string, stream: StreamPartID) => {
+                    if (node === contactNodeId && stream === streamPartId) {
+                        reject(`Joining stream as pure subscriber failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
+                    }
+                }
+                this.on(Event.SUBSCRIBE_STREAM_ACCEPTED, resolveHandler)
+                this.on(Event.SUBSCRIBE_STREAM_REJECTED, rejectHandler)
+            }),
+            this.proxyStreamConnectionManager.openOnewayStreamConnection(streamPartId, contactNodeId, Direction.IN)
+        ]).finally(() => {
+            this.off(Event.SUBSCRIBE_STREAM_ACCEPTED, resolveHandler)
+            this.off(Event.SUBSCRIBE_STREAM_REJECTED, rejectHandler)
+        })
+    }
+
+    async closeInboundStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.proxyStreamConnectionManager.closeOnewayStreamConnection(streamPartId, contactNodeId, Direction.IN)
     }
 
     // Null source is used when a message is published by the node itself
