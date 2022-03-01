@@ -7,7 +7,8 @@ import {
     StreamMessageValidator,
     SigningUtil,
     StreamMessageError,
-    StreamID
+    StreamID,
+    EthereumAddress
 } from 'streamr-client-protocol'
 
 import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
@@ -43,13 +44,13 @@ export default class Validator extends StreamMessageValidator implements Stoppab
             getStream: (streamId: StreamID) => {
                 return streamEndpoints.getStream(streamId)
             },
-            isPublisher: (publisherId: string, streamId: StreamID) => {
+            isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
                 return streamEndpoints.isStreamPublisher(streamId, publisherId)
             },
-            isSubscriber: (ethAddress: string, streamId: StreamID) => {
+            isSubscriber: (ethAddress: EthereumAddress, streamId: StreamID) => {
                 return streamEndpoints.isStreamSubscriber(streamId, ethAddress)
             },
-            verify: (address: string, payload: string, signature: string) => {
+            verify: (address: EthereumAddress, payload: string, signature: string) => {
                 return this.cachedVerify(address, payload, signature)
             }
         })
@@ -59,7 +60,7 @@ export default class Validator extends StreamMessageValidator implements Stoppab
         this.doValidation = super.validate.bind(this)
     }
 
-    private cachedVerify = CacheAsyncFn(async (address: string, payload: string, signature: string) => {
+    private cachedVerify = CacheAsyncFn(async (address: EthereumAddress, payload: string, signature: string) => {
         if (this.isStopped) { return true }
         return SigningUtil.verify(address, payload, signature)
     }, {

@@ -1,4 +1,4 @@
-import type { StreamMessage } from 'streamr-client-protocol'
+import type { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
@@ -22,7 +22,7 @@ export interface StoragePluginConfig {
     }
     cluster: {
         // If clusterAddress is null, the broker's address will be used
-        clusterAddress: string | null,
+        clusterAddress: EthereumAddress | null,
         clusterSize: number,
         myIndexInCluster: number
     }

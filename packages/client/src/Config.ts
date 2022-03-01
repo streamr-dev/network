@@ -68,7 +68,7 @@ export type DataUnionConfig = {
     templateSidechainAddress: EthereumAddress
 }
 
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: string }
+export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract

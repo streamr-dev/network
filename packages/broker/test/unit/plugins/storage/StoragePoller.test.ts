@@ -1,6 +1,7 @@
 import { StoragePoller } from '../../../../src/plugins/storage/StoragePoller'
 import { Stream, StreamrClient } from 'streamr-client'
 import { wait } from 'streamr-test-utils'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 const POLL_TIME = 5
 
@@ -13,7 +14,7 @@ const POLL_RESULT = Object.freeze({
 })
 
 describe(StoragePoller, () => {
-    let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: string]>
+    let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
     let onNewSnapshot: jest.Mock<void, [streams: Stream[], block: number]>
     let stubClient: Pick<StreamrClient, 'getStoredStreamsOf'>
     let poller: StoragePoller

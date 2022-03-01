@@ -6,6 +6,7 @@ import GroupKeyMessage from '../protocol/message_layer/GroupKeyMessage'
 
 import SigningUtil from './SigningUtil'
 import { StreamIDUtils, StreamID } from './StreamID'
+import { EthereumAddress } from '.'
 
 export interface StreamMetadata {
     partitions: number,
@@ -16,9 +17,9 @@ export interface Options {
     requireBrubeckValidation?: boolean
 
     getStream: (streamId: StreamID) => Promise<StreamMetadata>
-    isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
-    isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
-    verify?: (address: string, payload: string, signature: string) => Promise<boolean>
+    isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
+    isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
+    verify?: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
 }
 
 const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
@@ -38,9 +39,9 @@ const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
 export default class StreamMessageValidator {
     readonly requireBrubeckValidation: boolean
     readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
-    readonly isPublisher: (address: string, streamId: StreamID) => Promise<boolean>
-    readonly isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>
-    readonly verify: (address: string, payload: string, signature: string) => Promise<boolean>
+    readonly isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
+    readonly isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
+    readonly verify: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
@@ -63,9 +64,9 @@ export default class StreamMessageValidator {
 
     static checkInjectedFunctions(
         getStream: (streamId: StreamID) => Promise<StreamMetadata>,
-        isPublisher: (address: string, streamId: StreamID) => Promise<boolean>,
-        isSubscriber: (address: string, streamId: StreamID) => Promise<boolean>,
-        verify: (address: string, payload: string, signature: string) => Promise<boolean>
+        isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
+        isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
+        verify: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
     ): void | never {
         if (typeof getStream !== 'function') {
             throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
@@ -120,7 +121,7 @@ export default class StreamMessageValidator {
      */
     static async assertSignatureIsValid(
         streamMessage: StreamMessage,
-        verifyFn: (address: string, payload: string, signature: string) => Promise<boolean>
+        verifyFn: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
     ): Promise<void> {
         const payload = streamMessage.getPayloadToSign()
 
