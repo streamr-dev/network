@@ -48,6 +48,7 @@ export default class Subscriber implements Context {
             return this.subscribe<T>(streamId, onMessage)
         }
 
+        // output stream
         const messageStream = new MessageStream<T>(this)
 
         if (onMessage) {
@@ -55,6 +56,7 @@ export default class Subscriber implements Context {
         }
 
         const eachPartition = Array(partitions).fill(0).map((_, streamPartition) => streamPartition)
+        // create sub for each partition
         const subs = await Promise.all(eachPartition.map(async (streamPartition) => {
             const sub = await this.subscribe<T>({
                 streamId,
@@ -64,6 +66,7 @@ export default class Subscriber implements Context {
             return sub
         }))
 
+        // Should end if output ended or all subs done.
         function shouldEnd(): boolean {
             if (messageStream.isDone()) {
                 return true
@@ -72,6 +75,7 @@ export default class Subscriber implements Context {
             return subs.every((sub) => sub.isDone())
         }
 
+        // End output stream and all subs if should end.
         function maybeEnd(): void {
             if (!shouldEnd()) { return }
             subs.forEach((sub) => {
@@ -83,6 +87,7 @@ export default class Subscriber implements Context {
             messageStream.return()
         }
 
+        // pull partition subs into output stream
         for (const sub of subs) {
             sub.onFinally(() => maybeEnd())
             messageStream.pull(sub, { endDest: false })
