@@ -8,7 +8,7 @@ import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { StreamDefinition } from '../types'
-import { MessageStream } from './MessageStream'
+import { MessageStream, pullManyToOne } from './MessageStream'
 
 /**
  * Public Subscribe APIs
@@ -48,51 +48,16 @@ export default class Subscriber implements Context {
             return this.subscribe<T>(streamId, onMessage)
         }
 
-        // output stream
-        const messageStream = new MessageStream<T>(this)
-
-        if (onMessage) {
-            messageStream.useLegacyOnMessageHandler(onMessage)
-        }
-
         const eachPartition = Array(partitions).fill(0).map((_, streamPartition) => streamPartition)
         // create sub for each partition
         const subs = await Promise.all(eachPartition.map(async (streamPartition) => {
-            const sub = await this.subscribe<T>({
+            return this.subscribe<T>({
                 streamId,
                 partition: streamPartition,
             })
-            sub.onError((err) => messageStream.handleError(err))
-            return sub
         }))
 
-        // Should end if output ended or all subs done.
-        function shouldEnd(): boolean {
-            if (messageStream.isDone()) {
-                return true
-            }
-
-            return subs.every((sub) => sub.isDone())
-        }
-
-        // End output stream and all subs if should end.
-        function maybeEnd(): void {
-            if (!shouldEnd()) { return }
-            subs.forEach((sub) => {
-                if (!sub.isCleaningUp) {
-                    sub.end()
-                }
-            })
-            messageStream.end()
-            messageStream.return()
-        }
-
-        // pull partition subs into output stream
-        for (const sub of subs) {
-            sub.onFinally(() => maybeEnd())
-            messageStream.pull(sub, { endDest: false })
-        }
-        return messageStream
+        return pullManyToOne(this, subs, onMessage)
     }
 
     private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {

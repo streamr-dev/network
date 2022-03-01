@@ -4,7 +4,6 @@ import { getPublishTestMessages, createTestStream, getCreateClient, describeRepe
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/subscribe/Subscriber'
 
 const NUM_MESSAGES = 8
 const MAX_MESSAGES = 4
@@ -16,7 +15,6 @@ describeRepeats('SubscribeAll', () => {
     let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
-    let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     const createClient = getCreateClient()
@@ -29,27 +27,25 @@ describeRepeats('SubscribeAll', () => {
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient()
-        M = client.subscriber
-        client.debug('connecting before test >>')
-        await Promise.all([
-            client.connect(),
-        ])
+        await client.connect()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream)
     })
 
     afterEach(async () => {
-        client.debug('after test')
-        expect(await M.count()).toBe(0)
-        expect(await M.count(stream.id)).toBe(0)
-        expect(M.countSubscriptionSessions()).toBe(0)
+        // @ts-expect-error private
+        expect(await client.subscriber.count()).toBe(0)
+        // @ts-expect-error private
+        expect(await client.subscriber.count(stream.id)).toBe(0)
+        // @ts-expect-error private
+        expect(client.subscriber.countSubscriptionSessions()).toBe(0)
     })
 
     afterEach(async () => {
         await wait(0)
+        await client?.destroy()
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
@@ -69,7 +65,7 @@ describeRepeats('SubscribeAll', () => {
         for (const msg of publishedMsgs) {
             expect(subMsgs).toContainEqual(msg)
         }
-        await client.unsubscribeAll()
+        await client.unsubscribe()
         expect(client.countAll()).toBe(0)
     })
 
@@ -99,7 +95,7 @@ describeRepeats('SubscribeAll', () => {
         const sub = await client.subscribeAll(stream.id, (msg) => {
             subMsgs.push(msg)
             if (subMsgs.length === MAX_MESSAGES) {
-                client.unsubscribeAll()
+                client.unsubscribe()
             }
         })
         const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
