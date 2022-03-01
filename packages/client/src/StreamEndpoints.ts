@@ -9,10 +9,7 @@ import {
     EncryptionType,
     SignatureType,
     StreamMessageType,
-    EthereumAddress,
-    StreamPartIDUtils,
-    StreamPartID,
-    toStreamPartID
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
@@ -137,18 +134,6 @@ export class StreamEndpoints implements Context {
             restUrl: nodeUrl
         })
         return json
-    }
-
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
-
-        const result: StreamPartID[] = []
-        streams.forEach((stream: Stream) => {
-            for (let i = 0; i < stream.partitions; i++) {
-                result.push(toStreamPartID(stream.id, i))
-            }
-        })
-        return result
     }
 
     async publishHttp(

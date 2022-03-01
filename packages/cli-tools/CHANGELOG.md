@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replace command `storage-node list-stream-parts` with `storage-node list-streams` and change the output format
+
 ### Deprecated
 
 ### Removed
