@@ -82,7 +82,7 @@ jobs:
         run: npm run test-integration
 
   end-to-end:
-    name: "Test End-to-end"
+    name: "Test End-to-End"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.4.0
