@@ -192,11 +192,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStreamFromContract(_streamIdOrPath: string): Promise<Stream> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     deleteStream(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
