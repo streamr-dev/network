@@ -9,7 +9,7 @@ import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegi
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
-import { Config, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
 import { NotFoundError } from './authFetch'
@@ -77,7 +77,7 @@ export class StorageNodeRegistry {
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(Config.Root) clientConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()

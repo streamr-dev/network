@@ -1,7 +1,7 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
 import BrubeckNode from '../../../src/BrubeckNode'
-import { StreamrClientOptions, Config, StrictStreamrClientConfig } from '../../../src/Config'
+import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig } from '../../../src/Config'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { AuthConfig } from '../../../src/Ethereum'
 import { Rest } from '../../../src/Rest'
@@ -38,12 +38,12 @@ export const createClientFactory = (): ClientFactory => {
          * The calculation of the Ethereum address is relatively slow: therefore we use
          * the ethereumAddressCache to speed-up the privateKey->address mapping.
          */
-        const { privateKey } = c.resolve(Config.Auth) as AuthConfig
+        const { privateKey } = c.resolve(ConfigInjectionToken.Auth) as AuthConfig
         const activeNodes = c.resolve(ActiveNodes)
         const address = ethereumAddressCache.getAddress(privateKey!)
         let node = activeNodes.getNode(address)
         if (node === undefined) {
-            const { id } = c.resolve(Config.Root) as StrictStreamrClientConfig
+            const { id } = c.resolve(ConfigInjectionToken.Root) as StrictStreamrClientConfig
             const destroySignal = c.resolve(DestroySignal)
             node = new FakeBrubeckNode(address!, activeNodes, destroySignal, id)
             activeNodes.addNode(node)
@@ -52,7 +52,7 @@ export const createClientFactory = (): ClientFactory => {
     } })
 
     return {
-        createClient: (opts?: StreamrClientOptions) => {
+        createClient: (opts?: StreamrClientConfig) => {
             let authOpts
             if (opts?.auth?.privateKey === undefined) {
                 authOpts = {

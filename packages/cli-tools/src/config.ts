@@ -1,10 +1,10 @@
 import path from 'path'
 import os from 'os'
 import { readFileSync } from 'fs'
-import { StreamrClientOptions } from 'streamr-client'
+import { StreamrClientConfig } from 'streamr-client'
 
 interface Config {
-    client: StreamrClientOptions
+    client: StreamrClientConfig
 }
 
 /*

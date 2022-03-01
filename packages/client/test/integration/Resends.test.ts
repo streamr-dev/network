@@ -8,14 +8,14 @@ import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
-    clientOptions,
+    fetchPrivateKeyWithGas,
     Msg
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/subscribe/Resends'
 
 import { Stream } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 // import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
@@ -36,7 +36,10 @@ describeRepeats('resends', () => {
 
     beforeAll(async () => {
         client = new StreamrClient({
-            ...clientOptions
+            ...ConfigTest,
+            auth: {
+                privateKey: await fetchPrivateKeyWithGas()
+            }
         })
         // @ts-expect-error
         subscriber = client.resends

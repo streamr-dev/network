@@ -1,6 +1,5 @@
 import {
     Msg,
-    clientOptions,
     describeRepeats,
     fetchPrivateKeyWithGas,
     getWaitForStorage,
@@ -8,7 +7,7 @@ import {
     createTestStream,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 
@@ -30,7 +29,7 @@ describeRepeats('sequential resend subscribe', () => {
 
     beforeAll(async () => {
         publisher = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             id: 'TestPublisher',
             auth: {
                 privateKey: await fetchPrivateKeyWithGas(),
@@ -38,7 +37,7 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         subscriber = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             id: 'TestSubscriber',
             auth: {
                 privateKey: await fetchPrivateKeyWithGas(),

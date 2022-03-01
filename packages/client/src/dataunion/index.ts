@@ -9,7 +9,7 @@ import { EthereumAddress } from 'streamr-client-protocol'
 
 import Ethereum from '../Ethereum'
 import { Rest } from '../Rest'
-import { StrictBrubeckClientConfig, Config } from '../Config'
+import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
 import { DataUnion, DataUnionDeployOptions } from './DataUnion'
 import { getAddress, getCreate2Address, isAddress } from '@ethersproject/address'
 import Contracts from './Contracts'
@@ -39,7 +39,7 @@ export default class DataUnionAPI {
     constructor(
         public ethereum: Ethereum,
         public rest: Rest,
-        @inject(Config.Root) public options: StrictBrubeckClientConfig,
+        @inject(ConfigInjectionToken.Root) public options: StrictStreamrClientConfig,
     ) {
 
     }

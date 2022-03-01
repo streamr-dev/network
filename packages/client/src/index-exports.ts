@@ -23,22 +23,19 @@ export { StreamValidationInfo, StreamMessageAsObject } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
-    StreamrClientOptions,
-    NetworkNodeConfig,
-    DebugConfig,
-    StrictBrubeckClientConfig
-} from './Config'
-export {
-    CacheConfig,
+    StreamrClientConfig,
+    StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
     DataUnionConfig,
-    StrictStreamrClientConfig,
-    StreamrClientConfig,
+    TrackerRegistrySmartContract,
+    NetworkConfig,
+    DebugConfig,
+    CacheConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,
     validateConfig
-} from './ConfigBase'
+} from './Config'
 export {
     AuthConfig,
     AuthenticatedConfig,
@@ -56,10 +53,8 @@ export {
 export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeUtils'
 export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/Encryption'
 
-import ConfigTest from './ConfigTest'
-import { NetworkNodeStub } from './BrubeckNode'
-
-export { ConfigTest, NetworkNodeStub }
+export { ConfigTest } from './ConfigTest'
+export { NetworkNodeStub } from './BrubeckNode'
 export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
 export { SignalListener } from './utils/Signal'

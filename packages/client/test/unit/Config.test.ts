@@ -1,6 +1,6 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { BRUBECK_CLIENT_DEFAULTS } from '../../src/Config'
-import config from '../../src/ConfigTest'
+import { STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { ConfigTest } from '../../src/ConfigTest'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 describe('Config', () => {
@@ -93,11 +93,11 @@ describe('Config', () => {
 
         it('can override network.trackers arrays', () => {
             const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient(config)
-            // @ts-expect-error
+            const clientOverrides = new StreamrClient(ConfigTest)
+            // @ts-expect-error private
             expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
-            // @ts-expect-error
-            expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
+            // @ts-expect-error private
+            expect(clientOverrides.options.network.trackers).toEqual(ConfigTest.network.trackers)
         })
 
         it('network can be empty', () => {
@@ -107,8 +107,8 @@ describe('Config', () => {
             })
             // @ts-expect-error
             expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
-            // @ts-expect-error
-            expect(clientOverrides.options.network.trackers).toEqual(BRUBECK_CLIENT_DEFAULTS.network.trackers)
+            // @ts-expect-error private
+            expect(clientOverrides.options.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
         })
 
         it('can override trackers', () => {

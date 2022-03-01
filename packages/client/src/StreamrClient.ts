@@ -6,7 +6,7 @@ import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import BrubeckConfig, { Config, StrictBrubeckClientConfig, StreamrClientOptions } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, createStrictConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
@@ -67,7 +67,7 @@ class StreamrClientBase implements Context {
     constructor(
         private container: DependencyContainer,
         private context: Context,
-        @inject(Config.Root) private options: StrictBrubeckClientConfig,
+        @inject(ConfigInjectionToken.Root) private options: StrictStreamrClientConfig,
         private node: BrubeckNode,
         private ethereum: Ethereum,
         private session: Session,
@@ -177,9 +177,8 @@ class StreamrClientBase implements Context {
 /**
  * @internal
  */
-export function initContainer(options: StreamrClientOptions = {}, parentContainer = rootContainer) {
+export function initContainer(config: StrictStreamrClientConfig, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
-    const config = BrubeckConfig(options)
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
@@ -211,15 +210,15 @@ export function initContainer(options: StreamrClientOptions = {}, parentContaine
 
     // associate values to config tokens
     const configTokens: [symbol, object][] = [
-        [Config.Root, config],
-        [Config.Auth, config.auth],
-        [Config.Ethereum, config],
-        [Config.Network, config.network],
-        [Config.Connection, config],
-        [Config.Subscribe, config],
-        [Config.Publish, config],
-        [Config.Encryption, config],
-        [Config.Cache, config.cache],
+        [ConfigInjectionToken.Root, config],
+        [ConfigInjectionToken.Auth, config.auth],
+        [ConfigInjectionToken.Ethereum, config],
+        [ConfigInjectionToken.Network, config.network],
+        [ConfigInjectionToken.Connection, config],
+        [ConfigInjectionToken.Subscribe, config],
+        [ConfigInjectionToken.Publish, config],
+        [ConfigInjectionToken.Encryption, config],
+        [ConfigInjectionToken.Cache, config.cache],
     ]
 
     configTokens.forEach(([token, useValue]) => {
@@ -227,9 +226,8 @@ export function initContainer(options: StreamrClientOptions = {}, parentContaine
     })
 
     return {
-        config,
         childContainer: c,
-        rootContext,
+        rootContext
     }
 }
 
@@ -237,8 +235,9 @@ export function initContainer(options: StreamrClientOptions = {}, parentContaine
  * @category Important
  */
 export class StreamrClient extends StreamrClientBase {
-    constructor(options: StreamrClientOptions = {}, parentContainer = rootContainer) {
-        const { childContainer: c, config } = initContainer(options, parentContainer)
+    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
+        const config = createStrictConfig(options)
+        const { childContainer: c } = initContainer(config, parentContainer)
         super(
             c,
             c.resolve<Context>(Context as any),

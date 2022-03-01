@@ -3,7 +3,7 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from '../utils'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
-import { Config, CacheConfig } from '../Config'
+import { ConfigInjectionToken, CacheConfig } from '../Config'
 import Ethereum from '../Ethereum'
 
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
@@ -24,8 +24,8 @@ export default class GroupKeyStoreFactory implements Context {
     constructor(
         context: Context,
         private ethereum: Ethereum,
-        @inject(Config.Cache) cacheConfig: CacheConfig,
-        @inject(Config.Encryption) encryptionConfig: EncryptionConfig
+        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
+        @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

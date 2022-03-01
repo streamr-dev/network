@@ -406,8 +406,9 @@ permissions = [
 To update the description of a stream:
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
-stream.description = 'New description!'
-await stream.update()
+await stream.update({
+    description: 'New description'
+})
 ```
 
 

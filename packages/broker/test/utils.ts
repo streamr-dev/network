@@ -1,4 +1,4 @@
-import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientOptions } from 'streamr-client'
+import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientConfig } from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
@@ -132,7 +132,7 @@ export const createEthereumAddress = (id: number): string => {
 export const createClient = async (
     tracker: Tracker,
     privateKey: string,
-    clientOptions?: StreamrClientOptions
+    clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
     return new StreamrClient({
         ...ConfigTest,

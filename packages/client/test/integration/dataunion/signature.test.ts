@@ -8,19 +8,20 @@ import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { clientOptions, providerSidechain } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, providerSidechain } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import authFetch from '../../../src/authFetch'
-import BrubeckConfig from '../../../src/Config'
+import { BrubeckConfig } from '../../../src/Config'
 import { DataUnion } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
+const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 
 describe('DataUnion signature', () => {
 
     it('check validity', async () => {
-        const adminClient = new StreamrClient(clientOptions as any)
+        const adminClient = new StreamrClient(ConfigTest)
         const dataUnion = await adminClient.deployDataUnion()
         const dataUnionAddress = dataUnion.getAddress()
         const secret = await dataUnion.createSecret('test secret')
@@ -30,7 +31,7 @@ describe('DataUnion signature', () => {
         const member2Wallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
 
         const memberClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: memberWallet.privateKey
             }
@@ -38,7 +39,7 @@ describe('DataUnion signature', () => {
         const memberDataUnion = await memberClient.getDataUnion(dataUnionAddress)
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(ConfigTest.restUrl, 'products')
         await authFetch(createProductUrl, {
             method: 'POST',
             body: JSON.stringify({
@@ -51,7 +52,7 @@ describe('DataUnion signature', () => {
         })
         await memberDataUnion.join(secret)
 
-        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
+        const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(ConfigTest)))
         const contractMainnet = await contracts.getMainnetContract(dataUnion.getAddress())
         const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
         const tokenSidechainAddress = await contractMainnet.tokenSidechain()
@@ -87,7 +88,7 @@ describe('DataUnion signature', () => {
         const dataUnion = new DataUnion(
             '0x2222222222222222222222222222222222222222',
             '0x2222222222222222222222222222222222222222',
-            new DataUnionAPI(client, null!, BrubeckConfig(clientOptions))
+            new DataUnionAPI(client, null!, BrubeckConfig(ConfigTest))
         )
         const to = '0x3333333333333333333333333333333333333333'
         const withdrawn = BigNumber.from('4000000000000000')

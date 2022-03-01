@@ -1,5 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import ConfigTest from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { getCreateClient } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
 
