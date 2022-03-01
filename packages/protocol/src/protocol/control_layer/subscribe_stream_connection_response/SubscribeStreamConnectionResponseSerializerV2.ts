@@ -41,4 +41,8 @@ export default class SubscribeStreamConnectionResponseSerializerV2 extends Seria
     }
 }
 
-ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.SubscribeStreamConnectionResponse, new SubscribeStreamConnectionResponseSerializerV2())
+ControlMessage.registerSerializer(
+    VERSION,
+    ControlMessage.TYPES.SubscribeStreamConnectionResponse,
+    new SubscribeStreamConnectionResponseSerializerV2()
+)

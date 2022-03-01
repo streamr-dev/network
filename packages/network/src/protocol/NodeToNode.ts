@@ -36,8 +36,10 @@ export interface NodeToNode {
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.PUBLISH_STREAM_REQUEST_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionRequest, nodeId: NodeId) => void): this
     on(event: Event.PUBLISH_STREAM_RESPONSE_RECEIVED, listener: (message: ControlLayer.PublishStreamConnectionResponse, nodeId: NodeId) => void): this
-    on(event: Event.SUBSCRIBE_STREAM_REQUEST_RECEIVED, listener: (message: ControlLayer.SubscribeStreamConnectionRequest, nodeId: NodeId) => void): this
-    on(event: Event.SUBSCRIBE_STREAM_RESPONSE_RECEIVED, listener: (message: ControlLayer.SubscribeStreamConnectionResponse, nodeId: NodeId) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_REQUEST_RECEIVED,
+        listener: (message: ControlLayer.SubscribeStreamConnectionRequest, nodeId: NodeId) => void): this
+    on(event: Event.SUBSCRIBE_STREAM_RESPONSE_RECEIVED,
+        listener: (message: ControlLayer.SubscribeStreamConnectionResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED, listener: (message: ControlLayer.UnsubscribeRequest, nodeId: NodeId) => void): this
 }
 

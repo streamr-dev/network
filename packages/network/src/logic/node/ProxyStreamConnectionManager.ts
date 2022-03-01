@@ -34,7 +34,6 @@ export enum Direction {
     IN = 'inbound'
 }
 
-
 interface ProxyConnection {
     state?: State,
     reconnectionTimer?: NodeJS.Timeout,
