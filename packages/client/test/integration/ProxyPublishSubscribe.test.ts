@@ -155,4 +155,85 @@ describe('PubSub with proxy connections', () => {
             .toEqual(false)
 
     }, 15000)
+
+    it('Subsribe only connections work', async () => {
+        const receivedMessages: any[] = []
+        await proxyClient1.subscribe(stream)
+        await wait(2000)
+
+        await onewayClient.setSubscribeProxy(stream, proxyNodeId1)
+        await onewayClient.subscribe(stream, (msg) => {
+            receivedMessages.push(msg)
+        })
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .toEqual(true)
+
+        await proxyClient1.publish(stream, {
+            msg: 'hellow'
+        })
+        await proxyClient1.publish(stream, {
+            msg: 'hellow'
+        })
+        await proxyClient1.publish(stream, {
+            msg: 'hellow'
+        })
+        await wait(2500)
+        expect(receivedMessages.length).toEqual(3)
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .toEqual(true)
+    }, 15000)
+
+    it('removing proxy subscribing node works', async () => {
+        await proxyClient2.subscribe(stream)
+        await wait(4000)
+        await onewayClient.setSubscribeProxy(stream, proxyNodeId2)
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .toEqual(true)
+
+        await onewayClient.unsubscribe(stream)
+        await onewayClient.removeSubscribeProxy(stream, proxyNodeId2)
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .toEqual(false)
+    }, 15000)
+
+    it('setSubscribeProxies, removeSubscribeProxies', async () => {
+        await proxyClient1.subscribe(stream)
+        await proxyClient2.subscribe(stream)
+        await wait(2000)
+        await onewayClient.setSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .toEqual(true)
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .toEqual(true)
+
+        await onewayClient.unsubscribe(stream)
+        await onewayClient.removeSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .toEqual(false)
+
+        expect((await onewayClient.getNode())
+            // @ts-expect-error private
+            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .toEqual(false)
+    }, 15000)
 })

@@ -231,4 +231,26 @@ export default class BrubeckNode implements Context {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
+
+    async openSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                await this.startNodeTask()
+            }
+            await this.cachedNode!.joinStreamPartAsPureSubscriber(streamPartId, nodeId)
+        } finally {
+            this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
+        }
+    }
+
+    async closeSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+        try {
+            if (!this.cachedNode || !this.startNodeComplete) {
+                return
+            }
+            await this.cachedNode!.joinStreamPartAsPureSubscriber(streamPartId, nodeId)
+        } finally {
+            this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
+        }
+    }
 }
