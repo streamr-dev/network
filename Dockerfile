@@ -1,4 +1,4 @@
-FROM node:16-bullseye as build
+FROM node:16.14-bullseye as build
 WORKDIR /usr/src/monorepo
 RUN npm config set \
 	unsafe-perm=true \
@@ -6,7 +6,7 @@ RUN npm config set \
 COPY . .
 RUN npm run bootstrap-pkg -- streamr-broker && npm run prune-pkg -- streamr-broker
 
-FROM node:16-bullseye-slim
+FROM node:16.14-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
