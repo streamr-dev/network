@@ -6,7 +6,7 @@ import EventEmitter from 'eventemitter3'
 
 import { LoginEndpoints, TokenObject } from './LoginEndpoints'
 import { AuthConfig } from './Ethereum'
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { BrubeckContainer } from './Container'
 import { Debug } from './utils/log'
 
@@ -26,7 +26,7 @@ export default class Session extends EventEmitter {
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Auth) private options: AuthConfig
+        @inject(ConfigInjectionToken.Auth) private options: AuthConfig
     ) {
         super()
         this.state = State.LOGGED_OUT

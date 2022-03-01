@@ -15,7 +15,7 @@ import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { Config, SubscribeConfig, CacheConfig } from './Config'
+import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {
@@ -37,8 +37,8 @@ export default class Validator extends StreamMessageValidator implements Stoppab
     constructor(
         context: Context,
         streamEndpoints: StreamEndpointsCached,
-        @inject(Config.Subscribe) private options: SubscribeConfig,
-        @inject(Config.Cache) private cacheOptions: CacheConfig,
+        @inject(ConfigInjectionToken.Subscribe) private options: SubscribeConfig,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
         super({
             getStream: (streamId: StreamID) => {

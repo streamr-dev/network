@@ -13,10 +13,7 @@ const sideChainConfig = {
 /**
  * Streamr client constructor options that work in the test environment
  */
-export default {
-    auth: {
-        privateKey: process.env.ETHEREUM_PRIVATE_KEY || '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb',
-    },
+export const ConfigTest = {
     theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
     restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v2`,
     streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
@@ -49,6 +46,7 @@ export default {
                 http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
             }
         ],
+        webrtcDisallowPrivateAddresses: false
     },
     mainChainRPCs: {
         name: 'dev_ethereum',
@@ -59,8 +57,6 @@ export default {
     },
     streamRegistryChainRPCs: sideChainConfig,
     dataUnionChainRPCs: sideChainConfig,
-    autoConnect: false,
-    autoDisconnect: false,
     maxRetries: 2,
     _timeouts: {
         theGraph: {

@@ -5,7 +5,7 @@ import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { CacheConfig, Config } from './Config'
+import { CacheConfig, ConfigInjectionToken } from './Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from './permission'
 
@@ -19,7 +19,7 @@ export class StreamEndpointsCached implements Context {
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
-        @inject(Config.Cache) private cacheOptions: CacheConfig
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
         this.debug = context.debug.extend(this.id)
     }

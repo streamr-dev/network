@@ -1,8 +1,9 @@
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import { clientOptions, providerMainnet, providerSidechain } from '../devEnvironment'
+import { providerMainnet, providerSidechain } from '../devEnvironment'
 import { getRandomClient, expectInvalidAddress } from '../../test-utils/utils'
+import { ConfigTest } from '../../../src/ConfigTest'
 
 const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 
@@ -12,13 +13,13 @@ const log = debug('StreamrClient::DataUnion::integration-test-calculate')
 describe('DataUnion calculate', () => {
 
     it('calculate DU address before deployment', async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
+        log('Connecting to Ethereum networks, clientOptions: %O', ConfigTest)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: ', JSON.stringify(network))
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: ', JSON.stringify(network2))
 
-        const adminClient = new StreamrClient(clientOptions as any)
+        const adminClient = new StreamrClient(ConfigTest)
         const dataUnionName = 'test-' + Date.now()
         const {
             mainnetAddress,

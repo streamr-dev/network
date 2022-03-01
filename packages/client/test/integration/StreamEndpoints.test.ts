@@ -1,10 +1,10 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { randomEthereumAddress } from 'streamr-test-utils'
@@ -23,7 +23,7 @@ describe('StreamEndpoints', () => {
     beforeAll(async () => {
         wallet = new Wallet(await fetchPrivateKeyWithGas())
         client = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: wallet.privateKey,
             }
@@ -82,7 +82,7 @@ describe('StreamEndpoints', () => {
             it('domain owned by user', async () => {
                 const streamId = 'testdomain1.eth/foobar/' + Date.now()
                 const ensOwnerClient = new StreamrClient({
-                    ...clientOptions,
+                    ...ConfigTest,
                     auth: {
                         // In dev environment the testdomain1.eth is owned by 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0.
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
@@ -230,8 +230,9 @@ describe('StreamEndpoints', () => {
 
     describe('Stream.update', () => {
         it('can change stream description', async () => {
-            createdStream.description = `description-${Date.now()}`
-            await createdStream.update()
+            await createdStream.update({
+                description: `description-${Date.now()}`
+            })
             await until(async () => {
                 try {
                     return (await client.getStream(createdStream.id)).description === createdStream.description
@@ -239,6 +240,9 @@ describe('StreamEndpoints', () => {
                     return false
                 }
             }, 100000, 1000)
+            // check that other fields not overwritten
+            const updatedStream = await client.getStream(createdStream.id)
+            expect(updatedStream.requireSignedData).toBe(true)
         })
     })
 

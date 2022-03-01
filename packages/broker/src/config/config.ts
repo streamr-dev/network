@@ -1,4 +1,4 @@
-import { BrubeckClientConfig } from 'streamr-client'
+import { StreamrClientConfig } from 'streamr-client'
 import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import path from 'path'
 import * as os from 'os'
@@ -18,11 +18,9 @@ export interface HttpServerConfig {
 
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
-export type ClientConfig = BrubeckClientConfig & { network?: { trackers: TrackerRegistryItem[] | NetworkSmartContract | undefined } }
-
 export interface Config {
     $schema: string,
-    client: ClientConfig
+    client: StreamrClientConfig
     httpServer: HttpServerConfig
     plugins: Record<string,any>
     apiAuthentication: ApiAuthenticationConfig

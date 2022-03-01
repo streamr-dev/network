@@ -5,8 +5,8 @@ import { container, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
-import clientOptions from './config'
-import { StrictBrubeckClientConfig } from '../../src/Config'
+import { ConfigTest } from '../../src/ConfigTest'
+import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 
 const MAX_MESSAGES = 5
@@ -35,19 +35,19 @@ describe('MemoryLeaks', () => {
         let createContainer: Function
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
-                config: StrictBrubeckClientConfig;
+                config: StrictStreamrClientConfig;
                 childContainer: DependencyContainer;
                 rootContext: any;}> => {
-                return initContainer({
-                    ...clientOptions,
+                const config = createStrictConfig({
+                    ...ConfigTest,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    autoConnect: false,
-                    autoDisconnect: false,
                     maxRetries: 2,
                     ...opts,
                 })
+                const { childContainer, rootContext } = initContainer(config)
+                return { config, childContainer, rootContext }
             }
         })
 
@@ -99,12 +99,10 @@ describe('MemoryLeaks', () => {
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient({
-                    ...clientOptions,
+                    ...ConfigTest,
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    autoConnect: false,
-                    autoDisconnect: false,
                     maxRetries: 2,
                     ...opts,
                 })

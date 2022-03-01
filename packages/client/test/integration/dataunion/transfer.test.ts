@@ -5,7 +5,6 @@ import debug from 'debug'
 import Token from '../../../contracts/TestToken.json'
 import DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import {
-    clientOptions,
     tokenAdminPrivateKey,
     tokenMediatorAddress,
     relayTokensAbi,
@@ -14,6 +13,7 @@ import {
     getMainnetTestWallet,
     getSidechainTestWallet
 } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { getEndpointUrl, until } from '../../../src/utils'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -22,16 +22,16 @@ import authFetch from '../../../src/authFetch'
 const log = debug('StreamrClient::DataUnion::integration-test-transfer')
 
 const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminWallet)
 
 const tokenAdminSidechainWallet = new Wallet(tokenAdminPrivateKey, providerSidechain)
-const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
+const tokenSidechain = new Contract(ConfigTest.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
 async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
     const privateKey = `0x100000000000000000000000000000000000000012300000001${Date.now()}`
     log('Joining a new member with privatekey %s', privateKey)
     const memberClient = new StreamrClient({
-        ...clientOptions,
+        ...ConfigTest,
         auth: {
             privateKey
         }
@@ -46,7 +46,7 @@ async function addMember(dataUnionAddress: EthereumAddress, secret: string) {
 
 describe('DataUnion earnings transfer methods', () => {
     beforeAll(async () => {
-        log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
+        log('Connecting to Ethereum networks, clientOptions: %O', ConfigTest)
         const network = await providerMainnet.getNetwork()
         log('Connected to "mainnet" network: %O', network)
         const network2 = await providerSidechain.getNetwork()
@@ -105,7 +105,7 @@ describe('DataUnion earnings transfer methods', () => {
         const adminWalletSidechain = getSidechainTestWallet(testIndex)
 
         const adminClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: adminWallet.privateKey,
             },
@@ -122,7 +122,7 @@ describe('DataUnion earnings transfer methods', () => {
         log('Sending tx from %s', await adminClient.getAddress())
 
         // product is needed for join requests to analyze the DU version
-        const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
+        const createProductUrl = getEndpointUrl(ConfigTest.restUrl, 'products')
         await authFetch(createProductUrl, {
             method: 'POST',
             body: JSON.stringify({
@@ -169,7 +169,7 @@ describe('DataUnion earnings transfer methods', () => {
         } = await setupTest(1)
 
         const memberClient = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: memberWallet.privateKey,
             },
