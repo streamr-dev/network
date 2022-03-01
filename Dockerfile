@@ -1,10 +1,10 @@
 FROM node:16-bullseye as build
 WORKDIR /usr/src/monorepo
-RUN npm set unsafe-perm true
+RUN npm config set \
+	unsafe-perm=true \
+	python="$(which python3)"
 COPY . .
-RUN npm config set python "$(which python3)" && npm run bootstrap-pkg -- streamr-broker
-
-RUN npm run prune-pkg -- streamr-broker
+RUN npm run bootstrap-pkg -- streamr-broker && npm run prune-pkg -- streamr-broker
 
 FROM node:16-bullseye-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
