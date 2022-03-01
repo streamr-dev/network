@@ -177,6 +177,7 @@
     const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v2'
     let firstTime
     let lastTime
+    let lastMessage
     function log(content, className = '') {
         const now = Math.floor(performance.now())
         if (lastTime === undefined) {
@@ -313,29 +314,30 @@
                 msg: i
             }
             log(`Publishing ${i} of ${10}...`)
-            await publisher.publish(stream.id, msg)
+            const published = await publisher.publish(stream.id, msg)
             log(`Published ${i} of ${10}.`)
+            if (i === 9) {
+                lastMessage = published
+            }
         }
         log('Published All Messages', 'publishResult')
     })
 
     $('#resend').on('click', async () => {
+        await subscriber.waitForStorage(lastMessage)
         messages = []
         log(`Resending...`)
 
-        const sub = await subscriber.resend(
-            stream.id,
-            {
-                last: 10
+        const sub = await subscriber.resend(stream.id,
+            { last: 10 },
+            (message) => {
+                messages.push(message)
+                log(`Received Resent: ${JSON.stringify(message)}`)
+                if (messages.length === 10) {
+                    log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
+                }
             }
         )
-        sub.onMessage((message) => {
-            messages.push(message)
-            log(`Received Resent: ${JSON.stringify(message)}`)
-            if (messages.length === 10) {
-                log(`Resent: ${JSON.stringify(messages)}`, 'resendMessagesResult')
-            }
-        })
 
         sub.onConsumed(() => {
             log('Resend Consumed.', 'resendResult')
