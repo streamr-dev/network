@@ -28,8 +28,8 @@ class InvalidGroupKeyRequestError extends ValidationError {
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange implements Context {
     enabled = true
-    id
-    debug
+    readonly id
+    readonly debug
     getSubscription
 
     constructor(

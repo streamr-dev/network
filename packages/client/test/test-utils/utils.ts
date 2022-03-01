@@ -457,6 +457,7 @@ export function publishTestMessagesGenerator(
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
+    // @ts-expect-error
     const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
@@ -482,6 +483,7 @@ export function getPublishTestStreamMessages(
         }
 
         const contents = new WeakMap()
+        // @ts-expect-error
         client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
@@ -537,6 +539,7 @@ export function getPublishTestMessages(
 
 export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (lastPublished: StreamMessage, opts = {}) => {
+        // @ts-expect-error
         return client.publisher.waitForStorage(lastPublished, {
             ...defaultOpts,
             ...opts,

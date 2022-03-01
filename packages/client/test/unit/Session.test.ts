@@ -44,6 +44,7 @@ describe('Session', () => {
 
         clientSessionToken = createClient(opts, childContainer)
 
+        // @ts-expect-error
         session = clientSessionToken.session
     }
 
@@ -64,6 +65,7 @@ describe('Session', () => {
                 },
             })
             const sessionToken = await clientNone.getSessionToken()
+            // @ts-expect-error
             expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
         })
 
@@ -71,6 +73,7 @@ describe('Session', () => {
             const clientNone = createClient({
                 auth: {},
             })
+            // @ts-expect-error
             const sessionToken = await clientNone.session.getSessionToken()
             expect(sessionToken).toBe('')
         })
@@ -83,6 +86,7 @@ describe('Session', () => {
                 },
             })
             await expect(async () => (
+                // @ts-expect-error
                 clientNone.session.sendLogin()
             )).rejects.toThrow(
                 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
@@ -93,6 +97,7 @@ describe('Session', () => {
             const clientNone = createClient({
                 auth: {},
             })
+            // @ts-expect-error
             await clientNone.session.sendLogin().catch((err) => {
                 expect(err.message).toEqual(
                     'Need either "privateKey", "ethereum" or "sessionToken" to login.'
@@ -206,7 +211,8 @@ describe('Session', () => {
 
         it('can logout while logging in', async () => {
             const done = Defer()
-            session.once('logging in', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging in', done.wrap(async () => {
                 await session.logout()
             }))
             await session.getSessionToken()
@@ -215,7 +221,8 @@ describe('Session', () => {
 
         it('can login while logging out', async () => {
             const done = Defer()
-            session.once('logging out', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging out', done.wrap(async () => {
                 await session.getSessionToken()
             }))
             await session.getSessionToken()

@@ -55,29 +55,33 @@ export interface StreamrClient extends Ethereum,
 class StreamrClientBase implements Context {
     static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
 
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
+    /** @internal */
     onDestroy
+    /** @internal */
     isDestroyed
 
     constructor(
-        public container: DependencyContainer,
-        public context: Context,
-        @inject(ConfigInjectionToken.Root) public options: StrictStreamrClientConfig,
-        public node: BrubeckNode,
-        public ethereum: Ethereum,
-        public session: Session,
-        public loginEndpoints: LoginEndpoints,
-        public streamEndpoints: StreamEndpoints,
-        public cached: StreamEndpointsCached,
-        public resends: Resends,
-        public publisher: Publisher,
-        public subscriber: Subscriber,
-        public groupKeyStore: GroupKeyStoreFactory,
-        protected destroySignal: DestroySignal,
-        public dataunions: DataUnions,
-        public streamRegistry: StreamRegistry,
-        public storageNodeRegistry: StorageNodeRegistry,
+        private container: DependencyContainer,
+        private context: Context,
+        @inject(ConfigInjectionToken.Root) private options: StrictStreamrClientConfig,
+        private node: BrubeckNode,
+        private ethereum: Ethereum,
+        private session: Session,
+        private loginEndpoints: LoginEndpoints,
+        private streamEndpoints: StreamEndpoints,
+        private cached: StreamEndpointsCached,
+        private resends: Resends,
+        private publisher: Publisher,
+        private subscriber: Subscriber,
+        private groupKeyStore: GroupKeyStoreFactory,
+        private destroySignal: DestroySignal,
+        private dataunions: DataUnions,
+        private streamRegistry: StreamRegistry,
+        private storageNodeRegistry: StorageNodeRegistry,
         private streamIdBuilder: StreamIDBuilder
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
@@ -99,6 +103,9 @@ class StreamrClientBase implements Context {
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
     }
 
+    /**
+     * @category Important
+     */
     subscribe<T>(
         options: StreamDefinition & { resend: ResendOptions },
         onMessage?: SubscriptionOnMessage<T>
@@ -143,11 +150,6 @@ class StreamrClientBase implements Context {
         await Promise.all(tasks)
     })
 
-    /** @deprecated */
-    disconnect() {
-        return this.destroy()
-    }
-
     destroy = pOnce(async () => {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
@@ -161,10 +163,12 @@ class StreamrClientBase implements Context {
         await Promise.all(tasks)
     })
 
+    /** @internal */
     enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
         Debug.enable(prefix)
     }
 
+    /** @internal */
     disableDebugLogging() { // eslint-disable-line class-methods-use-this
         Debug.disable()
     }
@@ -227,6 +231,9 @@ export function initContainer(config: StrictStreamrClientConfig, parentContainer
     }
 }
 
+/**
+ * @category Important
+ */
 export class StreamrClient extends StreamrClientBase {
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const config = createStrictConfig(options)
@@ -254,6 +261,7 @@ export class StreamrClient extends StreamrClientBase {
     }
 }
 
+/** @internal */
 export const Dependencies = {
     Context,
     BrubeckNode,

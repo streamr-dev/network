@@ -26,7 +26,7 @@ describe(StorageConfig, () => {
     let stubClient: Pick<StreamrClient, 'getStream'
         | 'getStoredStreamsOf'
         | 'registerStorageEventListener'
-        | 'unRegisterStorageEventListeners' >
+        | 'unregisterStorageEventListeners' >
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
     let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>
     let storageConfig: StorageConfig
@@ -42,7 +42,7 @@ describe(StorageConfig, () => {
             async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any) {
                 storageEventListener = cb
             },
-            unRegisterStorageEventListeners: async () => {
+            unregisterStorageEventListeners: async () => {
                 storageEventListener = undefined
             }
         }

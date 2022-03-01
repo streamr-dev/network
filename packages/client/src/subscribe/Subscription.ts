@@ -8,15 +8,19 @@ import SubscriptionSession from './SubscriptionSession'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 
+/**
+ * @category Important
+ */
 export class Subscription<T = unknown> extends MessageStream<T> {
-    // @internal
+    /** @internal */
     context: SubscriptionSession<T>
     readonly streamPartId: StreamPartID
-    /** prevent buffered data from yielding */
-    // @internal
+    /**
+     * prevent buffered data from yielding
+     * @internal */
     isUnsubscribed = false
 
-    // @internal
+    /** @internal */
     constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
         super(subSession, options)
         this.context = subSession
@@ -27,7 +31,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         // this.debug('create', this.key, new Error('Subscription').stack)
     }
 
-    // @internal
+    /** @internal */
     waitForNeighbours(numNeighbours?: number, timeout?: number) {
         return this.context.waitForNeighbours(numNeighbours, timeout)
     }

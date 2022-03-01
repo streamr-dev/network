@@ -38,7 +38,7 @@ class InvalidGroupKeyError extends ValidationError {
     }
 }
 
-type GroupKeyObject = {
+export type GroupKeyObject = {
     id: string,
     hex: string,
     data: Uint8Array,
@@ -68,6 +68,7 @@ export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<type
 
 // eslint-disable-next-line no-redeclare
 class GroupKey {
+    /** @internal */
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     static validate(maybeGroupKey: GroupKey) {

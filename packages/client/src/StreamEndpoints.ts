@@ -7,6 +7,7 @@ import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
 import {
     ContentType,
     EncryptionType,
+    EthereumAddress,
     SignatureType,
     StreamMessageType,
     StreamPartIDUtils
@@ -71,12 +72,14 @@ function getKeepAliveAgentForUrl(url: string) {
     throw new Error(`Unknown protocol in URL: ${url}`)
 }
 
-/** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpoints implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
 
+    /** @internal */
     constructor(
         context: Context,
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -111,6 +114,7 @@ export class StreamEndpoints implements Context {
         }
     }
 
+    /** @internal */
     async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject[]> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)

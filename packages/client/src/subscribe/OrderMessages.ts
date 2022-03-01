@@ -19,8 +19,8 @@ import { SubscribeConfig } from '../Config'
  */
 @injectable()
 export default class OrderMessages<T> implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     stopSignal = Signal.once()
     done = false
     resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup

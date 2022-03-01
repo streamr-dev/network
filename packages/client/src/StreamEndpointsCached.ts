@@ -13,8 +13,8 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpointsCached implements Context {
-    id = instanceId(this)
-    debug
+    readonly id = instanceId(this)
+    readonly debug
 
     constructor(
         context: Context,

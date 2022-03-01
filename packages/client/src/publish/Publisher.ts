@@ -25,8 +25,8 @@ const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms
 
 @scoped(Lifecycle.ContainerScoped)
 export default class BrubeckPublisher implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     streamMessageQueue
     publishQueue
     isStopped = false
@@ -49,6 +49,9 @@ export default class BrubeckPublisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
+    /**
+     * @category Important
+     */
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
@@ -62,7 +65,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         })
     }
 
-    async publishMessage<T>(streamDefinition: StreamDefinition, {
+    private async publishMessage<T>(streamDefinition: StreamDefinition, {
         content,
         timestamp = Date.now(),
         partitionKey
@@ -76,6 +79,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         })
     }
 
+    /** @internal */
     async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -92,6 +96,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return msgs
     }
 
+    /** @internal */
     async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -193,10 +198,12 @@ export default class BrubeckPublisher implements Context, Stoppable {
         /* eslint-enable no-await-in-loop */
     }
 
+    /** @internal */
     startKeyExchange() {
         return this.keyExchange.start()
     }
 
+    /** @internal */
     stopKeyExchange() {
         return this.keyExchange.stop()
     }
@@ -225,11 +232,13 @@ export default class BrubeckPublisher implements Context, Stoppable {
         ])
     }
 
+    /** @internal */
     async start() {
         this.isStopped = false
         this.pipeline.start()
     }
 
+    /** @internal */
     async stop() {
         this.isStopped = true
         await Promise.allSettled([

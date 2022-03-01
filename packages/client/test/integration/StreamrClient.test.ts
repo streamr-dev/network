@@ -109,12 +109,14 @@ describeRepeats('StreamrClient', () => {
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
+                // @ts-expect-error
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
+                // @ts-expect-error
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
@@ -233,6 +235,7 @@ describeRepeats('StreamrClient', () => {
 
         it('destroying stops publish', async () => {
             const subscriber = await createClient({
+                // @ts-expect-error
                 auth: client.options.auth,
             })
             const sub = await subscriber.subscribe(streamDefinition)
@@ -240,6 +243,7 @@ describeRepeats('StreamrClient', () => {
             const onMessage = jest.fn()
             const gotMessages = Defer()
             const published: any[] = []
+            // @ts-expect-error
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
                 const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
                 if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }
@@ -279,6 +283,7 @@ describeRepeats('StreamrClient', () => {
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
             const subscriber = await createClient({
+                // @ts-expect-error
                 auth: client.options.auth,
             })
 
@@ -292,12 +297,12 @@ describeRepeats('StreamrClient', () => {
             const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
 
             const publishTasks = [
-                client.publishMessage(streamDefinition, msgs[0]).finally(async () => {
+                client.publish(streamDefinition, msgs[0]).finally(async () => {
                     await client.destroy()
                 }),
-                client.publishMessage(streamDefinition, msgs[1]),
-                client.publishMessage(streamDefinition, msgs[2]),
-                client.publishMessage(streamDefinition, msgs[3]),
+                client.publish(streamDefinition, msgs[1]),
+                client.publish(streamDefinition, msgs[2]),
+                client.publish(streamDefinition, msgs[3]),
             ]
             const results = await Promise.allSettled(publishTasks)
             client.debug('publishTasks', results.map(({ status }) => status))
@@ -361,7 +366,7 @@ describeRepeats('StreamrClient', () => {
 
             describe('with resend', () => {
                 it('client.subscribe then unsubscribe before subscribed', async () => {
-                    client.connection.enableAutoDisconnect(false)
+                    client.connection.enableAutodestroy(false)
                     const subTask = client.subscribe({
                         streamId: stream.id,
                         resend: {
@@ -435,14 +440,14 @@ describeRepeats('StreamrClient', () => {
         })
 
         test('publish does not disconnect after each message with autoDisconnect', async () => {
-            await client.disconnect()
+            await client.destroy()
             const onConnected = jest.fn()
             const onDisconnected = jest.fn()
             client.on('disconnected', onDisconnected)
             client.on('connected', onConnected)
 
             client.enableAutoConnect()
-            client.enableAutoDisconnect()
+            client.enableAutodestroy()
             await publishTestMessages(3, {
                 delay: 150,
             })

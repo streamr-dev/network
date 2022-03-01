@@ -12,7 +12,7 @@ import { BrubeckContainer } from './Container'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import Ethereum from './Ethereum'
-import { NotFoundError } from '.'
+import { NotFoundError } from './authFetch'
 import { until } from './utils'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -91,6 +91,7 @@ export class StorageNodeRegistry {
     // Read from the NodeRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
+    /** @internal */
     async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
@@ -172,6 +173,7 @@ export class StorageNodeRegistry {
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
 
+    /** @internal */
     async getStorageNodeUrl(nodeAddress: EthereumAddress): Promise<string> {
         log('getnode %s ', nodeAddress)
         const res = await this.sendNodeQuery(StorageNodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult
@@ -254,7 +256,7 @@ export class StorageNodeRegistry {
         })
     }
 
-    async unRegisterStorageEventListeners() {
+    async unregisterStorageEventListeners() {
         this.streamStorageRegistryContractReadonly.removeAllListeners()
     }
 

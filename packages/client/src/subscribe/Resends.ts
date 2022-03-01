@@ -69,8 +69,8 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Resend implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
 
     constructor(
         context: Context,
@@ -86,6 +86,7 @@ export default class Resend implements Context {
 
     /**
      * Call last/from/range as appropriate based on arguments
+     * @category Important
      */
     async resend<T>(
         streamDefinition: StreamDefinition,
@@ -184,7 +185,7 @@ export default class Resend implements Context {
         })
     }
 
-    async from<T>(streamPartId: StreamPartID, {
+    private async from<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
@@ -200,6 +201,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
@@ -225,6 +227,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async stop() {
         await this.storageNodeRegistry.stop()
     }

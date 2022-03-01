@@ -11,11 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Method `stream.update()` now requires a parameter `props`
+- Method `unRegisterStorageEventListeners()` renamed to `unregisterStorageEventListeners()`
 
 ### Deprecated
 
 ### Removed
+
 - Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
+- Remove method `disconnect()`, use `destroy()` instead
+- Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead
 
 ### Fixed
 

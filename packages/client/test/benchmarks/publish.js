@@ -138,15 +138,15 @@ async function run() {
 
     suite.on('complete', async () => {
         keyserver.destroy()
-        log('Disconnecting clients')
+        log('Destroying clients')
         const tasks = [
-            client1.disconnect(),
-            client2.disconnect(),
-            client3.disconnect(),
+            client1.destroy(),
+            client2.destroy(),
+            client3.destroy()
         ]
         await Promise.allSettled(tasks)
         await Promise.all(tasks)
-        log('Clients disconnected')
+        log('Clients destroyed')
     })
 
     suite.run()
