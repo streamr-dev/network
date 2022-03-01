@@ -58,12 +58,14 @@ describe('multi trackers', () => {
         nodeOne = createNetworkNode({
             id: 'nodeOne',
             trackers: trackerAddresses,
-            trackerConnectionMaintenanceInterval: 100
+            trackerConnectionMaintenanceInterval: 100,
+            webrtcDisallowPrivateAddresses: false
         })
         nodeTwo = createNetworkNode({
             id: 'nodeTwo',
             trackers: trackerAddresses,
-            trackerConnectionMaintenanceInterval: 100
+            trackerConnectionMaintenanceInterval: 100,
+            webrtcDisallowPrivateAddresses: false
         })
 
         await nodeOne.start()

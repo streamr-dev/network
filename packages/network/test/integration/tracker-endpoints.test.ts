@@ -53,12 +53,14 @@ describe('tracker endpoint', () => {
             location: {
                 country: 'CH',
                 city: 'Zug'
-            }
+            },
+            webrtcDisallowPrivateAddresses: false
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            location: undefined
+            location: undefined,
+            webrtcDisallowPrivateAddresses: false
         })
         nodeTwo.setExtraMetadata({
             foo: 'bar'

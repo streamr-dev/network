@@ -3,7 +3,7 @@ import { randomEthereumAddress, wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
-import ConfigTest from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { SearchStreamsPermissionFilter } from '../../src/searchStreams'
 import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
@@ -60,8 +60,7 @@ describe('SearchStreams', () => {
             ...ConfigTest,
             auth: {
                 privateKey: await fetchPrivateKeyWithGas(),
-            },
-            autoConnect: false
+            }
         })
         const streams = await createTestStreams([
             { streamId: `/${SEARCH_TERM}/1-no-permissions`, assignments: [] },

@@ -36,27 +36,32 @@ describe('duplicate message detection and avoidance', () => {
             createNetworkNode({
                 id: 'node-1',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-2',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-3',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-4',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
             createNetworkNode({
                 id: 'node-5',
                 trackers: [trackerInfo],
-                stunUrls: []
+                stunUrls: [],
+                webrtcDisallowPrivateAddresses: false
             }),
         ]
 

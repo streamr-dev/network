@@ -18,7 +18,7 @@ import { Context } from './utils/Context'
 import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
 import { BrubeckContainer } from './Container'
-import { Config, ConnectionConfig } from './Config'
+import { ConfigInjectionToken, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
 import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
@@ -80,7 +80,7 @@ export class StreamEndpoints implements Context {
     constructor(
         context: Context,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Connection) private readonly options: ConnectionConfig,
+        @inject(ConfigInjectionToken.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,

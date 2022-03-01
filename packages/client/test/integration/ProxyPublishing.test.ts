@@ -2,7 +2,7 @@ import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../te
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import ConfigTest from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
 

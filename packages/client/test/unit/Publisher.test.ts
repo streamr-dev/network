@@ -7,6 +7,7 @@ import { initContainer } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
+import { createStrictConfig } from '../../src/Config'
 
 const AUTHENTICATED_USER = '0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf'
 const PRIVATE_KEY = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -16,11 +17,12 @@ const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 const createMockContainer = async (
     brubeckNode: Pick<BrubeckNode, 'publishToNode'>,
 ) => {
-    const { childContainer } = initContainer({
+    const config = createStrictConfig({
         auth: {
             privateKey: PRIVATE_KEY
         }
-    }, container)
+    })
+    const { childContainer } = initContainer(config, container)
     return childContainer
         .registerSingleton(StreamRegistry, FakeStreamRegistry as any)
         .register(BrubeckNode, { useValue: brubeckNode as any })

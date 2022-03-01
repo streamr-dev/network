@@ -1,6 +1,7 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { ConfigTest } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
@@ -20,7 +21,7 @@ describe('Stream permissions', () => {
         const wallet = new Wallet(await fetchPrivateKeyWithGas())
         otherUser = randomEthereumAddress()
         client = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: wallet.privateKey,
             }

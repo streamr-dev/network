@@ -1,6 +1,6 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { instanceId } from './index'
-import { Config, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Context } from './Context'
 import { Debugger } from 'debug'
 import { HttpFetcher } from './HttpFetcher'
@@ -13,7 +13,7 @@ export class GraphQLClient {
     constructor(
         context: Context,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(Config.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
     ) {
         this.debug = context.debug.extend(instanceId(this))
     }

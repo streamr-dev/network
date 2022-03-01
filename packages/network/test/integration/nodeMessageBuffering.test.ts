@@ -27,11 +27,13 @@ describe('message buffering of Node', () => {
 
         sourceNode = createNetworkNode({
             id: 'source-node',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
         destinationNode = createNetworkNode({
             id: 'destination-node',
-            trackers: [trackerInfo]
+            trackers: [trackerInfo],
+            webrtcDisallowPrivateAddresses: false
         })
 
         sourceNode.start()

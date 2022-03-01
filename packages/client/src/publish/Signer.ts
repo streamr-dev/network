@@ -8,12 +8,12 @@ import { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, sleep } from '../utils'
 import type { AuthenticatedConfig } from '../Ethereum'
-import { Config } from '../Config'
+import { ConfigInjectionToken } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Signer {
     signData
-    constructor(@inject(Config.Auth) authOptions: AuthenticatedConfig) {
+    constructor(@inject(ConfigInjectionToken.Auth) authOptions: AuthenticatedConfig) {
         this.signData = Signer.getSigningFunction(authOptions)
     }
 
