@@ -5,7 +5,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import Ethereum, { AuthConfig } from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { Rest } from './Rest'
 
 export interface TokenObject {
@@ -28,7 +28,7 @@ export class LoginEndpoints implements Context {
         context: Context,
         private ethereum: Ethereum,
         @inject(delay(() => Rest)) private rest: Rest,
-        @inject(Config.Auth) private authConfig: AuthConfig,
+        @inject(ConfigInjectionToken.Auth) private authConfig: AuthConfig,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

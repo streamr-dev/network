@@ -5,7 +5,7 @@ import { Lifecycle, scoped, inject, DependencyContainer } from 'tsyringe'
 
 import { Debugger } from './utils/log'
 import { instanceId } from './utils'
-import { ConnectionConfig, Config } from './Config'
+import { ConnectionConfig, ConfigInjectionToken } from './Config'
 import authFetch, { authRequest } from './authFetch'
 import { Context } from './utils/Context'
 import { Readable } from 'stream'
@@ -44,7 +44,7 @@ export class Rest implements Context {
     constructor(
         context: Context,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Connection) private options: ConnectionConfig,
+        @inject(ConfigInjectionToken.Connection) private options: ConnectionConfig,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

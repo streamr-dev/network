@@ -9,7 +9,7 @@ import { BrubeckContainer } from './Container'
 import Ethereum from './Ethereum'
 import { instanceId, until } from './utils'
 import { Context } from './utils/Context'
-import { Config, StrictStreamrClientConfig } from './Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import { NotFoundError } from './authFetch'
 import {
@@ -64,7 +64,7 @@ export class StreamRegistry implements Context {
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Root) private config: StrictStreamrClientConfig,
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(GraphQLClient) private graphQLClient: GraphQLClient,
         @inject(StreamEndpointsCached) private streamEndpointsCached: StreamEndpointsCached
     ) {

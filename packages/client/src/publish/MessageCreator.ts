@@ -14,7 +14,7 @@ import { LimitAsyncFnByKey } from '../utils'
 import { Stoppable } from '../utils/Stoppable'
 
 import { getCachedMessageChain } from './MessageChain'
-import { Config, CacheConfig } from '../Config'
+import { ConfigInjectionToken, CacheConfig } from '../Config'
 import Ethereum from '../Ethereum'
 import StreamPartitioner from './StreamPartitioner'
 
@@ -57,7 +57,7 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
     constructor(
         private streamPartitioner: StreamPartitioner,
         private ethereum: Ethereum,
-        @inject(Config.Cache) private cacheOptions: CacheConfig,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
         this.getMsgChain = getCachedMessageChain(this.cacheOptions)
 

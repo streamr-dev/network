@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import clientOptions from '../config'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { createMockAddress } from '../../test-utils/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-deploy')
@@ -11,8 +11,8 @@ describe('DataUnion deploy', () => {
     let adminClient: StreamrClient
 
     beforeAll(async () => {
-        log('ClientOptions: %O', clientOptions)
-        adminClient = new StreamrClient(clientOptions as any)
+        log('ClientOptions: %O', ConfigTest)
+        adminClient = new StreamrClient(ConfigTest as any)
     }, 60000)
 
     describe('owner', () => {

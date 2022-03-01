@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import { StreamrClient } from '../../../src/StreamrClient'
-import clientOptions from '../config'
+import { ConfigTest } from '../../../src/ConfigTest'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { getRandomClient, createMockAddress, expectInvalidAddress } from '../../test-utils/utils'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -22,8 +22,8 @@ describe('DataUnion stats', () => {
     const inactiveMember = createMockAddress()
 
     beforeAll(async () => {
-        log('ClientOptions: %O', clientOptions)
-        adminClient = new StreamrClient(clientOptions as any)
+        log('ClientOptions: %O', ConfigTest)
+        adminClient = new StreamrClient(ConfigTest as any)
         dataUnion = await adminClient.deployDataUnion()
         await dataUnion.addMembers(activeMemberAddressList.concat([inactiveMember]))
         await dataUnion.removeMembers([inactiveMember])

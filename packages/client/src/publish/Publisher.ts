@@ -17,7 +17,7 @@ import Validator from '../Validator'
 import BrubeckNode from '../BrubeckNode'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { Config, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export type { PublishMetadata }
 
@@ -41,7 +41,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
-        @inject(Config.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

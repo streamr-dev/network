@@ -11,31 +11,32 @@ import Contracts from '../../../src/dataunion/Contracts'
 import DataUnionAPI from '../../../src/dataunion'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
-import { clientOptions, tokenAdminPrivateKey } from '../devEnvironment'
+import { dataUnionAdminPrivateKey, tokenAdminPrivateKey } from '../devEnvironment'
+import { ConfigTest } from '../../../src/ConfigTest'
 import authFetch from '../../../src/authFetch'
 import { expectInvalidAddress } from '../../test-utils/utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus, DataUnion } from '../../../src/dataunion/DataUnion'
 import { EthereumAddress } from 'streamr-client-protocol'
-import BrubeckConfig from '../../../src/Config'
+import { BrubeckConfig } from '../../../src/Config'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-const providerSidechain = new providers.JsonRpcProvider(clientOptions.dataUnionChainRPCs[0])
-const providerMainnet = new providers.JsonRpcProvider(clientOptions.mainChainRPCs[0])
-const adminWalletMainnet = new Wallet(clientOptions.auth.privateKey, providerMainnet)
-const adminWalletSidechain = new Wallet(clientOptions.auth.privateKey, providerSidechain)
+const providerSidechain = new providers.JsonRpcProvider(ConfigTest.dataUnionChainRPCs.rpcs[0])
+const providerMainnet = new providers.JsonRpcProvider(ConfigTest.mainChainRPCs.rpcs[0])
+const adminWalletMainnet = new Wallet(dataUnionAdminPrivateKey, providerMainnet)
+const adminWalletSidechain = new Wallet(dataUnionAdminPrivateKey, providerSidechain)
 
 const tokenAdminWallet = new Wallet(tokenAdminPrivateKey, providerMainnet)
-const tokenMainnet = new Contract(clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
+const tokenMainnet = new Contract(ConfigTest.tokenAddress, Token.abi, tokenAdminWallet)
 
-const tokenSidechain = new Contract(clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
+const tokenSidechain = new Contract(ConfigTest.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 let testWalletId = 1000000 // ensure fixed length as string
 
 // TODO: to speed up this test, try re-using the data union?
 let validDataUnion: DataUnion | undefined // use this in a test that only wants a valid data union but doesn't mutate it
 async function getDataUnion(): Promise<DataUnion> {
-    return validDataUnion || new StreamrClient(clientOptions).deployDataUnion()
+    return validDataUnion || new StreamrClient(ConfigTest).deployDataUnion()
 }
 
 async function testWithdraw(
@@ -50,7 +51,7 @@ async function testWithdraw(
     options: DataUnionWithdrawOptions,
     expectedWithdrawAmount?: BigNumber,
 ) {
-    log('Connecting to Ethereum networks, clientOptions: %O', clientOptions)
+    log('Connecting to Ethereum networks, clientOptions: %O', ConfigTest)
     const network = await providerMainnet.getNetwork()
     log('Connected to "mainnet" network: %O', network)
     const network2 = await providerSidechain.getNetwork()
@@ -60,7 +61,7 @@ async function testWithdraw(
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
     await tx1.wait()
 
-    const adminClient = new StreamrClient(clientOptions)
+    const adminClient = new StreamrClient(ConfigTest)
 
     const dataUnion = await adminClient.deployDataUnion()
     validDataUnion = dataUnion // save for later re-use
@@ -82,7 +83,7 @@ async function testWithdraw(
     }
 
     const memberClient = new StreamrClient({
-        ...clientOptions,
+        ...ConfigTest,
         auth: {
             privateKey: memberWallet.privateKey
         }
@@ -90,7 +91,7 @@ async function testWithdraw(
     const dataUnionMember = await memberClient.getDataUnion(dataUnion.getAddress())
 
     // product is needed for join requests to analyze the DU version
-    const createProductUrl = getEndpointUrl(clientOptions.restUrl, 'products')
+    const createProductUrl = getEndpointUrl(ConfigTest.restUrl, 'products')
     await authFetch(createProductUrl, {
         method: 'POST',
         body: JSON.stringify({
@@ -105,7 +106,7 @@ async function testWithdraw(
     const res2 = await dataUnionMember.join(secret)
     log('Member joined data union %O', res2)
 
-    const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions)))
+    const contracts = new Contracts(new DataUnionAPI(adminClient, null!, BrubeckConfig(ConfigTest)))
     const mainnetContract = await contracts.getMainnetContract(dataUnion.getAddress())
     const sidechainContractLimited = await contracts.getSidechainContract(dataUnion.getAddress())
 
@@ -214,11 +215,11 @@ providerSidechain.on({
         return
     }
     const hash = keccak256(message)
-    const adminClient = new StreamrClient(clientOptions)
+    const adminClient = new StreamrClient(ConfigTest)
     const dataUnion = new DataUnion(
         '0x0000000000000000000000000000000000000000',
         '0x0000000000000000000000000000000000000000',
-        new DataUnionAPI(adminClient, null!, BrubeckConfig(clientOptions))
+        new DataUnionAPI(adminClient, null!, BrubeckConfig(ConfigTest))
     )
     await dataUnion.transportMessage(hash, 100, 120000)
     log('Transported message (hash=%s)', hash)

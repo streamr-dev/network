@@ -17,8 +17,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StrictStreamrClientConfig } from './ConfigBase'
-import { Config } from './Config'
+import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 
@@ -102,7 +101,7 @@ class StreamrStream implements StreamMetadata {
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
         this._httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
-        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(Config.Root)
+        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(ConfigInjectionToken.Root)
     }
 
     /**

@@ -3,7 +3,7 @@
  */
 import { StreamID, Utils } from 'streamr-client-protocol'
 import { CacheFn } from '../utils'
-import { Config, CacheConfig } from '../Config'
+import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
@@ -13,7 +13,7 @@ export type PartitionKey = string | number | undefined
 export default class StreamPartitioner {
     constructor(
         private streamEndpoints: StreamEndpointsCached,
-        @inject(Config.Cache) private cacheOptions: CacheConfig,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
         // NOTE: ensure cache partitions by streamId + partitionCount.
         // i.e. don't cache on just partitionCount + key
