@@ -64,15 +64,33 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: "Test Integration: ${{ matrix.test-name }}"
+    name: Test Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
+      - name: test-unit
+        run: npm run test-integration
+
+  # TODO simplify this job: e.g. do not use matrix
+  end-to-end:
+    name: "Test End-to-end"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [16.x]
         test-name: [
-          "no-resend",
-          "resend",
+          "end-to-end"
         ]
     env:
       TEST_NAME: ${{ matrix.test-name }}
@@ -98,7 +116,7 @@ jobs:
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: Run Test
-        run: npm run test-integration-$TEST_NAME
+        run: npm run test-$TEST_NAME
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0
