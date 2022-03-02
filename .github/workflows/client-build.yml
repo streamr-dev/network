@@ -60,6 +60,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
+          node-version-file: '.nvmrc'
       - uses: actions/download-artifact@v2
         with:
           name: client-build
@@ -157,6 +158,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
+          node-version-file: '.nvmrc'
       - uses: actions/download-artifact@v2.0.10
         with:
           name: client-build
