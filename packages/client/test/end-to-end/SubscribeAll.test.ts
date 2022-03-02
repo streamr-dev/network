@@ -130,15 +130,13 @@ describeRepeats('SubscribeAll', () => {
         // unsub from each partition
         // should only onFinally once all unsubbed
         for (const p of eachPartition) {
+            expect(onFinallyCalled).toHaveBeenCalledTimes(0)
             // eslint-disable-next-line no-await-in-loop
             await client.unsubscribe({ streamId: stream.id, partition: p })
-            if (p === eachPartition.at(-1)) {
-                // should have ended after last partition unsubbed
-                expect(onFinallyCalled).toHaveBeenCalledTimes(1)
-            } else {
-                expect(onFinallyCalled).toHaveBeenCalledTimes(0)
-            }
         }
+
+        // should have ended after last partition unsubbed
+        expect(onFinallyCalled).toHaveBeenCalledTimes(1)
 
         for (const msg of publishedMsgs) {
             expect(subMsgs).toContainEqual(msg)
