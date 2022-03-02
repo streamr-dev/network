@@ -31,7 +31,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
