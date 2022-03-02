@@ -41,6 +41,22 @@ describe('StorageNodeRegistry', () => {
         ])
     })
 
+    it('add and remove', async () => {
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        let storageNodes = await stream.getStorageNodes()
+        expect(storageNodes.length).toBe(1)
+        expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
+        let stored = await creatorClient.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+        expect(stored.streams.some((s) => s.id === stream.id)).toBe(true)
+
+        await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
+        await until(async () => { return !(await creatorClient.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
+        storageNodes = await stream.getStorageNodes()
+        expect(storageNodes).toHaveLength(0)
+        stored = await creatorClient.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+        expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
+    })
+
     it('registerStorageEventListener: picks up add and remove events', async () => {
         const cb = jest.fn()
         listenerClient.registerStorageEventListener(cb)

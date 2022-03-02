@@ -98,6 +98,21 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         return this.registryItems.has(streamId)
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    async updateStream(props: StreamProperties): Promise<Stream> {
+        const streamId = await this.streamIdBuilder.toStreamID(props.id)
+        const registryItem = this.registryItems.get(streamId)
+        if (registryItem === undefined) {
+            throw new Error('Stream not found')
+        } else {
+            registryItem.metadata = props
+        }
+        return new Stream({
+            ...props,
+            id: streamId
+        }, this.container)
+    }
+
     /* eslint-disable padding-line-between-statements */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
@@ -174,16 +189,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
 
     async isStreamSubscriber(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getStreamFromContract(_streamIdOrPath: string): Promise<Stream> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    updateStream(_props: StreamProperties): Promise<Stream> {
-        throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
