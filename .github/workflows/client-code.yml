@@ -29,7 +29,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           cache: 'npm'
@@ -47,7 +47,7 @@ jobs:
     env:
       TEST_REPEATS: 1
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
@@ -63,27 +63,35 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: "Test Integration: ${{ matrix.test-name }}"
+    name: Test Integration
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test-name: [
-          "no-resend",
-          "resend",
-        ]
-    env:
-      TEST_NAME: ${{ matrix.test-name }}
-      TEST_REPEATS: 1
-
     steps:
       - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v3
         with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
           node-version-file: '.nvmrc'
+          check-latest: true
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
+          npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
+      - name: Run tests
+        run: npm run test-integration
+
+  end-to-end:
+    name: "Test End-to-End"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           check-latest: true
+          node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -94,8 +102,8 @@ jobs:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: Run Test
-        run: npm run test-integration-$TEST_NAME
+      - name: Run tests
+        run: npm run test-end-to-end
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0
@@ -123,7 +131,7 @@ jobs:
         node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
@@ -157,7 +165,7 @@ jobs:
     name: Test Memory
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json

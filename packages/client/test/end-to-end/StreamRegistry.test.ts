@@ -4,7 +4,7 @@ import { createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWit
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { randomEthereumAddress } from 'streamr-test-utils'
@@ -14,7 +14,7 @@ jest.setTimeout(40000)
 /**
  * These tests should be run in sequential order!
  */
-describe('StreamEndpoints', () => {
+describe('StreamRegistry', () => {
 
     let client: StreamrClient
     let wallet: Wallet
@@ -122,7 +122,7 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('getOrCreate', () => {
+    describe('getOrCreateStream', () => {
         it('existing Stream by id', async () => {
             const existingStream = await client.getOrCreateStream({
                 id: createdStream.id,
@@ -162,23 +162,6 @@ describe('StreamEndpoints', () => {
                     id: `${otherAddress}${newPath}`,
                 })
             }).rejects.toThrow(`stream id "${otherAddress}${newPath}" not in namespace of authenticated user "${wallet.address.toLowerCase()}"`)
-        })
-    })
-
-    describe('getStreamLast', () => {
-        it('does error if has no storage assigned', async () => {
-            await expect(async () => {
-                await client.getStreamLast(createdStream.id)
-            }).rejects.toThrow()
-        })
-
-        it('does not error if has storage assigned', async () => {
-            const stream = await client.createStream({
-                id: await createRelativeTestStreamId(module),
-            })
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const result = await client.getStreamLast(stream.id)
-            expect(result).toEqual([])
         })
     })
 
@@ -228,8 +211,8 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('Stream.update', () => {
-        it('can change stream description', async () => {
+    describe('update', () => {
+        it('happy path', async () => {
             await createdStream.update({
                 description: `description-${Date.now()}`
             })
@@ -246,8 +229,8 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('Stream deletion', () => {
-        it('Stream.delete', async () => {
+    describe('delete', () => {
+        it('happy path', async () => {
             const props = { id: await createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await until(() => client.streamExistsOnTheGraph(stream.id), 100000, 1000)
@@ -262,35 +245,6 @@ describe('StreamEndpoints', () => {
             }, 100000, 1000)
             expect(await client.streamExistsOnChain(stream.id)).toEqual(false)
             return expect(client.getStream(stream.id)).rejects.toThrow()
-        })
-
-        // it('does not throw if already deleted', async () => {
-        //     await createdStream.delete()
-        //     await createdStream.delete()
-        // })
-    })
-
-    describe('Storage node assignment', () => {
-        it('add', async () => {
-            // await stream.addToStorageNode(node.getAddress())// use actual storage nodes Address, actually register it
-            const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const storageNodes = await stream.getStorageNodes()
-            expect(storageNodes.length).toBe(1)
-            expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
-            const { streams } = await client.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
-            return expect(streams.some((s) => s.id === stream.id)).toBe(true)
-        })
-
-        it('remove', async () => {
-            const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
-            await until(async () => { return !(await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
-            const storageNodes = await stream.getStorageNodes()
-            expect(storageNodes).toHaveLength(0)
-            const { streams } = await client.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
-            return expect(streams.some((s) => s.id === stream.id)).toBe(false)
         })
     })
 })
