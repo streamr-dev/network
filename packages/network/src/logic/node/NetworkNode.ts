@@ -1,6 +1,5 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Node, NodeId, NodeOptions } from './Node'
-import { str } from 'ajv'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.

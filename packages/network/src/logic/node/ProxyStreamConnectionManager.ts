@@ -12,7 +12,6 @@ import { promiseTimeout } from '../../helpers/PromiseTools'
 import { Logger } from '../../helpers/logger/LoggerNode'
 import { SubscribeStreamConnectionResponse } from 'streamr-client-protocol'
 import { SubscribeStreamConnectionRequest } from 'streamr-client-protocol'
-import { str } from 'ajv'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {

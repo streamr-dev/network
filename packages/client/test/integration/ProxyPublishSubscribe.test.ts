@@ -158,7 +158,7 @@ describe('PubSub with proxy connections', () => {
 
     }, 15000)
 
-    it('Subsribe only connections work', async () => {
+    it('Subscribe only connections work', async () => {
         const receivedMessages: any[] = []
         await proxyClient1.subscribe(stream)
         await wait(2000)
@@ -200,7 +200,7 @@ describe('PubSub with proxy connections', () => {
             .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
-        await onewayClient.unsubscribe(stream)
+        // await onewayClient.unsubscribe(stream)
         await onewayClient.removeSubscribeProxy(stream, proxyNodeId2)
 
         expect((await onewayClient.getNode())
