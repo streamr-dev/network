@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import './utils/PatchTsyringe'
-import { container as rootContainer, DependencyContainer, inject } from 'tsyringe'
+import { container as rootContainer, DependencyContainer } from 'tsyringe'
 
 import Ethereum from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
@@ -66,14 +66,12 @@ class StreamrClientBase implements Context {
 
     constructor(
         private container: DependencyContainer,
-        private context: Context,
-        @inject(ConfigInjectionToken.Root) private options: StrictStreamrClientConfig,
+        context: Context,
         private node: BrubeckNode,
         private ethereum: Ethereum,
         private session: Session,
         private loginEndpoints: LoginEndpoints,
         private streamEndpoints: StreamEndpoints,
-        private cached: StreamEndpointsCached,
         private resends: Resends,
         private publisher: Publisher,
         private subscriber: Subscriber,
@@ -241,13 +239,11 @@ export class StreamrClient extends StreamrClientBase {
         super(
             c,
             c.resolve<Context>(Context as any),
-            config,
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
             c.resolve<Session>(Session),
             c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
-            c.resolve<StreamEndpointsCached>(StreamEndpointsCached),
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),

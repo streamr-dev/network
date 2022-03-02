@@ -3,7 +3,7 @@
  */
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
-import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import {
     ContentType,
     EncryptionType,
@@ -18,10 +18,7 @@ import { Context } from './utils/Context'
 
 import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
-import { BrubeckContainer } from './Container'
-import { ConfigInjectionToken, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
-import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -82,13 +79,10 @@ export class StreamEndpoints implements Context {
     /** @internal */
     constructor(
         context: Context,
-        @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
-        private readonly ethereum: StreamrEthereum
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
