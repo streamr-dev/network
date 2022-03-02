@@ -29,6 +29,7 @@ jobs:
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
           check-latest: true
 
       - name: bootstrap-pkg
