@@ -38,7 +38,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - run: npm run eslint
 
@@ -53,43 +52,49 @@ jobs:
         with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
+          node-version-file: '.nvmrc'
           check-latest: true
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: test-unit
         timeout-minutes: 7
         run: npm run test-unit
 
   integration:
-    name: "Test Integration: ${{ matrix.test-name }}"
+    name: Test Integration
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [16.x]
-        test-name: [
-          "no-resend",
-          "resend",
-        ]
-    env:
-      TEST_NAME: ${{ matrix.test-name }}
-      TEST_REPEATS: 1
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2.4.0
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
           cache-dependency-path: package-lock.json
           cache: 'npm'
+          node-version-file: '.nvmrc'
           check-latest: true
       - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
+          npm run bootstrap-pkg streamr-client
+      - name: Run tests
+        run: npm run test-integration
+
+  end-to-end:
+    name: "Test End-to-End"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          check-latest: true
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
@@ -97,8 +102,8 @@ jobs:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: Run Test
-        run: npm run test-integration-$TEST_NAME
+      - name: Run tests
+        run: npm run test-end-to-end
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0
@@ -108,7 +113,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v2.3.1
         with:
-          name: docker-logs-${{ matrix.test-name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          name: docker-logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()
@@ -135,7 +140,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
@@ -165,12 +169,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
           cache: 'npm'
           check-latest: true
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0

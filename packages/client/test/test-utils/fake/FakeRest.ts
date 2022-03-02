@@ -1,6 +1,6 @@
 import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamID, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FetchOptions, Rest, UrlParts } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
@@ -39,14 +39,26 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
     async fetchStream(url: string): Promise<Readable> {
         const request = FakeRest.getResendRequest(url)
         if (request !== undefined) {
-            if (request.resendType === 'last') {
-                const format = request.query!.get('format')
-                if (format === 'raw') {
-                    const count = Number(request.query!.get('count'))
-                    const storageNode = await this.storageNodeRegistry.getRandomStorageNodeFor(request.streamPartId)
-                    const msgs = await storageNode.getLast(request.streamPartId, count)
-                    return Readable.from(msgs)
+            const format = request.query!.get('format')
+            if (format === 'raw') {
+                const count = Number(request.query!.get('count'))
+                const storageNode = await this.storageNodeRegistry.getRandomStorageNodeFor(request.streamPartId)
+                let msgs: StreamMessage<unknown>[]
+                if (request.resendType === 'last') {
+                    msgs = await storageNode.getLast(request.streamPartId, count)
+                } else if (request.resendType === 'range') {
+                    msgs = await storageNode.getRange(request.streamPartId, {
+                        fromTimestamp: Number(request.query!.get('fromTimestamp')),
+                        fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
+                        toTimestamp: Number(request.query!.get('toTimestamp')),
+                        toSequenceNumber: Number(request.query!.get('toSequenceNumber')),
+                        publisherId: request.query!.get('publisherId')!,
+                        msgChainId: request.query!.get('msgChainId')!
+                    })
+                } else {
+                    throw new Error('not implemented: ' + JSON.stringify(request))
                 }
+                return Readable.from(msgs)
             }
         }
         throw new Error('not implemented: ' + url)

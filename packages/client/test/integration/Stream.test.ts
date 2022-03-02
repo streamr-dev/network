@@ -1,6 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, getCreateClient, createTestStream } from '../test-utils/utils'
+import { getPublishTestMessages, createTestStream } from '../test-utils/utils'
+import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
@@ -10,10 +11,8 @@ describe('Stream', () => {
     let client: StreamrClient
     let stream: Stream
 
-    const createClient = getCreateClient()
     beforeEach(async () => {
-        client = await createClient()
-        await client.connect()
+        client = createClientFactory().createClient()
 
         stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)

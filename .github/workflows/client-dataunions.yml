@@ -23,10 +23,10 @@ defaults:
   run:
     working-directory: packages/client
 jobs:
-  data-unions-integration:
+  data-unions-end-to-end:
     # temporary disabling of DU tests
     if: ${{ false }}
-    name: Test DataUnion Integration
+    name: Test DataUnion End-to-end
     runs-on: ubuntu-latest
     env:
       TEST_REPEATS: 1
@@ -41,14 +41,13 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
       - name: Run Test
-        run: npm run test-integration-dataunions
+        run: npm run test-end-to-end-dataunions
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0

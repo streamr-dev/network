@@ -7,8 +7,9 @@ import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../test-utils/utils'
+import { getPublishTestStreamMessages, createTestStream, describeRepeats, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -36,17 +37,17 @@ describeRepeats('GapFill', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
-
-    const createClient = getCreateClient({
-        maxRetries: 2,
-        maxGapRequests: 20,
-        gapFillTimeout: 500,
-        retryResendAfter: 1000,
-    })
+    let clientFactory: ClientFactory
 
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
-        client = await createClient(opts)
+        client = clientFactory.createClient({
+            maxRetries: 2,
+            maxGapRequests: 20,
+            gapFillTimeout: 500,
+            retryResendAfter: 1000,
+            ...opts
+        })
         // @ts-expect-error
         subscriber = client.subscriber
         client.debug('connecting before test >>')
@@ -60,6 +61,7 @@ describeRepeats('GapFill', () => {
     }
 
     beforeEach(async () => {
+        clientFactory = createClientFactory()
         expectErrors = 0
         onError = jest.fn()
     })

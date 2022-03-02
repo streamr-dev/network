@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
     describeRepeats,
@@ -29,7 +29,9 @@ describeRepeats('decryption', () => {
     let errors: Error[] = []
 
     let publisher: StreamrClient
+    let publisherPrivateKey: string
     let subscriber: StreamrClient
+    let subscriberPrivateKey: string
     let stream: Stream
     let clientFactory: ClientFactory
 
@@ -90,10 +92,24 @@ describeRepeats('decryption', () => {
             await subscriber.destroy()
         }
 
+        publisherPrivateKey = fastPrivateKey()
+        subscriberPrivateKey = fastPrivateKey()
         // eslint-disable-next-line require-atomic-updates, semi-style, no-extra-semi
         ;[publisher, subscriber] = await Promise.all([
-            setupClient({ id: 'publisher', ...opts }),
-            setupClient({ id: 'subscriber', ...opts }),
+            setupClient({
+                id: 'publisher',
+                auth: {
+                    privateKey: publisherPrivateKey
+                },
+                ...opts
+            }),
+            setupClient({
+                id: 'subscriber',
+                auth: {
+                    privateKey: subscriberPrivateKey
+                },
+                ...opts
+            })
         ])
     }
 
@@ -374,18 +390,19 @@ describeRepeats('decryption', () => {
                         }
                     }
                 }
-
                 // eslint-disable-next-line require-atomic-updates
                 publisher = await setupClient({
-                    // @ts-expect-error
-                    auth: publisher.options.auth,
+                    auth: {
+                        privateKey: publisherPrivateKey
+                    },
                     groupKeys,
                 })
 
                 // eslint-disable-next-line require-atomic-updates
                 subscriber = await setupClient({
-                    // @ts-expect-error
-                    auth: subscriber.options.auth,
+                    auth: {
+                        privateKey: subscriberPrivateKey
+                    },
                     groupKeys,
                 })
 
