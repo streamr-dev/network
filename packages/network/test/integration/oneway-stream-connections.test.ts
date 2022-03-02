@@ -220,15 +220,12 @@ describe('Publish only connection tests', () => {
 
     it('one-way subscribers cannot publish data', async () => {
         await onewayNode.joinStreamPartAsPureSubscriber(defaultStreamPartId, 'contact-node')
-        await expect(Promise.all([
-            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
-            onewayNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
-                content: {
-                    hello: 'world'
-                },
-            }))
-        ])).rejects.toMatchObject(new Error('Promise timed out after 5000 milliseconds'))
+        expect(() => onewayNode.publish(new StreamMessage({
+            messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+            content: {
+                hello: 'world'
+            },
+        }))).toThrow('Cannot publish')
     })
 
     it('Node with existing subscription cannot create a publish only stream connection', async () => {

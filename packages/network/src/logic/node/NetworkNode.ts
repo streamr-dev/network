@@ -1,5 +1,6 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Node, NodeId, NodeOptions } from './Node'
+import { str } from 'ajv'
 
 /*
 Convenience wrapper for building client-facing functionality. Used by client.
@@ -16,7 +17,11 @@ export class NetworkNode extends Node {
         this.extraMetadata = metadata
     }
 
-    publish(streamMessage: StreamMessage): void {
+    publish(streamMessage: StreamMessage): void | never {
+        const streamPartId = streamMessage.getStreamPartID()
+        if (this.isProxiedSubscription(streamPartId)) {
+            throw new Error(`Cannot publish to ${streamPartId} as subscribe only connections have been set`)
+        }
         this.onDataReceived(streamMessage)
     }
 

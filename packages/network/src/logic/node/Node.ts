@@ -468,4 +468,8 @@ export class Node extends EventEmitter {
     emitJoinFailed(streamPartId: StreamPartID, error: string): void {
         this.emit(streamPartId, error)
     }
+
+    isProxiedSubscription(streamPartId: StreamPartID): boolean {
+        return this.proxyStreamConnectionManager.isSubscribeOnlyStream(streamPartId)
+    }
 }

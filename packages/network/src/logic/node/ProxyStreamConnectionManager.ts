@@ -12,6 +12,7 @@ import { promiseTimeout } from '../../helpers/PromiseTools'
 import { Logger } from '../../helpers/logger/LoggerNode'
 import { SubscribeStreamConnectionResponse } from 'streamr-client-protocol'
 import { SubscribeStreamConnectionRequest } from 'streamr-client-protocol'
+import { str } from 'ajv'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
@@ -251,6 +252,13 @@ export class ProxyStreamConnectionManager {
         } finally {
             this.trackerManager.disconnectFromSignallingOnlyTracker(trackerId)
         }
+    }
+
+    isSubscribeOnlyStream(streamPartId: StreamPartID): boolean {
+        if (this.connections.get(streamPartId) && [...this.connections.values()].length > 0) {
+            return [...this.connections.get(streamPartId)!.values()][0].direction === Direction.IN
+        }
+        return false
     }
 
     stop(): void {
