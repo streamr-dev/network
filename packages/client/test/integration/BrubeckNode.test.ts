@@ -1,7 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest } from '../../src/ConfigTest'
 import { getCreateClient } from '../test-utils/utils'
-import { fastWallet } from 'streamr-test-utils'
+import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
 
 describe('BrubeckNode', () => {
     const createClient = getCreateClient()
@@ -16,9 +16,17 @@ describe('BrubeckNode', () => {
         })
 
         it('generates different ids for different clients with same private key', async () => {
-            const client1 = await createClient()
-            // @ts-expect-error
-            const client2 = await createClient({ auth: client1.options.auth })
+            const privateKey = fastPrivateKey()
+            const client1 = await createClient({
+                auth: {
+                    privateKey
+                }
+            })
+            const client2 = await createClient({
+                auth: {
+                    privateKey
+                }
+            })
             // same key, same address
             expect(await client1.getAddress()).toEqual(await client2.getAddress())
             const expectedPrefix = `${await client1.getAddress()}#`

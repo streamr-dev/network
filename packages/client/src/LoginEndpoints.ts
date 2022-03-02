@@ -2,10 +2,9 @@
  * Login Endpoints Wrapper.
  */
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import Ethereum, { AuthConfig } from './Ethereum'
+import Ethereum from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
-import { ConfigInjectionToken } from './Config'
 import { Rest } from './Rest'
 import { EthereumAddress } from 'streamr-client-protocol'
 
@@ -32,8 +31,7 @@ export class LoginEndpoints implements Context {
     constructor(
         context: Context,
         private ethereum: Ethereum,
-        @inject(delay(() => Rest)) private rest: Rest,
-        @inject(ConfigInjectionToken.Auth) private authConfig: AuthConfig,
+        @inject(delay(() => Rest)) private rest: Rest
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

@@ -13,7 +13,6 @@ import { StreamEndpoints } from '../StreamEndpoints'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
-import Validator from '../Validator'
 import BrubeckNode from '../BrubeckNode'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
@@ -37,7 +36,6 @@ export default class BrubeckPublisher implements Context, Stoppable {
         context: Context,
         private pipeline: PublishPipeline,
         private node: BrubeckNode,
-        private validator: Validator,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
         @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,

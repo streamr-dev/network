@@ -90,7 +90,7 @@ class StreamrStream implements StreamMetadata {
     /** @internal */
     constructor(
         props: StreamrStreamConstructorOptions,
-        @inject(BrubeckContainer) private _container: DependencyContainer
+        @inject(BrubeckContainer) _container: DependencyContainer
     ) {
         Object.assign(this, props)
         this.id = props.id
