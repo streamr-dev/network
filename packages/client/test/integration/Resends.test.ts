@@ -41,6 +41,7 @@ describeRepeats('resends', () => {
                 privateKey: await fetchPrivateKeyWithGas()
             }
         })
+        // @ts-expect-error
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates

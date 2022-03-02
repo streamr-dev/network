@@ -37,7 +37,7 @@ describe('StorageNodeRegistry', () => {
         await Promise.allSettled([
             creatorClient?.destroy(),
             listenerClient?.destroy(),
-            listenerClient?.unRegisterStorageEventListeners()
+            listenerClient?.unregisterStorageEventListeners()
         ])
     })
 

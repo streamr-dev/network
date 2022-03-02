@@ -51,6 +51,7 @@ describeRepeats('Subscriber', () => {
                 privateKey: fastPrivateKey()
             }
         })
+        // @ts-expect-error private
         M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
@@ -107,7 +108,7 @@ describeRepeats('Subscriber', () => {
         })
 
         // it('errors if not connected', async () => {
-        // await client.disconnect()
+        // await client.destroy()
         // await expect(() => (
         // M.subscribe(streamDefinition)
         // )).rejects.toThrow('connect')
@@ -402,6 +403,7 @@ describeRepeats('Subscriber', () => {
                 sub2.onError(onSuppressError)
 
                 const client2 = await createClient({
+                    // @ts-expect-error
                     auth: client.options.auth,
                 })
 

@@ -130,6 +130,7 @@ describe('DataUnion earnings transfer methods', () => {
                 type: 'DATAUNION',
                 dataUnionVersion: 2
             }),
+            // @ts-expect-error
             session: adminClient.session,
         })
 

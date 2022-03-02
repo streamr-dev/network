@@ -70,8 +70,8 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
 }
 
 export default class GroupKeyStore implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     store
     currentGroupKeyId: GroupKeyId | undefined // current key id if any
     nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2

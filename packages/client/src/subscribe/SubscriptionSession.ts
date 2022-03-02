@@ -19,8 +19,8 @@ import BrubeckNode, { NetworkNodeStub } from '../BrubeckNode'
  */
 
 export default class SubscriptionSession<T> implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     public readonly streamPartId: StreamPartID
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()

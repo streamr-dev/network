@@ -163,6 +163,12 @@ git push origin client/vX.Y.Z
 npm run build-production
 cd dist
 npm publish
+
+# Generate & upload API docs (if a major/minor version update)
+cd ..
+npm run docs
+aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
+# and update the API reference link in s3://api-docs.streamr.network/index.html
 ```
 
 ## Important changes to the bootstrap/install scripts as of 48e165f:

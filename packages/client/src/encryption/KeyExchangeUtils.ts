@@ -62,8 +62,8 @@ const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_T
 
 @scoped(Lifecycle.ContainerScoped)
 export class KeyExchangeStream implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }
     isStopped = false
     constructor(

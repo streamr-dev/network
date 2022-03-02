@@ -214,6 +214,7 @@ describe('Stream permissions', () => {
     })
 
     it('modification invalidates StreamEndpointsCached', async () => {
+        // @ts-expect-error
         const cachedStreamEndpoint = client.container.resolve(StreamEndpointsCached)
         expect(await cachedStreamEndpoint.isStreamPublisher(stream.id, otherUser)).toBe(false)
         await client.grantPermissions(stream.id, {

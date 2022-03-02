@@ -3,7 +3,9 @@ import { Debugger, formatWithOptions } from './log'
 export const InjectContext = Symbol('Context')
 
 export abstract class Context {
+    /** @internal */
     readonly id!: string
+    /** @internal */
     readonly debug!: Debugger
 }
 

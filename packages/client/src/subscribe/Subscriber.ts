@@ -15,8 +15,8 @@ import BrubeckNode from '../BrubeckNode'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Subscriber implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
     constructor(
@@ -37,7 +37,7 @@ export default class Subscriber implements Context {
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
+    private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
         const sub: Subscription<T> = await this.add(streamPartId)
         if (onMessage) {
             sub.useLegacyOnMessageHandler(onMessage)
@@ -94,14 +94,15 @@ export default class Subscriber implements Context {
         await subSession.remove(sub)
     }
 
+    /**
+     * @category Important
+     */
     async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
         if (streamDefinitionOrSubscription instanceof Subscription) {
             return this.remove(streamDefinitionOrSubscription)
         }
         return this.removeAll(streamDefinitionOrSubscription)
     }
-
-    unsubscribeAll = this.removeAll.bind(this)
 
     /**
      * Remove all subscriptions, optionally only those matching options.
@@ -128,6 +129,7 @@ export default class Subscriber implements Context {
 
     /**
      * Count all matching subscriptions.
+     * @internal
      */
     // TODO rename this to something more specific?
     async count(streamDefinition?: StreamDefinition): Promise<number> {
@@ -158,12 +160,14 @@ export default class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
+    /** @internal */
     countSubscriptionSessions() {
         return this.subSessions.size
     }
 
     /**
      * Get subscriptions matching streamId or streamId + streamPartition
+     * @category Important
      */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {
@@ -207,6 +211,7 @@ export default class Subscriber implements Context {
         ])
     }
 
+    /** @internal */
     async stop() {
         await this.removeAll()
     }

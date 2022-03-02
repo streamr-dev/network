@@ -96,6 +96,7 @@ describe('Group Key Persistence', () => {
             it('works', async () => {
                 // TODO: this should probably happen automatically if there are keys
                 // also probably needs to create a connection handle
+                // @ts-expect-error
                 await publisher2.publisher.startKeyExchange()
 
                 const received = []

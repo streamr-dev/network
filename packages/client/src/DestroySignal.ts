@@ -16,8 +16,11 @@ import Signal from './utils/Signal'
 export class DestroySignal implements Context {
     onDestroy = Signal.once()
     trigger = this.destroy
-    id = instanceId(this)
-    debug
+    /** @internal */
+    readonly id = instanceId(this)
+    /** @internal */
+    readonly debug
+
     constructor(context: Context) {
         this.debug = context.debug.extend(this.id)
         this.onDestroy(() => {

@@ -99,6 +99,9 @@ export default class DataUnionAPI {
         return { mainnetAddress, sidechainAddress }
     }
 
+    /**
+     * @category Important
+     */
     async getDataUnion(contractAddress: EthereumAddress): Promise<DataUnion> {
         if (!isAddress(contractAddress)) {
             throw new Error(`Can't get Data Union, invalid Ethereum address: ${contractAddress}`)

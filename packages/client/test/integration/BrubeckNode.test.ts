@@ -17,6 +17,7 @@ describe('BrubeckNode', () => {
 
         it('generates different ids for different clients with same private key', async () => {
             const client1 = await createClient()
+            // @ts-expect-error
             const client2 = await createClient({ auth: client1.options.auth })
             // same key, same address
             expect(await client1.getAddress()).toEqual(await client2.getAddress())

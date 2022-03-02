@@ -34,8 +34,8 @@ import { Debug } from './log'
  * ```
  */
 export default class Gate implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     isLocked = false
     private pending?: Deferred<void>
 

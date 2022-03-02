@@ -52,8 +52,10 @@ type StreamPublisherOrSubscriberItem = {
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
     private streamRegistryContract?: StreamRegistryContract
     private streamRegistryContractsReadonly: StreamRegistryContract[]
     private chainProviders: Provider[]
@@ -86,24 +88,6 @@ export class StreamRegistry implements Context {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Read from the StreamRegistry contract
-    // --------------------------------------------------------------------------------------------
-
-    async getStreamFromContract(streamIdOrPath: string): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('getStream %s', streamId)
-        try {
-            const metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
-                return contract.getStreamMetadata(streamId) || '{}'
-            })
-            return this.parseStream(streamId, metadata)
-        } catch (error) {
-            this.debug(error)
-        }
-        throw new NotFoundError('Stream: id=' + streamId)
-    }
-
-    // --------------------------------------------------------------------------------------------
     // Send transactions to the StreamRegistry contract
     // --------------------------------------------------------------------------------------------
 
@@ -117,6 +101,9 @@ export class StreamRegistry implements Context {
         }
     }
 
+    /**
+     * @category Important
+     */
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
@@ -196,6 +183,7 @@ export class StreamRegistry implements Context {
         ))
     }
 
+    /** @internal */
     async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking if stream exists on chain %s', streamId)
@@ -206,6 +194,7 @@ export class StreamRegistry implements Context {
         ])
     }
 
+    /** @internal */
     async streamExistsOnTheGraph(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking if stream exists on theGraph %s', streamId)
@@ -220,10 +209,9 @@ export class StreamRegistry implements Context {
         }
     }
 
-    // --------------------------------------------------------------------------------------------
-    // GraphQL queries
-    // --------------------------------------------------------------------------------------------
-
+    /**
+     * @category Important
+     */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
@@ -241,7 +229,7 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
+    private async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s from theGraph', streamId)
         if (StreamIDUtils.isKeyExchangeStream(streamId)) {
@@ -323,11 +311,12 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
+    /** @internal */
     static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    // @internal
+    /** @internal */
     static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {
