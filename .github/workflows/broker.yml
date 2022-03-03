@@ -88,6 +88,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=development
       - name: Build
         uses: docker/build-push-action@v2.9.0
         with:
@@ -161,6 +163,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=production
       - uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
