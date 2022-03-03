@@ -201,7 +201,7 @@ export default class BrubeckNode implements Context {
         try {
             this.destroySignal.assertNotDestroyed(this)
 
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 // use .then instead of async/await so
                 // this.cachedNode.publish call can be sync
                 return this.startNodeTask().then((node) => {
@@ -209,7 +209,7 @@ export default class BrubeckNode implements Context {
                 })
             }
 
-            return this.cachedNode.publish(streamMessage)
+            return this.cachedNode!.publish(streamMessage)
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
         }
@@ -217,7 +217,7 @@ export default class BrubeckNode implements Context {
 
     async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 await this.startNodeTask()
             }
             await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
@@ -228,7 +228,7 @@ export default class BrubeckNode implements Context {
 
     async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 return
             }
             await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
@@ -239,7 +239,7 @@ export default class BrubeckNode implements Context {
 
     async openSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 await this.startNodeTask()
             }
             await this.cachedNode!.joinStreamPartAsPureSubscriber(streamPartId, nodeId)
@@ -250,7 +250,7 @@ export default class BrubeckNode implements Context {
 
     async closeSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 return
             }
             await this.cachedNode!.leavePureSubscribingStreamPart(streamPartId, nodeId)
@@ -258,4 +258,9 @@ export default class BrubeckNode implements Context {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
+
+    private isStarting(): boolean {
+        return !this.cachedNode || !this.startNodeComplete
+    }
 }
+
