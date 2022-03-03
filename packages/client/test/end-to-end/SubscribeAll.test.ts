@@ -4,6 +4,7 @@ import { getPublishTestMessages, createTestStream, getCreateClient, describeRepe
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
+import { range } from 'lodash'
 
 const NUM_MESSAGES = 8
 const MAX_MESSAGES = 4
@@ -55,13 +56,36 @@ describeRepeats('SubscribeAll', () => {
         await client.subscribeAll(stream.id, (msg) => {
             subMsgs.push(msg)
         })
-        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
-        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+        const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
         }))
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
+        for (const msg of publishedMsgs) {
+            expect(subMsgs).toContainEqual(msg)
+        }
+        await client.unsubscribe()
+        expect(client.countAll()).toBe(0)
+    })
+
+    it('works with single partition', async () => {
+        const subMsgs: any[] = []
+        stream = await createTestStream(client, module, {
+            partitions: 1
+        })
+        publishTestMessages = getPublishTestMessages(client, stream)
+
+        await client.subscribeAll(stream.id, (msg) => {
+            subMsgs.push(msg)
+        })
+
+        const pubs = await Promise.all([0].map((streamPartition) => {
+            return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
+        }))
+        const publishedMsgs = pubs.flat()
+        expect(publishedMsgs.length).toBe(NUM_MESSAGES)
+        await waitForCondition(() => subMsgs.length >= (NUM_MESSAGES), 25000)
         for (const msg of publishedMsgs) {
             expect(subMsgs).toContainEqual(msg)
         }
@@ -77,8 +101,7 @@ describeRepeats('SubscribeAll', () => {
                 sub.return()
             }
         })
-        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
-        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+        const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
         }))
         const publishedMsgs = pubs.flat()
@@ -98,8 +121,7 @@ describeRepeats('SubscribeAll', () => {
                 client.unsubscribe()
             }
         })
-        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
-        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+        const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
         }))
         const publishedMsgs = pubs.flat()
@@ -119,8 +141,7 @@ describeRepeats('SubscribeAll', () => {
         const onFinallyCalled = jest.fn()
         sub.onFinally(onFinallyCalled)
 
-        const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
-        const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+        const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
         }))
         const publishedMsgs = pubs.flat()
@@ -129,7 +150,7 @@ describeRepeats('SubscribeAll', () => {
         expect(onFinallyCalled).toHaveBeenCalledTimes(0)
         // unsub from each partition
         // should only onFinally once all unsubbed
-        for (const p of eachPartition) {
+        for (const p of range(PARTITIONS)) {
             expect(onFinallyCalled).toHaveBeenCalledTimes(0)
             // eslint-disable-next-line no-await-in-loop
             await client.unsubscribe({ streamId: stream.id, partition: p })

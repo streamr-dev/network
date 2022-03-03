@@ -1,3 +1,4 @@
+import { range } from 'lodash'
 import { StreamMessage } from 'streamr-client-protocol'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
@@ -22,7 +23,6 @@ describeRepeats('ResendAll', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
 
-    // const createClient = getCreateClient()
     beforeAll(async () => {
         client = new StreamrClient({
             ...ConfigTest,
@@ -35,6 +35,8 @@ describeRepeats('ResendAll', () => {
         await client.connect()
     })
 
+    // note: test order matters
+    // reuses same stream across tests
     beforeAll(async () => {
         client.debug('createStream >>')
         stream = await createTestStream(client, module, {
@@ -57,6 +59,7 @@ describeRepeats('ResendAll', () => {
         await client?.destroy()
     })
 
+    // must run before publishing any data
     describe('no data', () => {
         it('handles nothing to resend', async () => {
             const sub = await client.resendAll(stream.id, {
@@ -73,8 +76,7 @@ describeRepeats('ResendAll', () => {
         beforeEach(async () => {
             if (published && published.length) { return }
 
-            const eachPartition = Array(PARTITIONS).fill(0).map((_v, streamPartition) => streamPartition)
-            const pubs = await Promise.all(eachPartition.map((streamPartition) => {
+            const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
                 return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
             }))
             // eslint-disable-next-line require-atomic-updates

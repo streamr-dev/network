@@ -101,14 +101,21 @@ export class MessageStream<
         return super.forEachBefore(fn) as MessageStream<T, InType, OutType>
     }
 
-    async unsubscribe() {
+    async unsubscribe(): Promise<void> {
         this.end()
         await this.return()
     }
 }
 
-export async function pullManyToOne<T>(context: Context, inputStreams: MessageStream<T>[], onMessage?: MessageStreamOnMessage<T>) {
+export async function pullManyToOne<T>(
+    context: Context,
+    inputStreams: MessageStream<T>[],
+    onMessage?: MessageStreamOnMessage<T>
+): Promise<MessageStream<T, StreamMessage<T>, StreamMessage<T>>> {
     if (inputStreams.length === 1) {
+        if (onMessage) {
+            inputStreams[0].useLegacyOnMessageHandler(onMessage)
+        }
         return inputStreams[0]
     }
 

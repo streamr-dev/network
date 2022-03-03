@@ -17,6 +17,7 @@ import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { range } from 'lodash'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -114,9 +115,8 @@ export default class Resend implements Context {
             return this.resend<T>(streamId, options, onMessage)
         }
 
-        const eachPartition = Array(partitions).fill(0).map((_, streamPartition) => streamPartition)
         // create resend for each partition
-        const subs = await Promise.all(eachPartition.map(async (streamPartition) => {
+        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
             return this.resend<T>({
                 streamId,
                 partition: streamPartition,

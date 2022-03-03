@@ -9,6 +9,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { StreamDefinition } from '../types'
 import { MessageStream, pullManyToOne } from './MessageStream'
+import { range } from 'lodash'
 
 /**
  * Public Subscribe APIs
@@ -48,9 +49,8 @@ export default class Subscriber implements Context {
             return this.subscribe<T>(streamId, onMessage)
         }
 
-        const eachPartition = Array(partitions).fill(0).map((_, streamPartition) => streamPartition)
         // create sub for each partition
-        const subs = await Promise.all(eachPartition.map(async (streamPartition) => {
+        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
             return this.subscribe<T>({
                 streamId,
                 partition: streamPartition,
