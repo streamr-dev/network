@@ -11,6 +11,7 @@ import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
 import Subscriber from './subscribe/Subscriber'
+import ProxySubscriber from './subscribe/ProxySubscriber'
 import Resends, { ResendOptions } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import BrubeckNode from './BrubeckNode'
@@ -49,7 +50,8 @@ export interface StreamrClient extends Ethereum,
     Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
     Methods<Session>,
-    Methods<Resends> {
+    Methods<Resends>,
+    Methods<ProxySubscriber> {
 }
 
 class StreamrClientBase implements Context {
@@ -75,6 +77,7 @@ class StreamrClientBase implements Context {
         private resends: Resends,
         private publisher: Publisher,
         private subscriber: Subscriber,
+        private proxySubscriber: ProxySubscriber,
         private groupKeyStore: GroupKeyStoreFactory,
         private destroySignal: DestroySignal,
         private dataunions: DataUnions,
@@ -89,6 +92,7 @@ class StreamrClientBase implements Context {
         Plugin(this, this.ethereum)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
+        Plugin(this, this.proxySubscriber)
         Plugin(this, this.resends)
         Plugin(this, this.session)
         Plugin(this, this.node)
@@ -247,6 +251,7 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
             c.resolve<Subscriber>(Subscriber),
+            c.resolve<ProxySubscriber>(ProxySubscriber),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
             c.resolve<DataUnions>(DataUnions),
@@ -269,6 +274,7 @@ export const Dependencies = {
     Resends,
     Publisher,
     Subscriber,
+    ProxySubscriber,
     GroupKeyStoreFactory,
     DestroySignal,
     DataUnions,

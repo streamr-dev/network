@@ -7,7 +7,6 @@ import { StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import BrubeckNode from '../BrubeckNode'
 
 /**
  * Public Subscribe APIs
@@ -21,7 +20,6 @@ export default class Subscriber implements Context {
 
     constructor(
         context: Context,
-        private node: BrubeckNode,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
@@ -185,30 +183,6 @@ export default class Subscriber implements Context {
         return results.flatMap((subSession) => ([
             ...subSession.subscriptions
         ]))
-    }
-
-    async setSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async removeSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async setSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map((nodeId) => this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
-    }
-
-    async removeSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map(async (nodeId) => this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
     }
 
     /** @internal */
