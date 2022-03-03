@@ -276,7 +276,9 @@ export class Node extends EventEmitter {
                 }
                 rejectHandler = (node: string, stream: StreamPartID) => {
                     if (node === contactNodeId && stream === streamPartId) {
-                        reject(`Joining stream as pure publisher failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
+                        reject(new Error(
+                            `Joining stream as pure publisher failed on contact-node ${contactNodeId} for stream ${streamPartId}`
+                        ))
                     }
                 }
                 this.on(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
@@ -305,7 +307,9 @@ export class Node extends EventEmitter {
                 }
                 rejectHandler = (node: string, stream: StreamPartID) => {
                     if (node === contactNodeId && stream === streamPartId) {
-                        reject(`Joining stream as pure subscriber failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
+                        reject(new Error(
+                            `Joining stream as pure subscriber failed on contact-node ${contactNodeId} for stream ${streamPartId}`
+                        ))
                     }
                 }
                 this.on(Event.SUBSCRIBE_STREAM_ACCEPTED, resolveHandler)
@@ -447,7 +451,7 @@ export class Node extends EventEmitter {
                 }
                 rejectHandler = (stream: StreamPartID, error: string) => {
                     if (stream === streamPartId) {
-                        reject(error)
+                        reject(new Error(error))
                     }
                 }
                 this.on(Event.JOIN_COMPLETED, resolveHandler)

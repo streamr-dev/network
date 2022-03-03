@@ -173,7 +173,7 @@ describe('Publish only connection tests', () => {
 
         await expect(onewayNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
             .rejects
-            .toMatch(`failed`)
+            .toMatchObject(new Error('Joining stream as pure publisher failed on contact-node non-contact-node for stream stream-0#0'))
 
         await nonContactNode.stop()
     })
@@ -231,19 +231,25 @@ describe('Publish only connection tests', () => {
     it('Node with existing subscription cannot create a publish only stream connection', async () => {
         await expect(onewayNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
             .rejects
-            .toMatch(`failed`)
+            .toMatchObject(
+                new Error('Joining stream as pure publisher failed on contact-node non-contact-node for stream stream-0#0')
+            )
     })
 
     it('Cannot open publish only stream connection to non-existing node (not connected to the streams tracker)', async () => {
         await expect(onewayNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
             .rejects
-            .toMatch(`failed`)
+            .toMatchObject(
+                new Error('Joining stream as pure publisher failed on contact-node non-contact-node for stream stream-0#0')
+            )
     })
 
     it('Cannot open publish only stream connection to a node without an existing subscription to the given stream', async () => {
         await expect(onewayNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
             .rejects
-            .toMatch(`failed`)
+            .toMatchObject(
+                new Error('Joining stream as pure publisher failed on contact-node non-contact-node for stream stream-0#0')
+            )
     })
 
     it('if caught, failed publish only connections do not clean out existing connections', async () => {
