@@ -20,5 +20,6 @@ Remove this paragraph when content has been added.
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.2...HEAD
+[6.0.2]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.1...client/v6.0.2
 [6.0.1]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.0...client/v6.0.1
