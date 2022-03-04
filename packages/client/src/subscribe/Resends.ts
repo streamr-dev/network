@@ -12,7 +12,6 @@ import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
-import { StreamEndpoints } from '../StreamEndpoints'
 import { BrubeckContainer } from '../Container'
 import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -76,7 +75,6 @@ export default class Resend implements Context {
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
         @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {

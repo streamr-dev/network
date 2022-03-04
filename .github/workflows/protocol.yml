@@ -29,12 +29,12 @@ jobs:
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
+          node-version-file: '.nvmrc'
           check-latest: true
 
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client-protocol
 
       - name: eslint

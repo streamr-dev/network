@@ -37,6 +37,7 @@ describeRepeats('StreamrClient', () => {
 
     let onError = jest.fn()
     let client: StreamrClient
+    let privateKey: string
     const createClient = getCreateClient()
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
@@ -62,9 +63,10 @@ describeRepeats('StreamrClient', () => {
     })
 
     beforeEach(async () => {
+        privateKey = fastPrivateKey()
         client = await createClient({
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey
             }
         })
         await client.connect()
@@ -235,8 +237,9 @@ describeRepeats('StreamrClient', () => {
 
         it('destroying stops publish', async () => {
             const subscriber = await createClient({
-                // @ts-expect-error
-                auth: client.options.auth,
+                auth: {
+                    privateKey
+                }
             })
             const sub = await subscriber.subscribe(streamDefinition)
 
@@ -283,8 +286,9 @@ describeRepeats('StreamrClient', () => {
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
             const subscriber = await createClient({
-                // @ts-expect-error
-                auth: client.options.auth,
+                auth: {
+                    privateKey
+                }
             })
 
             const received: any[] = []

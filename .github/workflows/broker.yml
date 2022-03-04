@@ -38,7 +38,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
@@ -56,7 +55,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
@@ -90,6 +88,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=development
       - name: Build
         uses: docker/build-push-action@v2.9.0
         with:
@@ -163,6 +163,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=production
       - uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}

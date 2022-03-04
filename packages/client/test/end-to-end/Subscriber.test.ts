@@ -25,6 +25,7 @@ describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
+    let privateKey: string
     let streamParts: AsyncGenerator<StreamPartID>
     let streamDefinition: StreamDefinition
     let M: Subscriber
@@ -44,11 +45,11 @@ describeRepeats('Subscriber', () => {
     })
 
     beforeEach(async () => {
-        // eslint-disable-next-line require-atomic-updates
+        privateKey = fastPrivateKey()
         client = new StreamrClient({
             ...ConfigTest,
             auth: {
-                privateKey: fastPrivateKey()
+                privateKey
             }
         })
         // @ts-expect-error private
@@ -403,8 +404,9 @@ describeRepeats('Subscriber', () => {
                 sub2.onError(onSuppressError)
 
                 const client2 = await createClient({
-                    // @ts-expect-error
-                    auth: client.options.auth,
+                    auth: {
+                        privateKey
+                    }
                 })
 
                 const publishTestMessages2 = getPublishTestMessages(client2, streamDefinition)

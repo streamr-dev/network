@@ -59,14 +59,14 @@ describe('Session', () => {
 
     describe('instantiation', () => {
         it('should get token if set with a token', async () => {
+            const SESSION_TOKEN = 'test'
             const clientNone = createClient({
                 auth: {
-                    sessionToken: 'test'
+                    sessionToken: SESSION_TOKEN
                 },
             })
             const sessionToken = await clientNone.getSessionToken()
-            // @ts-expect-error
-            expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
+            expect(sessionToken).toBe(SESSION_TOKEN)
         })
 
         it('should return empty string with no authentication', async () => {

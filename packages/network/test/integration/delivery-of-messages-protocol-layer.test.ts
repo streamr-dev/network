@@ -24,14 +24,15 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
 describe('delivery of messages in protocol layer', () => {
+    let signallingTracker: Tracker | undefined
     let nodeToNode1: NodeToNode
     let nodeToNode2: NodeToNode
     let nodeToTracker: NodeToTracker
     let nodeToTracker2: NodeToTracker
     let trackerServer: TrackerServer
-    let tracker: Tracker
+
     beforeAll(async () => {
-        tracker = await startTracker({
+        signallingTracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
                 port: 28515
@@ -39,11 +40,10 @@ describe('delivery of messages in protocol layer', () => {
         })
         const peerInfo1 = PeerInfo.newNode('node1')
         const peerInfo2 = PeerInfo.newNode('node2')
-        const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         const trackerServerPeerInfo = PeerInfo.newTracker('trackerServer')
         const wsEndpoint1 = new NodeClientWsEndpoint(peerInfo1)
         const wsEndpoint2 = new NodeClientWsEndpoint(peerInfo2)
-        const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, PeerInfo.newTracker('trackerServer'))
+        const wsEndpoint3 = await startServerWsEndpoint('127.0.0.1', 28516, trackerServerPeerInfo)
         nodeToTracker = new NodeToTracker(wsEndpoint1)
         nodeToTracker2 = new NodeToTracker(wsEndpoint2)
 
@@ -78,26 +78,32 @@ describe('delivery of messages in protocol layer', () => {
         await nodeToTracker.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)
         await nodeToTracker2.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)
 
-        // Connect nodeToTracker <-> Tracker
-        await nodeToTracker.connectToTracker(tracker.getUrl(), trackerPeerInfo)
-        await nodeToTracker2.connectToTracker(tracker.getUrl(), trackerPeerInfo)
+        // Connect nodeToTracker <-> Tracker (for signalling purposes)
+        const signallingTrackerPeerInfo = PeerInfo.newTracker(signallingTracker.getTrackerId())
+        await nodeToTracker.connectToTracker(signallingTracker.getUrl(), signallingTrackerPeerInfo)
+        await nodeToTracker2.connectToTracker(signallingTracker.getUrl(), signallingTrackerPeerInfo)
 
         // Connect nodeToNode1 <-> nodeToNode2
         await runAndWaitForEvents(
-            () => { nodeToNode1.connectToNode('node2', tracker.getTrackerId())}, [
+            () => { nodeToNode1.connectToNode('node2', signallingTracker!.getTrackerId())}, [
                 [nodeToNode2, NodeToNodeEvent.NODE_CONNECTED],
                 [nodeToNode1, NodeToNodeEvent.NODE_CONNECTED]
             ])
+
+        // signallingTracker was used to form webrtc connection, it is closed so it doesn't interfere with tests
+        await signallingTracker?.stop()
+        // eslint-disable-next-line require-atomic-updates
+        signallingTracker = undefined
     }, 60000)
 
     afterAll(() => {
-        return Promise.all([
-            nodeToNode2.stop(),
-            nodeToNode1.stop(),
-            nodeToTracker.stop(),
-            nodeToTracker2.stop(),
-            trackerServer.stop(),
-            tracker.stop()
+        return Promise.allSettled([
+            nodeToNode2?.stop(),
+            nodeToNode1?.stop(),
+            nodeToTracker?.stop(),
+            nodeToTracker2?.stop(),
+            trackerServer?.stop(),
+            signallingTracker?.stop()
         ])
     })
 
