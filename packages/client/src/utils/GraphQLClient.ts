@@ -63,6 +63,14 @@ export class GraphQLClient {
         } while (lastResultSet.length === pageSize)
     }
 
+    async getIndexBlockNumber() {
+        const gqlQuery = JSON.stringify({
+            query: '{ _meta { block { number } } }'
+        })
+        const response: any = await this.sendQuery(gqlQuery)
+        return response._meta.block.number
+    }
+
     static createWhereClause(variables: Record<string, any>): string {
         const parameterList = Object.keys(variables)
             .filter((k) => variables[k] !== undefined)
