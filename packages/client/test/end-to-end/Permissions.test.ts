@@ -116,7 +116,7 @@ describe('Stream permissions', () => {
         await stream.grantPermissions({ public: true, permissions: [StreamPermission.PUBLISH] })
         const permissions = await stream.getPermissions()
         const owner = await client.getAddress()
-        return expect(permissions).toEqual([{
+        return expect(permissions).toIncludeSameMembers([{
             user: owner.toLowerCase(),
             permissions: [
                 StreamPermission.EDIT,
