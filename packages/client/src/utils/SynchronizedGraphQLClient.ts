@@ -1,8 +1,28 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
+import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
+import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
 import { until } from '../utils'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ObservableContract, withErrorHandlingAndLogging } from './contract'
+import { EthereumAddress } from 'streamr-client-protocol'
 import pMemoize from 'p-memoize'
+
+export const createWriteContract = <T extends Contract>(
+    address: EthereumAddress,
+    contractInterface: ContractInterface,
+    signer: Signer,
+    name: string,
+    graphQLClient: SynchronizedGraphQLClient
+): ObservableContract<T> => {
+    const contract = withErrorHandlingAndLogging<T>(
+        new Contract(address, contractInterface, signer),
+        name)
+    contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
+        graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
+    })
+    return contract
+}
 
 @scoped(Lifecycle.ContainerScoped)
 export class SynchronizedGraphQLClient {

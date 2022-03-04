@@ -1,6 +1,5 @@
 import { Contract } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/providers'
-import { Signer } from '@ethersproject/abstract-signer'
 import debug from 'debug'
 import type { NodeRegistry as NodeRegistryContract } from './ethereumArtifacts/NodeRegistry'
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from './ethereumArtifacts/StreamStorageRegistry'
@@ -17,7 +16,7 @@ import { until } from './utils'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
-import { GraphQLClient } from './utils/GraphQLClient'
+import { SynchronizedGraphQLClient, createWriteContract } from './utils/SynchronizedGraphQLClient'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -68,7 +67,6 @@ export class StorageNodeRegistry {
     private clientConfig: StrictStreamrClientConfig
     private chainProvider: Provider
     private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
-    private chainSigner?: Signer
     private nodeRegistryContract?: NodeRegistryContract
     private streamStorageRegistryContract?: StreamStorageRegistryContract
 
@@ -76,7 +74,7 @@ export class StorageNodeRegistry {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(GraphQLClient) private graphQLClient: GraphQLClient,
+        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
     ) {
         this.clientConfig = clientConfig
@@ -103,16 +101,20 @@ export class StorageNodeRegistry {
     // --------------------------------------------------------------------------------------------
 
     private async connectToNodeRegistryContract() {
-        if (!this.chainSigner || !this.nodeRegistryContract) {
-            this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.nodeRegistryContract = withErrorHandlingAndLogging(
-                new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, this.chainSigner),
-                'storageNodeRegistry'
-            ) as NodeRegistryContract
-            this.streamStorageRegistryContract = withErrorHandlingAndLogging(
-                new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainSigner),
-                'streamStorageRegistry'
-            ) as StreamStorageRegistryContract
+        if (!this.nodeRegistryContract) {
+            const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            this.nodeRegistryContract = createWriteContract<NodeRegistryContract>(
+                this.clientConfig.storageNodeRegistryChainAddress, 
+                NodeRegistryArtifact,
+                chainSigner,
+                'storageNodeRegistry',
+                this.graphQLClient)
+            this.streamStorageRegistryContract = createWriteContract<StreamStorageRegistryContract>(
+                this.clientConfig.streamStorageRegistryChainAddress,
+                StreamStorageRegistryArtifact, 
+                chainSigner,
+                'streamStorageRegistry',
+                this.graphQLClient)
         }
     }
 
