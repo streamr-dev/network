@@ -9,6 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+## [6.0.2] - 2022-03-04
+
+### Fixed
+
+- Fixed an issue in which method `searchStreams` would throw on invalid metadata (NET-730)
+
 ## [6.0.1] - 2022-02-24
 
 ### Fixed
