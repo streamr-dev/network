@@ -1,11 +1,10 @@
 import { Wallet } from 'ethers'
-import { randomEthereumAddress, wait } from 'streamr-test-utils'
+import { randomEthereumAddress } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { SearchStreamsPermissionFilter } from '../../src/searchStreams'
-import { until } from '../../src/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { fetchPrivateKeyWithGas } from '../test-utils/utils'
 
@@ -34,17 +33,6 @@ describe('SearchStreams', () => {
         }
         await client.setPermissions(...items)
         return streams
-    }
-
-    const waitUntilStreamsExistOnTheGraph = async (streams: Stream[]) => {
-        return Promise.all(streams.map((stream: Stream) => {
-            return until(
-                () => { return client.streamExistsOnTheGraph(stream.id) },
-                20000,
-                500,
-                () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
-            )
-        }))
     }
 
     const searchStreamIds = async (searchTerm: string, permissionFilter?: SearchStreamsPermissionFilter) => {
@@ -85,22 +73,10 @@ describe('SearchStreams', () => {
         streamWithPublicPermission = streams[2]
         streamWithUserAndPublicPermission = streams[3]
         streamWithGrantedAndRevokedPermission = streams[4]
-        const noSearchTermMatchStream = streams[5]
         await streamWithGrantedAndRevokedPermission.revokePermissions(
             { user: searcher.address, permissions: [StreamPermission.SUBSCRIBE] },
             { public: true, permissions: [StreamPermission.SUBSCRIBE] }
         )
-        // we should wait until revoked permission are propagated to TheGraph
-        // replace the time-based wait in NET-606
-        await wait(5000)
-        await waitUntilStreamsExistOnTheGraph([
-            streamWithoutPermission,
-            streamWithUserPermission,
-            streamWithPublicPermission,
-            streamWithUserAndPublicPermission,
-            streamWithGrantedAndRevokedPermission,
-            noSearchTermMatchStream
-        ])
     })
 
     afterAll(async () => {
