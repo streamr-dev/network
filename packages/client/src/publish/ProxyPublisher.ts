@@ -5,34 +5,35 @@ import BrubeckNode from '../BrubeckNode'
 import { Context } from '../utils/Context'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class ProxySubscriber {
+export default class ProxyPublisher {
     constructor(
         context: Context,
         private node: BrubeckNode,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-    ) {}
-
-    async setSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
+    ) {
     }
 
-    async removeSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
+    async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
+        await this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId)
     }
 
-    async setSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
+    async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        await this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId)
+    }
+
+    async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
-            ...nodeIds.map((nodeId) => this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
+            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId))
         ])
     }
 
-    async removeSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
+    async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled([
-            ...nodeIds.map(async (nodeId) => this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
+            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId))
         ])
     }
 }
