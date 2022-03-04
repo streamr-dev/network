@@ -2,26 +2,26 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
-import { until } from '../utils'
+import { until } from '.'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ObservableContract, withErrorHandlingAndLogging } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
 import pMemoize from 'p-memoize'
 
 /*
- * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the 
+ * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
  * GraphQLClient class and has identical public API for executing queries.
- * 
- * In this class there is an additional method `updateRequiredBlockNumber(n)`. If that method 
+ *
+ * In this class there is an additional method `updateRequiredBlockNumber(n)`. If that method
  * is called, then any subsequent query will provide up-to-date data from The Graph (i.e. data
  * which has been indexed at least to that block number).
- * 
- * If SynchronizedGraphQLClient is used, the client instance should be notified about any 
+ *
+ * If SynchronizedGraphQLClient is used, the client instance should be notified about any
  * transaction which writes to the blockchain indexed by The Graph. That way we can ensure that all
  * read queries from The Graph correspond the data written in those transactions.
- * 
- * The notification can be done by calling the `updateRequiredBlockNumber(n)` method described above. 
- * We can use the helper method `createWriteContract` to create a contract which automatically 
+ *
+ * The notification can be done by calling the `updateRequiredBlockNumber(n)` method described above.
+ * We can use the helper method `createWriteContract` to create a contract which automatically
  * updates the client when something is written to the blockchain via that contract.
  */
 
@@ -34,7 +34,8 @@ export const createWriteContract = <T extends Contract>(
 ): ObservableContract<T> => {
     const contract = withErrorHandlingAndLogging<T>(
         new Contract(address, contractInterface, signer),
-        name)
+        name
+    )
     contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
         graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
     })

@@ -104,17 +104,19 @@ export class StorageNodeRegistry {
         if (!this.nodeRegistryContract) {
             const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.nodeRegistryContract = createWriteContract<NodeRegistryContract>(
-                this.clientConfig.storageNodeRegistryChainAddress, 
+                this.clientConfig.storageNodeRegistryChainAddress,
                 NodeRegistryArtifact,
                 chainSigner,
                 'storageNodeRegistry',
-                this.graphQLClient)
+                this.graphQLClient
+            )
             this.streamStorageRegistryContract = createWriteContract<StreamStorageRegistryContract>(
                 this.clientConfig.streamStorageRegistryChainAddress,
-                StreamStorageRegistryArtifact, 
+                StreamStorageRegistryArtifact,
                 chainSigner,
                 'streamStorageRegistry',
-                this.graphQLClient)
+                this.graphQLClient
+            )
         }
     }
 

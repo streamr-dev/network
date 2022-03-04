@@ -1,6 +1,4 @@
 import 'reflect-metadata'
-import { wait } from 'streamr-test-utils'
-import { until } from '../../src/utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 
 const MOCK_QUERY = 'mock-query'
@@ -14,6 +12,7 @@ class FakeIndex {
 
     private states: IndexState[]
     private blockNumber = 0
+    // eslint-disable-next-line no-undef
     private timer: NodeJS.Timer | undefined
 
     constructor(states: IndexState[]) {
@@ -29,6 +28,7 @@ class FakeIndex {
     }
 
     start() {
+        // eslint-disable-next-line no-plusplus
         this.timer = setInterval(() => this.blockNumber++, 100)
     }
 
@@ -47,19 +47,19 @@ describe('SynchronizedGraphQLClient', () => {
     beforeEach(() => {
         fakeIndex = new FakeIndex([{
             blockNumber: 1,
-            queryResult: { 
+            queryResult: {
                 foo: 111
             }
         },
         {
             blockNumber: 3,
-            queryResult: { 
+            queryResult: {
                 foo: 333
             }
         },
         {
             blockNumber: 5,
-            queryResult: { 
+            queryResult: {
                 foo: 555
             }
         }])
@@ -79,7 +79,7 @@ describe('SynchronizedGraphQLClient', () => {
                 _timeouts: {
                     theGraph: {
                         timeout: 60 * 1000,
-                        retryInterval: 100    
+                        retryInterval: 100
                     }
                 }
             } as any

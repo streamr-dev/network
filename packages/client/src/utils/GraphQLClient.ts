@@ -68,6 +68,7 @@ export class GraphQLClient {
             query: '{ _meta { block { number } } }'
         })
         const response: any = await this.sendQuery(gqlQuery)
+        // eslint-disable-next-line no-underscore-dangle
         return response._meta.block.number
     }
 

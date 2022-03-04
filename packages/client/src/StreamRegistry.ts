@@ -1,5 +1,4 @@
-import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { Signer } from '@ethersproject/abstract-signer'
+import { Contract, ContractTransaction } from '@ethersproject/contracts'
 import type { StreamRegistryV3 as StreamRegistryContract } from './ethereumArtifacts/StreamRegistryV3'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -94,11 +93,12 @@ export class StreamRegistry implements Context {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
-                this.config.streamRegistryChainAddress, 
+                this.config.streamRegistryChainAddress,
                 StreamRegistryArtifact,
                 chainSigner,
                 'streamRegistry',
-                this.graphQLClient)
+                this.graphQLClient
+            )
         }
     }
 
