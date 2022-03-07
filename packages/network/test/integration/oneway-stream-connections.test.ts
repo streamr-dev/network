@@ -11,9 +11,6 @@ const { StreamMessage, MessageID } = MessageLayer
 
 const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 
-/**
- * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
- */
 describe('Publish only connection tests', () => {
     let tracker: Tracker
     let contactNode: NetworkNode
@@ -64,11 +61,11 @@ describe('Publish only connection tests', () => {
     })
 
     afterEach(async () => {
-        await tracker.stop()
-        await Promise.all([
-            onewayNode.stop(),
-            contactNode.stop(),
-            contactNode2.stop(),
+        await Promise.allSettled([
+            tracker?.stop(),
+            onewayNode?.stop(),
+            contactNode?.stop(),
+            contactNode2?.stop(),
         ])
     })
 
@@ -244,11 +241,11 @@ describe('Publish only connection tests', () => {
             )
     })
 
-    it('Cannot open publish only stream connection to a node without an existing subscription to the given stream', async () => {
-        await expect(onewayNode.joinStreamPartAsPurePublisher(defaultStreamPartId, 'non-contact-node'))
+    it('Cannot open susbcribe only stream connection to a node without an existing subscription to the given stream', async () => {
+        await expect(onewayNode.joinStreamPartAsPureSubscriber(defaultStreamPartId, 'non-contact-node'))
             .rejects
             .toMatchObject(
-                new Error('Joining stream as pure publisher failed on contact-node non-contact-node for stream stream-0#0')
+                new Error('Joining stream as pure subscriber failed on contact-node non-contact-node for stream stream-0#0')
             )
     })
 
@@ -299,5 +296,5 @@ describe('Publish only connection tests', () => {
                 },
             }))
         ])
-    }, 20000)
+    }, 20100)
 })
