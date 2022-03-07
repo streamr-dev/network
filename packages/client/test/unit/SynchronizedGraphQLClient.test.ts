@@ -12,7 +12,7 @@ interface IndexState {
     queryResult: any
 }
 
-class FakeIndex {
+class EmulatedTheGraphIndex {
 
     private states: IndexState[]
     private blockNumber = 0
@@ -48,13 +48,13 @@ class FakeIndex {
 
 describe('SynchronizedGraphQLClient', () => {
 
-    let fakeIndex: FakeIndex
+    let theGraphIndex: EmulatedTheGraphIndex
     let sendQuery: jest.Mock<Promise<Object>, []>
     let getIndexBlockNumber: jest.Mock<Promise<number>, []>
     let client: Pick<SynchronizedGraphQLClient, 'sendQuery' | 'updateRequiredBlockNumber'>
 
     beforeEach(() => {
-        fakeIndex = new FakeIndex([{
+        theGraphIndex = new EmulatedTheGraphIndex([{
             blockNumber: 1,
             queryResult: {
                 foo: 111
@@ -81,11 +81,11 @@ describe('SynchronizedGraphQLClient', () => {
             }
         }])
         sendQuery = jest.fn().mockImplementation((_query: string) => {
-            const state = fakeIndex.getState()
+            const state = theGraphIndex.getState()
             return state!.queryResult
         })
         getIndexBlockNumber = jest.fn().mockImplementation(() => {
-            return fakeIndex.getBlockNumber()
+            return theGraphIndex.getBlockNumber()
         })
         client = new SynchronizedGraphQLClient(
             mockContext(),
@@ -105,7 +105,7 @@ describe('SynchronizedGraphQLClient', () => {
     })
 
     afterEach(() => {
-        fakeIndex.stop()
+        theGraphIndex.stop()
     })
 
     it('no synchronization', async () => {
@@ -121,7 +121,7 @@ describe('SynchronizedGraphQLClient', () => {
     it('happy path', async () => {
         client.updateRequiredBlockNumber(3)
         const responsePromise = client.sendQuery(MOCK_QUERY)
-        fakeIndex.start()
+        theGraphIndex.start()
         expect(await responsePromise).toEqual({
             foo: 444
         })
@@ -136,7 +136,7 @@ describe('SynchronizedGraphQLClient', () => {
             client.sendQuery(MOCK_QUERY),
             client.sendQuery(MOCK_QUERY)
         ])
-        fakeIndex.start()
+        theGraphIndex.start()
         const responses = await responsePromise
         expect(responses).toHaveLength(2)
         expect(responses[0]).toEqual({
@@ -155,7 +155,7 @@ describe('SynchronizedGraphQLClient', () => {
         const responsePromise1 = client.sendQuery(MOCK_QUERY)
         client.updateRequiredBlockNumber(8)
         const responsePromise2 = client.sendQuery(MOCK_QUERY)
-        fakeIndex.start()
+        theGraphIndex.start()
         const responses = await Promise.all([responsePromise1, responsePromise2])
         expect(responses).toHaveLength(2)
         expect(responses[0]).toEqual({
@@ -171,7 +171,7 @@ describe('SynchronizedGraphQLClient', () => {
 
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
-        fakeIndex.start()
+        theGraphIndex.start()
         return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('timed out while waiting for The Graph index update for block 999999')
     })
 
@@ -180,7 +180,7 @@ describe('SynchronizedGraphQLClient', () => {
         const responsePromise1 = client.sendQuery(MOCK_QUERY)
         await wait(500)
         const responsePromise2 = client.sendQuery(MOCK_QUERY)
-        fakeIndex.start()
+        theGraphIndex.start()
         await expect(() => responsePromise1).rejects.toThrow('timed out while waiting for The Graph index update for block 7')
         expect(await responsePromise2).toEqual({
             foo: 777
