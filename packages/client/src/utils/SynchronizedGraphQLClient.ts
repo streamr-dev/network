@@ -6,6 +6,9 @@ import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ObservableContract, withErrorHandlingAndLogging } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
 import Gate from './Gate'
+import { Context } from './Context'
+import { Debugger } from 'debug'
+import { instanceId } from './index'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -60,14 +63,22 @@ class IndexingState {
     private getCurrentBlockNumber: () => Promise<number>
     private pollTimeout: number
     private pollRetryInterval: number
+    private debug: Debugger
 
-    constructor(getCurrentBlockNumber: () => Promise<number>, pollTimeout: number, pollRetryInterval: number) {
+    constructor(
+        getCurrentBlockNumber: () => Promise<number>,
+        pollTimeout: number,
+        pollRetryInterval: number,
+        debug: Debugger
+    ) {
         this.getCurrentBlockNumber = getCurrentBlockNumber
         this.pollTimeout = pollTimeout
         this.pollRetryInterval = pollRetryInterval
+        this.debug = debug
     }
 
     async waitUntiIndexed(blockNumber: number): Promise<void> {
+        this.debug(`wait until indexed ${blockNumber}`)
         const gate = this.getOrCreateGate(blockNumber)
         await Promise.race([
             gate.check(),
@@ -102,15 +113,22 @@ class IndexingState {
 
     /* eslint-disable no-constant-condition, no-await-in-loop, padding-line-between-statements */
     private async startPolling(): Promise<void> {
+        this.debug('start polling')
         while (true) {
-            this.blockNumber = await this.getCurrentBlockNumber()
-            const gate = this.gates.get(this.blockNumber)
-            if (gate !== undefined) {
-                gate.open()
-                this.gates.delete(this.blockNumber)
-            }
-            if (this.gates.size === 0) {
-                return
+            const newBlockNumber = await this.getCurrentBlockNumber()
+            if (newBlockNumber !== this.blockNumber) {
+                this.blockNumber = newBlockNumber
+                this.debug(`poll result: blockNumber=${this.blockNumber}`)
+                const gate = this.gates.get(this.blockNumber)
+                if (gate !== undefined) {
+                    gate.open()
+                    this.gates.delete(this.blockNumber)
+                }
+                if (this.gates.size === 0) {
+                    this.debug('stop polling')
+                    return
+                }
+
             }
             await wait(this.pollRetryInterval)
         }
@@ -125,6 +143,7 @@ export class SynchronizedGraphQLClient {
     private indexingState: IndexingState
 
     constructor(
+        context: Context,
         @inject(GraphQLClient) delegate: GraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
     ) {
@@ -134,7 +153,8 @@ export class SynchronizedGraphQLClient {
             // eslint-disable-next-line no-underscore-dangle
             clientConfig._timeouts.theGraph.timeout,
             // eslint-disable-next-line no-underscore-dangle
-            clientConfig._timeouts.theGraph.retryInterval
+            clientConfig._timeouts.theGraph.retryInterval,
+            context.debug.extend(instanceId(this))
         )
     }
 

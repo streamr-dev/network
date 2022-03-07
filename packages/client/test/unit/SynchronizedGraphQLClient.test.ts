@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
+import { mockContext } from '../test-utils/utils'
 
 const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
@@ -87,6 +88,7 @@ describe('SynchronizedGraphQLClient', () => {
             return fakeIndex.getBlockNumber()
         })
         client = new SynchronizedGraphQLClient(
+            mockContext(),
             {
                 sendQuery,
                 getIndexBlockNumber
@@ -100,6 +102,10 @@ describe('SynchronizedGraphQLClient', () => {
                 }
             } as any
         )
+    })
+
+    afterEach(() => {
+        fakeIndex.stop()
     })
 
     it('no synchronization', async () => {
@@ -122,7 +128,6 @@ describe('SynchronizedGraphQLClient', () => {
         expect(getIndexBlockNumber).toBeCalledTimes(3 * (INDEXING_INTERVAL / POLL_INTERVAL) + 1)
         expect(sendQuery).toBeCalledTimes(1)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        fakeIndex.stop()
     })
 
     it('multiple queries for same block', async () => {
@@ -143,7 +148,6 @@ describe('SynchronizedGraphQLClient', () => {
         expect(getIndexBlockNumber).toBeCalledTimes(7 * (INDEXING_INTERVAL / POLL_INTERVAL) + 1)
         expect(sendQuery).toBeCalledTimes(2)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        fakeIndex.stop()
     })
 
     it('multiple queries for different blocks', async () => {
@@ -163,11 +167,11 @@ describe('SynchronizedGraphQLClient', () => {
         expect(getIndexBlockNumber).toBeCalledTimes(8 * (INDEXING_INTERVAL / POLL_INTERVAL) + 1)
         expect(sendQuery).toBeCalledTimes(2)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        fakeIndex.stop()
     })
 
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
+        fakeIndex.start()
         return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('timed out while waiting for The Graph index update for block 999999')
     })
 })
