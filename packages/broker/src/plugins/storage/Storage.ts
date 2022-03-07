@@ -14,6 +14,7 @@ import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './DataQuer
 
 const logger = new Logger(module)
 
+const MAX_TIMESTAMP_VALUE = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
 const MAX_RESEND_LAST = 10000
 
 export interface StartCassandraOptions {
@@ -196,8 +197,15 @@ export class Storage extends EventEmitter {
     requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId?: string): Readable {
         logger.trace('requestFrom %o', { streamId, partition, fromTimestamp, fromSequenceNo, publisherId })
 
-        return this.fetchFrom(streamId, partition, fromTimestamp,
-            fromSequenceNo, publisherId)
+        return this.fetchRange(
+            streamId,
+            partition,
+            fromTimestamp,
+            fromSequenceNo,
+            MAX_TIMESTAMP_VALUE,
+            MAX_SEQUENCE_NUMBER_VALUE,
+            publisherId
+        )
     }
 
     requestRange(
@@ -250,65 +258,6 @@ export class Storage extends EventEmitter {
         this.bucketManager.stop()
         this.batchManager.stop()
         return this.cassandraClient.shutdown()
-    }
-
-    private fetchFrom(
-        streamId: string,
-        partition: number,
-        fromTimestamp: number,
-        fromSequenceNo: number,
-        publisherId?: string
-    ) {
-        const resultStream = this.createResultStream({streamId, partition, fromTimestamp, fromSequenceNo, publisherId})
-
-        const hasPublisher = (publisherId !== undefined)
-        const publisherQuerySuffix = hasPublisher ? ' AND publisher_id = ?' : ''
-        const query1 = [
-            'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ?',
-            'AND ts = ? AND sequence_no >= ?' + publisherQuerySuffix,
-            'ALLOW FILTERING'
-        ].join(' ')
-        const query2 = [
-            'SELECT payload FROM stream_data',
-            'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ?' + publisherQuerySuffix,
-            'ALLOW FILTERING'
-        ].join(' ')
-
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
-            if (buckets.length === 0) {
-                resultStream.end()
-                return
-            }
-
-            const bucketsForQuery = bucketsToIds(buckets)
-
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp]
-            if (hasPublisher) {
-                [queryParams1, queryParams2].forEach((p) => p.push(publisherId))
-            }
-            const stream1 = this.queryWithStreamingResults(query1, queryParams1)
-            const stream2 = this.queryWithStreamingResults(query2, queryParams2)
-
-            return pipeline(
-                merge2(stream1, stream2, {
-                    // @ts-expect-error options not in type
-                    pipeError: true,
-                }),
-                resultStream,
-                (err) => {
-                    resultStream.destroy(err || undefined)
-                    stream1.destroy(err || undefined)
-                    stream2.destroy(err || undefined)
-                }
-            )
-        })
-            .catch((e) => {
-                resultStream.destroy(e)
-            })
-
-        return resultStream
     }
 
     private fetchRange(
