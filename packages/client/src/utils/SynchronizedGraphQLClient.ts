@@ -57,9 +57,18 @@ const timeout = async (
     throw new Error(errorMessage)
 }
 
+class BlockNumberGate extends Gate {
+    blockNumber: number
+
+    constructor(blockNumber: number) {
+        super()
+        this.blockNumber = blockNumber
+    }
+}
+
 class IndexingState {
     private blockNumber = 0
-    private gates: Map<number, Gate> = new Map()
+    private gates: Set<BlockNumberGate> = new Set()
     private getCurrentBlockNumber: () => Promise<number>
     private pollTimeout: number
     private pollRetryInterval: number
@@ -85,53 +94,44 @@ class IndexingState {
             timeout(
                 this.pollTimeout,
                 `timed out while waiting for The Graph index update for block ${blockNumber}`,
-                () => this.removeGate(blockNumber)
+                () => this.gates.delete(gate)
             )
         ])
     }
 
-    private getOrCreateGate(blockNumber: number): Gate {
-        let gate: Gate | undefined = new Gate()
+    private getOrCreateGate(blockNumber: number): BlockNumberGate {
+        const gate: BlockNumberGate | undefined = new BlockNumberGate(blockNumber)
         if (blockNumber > this.blockNumber) {
-            gate = this.gates.get(blockNumber)
-            if (gate === undefined) {
-                const isPolling = this.gates.size > 0
-                gate = new Gate()
-                gate.close()
-                this.gates.set(blockNumber, gate)
-                if (!isPolling) {
-                    this.startPolling()
-                }
+            const isPolling = this.gates.size > 0
+            gate.close()
+            this.gates.add(gate)
+            if (!isPolling) {
+                this.startPolling()
             }
         }
         return gate
     }
 
-    private removeGate(blockNumber: number): void {
-        this.gates.delete(blockNumber)
-    }
-
     /* eslint-disable no-constant-condition, no-await-in-loop, padding-line-between-statements */
     private async startPolling(): Promise<void> {
         this.debug('start polling')
-        while (true) {
+        while (this.gates.size > 0) {
             const newBlockNumber = await this.getCurrentBlockNumber()
             if (newBlockNumber !== this.blockNumber) {
                 this.blockNumber = newBlockNumber
                 this.debug(`poll result: blockNumber=${this.blockNumber}`)
-                const gate = this.gates.get(this.blockNumber)
-                if (gate !== undefined) {
-                    gate.open()
-                    this.gates.delete(this.blockNumber)
-                }
-                if (this.gates.size === 0) {
-                    this.debug('stop polling')
-                    return
-                }
-
+                this.gates.forEach((gate) => {
+                    if (gate.blockNumber <= this.blockNumber) {
+                        gate.open()
+                        this.gates.delete(gate)
+                    }
+                })
             }
-            await wait(this.pollRetryInterval)
+            if (this.gates.size > 0) {
+                await wait(this.pollRetryInterval)
+            }
         }
+        this.debug('stop polling')
     }
 }
 

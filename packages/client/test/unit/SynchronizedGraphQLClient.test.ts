@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import { wait } from 'streamr-test-utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockContext } from '../test-utils/utils'
 
@@ -58,8 +59,7 @@ describe('SynchronizedGraphQLClient', () => {
             queryResult: {
                 foo: 111
             }
-        },
-        {
+        }, {
             blockNumber: 2,
             queryResult: {
                 foo: 222
@@ -173,5 +173,17 @@ describe('SynchronizedGraphQLClient', () => {
         client.updateRequiredBlockNumber(999999)
         fakeIndex.start()
         return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('timed out while waiting for The Graph index update for block 999999')
+    })
+
+    it('one query timeouts, another succeeds', async () => {
+        client.updateRequiredBlockNumber(7)
+        const responsePromise1 = client.sendQuery(MOCK_QUERY)
+        await wait(500)
+        const responsePromise2 = client.sendQuery(MOCK_QUERY)
+        fakeIndex.start()
+        await expect(() => responsePromise1).rejects.toThrow('timed out while waiting for The Graph index update for block 7')
+        expect(await responsePromise2).toEqual({
+            foo: 777
+        })
     })
 })
