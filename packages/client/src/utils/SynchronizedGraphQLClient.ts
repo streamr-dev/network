@@ -2,11 +2,10 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
-import { until } from '.'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ObservableContract, withErrorHandlingAndLogging } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
-import pMemoize from 'p-memoize'
+import Gate from './Gate'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -42,57 +41,109 @@ export const createWriteContract = <T extends Contract>(
     return contract
 }
 
+// TODO import this from a library (e.g. streamr-test-utils if that is no longer a test-only dependency)
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const timeout = async (
+    waitTimeMs: number,
+    errorMessage: string,
+    callback: () => void
+): Promise<void> => {
+    await wait(waitTimeMs)
+    callback()
+    throw new Error(errorMessage)
+}
+
+class IndexingState {
+    private blockNumber = 0
+    private gates: Map<number, Gate> = new Map()
+    private getCurrentBlockNumber: () => Promise<number>
+    private pollTimeout: number
+    private pollRetryInterval: number
+
+    constructor(getCurrentBlockNumber: () => Promise<number>, pollTimeout: number, pollRetryInterval: number) {
+        this.getCurrentBlockNumber = getCurrentBlockNumber
+        this.pollTimeout = pollTimeout
+        this.pollRetryInterval = pollRetryInterval
+    }
+
+    async waitUntiIndexed(blockNumber: number): Promise<void> {
+        const gate = this.getOrCreateGate(blockNumber)
+        await Promise.race([
+            gate.check(),
+            timeout(
+                this.pollTimeout,
+                `timed out while waiting for The Graph index update for block ${blockNumber}`,
+                () => this.removeGate(blockNumber)
+            )
+        ])
+    }
+
+    private getOrCreateGate(blockNumber: number): Gate {
+        let gate: Gate | undefined = new Gate()
+        if (blockNumber > this.blockNumber) {
+            gate = this.gates.get(blockNumber)
+            if (gate === undefined) {
+                const isPolling = this.gates.size > 0
+                gate = new Gate()
+                gate.close()
+                this.gates.set(blockNumber, gate)
+                if (!isPolling) {
+                    this.startPolling()
+                }
+            }
+        }
+        return gate
+    }
+
+    private removeGate(blockNumber: number): void {
+        this.gates.delete(blockNumber)
+    }
+
+    /* eslint-disable no-constant-condition, no-await-in-loop, padding-line-between-statements */
+    private async startPolling(): Promise<void> {
+        while (true) {
+            this.blockNumber = await this.getCurrentBlockNumber()
+            const gate = this.gates.get(this.blockNumber)
+            if (gate !== undefined) {
+                gate.open()
+                this.gates.delete(this.blockNumber)
+            }
+            if (this.gates.size === 0) {
+                return
+            }
+            await wait(this.pollRetryInterval)
+        }
+    }
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class SynchronizedGraphQLClient {
 
     private delegate: GraphQLClient
     private requiredBlockNumber = 0
-    private indexedBlockNumber = 0
-    private clientConfig: StrictStreamrClientConfig
-    private memoizedWaitUntilIndexed: (blockNumber: number) => Promise<void>
+    private indexingState: IndexingState
 
     constructor(
         @inject(GraphQLClient) delegate: GraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
     ) {
         this.delegate = delegate
-        this.clientConfig = clientConfig
-        this.memoizedWaitUntilIndexed = pMemoize((blockNumber: number) => {
-            return this.waitUntiIndexed(blockNumber)
-        })
-    }
-
-    private async waitUntiIndexed(blockNumber: number): Promise<void> {
-        await until(
-            async () => {
-                const currentBlockNumber = await this.delegate.getIndexBlockNumber()
-                return (currentBlockNumber >= blockNumber)
-            },
+        this.indexingState = new IndexingState(
+            this.delegate.getIndexBlockNumber,
             // eslint-disable-next-line no-underscore-dangle
-            this.clientConfig._timeouts.theGraph.timeout,
+            clientConfig._timeouts.theGraph.timeout,
             // eslint-disable-next-line no-underscore-dangle
-            this.clientConfig._timeouts.theGraph.retryInterval,
-            () => `Timed out while waiting for TheGraph to synchronize to block ${this.requiredBlockNumber}`
+            clientConfig._timeouts.theGraph.retryInterval
         )
-        this.updateIndexedBlockNumber(blockNumber)
-    }
-
-    private async waitUntilSynchronized() {
-        if (this.requiredBlockNumber > this.indexedBlockNumber) {
-            await this.memoizedWaitUntilIndexed(this.requiredBlockNumber)
-        }
     }
 
     updateRequiredBlockNumber(blockNumber: number) {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }
 
-    private updateIndexedBlockNumber(blockNumber: number) {
-        this.indexedBlockNumber = Math.max(blockNumber, this.indexedBlockNumber)
-    }
-
     async sendQuery(gqlQuery: string): Promise<Object> {
-        await this.waitUntilSynchronized()
+        await this.indexingState.waitUntiIndexed(this.requiredBlockNumber)
         return this.delegate.sendQuery(gqlQuery)
     }
 
@@ -100,7 +151,7 @@ export class SynchronizedGraphQLClient {
         createQuery: (lastId: string, pageSize: number) => string,
         pageSize?: number
     ): AsyncGenerator<T, void, undefined> {
-        await this.waitUntilSynchronized()
+        await this.indexingState.waitUntiIndexed(this.requiredBlockNumber)
         yield* this.delegate.fetchPaginatedResults(createQuery, pageSize)
     }
 }
