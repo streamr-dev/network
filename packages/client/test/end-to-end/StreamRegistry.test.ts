@@ -43,7 +43,6 @@ describe('StreamRegistry', () => {
                 id: path,
                 requireSignedData: true
             })
-            await until(async () => { return client.streamExistsOnTheGraph(stream.id) }, 100000, 1000)
             expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
             expect(stream.requireSignedData).toBe(true)
         })
@@ -53,8 +52,8 @@ describe('StreamRegistry', () => {
             const newStream = await client.createStream({
                 id: newId,
             })
-            await until(async () => { return client.streamExistsOnTheGraph(newId) }, 100000, 1000)
             expect(newStream.id).toEqual(newId)
+            expect(await client.getStream(newId)).toBeDefined()
         })
 
         it('valid path', async () => {
@@ -63,8 +62,8 @@ describe('StreamRegistry', () => {
             const newStream = await client.createStream({
                 id: newPath,
             })
-            await until(async () => { return client.streamExistsOnTheGraph(expectedId) }, 100000, 1000)
             expect(newStream.id).toEqual(expectedId)
+            expect(await client.getStream(expectedId)).toBeDefined()
         })
 
         it('legacy format', async () => {
@@ -92,8 +91,8 @@ describe('StreamRegistry', () => {
                 const newStream = await ensOwnerClient.createStream({
                     id: streamId,
                 })
-                await until(async () => { return ensOwnerClient.streamExistsOnTheGraph(streamId) }, 100000, 1000)
                 expect(newStream.id).toEqual(streamId)
+                expect(await client.getStream(streamId)).toBeDefined()
             })
 
             it('domain not owned by user', async () => {
@@ -233,7 +232,6 @@ describe('StreamRegistry', () => {
         it('happy path', async () => {
             const props = { id: await createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
-            await until(() => client.streamExistsOnTheGraph(stream.id), 100000, 1000)
             await stream.delete()
             await until(async () => {
                 try {

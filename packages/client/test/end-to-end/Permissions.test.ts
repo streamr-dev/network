@@ -112,12 +112,11 @@ describe('Stream permissions', () => {
         })
     })
 
-    // TODO: fix flaky test in NET-653 / NET-606
-    it.skip('get permissions', async () => {
+    it('get permissions', async () => {
         await stream.grantPermissions({ public: true, permissions: [StreamPermission.PUBLISH] })
         const permissions = await stream.getPermissions()
         const owner = await client.getAddress()
-        return expect(permissions).toEqual([{
+        return expect(permissions).toIncludeSameMembers([{
             user: owner.toLowerCase(),
             permissions: [
                 StreamPermission.EDIT,
@@ -198,8 +197,7 @@ describe('Stream permissions', () => {
         )).toBe(true)
     })
 
-    // TODO: fix flaky test when we have NET-606
-    it.skip('grant same permission multiple times', async () => {
+    it('grant same permission multiple times', async () => {
         await stream.grantPermissions({
             user: otherUser,
             permissions: [StreamPermission.SUBSCRIBE]

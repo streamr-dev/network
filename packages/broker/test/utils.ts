@@ -163,8 +163,6 @@ export const createTestStream = async (
         id,
         ...props
     })
-    // @ts-expect-error internal method TODO remove this wait when NET-606 is implemented
-    await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
 

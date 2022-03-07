@@ -284,9 +284,6 @@
         })
         log('Set Permissions.')
         log('Loading permissions...')
-        // wait wait until permissions are propagated to TheGraph
-        // TODO: when NET-606 is implemented, the wait is not needed
-        await wait(5000)
         const allAssignments = await stream.getPermissions()
         const modifiedAssignment = allAssignments.find(p => (p.user.toLowerCase() === subscriberAddress.toLowerCase()))
         log(`Permissions: [${modifiedAssignment.permissions.join(',')}]`, 'permissionsResult')

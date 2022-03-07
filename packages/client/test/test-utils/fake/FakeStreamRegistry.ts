@@ -93,11 +93,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         }
     }
 
-    async streamExistsOnTheGraph(streamIdOrPath: string): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.registryItems.has(streamId)
-    }
-
     // eslint-disable-next-line class-methods-use-this
     async updateStream(props: StreamProperties): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
