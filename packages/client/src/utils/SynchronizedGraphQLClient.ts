@@ -87,13 +87,13 @@ class IndexingState {
     }
 
     async waitUntiIndexed(blockNumber: number): Promise<void> {
-        this.debug(`wait until indexed ${blockNumber}`)
+        this.debug(`wait until The Graph is synchronized to block ${blockNumber}`)
         const gate = this.getOrCreateGate(blockNumber)
         await Promise.race([
             gate.check(),
             timeout(
                 this.pollTimeout,
-                `timed out while waiting for The Graph index update for block ${blockNumber}`,
+                `timed out while waiting for The Graph to synchronized to block ${blockNumber}`,
                 () => this.gates.delete(gate)
             )
         ])
