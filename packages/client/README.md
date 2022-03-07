@@ -44,7 +44,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 
 ### Subscribing
 ```js 
-const streamId = 'binance-streamr.eth/ETHUSDT/ticker'
+const streamId = 'streamr.eth/demos/helsinki-trams'
 
 streamr.subscribe(streamId, (message) => {
     // handle for individual messages
