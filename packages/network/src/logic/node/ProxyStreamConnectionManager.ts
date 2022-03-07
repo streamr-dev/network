@@ -30,7 +30,7 @@ enum State {
 }
 
 export enum Direction {
-    OUT = 'outgoing',
+    OUT = 'outbound',
     IN = 'inbound'
 }
 

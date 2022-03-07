@@ -25,11 +25,11 @@ export class NetworkNode extends Node {
     }
 
     async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openOutgoingStreamConnection(streamPartId, contactNodeId)
+        await this.openOutboundStreamConnection(streamPartId, contactNodeId)
     }
 
     async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeOutgoingStreamConnection(streamPartId, contactNodeId)
+        await this.closeOutboundStreamConnection(streamPartId, contactNodeId)
     }
 
     async joinStreamPartAsPureSubscriber(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {

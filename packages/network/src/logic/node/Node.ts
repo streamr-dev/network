@@ -264,7 +264,7 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async openOutgoingStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+    async openOutboundStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
         await Promise.all([
@@ -291,7 +291,7 @@ export class Node extends EventEmitter {
         })
     }
 
-    async closeOutgoingStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+    async closeOutboundStreamConnection(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
         await this.proxyStreamConnectionManager.closeOnewayStreamConnection(streamPartId, contactNodeId, Direction.OUT)
     }
 
@@ -336,7 +336,7 @@ export class Node extends EventEmitter {
             && this.streamPartManager.isBehindProxy(streamPartId)
             && !this.streamPartManager.hasInboundConnection(streamPartId, source))
         {
-            logger.warn(`Unexpected message received on outgoing proxy stream from node ${source} on stream ${streamPartId}`)
+            logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }

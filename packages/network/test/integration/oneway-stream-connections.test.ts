@@ -151,7 +151,7 @@ describe('Publish only connection tests', () => {
         await onewayNode.joinStreamPartAsPureSubscriber(defaultStreamPartId, 'contact-node')
         await expect(onewayNode.leavePurePublishingStreamPart(defaultStreamPartId, 'non-contact-node'))
             .rejects
-            .toMatch(`outgoing`)
+            .toMatch(`outbound`)
     })
 
     it('publisher cannot connect to non-contact node', async () => {
