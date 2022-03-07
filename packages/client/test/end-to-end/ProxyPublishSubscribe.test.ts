@@ -81,8 +81,7 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         await onewayClient.publish(stream, {
@@ -98,8 +97,7 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessagesProxy.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
     }, 15000)
 
@@ -112,15 +110,13 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         await onewayClient.removePublishProxy(stream, proxyNodeId1)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
     }, 15000)
 
@@ -137,25 +133,21 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasOutOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
         await onewayClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
     }, 15000)
@@ -170,8 +162,7 @@ describe('PubSub with proxy connections', () => {
             receivedMessages.push(msg)
         })
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         await proxyClient1.publish(stream, {
@@ -187,8 +178,7 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessages.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
     }, 15000)
 
@@ -198,16 +188,14 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setSubscribeProxy(stream, proxyNodeId2)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
         // await onewayClient.unsubscribe(stream)
         await onewayClient.removeSubscribeProxy(stream, proxyNodeId2)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
     }, 15000)
 
@@ -218,26 +206,22 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.hasInOnlyConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
             .toEqual(true)
 
         await onewayClient.unsubscribe(stream)
         await onewayClient.removeSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
         expect((await onewayClient.getNode())
-            // @ts-expect-error private
-            .streamPartManager.isSetUp(toStreamPartID(stream.id, 0)))
+            .isStreamSetUp(toStreamPartID(stream.id, 0)))
             .toEqual(false)
     }, 15000)
 })

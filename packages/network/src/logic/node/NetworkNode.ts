@@ -70,6 +70,18 @@ export class NetworkNode extends Node {
         return this.streamPartManager.getNeighborsForStreamPart(streamPartId)
     }
 
+    isStreamSetUp(streamPartId: StreamPartID): boolean {
+        return this.streamPartManager.isSetUp(streamPartId)
+    }
+
+    hasProxyPublishConnection(streamPartId: StreamPartID, contactNodeId: NodeId): boolean {
+        return this.streamPartManager.hasOutOnlyConnection(streamPartId, contactNodeId)
+    }
+
+    hasProxySubscribeConnection(streamPartId: StreamPartID, contactNodeId: NodeId): boolean {
+        return this.streamPartManager.hasInOnlyConnection(streamPartId, contactNodeId)
+    }
+
     getRtt(nodeId: NodeId): number|undefined {
         return this.nodeToNode.getRtts()[nodeId]
     }
