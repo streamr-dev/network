@@ -3,15 +3,15 @@ import { StreamPartManager } from './StreamPartManager'
 import { NodeToNode } from '../../protocol/NodeToNode'
 import { Event, Node, NodeId } from './Node'
 import {
-    PublishStreamConnectionRequest,
-    PublishStreamConnectionResponse,
+    ProxyPublishStreamConnectionRequest,
+    ProxyPublishStreamConnectionResponse,
+    ProxySubscribeStreamConnectionResponse,
+    ProxySubscribeStreamConnectionRequest,
     StreamPartID,
     UnsubscribeRequest
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../../helpers/PromiseTools'
 import { Logger } from '../../helpers/logger/LoggerNode'
-import { SubscribeStreamConnectionResponse } from 'streamr-client-protocol'
-import { SubscribeStreamConnectionRequest } from 'streamr-client-protocol'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
@@ -30,8 +30,8 @@ enum State {
 }
 
 export enum Direction {
-    OUT = 'outbound',
-    IN = 'inbound'
+    PUBLISHER = 'publisher',
+    SUBSCRIBER = 'subscriber'
 }
 
 interface ProxyConnection {
@@ -100,8 +100,8 @@ export class ProxyStreamConnectionManager {
         return this.connections.get(streamPartId)!.get(nodeId)!
     }
 
-    async openOnewayStreamConnection(streamPartId: StreamPartID, targetNodeId: string, direction: Direction): Promise<void> {
-        const rejectEvent = direction === Direction.OUT ? Event.PUBLISH_STREAM_REJECTED : Event.SUBSCRIBE_STREAM_REJECTED
+    async openProxyStreamConnection(streamPartId: StreamPartID, targetNodeId: string, direction: Direction): Promise<void> {
+        const rejectEvent = direction === Direction.PUBLISHER ? Event.PROXY_PUBLISH_STREAM_REJECTED : Event.PROXY_SUBSCRIBE_STREAM_REJECTED
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
             if (!this.streamPartManager.isSetUp(streamPartId)) {
@@ -138,10 +138,10 @@ export class ProxyStreamConnectionManager {
 
         await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
         await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
-        if (direction === Direction.OUT) {
-            await this.nodeToNode.requestPublishOnlyStreamConnection(targetNodeId, streamPartId)
+        if (direction === Direction.PUBLISHER) {
+            await this.nodeToNode.requestProxyPublishStreamConnection(targetNodeId, streamPartId)
         } else {
-            await this.nodeToNode.requestSubscribeOnlyStreamConnection(targetNodeId, streamPartId)
+            await this.nodeToNode.requestProxySubscribeStreamConnection(targetNodeId, streamPartId)
         }
     }
 
@@ -174,7 +174,7 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    async processPublishStreamRequest(message: PublishStreamConnectionRequest, nodeId: string): Promise<void> {
+    async processPublishStreamRequest(message: ProxyPublishStreamConnectionRequest, nodeId: string): Promise<void> {
         const streamPartId = message.getStreamPartID()
 
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
@@ -182,19 +182,19 @@ export class ProxyStreamConnectionManager {
         if (isAccepted) {
             this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
         }
-        await this.nodeToNode.respondToPublishOnlyStreamConnectionRequest(nodeId, streamPartId, isAccepted)
+        await this.nodeToNode.respondToProxyPublishStreamConnectionRequest(nodeId, streamPartId, isAccepted)
     }
 
-    processPublishStreamResponse(message: PublishStreamConnectionResponse, nodeId: string): void {
+    processPublishStreamResponse(message: ProxyPublishStreamConnectionResponse, nodeId: string): void {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
-            this.node.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, streamPartId)
+            this.node.emit(Event.PROXY_PUBLISH_STREAM_ACCEPTED, nodeId, streamPartId)
         } else {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(
-                Event.PUBLISH_STREAM_REJECTED,
+                Event.PROXY_PUBLISH_STREAM_REJECTED,
                 nodeId,
                 streamPartId,
                 `Target node ${nodeId} rejected publish only stream connection ${streamPartId}`
@@ -202,7 +202,7 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    async processSubscribeStreamRequest(message: SubscribeStreamConnectionRequest, nodeId: string): Promise<void> {
+    async processSubscribeStreamRequest(message: ProxySubscribeStreamConnectionRequest, nodeId: string): Promise<void> {
         const streamPartId = message.getStreamPartID()
 
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
@@ -210,19 +210,19 @@ export class ProxyStreamConnectionManager {
         if (isAccepted) {
             this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
         }
-        await this.nodeToNode.respondToSubscribeOnlyStreamConnectionRequest(nodeId, streamPartId, isAccepted)
+        await this.nodeToNode.respondToProxySubscribeStreamConnectionRequest(nodeId, streamPartId, isAccepted)
     }
 
-    processSubscribeStreamResponse(message: SubscribeStreamConnectionResponse, nodeId: string): void {
+    processSubscribeStreamResponse(message: ProxySubscribeStreamConnectionResponse, nodeId: string): void {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
-            this.node.emit(Event.SUBSCRIBE_STREAM_ACCEPTED, nodeId, streamPartId)
+            this.node.emit(Event.PROXY_SUBSCRIBE_STREAM_ACCEPTED, nodeId, streamPartId)
         } else {
             this.removeConnection(streamPartId, nodeId)
             this.node.emit(
-                Event.SUBSCRIBE_STREAM_REJECTED,
+                Event.PROXY_SUBSCRIBE_STREAM_REJECTED,
                 nodeId,
                 streamPartId,
                 `Target node ${nodeId} rejected subscribe only stream connection ${streamPartId}`
@@ -254,8 +254,8 @@ export class ProxyStreamConnectionManager {
     }
 
     isSubscribeOnlyStream(streamPartId: StreamPartID): boolean {
-        if (this.connections.get(streamPartId) && [...this.connections.values()].length > 0) {
-            return [...this.connections.get(streamPartId)!.values()][0].direction === Direction.IN
+        if (this.connections.get(streamPartId) && [...this.connections.get(streamPartId)!.values()].length > 0) {
+            return [...this.connections.get(streamPartId)!.values()][0].direction === Direction.SUBSCRIBER
         }
         return false
     }

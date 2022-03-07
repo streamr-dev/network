@@ -1,17 +1,17 @@
 import ControlMessage from '../ControlMessage'
 
-import PublishStreamConnectionRequest from "./PublishStreamConnectionRequest"
+import ProxyPublishStreamConnectionRequest from "./ProxyPublishStreamConnectionRequest"
 
 import { Serializer } from '../../../Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
-export default class PublishStreamConnectionRequestSerializerV2 extends Serializer<PublishStreamConnectionRequest> {
-    toArray(publishStreamConnectionRequest: PublishStreamConnectionRequest): any[] {
+export default class ProxyPublishStreamConnectionRequestSerializerV2 extends Serializer<ProxyPublishStreamConnectionRequest> {
+    toArray(publishStreamConnectionRequest: ProxyPublishStreamConnectionRequest): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.PublishStreamConnectionRequest,
+            ControlMessage.TYPES.ProxyPublishStreamConnectionRequest,
             publishStreamConnectionRequest.requestId,
             publishStreamConnectionRequest.streamId,
             publishStreamConnectionRequest.streamPartition,
@@ -19,7 +19,7 @@ export default class PublishStreamConnectionRequestSerializerV2 extends Serializ
         ]
     }
 
-    fromArray(arr: any[]): PublishStreamConnectionRequest {
+    fromArray(arr: any[]): ProxyPublishStreamConnectionRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -29,7 +29,7 @@ export default class PublishStreamConnectionRequestSerializerV2 extends Serializ
             senderId,
         ] = arr
 
-        return new PublishStreamConnectionRequest({
+        return new ProxyPublishStreamConnectionRequest({
             version,
             requestId,
             streamId: toStreamID(streamId),
@@ -39,4 +39,8 @@ export default class PublishStreamConnectionRequestSerializerV2 extends Serializ
     }
 }
 
-ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.PublishStreamConnectionRequest, new PublishStreamConnectionRequestSerializerV2())
+ControlMessage.registerSerializer(
+    VERSION,
+    ControlMessage.TYPES.ProxyPublishStreamConnectionRequest,
+    new ProxyPublishStreamConnectionRequestSerializerV2()
+)

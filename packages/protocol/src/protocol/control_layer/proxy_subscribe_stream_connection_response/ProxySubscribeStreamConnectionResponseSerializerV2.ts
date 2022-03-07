@@ -1,16 +1,16 @@
 import ControlMessage from '../ControlMessage'
 
-import SubscribeStreamConnectionResponse from "./SubscribeStreamConnectionResponse"
+import ProxySubscribeStreamConnectionResponse from "./ProxySubscribeStreamConnectionResponse"
 import { Serializer } from '../../../Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
-export default class SubscribeStreamConnectionResponseSerializerV2 extends Serializer<SubscribeStreamConnectionResponse> {
-    toArray(subscribeStreamConnectionResponse: SubscribeStreamConnectionResponse): any[] {
+export default class ProxySubscribeStreamConnectionResponseSerializerV2 extends Serializer<ProxySubscribeStreamConnectionResponse> {
+    toArray(subscribeStreamConnectionResponse: ProxySubscribeStreamConnectionResponse): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.SubscribeStreamConnectionResponse,
+            ControlMessage.TYPES.ProxySubscribeStreamConnectionResponse,
             subscribeStreamConnectionResponse.requestId,
             subscribeStreamConnectionResponse.streamId,
             subscribeStreamConnectionResponse.streamPartition,
@@ -19,7 +19,7 @@ export default class SubscribeStreamConnectionResponseSerializerV2 extends Seria
         ]
     }
 
-    fromArray(arr: any[]): SubscribeStreamConnectionResponse {
+    fromArray(arr: any[]): ProxySubscribeStreamConnectionResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -30,7 +30,7 @@ export default class SubscribeStreamConnectionResponseSerializerV2 extends Seria
             accepted
         ] = arr
 
-        return new SubscribeStreamConnectionResponse({
+        return new ProxySubscribeStreamConnectionResponse({
             version,
             requestId,
             streamId: toStreamID(streamId),
@@ -43,6 +43,6 @@ export default class SubscribeStreamConnectionResponseSerializerV2 extends Seria
 
 ControlMessage.registerSerializer(
     VERSION,
-    ControlMessage.TYPES.SubscribeStreamConnectionResponse,
-    new SubscribeStreamConnectionResponseSerializerV2()
+    ControlMessage.TYPES.ProxySubscribeStreamConnectionResponse,
+    new ProxySubscribeStreamConnectionResponseSerializerV2()
 )

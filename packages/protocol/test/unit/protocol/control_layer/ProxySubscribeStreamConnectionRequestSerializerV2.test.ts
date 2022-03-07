@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { SubscribeStreamConnectionRequest, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxySubscribeStreamConnectionRequest, ControlMessage, toStreamID } from '../../../../src/index'
 
 const VERSION = 2
 const streamId = toStreamID('stream')
@@ -8,7 +8,7 @@ const streamPartition = 0
 const senderId = 'node'
 
 // Message definitions
-const message = new SubscribeStreamConnectionRequest({
+const message = new ProxySubscribeStreamConnectionRequest({
     version: VERSION,
     streamId,
     streamPartition,
@@ -17,7 +17,7 @@ const message = new SubscribeStreamConnectionRequest({
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    ControlMessage.TYPES.SubscribeStreamConnectionRequest,
+    ControlMessage.TYPES.ProxySubscribeStreamConnectionRequest,
     'requestId',
     streamId,
     streamPartition,

@@ -9,13 +9,13 @@ interface Options extends ControlMessageOptions {
     streamPartition: number
 }
 
-export default class PublishStreamConnectionRequest extends ControlMessage {
+export default class ProxySubscribeStreamConnectionRequest extends ControlMessage {
     senderId: string
     streamId: StreamID
     streamPartition: number
 
     constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition }: Options) {
-        super(version, ControlMessage.TYPES.PublishStreamConnectionRequest, requestId)
+        super(version, ControlMessage.TYPES.ProxySubscribeStreamConnectionRequest, requestId)
 
         validateIsNotNullOrUndefined('senderId', senderId)
         this.senderId = senderId

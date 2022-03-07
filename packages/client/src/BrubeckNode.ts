@@ -220,7 +220,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            await this.cachedNode!.joinStreamPartAsProxyPublisher(streamPartId, nodeId)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
@@ -231,7 +231,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.leaveProxyPublishingStreamPart(streamPartId, nodeId)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
@@ -242,7 +242,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.joinStreamPartAsPureSubscriber(streamPartId, nodeId)
+            await this.cachedNode!.joinStreamPartAsProxySubscriber(streamPartId, nodeId)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
@@ -253,7 +253,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.leavePureSubscribingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.leaveProxySubscribingStreamPart(streamPartId, nodeId)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }

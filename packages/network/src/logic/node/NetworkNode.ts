@@ -24,20 +24,20 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openOutboundStreamConnection(streamPartId, contactNodeId)
+    async joinStreamPartAsProxyPublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.openProxyPublisherStreamConnection(streamPartId, contactNodeId)
     }
 
-    async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeOutboundStreamConnection(streamPartId, contactNodeId)
+    async leaveProxyPublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.closeProxyPublisherStreamConnection(streamPartId, contactNodeId)
     }
 
-    async joinStreamPartAsPureSubscriber(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openInboundStreamConnection(streamPartId, contactNodeId)
+    async joinStreamPartAsProxySubscriber(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.openProxySubscriberStreamConnection(streamPartId, contactNodeId)
     }
 
-    async leavePureSubscribingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeInboundStreamConnection(streamPartId, contactNodeId)
+    async leaveProxySubscribingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
+        await this.closeProxySubscriberStreamConnection(streamPartId, contactNodeId)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

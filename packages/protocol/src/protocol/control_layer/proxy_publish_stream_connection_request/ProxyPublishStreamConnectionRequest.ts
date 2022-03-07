@@ -1,23 +1,21 @@
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
-import {validateIsInteger, validateIsNotNullOrUndefined, validateIsString} from '../../../utils/validations'
+import { validateIsInteger, validateIsNotNullOrUndefined, validateIsString } from '../../../utils/validations'
 import { StreamID } from '../../../utils/StreamID'
-import { StreamPartID, toStreamPartID } from "../../../utils"
+import { StreamPartID, toStreamPartID } from "../../../utils/StreamPartID"
 
 interface Options extends ControlMessageOptions {
     senderId: string
     streamId: StreamID
     streamPartition: number
-    accepted: boolean
 }
 
-export default class PublishStreamConnectionResponse extends ControlMessage {
+export default class ProxyPublishStreamConnectionRequest extends ControlMessage {
     senderId: string
     streamId: StreamID
     streamPartition: number
-    accepted: boolean
 
-    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, accepted }: Options) {
-        super(version, ControlMessage.TYPES.PublishStreamConnectionResponse, requestId)
+    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition }: Options) {
+        super(version, ControlMessage.TYPES.ProxyPublishStreamConnectionRequest, requestId)
 
         validateIsNotNullOrUndefined('senderId', senderId)
         this.senderId = senderId
@@ -27,9 +25,6 @@ export default class PublishStreamConnectionResponse extends ControlMessage {
 
         validateIsInteger('streamPartition', streamPartition)
         this.streamPartition = streamPartition
-
-        validateIsNotNullOrUndefined('accepted', accepted)
-        this.accepted = accepted
     }
 
     getStreamPartID(): StreamPartID {

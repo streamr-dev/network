@@ -10,14 +10,14 @@ interface Options extends ControlMessageOptions {
     accepted: boolean
 }
 
-export default class SubscribeStreamConnectionResponse extends ControlMessage {
+export default class ProxyPublishStreamConnectionResponse extends ControlMessage {
     senderId: string
     streamId: StreamID
     streamPartition: number
     accepted: boolean
 
     constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, accepted }: Options) {
-        super(version, ControlMessage.TYPES.SubscribeStreamConnectionResponse, requestId)
+        super(version, ControlMessage.TYPES.ProxyPublishStreamConnectionResponse, requestId)
 
         validateIsNotNullOrUndefined('senderId', senderId)
         this.senderId = senderId

@@ -1,16 +1,16 @@
 import ControlMessage from '../ControlMessage'
 
-import PublishStreamConnectionResponse from "./PublishStreamConnectionResponse"
+import ProxyPublishStreamConnectionResponse from "./ProxyPublishStreamConnectionResponse"
 import { Serializer } from '../../../Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
-export default class PublishStreamConnectionResponseSerializerV2 extends Serializer<PublishStreamConnectionResponse> {
-    toArray(publishStreamConnectionResponse: PublishStreamConnectionResponse): any[] {
+export default class ProxyPublishStreamConnectionResponseSerializerV2 extends Serializer<ProxyPublishStreamConnectionResponse> {
+    toArray(publishStreamConnectionResponse: ProxyPublishStreamConnectionResponse): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.PublishStreamConnectionResponse,
+            ControlMessage.TYPES.ProxyPublishStreamConnectionResponse,
             publishStreamConnectionResponse.requestId,
             publishStreamConnectionResponse.streamId,
             publishStreamConnectionResponse.streamPartition,
@@ -19,7 +19,7 @@ export default class PublishStreamConnectionResponseSerializerV2 extends Seriali
         ]
     }
 
-    fromArray(arr: any[]): PublishStreamConnectionResponse {
+    fromArray(arr: any[]): ProxyPublishStreamConnectionResponse {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -30,7 +30,7 @@ export default class PublishStreamConnectionResponseSerializerV2 extends Seriali
             accepted
         ] = arr
 
-        return new PublishStreamConnectionResponse({
+        return new ProxyPublishStreamConnectionResponse({
             version,
             requestId,
             streamId: toStreamID(streamId),
@@ -41,4 +41,8 @@ export default class PublishStreamConnectionResponseSerializerV2 extends Seriali
     }
 }
 
-ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.PublishStreamConnectionResponse, new PublishStreamConnectionResponseSerializerV2())
+ControlMessage.registerSerializer(
+    VERSION,
+    ControlMessage.TYPES.ProxyPublishStreamConnectionResponse,
+    new ProxyPublishStreamConnectionResponseSerializerV2()
+)

@@ -1,17 +1,17 @@
 import ControlMessage from '../ControlMessage'
 
-import SubscribeStreamConnectionRequest from "./SubscribeStreamConnectionRequest"
+import ProxySubscribeStreamConnectionRequest from "./ProxySubscribeStreamConnectionRequest"
 
 import { Serializer } from '../../../Serializer'
 import { toStreamID } from '../../../../src/utils/StreamID'
 
 const VERSION = 2
 
-export default class SubscribeStreamConnectionRequestSerializerV2 extends Serializer<SubscribeStreamConnectionRequest> {
-    toArray(subscribeStreamConnectionRequest: SubscribeStreamConnectionRequest): any[] {
+export default class ProxySubscribeStreamConnectionRequestSerializerV2 extends Serializer<ProxySubscribeStreamConnectionRequest> {
+    toArray(subscribeStreamConnectionRequest: ProxySubscribeStreamConnectionRequest): any[] {
         return [
             VERSION,
-            ControlMessage.TYPES.SubscribeStreamConnectionRequest,
+            ControlMessage.TYPES.ProxySubscribeStreamConnectionRequest,
             subscribeStreamConnectionRequest.requestId,
             subscribeStreamConnectionRequest.streamId,
             subscribeStreamConnectionRequest.streamPartition,
@@ -19,7 +19,7 @@ export default class SubscribeStreamConnectionRequestSerializerV2 extends Serial
         ]
     }
 
-    fromArray(arr: any[]): SubscribeStreamConnectionRequest {
+    fromArray(arr: any[]): ProxySubscribeStreamConnectionRequest {
         const [
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -29,7 +29,7 @@ export default class SubscribeStreamConnectionRequestSerializerV2 extends Serial
             senderId,
         ] = arr
 
-        return new SubscribeStreamConnectionRequest({
+        return new ProxySubscribeStreamConnectionRequest({
             version,
             requestId,
             streamId: toStreamID(streamId),
@@ -39,4 +39,7 @@ export default class SubscribeStreamConnectionRequestSerializerV2 extends Serial
     }
 }
 
-ControlMessage.registerSerializer(VERSION, ControlMessage.TYPES.SubscribeStreamConnectionRequest, new SubscribeStreamConnectionRequestSerializerV2())
+ControlMessage.registerSerializer(VERSION,
+    ControlMessage.TYPES.ProxySubscribeStreamConnectionRequest,
+    new ProxySubscribeStreamConnectionRequestSerializerV2()
+)

@@ -1,23 +1,23 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { PublishStreamConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxySubscribeStreamConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
 
-describe('PublishStreamConnectionResponse', () => {
+describe('ProxySubscribeStreamConnectionResponse', () => {
     const streamId = toStreamID('stream')
     const streamPartition = 0
     const senderId = 'node'
     const accepted = true
 
     it('should create the latest version', () => {
-        const msg = new PublishStreamConnectionResponse({
+        const msg = new ProxySubscribeStreamConnectionResponse({
             requestId: 'requestId',
             streamId,
             streamPartition,
             senderId,
             accepted
         })
-        assert(msg instanceof PublishStreamConnectionResponse)
+        assert(msg instanceof ProxySubscribeStreamConnectionResponse)
         assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
         assert.strictEqual(msg.requestId, 'requestId')
         assert.strictEqual(msg.streamId, streamId)
@@ -28,7 +28,7 @@ describe('PublishStreamConnectionResponse', () => {
     })
 
     it('throws on null streamId', () => {
-        assert.throws(() => new PublishStreamConnectionResponse({
+        assert.throws(() => new ProxySubscribeStreamConnectionResponse({
             requestId: 'requestId',
             streamId: null as any,
             streamPartition,
@@ -38,7 +38,7 @@ describe('PublishStreamConnectionResponse', () => {
     })
 
     it('throws on null streamPartition', () => {
-        assert.throws(() => new PublishStreamConnectionResponse({
+        assert.throws(() => new ProxySubscribeStreamConnectionResponse({
             requestId: 'requestId',
             streamId,
             streamPartition: null as any,
@@ -48,7 +48,7 @@ describe('PublishStreamConnectionResponse', () => {
     })
 
     it('throws on null senderId', () => {
-        assert.throws(() => new PublishStreamConnectionResponse({
+        assert.throws(() => new ProxySubscribeStreamConnectionResponse({
             requestId: 'requestId',
             streamId,
             streamPartition,
@@ -58,7 +58,7 @@ describe('PublishStreamConnectionResponse', () => {
     })
 
     it('throws on null accepted', () => {
-        assert.throws(() => new PublishStreamConnectionResponse({
+        assert.throws(() => new ProxySubscribeStreamConnectionResponse({
             requestId: 'requestId',
             streamId,
             streamPartition,
