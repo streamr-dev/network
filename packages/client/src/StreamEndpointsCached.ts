@@ -1,11 +1,11 @@
 /**
  * Cached Subset of StreamEndpoints.
  */
-import { StreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { CacheConfig, Config } from './Config'
+import { CacheConfig, ConfigInjectionToken } from './Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from './permission'
 
@@ -13,13 +13,13 @@ const SEPARATOR = '|' // always use SEPARATOR for cache key
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpointsCached implements Context {
-    id = instanceId(this)
-    debug
+    readonly id = instanceId(this)
+    readonly debug
 
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistry)) private streamRegistry: StreamRegistry,
-        @inject(Config.Cache) private cacheOptions: CacheConfig
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
         this.debug = context.debug.extend(this.id)
     }
@@ -47,7 +47,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: string) {
+    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
@@ -58,7 +58,7 @@ export class StreamEndpointsCached implements Context {
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: string) {
+    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 

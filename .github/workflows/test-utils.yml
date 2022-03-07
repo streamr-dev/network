@@ -1,5 +1,6 @@
 ---
-name: test-utils – Lint, Test and Publish
+#Lint, Test and Publish
+name: TestUtils
 
 on:
   push:
@@ -19,18 +20,14 @@ defaults:
 
 jobs:
   test-unit:
-    name: Lint & Unit Test on Node ${{ matrix.node-version }}
+    name: Lint & Unit Test
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [16.x]
-
     steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
@@ -38,7 +35,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-test-utils
 
       - name: eslint

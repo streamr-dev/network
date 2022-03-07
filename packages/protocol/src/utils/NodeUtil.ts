@@ -1,9 +1,10 @@
 import { entropyToMnemonic } from '@ethersproject/hdnode'
+import { EthereumAddress } from './types'
 
 /**
  * @param address - valid eth address with leading 0x
  */
-export const generateMnemonicFromAddress = (address: string): string => {
+export const generateMnemonicFromAddress = (address: EthereumAddress): string => {
     const prefixedAddress = typeof address === 'string' && !address.startsWith('0x') ? `0x${address}` : address
     return entropyToMnemonic(prefixedAddress)
         .split(' ')

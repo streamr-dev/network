@@ -1,5 +1,6 @@
 ---
-name: Network – Lint, Test and Publish
+# Lint, Test and Publish
+name: Network
 
 on:
   push:
@@ -21,8 +22,8 @@ jobs:
     name: Lint & Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
@@ -30,7 +31,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit

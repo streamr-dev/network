@@ -40,6 +40,6 @@ export class StorageEventListener {
     }
 
     async destroy(): Promise<void> {
-        await this.streamrClient.unRegisterStorageEventListeners()
+        await this.streamrClient.unregisterStorageEventListeners()
     }
 }

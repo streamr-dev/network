@@ -5,21 +5,20 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamPartID, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId, CounterId, AggregatedError, instanceId } from '../../src/utils'
 import { Debug, format } from '../../src/utils/log'
 import { MaybeAsync, StreamDefinition } from '../../src/types'
-import { StreamProperties } from '../../src/Stream'
-import clientOptions from '../../src/ConfigTest'
+import { Stream, StreamProperties } from '../../src/Stream'
+import { ConfigTest } from '../../src/ConfigTest'
 
 import Signal from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
-
-export { clientOptions }
+import { StreamPermission } from '../../src/permission'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -137,7 +136,7 @@ export const createMockAddress = () => '0x000000000000000000000000000' + Date.no
 export function getRandomClient() {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
     return new StreamrClient({
-        ...clientOptions,
+        ...ConfigTest,
         auth: {
             privateKey: wallet.privateKey
         }
@@ -168,12 +167,6 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
         id: createRelativeTestStreamId(module),
         ...props
     })
-    await until(
-        async () => { return streamrClient.streamExistsOnTheGraph(stream.id) },
-        20000,
-        500,
-        () => `timed out while waiting for streamrClient.streamExistsOnTheGraph(${stream.id})`
-    )
     return stream
 }
 
@@ -188,7 +181,7 @@ export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: Depen
             key = await fetchPrivateKeyWithGas()
         }
         const c = new StreamrClient({
-            ...clientOptions,
+            ...ConfigTest,
             auth: {
                 privateKey: key,
             },
@@ -458,6 +451,7 @@ export function publishTestMessagesGenerator(
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
+    // @ts-expect-error
     const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
@@ -483,6 +477,7 @@ export function getPublishTestStreamMessages(
         }
 
         const contents = new WeakMap()
+        // @ts-expect-error
         client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
@@ -538,6 +533,7 @@ export function getPublishTestMessages(
 
 export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (lastPublished: StreamMessage, opts = {}) => {
+        // @ts-expect-error
         return client.publisher.waitForStorage(lastPublished, {
             ...defaultOpts,
             ...opts,
@@ -660,5 +656,38 @@ export class Multimap<K, V> {
 
     keys(): K[] {
         return Array.from(this.values.keys())
+    }
+}
+
+// eslint-disable-next-line no-undef
+export const createPartitionedTestStream = async (module: NodeModule): Promise<Stream> => {
+    const client = new StreamrClient({
+        ...ConfigTest,
+        auth: {
+            privateKey: await fetchPrivateKeyWithGas()
+        }
+    })
+    const stream = await createTestStream(client, module, {
+        partitions: MAX_PARTITION_COUNT
+    })
+    await stream.grantPermissions({
+        public: true,
+        permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
+    })
+    await client.destroy()
+    return stream
+}
+
+export async function* createStreamPartIterator(stream: Stream): AsyncGenerator<StreamPartID> {
+    for (let partition = 0; partition < stream.partitions; partition++) {
+        yield toStreamPartID(stream.id, partition)
+    }
+}
+
+export const toStreamDefinition = (streamPart: StreamPartID): { id: string, partition: number } => {
+    const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPart)
+    return {
+        id,
+        partition
     }
 }

@@ -3,16 +3,14 @@
  */
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
-import { scoped, Lifecycle, inject, DependencyContainer, delay } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import {
     ContentType,
     EncryptionType,
+    EthereumAddress,
     SignatureType,
     StreamMessageType,
-    EthereumAddress,
-    StreamPartIDUtils,
-    StreamPartID,
-    toStreamPartID
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
@@ -20,10 +18,7 @@ import { Context } from './utils/Context'
 
 import { Stream } from './Stream'
 import { ErrorCode, NotFoundError } from './authFetch'
-import { BrubeckContainer } from './Container'
-import { Config, ConnectionConfig } from './Config'
 import { Rest } from './Rest'
-import StreamrEthereum from './Ethereum'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -41,7 +36,7 @@ export interface StreamMessageAsObject { // TODO this could be in streamr-protoc
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId: string
+    publisherId: EthereumAddress
     msgChainId: string
     messageType: StreamMessageType
     contentType: ContentType
@@ -74,21 +69,20 @@ function getKeepAliveAgentForUrl(url: string) {
     throw new Error(`Unknown protocol in URL: ${url}`)
 }
 
-/** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpoints implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
 
+    /** @internal */
     constructor(
         context: Context,
-        @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Connection) private readonly options: ConnectionConfig,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
-        private readonly ethereum: StreamrEthereum
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -114,6 +108,7 @@ export class StreamEndpoints implements Context {
         }
     }
 
+    /** @internal */
     async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject[]> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
@@ -137,18 +132,6 @@ export class StreamEndpoints implements Context {
             restUrl: nodeUrl
         })
         return json
-    }
-
-    async getStreamPartsByStorageNode(nodeAddress: EthereumAddress): Promise<StreamPartID[]> {
-        const { streams } = await this.storageNodeRegistry.getStoredStreamsOf(nodeAddress)
-
-        const result: StreamPartID[] = []
-        streams.forEach((stream: Stream) => {
-            for (let i = 0; i < stream.partitions; i++) {
-                result.push(toStreamPartID(stream.id, i))
-            }
-        })
-        return result
     }
 
     async publishHttp(

@@ -3,7 +3,7 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from '../utils'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
-import { Config, CacheConfig } from '../Config'
+import { ConfigInjectionToken, CacheConfig } from '../Config'
 import Ethereum from '../Ethereum'
 
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
@@ -13,16 +13,19 @@ import { StreamID } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class GroupKeyStoreFactory implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
     initialGroupKeys
+    /** @internal */
     getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
     constructor(
         context: Context,
         private ethereum: Ethereum,
-        @inject(Config.Cache) cacheConfig: CacheConfig,
-        @inject(Config.Encryption) encryptionConfig: EncryptionConfig
+        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
+        @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -58,21 +61,25 @@ export default class GroupKeyStoreFactory implements Context {
         return store
     }
 
+    /** @internal */
     async useGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.useGroupKey()
     }
 
+    /** @internal */
     async rotateGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.rotateGroupKey()
     }
 
+    /** @internal */
     async setNextGroupKey(streamId: StreamID, newKey: GroupKey) {
         const store = await this.getStore(streamId)
         return store.setNextGroupKey(newKey)
     }
 
+    /** @internal */
     async rekey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.rekey()

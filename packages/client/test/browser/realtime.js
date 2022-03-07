@@ -10,7 +10,7 @@ describe('StreamrClient Realtime', () => {
         const restUrl = process.env.REST_URL ? `&REST_URL=${encodeURIComponent(process.env.REST_URL)}` : ''
         const browserUrl = `http://localhost:8880?streamName=${streamName}${url}${restUrl}`
         console.info(browserUrl)
-        await browser.windowMaximize()
+        await browser.maximizeWindow()
         return browser.url(browserUrl)
     })
 

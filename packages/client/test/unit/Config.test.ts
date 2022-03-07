@@ -1,13 +1,13 @@
 import { StreamrClient } from '../../src/StreamrClient'
-import { DEFAULTS } from '../../src/Config'
-import config from '../../src/ConfigTest'
+import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
+import { ConfigTest } from '../../src/ConfigTest'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 describe('Config', () => {
     describe('validate', () => {
         it('additional property', () => {
             expect(() => {
-                return new StreamrClient({
+                return createStrictConfig({
                     network: {
                         foo: 'bar'
                     }
@@ -17,7 +17,7 @@ describe('Config', () => {
 
         it('missing property', () => {
             expect(() => {
-                return new StreamrClient({
+                return createStrictConfig({
                     network: {
                         trackers: [{
                             id: '0x1234567890123456789012345678901234567890',
@@ -31,7 +31,7 @@ describe('Config', () => {
         describe('invalid property format', () => {
             it('primitive', () => {
                 expect(() => {
-                    return new StreamrClient({
+                    return createStrictConfig({
                         network: {
                             acceptProxyConnections: 123
                         }
@@ -41,7 +41,7 @@ describe('Config', () => {
 
             it('enum', () => {
                 expect(() => {
-                    return new StreamrClient({
+                    return createStrictConfig({
                         verifySignatures: 'foo'
                     } as any)
                 }).toThrow('verifySignatures must be equal to one of the allowed values')
@@ -49,7 +49,7 @@ describe('Config', () => {
 
             it('ajv-format', () => {
                 expect(() => {
-                    return new StreamrClient({
+                    return createStrictConfig({
                         theGraphUrl: 'foo'
                     } as any)
                 }).toThrow('/theGraphUrl must match format "uri"')
@@ -57,7 +57,7 @@ describe('Config', () => {
 
             it('ethereum address', () => {
                 expect(() => {
-                    return new StreamrClient({
+                    return createStrictConfig({
                         auth: {
                             address: 'foo'
                         }
@@ -67,7 +67,7 @@ describe('Config', () => {
 
             it('ethereum private key', () => {
                 expect(() => {
-                    return new StreamrClient({
+                    return createStrictConfig({
                         auth: {
                             privateKey: 'foo'
                         }
@@ -92,19 +92,19 @@ describe('Config', () => {
         })
 
         it('can override network.trackers arrays', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient(config)
-            expect(clientOverrides.options.network.trackers).not.toEqual(clientDefaults.options.network.trackers)
-            expect(clientOverrides.options.network.trackers).toEqual(config.network.trackers)
+            const clientDefaults = createStrictConfig()
+            const clientOverrides = createStrictConfig(ConfigTest)
+            expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
+            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network.trackers)
         })
 
         it('network can be empty', () => {
-            const clientDefaults = new StreamrClient()
-            const clientOverrides = new StreamrClient({
+            const clientDefaults = createStrictConfig()
+            const clientOverrides = createStrictConfig({
                 network: {}
             })
-            expect(clientOverrides.options.network).toEqual(clientDefaults.options.network)
-            expect(clientOverrides.options.network.trackers).toEqual(DEFAULTS.network.trackers)
+            expect(clientOverrides.network).toEqual(clientDefaults.network)
+            expect(clientOverrides.network.trackers).toEqual(STREAM_CLIENT_DEFAULTS.network.trackers)
         })
 
         it('can override trackers', () => {
@@ -115,14 +115,14 @@ describe('Config', () => {
                     http: 'https://brubeck3.streamr.network:30401'
                 },
             ]
-            const clientOverrides = new StreamrClient({
+            const clientOverrides = createStrictConfig({
                 network: {
                     trackers,
                 }
             })
-            expect(clientOverrides.options.network.trackers).toEqual(trackers)
-            expect(clientOverrides.options.network.trackers).not.toBe(trackers)
-            expect((clientOverrides.options.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
+            expect(clientOverrides.network.trackers).toEqual(trackers)
+            expect(clientOverrides.network.trackers).not.toBe(trackers)
+            expect((clientOverrides.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
         })
 
         it('can override debug settings', () => {
@@ -138,24 +138,24 @@ describe('Config', () => {
                 }
             }
 
-            const clientDefaults = new StreamrClient()
-            const clientOverrides1 = new StreamrClient({
+            const clientDefaults = createStrictConfig()
+            const clientOverrides1 = createStrictConfig({
                 debug: debugPartial,
             })
-            const clientOverrides2 = new StreamrClient({
+            const clientOverrides2 = createStrictConfig({
                 debug: debugFull,
             })
-            expect(clientOverrides1.options.debug).toEqual({
-                ...clientDefaults.options.debug,
+            expect(clientOverrides1.debug).toEqual({
+                ...clientDefaults.debug,
                 inspectOpts: {
-                    ...clientDefaults.options.debug.inspectOpts,
+                    ...clientDefaults.debug.inspectOpts,
                     ...debugPartial.inspectOpts,
                 }
             })
-            expect(clientOverrides2.options.debug).toEqual({
-                ...clientDefaults.options.debug,
+            expect(clientOverrides2.debug).toEqual({
+                ...clientDefaults.debug,
                 inspectOpts: {
-                    ...clientDefaults.options.debug.inspectOpts,
+                    ...clientDefaults.debug.inspectOpts,
                     ...debugFull.inspectOpts,
                 }
             })

@@ -17,6 +17,7 @@ export default class StubbedStreamrClient extends StreamrClient {
         return new Stream({
             id: toStreamID('streamId'),
             partitions: 1,
+        // @ts-expect-error
         }, this.container)
     }
 }

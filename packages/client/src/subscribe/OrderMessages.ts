@@ -2,7 +2,7 @@
  * Makes OrderingUtil more compatible with use in pipeline.
  */
 import { injectable } from 'tsyringe'
-import { OrderingUtil, StreamMessage, StreamPartID, MessageRef } from 'streamr-client-protocol'
+import { OrderingUtil, StreamMessage, StreamPartID, MessageRef, EthereumAddress } from 'streamr-client-protocol'
 
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
@@ -19,8 +19,8 @@ import { SubscribeConfig } from '../Config'
  */
 @injectable()
 export default class OrderMessages<T> implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
     stopSignal = Signal.once()
     done = false
     resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
@@ -61,7 +61,7 @@ export default class OrderMessages<T> implements Context {
         this.orderingUtil.on('error', this.maybeClose) // probably noop
     }
 
-    async onGap(from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) {
+    async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) {
         if (this.done || !this.enabled) { return }
         this.debug('gap %o', {
             streamPartId: this.streamPartId, publisherId, msgChainId, from, to,

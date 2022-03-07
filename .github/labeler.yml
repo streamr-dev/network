@@ -33,3 +33,5 @@ cli-tools:
   - 'packages/cli-tools/**/*'
 dev-config:
   - 'packages/dev-config/*'
+changelog:
+  - 'packages/*/CHANGELOG.md'

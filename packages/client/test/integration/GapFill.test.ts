@@ -2,13 +2,14 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { BrubeckClientConfig } from '../../src/Config'
+import { StreamrClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, getCreateClient, describeRepeats, Msg } from '../test-utils/utils'
+import { getPublishTestStreamMessages, createTestStream, describeRepeats, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -36,17 +37,18 @@ describeRepeats('GapFill', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
+    let clientFactory: ClientFactory
 
-    const createClient = getCreateClient({
-        maxRetries: 2,
-        maxGapRequests: 20,
-        gapFillTimeout: 500,
-        retryResendAfter: 1000,
-    })
-
-    async function setupClient(opts: BrubeckClientConfig) {
+    async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
-        client = await createClient(opts)
+        client = clientFactory.createClient({
+            maxRetries: 2,
+            maxGapRequests: 20,
+            gapFillTimeout: 500,
+            retryResendAfter: 1000,
+            ...opts
+        })
+        // @ts-expect-error
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module, {
@@ -59,6 +61,7 @@ describeRepeats('GapFill', () => {
     }
 
     beforeEach(async () => {
+        clientFactory = createClientFactory()
         expectErrors = 0
         onError = jest.fn()
     })
@@ -97,6 +100,7 @@ describeRepeats('GapFill', () => {
 
         describe('realtime (uses resend)', () => {
             it('can fill single gap', async () => {
+                // @ts-expect-error
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
@@ -266,6 +270,7 @@ describeRepeats('GapFill', () => {
                 maxGapRequests: 99 // would time out test if doesn't give up
             })
 
+            // @ts-expect-error
             const calledResend = jest.spyOn(client.resends, 'range')
 
             const node = await client.getNode()
@@ -307,6 +312,7 @@ describeRepeats('GapFill', () => {
 
             await client.connect()
 
+            // @ts-expect-error
             const calledResend = jest.spyOn(client.resends, 'range')
             const node = await client.getNode()
             let publishCount = 0

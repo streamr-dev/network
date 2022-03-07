@@ -59,8 +59,8 @@ export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMes
 
 @scoped(Lifecycle.ContainerScoped)
 export default class PublishPipeline implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
     streamMessageQueue!: PushPipeline<PublishQueueIn, PublishQueueOut>
     /** signs, encrypts then publishes messages */
@@ -186,8 +186,6 @@ export default class PublishPipeline implements Context, Stoppable {
      * Creates a Defer to be resolved when message gets sent to node.
      */
     async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
-        // TODO the logged object contains a huge streamDefiniton if a Stream object is
-        // used -> truncate to minimal e.g. with streamDefinitionToString?
         this.debug('publish >> %o', publishMetadata)
         this.startQueue()
 

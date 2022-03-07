@@ -3,7 +3,8 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyErrorResponse,
-    StreamIDUtils
+    StreamIDUtils,
+    EthereumAddress
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -61,8 +62,8 @@ const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_T
 
 @scoped(Lifecycle.ContainerScoped)
 export class KeyExchangeStream implements Context, Stoppable {
-    id
-    debug
+    readonly id
+    readonly debug
     subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }
     isStopped = false
     constructor(
@@ -97,7 +98,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         this.isStopped = true
     }
 
-    async request(publisherId: string, request: GroupKeyRequest) {
+    async request(publisherId: EthereumAddress, request: GroupKeyRequest) {
         if (this.isStopped) { return undefined }
 
         const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
@@ -148,7 +149,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         }
     }
 
-    async response(subscriberId: string, response: GroupKeyResponse | GroupKeyErrorResponse) {
+    async response(subscriberId: EthereumAddress, response: GroupKeyResponse | GroupKeyErrorResponse) {
         if (this.isStopped) { return undefined }
 
         // hack overriding toStreamMessage method to set correct encryption type

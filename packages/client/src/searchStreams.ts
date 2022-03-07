@@ -4,6 +4,7 @@ import { StreamQueryResult } from './StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from './permission'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { filter, unique } from './utils/GeneratorUtils'
+import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
 
 export interface SearchStreamsPermissionFilter {
     user: EthereumAddress
@@ -17,14 +18,14 @@ export interface SearchStreamsPermissionFilter {
 
 export type SearchStreamsResultItem = {
     id: string
-    userAddress: string
+    userAddress: EthereumAddress
     stream: StreamQueryResult
 } & ChainPermissions
 
 export async function* fetchSearchStreamsResultFromTheGraph(
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
-    graphQLClient: GraphQLClient,
+    graphQLClient: SynchronizedGraphQLClient,
 ): AsyncGenerator<SearchStreamsResultItem> {
     const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, lastId, pageSize)

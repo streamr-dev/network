@@ -2,21 +2,22 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
-import { StreamEndpoints } from '../StreamEndpoints'
 import { BrubeckContainer } from '../Container'
 import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { range } from 'lodash'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -43,14 +44,14 @@ export type ResendLastOptions = {
 
 export type ResendFromOptions = {
     from: ResendRef
-    publisherId?: string
+    publisherId?: EthereumAddress
 }
 
 export type ResendRangeOptions = {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
-    publisherId?: string
+    publisherId?: EthereumAddress
 }
 
 export type ResendOptions = ResendLastOptions | ResendFromOptions | ResendRangeOptions
@@ -69,14 +70,14 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 
 @scoped(Lifecycle.ContainerScoped)
 export default class Resend implements Context {
-    id
-    debug
+    readonly id
+    readonly debug
 
     constructor(
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
+        @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
         @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
@@ -86,6 +87,7 @@ export default class Resend implements Context {
 
     /**
      * Call last/from/range as appropriate based on arguments
+     * @category Important
      */
     async resend<T>(
         streamDefinition: StreamDefinition,
@@ -101,6 +103,27 @@ export default class Resend implements Context {
         }
 
         return sub
+    }
+
+    /**
+     * Resend for all partitions of a stream.
+     */
+    async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
+        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        if (partitions === 1) {
+            // nothing interesting to do, treat as regular subscription
+            return this.resend<T>(streamId, options, onMessage)
+        }
+
+        // create resend for each partition
+        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
+            return this.resend<T>({
+                streamId,
+                partition: streamPartition,
+            }, options)
+        }))
+
+        return pullManyToOne(this, subs, onMessage)
     }
 
     private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
@@ -184,14 +207,14 @@ export default class Resend implements Context {
         })
     }
 
-    async from<T>(streamPartId: StreamPartID, {
+    private async from<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
     }: {
         fromTimestamp: number,
         fromSequenceNumber?: number,
-        publisherId?: string
+        publisherId?: EthereumAddress
     }): Promise<MessageStream<T>> {
         return this.fetchStream('from', streamPartId, {
             fromTimestamp,
@@ -200,6 +223,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
@@ -212,7 +236,7 @@ export default class Resend implements Context {
         fromSequenceNumber?: number,
         toTimestamp: number,
         toSequenceNumber?: number,
-        publisherId?: string,
+        publisherId?: EthereumAddress,
         msgChainId?: string
     }): Promise<MessageStream<T>> {
         return this.fetchStream('range', streamPartId, {
@@ -225,6 +249,7 @@ export default class Resend implements Context {
         })
     }
 
+    /** @internal */
     async stop() {
         await this.storageNodeRegistry.stop()
     }

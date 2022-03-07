@@ -11,9 +11,10 @@ on:
 
 jobs:
   label:
+    name: Label
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v3.0.2
+      - uses: actions/labeler@v4
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           sync-labels: true

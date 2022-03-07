@@ -4,8 +4,9 @@ import { container, DependencyContainer } from 'tsyringe'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
-import clientOptions from '../../src/ConfigTest'
+import { ConfigTest } from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 describe('Session', () => {
     let session: Session
@@ -14,12 +15,16 @@ describe('Session', () => {
     let loginFunction: jest.MockedFunction<any>
     let logoutFunction: jest.MockedFunction<any>
 
-    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => new StreamrClient({
-        ...clientOptions,
-        autoConnect: false,
-        autoDisconnect: false,
-        ...opts,
-    }, parentContainer)
+    const createClient = (opts: any = {}, parentContainer?: DependencyContainer) => {
+        const config = {
+            ...ConfigTest,
+            auth: {
+                privateKey: fastPrivateKey(),
+            },
+            ...opts,
+        }
+        return new StreamrClient(config, parentContainer)
+    }
 
     function setup(opts?: any) {
         const childContainer = container.createChildContainer()
@@ -39,6 +44,7 @@ describe('Session', () => {
 
         clientSessionToken = createClient(opts, childContainer)
 
+        // @ts-expect-error
         session = clientSessionToken.session
     }
 
@@ -53,19 +59,21 @@ describe('Session', () => {
 
     describe('instantiation', () => {
         it('should get token if set with a token', async () => {
+            const SESSION_TOKEN = 'test'
             const clientNone = createClient({
                 auth: {
-                    sessionToken: 'test'
+                    sessionToken: SESSION_TOKEN
                 },
             })
             const sessionToken = await clientNone.getSessionToken()
-            expect(sessionToken).toBe(clientNone.options.auth.sessionToken)
+            expect(sessionToken).toBe(SESSION_TOKEN)
         })
 
         it('should return empty string with no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
+            // @ts-expect-error
             const sessionToken = await clientNone.session.getSessionToken()
             expect(sessionToken).toBe('')
         })
@@ -78,6 +86,7 @@ describe('Session', () => {
                 },
             })
             await expect(async () => (
+                // @ts-expect-error
                 clientNone.session.sendLogin()
             )).rejects.toThrow(
                 'Need either "privateKey", "ethereum" or "sessionToken" to login.'
@@ -88,6 +97,7 @@ describe('Session', () => {
             const clientNone = createClient({
                 auth: {},
             })
+            // @ts-expect-error
             await clientNone.session.sendLogin().catch((err) => {
                 expect(err.message).toEqual(
                     'Need either "privateKey", "ethereum" or "sessionToken" to login.'
@@ -201,7 +211,8 @@ describe('Session', () => {
 
         it('can logout while logging in', async () => {
             const done = Defer()
-            session.once('logging in', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging in', done.wrap(async () => {
                 await session.logout()
             }))
             await session.getSessionToken()
@@ -210,7 +221,8 @@ describe('Session', () => {
 
         it('can login while logging out', async () => {
             const done = Defer()
-            session.once('logging out', done.wrap(async () => {
+            // @ts-expect-error
+            session.eventEmitter.once('logging out', done.wrap(async () => {
                 await session.getSessionToken()
             }))
             await session.getSessionToken()

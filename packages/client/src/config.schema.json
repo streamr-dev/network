@@ -170,12 +170,6 @@
             "type": "string",
             "format": "uri"
         },
-        "autoConnect": {
-            "type": "boolean"
-        },
-        "autoDisconnect": {
-            "type": "boolean"
-        },
         "orderMessages": {
             "type": "boolean"
         },
@@ -322,13 +316,16 @@
             "format": "uri"
         },
         "streamRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         },
         "storageNodeRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         },
         "streamStorageRegistryChainAddress" : {
-            "type" : "string"
+            "type": "string",
+            "format": "ethereum-address"
         }
     },
     "definitions": {

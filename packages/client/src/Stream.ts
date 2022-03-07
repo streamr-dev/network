@@ -3,8 +3,8 @@
  */
 import { DependencyContainer, inject } from 'tsyringe'
 
-export { GroupKey } from './encryption/Encryption'
 import { until } from './utils'
+import { inspect } from './utils/log'
 
 import { Rest } from './Rest'
 import Resends from './subscribe/Resends'
@@ -17,8 +17,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
 import { DEFAULT_PARTITION } from './StreamIDBuilder'
-import { StrictStreamrClientConfig } from './ConfigBase'
-import { Config } from './Config'
+import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 
@@ -34,11 +33,12 @@ export interface StreamProperties {
     inactivityThresholdHours?: number
 }
 
+/** @internal */
 export interface StreamrStreamConstructorOptions extends StreamProperties {
     id: StreamID
 }
 
-const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
+export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
 export type Field = {
     name: string;
@@ -64,6 +64,9 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
+/**
+ * @category Important
+ */
 class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
@@ -88,7 +91,7 @@ class StreamrStream implements StreamMetadata {
     /** @internal */
     constructor(
         props: StreamrStreamConstructorOptions,
-        @inject(BrubeckContainer) private _container: DependencyContainer
+        @inject(BrubeckContainer) _container: DependencyContainer
     ) {
         Object.assign(this, props)
         this.id = props.id
@@ -102,21 +105,29 @@ class StreamrStream implements StreamMetadata {
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
         this._httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
-        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(Config.Root)
+        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(ConfigInjectionToken.Root)
     }
 
     /**
      * Persist stream metadata updates.
      */
-    async update() {
+    async update(props: Omit<StreamProperties, 'id'>) {
         try {
-            await this._streamRegistry.updateStream(this.toObject())
+            await this._streamRegistry.updateStream({
+                ...this.toObject(),
+                ...props,
+                id: this.id
+            })
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
         }
+        for (const key of Object.keys(props)) {
+            // @ts-expect-error
+            this[key] = props[key]
+        }
     }
 
-    toObject() : StreamProperties {
+    toObject(): StreamProperties {
         const result = {}
         Object.keys(this).forEach((key) => {
             if (key.startsWith('_') || typeof key === 'function') { return }
@@ -158,10 +169,16 @@ class StreamrStream implements StreamMetadata {
         }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
 
         // Save field config back to the stream
-        this.config.fields = fields
-        await this.update()
+        await this.update({
+            config: {
+                fields
+            }
+        })
     }
 
+    /**
+     * @category Important
+     */
     async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
         timeout?: number,
         pollInterval?: number
@@ -206,6 +223,9 @@ class StreamrStream implements StreamMetadata {
         throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
+    /**
+     * @category Important
+     */
     async removeFromStorageNode(nodeAddress: EthereumAddress) {
         try {
             return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
@@ -218,6 +238,9 @@ class StreamrStream implements StreamMetadata {
         return this._nodeRegistry.getStorageNodesOf(this.id)
     }
 
+    /**
+     * @category Important
+     */
     async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
@@ -231,6 +254,9 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
+    /**
+     * @category Important
+     */
     async hasPermission(query: Omit<UserPermissionQuery, 'streamId'> | Omit<PublicPermissionQuery, 'streamId'>): Promise<boolean> {
         return this._streamRegistry.hasPermission({
             streamId: this.id,
@@ -238,16 +264,33 @@ class StreamrStream implements StreamMetadata {
         })
     }
 
+    /**
+     * @category Important
+     */
     async getPermissions(): Promise<PermissionAssignment[]> {
         return this._streamRegistry.getPermissions(this.id)
     }
 
+    /**
+     * @category Important
+     */
     async grantPermissions(...assignments: PermissionAssignment[]): Promise<void> {
         return this._streamRegistry.grantPermissions(this.id, ...assignments)
     }
 
+    /**
+     * @category Important
+     */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
+    }
+
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+        return inspect(this.toObject(), {
+            ...options,
+            customInspect: false,
+            depth,
+        })
     }
 }
 

@@ -15,6 +15,6 @@ const client = new StreamrClient({
 
 client.connect().then(async () => {
     console.info('success')
-    await client.disconnect()
+    await client.destroy()
     process.exit(0)
 })

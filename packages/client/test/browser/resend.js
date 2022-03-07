@@ -10,11 +10,12 @@ describe('StreamrClient Resend', () => {
         const restUrl = process.env.REST_URL ? `&REST_URL=${encodeURIComponent(process.env.REST_URL)}` : ''
         const browserUrl = `http://localhost:8880?streamName=${streamName}${url}${restUrl}`
         console.info(browserUrl)
-        await browser.windowMaximize()
         return browser.url(browserUrl)
     })
 
-    test('Test StreamrClient in Chrome Browser', (browser) => {
+    test('Test StreamrClient in Chrome Browser', async (browser) => {
+        // Make viewport huge to ensure that all buttons are inside it
+        browser.resizeWindow(4000, 4000)
         browser
             .waitForElementVisible('body')
             .assert.titleContains('Test StreamrClient in Chrome Browser')
@@ -71,7 +72,7 @@ describe('StreamrClient Resend', () => {
             .verify.containsText('#result', '{"msg":9}')
             .assert.containsText(
                 '#result',
-                'Resend: [{"msg":0},{"msg":1},{"msg":2},{"msg":3},{"msg":4},{"msg":5},{"msg":6},{"msg":7},{"msg":8},{"msg":9}]',
+                'Resent: [{"msg":0},{"msg":1},{"msg":2},{"msg":3},{"msg":4},{"msg":5},{"msg":6},{"msg":7},{"msg":8},{"msg":9}]',
             )
     })
 

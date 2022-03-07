@@ -1,6 +1,6 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { instanceId } from './index'
-import { Config, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, ConnectionConfig } from '../Config'
 import { Context } from './Context'
 import { Debugger } from 'debug'
 import { HttpFetcher } from './HttpFetcher'
@@ -13,7 +13,7 @@ export class GraphQLClient {
     constructor(
         context: Context,
         @inject(HttpFetcher) private httpFetcher: HttpFetcher,
-        @inject(Config.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Connection) private config: ConnectionConfig,
     ) {
         this.debug = context.debug.extend(instanceId(this))
     }
@@ -61,6 +61,15 @@ export class GraphQLClient {
             yield* items
             lastResultSet = items
         } while (lastResultSet.length === pageSize)
+    }
+
+    async getIndexBlockNumber() {
+        const gqlQuery = JSON.stringify({
+            query: '{ _meta { block { number } } }'
+        })
+        const response: any = await this.sendQuery(gqlQuery)
+        // eslint-disable-next-line no-underscore-dangle
+        return response._meta.block.number
     }
 
     static createWhereClause(variables: Record<string, any>): string {

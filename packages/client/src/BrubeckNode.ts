@@ -5,7 +5,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
-import { BrubeckNodeOptions, Config, TrackerRegistrySmartContract } from './Config'
+import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
@@ -17,6 +17,8 @@ export interface NetworkNodeStub {
     addMessageListener: (listener: (msg: StreamMessage) => void) => void,
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
+    subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
+    waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
     publish: (streamMessage: StreamMessage) => void,
     getStreamParts: () => Iterable<StreamPartID>
@@ -35,8 +37,10 @@ export interface NetworkNodeStub {
 export default class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
 
@@ -44,7 +48,7 @@ export default class BrubeckNode implements Context {
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
-        @inject(Config.Network) options: BrubeckNodeOptions
+        @inject(ConfigInjectionToken.Network) options: NetworkConfig
     ) {
         this.options = options
         this.id = instanceId(this)
@@ -168,6 +172,7 @@ export default class BrubeckNode implements Context {
         }
     })
 
+    /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
     /**
@@ -175,6 +180,7 @@ export default class BrubeckNode implements Context {
      */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
+    /** @internal */
     async getNodeId() {
         const node = await this.getNode()
         return node.getNodeId()
@@ -185,6 +191,7 @@ export default class BrubeckNode implements Context {
      * Basically a wrapper around: (await getNode()).publish(…)
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
+     * @internal
      */
     publishToNode(streamMessage: StreamMessage): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.

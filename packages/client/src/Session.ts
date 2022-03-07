@@ -6,7 +6,7 @@ import EventEmitter from 'eventemitter3'
 
 import { LoginEndpoints, TokenObject } from './LoginEndpoints'
 import { AuthConfig } from './Ethereum'
-import { Config } from './Config'
+import { ConfigInjectionToken } from './Config'
 import { BrubeckContainer } from './Container'
 import { Debug } from './utils/log'
 
@@ -20,36 +20,39 @@ enum State {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Session extends EventEmitter {
+export default class Session {
     private state: State
     private sessionTokenPromise?: Promise<string>
+    private eventEmitter: EventEmitter
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Config.Auth) private options: AuthConfig
+        @inject(ConfigInjectionToken.Auth) private options: AuthConfig
     ) {
-        super()
         this.state = State.LOGGED_OUT
         this.options = options
+        this.eventEmitter = new EventEmitter()
         if (!this.options.sessionToken) {
             this.options.unauthenticated = true
         }
     }
 
+    /** @internal */
     isUnauthenticated() {
         return !this.options.privateKey && !this.options.ethereum && !this.options.sessionToken
     }
 
-    updateState(newState: State) {
+    private updateState(newState: State) {
         debug('updateState %s -> %s', this.state, newState)
         this.state = newState
-        this.emit(newState)
+        this.eventEmitter.emit(newState)
     }
 
     private get loginEndpoints() {
         return this.container.resolve<LoginEndpoints>(LoginEndpoints)
     }
 
+    /** @internal */
     async sendLogin(): Promise<TokenObject> {
         const auth = this.options
         debug('sendLogin()')
@@ -61,6 +64,7 @@ export default class Session extends EventEmitter {
         throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
     }
 
+    /** @internal */
     async getSessionToken(requireNewToken = false): Promise<string> {
         // @ts-expect-error
         if (typeof this.options.apiKey !== 'undefined') {
@@ -83,7 +87,7 @@ export default class Session extends EventEmitter {
         if (this.state !== State.LOGGING_IN) {
             if (this.state === State.LOGGING_OUT) {
                 this.sessionTokenPromise = new Promise((resolve) => {
-                    this.once(State.LOGGED_OUT, () => resolve(this.getSessionToken(requireNewToken)))
+                    this.eventEmitter.once(State.LOGGED_OUT, () => resolve(this.getSessionToken(requireNewToken)))
                 })
             } else {
                 this.updateState(State.LOGGING_IN)
@@ -101,6 +105,7 @@ export default class Session extends EventEmitter {
         return this.sessionTokenPromise!
     }
 
+    /** @internal */
     async logout() {
         if (this.state === State.LOGGED_OUT) {
             throw new Error('Already logged out!')
@@ -112,7 +117,7 @@ export default class Session extends EventEmitter {
 
         if (this.state === State.LOGGING_IN) {
             await new Promise((resolve) => {
-                this.once(State.LOGGED_IN, () => resolve(this.logout()))
+                this.eventEmitter.once(State.LOGGED_IN, () => resolve(this.logout()))
             })
             return
         }

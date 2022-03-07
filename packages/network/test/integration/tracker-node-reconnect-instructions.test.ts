@@ -28,12 +28,14 @@ describe('Check tracker instructions to node', () => {
         nodeOne = createNetworkNode({
             id: 'node-1',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
         nodeTwo = createNetworkNode({
             id: 'node-2',
             trackers: [trackerInfo],
-            disconnectionWaitTime: 200
+            disconnectionWaitTime: 200,
+            webrtcDisallowPrivateAddresses: false
         })
 
         await Promise.all([

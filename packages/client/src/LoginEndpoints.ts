@@ -2,13 +2,15 @@
  * Login Endpoints Wrapper.
  */
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import Ethereum, { AuthConfig } from './Ethereum'
+import Ethereum from './Ethereum'
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
-import { Config } from './Config'
 import { Rest } from './Rest'
+import { EthereumAddress } from 'streamr-client-protocol'
 
-import { AuthFetchError } from './authFetch'
+export interface TokenObject {
+    token: string
+}
 
 export interface UserDetails {
     name: string
@@ -18,26 +20,25 @@ export interface UserDetails {
     lastLogin?: string
 }
 
-export interface TokenObject {
-    token: string
-}
-
 @scoped(Lifecycle.ContainerScoped)
 export class LoginEndpoints implements Context {
-    id
-    debug
+    /** @internal */
+    readonly id
+    /** @internal */
+    readonly debug
+
+    /** @internal */
     constructor(
         context: Context,
         private ethereum: Ethereum,
-        @inject(delay(() => Rest)) private rest: Rest,
-        @inject(Config.Auth) private authConfig: AuthConfig,
+        @inject(delay(() => Rest)) private rest: Rest
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 
     /** @internal */
-    async getChallenge(address: string) {
+    async getChallenge(address: EthereumAddress) {
         this.debug('getChallenge %o', {
             address,
         })
@@ -45,7 +46,7 @@ export class LoginEndpoints implements Context {
     }
 
     /** @internal */
-    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: string) {
+    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: EthereumAddress) {
         const props = {
             challenge,
             signature,
@@ -62,20 +63,6 @@ export class LoginEndpoints implements Context {
         const challenge = await this.getChallenge(address)
         const signature = await this.ethereum.getSigner().signMessage(challenge.challenge)
         return this.sendChallengeResponse(challenge, signature, address)
-    }
-
-    /** @internal */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-    async loginWithApiKey(_apiKey: string): Promise<any> {
-        const message = 'apiKey auth is no longer supported. Please create an ethereum identity.'
-        throw new AuthFetchError(message)
-    }
-
-    /** @internal */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-    async loginWithUsernamePassword(_username: string, _password: string): Promise<any> {
-        const message = 'username/password auth is no longer supported. Please create an ethereum identity.'
-        throw new AuthFetchError(message)
     }
 
     async getUserInfo() {

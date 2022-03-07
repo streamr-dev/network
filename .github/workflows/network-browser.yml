@@ -1,4 +1,4 @@
-name: Network Browser Build
+name: Network
 
 on:
   push:
@@ -20,11 +20,11 @@ defaults:
 
 jobs:
   test-browser:
-    name: Test on Browser Node
+    name: Browser Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2.5.1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           cache-dependency-path: package-lock.json
           cache: 'npm'
@@ -32,7 +32,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-network
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser

@@ -2,7 +2,7 @@ import { DependencyContainer } from 'tsyringe'
 import SubscriptionSession from './SubscriptionSession'
 import { Subscription } from './Subscription'
 import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
-import { Config } from '../Config'
+import { ConfigInjectionToken } from '../Config'
 import OrderMessages from './OrderMessages'
 import Resends, { ResendOptions } from './Resends'
 import Signal from '../utils/Signal'
@@ -11,7 +11,7 @@ export class ResendSubscription<T> extends Subscription<T> {
     onResent = Signal.once()
 
     private orderMessages
-    // @internal
+    /** @internal */
     constructor(
         subSession: SubscriptionSession<T>,
         private resends: Resends,
@@ -21,7 +21,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         super(subSession)
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
-            container.resolve(Config.Subscribe),
+            container.resolve(ConfigInjectionToken.Subscribe),
             this,
             container.resolve(Resends),
             subSession.streamPartId,
@@ -48,7 +48,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    // @internal
+    /** @internal */
     async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
         try {
             yield* await this.getResent()
