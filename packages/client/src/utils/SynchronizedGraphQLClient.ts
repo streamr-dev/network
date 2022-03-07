@@ -130,7 +130,7 @@ export class SynchronizedGraphQLClient {
     ) {
         this.delegate = delegate
         this.indexingState = new IndexingState(
-            this.delegate.getIndexBlockNumber,
+            () => this.delegate.getIndexBlockNumber(),
             // eslint-disable-next-line no-underscore-dangle
             clientConfig._timeouts.theGraph.timeout,
             // eslint-disable-next-line no-underscore-dangle
