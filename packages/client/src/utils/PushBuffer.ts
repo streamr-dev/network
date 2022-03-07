@@ -280,14 +280,24 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     }
 }
 
+export type PullOptions = {
+    /** end dest when src ends */
+    endDest: boolean
+}
+
 /**
  * Pull from a source into some PushBuffer
  */
-
-export async function pull<InType, OutType = InType>(src: AsyncGenerator<InType>, dest: IPushBuffer<InType, OutType>) {
+export async function pull<InType, OutType = InType>(
+    src: AsyncGenerator<InType>,
+    dest: IPushBuffer<InType, OutType>,
+    opts?: PullOptions
+): Promise<void> {
     if (!src) {
         throw new Error('no source')
     }
+
+    const endDest = opts?.endDest ?? true
 
     try {
         for await (const v of src) {
@@ -299,7 +309,9 @@ export async function pull<InType, OutType = InType>(src: AsyncGenerator<InType>
     } catch (err) {
         dest.endWrite(err)
     } finally {
-        dest.endWrite()
+        if (endDest) {
+            dest.endWrite()
+        }
     }
 }
 

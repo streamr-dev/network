@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add method `subscribeAll` to subscribe to all stream partitions.
+- Add method `resendAll` to resend data from all stream partitions.
+
 ### Changed
 
 - Method `stream.update()` now requires a parameter `props`

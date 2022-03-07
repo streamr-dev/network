@@ -1,7 +1,7 @@
 import { instanceId, pOnce } from './index'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions, PullOptions } from './PushBuffer'
 import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
 import Signal, { ErrorSignal } from './Signal'
@@ -399,8 +399,8 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     /** @internal */
-    pull(source: AsyncGenerator<InType>) {
-        return pull(source, this)
+    pull(source: AsyncGenerator<InType>, opts?: PullOptions) {
+        return pull(source, this, opts)
     }
 
     // wrapped PushBuffer methods below here

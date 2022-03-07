@@ -4,6 +4,7 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
 import { until } from './utils'
+import { inspect } from './utils/log'
 
 import { Rest } from './Rest'
 import Resends from './subscribe/Resends'
@@ -282,6 +283,14 @@ class StreamrStream implements StreamMetadata {
      */
     async revokePermissions(...assignments: PermissionAssignment[]): Promise<void> {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
+    }
+
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+        return inspect(this.toObject(), {
+            ...options,
+            customInspect: false,
+            depth,
+        })
     }
 }
 
