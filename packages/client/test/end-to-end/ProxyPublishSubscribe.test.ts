@@ -5,8 +5,10 @@ import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { toStreamPartID } from 'streamr-client-protocol'
+import { until } from '../../src/utils'
 
 jest.setTimeout(50000)
+const SUBSCRIBE_WAIT_TIME = 2000
 
 describe('PubSub with proxy connections', () => {
     let stream: Stream
@@ -75,7 +77,7 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
-        await wait(2000)
+        await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
         expect((await onewayClient.getNode())
@@ -92,7 +94,7 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.publish(stream, {
             msg: 'hellow'
         })
-        await wait(2500)
+        await until(() => receivedMessagesProxy.length >= 3)
         expect(receivedMessagesProxy.length).toEqual(3)
 
         expect((await onewayClient.getNode())
@@ -106,7 +108,7 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
-        await wait(1000)
+        await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setPublishProxy(stream, proxyNodeId1)
 
         expect((await onewayClient.getNode())
@@ -131,7 +133,7 @@ describe('PubSub with proxy connections', () => {
         await proxyClient2.subscribe(stream, (msg) => {
             receivedMessagesProxy2.push(msg)
         })
-        await wait(1000)
+        await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
@@ -161,7 +163,7 @@ describe('PubSub with proxy connections', () => {
     it('Subscribe only connections work', async () => {
         const receivedMessages: any[] = []
         await proxyClient1.subscribe(stream)
-        await wait(2000)
+        await wait(SUBSCRIBE_WAIT_TIME)
 
         await onewayClient.setSubscribeProxy(stream, proxyNodeId1)
         await onewayClient.subscribe(stream, (msg) => {
@@ -181,7 +183,7 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.publish(stream, {
             msg: 'hellow'
         })
-        await wait(2500)
+        await until(() => receivedMessages.length >= 3)
         expect(receivedMessages.length).toEqual(3)
 
         expect((await onewayClient.getNode())
@@ -192,7 +194,7 @@ describe('PubSub with proxy connections', () => {
 
     it('removing proxy subscribing node works', async () => {
         await proxyClient2.subscribe(stream)
-        await wait(4000)
+        await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setSubscribeProxy(stream, proxyNodeId2)
 
         expect((await onewayClient.getNode())
@@ -212,7 +214,7 @@ describe('PubSub with proxy connections', () => {
     it('setSubscribeProxies, removeSubscribeProxies', async () => {
         await proxyClient1.subscribe(stream)
         await proxyClient2.subscribe(stream)
-        await wait(2000)
+        await wait(SUBSCRIBE_WAIT_TIME)
         await onewayClient.setSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())

@@ -24,15 +24,15 @@ export default class ProxySubscriber {
 
     async setSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map((nodeId) => this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
+        await Promise.allSettled(
+            nodeIds.map((nodeId) => this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
+        )
     }
 
     async removeSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map(async (nodeId) => this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
+        await Promise.allSettled(
+            nodeIds.map(async (nodeId) => this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId))
+        )
     }
 }

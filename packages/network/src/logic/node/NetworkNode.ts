@@ -19,7 +19,7 @@ export class NetworkNode extends Node {
     publish(streamMessage: StreamMessage): void | never {
         const streamPartId = streamMessage.getStreamPartID()
         if (this.isProxiedSubscription(streamPartId)) {
-            throw new Error(`Cannot publish to ${streamPartId} as subscribe only connections have been set`)
+            throw new Error(`Cannot publish to ${streamPartId} as subscribe-only connections have been set`)
         }
         this.onDataReceived(streamMessage)
     }
