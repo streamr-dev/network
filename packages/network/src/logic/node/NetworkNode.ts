@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Event as NodeEvent, Node, NodeId, NodeOptions } from './Node'
 
 /*
@@ -24,20 +24,12 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    async joinStreamPartAsProxyPublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openProxyPublisherStreamConnection(streamPartId, contactNodeId)
+    async createProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+        await this.openProxyConnection(streamPartId, contactNodeId, direction)
     }
 
-    async leaveProxyPublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeProxyPublisherStreamConnection(streamPartId, contactNodeId)
-    }
-
-    async joinStreamPartAsProxySubscriber(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.openProxySubscriberStreamConnection(streamPartId, contactNodeId)
-    }
-
-    async leaveProxySubscribingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeProxySubscriberStreamConnection(streamPartId, contactNodeId)
+    async removeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+        await this.closeProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {

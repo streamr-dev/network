@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } fr
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
@@ -218,45 +218,23 @@ export default class BrubeckNode implements Context {
         }
     }
 
-    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.joinStreamPartAsProxyPublisher(streamPartId, nodeId)
+            await this.cachedNode!.createProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 
-    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.leaveProxyPublishingStreamPart(streamPartId, nodeId)
-        } finally {
-            this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
-        }
-    }
-
-    async openSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
-        try {
-            if (this.isStarting()) {
-                await this.startNodeTask()
-            }
-            await this.cachedNode!.joinStreamPartAsProxySubscriber(streamPartId, nodeId)
-        } finally {
-            this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
-        }
-    }
-
-    async closeSubscribeProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
-        try {
-            if (this.isStarting()) {
-                return
-            }
-            await this.cachedNode!.leaveProxySubscribingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.removeProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }

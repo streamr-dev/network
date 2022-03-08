@@ -3,6 +3,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import BrubeckNode from '../BrubeckNode'
 import { Context } from '../utils/Context'
+import { ProxyDirection } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
 export default class ProxyPublisher {
@@ -16,14 +17,14 @@ export default class ProxyPublisher {
     async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled(
-            nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId))
+            nodeIds.map((nodeId) => this.node.openProxyConnection(streamPartId, nodeId, ProxyDirection.PUBLISH))
         )
     }
 
     async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled(
-            nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId))
+            nodeIds.map(async (nodeId) => this.node.closeProxyConnection(streamPartId, nodeId, ProxyDirection.PUBLISH))
         )
     }
 }

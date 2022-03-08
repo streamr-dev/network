@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { ControlLayer, MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer, ProxyDirection, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
@@ -13,19 +13,15 @@ export enum Event {
     DATA_RECEIVED = 'streamr:node-node:stream-data',
     LOW_BACK_PRESSURE = 'streamr:node-node:low-back-pressure',
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
-    PROXY_PUBLISH_STREAM_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
-    PROXY_PUBLISH_STREAM_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
-    PROXY_SUBSCRIBE_STREAM_REQUEST_RECEIVED = 'node-node:subscribe-only-stream-request-received',
-    PROXY_SUBSCRIBE_STREAM_RESPONSE_RECEIVED = 'node-node:subscribe-only-stream-response-received',
+    PROXY_CONNECTION_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
+    PROXY_CONNECTION_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
     LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ProxyPublishStreamConnectionRequest] = Event.PROXY_PUBLISH_STREAM_REQUEST_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ProxyPublishStreamConnectionResponse] = Event.PROXY_PUBLISH_STREAM_RESPONSE_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ProxySubscribeStreamConnectionRequest] = Event.PROXY_SUBSCRIBE_STREAM_REQUEST_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ProxySubscribeStreamConnectionResponse] = Event.PROXY_SUBSCRIBE_STREAM_RESPONSE_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTION_REQUEST_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
 
 export interface NodeToNode {
@@ -34,14 +30,10 @@ export interface NodeToNode {
     on(event: Event.DATA_RECEIVED, listener: (message: ControlLayer.BroadcastMessage, nodeId: NodeId) => void): this
     on(event: Event.LOW_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
     on(event: Event.HIGH_BACK_PRESSURE, listener: (nodeId: NodeId) => void): this
-    on(event: Event.PROXY_PUBLISH_STREAM_REQUEST_RECEIVED,
-       listener: (message: ControlLayer.ProxyPublishStreamConnectionRequest, nodeId: NodeId) => void): this
-    on(event: Event.PROXY_PUBLISH_STREAM_RESPONSE_RECEIVED,
-       listener: (message: ControlLayer.ProxyPublishStreamConnectionResponse, nodeId: NodeId) => void): this
-    on(event: Event.PROXY_SUBSCRIBE_STREAM_REQUEST_RECEIVED,
-        listener: (message: ControlLayer.ProxySubscribeStreamConnectionRequest, nodeId: NodeId) => void): this
-    on(event: Event.PROXY_SUBSCRIBE_STREAM_RESPONSE_RECEIVED,
-        listener: (message: ControlLayer.ProxySubscribeStreamConnectionResponse, nodeId: NodeId) => void): this
+    on(event: Event.PROXY_CONNECTION_REQUEST_RECEIVED,
+       listener: (message: ControlLayer.ProxyConnectionRequest, nodeId: NodeId) => void): this
+    on(event: Event.PROXY_CONNECTION_RESPONSE_RECEIVED,
+       listener: (message: ControlLayer.ProxyConnectionResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED,
        listener: (message: ControlLayer.UnsubscribeRequest, nodeId: NodeId) => void): this
 }
@@ -143,23 +135,14 @@ export class NodeToNode extends EventEmitter {
         return [controlLayerVersion, messageLayerVersion]
     }
 
-    async requestProxyPublishStreamConnection(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
+    async requestProxyConnection(nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(nodeId, new ControlLayer.ProxyPublishStreamConnectionRequest({
+        await this.send(nodeId, new ControlLayer.ProxyConnectionRequest({
             requestId: '',
             senderId: nodeId,
             streamId,
-            streamPartition
-        }))
-    }
-
-    async requestProxySubscribeStreamConnection(nodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(nodeId, new ControlLayer.ProxySubscribeStreamConnectionRequest({
-            requestId: '',
-            senderId: nodeId,
-            streamId,
-            streamPartition
+            streamPartition,
+            direction
         }))
     }
 
@@ -172,24 +155,14 @@ export class NodeToNode extends EventEmitter {
         }))
     }
 
-    async respondToProxyPublishStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
+    async respondToProxyConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection, accepted: boolean): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(nodeId, new ControlLayer.ProxyPublishStreamConnectionResponse({
+        await this.send(nodeId, new ControlLayer.ProxyConnectionResponse({
             requestId: '',
             senderId: nodeId,
             streamId,
             streamPartition,
-            accepted
-        }))
-    }
-
-    async respondToProxySubscribeStreamConnectionRequest(nodeId: NodeId, streamPartId: StreamPartID, accepted: boolean): Promise<void> {
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(nodeId, new ControlLayer.ProxySubscribeStreamConnectionResponse({
-            requestId: '',
-            senderId: nodeId,
-            streamId,
-            streamPartition,
+            direction,
             accepted
         }))
     }
