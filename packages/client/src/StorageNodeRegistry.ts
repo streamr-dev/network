@@ -86,17 +86,6 @@ export class StorageNodeRegistry {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Read from the NodeRegistry or StreamStorageRegistry contract
-    // --------------------------------------------------------------------------------------------
-
-    /** @internal */
-    async isStreamStoredInStorageNodeFromContract(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
-        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
-    }
-
-    // --------------------------------------------------------------------------------------------
     // Send transactions to the StreamRegistry or StreamStorageRegistry contract
     // --------------------------------------------------------------------------------------------
 
@@ -155,14 +144,6 @@ export class StorageNodeRegistry {
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
-        await until(
-            async () => this.isStreamStoredInStorageNode(streamId, nodeAddress),
-            // eslint-disable-next-line no-underscore-dangle
-            this.clientConfig._timeouts.theGraph.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            this.clientConfig._timeouts.theGraph.retryInterval,
-            () => `Failed to add stream ${streamId} to storageNode ${nodeAddress}, timed out querying fact from theGraph`
-        )
     }
 
     async removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
@@ -191,12 +172,7 @@ export class StorageNodeRegistry {
     async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
-        const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
-        if (res.node === null) {
-            throw new NotFoundError('Node not found, id: ' + nodeAddress)
-        }
-        const found = res.node.storedStreams.find((stream) => stream.id === streamId)
-        return found !== undefined
+        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
     }
 
     async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
@@ -242,12 +218,16 @@ export class StorageNodeRegistry {
         this.streamStorageRegistryContractReadonly.removeAllListeners()
     }
 
-    // --------------------------------------------------------------------------------------------
-    // GraphQL query builders
-    // --------------------------------------------------------------------------------------------
+    async stop() {
+        if (this.nodeRegistryContract) {
+            this.nodeRegistryContract.removeAllListeners()
+            this.nodeRegistryContract.provider.removeAllListeners()
+        }
+    }
 
-    // graphql over fetch:
-    // https://stackoverflow.com/questions/44610310/node-fetch-post-request-using-graphql-query
+    // --------------------------------------------------------------------------------------------
+    // GraphQL queries
+    // --------------------------------------------------------------------------------------------
 
     private static buildAllNodesQuery(): string {
         const query = `{
@@ -305,37 +285,5 @@ export class StorageNodeRegistry {
         }`
         return JSON.stringify({ query })
     }
-
-    async stop() {
-        // if (!this.didInitialize) {
-        //     return
-        // }
-    //     const contractTask = this.getContract()
-    //     this.getContract.reset()
-    // nodeRegistryContract?: NodeRegistryContract
-        // this.didInitialize = false
-        // const contract = await contractTask
-        if (this.nodeRegistryContract) {
-            this.nodeRegistryContract.removeAllListeners()
-            this.nodeRegistryContract.provider.removeAllListeners()
-        }
-    }
-
-    // static buildGetFilteredNodeListQuery(filter: NodeListQuery): string {
-    //     const nameparam = filter.name ? `metadata_contains: "name\\\\\\":\\\\\\"${filter.name}"` : ''
-    //     const maxparam = filter.max ? `, first: ${filter.max}` : ''
-    //     const offsetparam = filter.offset ? `, skip: ${filter.offset}` : ''
-    //     const orderByParam = filter.sortBy ? `, orderBy: ${filter.sortBy}` : ''
-    //     const ascDescParama = filter.order ? `, orderDirection: ${filter.order}` : ''
-    //     const query = `{
-    //         streams (where: {${nameparam}}${maxparam}${offsetparam}${orderByParam}${ascDescParama})
-    //           { id, metadata, permissions
-    //             { id, userAddress, edit, canDelete, publishExpiration,
-    //               subscribeExpiration, share
-    //             }
-    //           }
-    //       }`
-    //     return JSON.stringify({ query })
-    // }
 }
 
