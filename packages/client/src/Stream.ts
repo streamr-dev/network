@@ -221,7 +221,7 @@ class StreamrStream implements StreamMetadata {
 
             const timeoutRef = setTimeout(async () => {
                 cleanUp()
-                reject(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...missingStreamParts].join(',')))
+                reject(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...pendingStreamParts].join(',')))
             }, timeout)
 
             const cleanUp = () => {
