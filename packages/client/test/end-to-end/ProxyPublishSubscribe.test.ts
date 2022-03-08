@@ -141,7 +141,6 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.setSubscribeProxies(stream, [proxyNodeId1])
         await onewayClient.subscribe(stream, (msg) => {
             receivedMessages.push(msg)
-            console.log("here")
         })
         expect((await onewayClient.getNode())
             .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
