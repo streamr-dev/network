@@ -42,7 +42,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     async start(): Promise<void> {
         const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
-        const assignmentPickUpStream = await this.streamrClient.getOrCreateStream({
+        const assignmentPickUpStream = await this.streamrClient.getOrCreateStream({ // TODO: pre-built stream to image?
             id: toStreamID('/assignments', clusterId)
         })
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
@@ -91,7 +91,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async startStorageConfig(clusterId: string, assignmentPickUpStream: Stream): Promise<StorageConfig> {
+    private async startStorageConfig(clusterId: string, assignmentStream: Stream): Promise<StorageConfig> {
         const node = await this.streamrClient.getNode()
         const storageConfig = new StorageConfig(
             clusterId,
@@ -102,7 +102,8 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: (streamPart) => {
                     node.subscribe(streamPart)
-                    assignmentPickUpStream.publish({
+                    // TODO: timing issue?
+                    assignmentStream.publish({
                         streamPart
                     }).catch((e) => {
                         logger.warn('failed to publish to assignment pickup stream: %s', e)

@@ -213,19 +213,22 @@ class StreamrStream implements StreamMetadata {
         timeout: number
     ): Promise<void> {
         return new Promise((resolve, reject) => {
-            const missingStreamParts = new Set<StreamPartID>(this.getStreamParts())
+            /// stream#0 ---> storage-node-1
+            //  stream#1 ---> storage-node-1
+            //   stream#2 ---> storage-node-2
+            const pendingStreamParts = new Set<StreamPartID>(this.getStreamParts())
             let subscription: Subscription | undefined
 
             const timeoutRef = setTimeout(async () => {
+                cleanUp()
                 reject(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...missingStreamParts].join(',')))
-                await cleanUp()
             }, timeout)
 
-            const cleanUp = async () => {
+            const cleanUp = () => {
                 clearTimeout(timeoutRef)
-                if (subscription !== undefined) {
-                    await subscription.unsubscribe()
-                }
+                subscription?.unsubscribe().catch((_e) => {
+                    // TODO: handle error
+                })
             }
 
             this._subscriber.subscribe(
@@ -239,9 +242,10 @@ class StreamrStream implements StreamMetadata {
                             console.warn('failed to parse stream part from assignment pickup stream: %s', e)
                         }
                         if (streamPartId !== undefined) {
-                            missingStreamParts.delete(streamPartId)
-                            if (missingStreamParts.size === 0) {
-                                cleanUp().then(resolve)
+                            pendingStreamParts.delete(streamPartId)
+                            if (pendingStreamParts.size === 0) {
+                                cleanUp()
+                                resolve()
                             }
                         }
                     }
