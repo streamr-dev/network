@@ -209,7 +209,7 @@ describe('Proxy connection tests', () => {
     it('proxied subscribers receive data', async () => {
         await onewayNode.createProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.SUBSCRIBE)
         await Promise.all([
-            waitForEvent(contactNode, NodeEvent.MESSAGE_RECEIVED),
+            waitForEvent(onewayNode, NodeEvent.MESSAGE_RECEIVED),
             contactNode.publish(new StreamMessage({
                 messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
                 content: {
