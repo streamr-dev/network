@@ -105,8 +105,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                     // TODO: timing issue?
                     assignmentStream.publish({
                         streamPart
+                    }).then(() => {
+                        logger.debug('published message to assignment stream %s', assignmentStream.id)
+                        return true
                     }).catch((e) => {
-                        logger.warn('failed to publish to assignment pickup stream: %s', e)
+                        logger.warn('failed to publish to assignment stream: %s', e)
                     })
                 },
                 onStreamPartRemoved: (streamPart) => {
