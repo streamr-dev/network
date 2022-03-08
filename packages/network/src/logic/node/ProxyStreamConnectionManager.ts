@@ -164,7 +164,7 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    async processProxyConnectionRequest(message: ProxyConnectionRequest, nodeId: string): Promise<void> {
+    async processProxyConnectionRequest(message: ProxyConnectionRequest, nodeId: NodeId): Promise<void> {
         const streamPartId = message.getStreamPartID()
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
         const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
@@ -179,7 +179,7 @@ export class ProxyStreamConnectionManager {
         await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
 
-    processProxyConnectionResponse(message: ProxyConnectionResponse, nodeId: string): void {
+    processProxyConnectionResponse(message: ProxyConnectionResponse, nodeId: NodeId): void {
         const streamPartId = message.getStreamPartID()
         if (message.accepted) {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
@@ -225,16 +225,9 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    isProxySubscribeStreamPart(streamPartId: StreamPartID): boolean {
+    isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
         if (this.connections.get(streamPartId) && [...this.connections.get(streamPartId)!.values()].length > 0) {
-            return [...this.connections.get(streamPartId)!.values()][0].direction === ProxyDirection.SUBSCRIBE
-        }
-        return false
-    }
-
-    isProxyPublishStreamPart(streamPartId: StreamPartID): boolean {
-        if (this.connections.get(streamPartId) && [...this.connections.get(streamPartId)!.values()].length > 0) {
-            return [...this.connections.get(streamPartId)!.values()][0].direction === ProxyDirection.PUBLISH
+            return [...this.connections.get(streamPartId)!.values()][0].direction === direction
         }
         return false
     }

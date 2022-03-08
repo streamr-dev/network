@@ -1,10 +1,10 @@
-import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createTestStream, fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
-import { toStreamPartID } from 'streamr-client-protocol'
+import { ProxyDirection, toStreamPartID } from 'streamr-client-protocol'
 import { until } from '../../src/utils'
 
 jest.setTimeout(50000)
@@ -72,16 +72,16 @@ describe('PubSub with proxy connections', () => {
         })
     }, 60000)
 
-    it('Publish only connections work', async () => {
+    it('Proxy publish connections work', async () => {
         const receivedMessagesProxy: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
             receivedMessagesProxy.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setPublishProxies(stream, [proxyNodeId1])
+        await onewayClient.openProxyConnections(stream, [proxyNodeId1], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
-            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         await onewayClient.publish(stream, {
@@ -97,11 +97,11 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessagesProxy.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
             .toEqual(true)
     }, 15000)
 
-    it('setPublishProxies, removePublishProxies', async () => {
+    it('Open publish proxies, close publish proxies', async () => {
         const receivedMessagesProxy1: any[] = []
         const receivedMessagesProxy2: any[] = []
         await proxyClient1.subscribe(stream, (msg) => {
@@ -111,17 +111,17 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy2.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setPublishProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.openProxyConnections(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
-            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.PUBLISH))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.PUBLISH))
             .toEqual(true)
 
-        await onewayClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.closeProxyConnections(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.PUBLISH)
 
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))
@@ -133,17 +133,17 @@ describe('PubSub with proxy connections', () => {
 
     }, 15000)
 
-    it('Subscribe only connections work', async () => {
+    it('Proxy subscribe connections work', async () => {
         const receivedMessages: any[] = []
         await proxyClient1.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
 
-        await onewayClient.setSubscribeProxies(stream, [proxyNodeId1])
+        await onewayClient.openProxyConnections(stream, [proxyNodeId1], ProxyDirection.SUBSCRIBE)
         await onewayClient.subscribe(stream, (msg) => {
             receivedMessages.push(msg)
         })
         expect((await onewayClient.getNode())
-            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         await proxyClient1.publish(stream, {
@@ -159,26 +159,26 @@ describe('PubSub with proxy connections', () => {
         expect(receivedMessages.length).toEqual(3)
 
         expect((await onewayClient.getNode())
-            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
     }, 15000)
 
-    it('setSubscribeProxies, removeSubscribeProxies', async () => {
+    it('open subscribe proxies, close subscribe proxies', async () => {
         await proxyClient1.subscribe(stream)
         await proxyClient2.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.openProxyConnections(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.SUBSCRIBE)
 
         expect((await onewayClient.getNode())
-            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId1, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         expect((await onewayClient.getNode())
-            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
+            .hasProxyConnection(toStreamPartID(stream.id, 0), proxyNodeId2, ProxyDirection.SUBSCRIBE))
             .toEqual(true)
 
         await onewayClient.unsubscribe(stream)
-        await onewayClient.removeSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
+        await onewayClient.closeProxyConnections(stream, [proxyNodeId1, proxyNodeId2], ProxyDirection.SUBSCRIBE)
 
         expect((await onewayClient.getNode())
             .hasStreamPart(toStreamPartID(stream.id, 0)))

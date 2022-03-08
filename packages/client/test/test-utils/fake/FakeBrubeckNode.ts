@@ -105,12 +105,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    hasProxyPublishConnection(_streamPartId: StreamPartID, _contactNodeId: string): boolean {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    hasProxySubscribeConnection(_streamPartId: StreamPartID, _contactNodeId: string): boolean {
+    hasProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): boolean {
         throw new Error('not implemented')
     }
 }

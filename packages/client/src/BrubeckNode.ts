@@ -28,8 +28,7 @@ export interface NetworkNodeStub {
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
-    hasProxyPublishConnection: (streamPartId: StreamPartID, contactNodeId: string) => boolean
-    hasProxySubscribeConnection: (streamPartId: StreamPartID, contactNodeId: string) => boolean
+    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
 }
 
 /**
@@ -223,7 +222,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.createProxyConnection(streamPartId, nodeId, direction)
+            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
@@ -234,7 +233,7 @@ export default class BrubeckNode implements Context {
             if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.removeProxyConnection(streamPartId, nodeId, direction)
+            await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }

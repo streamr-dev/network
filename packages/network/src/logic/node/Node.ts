@@ -257,7 +257,7 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
         await Promise.all([
@@ -285,7 +285,7 @@ export class Node extends EventEmitter {
         })
     }
 
-    async closeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+    async removeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
         await this.proxyStreamConnectionManager.closeProxyConnection(streamPartId, contactNodeId, direction)
     }
 
@@ -436,11 +436,7 @@ export class Node extends EventEmitter {
         this.emit(streamPartId, error)
     }
 
-    isProxiedSubscriber(streamPartId: StreamPartID): boolean {
-        return this.proxyStreamConnectionManager.isProxySubscribeStreamPart(streamPartId)
-    }
-
-    isProxiedPublisher(streamPartId: StreamPartID): boolean {
-        return this.proxyStreamConnectionManager.isProxyPublishStreamPart(streamPartId)
+    isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
+        return this.proxyStreamConnectionManager.isProxiedStreamPart(streamPartId, direction)
     }
 }

@@ -738,19 +738,45 @@ Proxy publishing and subscribing are handled on the network overlay level. This 
 ```js
 
 // Open publish proxy to multiple nodes on stream
-await publishingClient.setPublishProxies(stream, ['0x11111...', '0x22222...'])
+await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
 // Remove publish proxy to multiple nodes on stream
-await publishingClient.removePublishProxies(stream, ['0x11111...', '0x22222...'])
+await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
-// Open subscribe proxy to multiple nodes on stream
-await publishingClient.setSubscribeProxies(stream, ['0x11111...', '0x22222...'])
+// Open publish proxy to multiple nodes on stream
+await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 
-// Remove subscribe proxy to multiple nodes on stream
-await publishingClient.removeSubscribeProxies(stream, ['0x11111...', '0x22222...'])
+// Remove publish proxy to multiple nodes on stream
+await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 ```
 
 IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
+
+Example client config:
+
+```json
+{
+    ...
+    "network": {
+        ...
+        "acceptProxyConnections": true
+    }
+}
+```
+
+Example broker config
+
+```json
+{
+    "client": {
+        ...
+        "network": {
+            ...
+            "acceptProxyConnections": true
+        }
+    }
+}
+```
 
 ### Logging
 
