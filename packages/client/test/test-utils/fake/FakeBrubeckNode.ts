@@ -1,6 +1,6 @@
 import debug from 'debug'
 import { pull } from 'lodash'
-import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
 import BrubeckNode, { NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
@@ -159,22 +159,12 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
+    async openProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async openSubscribeProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async closeSubscribeProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
+    async closeProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
     }
 }
