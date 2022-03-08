@@ -731,6 +731,8 @@ By disabling message ordering your application won't perform any filling nor sor
 
 In some cases the client might be interested in publishing messages without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
 
+Setting subscribe proxies can be useful for cases where broker nodes with public IP addresses do not exist in a stream.
+
 Proxy publishing and subscribing are handled on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish / subscribe proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
 ```js
