@@ -1,10 +1,8 @@
 import BroadcastMessage from "./broadcast_message/BroadcastMessage"
 import ErrorResponse from "./error_response/ErrorResponse"
 import { ErrorCode } from "./error_response/ErrorResponse"
-import ProxyPublishStreamConnectionRequest from "./proxy_publish_stream_connection_request/ProxyPublishStreamConnectionRequest"
-import ProxyPublishStreamConnectionResponse from "./proxy_publish_stream_connection_response/ProxyPublishStreamConnectionResponse"
-import ProxySubscribeStreamConnectionRequest from "./proxy_subscribe_stream_connection_request/ProxySubscribeStreamConnectionRequest"
-import ProxySubscribeStreamConnectionResponse from "./proxy_subscribe_stream_connection_response/ProxySubscribeStreamConnectionResponse"
+import ProxyConnectionRequest from "./proxy_connection_request/ProxyConnectionRequest"
+import ProxyConnectionResponse from "./proxy_connection_response/ProxyConnectionResponse"
 import UnsubscribeRequest from "./unsubscribe_request/UnsubscribeRequest"
 import ControlMessage from "./ControlMessage"
 import { ControlMessageType } from "./ControlMessage"
@@ -13,10 +11,9 @@ import { ControlMessageType } from "./ControlMessage"
 import './broadcast_message/BroadcastMessageSerializerV2'
 import './error_response/ErrorResponseSerializerV2'
 import './unsubscribe_request/UnsubscribeRequestSerializerV2'
-import './proxy_publish_stream_connection_request/ProxyPublishStreamConnectionRequestSerializerV2'
-import './proxy_publish_stream_connection_response/ProxyPublishStreamConnectionResponseSerializerV2'
-import './proxy_subscribe_stream_connection_request/ProxySubscribeStreamConnectionRequestSerializerV2'
-import './proxy_subscribe_stream_connection_response/ProxySubscribeStreamConnectionResponseSerializerV2'
+import './proxy_connection_request/ProxyConnectionRequestSerializerV2'
+import './proxy_connection_response/ProxyConnectionResponseSerializerV2'
+
 export {
     BroadcastMessage,
     ErrorResponse,
@@ -24,8 +21,6 @@ export {
     UnsubscribeRequest,
     ControlMessage,
     ControlMessageType,
-    ProxyPublishStreamConnectionRequest,
-    ProxyPublishStreamConnectionResponse,
-    ProxySubscribeStreamConnectionRequest,
-    ProxySubscribeStreamConnectionResponse
+    ProxyConnectionRequest,
+    ProxyConnectionResponse
 }

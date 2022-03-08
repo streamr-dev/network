@@ -1,23 +1,31 @@
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
-import {validateIsInteger, validateIsNotNullOrUndefined, validateIsString} from '../../../utils/validations'
+import {
+    validateIsDirection,
+    validateIsInteger,
+    validateIsNotNullOrUndefined,
+    validateIsString
+} from '../../../utils/validations'
 import { StreamID } from '../../../utils/StreamID'
 import { StreamPartID, toStreamPartID } from "../../../utils"
+import { ProxyDirection } from '../../../utils/types'
 
 interface Options extends ControlMessageOptions {
     senderId: string
     streamId: StreamID
     streamPartition: number
+    direction: ProxyDirection
     accepted: boolean
 }
 
-export default class ProxySubscribeStreamConnectionResponse extends ControlMessage {
+export default class ProxyConnectionResponse extends ControlMessage {
     senderId: string
     streamId: StreamID
     streamPartition: number
+    direction: ProxyDirection
     accepted: boolean
 
-    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, accepted }: Options) {
-        super(version, ControlMessage.TYPES.ProxySubscribeStreamConnectionResponse, requestId)
+    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, direction, accepted }: Options) {
+        super(version, ControlMessage.TYPES.ProxyConnectionResponse, requestId)
 
         validateIsNotNullOrUndefined('senderId', senderId)
         this.senderId = senderId
@@ -30,6 +38,9 @@ export default class ProxySubscribeStreamConnectionResponse extends ControlMessa
 
         validateIsNotNullOrUndefined('accepted', accepted)
         this.accepted = accepted
+
+        validateIsDirection('direction', direction)
+        this.direction = direction
     }
 
     getStreamPartID(): StreamPartID {

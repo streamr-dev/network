@@ -11,10 +11,8 @@ export enum ControlMessageType {
     BroadcastMessage = 0,
     ErrorResponse = 7,
     UnsubscribeRequest = 10,
-    ProxyPublishStreamConnectionRequest = 14,
-    ProxyPublishStreamConnectionResponse = 15,
-    ProxySubscribeStreamConnectionRequest = 16,
-    ProxySubscribeStreamConnectionResponse = 17
+    ProxyConnectionRequest = 14,
+    ProxyConnectionResponse = 15
 }
 
 export interface ControlMessageOptions {

@@ -1,29 +1,33 @@
 import assert from 'assert'
 
-import { ProxyPublishStreamConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxyConnectionResponse, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxyDirection } from '../../../../src/utils/types'
 
 const VERSION = 2
 const streamId = toStreamID('stream')
 const streamPartition = 0
 const senderId = 'node'
 const accepted = true
+const direction = ProxyDirection.PUBLISH
 
 // Message definitions
-const message = new ProxyPublishStreamConnectionResponse({
+const message = new ProxyConnectionResponse({
     version: VERSION,
     streamId,
     streamPartition,
     senderId,
     requestId: 'requestId',
+    direction,
     accepted
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    ControlMessage.TYPES.ProxyPublishStreamConnectionResponse,
+    ControlMessage.TYPES.ProxyConnectionResponse,
     'requestId',
     streamId,
     streamPartition,
     senderId,
+    direction,
     accepted
 ])
 
