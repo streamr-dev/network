@@ -12,16 +12,6 @@ export default class ProxySubscriber {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
     ) {}
 
-    async setSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async removeSubscribeProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closeSubscribeProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
     async setSubscribeProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled(

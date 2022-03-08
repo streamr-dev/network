@@ -78,7 +78,7 @@ describe('PubSub with proxy connections', () => {
             receivedMessagesProxy.push(msg)
         })
         await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setPublishProxy(stream, proxyNodeId1)
+        await onewayClient.setPublishProxies(stream, [proxyNodeId1])
 
         expect((await onewayClient.getNode())
             .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
@@ -99,25 +99,6 @@ describe('PubSub with proxy connections', () => {
         expect((await onewayClient.getNode())
             .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
             .toEqual(true)
-    }, 15000)
-
-    it('removing proxy publishing node works', async () => {
-        const receivedMessagesProxy: any[] = []
-        await proxyClient1.subscribe(stream, (msg) => {
-            receivedMessagesProxy.push(msg)
-        })
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setPublishProxy(stream, proxyNodeId1)
-
-        expect((await onewayClient.getNode())
-            .hasProxyPublishConnection(toStreamPartID(stream.id, 0), proxyNodeId1))
-            .toEqual(true)
-
-        await onewayClient.removePublishProxy(stream, proxyNodeId1)
-
-        expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
     }, 15000)
 
     it('setPublishProxies, removePublishProxies', async () => {
@@ -143,11 +124,11 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.removePublishProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
+            .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
         expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
+            .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
     }, 15000)
@@ -157,7 +138,7 @@ describe('PubSub with proxy connections', () => {
         await proxyClient1.subscribe(stream)
         await wait(SUBSCRIBE_WAIT_TIME)
 
-        await onewayClient.setSubscribeProxy(stream, proxyNodeId1)
+        await onewayClient.setSubscribeProxies(stream, [proxyNodeId1])
         await onewayClient.subscribe(stream, (msg) => {
             receivedMessages.push(msg)
         })
@@ -182,23 +163,6 @@ describe('PubSub with proxy connections', () => {
             .toEqual(true)
     }, 15000)
 
-    it('removing proxy subscribing node works', async () => {
-        await proxyClient2.subscribe(stream)
-        await wait(SUBSCRIBE_WAIT_TIME)
-        await onewayClient.setSubscribeProxy(stream, proxyNodeId2)
-
-        expect((await onewayClient.getNode())
-            .hasProxySubscribeConnection(toStreamPartID(stream.id, 0), proxyNodeId2))
-            .toEqual(true)
-
-        // await onewayClient.unsubscribe(stream)
-        await onewayClient.removeSubscribeProxy(stream, proxyNodeId2)
-
-        expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
-            .toEqual(false)
-    }, 15000)
-
     it('setSubscribeProxies, removeSubscribeProxies', async () => {
         await proxyClient1.subscribe(stream)
         await proxyClient2.subscribe(stream)
@@ -217,11 +181,11 @@ describe('PubSub with proxy connections', () => {
         await onewayClient.removeSubscribeProxies(stream, [proxyNodeId1, proxyNodeId2])
 
         expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
+            .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
 
         expect((await onewayClient.getNode())
-            .isStreamSetUp(toStreamPartID(stream.id, 0)))
+            .hasStreamPart(toStreamPartID(stream.id, 0)))
             .toEqual(false)
     }, 15000)
 })

@@ -260,6 +260,13 @@ export class ProxyStreamConnectionManager {
         return false
     }
 
+    isPublishOnlyStream(streamPartId: StreamPartID): boolean {
+        if (this.connections.get(streamPartId) && [...this.connections.get(streamPartId)!.values()].length > 0) {
+            return [...this.connections.get(streamPartId)!.values()][0].direction === Direction.PUBLISHER
+        }
+        return false
+    }
+
     stop(): void {
         this.connections.forEach((streamPart: Map<NodeId, ProxyConnection>) => {
             streamPart.forEach((connection: ProxyConnection) => {

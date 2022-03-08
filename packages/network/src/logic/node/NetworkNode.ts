@@ -18,7 +18,7 @@ export class NetworkNode extends Node {
 
     publish(streamMessage: StreamMessage): void | never {
         const streamPartId = streamMessage.getStreamPartID()
-        if (this.isProxiedSubscription(streamPartId)) {
+        if (this.isProxiedSubscriber(streamPartId)) {
             throw new Error(`Cannot publish to ${streamPartId} as subscribe-only connections have been set`)
         }
         this.onDataReceived(streamMessage)
@@ -49,15 +49,25 @@ export class NetworkNode extends Node {
     }
 
     subscribe(streamPartId: StreamPartID): void {
+        if (this.isProxiedPublisher(streamPartId)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as publish-only connections have been set`)
+        }
         this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
 
     async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
+        if (this.isProxiedPublisher(streamPartId)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as publish-only connections have been set`)
+        }
         return this.subscribeAndWaitForJoinOperation(streamPartId, timeout)
     }
 
     async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
-        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamMessage.getStreamPartID(), timeout)
+        const streamPartId = streamMessage.getStreamPartID()
+        if (this.isProxiedSubscriber(streamPartId)) {
+            throw new Error(`Cannot publish to ${streamPartId} as subscribe-only connections have been set`)
+        }
+        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamPartId, timeout)
         this.onDataReceived(streamMessage)
         return numOfNeighbors
     }
@@ -70,7 +80,7 @@ export class NetworkNode extends Node {
         return this.streamPartManager.getNeighborsForStreamPart(streamPartId)
     }
 
-    isStreamSetUp(streamPartId: StreamPartID): boolean {
+    hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.streamPartManager.isSetUp(streamPartId)
     }
 

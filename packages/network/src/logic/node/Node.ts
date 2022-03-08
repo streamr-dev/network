@@ -473,7 +473,11 @@ export class Node extends EventEmitter {
         this.emit(streamPartId, error)
     }
 
-    isProxiedSubscription(streamPartId: StreamPartID): boolean {
+    isProxiedSubscriber(streamPartId: StreamPartID): boolean {
         return this.proxyStreamConnectionManager.isSubscribeOnlyStream(streamPartId)
+    }
+
+    isProxiedPublisher(streamPartId: StreamPartID): boolean {
+        return this.proxyStreamConnectionManager.isPublishOnlyStream(streamPartId)
     }
 }

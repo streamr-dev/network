@@ -27,7 +27,7 @@ export interface NetworkNodeStub {
     getRtt: (nodeId: string) => number|undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
-    isStreamSetUp: (streamPartId: StreamPartID) => boolean
+    hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyPublishConnection: (streamPartId: StreamPartID, contactNodeId: string) => boolean
     hasProxySubscribeConnection: (streamPartId: StreamPartID, contactNodeId: string) => boolean
 }

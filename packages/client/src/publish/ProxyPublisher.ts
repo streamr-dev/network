@@ -13,16 +13,6 @@ export default class ProxyPublisher {
     ) {
     }
 
-    async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
     async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         await Promise.allSettled(

@@ -100,7 +100,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    isStreamSetUp(streamPartId: StreamPartID): boolean {
+    hasStreamPart(streamPartId: StreamPartID): boolean {
         return this.subscriptions.has(streamPartId)
     }
 
