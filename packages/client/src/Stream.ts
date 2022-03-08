@@ -28,6 +28,7 @@ import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import Subscriber from './subscribe/Subscriber'
 import { Subscription } from './subscribe/Subscription'
+import debug from 'debug'
 
 export interface StreamProperties {
     id: string
@@ -71,6 +72,8 @@ function getFieldType(value: any): (Field['type'] | undefined) {
         }
     }
 }
+
+const log = debug('StreamrClient:Stream')
 
 /**
  * @category Important
@@ -243,6 +246,12 @@ class StreamrStream implements StreamMetadata {
                         }
                         if (streamPartId !== undefined) {
                             pendingStreamParts.delete(streamPartId)
+                            log(
+                                'received assignment %s, still %d / %d pending assignments',
+                                streamPartId,
+                                pendingStreamParts.size,
+                                this.partitions
+                            )
                             if (pendingStreamParts.size === 0) {
                                 cleanUp()
                                 resolve()
