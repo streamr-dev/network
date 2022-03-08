@@ -768,6 +768,7 @@ Example broker config
 
 ```json
 {
+    ...
     "client": {
         ...
         "network": {
