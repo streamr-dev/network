@@ -8,6 +8,9 @@ import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 import { MetricsContext } from 'streamr-network'
+import { toStreamID } from 'streamr-client-protocol'
+import { Stream } from 'streamr-client'
+import { logger } from 'ethers'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -38,9 +41,13 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     async start(): Promise<void> {
+        const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
+        const assignmentPickUpStream = await this.streamrClient.getOrCreateStream({
+            id: toStreamID('/assignments', clusterId)
+        })
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)
-        this.storageConfig = await this.startStorageConfig()
+        this.storageConfig = await this.startStorageConfig(clusterId, assignmentPickUpStream)
         this.messageListener = (msg) => {
             if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
@@ -84,10 +91,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async startStorageConfig(): Promise<StorageConfig> {
+    private async startStorageConfig(clusterId: string, assignmentPickUpStream: Stream): Promise<StorageConfig> {
         const node = await this.streamrClient.getNode()
         const storageConfig = new StorageConfig(
-            this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress(),
+            clusterId,
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
             this.pluginConfig.storageConfig.refreshInterval,
@@ -95,6 +102,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
             {
                 onStreamPartAdded: (streamPart) => {
                     node.subscribe(streamPart)
+                    assignmentPickUpStream.publish({
+                        streamPart
+                    }).catch((e) => {
+                        logger.warn('failed to publish to assignment pickup stream: %s', e)
+                    })
                 },
                 onStreamPartRemoved: (streamPart) => {
                     node.unsubscribe(streamPart)
