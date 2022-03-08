@@ -169,7 +169,8 @@ export class ProxyStreamConnectionManager {
         // More conditions could be added here, ie. a list of acceptable ids or max limit for number of one-way this
         const isAccepted = this.streamPartManager.isSetUp(streamPartId) && this.acceptProxyConnections
         if (isAccepted) {
-            if (message.direction === ProxyDirection.SUBSCRIBE) {
+            if (message.direction === ProxyDirection.PUBLISH) {
+                // The receiver of the PUBLISH request will only receive data from the connection
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
