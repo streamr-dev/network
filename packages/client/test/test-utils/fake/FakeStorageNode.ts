@@ -1,4 +1,11 @@
-import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import {
+    EthereumAddress,
+    MessageID,
+    StreamID,
+    StreamMessage,
+    StreamPartID, toStreamID,
+    toStreamPartID
+} from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { Multimap } from '../utils'
@@ -19,6 +26,12 @@ export class FakeStorageNode extends FakeBrubeckNode {
                 this.storeMessage(msg)
             })
             networkNode.subscribe(streamPartId)
+            this.publishToNode(new StreamMessage({
+                messageId: new MessageID(toStreamID(`${this.id}/assignments`), 0, Date.now(), 0, this.id, ''),
+                content: {
+                    streamPart: streamPartId,
+                }
+            }))
         }
     }
 

@@ -75,8 +75,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
 
     private createFakeStream = (props: StreamProperties & { id: StreamID}) => {
         const s = new Stream(props, this.container)
-        // TODO check that there is a storage assignment (if not, this promise should timeout)
-        s.waitUntilStorageAssigned = () => Promise.resolve()
         return s
     }
 

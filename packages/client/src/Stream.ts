@@ -200,69 +200,56 @@ class StreamrStream implements StreamMetadata {
         timeout?: number
     } = {}) {
         try {
-            const waitForPickupsPromise = this.waitForStorageNodesToPickUpAssignments(
-                nodeAddress,
-                waitOptions.timeout || 30 * 1000
-            ) // TODO: default param?
-            await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
-            await waitForPickupsPromise
-        } finally {
-            this._streamEndpointsCached.clearStream(this.id)
-        }
-    }
-
-    private waitForStorageNodesToPickUpAssignments(
-        nodeAddress: EthereumAddress,
-        timeout: number
-    ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            /// stream#0 ---> storage-node-1
-            //  stream#1 ---> storage-node-1
-            //   stream#2 ---> storage-node-2
+            let resolveFn: (v: unknown) => void
+            let rejectFn: (err: Error) => void
+            const p = new Promise((resolve, reject) => {
+                resolveFn = resolve
+                rejectFn = reject
+            })
+            let assignmentStreamSubscription: Subscription | undefined
             const pendingStreamParts = new Set<StreamPartID>(this.getStreamParts())
-            let subscription: Subscription | undefined
-
-            const timeoutRef = setTimeout(async () => {
+            const timeoutRef = setTimeout(() => {
                 cleanUp()
-                reject(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...pendingStreamParts].join(',')))
-            }, timeout)
-
+                rejectFn(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...pendingStreamParts].join(',')))
+            }, waitOptions.timeout ?? 30 * 1000)
             const cleanUp = () => {
                 clearTimeout(timeoutRef)
-                subscription?.unsubscribe().catch((_e) => {
+                assignmentStreamSubscription?.unsubscribe().catch((_e) => {
                     // TODO: handle error
                 })
             }
-
-            this._subscriber.subscribe(
-                toStreamID('/assignments', nodeAddress),
-                (msg: any) => {
-                    if (msg.streamPart !== undefined) {
-                        let streamPartId: StreamPartID | undefined
-                        try {
-                            streamPartId = StreamPartIDUtils.parse(msg.streamPart)
-                        } catch (e) {
-                            console.warn('failed to parse stream part from assignment pickup stream: %s', e)
-                        }
-                        if (streamPartId !== undefined) {
-                            pendingStreamParts.delete(streamPartId)
-                            log(
-                                'received assignment %s, still %d / %d pending assignments',
-                                streamPartId,
-                                pendingStreamParts.size,
-                                this.partitions
-                            )
-                            if (pendingStreamParts.size === 0) {
-                                cleanUp()
-                                resolve()
-                            }
+            const msgHandler = (msg: any) => {
+                if (msg.streamPart !== undefined) {
+                    let streamPartId: StreamPartID | undefined
+                    try {
+                        streamPartId = StreamPartIDUtils.parse(msg.streamPart)
+                    } catch (e) {
+                        console.warn('failed to parse stream part from assignment pickup stream: %s', e)
+                    }
+                    if (streamPartId !== undefined) {
+                        pendingStreamParts.delete(streamPartId)
+                        log(
+                            'received assignment %s, still %d / %d pending assignments',
+                            streamPartId,
+                            pendingStreamParts.size,
+                            this.partitions
+                        )
+                        if (pendingStreamParts.size === 0) {
+                            cleanUp()
+                            resolveFn(undefined)
                         }
                     }
                 }
-            ).then((sub) => {
-                subscription = sub
-            }, reject)
-        })
+            }
+            assignmentStreamSubscription = await this._subscriber.subscribe(
+                toStreamID('/assignments', nodeAddress),
+                msgHandler
+            )
+            await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
+            await p
+        } finally {
+            this._streamEndpointsCached.clearStream(this.id)
+        }
     }
 
     /**
