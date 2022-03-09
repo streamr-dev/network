@@ -7,6 +7,7 @@ import { ActiveNodes } from './ActiveNodes'
 import { StorageNodeAssignmentEvent, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { Stream } from '../../../src/Stream'
 import { Multimap } from '../utils'
+import { StreamRegistry } from '../../../src/StreamRegistry'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
@@ -20,10 +21,11 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         @inject(ActiveNodes) activeNodes: ActiveNodes,
+        @inject(StreamRegistry) streamRegistry: StreamRegistry
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.activeNodes = activeNodes
-        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, 'storage'))
+        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, 'storage', streamRegistry))
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {

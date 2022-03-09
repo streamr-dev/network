@@ -17,19 +17,17 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import {
     EthereumAddress,
     StreamID,
-    StreamMessage,
     StreamMetadata,
     StreamPartID,
-    StreamPartIDUtils,
     toStreamPartID
 } from 'streamr-client-protocol'
-import { identity, range } from 'lodash'
+import { range } from 'lodash'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import Subscriber from './subscribe/Subscriber'
-import { collect, unique } from './utils/GeneratorUtils'
 import { withTimeout } from './utils'
+import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
 export interface StreamProperties {
     id: string
@@ -199,22 +197,7 @@ class StreamrStream implements StreamMetadata {
         let assignmentSubscription
         try {
             assignmentSubscription = await this._subscriber.subscribe(`${nodeAddress}/assignments`)
-            const propagationPromise = collect(
-                unique<string>(
-                    assignmentSubscription
-                        .map((msg: StreamMessage) => (msg.getParsedContent() as any).streamPart)
-                        .filter((input: any) => {
-                            try {
-                                const streamPartId = StreamPartIDUtils.parse(input)
-                                return StreamPartIDUtils.getStreamID(streamPartId) === this.id
-                            } catch {
-                                return false
-                            }
-                        }),
-                    identity
-                ),
-                this.partitions
-            )
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
             await withTimeout(
                 propagationPromise,
