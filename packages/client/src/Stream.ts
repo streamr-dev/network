@@ -28,7 +28,6 @@ import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import Subscriber from './subscribe/Subscriber'
-import debug from 'debug'
 import { collect, unique } from './utils/GeneratorUtils'
 import { withTimeout } from './utils'
 
