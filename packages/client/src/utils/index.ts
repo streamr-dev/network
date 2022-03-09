@@ -651,3 +651,23 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         clearTimeout(t)
     }
 }
+
+// TODO import this from a library (e.g. streamr-test-utils if that is no longer a test-only dependency)
+export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+export const withTimeout = async <T>(
+    task: Promise<T>,
+    waitTimeMs: number,
+    errorMessage: string,
+    onTimeout?: () => void
+): Promise<void> => {
+    let timeoutRef: ReturnType<typeof setTimeout>
+    const timeoutPromise = new Promise((resolve, reject) => {
+        timeoutRef = setTimeout(() => {
+            onTimeout?.()
+            reject(new Error(errorMessage))
+        }, waitTimeMs)
+    })
+    await Promise.race([task, timeoutPromise])
+    clearTimeout(timeoutRef!)
+}

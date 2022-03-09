@@ -1,5 +1,5 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
-import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
     StreamPermission,
@@ -16,6 +16,7 @@ import { StreamRegistry } from '../../../src/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
 import { StreamEndpointsCached } from '../../../src/StreamEndpointsCached'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 type PublicPermissionTarget = 'public'
 const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
@@ -47,6 +48,10 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         this.ethereum = ethereum
         this.container = container
         this.streamEndpointsCached = streamEndpointsCached
+        this.registryItems.set(toStreamID('/assignments', DOCKER_DEV_STORAGE_NODE), {
+            metadata: {},
+            permissions: new Multimap()
+        })
     }
 
     async createStream(propsOrStreamIdOrPath: StreamProperties | string) {

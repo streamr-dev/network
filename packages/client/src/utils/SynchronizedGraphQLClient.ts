@@ -8,7 +8,7 @@ import { EthereumAddress } from 'streamr-client-protocol'
 import Gate from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
-import { instanceId } from './index'
+import { instanceId, wait, withTimeout } from './index'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -44,19 +44,6 @@ export const createWriteContract = <T extends Contract>(
     return contract
 }
 
-// TODO import this from a library (e.g. streamr-test-utils if that is no longer a test-only dependency)
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const timeout = async (
-    waitTimeMs: number,
-    errorMessage: string,
-    callback: () => void
-): Promise<void> => {
-    await wait(waitTimeMs)
-    callback()
-    throw new Error(errorMessage)
-}
-
 class BlockNumberGate extends Gate {
     blockNumber: number
 
@@ -86,17 +73,15 @@ class IndexingState {
         this.debug = debug
     }
 
-    async waitUntiIndexed(blockNumber: number): Promise<void> {
+    async waitUntilIndexed(blockNumber: number): Promise<void> {
         this.debug(`wait until The Graph is synchronized to block ${blockNumber}`)
         const gate = this.getOrCreateGate(blockNumber)
-        await Promise.race([
+        await withTimeout(
             gate.check(),
-            timeout(
-                this.pollTimeout,
-                `timed out while waiting for The Graph to synchronized to block ${blockNumber}`,
-                () => this.gates.delete(gate)
-            )
-        ])
+            this.pollTimeout,
+            `timed out while waiting for The Graph to synchronized to block ${blockNumber}`,
+            () => this.gates.delete(gate)
+        )
     }
 
     private getOrCreateGate(blockNumber: number): BlockNumberGate {
@@ -163,7 +148,7 @@ export class SynchronizedGraphQLClient {
     }
 
     async sendQuery(gqlQuery: string): Promise<Object> {
-        await this.indexingState.waitUntiIndexed(this.requiredBlockNumber)
+        await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         return this.delegate.sendQuery(gqlQuery)
     }
 
@@ -171,7 +156,7 @@ export class SynchronizedGraphQLClient {
         createQuery: (lastId: string, pageSize: number) => string,
         pageSize?: number
     ): AsyncGenerator<T, void, undefined> {
-        await this.indexingState.waitUntiIndexed(this.requiredBlockNumber)
+        await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         yield* this.delegate.fetchPaginatedResults(createQuery, pageSize)
     }
 }

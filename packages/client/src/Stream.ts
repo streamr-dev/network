@@ -17,18 +17,20 @@ import { StreamEndpointsCached } from './StreamEndpointsCached'
 import {
     EthereumAddress,
     StreamID,
+    StreamMessage,
     StreamMetadata,
-    StreamPartID, StreamPartIDUtils,
-    toStreamID,
+    StreamPartID,
+    StreamPartIDUtils,
     toStreamPartID
 } from 'streamr-client-protocol'
-import _ from 'lodash'
+import { identity, range } from 'lodash'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import Subscriber from './subscribe/Subscriber'
-import { Subscription } from './subscribe/Subscription'
 import debug from 'debug'
+import { collect, unique } from './utils/GeneratorUtils'
+import { withTimeout } from './utils'
 
 export interface StreamProperties {
     id: string
@@ -72,8 +74,6 @@ function getFieldType(value: any): (Field['type'] | undefined) {
         }
     }
 }
-
-const log = debug('StreamrClient:Stream')
 
 /**
  * @category Important
@@ -141,7 +141,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     getStreamParts(): StreamPartID[] {
-        return _.range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+        return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
     }
 
     toObject(): StreamProperties {
@@ -196,59 +196,36 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
-        timeout?: number
-    } = {}) {
+    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}) {
+        let assignmentSubscription
         try {
-            let resolveFn: (v: unknown) => void
-            let rejectFn: (err: Error) => void
-            const p = new Promise((resolve, reject) => {
-                resolveFn = resolve
-                rejectFn = reject
-            })
-            let assignmentStreamSubscription: Subscription | undefined
-            const pendingStreamParts = new Set<StreamPartID>(this.getStreamParts())
-            const timeoutRef = setTimeout(() => {
-                cleanUp()
-                rejectFn(new Error('timed out waiting for storage nodes to pick up on assignments: ' + [...pendingStreamParts].join(',')))
-            }, waitOptions.timeout ?? 30 * 1000)
-            const cleanUp = () => {
-                clearTimeout(timeoutRef)
-                assignmentStreamSubscription?.unsubscribe().catch((_e) => {
-                    // TODO: handle error
-                })
-            }
-            const msgHandler = (msg: any) => {
-                if (msg.streamPart !== undefined) {
-                    let streamPartId: StreamPartID | undefined
-                    try {
-                        streamPartId = StreamPartIDUtils.parse(msg.streamPart)
-                    } catch (e) {
-                        console.warn('failed to parse stream part from assignment pickup stream: %s', e)
-                    }
-                    if (streamPartId !== undefined) {
-                        pendingStreamParts.delete(streamPartId)
-                        log(
-                            'received assignment %s, still %d / %d pending assignments',
-                            streamPartId,
-                            pendingStreamParts.size,
-                            this.partitions
-                        )
-                        if (pendingStreamParts.size === 0) {
-                            cleanUp()
-                            resolveFn(undefined)
-                        }
-                    }
-                }
-            }
-            assignmentStreamSubscription = await this._subscriber.subscribe(
-                toStreamID('/assignments', nodeAddress),
-                msgHandler
+            assignmentSubscription = await this._subscriber.subscribe(`${nodeAddress}/assignments`)
+            const propagationPromise = collect(
+                unique<string>(
+                    assignmentSubscription
+                        .map((msg: StreamMessage) => (msg.getParsedContent() as any).streamPart)
+                        .filter((input: any) => {
+                            try {
+                                const streamPartId = StreamPartIDUtils.parse(input)
+                                return StreamPartIDUtils.getStreamID(streamPartId) === this.id
+                            } catch {
+                                return false
+                            }
+                        }),
+                    identity
+                ),
+                this.partitions
             )
             await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
-            await p
+            await withTimeout(
+                propagationPromise,
+                // eslint-disable-next-line no-underscore-dangle
+                waitOptions.timeout ?? this._clientConfig._timeouts.storageNode.timeout,
+                'timed out waiting for storage nodes to respond'
+            )
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
+            await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
 
