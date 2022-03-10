@@ -28,17 +28,17 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const normalizedNodeAddress = nodeAddress.toLowerCase()
-        const assignments = await this.getStorageNodesOf(streamIdOrPath)
+        const assignments = await this.getStorageNodes(streamIdOrPath)
         return assignments.includes(normalizedNodeAddress)
     }
 
-    async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
+    async getStorageNodes(streamIdOrPath: string): Promise<EthereumAddress[]> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         return this.assignments.get(streamId)
     }
 
     async getRandomStorageNodeFor(streamPartId: StreamPartID): Promise<FakeStorageNode> {
-        const nodeAddresses = await this.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAddresses = await this.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (nodeAddresses.length > 0) {
             const chosenAddress = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
             const storageNode = this.activeNodes.getNode(chosenAddress)

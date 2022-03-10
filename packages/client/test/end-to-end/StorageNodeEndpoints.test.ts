@@ -78,10 +78,20 @@ describe('createNode', () => {
         await client.unregisterStorageEventListeners()
     })
 
-    it('getStorageNodesOf', async () => {
-        const storageNodeUrls: EthereumAddress[] = await client.getStorageNodesOf(createdStream.id)
-        expect(storageNodeUrls.length).toEqual(1)
-        return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
+    describe('getStorageNodes', () => {
+
+        it('id', async () => {
+            const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes(createdStream.id)
+            expect(storageNodeUrls.length).toEqual(1)
+            return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
+        })
+    
+        it('all', async () => {
+            const storageNodeUrls: EthereumAddress[] = await client.getAllStorageNodes()
+            expect(storageNodeUrls.length).toBeGreaterThan(0)
+            return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
+        })
+
     })
 
     it('getStoredStreamsOf', async () => {
@@ -89,12 +99,6 @@ describe('createNode', () => {
         expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.length).toBeGreaterThan(0)
         return expect(streams.find((el) => { return el.id === createdStream.id })).toBeDefined()
-    })
-
-    it('getAllStorageNodes', async () => {
-        const storageNodeUrls: EthereumAddress[] = await client.getAllStorageNodes()
-        expect(storageNodeUrls.length).toBeGreaterThan(0)
-        return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
     })
 
     it('removeStreamFromStorageNode', async () => {
