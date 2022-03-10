@@ -109,7 +109,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreamsOf(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
+    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
         throw new Error('not implemented')
     }
 

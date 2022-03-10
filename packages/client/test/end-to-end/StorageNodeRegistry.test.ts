@@ -46,14 +46,14 @@ describe('StorageNodeRegistry', () => {
         let storageNodes = await stream.getStorageNodes()
         expect(storageNodes.length).toBe(1)
         expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
-        let stored = await creatorClient.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+        let stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(true)
 
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
         await until(async () => { return !(await creatorClient.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
         storageNodes = await stream.getStorageNodes()
         expect(storageNodes).toHaveLength(0)
-        stored = await creatorClient.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+        stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
     })
 
@@ -81,8 +81,8 @@ describe('StorageNodeRegistry', () => {
         })
     }, TEST_TIMEOUT)
 
-    it('getStoredStreamsOf', async () => {
-        const result = await listenerClient.getStoredStreamsOf(DOCKER_DEV_STORAGE_NODE)
+    it('getStoredStreams', async () => {
+        const result = await listenerClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(result.blockNumber).toBeGreaterThanOrEqual(0)
         expect(result.streams.length).toBeGreaterThanOrEqual(0)
         result.streams.forEach((s) => expect(s).toBeInstanceOf(Stream))
