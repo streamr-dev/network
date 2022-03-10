@@ -3,7 +3,6 @@ import { MessageID, StreamID, StreamMessage, StreamPartID, toStreamID, toStreamP
 import { PushPipeline } from '../../src/utils/Pipeline'
 import { range, shuffle } from 'lodash'
 import { wait } from 'streamr-test-utils'
-import { afterEach } from 'jest-circus'
 
 function makeMsg<T>(ts: number, content: T): StreamMessage<T> {
     return new StreamMessage({
@@ -47,10 +46,6 @@ describe(waitForAssignmentsToPropagate, () => {
             .catch(() => {
                 propagatePromiseState = 'rejected'
             })
-    })
-
-    afterEach(() => {
-        pushPipeline.end()
     })
 
     describe('ignore cases', () => {

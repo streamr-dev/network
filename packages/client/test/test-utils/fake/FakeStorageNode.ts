@@ -3,8 +3,8 @@ import {
     MessageID,
     StreamID,
     StreamMessage,
-    StreamPartID, toStreamID,
-    toStreamPartID
+    StreamPartID,
+    toStreamID
 } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
