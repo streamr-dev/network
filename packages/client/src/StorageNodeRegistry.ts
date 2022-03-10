@@ -114,21 +114,6 @@ export class StorageNodeRegistry {
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
         await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
-
-        const nodeAddress = await this.ethereum.getAddress()
-        await until(async () => {
-            try {
-                const url = await this.getStorageNodeUrl(nodeAddress)
-                return nodeMetadata.includes(url)
-            } catch (err) {
-                return false
-            }
-        },
-        // eslint-disable-next-line no-underscore-dangle
-        this.clientConfig._timeouts.theGraph.timeout,
-        // eslint-disable-next-line no-underscore-dangle
-        this.clientConfig._timeouts.theGraph.retryInterval,
-        () => `Failed to create/update node ${nodeAddress}, timed out querying fact from theGraph`)
     }
 
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
