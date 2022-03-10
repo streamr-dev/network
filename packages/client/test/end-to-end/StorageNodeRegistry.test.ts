@@ -50,7 +50,7 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(true)
 
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
-        await until(async () => { return !(await creatorClient.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
+        await until(async () => { return !(await creatorClient.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)) }, 100000, 1000)
         storageNodes = await stream.getStorageNodes()
         expect(storageNodes).toHaveLength(0)
         stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)

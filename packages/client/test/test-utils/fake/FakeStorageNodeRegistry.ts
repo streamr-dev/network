@@ -84,11 +84,6 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isStreamStoredInStorageNodeFromContract(_streamIdOrPath: string, _nodeAddress: EthereumAddress): Promise<boolean> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     createOrUpdateNodeInStorageNodeRegistry(_nodeMetadata: string): Promise<void> {
         throw new Error('not implemented')
     }
@@ -104,7 +99,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isStreamStoredInStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
+    isStoredStream(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
         throw new Error('not implemented')
     }
 

@@ -52,13 +52,13 @@ describe('createNode', () => {
         return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
     })
 
-    it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
+    it('addStreamToStorageNode, isStoredStream', async () => {
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
+        await until(async () => { return client.isStoredStream(createdStream.id, nodeAddress) }, 100000, 1000)
+        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(true)
     })
 
-    it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
+    it('addStreamToStorageNode, isStoredStream, eventlistener', async () => {
         const promise = Promise
         const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
@@ -103,14 +103,14 @@ describe('createNode', () => {
 
     it('removeStreamFromStorageNode', async () => {
         await client.removeStreamFromStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return !(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)) }, 100000, 1000)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
+        await until(async () => { return !(await client.isStoredStream(createdStream.id, nodeAddress)) }, 100000, 1000)
+        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(false)
     })
 
     it('addStreamToStorageNode through stream object', async () => {
         const stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored).toEqual(true)
     })
 
