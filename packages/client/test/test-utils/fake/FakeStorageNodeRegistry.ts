@@ -32,9 +32,13 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
         return assignments.includes(normalizedNodeAddress)
     }
 
-    async getStorageNodes(streamIdOrPath: string): Promise<EthereumAddress[]> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.assignments.get(streamId)
+    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        if (streamIdOrPath !== undefined) {
+            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+            return this.assignments.get(streamId)
+        } else {
+            throw new Error('not implemented')
+        }
     }
 
     async getRandomStorageNodeFor(streamPartId: StreamPartID): Promise<FakeStorageNode> {
@@ -106,11 +110,6 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
 
     // eslint-disable-next-line class-methods-use-this
     getStoredStreamsOf(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getAllStorageNodes(): Promise<string[]> {
         throw new Error('not implemented')
     }
 
