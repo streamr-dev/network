@@ -36,6 +36,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             return this.assignments.get(streamId)
+            // eslint-disable-next-line no-else-return
         } else {
             throw new Error('not implemented')
         }

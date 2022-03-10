@@ -85,7 +85,7 @@ describe('createNode', () => {
             expect(storageNodeUrls.length).toEqual(1)
             return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
         })
-    
+
         it('all', async () => {
             const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes()
             expect(storageNodeUrls.length).toBeGreaterThan(0)

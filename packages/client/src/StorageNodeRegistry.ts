@@ -198,6 +198,7 @@ export class StorageNodeRegistry {
                 return []
             }
             return res.stream.storageNodes.map((node) => node.id)
+            // eslint-disable-next-line no-else-return
         } else {
             log('Getting all storage nodes')
             const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildAllNodesQuery()) as AllNodesQueryResult
