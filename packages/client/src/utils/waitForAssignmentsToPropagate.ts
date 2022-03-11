@@ -16,6 +16,7 @@ export function waitForAssignmentsToPropagate(
                 .map((msg: StreamMessage) => (msg.getParsedContent() as any).streamPart)
                 .filter((input: any) => {
                     try {
+                        console.info('RECEIVED MESSAGE\n' + input)
                         const streamPartId = StreamPartIDUtils.parse(input)
                         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
                         return streamId === targetStream.id && partition < targetStream.partitions

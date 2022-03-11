@@ -103,13 +103,18 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 onStreamPartAdded: (streamPart) => {
                     node.subscribe(streamPart)
                     // TODO: timing issue?
+                    logger.info("going to publish %s, all neighbors %s, assignment stream neighbors %s",
+                        assignmentStream.id,
+                        node.getNeighbors(),
+                        node.getNeighborsForStreamPart(assignmentStream.getStreamParts()[0])
+                    )
                     assignmentStream.publish({
                         streamPart
                     }).then(() => {
-                        logger.debug('published message to assignment stream %s', assignmentStream.id)
+                        logger.info('published message to assignment stream %s', assignmentStream.id)
                         return true
                     }).catch((e) => {
-                        logger.warn('failed to publish to assignment stream: %s', e)
+                        logger.info('failed to publish to assignment stream: %s', e)
                     })
                 },
                 onStreamPartRemoved: (streamPart) => {
