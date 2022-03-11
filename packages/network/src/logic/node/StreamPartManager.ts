@@ -32,7 +32,7 @@ export class StreamPartManager {
                 outputToPrint[streamPartId] = state.neighbors
             })
             logger.info("streamPartManager state %j", outputToPrint)
-        }, 5000)
+        }, 15 * 1000)
     }
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {

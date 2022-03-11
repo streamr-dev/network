@@ -245,7 +245,8 @@ export class Node extends EventEmitter {
         trackerId: TrackerId,
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
-        logger.info('nodes %j ATTEMPTING to subscribe to stream %s', nodeIds, streamPartId)
+        logger.info('nodes %j ATTEMPTING to subscribe to stream %s',
+            nodeIds, streamPartId)
         const subscribePromises = nodeIds.map(async (nodeId) => {
             try {
                 await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
