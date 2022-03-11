@@ -324,6 +324,7 @@ export class Node extends EventEmitter {
     }
 
     private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {
+        logger.info('node %s subscribed to stream %s', node, streamPartId)
         this.streamPartManager.addNeighbor(streamPartId, node)
         this.propagation.onNeighborJoined(node, streamPartId)
         if (sendStatus) {
@@ -335,7 +336,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
-        logger.trace('node %s unsubscribed from stream %s', node, streamPartId)
+        logger.info('node %s unsubscribed from stream %s', node, streamPartId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {
