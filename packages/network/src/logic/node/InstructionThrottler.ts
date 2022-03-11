@@ -58,6 +58,9 @@ export class InstructionThrottler {
                     this.logger.warn("error handling instruction, reason: %s", err)
                 })
             }
+        } else {
+            this.logger.warn('Received OLD instruction %d (current=%s)',
+                instructionMessage.counter, this.instructionCounter[streamPartId])
         }
     }
 
