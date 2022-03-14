@@ -11,8 +11,9 @@ jest.setTimeout(30000)
 
 /**
  * These tests should be run in sequential order!
+ * TODO: combine with StorageNodeRegistry.test.ts ?
  */
-describe('createNode', () => {
+describe('StorageNodeRegistry2', () => {
     let client: StreamrClient
     let storageNodeClient: StreamrClient
     let createdStream: Stream
