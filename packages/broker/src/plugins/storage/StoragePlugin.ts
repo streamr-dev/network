@@ -8,6 +8,8 @@ import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
 import { MetricsContext } from 'streamr-network'
+import { Stream } from 'streamr-client'
+import { logger } from 'ethers'
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -38,9 +40,11 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     }
 
     async start(): Promise<void> {
+        const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
+        const assignmentPickUpStream = await this.streamrClient.getStream(`${clusterId}/assignments`)
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)
-        this.storageConfig = await this.startStorageConfig()
+        this.storageConfig = await this.startStorageConfig(clusterId, assignmentPickUpStream)
         this.messageListener = (msg) => {
             if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
@@ -84,17 +88,27 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         return cassandraStorage
     }
 
-    private async startStorageConfig(): Promise<StorageConfig> {
+    private async startStorageConfig(clusterId: string, assignmentStream: Stream): Promise<StorageConfig> {
         const node = await this.streamrClient.getNode()
         const storageConfig = new StorageConfig(
-            this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress(),
+            clusterId,
             this.pluginConfig.cluster.clusterSize,
             this.pluginConfig.cluster.myIndexInCluster,
             this.pluginConfig.storageConfig.refreshInterval,
             this.streamrClient,
             {
-                onStreamPartAdded: (streamPart) => {
-                    node.subscribe(streamPart)
+                onStreamPartAdded: async (streamPart) => {
+                    try {
+                        await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
+                    } catch (_e) {}
+                    try {
+                        await assignmentStream.publish({
+                            streamPart
+                        })
+                        logger.debug('published message to assignment stream %s', assignmentStream.id)
+                    } catch (e) {
+                        logger.warn('failed to publish to assignment stream %s, reason: %s', assignmentStream.id, e)
+                    }
                 },
                 onStreamPartRemoved: (streamPart) => {
                     node.unsubscribe(streamPart)
