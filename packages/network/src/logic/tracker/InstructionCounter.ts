@@ -1,10 +1,13 @@
 import { StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Status } from '../../identifiers'
 import { NodeId } from '../node/Node'
+import { Logger } from '../../helpers/logger/LoggerNode'
 
 export const COUNTER_UNSUBSCRIBE = -1
 // Used by the tracker to signal to nodes that they are alone in the topology
 export const COUNTER_LONE_NODE = -2
+
+const logger = new Logger(module)
 
 type Counters = Record<NodeId, Record<StreamPartID, number>>
 
@@ -16,6 +19,11 @@ export class InstructionCounter {
     setOrIncrement(nodeId: NodeId, streamPartId: StreamPartID): number {
         this.getAndSetIfNecessary(nodeId, streamPartId)
         this.counters[nodeId][streamPartId] += 1
+        logger.info('counter (%s,%s) === %d',
+            nodeId.slice(0, 15),
+            streamPartId.slice(-15),
+            this.counters[nodeId][streamPartId]
+        )
         return this.counters[nodeId][streamPartId]
     }
 
@@ -26,11 +34,16 @@ export class InstructionCounter {
     }
 
     removeNode(nodeId: NodeId): void {
+        logger.info('removeNode %s', nodeId.slice(0, 15))
         delete this.counters[nodeId]
     }
 
     removeStreamPart(streamPartId: StreamPartID): void {
         Object.keys(this.counters).forEach((nodeId) => {
+            logger.info('removeStreamPart: rm counter (%s,%s)',
+                nodeId.slice(0, 15),
+                streamPartId.slice(-15),
+            )
             delete this.counters[nodeId][streamPartId]
         })
     }

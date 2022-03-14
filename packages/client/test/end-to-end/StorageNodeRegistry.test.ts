@@ -6,7 +6,7 @@ import { Stream } from '../../src'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { afterAll } from 'jest-circus'
 
-const TEST_TIMEOUT = 60 * 1000
+const TEST_TIMEOUT = 256 * 1000
 
 describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet
@@ -42,7 +42,7 @@ describe('StorageNodeRegistry', () => {
     })
 
     it('add and remove', async () => {
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { timeout: 45 * 1000})
+        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE, { timeout: 120 * 1000})
         let storageNodes = await stream.getStorageNodes()
         expect(storageNodes.length).toBe(1)
         expect(storageNodes[0]).toStrictEqual(DOCKER_DEV_STORAGE_NODE.toLowerCase())
