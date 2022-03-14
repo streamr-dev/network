@@ -28,17 +28,22 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const normalizedNodeAddress = nodeAddress.toLowerCase()
-        const assignments = await this.getStorageNodesOf(streamIdOrPath)
+        const assignments = await this.getStorageNodes(streamIdOrPath)
         return assignments.includes(normalizedNodeAddress)
     }
 
-    async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        return this.assignments.get(streamId)
+    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        if (streamIdOrPath !== undefined) {
+            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+            return this.assignments.get(streamId)
+            // eslint-disable-next-line no-else-return
+        } else {
+            throw new Error('not implemented')
+        }
     }
 
     async getRandomStorageNodeFor(streamPartId: StreamPartID): Promise<FakeStorageNode> {
-        const nodeAddresses = await this.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAddresses = await this.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (nodeAddresses.length > 0) {
             const chosenAddress = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
             const storageNode = this.activeNodes.getNode(chosenAddress)
@@ -80,11 +85,6 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isStreamStoredInStorageNodeFromContract(_streamIdOrPath: string, _nodeAddress: EthereumAddress): Promise<boolean> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     createOrUpdateNodeInStorageNodeRegistry(_nodeMetadata: string): Promise<void> {
         throw new Error('not implemented')
     }
@@ -100,17 +100,12 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    isStreamStoredInStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
+    isStoredStream(_streamIdOrPath: string, _nodeAddress: string): Promise<boolean> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreamsOf(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getAllStorageNodes(): Promise<string[]> {
+    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
         throw new Error('not implemented')
     }
 
