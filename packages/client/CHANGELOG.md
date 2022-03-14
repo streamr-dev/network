@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Method `getStorageNodesOf()` renamed to `getStorageNodes()`
+- Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
+- Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
 - Method `stream.update()` now requires a parameter `props`
 - Method `unRegisterStorageEventListeners()` renamed to `unregisterStorageEventListeners()`
 
@@ -20,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove method `getAllStorageNodes()`, use `getStorageNodes()` without arguments instead
 - Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
 - Remove method `disconnect()`, use `destroy()` instead
 - Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead

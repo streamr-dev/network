@@ -12,7 +12,6 @@ jest.setTimeout(30000)
 /**
  * These tests should be run in sequential order!
  */
-
 describe('createNode', () => {
     let client: StreamrClient
     let storageNodeClient: StreamrClient
@@ -52,7 +51,7 @@ describe('createNode', () => {
 
     it('add stream to storage node', async () => {
         await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
-        expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeAddress)).toEqual(true)
+        expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(true)
     })
 
     it('storage event listener', async () => {
@@ -78,31 +77,33 @@ describe('createNode', () => {
         }
     })
 
-    it('getStorageNodesOf', async () => {
-        const storageNodeUrls = await client.getStorageNodesOf(createdStream.id)
-        expect(storageNodeUrls).toEqual([storageNodeAddress.toLowerCase()])
+    describe('getStorageNodes', () => {
+        it('id', async () => {
+            const storageNodeUrls = await client.getStorageNodes(createdStream.id)
+            expect(storageNodeUrls).toEqual([storageNodeAddress.toLowerCase()])
+        })
+
+        it('all', async () => {
+            const storageNodeUrls = await client.getStorageNodes()
+            return expect(storageNodeUrls).toContain(storageNodeAddress.toLowerCase())
+        })
     })
 
-    it('getStoredStreamsOf', async () => {
-        const { streams, blockNumber } = await client.getStoredStreamsOf(storageNodeAddress)
+    it('getStoredStreams', async () => {
+        const { streams, blockNumber } = await client.getStoredStreams(storageNodeAddress)
         expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.find((el) => el.id === createdStream.id)).toBeDefined()
     })
 
-    it('getAllStorageNodes', async () => {
-        const storageNodeUrls = await client.getAllStorageNodes()
-        return expect(storageNodeUrls).toContain(storageNodeAddress.toLowerCase())
-    })
-
     it('removeStreamFromStorageNode', async () => {
         await client.removeStreamFromStorageNode(createdStream.id, storageNodeAddress)
-        expect(await client.isStreamStoredInStorageNode(createdStream.id, storageNodeAddress)).toEqual(false)
+        expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(false)
     })
 
     it('addStreamToStorageNode through stream object', async () => {
         const stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored).toEqual(true)
     })
 

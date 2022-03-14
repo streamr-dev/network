@@ -162,7 +162,7 @@ export default class Resend implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAdresses = await this.storageNodeRegistry.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAdresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAdresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'

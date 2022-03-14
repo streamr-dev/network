@@ -6,7 +6,8 @@ import { Logger } from "../helpers/Logger"
 import { NameDirectory } from "../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
-nodeDataChannel.initLogger("Error" as LogLevel)
+const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
+nodeDataChannel.initLogger(loggerLevel as LogLevel)
 
 /**
  * Parameters that would be passed to an event handler function

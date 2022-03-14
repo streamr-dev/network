@@ -223,7 +223,7 @@ class StreamrStream implements StreamMetadata {
     }
 
     async getStorageNodes() {
-        return this._nodeRegistry.getStorageNodesOf(this.id)
+        return this._nodeRegistry.getStorageNodes(this.id)
     }
 
     /**

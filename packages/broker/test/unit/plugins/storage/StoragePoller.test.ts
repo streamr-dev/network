@@ -14,9 +14,9 @@ const POLL_RESULT = Object.freeze({
 })
 
 describe(StoragePoller, () => {
-    let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
+    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
     let onNewSnapshot: jest.Mock<void, [streams: Stream[], block: number]>
-    let stubClient: Pick<StreamrClient, 'getStoredStreamsOf'>
+    let stubClient: Pick<StreamrClient, 'getStoredStreams'>
     let poller: StoragePoller
 
     function initPoller(interval: number): StoragePoller {
@@ -24,9 +24,9 @@ describe(StoragePoller, () => {
     }
 
     beforeEach(() => {
-        getStoredStreamsOf = jest.fn()
+        getStoredStreams = jest.fn()
         onNewSnapshot = jest.fn()
-        stubClient = { getStoredStreamsOf }
+        stubClient = { getStoredStreams }
         poller = initPoller(POLL_TIME)
     })
 
@@ -36,7 +36,7 @@ describe(StoragePoller, () => {
 
     describe('poll()', () => {
         beforeEach(async () => {
-            getStoredStreamsOf.mockResolvedValueOnce(POLL_RESULT)
+            getStoredStreams.mockResolvedValueOnce(POLL_RESULT)
             await poller.poll()
         })
 
@@ -45,28 +45,28 @@ describe(StoragePoller, () => {
             expect(onNewSnapshot).toHaveBeenCalledWith(POLL_RESULT.streams, POLL_RESULT.blockNumber)
         })
 
-        it('client.getStoredStreamsOf is invoked with correct argument', () => {
-            expect(getStoredStreamsOf).toHaveBeenCalledWith('clusterId')
+        it('client.getStoredStreams is invoked with correct argument', () => {
+            expect(getStoredStreams).toHaveBeenCalledWith('clusterId')
         })
     })
 
     it('start() schedules polling on an interval', async () => {
-        getStoredStreamsOf.mockResolvedValue(POLL_RESULT)
+        getStoredStreams.mockResolvedValue(POLL_RESULT)
         await poller.start()
         await wait(POLL_TIME * 10)
         expect(onNewSnapshot.mock.calls.length).toBeGreaterThanOrEqual(4)
     })
 
     it('start() polls only once if pollInterval=0', async () => {
-        getStoredStreamsOf.mockResolvedValue(POLL_RESULT)
+        getStoredStreams.mockResolvedValue(POLL_RESULT)
         poller = initPoller(0)
         await poller.start()
         await wait(POLL_TIME * 10)
-        expect(getStoredStreamsOf).toBeCalledTimes(1)
+        expect(getStoredStreams).toBeCalledTimes(1)
     })
 
     it('start() handles polling errors gracefully', async () => {
-        getStoredStreamsOf.mockRejectedValue(new Error('poll failed'))
+        getStoredStreams.mockRejectedValue(new Error('poll failed'))
         await poller.start()
         await wait(POLL_TIME * 2)
         expect(onNewSnapshot).toBeCalledTimes(0) // Should not have encountered unhandledRejectionError
