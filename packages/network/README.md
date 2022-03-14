@@ -92,6 +92,12 @@ To disable all logs
 
     NOLOG=true
 
+To get logs from the internal node-datachannel library:
+
+    NODE_DATACHANNEL_LOG_LEVEL=[Verbose|Debug|Info|Warning|Error|Fatal]
+
+    By default: NODE_DATACHANNEL_LOG_LEVEL=Fatal
+
 ### Regenerate self-signed certificate fixture
 To regenerate self signed certificate in `./test/fixtures` run:
 
