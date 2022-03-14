@@ -750,7 +750,7 @@ await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...']
 await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 ```
 
-IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
+IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections and must have joined to the stream that a proxy connection is wanted for.
 
 Example client config:
 
@@ -774,6 +774,21 @@ Example broker config
         "network": {
             ...
             "acceptProxyConnections": true
+        }
+    },
+    "plugins": {
+        ...
+        "subscriber": {
+            "streams": [
+                {
+                    "streamId": "STREAM_ID",
+                    "streamPartition": 0
+                },
+                {
+                    "streamId": "STREAM_ID2",
+                    "streamPartition": 0
+                },
+            ]
         }
     }
 }
