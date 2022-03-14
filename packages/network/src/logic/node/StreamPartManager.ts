@@ -19,21 +19,8 @@ function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
     return `${publisherId}-${msgChainId}`
 }
 
-const logger = new Logger(module)
-
 export class StreamPartManager {
     private readonly streamParts = new Map<StreamPartID,StreamPartState>()
-
-    constructor() {
-        // TODO: RMRMRM!
-        setInterval(() => {
-            const outputToPrint: any = {}
-            this.streamParts.forEach((state, streamPartId) => {
-                outputToPrint[streamPartId] = state.neighbors
-            })
-            logger.info("streamPartManager state %j", outputToPrint)
-        }, 15 * 1000)
-    }
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
