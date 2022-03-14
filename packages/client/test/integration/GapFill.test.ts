@@ -7,7 +7,7 @@ import { Stream } from '../../src/Stream'
 import Subscriber from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, describeRepeats, Msg } from '../test-utils/utils'
+import { getPublishTestStreamMessages, createTestStream, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
@@ -30,7 +30,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
     })
 }
 
-describeRepeats('GapFill', () => {
+describe('GapFill', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let onError = jest.fn()

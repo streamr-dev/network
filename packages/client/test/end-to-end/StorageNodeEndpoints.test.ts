@@ -1,110 +1,103 @@
-import debug from 'debug'
 import { Wallet } from 'ethers'
-import { NotFoundError, Stream } from '../../src'
+import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { until } from '../../src/utils'
 import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
-import { createTestStream, getCreateClient, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
-const log = debug('StreamrClient::NodeEndpointsIntegrationTest')
 
 /**
  * These tests should be run in sequential order!
  */
-
-let client: StreamrClient
-let newStorageNodeClient: StreamrClient
-let createdStream: Stream
-let nodeAddress: EthereumAddress
-
-const createClient = getCreateClient()
-
-beforeAll(async () => {
-    const key = await fetchPrivateKeyWithGas()
-    client = await createClient({ auth: {
-        privateKey: key
-    } })
-    const newStorageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
-    newStorageNodeClient = await createClient({ auth: {
-        privateKey: newStorageNodeWallet.privateKey
-    } })
-    nodeAddress = (await newStorageNodeWallet.getAddress())
-    createdStream = await createTestStream(client, module, {})
-})
-
 describe('createNode', () => {
-    it('creates a node ', async () => {
-        const storageNodeMetadata = '{"http": "http://10.200.10.1:8891"}'
-        await newStorageNodeClient.createOrUpdateNodeInStorageNodeRegistry(storageNodeMetadata)
-        await until(async () => {
-            try {
-                return (await client.getStorageNodeUrl(nodeAddress)) !== null
-            } catch (err) {
-                log('node not found yet %o', err)
-                return false
+    let client: StreamrClient
+    let storageNodeClient: StreamrClient
+    let createdStream: Stream
+    let storageNodeAddress: EthereumAddress
+
+    beforeAll(async () => {
+        client = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: await fetchPrivateKeyWithGas()
             }
-        }, 100000, 1000)
-        const createdNodeUrl = await client.getStorageNodeUrl(nodeAddress)
-        return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
+        })
+        const storageNodeWallet = new Wallet(await fetchPrivateKeyWithGas())
+        storageNodeClient = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: storageNodeWallet.privateKey
+            }
+        })
+        storageNodeAddress = storageNodeWallet.address
+        createdStream = await createTestStream(client, module)
     })
 
-    it('addStreamToStorageNode, isStoredStream', async () => {
-        await client.addStreamToStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return client.isStoredStream(createdStream.id, nodeAddress) }, 100000, 1000)
-        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(true)
+    afterAll(async () => {
+        await Promise.allSettled([
+            client?.destroy(),
+            storageNodeClient?.destroy()
+        ])
     })
 
-    it('addStreamToStorageNode, isStoredStream, eventlistener', async () => {
+    it('creates a node', async () => {
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry('{"http": "http://10.200.10.1:8891"}')
+        const createdNodeUrl = await client.getStorageNodeUrl(storageNodeAddress)
+        expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
+    })
+
+    it('add stream to storage node', async () => {
+        await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
+        expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(true)
+    })
+
+    it('storage event listener', async () => {
         const promise = Promise
         const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
-            if (event.streamId === createdStream.id && event.nodeAddress === nodeAddress) {
+            if (event.streamId === createdStream.id && event.nodeAddress === storageNodeAddress) {
                 expect(event).toEqual({
                     blockNumber: expect.any(Number),
                     streamId: createdStream.id,
-                    nodeAddress,
+                    nodeAddress: storageNodeAddress,
                     type: 'added'
                 })
                 promise.resolve()
             }
         }
-        await client.registerStorageEventListener(callback)
-        await client.addStreamToStorageNode(createdStream.id, nodeAddress)
-        await promise
-        await client.unregisterStorageEventListeners()
+        try {
+            await client.registerStorageEventListener(callback)
+            await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
+            await promise
+        } finally {
+            await client?.unregisterStorageEventListeners()
+        }
     })
 
     describe('getStorageNodes', () => {
-
         it('id', async () => {
-            const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes(createdStream.id)
-            expect(storageNodeUrls.length).toEqual(1)
-            return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
+            const storageNodeUrls = await client.getStorageNodes(createdStream.id)
+            expect(storageNodeUrls).toEqual([storageNodeAddress.toLowerCase()])
         })
 
         it('all', async () => {
-            const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes()
-            expect(storageNodeUrls.length).toBeGreaterThan(0)
-            return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
+            const storageNodeUrls = await client.getStorageNodes()
+            return expect(storageNodeUrls).toContain(storageNodeAddress.toLowerCase())
         })
-
     })
 
     it('getStoredStreams', async () => {
-        const { streams, blockNumber } = await client.getStoredStreams(nodeAddress)
+        const { streams, blockNumber } = await client.getStoredStreams(storageNodeAddress)
         expect(blockNumber).toBeGreaterThanOrEqual(0)
-        expect(streams.length).toBeGreaterThan(0)
-        return expect(streams.find((el) => { return el.id === createdStream.id })).toBeDefined()
+        expect(streams.find((el) => el.id === createdStream.id)).toBeDefined()
     })
 
     it('removeStreamFromStorageNode', async () => {
-        await client.removeStreamFromStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return !(await client.isStoredStream(createdStream.id, nodeAddress)) }, 100000, 1000)
-        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(false)
+        await client.removeStreamFromStorageNode(createdStream.id, storageNodeAddress)
+        expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(false)
     })
 
     it('addStreamToStorageNode through stream object', async () => {
@@ -115,17 +108,7 @@ describe('createNode', () => {
     })
 
     it('delete a node ', async () => {
-        await newStorageNodeClient.removeNodeFromStorageNodeRegistry()
-        await until(async () => {
-            try {
-                const res = await client.getStorageNodeUrl(nodeAddress)
-                return res === null
-            } catch (err) {
-                if (err instanceof NotFoundError) { return true }
-                log('node still there after being deleted %o', err)
-                return false
-            }
-        }, 100000, 1000)
-        return expect(client.getStorageNodeUrl(nodeAddress)).rejects.toThrow()
+        await storageNodeClient.removeNodeFromStorageNodeRegistry()
+        return expect(client.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
     })
 })
