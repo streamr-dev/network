@@ -52,13 +52,13 @@ describe('createNode', () => {
         return expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
     })
 
-    it('addStreamToStorageNode, isStreamStoredInStorageNode', async () => {
+    it('addStreamToStorageNode, isStoredStream', async () => {
         await client.addStreamToStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return client.isStreamStoredInStorageNode(createdStream.id, nodeAddress) }, 100000, 1000)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(true)
+        await until(async () => { return client.isStoredStream(createdStream.id, nodeAddress) }, 100000, 1000)
+        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(true)
     })
 
-    it('addStreamToStorageNode, isStreamStoredInStorageNode, eventlistener', async () => {
+    it('addStreamToStorageNode, isStoredStream, eventlistener', async () => {
         const promise = Promise
         const callback = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
@@ -78,35 +78,39 @@ describe('createNode', () => {
         await client.unregisterStorageEventListeners()
     })
 
-    it('getStorageNodesOf', async () => {
-        const storageNodeUrls: EthereumAddress[] = await client.getStorageNodesOf(createdStream.id)
-        expect(storageNodeUrls.length).toEqual(1)
-        return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
+    describe('getStorageNodes', () => {
+
+        it('id', async () => {
+            const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes(createdStream.id)
+            expect(storageNodeUrls.length).toEqual(1)
+            return expect(storageNodeUrls[0]).toEqual(nodeAddress.toLowerCase())
+        })
+
+        it('all', async () => {
+            const storageNodeUrls: EthereumAddress[] = await client.getStorageNodes()
+            expect(storageNodeUrls.length).toBeGreaterThan(0)
+            return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
+        })
+
     })
 
-    it('getStoredStreamsOf', async () => {
-        const { streams, blockNumber } = await client.getStoredStreamsOf(nodeAddress)
+    it('getStoredStreams', async () => {
+        const { streams, blockNumber } = await client.getStoredStreams(nodeAddress)
         expect(blockNumber).toBeGreaterThanOrEqual(0)
         expect(streams.length).toBeGreaterThan(0)
         return expect(streams.find((el) => { return el.id === createdStream.id })).toBeDefined()
     })
 
-    it('getAllStorageNodes', async () => {
-        const storageNodeUrls: EthereumAddress[] = await client.getAllStorageNodes()
-        expect(storageNodeUrls.length).toBeGreaterThan(0)
-        return expect(storageNodeUrls).toContain(nodeAddress.toLowerCase())
-    })
-
     it('removeStreamFromStorageNode', async () => {
         await client.removeStreamFromStorageNode(createdStream.id, nodeAddress)
-        await until(async () => { return !(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)) }, 100000, 1000)
-        return expect(await client.isStreamStoredInStorageNode(createdStream.id, nodeAddress)).toEqual(false)
+        await until(async () => { return !(await client.isStoredStream(createdStream.id, nodeAddress)) }, 100000, 1000)
+        return expect(await client.isStoredStream(createdStream.id, nodeAddress)).toEqual(false)
     })
 
     it('addStreamToStorageNode through stream object', async () => {
         const stream = await createTestStream(client, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const isStored = await client.isStreamStoredInStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        const isStored = await client.isStoredStream(stream.id, DOCKER_DEV_STORAGE_NODE)
         expect(isStored).toEqual(true)
     })
 

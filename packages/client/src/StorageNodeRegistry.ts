@@ -169,23 +169,13 @@ export class StorageNodeRegistry {
         return metadata.http
     }
 
-    async isStreamStoredInStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
+    async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
         return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
     }
 
-    async getStorageNodesOf(streamIdOrPath: string): Promise<EthereumAddress[]> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        log('Getting storage nodes of stream %s', streamId)
-        const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
-        if (res.stream === null) {
-            return []
-        }
-        return res.stream.storageNodes.map((node) => node.id)
-    }
-
-    async getStoredStreamsOf(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+    async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         log('Getting stored streams of node %s', nodeAddress)
         const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
@@ -199,10 +189,21 @@ export class StorageNodeRegistry {
         }
     }
 
-    async getAllStorageNodes(): Promise<EthereumAddress[]> {
-        log('Getting all storage nodes')
-        const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildAllNodesQuery()) as AllNodesQueryResult
-        return res.nodes.map((node) => node.id)
+    async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        if (streamIdOrPath !== undefined) {
+            const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+            log('Getting storage nodes of stream %s', streamId)
+            const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
+            if (res.stream === null) {
+                return []
+            }
+            return res.stream.storageNodes.map((node) => node.id)
+            // eslint-disable-next-line no-else-return
+        } else {
+            log('Getting all storage nodes')
+            const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildAllNodesQuery()) as AllNodesQueryResult
+            return res.nodes.map((node) => node.id)
+        }
     }
 
     async registerStorageEventListener(callback: (event: StorageNodeAssignmentEvent) => any) {

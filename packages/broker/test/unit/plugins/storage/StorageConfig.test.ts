@@ -21,10 +21,10 @@ function makeStubStream(streamId: string): Stream {
 }
 
 describe(StorageConfig, () => {
-    let getStoredStreamsOf: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
+    let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
     let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
     let stubClient: Pick<StreamrClient, 'getStream'
-        | 'getStoredStreamsOf'
+        | 'getStoredStreams'
         | 'registerStorageEventListener'
         | 'unregisterStorageEventListeners' >
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
@@ -32,10 +32,10 @@ describe(StorageConfig, () => {
     let storageConfig: StorageConfig
 
     beforeEach(async () => {
-        getStoredStreamsOf = jest.fn()
+        getStoredStreams = jest.fn()
         storageEventListener = undefined
         stubClient = {
-            getStoredStreamsOf,
+            getStoredStreams,
             async getStream(streamIdOrPath: string) {
                 return makeStubStream(streamIdOrPath, )
             },
@@ -52,7 +52,7 @@ describe(StorageConfig, () => {
             onStreamPartAdded,
             onStreamPartRemoved
         })
-        getStoredStreamsOf.mockRejectedValue(new Error('results not available'))
+        getStoredStreams.mockRejectedValue(new Error('results not available'))
     })
 
     afterEach(async () => {
@@ -65,7 +65,7 @@ describe(StorageConfig, () => {
 
     describe('on polled results', () => {
         beforeEach(async () => {
-            getStoredStreamsOf.mockResolvedValue({
+            getStoredStreams.mockResolvedValue({
                 streams: [
                     makeStubStream('stream-1'),
                     makeStubStream('stream-2')
@@ -140,7 +140,7 @@ describe(StorageConfig, () => {
     })
 
     it('updates do not occur if start has not been invoked', async () => {
-        getStoredStreamsOf.mockResolvedValue({
+        getStoredStreams.mockResolvedValue({
             streams: [
                 makeStubStream('stream-1'),
                 makeStubStream('stream-2')
@@ -150,7 +150,7 @@ describe(StorageConfig, () => {
         await wait(POLL_TIME * 2)
 
         expect(storageEventListener).toBeUndefined()
-        expect(getStoredStreamsOf).toHaveBeenCalledTimes(0)
+        expect(getStoredStreams).toHaveBeenCalledTimes(0)
         expect(onStreamPartAdded).toHaveBeenCalledTimes(0)
         expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
     })
@@ -160,8 +160,8 @@ describe(StorageConfig, () => {
         await wait(POLL_TIME)
         await storageConfig.destroy()
 
-        getStoredStreamsOf.mockClear()
-        getStoredStreamsOf.mockResolvedValue({
+        getStoredStreams.mockClear()
+        getStoredStreams.mockResolvedValue({
             streams: [
                 makeStubStream('stream-1'),
                 makeStubStream('stream-2')
@@ -171,7 +171,7 @@ describe(StorageConfig, () => {
         expect(storageEventListener).toBeUndefined()
         await wait(POLL_TIME * 2)
 
-        expect(getStoredStreamsOf).toHaveBeenCalledTimes(0)
+        expect(getStoredStreams).toHaveBeenCalledTimes(0)
         expect(onStreamPartAdded).toHaveBeenCalledTimes(0)
         expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
     })
