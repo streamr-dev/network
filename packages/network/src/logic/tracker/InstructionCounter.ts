@@ -38,6 +38,12 @@ export class InstructionCounter {
         delete this.counters[nodeId]
     }
 
+    removeNodeFromStreamPart(nodeId: NodeId, streamPartId: StreamPartID): void {
+        if (this.counters[nodeId] !== undefined) {
+            delete this.counters[nodeId][streamPartId]
+        }
+    }
+
     removeStreamPart(streamPartId: StreamPartID): void {
         Object.keys(this.counters).forEach((nodeId) => {
             logger.info('removeStreamPart: rm counter (%s,%s)',
