@@ -245,15 +245,8 @@ export class Node extends EventEmitter {
         trackerId: TrackerId,
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
-        logger.info('nodes %j ATTEMPTING to subscribe to stream %s',
-            nodeIds, streamPartId)
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            try {
-                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
-            } catch (e) {
-                logger.warn('subscribeToStreamPartOnNodes timeout!: %s, error %s', nodeId, e)
-                throw e
-            }
+            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
             this.disconnectionManager.cancelScheduledDisconnection(nodeId)
             this.subscribeToStreamPartOnNode(nodeId, streamPartId, false)
             return nodeId
@@ -331,7 +324,6 @@ export class Node extends EventEmitter {
     }
 
     private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {
-        logger.info('node %s subscribed to stream %s', node, streamPartId)
         this.streamPartManager.addNeighbor(streamPartId, node)
         this.propagation.onNeighborJoined(node, streamPartId)
         if (sendStatus) {
@@ -343,7 +335,7 @@ export class Node extends EventEmitter {
 
     private unsubscribeFromStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): void {
         this.streamPartManager.removeNodeFromStreamPart(streamPartId, node)
-        logger.info('node %s unsubscribed from stream %s', node, streamPartId)
+        logger.trace('node %s unsubscribed from stream %s', node, streamPartId)
         this.emit(Event.NODE_UNSUBSCRIBED, node, streamPartId)
         this.disconnectionManager.scheduleDisconnectionIfNoSharedStreamParts(node)
         if (sendStatus) {

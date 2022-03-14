@@ -191,8 +191,6 @@ export class Tracker extends EventEmitter {
 
         const streamPartId = toStreamPartID(status.streamPart.id, status.streamPart.partition)
 
-        this.logger.info('processNodeStatus (source=%s): %j', source.slice(0, 10), status)
-
         // update topology
         this.createTopology(streamPartId)
         this.updateNodeOnStream(source, status.streamPart)
@@ -269,13 +267,11 @@ export class Tracker extends EventEmitter {
             .forEach(([streamPartId, overlayTopology]) => {
                 this.leaveAndCheckEmptyOverlay(streamPartId as StreamPartID, overlayTopology, node)
             })
-        this.instructionCounter.removeNode(node)
     }
 
     private leaveAndCheckEmptyOverlay(streamPartId: StreamPartID, overlayTopology: OverlayTopology, node: NodeId) {
-        this.logger.info('leaveAndCheckEmptyOverlay: %s, %s', streamPartId.slice(-10), node.slice(0, 10))
         const neighbors = overlayTopology.leave(node)
-        this.instructionCounter.removeNodeFromStreamPart(node, streamPartId)
+        this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
             this.instructionCounter.removeStreamPart(streamPartId)

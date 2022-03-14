@@ -41,8 +41,6 @@ export class InstructionThrottler {
         }
         const streamPartId = instructionMessage.getStreamPartID()
         if (!this.instructionCounter[streamPartId] || this.instructionCounter[streamPartId] <= instructionMessage.counter) {
-            this.logger.info('Received NEW instruction %d (current=%s)',
-                instructionMessage.counter, this.instructionCounter[streamPartId])
             this.instructionCounter[streamPartId] = instructionMessage.counter
             this.queue[streamPartId] = {
                 instructionMessage,
@@ -60,9 +58,6 @@ export class InstructionThrottler {
                     this.logger.warn("error handling instruction, reason: %s", err)
                 })
             }
-        } else {
-            this.logger.warn('Received OLD instruction %d (current=%s)',
-                instructionMessage.counter, this.instructionCounter[streamPartId])
         }
     }
 
@@ -70,7 +65,6 @@ export class InstructionThrottler {
         if (this.stopped) {
             return
         }
-        this.logger.info('Remove streamPart %s', streamPartId)
         delete this.queue[streamPartId]
         delete this.instructionCounter[streamPartId]
         if (this.ongoingPromises[streamPartId]) {

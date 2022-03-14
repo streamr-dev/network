@@ -184,7 +184,6 @@ export class TrackerManager {
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {
-        logger.info("handleTrackerInstruction!")
         const streamPartId = instructionMessage.getStreamPartID()
         const { nodeIds, counter } = instructionMessage
 

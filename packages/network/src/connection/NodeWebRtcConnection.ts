@@ -277,7 +277,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         })
 
         this.dataChannelEmitter.on('message', (msg) => {
-            this.logger.trace('dc.onmessage %s', msg.toString())
+            this.logger.trace('dc.onmessage')
             this.emitMessage(msg.toString())
         })
     }

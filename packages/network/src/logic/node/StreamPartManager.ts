@@ -4,7 +4,6 @@ import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector
 import { NodeId } from './Node'
 import { COUNTER_UNSUBSCRIBE } from '../tracker/InstructionCounter'
 import _ from 'lodash'
-import { Logger } from '../../helpers/logger/LoggerNode'
 
 interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
