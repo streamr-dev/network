@@ -25,8 +25,13 @@ export class InstructionCounter {
         return (status.streamPart.counter >= currentCounter || status.streamPart.counter === COUNTER_UNSUBSCRIBE)
     }
 
-    removeNode(nodeId: NodeId): void {
-        delete this.counters[nodeId]
+    removeNodeFromStreamPart(nodeId: NodeId, streamPartId: StreamPartID): void {
+        if (this.counters[nodeId] !== undefined) {
+            delete this.counters[nodeId][streamPartId]
+            if (Object.keys(this.counters[nodeId]).length === 0) {
+                delete this.counters[nodeId]
+            }
+        }
     }
 
     removeStreamPart(streamPartId: StreamPartID): void {
