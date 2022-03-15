@@ -9,13 +9,13 @@ const assert = require('assert') // esm/ts bs
 
 const exec = promisify(originalExec)
 
+export type Workspace = SetRequired<PackageJson, 'name' | 'version'> & Required<{ path: string, dirPath: string }>
+export type Workspaces = Record<string, Workspace>
+
 async function getWorkspacePaths(): Promise<string[]> {
     const { stdout } = await exec(`npx --workspaces -c 'pwd'`)
     return stdout.trim().split('\n')
 }
-
-type Workspace = SetRequired<PackageJson, 'name' | 'version'>
-type Workspaces = Record<string, Workspace>
 
 async function getWorkspace(workspacePath: string): Promise<Workspace> {
     const pkgJSONPath = join(workspacePath, 'package.json')
@@ -37,7 +37,7 @@ export async function loadWorkspaces(): Promise<Workspaces> {
     }), {})
 }
 
-export function getWorkspaceDependencyNames(workspaces: Workspaces, name: string): string[] {
+function getWorkspaceDependencyNames(workspaces: Workspaces, name: string): string[] {
     const pkgJSON = workspaces[name]
     if (!pkgJSON) {
         throw new Error(`Unknown package: ${name}`)
@@ -49,11 +49,29 @@ export function getWorkspaceDependencyNames(workspaces: Workspaces, name: string
         .filter((name) => pkgNames.has(name))
 }
 
+export function getAllWorkspaceDependents(workspaces: Workspaces, name: string): string[] {
+    const graph = createWorkspaceGraph(workspaces)
+    const inverseGraph = graph.invert()
+    const nodes = graph.getTopoSort()
+    const dependents: Set<string> = new Set(name)
+
+    function visit(n: string) {
+        if (dependents.has(n)) {
+            return
+        }
+        dependents.add(n)
+
+        for (const dependent of inverseGraph.getConnections(n)) {
+            visit(dependent)
+        }
+    }
+    visit(name)
+    return nodes.filter((n) => dependents.has(n))
+}
+
 export function getTopoSort(workspaces: Workspaces): string[] {
     const graph = createWorkspaceGraph(workspaces)
     return graph.getTopoSort()
-    //console.info(graph.toObject())
-    //console.info(graph.getTopoSort())
 }
 
 class Graph {
@@ -83,6 +101,17 @@ class Graph {
                 [key]: [...value],
             })
         }, {})
+    }
+
+    invert(): Graph {
+        const invertedGraph = new Graph()
+        this.nodes.forEach((connections, from) => {
+            invertedGraph.addNode(from)
+            connections.forEach((to) => {
+                invertedGraph.addEdge(to, from)
+            })
+        })
+        return invertedGraph
     }
 
     getTopoSort(): string[] {
