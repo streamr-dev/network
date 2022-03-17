@@ -91,7 +91,7 @@ jobs:
           build-args: |
             NODE_ENV=development
       - name: Build
-        uses: docker/build-push-action@v2.9.0
+        uses: docker/build-push-action@v2.10.0
         with:
           context: .
           file: ./Dockerfile
@@ -204,7 +204,7 @@ jobs:
           driver-opts: |
             network=host
       - name: Build & Push
-        uses: docker/build-push-action@v2.9.0
+        uses: docker/build-push-action@v2.10.0
         with:
           context: .
           file: ./Dockerfile
