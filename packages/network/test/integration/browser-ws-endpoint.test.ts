@@ -1,4 +1,4 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
+import { Tracker } from '../../../network-tracker/src/logic/Tracker'
 import WebSocket from 'ws'
 import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
 

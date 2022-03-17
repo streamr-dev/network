@@ -3,7 +3,7 @@ const program = require('commander')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { startTracker } = require('../dist/src/composition')
+const { startTracker } = require('..')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 program

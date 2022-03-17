@@ -1,6 +1,12 @@
 import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
-import { NodeId } from './logic/node/Node'
 import { MetricsContext } from './helpers/MetricsContext'
+
+
+export type NodeId = string
+export type TrackerId = string
+export const COUNTER_UNSUBSCRIBE = -1
+// Used by the tracker to signal to nodes that they are alone in the topology
+export const COUNTER_LONE_NODE = -2
 
 export interface Rtts {
     [key: string]: number

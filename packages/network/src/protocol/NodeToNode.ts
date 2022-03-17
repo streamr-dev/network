@@ -2,10 +2,9 @@ import { EventEmitter } from 'events'
 import { ControlLayer, MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
-import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/IWebRtcEndpoint'
+import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
-import { Rtts } from "../identifiers"
-import { NodeId } from '../logic/node/Node'
+import { Rtts, NodeId } from "../identifiers"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',

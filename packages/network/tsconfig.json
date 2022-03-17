@@ -3,19 +3,19 @@
     "compilerOptions": {
         "noEmit": true,
         "composite": true,
-        "outDir": "dist"
+        "outDir": "./dist"
     },
     "include": [
-        "src/**/*",
-        "test/**/*"
+      "src/**/*",
+      "test/**/*"
     ],
     "exclude": [
-        "src/**/BrowserWebRtcConnection.ts",
-        "test/**/BrowserWebRtcConnection.test.ts",
-        "test/**/IntegrationBrowserWebRtcConnection.test.ts"
+      "src/**/BrowserWebRtcConnection.ts",
+      "test/**/BrowserWebRtcConnection.test.ts",
+      "test/**/IntegrationBrowserWebRtcConnection.test.ts"
     ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "./tsconfig.node.json" }
+        { "path": "../test-utils/tsconfig.node.json"},
+        { "path": "./tsconfig.node.json"}
     ]
 }

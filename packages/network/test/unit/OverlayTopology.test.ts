@@ -1,4 +1,4 @@
-import { OverlayTopology } from '../../src/logic/tracker/OverlayTopology'
+import { OverlayTopology } from '../../../network-tracker/src/logic/OverlayTopology'
 
 const maxNeighborsPerNodeArray = [4, 8, 12, 16]
 

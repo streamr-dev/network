@@ -1,4 +1,4 @@
-import { LocationManager } from '../../src/logic/tracker/LocationManager'
+import { LocationManager } from '../../../network-tracker/src/logic/LocationManager'
 
 describe('LocationManager', () => {
     let locationManager: LocationManager

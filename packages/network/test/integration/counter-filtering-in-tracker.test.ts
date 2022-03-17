@@ -4,10 +4,10 @@ import { runAndWaitForEvents, wait } from 'streamr-test-utils'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { startTracker, Tracker } from '../../src/composition'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
+import { Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
+import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { NodeId } from '../../src/logic/node/Node'
+import { NodeId } from '../../src/logic/Node'
 import { toStreamID } from "streamr-client-protocol"
 
 const WAIT_TIME = 2000

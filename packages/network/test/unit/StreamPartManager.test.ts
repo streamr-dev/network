@@ -1,5 +1,5 @@
 import { MessageLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { StreamPartManager } from '../../src/logic/node/StreamPartManager'
+import { StreamPartManager } from '../../src/logic/StreamPartManager'
 
 const { MessageID, MessageRef } = MessageLayer
 

@@ -1,5 +1,5 @@
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/tracker/InstructionSender'
+import { Instruction, InstructionSender, SendInstructionFn } from '../../../network-tracker/src/logic/InstructionSender'
 import { Metrics, MetricsContext } from '../../src/helpers/MetricsContext'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')

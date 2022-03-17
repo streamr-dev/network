@@ -1,5 +1,5 @@
-import { DisconnectionManager } from '../../src/logic/node/DisconnectionManager'
-import { NodeId } from '../../src/logic/node/Node'
+import { DisconnectionManager } from '../../src/logic/DisconnectionManager'
+import { NodeId } from '../../src/identifiers'
 import { wait } from 'streamr-test-utils'
 
 const TTL = 20

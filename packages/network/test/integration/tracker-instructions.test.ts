@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker } from '../../../network-tracker/src/logic/Tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { toStreamID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
 import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { getTopology } from '../../src/logic/tracker/trackerSummaryUtils'
+import { Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
+import { Event as NodeEvent } from '../../src/logic/Node'
+import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker: Tracker

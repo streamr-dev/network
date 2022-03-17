@@ -1,4 +1,4 @@
-import { isOffering } from '../../src/connection/WebRtcConnection'
+import { isOffering } from '../../src/connection/webrtc/WebRtcConnection'
 
 describe('isOffering', () => {
     it('works', () => {

@@ -1,8 +1,8 @@
-import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
+import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
-import { Tracker } from '../../src/logic/tracker/Tracker'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { Tracker } from '../../../network-tracker/src/logic/Tracker'
 import { startTracker } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
@@ -10,8 +10,8 @@ import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from "../../src/connection/webrtc/NodeWebRtcConnection"
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
