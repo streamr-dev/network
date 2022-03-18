@@ -6,7 +6,7 @@ RUN npm config set \
 COPY . .
 RUN npm run bootstrap-pkg -- streamr-broker && npm run prune-pkg -- streamr-broker
 
-FROM node:16.14.1-bullseye
+FROM node:16.14.1-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
