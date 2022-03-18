@@ -1,12 +1,14 @@
-FROM node:16.14-bullseye as build
+FROM --platform=$BUILDPLATFORM node:16.14-bullseye as build
 WORKDIR /usr/src/network
 RUN npm config set \
 	unsafe-perm=true \
 	python="$(which python3)"
 COPY . .
-RUN npm run bootstrap-pkg -- streamr-broker && npm run prune-pkg -- streamr-broker
+RUN --mount=type=cache,target=/root/.npm \
+	npm run bootstrap-pkg -- streamr-broker && \
+	npm run prune-pkg -- streamr-broker
 
-FROM node:16.14-bullseye-slim
+FROM --platform=$BUILDPLATFORM node:16.14-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
