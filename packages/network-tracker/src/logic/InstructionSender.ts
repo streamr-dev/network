@@ -6,15 +6,15 @@ import { TopologyStabilizationOptions } from './Tracker'
 /**
  * Instructions are collected to buffers and sent after a short delay. For each stream
  * part there is a separate buffer.
- * 
- * We use debouncing to delay the sending. It means that we send the buffered instructions 
- * when either of these conditions is satisfied: 
- * - the topology stabilizes: no new instructions has been formed for the stream part 
+ *
+ * We use debouncing to delay the sending. It means that we send the buffered instructions
+ * when either of these conditions is satisfied:
+ * - the topology stabilizes: no new instructions has been formed for the stream part
  *   in X milliseconds
  * - the buffer times out: we have buffered an instruction for Y milliseconds
- * 
+ *
  * When an instruction is added to a the buffer, it may overwrite an existing
- * instruction in the buffer if the both instructions share the same nodeId. In that 
+ * instruction in the buffer if the both instructions share the same nodeId. In that
  * situation we expect that the previous instruction is no longer valid (it has a lower
  * counterValue) and can be ignored.
  */
@@ -94,15 +94,15 @@ export class InstructionSender {
         const existingBuffer = this.streamPartBuffers.get(streamPartId)
         if (existingBuffer !== undefined) {
             return existingBuffer
-        } else {
-            const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
-                this.streamPartBuffers.get(streamPartId)?.stop()
-                this.streamPartBuffers.delete(streamPartId)
-                this.sendInstructions(newBuffer)
-            })
-            this.streamPartBuffers.set(streamPartId, newBuffer)
-            return newBuffer
         }
+        const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
+            this.streamPartBuffers.get(streamPartId)?.stop()
+            this.streamPartBuffers.delete(streamPartId)
+            this.sendInstructions(newBuffer)
+        })
+        this.streamPartBuffers.set(streamPartId, newBuffer)
+        return newBuffer
+
     }
 
     private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
@@ -118,11 +118,10 @@ export class InstructionSender {
                     )
                     logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
                 } catch (err) {
-                    logger.error(`failed to send instructions %o to node %o, reason: %s`,
+                    logger.error('failed to send instructions %o to node %o, reason: %s',
                         newNeighbors,
                         { counterValue, streamPartId, nodeId },
-                        err
-                    )
+                        err)
                 }
             })
         await Promise.allSettled(promises)

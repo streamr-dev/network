@@ -6,12 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatusValidator = void 0;
 const ajv_1 = __importDefault(require("ajv"));
 const schemas_1 = require("./schemas");
-const LATEST_STATUS_VERSION = "brubeck-1.0";
+const LATEST_STATUS_VERSION = 'brubeck-1.0';
 class StatusValidator {
     constructor() {
         const ajv = new ajv_1.default();
         this.versions = {
-            "brubeck-1.0": ajv.compile(schemas_1.statusSchema),
+            'brubeck-1.0': ajv.compile(schemas_1.statusSchema),
         };
     }
     validate(status, version) {

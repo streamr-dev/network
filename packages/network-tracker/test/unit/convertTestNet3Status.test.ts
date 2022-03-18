@@ -1,4 +1,4 @@
-import { convertTestNet3Status } from '../../../network-tracker/src/logic/Tracker'
+import { convertTestNet3Status } from '../../src/logic/Tracker'
 import { StatusValidator } from '../../src/helpers/SchemaValidators'
 import { StatusMessage } from 'streamr-client-protocol'
 

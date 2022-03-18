@@ -11,7 +11,7 @@ import {
     ServerWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    Event as WsEndpointEvent,
+    WsEndpointEvent,
     NodeId
 } from 'streamr-network'
 
@@ -47,8 +47,8 @@ export class TrackerServer extends EventEmitter {
     }
 
     async sendInstruction(
-        receiverNodeId: NodeId, 
-        streamPartId: StreamPartID, 
+        receiverNodeId: NodeId,
+        streamPartId: StreamPartID,
         nodeIds: NodeId[], counter: number
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
@@ -62,10 +62,10 @@ export class TrackerServer extends EventEmitter {
     }
 
     async sendRtcOffer(
-        receiverNodeId: NodeId, 
-        requestId: string, 
+        receiverNodeId: NodeId,
+        requestId: string,
         originatorInfo: TrackerLayer.Originator,
-        connectionId: string, 
+        connectionId: string,
         description: string
     ): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
@@ -81,9 +81,9 @@ export class TrackerServer extends EventEmitter {
     }
 
     async sendRtcAnswer(
-        receiverNodeId: NodeId, 
-        requestId: string, 
-        originatorInfo: TrackerLayer.Originator, 
+        receiverNodeId: NodeId,
+        requestId: string,
+        originatorInfo: TrackerLayer.Originator,
         connectionId: string,
         description: string
     ): Promise<void> {
@@ -109,6 +109,7 @@ export class TrackerServer extends EventEmitter {
             originator: originatorInfo,
             targetNode: receiverNodeId,
             subType: RtcSubTypes.RTC_CONNECT,
+            // eslint-disable-next-line no-new-object
             data: new Object()
         }))
     }

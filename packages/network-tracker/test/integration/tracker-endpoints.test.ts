@@ -1,10 +1,9 @@
-import { Tracker } from '../../../network-tracker/src/logic/Tracker'
-import { NetworkNode } from '../../src/logic/NetworkNode'
+import { Tracker } from '../../src/logic/Tracker'
 import http from 'http'
-
+import { startTracker } from '../../src/startTracker'
 import { waitForCondition } from 'streamr-test-utils'
-
-import { createNetworkNode, startTracker } from '../../src/composition'
+import 'jest-extended'
+import { createNetworkNode, NetworkNode } from 'streamr-network'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 function getHttp(url: string) {
@@ -232,8 +231,8 @@ describe('tracker endpoint', () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/node-connections/`)
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
-            'node-1': [{neighborId: 'node-2', rtt: null}],
-            'node-2': [{neighborId: 'node-1', rtt: null}]
+            'node-1': [{ neighborId: 'node-2', rtt: null }],
+            'node-2': [{ neighborId: 'node-1', rtt: null }]
         })
     })
 
@@ -242,19 +241,19 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult).toIncludeSameMembers([
             {
-                "partition": 0,
-                "streamId": "sandbox/test/stream-3",
-                "topologySize": 1
+                partition: 0,
+                streamId: 'sandbox/test/stream-3',
+                topologySize: 1
             },
             {
-                "partition": 0,
-                "streamId": "stream-1",
-                "topologySize": 2
+                partition: 0,
+                streamId: 'stream-1',
+                topologySize: 2
             },
             {
-                "partition": 0,
-                "streamId": "stream-2",
-                "topologySize": 1
+                partition: 0,
+                streamId: 'stream-2',
+                topologySize: 1
             },
         ])
     })
@@ -264,9 +263,9 @@ describe('tracker endpoint', () => {
         expect(status).toEqual(200)
         expect(jsonResult).toEqual([
             {
-                "partition": 0,
-                "streamId": "stream-1",
-                "topologySize": 2
+                partition: 0,
+                streamId: 'stream-1',
+                topologySize: 2
             }
         ])
     })

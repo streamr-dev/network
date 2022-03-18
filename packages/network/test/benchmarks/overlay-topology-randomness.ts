@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { OverlayTopology, TopologyState } from '../../../network-tracker/src/logic/OverlayTopology'
-import { NodeId } from '../../src/logic/Node'
+import { NodeId } from '../../src/identifiers'
 
 const numOfNeighbors = 4
 const numOfRounds = 1000

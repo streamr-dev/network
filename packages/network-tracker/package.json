@@ -12,7 +12,6 @@
   "main": "dist/src/composition.js",
   "browser": "dist/streamr-network.js",
   "types": "dist/src/composition.d.ts",
-
   "scripts": {
     "build": "npm run prepare",
     "check": "tsc -p tsconfig.json --noEmit",

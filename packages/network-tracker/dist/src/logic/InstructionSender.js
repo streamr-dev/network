@@ -64,16 +64,14 @@ class InstructionSender {
         if (existingBuffer !== undefined) {
             return existingBuffer;
         }
-        else {
-            const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
-                var _a;
-                (_a = this.streamPartBuffers.get(streamPartId)) === null || _a === void 0 ? void 0 : _a.stop();
-                this.streamPartBuffers.delete(streamPartId);
-                this.sendInstructions(newBuffer);
-            });
-            this.streamPartBuffers.set(streamPartId, newBuffer);
-            return newBuffer;
-        }
+        const newBuffer = new StreamPartInstructionBuffer(this.options, () => {
+            var _a;
+            (_a = this.streamPartBuffers.get(streamPartId)) === null || _a === void 0 ? void 0 : _a.stop();
+            this.streamPartBuffers.delete(streamPartId);
+            this.sendInstructions(newBuffer);
+        });
+        this.streamPartBuffers.set(streamPartId, newBuffer);
+        return newBuffer;
     }
     async sendInstructions(buffer) {
         const promises = Array.from(buffer.getInstructions())
@@ -84,7 +82,7 @@ class InstructionSender {
                 logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId });
             }
             catch (err) {
-                logger.error(`failed to send instructions %o to node %o, reason: %s`, newNeighbors, { counterValue, streamPartId, nodeId }, err);
+                logger.error('failed to send instructions %o to node %o, reason: %s', newNeighbors, { counterValue, streamPartId, nodeId }, err);
             }
         });
         await Promise.allSettled(promises);

@@ -34,7 +34,7 @@ const validateStreamId = (req: express.Request, res: express.Response): StreamID
     return toStreamID(streamId)
 }
 
-const validatePartition = (req: express.Request, res: express.Response): number | null  => {
+const validatePartition = (req: express.Request, res: express.Response): number | null => {
     const partition = Number.parseInt(req.params.partition, 10)
     if (!Number.isSafeInteger(partition) || partition < 0) {
         staticLogger.warn(`422 partition must be a positive integer, askedPartition: ${partition}`)
@@ -105,14 +105,14 @@ export function trackerHttpEndpoints(
         staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         res.json(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts(), streamId, askedPartition))
     })
-    cachedJsonGet(app,'/node-connections/', 5 * 60 * 1000, () => {
+    cachedJsonGet(app, '/node-connections/', 5 * 60 * 1000, () => {
         const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStreamPart())
         return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
             return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
         }))
     })
     app.get('/nodes/:nodeId/streams', async (req: express.Request, res: express.Response) => {
-        const nodeId = req.params.nodeId
+        const { nodeId } = req.params
         staticLogger.debug(`request to /nodes/${nodeId}/streams`)
         const result = findStreamsPartsForNode(tracker.getOverlayPerStreamPart(), nodeId)
         res.json(result)
@@ -122,7 +122,7 @@ export function trackerHttpEndpoints(
         res.json(getNodesWithLocationData(tracker.getNodes(), tracker.getAllNodeLocations()))
     })
     app.get('/location/:nodeId/', (req: express.Request, res: express.Response) => {
-        const nodeId = req.params.nodeId
+        const { nodeId } = req.params
         const location = tracker.getNodeLocation(nodeId)
 
         staticLogger.debug(`request to /location/${nodeId}/`)
@@ -146,7 +146,7 @@ export function trackerHttpEndpoints(
         if (streamId === null) {
             return
         }
-        
+
         staticLogger.debug(`request to /topology-size/${streamId}/`)
         res.json(getStreamPartSizes(tracker.getOverlayPerStreamPart(), streamId, null))
     })

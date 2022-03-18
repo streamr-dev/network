@@ -87,7 +87,7 @@ function trackerHttpEndpoints(httpServer, tracker, metricsContext) {
         }));
     });
     app.get('/nodes/:nodeId/streams', async (req, res) => {
-        const nodeId = req.params.nodeId;
+        const { nodeId } = req.params;
         staticLogger.debug(`request to /nodes/${nodeId}/streams`);
         const result = (0, trackerSummaryUtils_1.findStreamsPartsForNode)(tracker.getOverlayPerStreamPart(), nodeId);
         res.json(result);
@@ -97,7 +97,7 @@ function trackerHttpEndpoints(httpServer, tracker, metricsContext) {
         res.json((0, trackerSummaryUtils_1.getNodesWithLocationData)(tracker.getNodes(), tracker.getAllNodeLocations()));
     });
     app.get('/location/:nodeId/', (req, res) => {
-        const nodeId = req.params.nodeId;
+        const { nodeId } = req.params;
         const location = tracker.getNodeLocation(nodeId);
         staticLogger.debug(`request to /location/${nodeId}/`);
         res.json(location || {});

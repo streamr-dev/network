@@ -1,4 +1,4 @@
-import { ServerWsEndpoint, startHttpServer } from "../../src/connection/ws/ServerWsEndpoint"
+import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from "../../src/connection/PeerInfo"
 import WebSocket from "ws"
 import { waitForCondition } from "streamr-test-utils"

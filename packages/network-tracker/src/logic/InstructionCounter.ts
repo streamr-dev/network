@@ -6,8 +6,6 @@ type Counters = Record<NodeId, Record<StreamPartID, number>>
 export class InstructionCounter {
     private readonly counters: Counters = {}
 
-    constructor() {}
-
     setOrIncrement(nodeId: NodeId, streamPartId: StreamPartID): number {
         this.getAndSetIfNecessary(nodeId, streamPartId)
         this.counters[nodeId][streamPartId] += 1
@@ -39,6 +37,7 @@ export class InstructionCounter {
         if (this.counters[nodeId] === undefined) {
             this.counters[nodeId] = {}
         }
+
         if (this.counters[nodeId][streamPartId] === undefined) {
             this.counters[nodeId][streamPartId] = 0
         }

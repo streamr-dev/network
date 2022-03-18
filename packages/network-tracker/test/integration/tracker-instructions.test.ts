@@ -1,11 +1,10 @@
-import { Tracker } from '../../../network-tracker/src/logic/Tracker'
-import { NetworkNode } from '../../src/logic/NetworkNode'
+import { Tracker } from '../../src/logic/Tracker'
+import { startTracker } from '../../src/startTracker'
 import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { toStreamID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/Node'
-import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
+import { NetworkNode, createNetworkNode, NodeEvent } from 'streamr-network'
+import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
+import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker: Tracker
@@ -42,10 +41,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         await runAndWaitForEvents([
-            () => {node1.subscribeToStreamIfHaveNotYet(streamPartOne)},
-            () => {node2.subscribeToStreamIfHaveNotYet(streamPartOne)},
-            () => {node1.start()},
-            () => {node2.start()}
+            () => { node1.subscribeToStreamIfHaveNotYet(streamPartOne) },
+            () => { node2.subscribeToStreamIfHaveNotYet(streamPartOne) },
+            () => { node1.start() },
+            () => { node2.start() }
         ], [
             // @ts-expect-error private variable
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED],
@@ -101,8 +100,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1#0': {
-                node1: [{neighborId: 'node2', rtt: null}],
-                node2: [{neighborId: 'node1', rtt: null}],
+                node1: [{ neighborId: 'node2', rtt: null }],
+                node2: [{ neighborId: 'node1', rtt: null }],
             }
         })
 

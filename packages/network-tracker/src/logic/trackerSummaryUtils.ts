@@ -2,7 +2,7 @@ import { StreamPartID, StreamID, StreamPartIDUtils, toStreamPartID } from 'strea
 import { OverlayPerStreamPart, OverlayConnectionRtts } from './Tracker'
 import { Location, NodeId } from 'streamr-network'
 
-type OverLayWithRtts = Record<StreamPartID, Record<NodeId,{ neighborId: NodeId, rtt: number | null }[] >>
+type OverLayWithRtts = Record<StreamPartID, Record<NodeId, { neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
 type NodesWithLocations = { [key: string]: Location }
 
@@ -42,8 +42,8 @@ export function getStreamPartSizes(
     return sizes
 }
 
-export function getNodeConnections(nodes: readonly NodeId[], overlayPerStreamPart: OverlayPerStreamPart): Record<NodeId,Set<NodeId>> {
-    const result: Record<NodeId,Set<NodeId>> = {}
+export function getNodeConnections(nodes: readonly NodeId[], overlayPerStreamPart: OverlayPerStreamPart): Record<NodeId, Set<NodeId>> {
+    const result: Record<NodeId, Set<NodeId>> = {}
     nodes.forEach((node) => {
         result[node] = new Set<NodeId>()
     })
@@ -64,7 +64,7 @@ export function addRttsToNodeConnections(
     nodeId: NodeId,
     neighbors: Array<NodeId>,
     connectionRtts: OverlayConnectionRtts
-): Record<NodeId,{ neighborId: NodeId, rtt: number | null }[]> {
+): Record<NodeId, { neighborId: NodeId, rtt: number | null }[]> {
     return {
         [nodeId]: neighbors.map((neighborId) => {
             return {
@@ -107,8 +107,8 @@ export function findStreamsPartsForNode(
 function getNodeToNodeConnectionRtts(
     nodeOne: NodeId,
     nodeTwo: NodeId,
-    nodeOneRtts: Record<NodeId,number>,
-    nodeTwoRtts: Record<NodeId,number>
+    nodeOneRtts: Record<NodeId, number>,
+    nodeTwoRtts: Record<NodeId, number>
 ): number | null {
     try {
         return nodeOneRtts[nodeTwo] || nodeTwoRtts[nodeOne] || null
@@ -124,12 +124,14 @@ function findStreamParts(
 ): StreamPartID[] {
     if (streamId === null) {
         return Object.keys(overlayPerStreamPart) as StreamPartID[]
-    } else if (partition === null) {
+    }
+
+    if (partition === null) {
         return Object.keys(overlayPerStreamPart)
             .filter((streamPartId) => streamPartId.includes(streamId)) as StreamPartID[]
-    } else {
-        const targetStreamPartId = toStreamPartID(streamId, partition)
-        return Object.keys(overlayPerStreamPart)
-            .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId) as StreamPartID[]
     }
+    const targetStreamPartId = toStreamPartID(streamId, partition)
+    return Object.keys(overlayPerStreamPart)
+        .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId) as StreamPartID[]
+
 }

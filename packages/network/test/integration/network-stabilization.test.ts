@@ -1,11 +1,10 @@
-import { Tracker } from '../../../network-tracker/src/logic/Tracker'
+import { Tracker, startTracker, getTopology } from 'streamr-network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import assert from 'assert'
 
 import { wait } from 'streamr-test-utils'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
+import { createNetworkNode } from '../../src/composition'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 function areEqual(a: any, b: any) {

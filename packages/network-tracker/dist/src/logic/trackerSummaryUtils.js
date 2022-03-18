@@ -94,14 +94,12 @@ function findStreamParts(overlayPerStreamPart, streamId = null, partition = null
     if (streamId === null) {
         return Object.keys(overlayPerStreamPart);
     }
-    else if (partition === null) {
+    if (partition === null) {
         return Object.keys(overlayPerStreamPart)
             .filter((streamPartId) => streamPartId.includes(streamId));
     }
-    else {
-        const targetStreamPartId = (0, streamr_client_protocol_1.toStreamPartID)(streamId, partition);
-        return Object.keys(overlayPerStreamPart)
-            .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId);
-    }
+    const targetStreamPartId = (0, streamr_client_protocol_1.toStreamPartID)(streamId, partition);
+    return Object.keys(overlayPerStreamPart)
+        .filter((candidateStreamPartId) => targetStreamPartId === candidateStreamPartId);
 }
 //# sourceMappingURL=trackerSummaryUtils.js.map

@@ -8,7 +8,7 @@ import {
     RtcSubTypes,
     UnknownPeerError,
     Logger
-} from "streamr-network"
+} from 'streamr-network'
 
 export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {

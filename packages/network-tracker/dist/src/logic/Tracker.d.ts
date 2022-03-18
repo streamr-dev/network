@@ -1,10 +1,9 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { SmartContractRecord, StatusMessage, StreamPartID } from 'streamr-client-protocol';
+import { SmartContractRecord, StatusMessage, StreamPartID, TrackerLayer } from 'streamr-client-protocol';
 import { TrackerServer } from '../protocol/TrackerServer';
 import { OverlayTopology } from './OverlayTopology';
 import { PeerId, PeerInfo, NodeId, Location, MetricsContext } from 'streamr-network';
-import { TrackerLayer } from 'streamr-client-protocol';
 export declare type TrackerId = string;
 export declare enum Event {
     NODE_CONNECTED = "streamr:tracker:node-connected"

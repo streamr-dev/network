@@ -12,15 +12,14 @@ import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
-import type { TrackerId } from '../identifiers'
-import type { NodeId } from '../identifiers'
+import type { NodeId, TrackerId } from '../identifiers'
+import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../identifiers'
 import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 
 const logger = new Logger(module)
-const DEFAULT_MAX_NEIGHBOR_COUNT = 4
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',

@@ -19,9 +19,9 @@ class TrackerServer extends events_1.EventEmitter {
     constructor(endpoint) {
         super();
         this.endpoint = endpoint;
-        endpoint.on(streamr_network_1.Event.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo));
-        endpoint.on(streamr_network_1.Event.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo));
-        endpoint.on(streamr_network_1.Event.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message));
+        endpoint.on(streamr_network_1.WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo));
+        endpoint.on(streamr_network_1.WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo));
+        endpoint.on(streamr_network_1.WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message));
         this.logger = new streamr_network_1.Logger(module);
     }
     async sendInstruction(receiverNodeId, streamPartId, nodeIds, counter) {
@@ -64,6 +64,7 @@ class TrackerServer extends events_1.EventEmitter {
             originator: originatorInfo,
             targetNode: receiverNodeId,
             subType: streamr_network_1.RtcSubTypes.RTC_CONNECT,
+            // eslint-disable-next-line no-new-object
             data: new Object()
         }));
     }

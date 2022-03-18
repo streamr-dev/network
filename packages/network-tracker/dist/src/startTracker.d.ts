@@ -1,6 +1,5 @@
-import { HttpServerConfig } from '../../network/src/connection/ws/ServerWsEndpoint';
 import { TopologyStabilizationOptions, Tracker } from './logic/Tracker';
-import { AbstractNodeOptions } from '../../network/src/identifiers';
+import { AbstractNodeOptions, HttpServerConfig } from 'streamr-network';
 export interface TrackerOptions extends AbstractNodeOptions {
     listen: HttpServerConfig;
     attachHttpEndpoints?: boolean;

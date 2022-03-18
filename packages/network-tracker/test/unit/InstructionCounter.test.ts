@@ -1,6 +1,6 @@
-import { Status } from '../../src/identifiers'
-import { InstructionCounter } from '../../../network-tracker/src/logic/InstructionCounter'
-import { StreamPartID, toStreamID } from "streamr-client-protocol"
+import { Status } from 'streamr-network/dist/src/identifiers'
+import { InstructionCounter } from '../../src/logic/InstructionCounter'
+import { StreamPartID, toStreamID } from 'streamr-client-protocol'
 
 describe('InstructionCounter', () => {
     let instructionCounter: InstructionCounter

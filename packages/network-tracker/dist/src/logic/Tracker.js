@@ -18,7 +18,7 @@ var Event;
 // TODO: Testnet (3rd iteration) compatibility, rm when no more testnet nodes
 function convertTestNet3Status(statusMessage) {
     if (statusMessage.status.stream !== undefined) {
-        const streamKey = statusMessage.status.stream.streamKey;
+        const { streamKey } = statusMessage.status.stream;
         let id = '';
         let partition = 0;
         if (streamKey !== undefined) {
@@ -27,7 +27,7 @@ function convertTestNet3Status(statusMessage) {
                 id = parsedId;
             }
             if (parsedPartition !== undefined) {
-                partition = parseInt(parsedPartition);
+                partition = parseInt(parsedPartition, 10);
             }
         }
         let neighbors = [];
@@ -36,8 +36,9 @@ function convertTestNet3Status(statusMessage) {
         }
         let counter = 0;
         if (statusMessage.status.stream.counter !== undefined) {
-            counter = parseInt(statusMessage.status.stream.counter);
+            counter = parseInt(statusMessage.status.stream.counter, 10);
         }
+        // eslint-disable-next-line no-param-reassign
         statusMessage.status = {
             ...statusMessage.status,
             streamPart: {

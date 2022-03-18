@@ -1,12 +1,16 @@
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from '../../network/src/helpers/MetricsContext'
-import { PeerInfo } from '../../network/src/connection/PeerInfo'
-import { HttpServerConfig, ServerWsEndpoint, startHttpServer } from '../../network/src/connection/ws/ServerWsEndpoint'
 import { TopologyStabilizationOptions, Tracker } from './logic/Tracker'
-import { DEFAULT_MAX_NEIGHBOR_COUNT } from './logic/config'
 import { TrackerServer } from './protocol/TrackerServer'
 import { trackerHttpEndpoints } from './logic/trackerHttpEndpoints'
-import { AbstractNodeOptions } from '../../network/src/identifiers'
+import {
+    AbstractNodeOptions,
+    HttpServerConfig,
+    MetricsContext,
+    PeerInfo,
+    ServerWsEndpoint,
+    startHttpServer,
+    DEFAULT_MAX_NEIGHBOR_COUNT
+} from 'streamr-network'
 
 export interface TrackerOptions extends AbstractNodeOptions {
     listen: HttpServerConfig

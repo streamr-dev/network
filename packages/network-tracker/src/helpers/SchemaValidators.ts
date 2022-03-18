@@ -1,14 +1,14 @@
 import Ajv from 'ajv'
-import { statusSchema } from "./schemas"
+import { statusSchema } from './schemas'
 
-const LATEST_STATUS_VERSION = "brubeck-1.0"
+const LATEST_STATUS_VERSION = 'brubeck-1.0'
 
 export class StatusValidator {
     private readonly versions: Record<string, any>
     constructor() {
         const ajv = new Ajv()
         this.versions = {
-            "brubeck-1.0": ajv.compile(statusSchema),
+            'brubeck-1.0': ajv.compile(statusSchema),
         }
     }
     validate(status: Record<string, any>, version?: string): boolean {

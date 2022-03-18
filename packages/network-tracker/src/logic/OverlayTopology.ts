@@ -9,11 +9,11 @@ const shuffleArray = <T>(arr: Array<T>): Array<T> => arr
 
 const pickRandomElement = <T>(arr: Array<T>): T => arr[Math.floor(Math.random() * arr.length)]
 
-export type TopologyState = Record<NodeId,Array<NodeId>>
+export type TopologyState = Record<NodeId, Array<NodeId>>
 
-export type Instructions = Record<NodeId,NodeId[]>
+export type Instructions = Record<NodeId, NodeId[]>
 
-export type TopologyNodes = Record<NodeId,Set<NodeId>>
+export type TopologyNodes = Record<NodeId, Set<NodeId>>
 
 export class OverlayTopology {
     private readonly maxNeighborsPerNode: number
@@ -63,9 +63,8 @@ export class OverlayTopology {
         }
 
         this.nodes[nodeId] = new Set(newNeighbors)
-        newNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))
-
-        ;[nodeId, ...newNeighbors].forEach((n) => {
+        newNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId));
+        [nodeId, ...newNeighbors].forEach((n) => {
             this.checkOpenSlots(n)
         })
     }

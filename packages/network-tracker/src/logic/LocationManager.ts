@@ -6,7 +6,7 @@ function isValidNodeLocation(location?: Location) {
 }
 
 export class LocationManager {
-    private readonly nodeLocations: Record<NodeId,Location>
+    private readonly nodeLocations: Record<NodeId, Location>
     private readonly logger: Logger
 
     constructor() {
@@ -14,7 +14,7 @@ export class LocationManager {
         this.logger = new Logger(module)
     }
 
-    getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
+    getAllNodeLocations(): Readonly<Record<NodeId, Location>> {
         return this.nodeLocations
     }
 
@@ -30,6 +30,7 @@ export class LocationManager {
             if (address) {
                 geoIpRecord = lookup(address)
             }
+
             if (geoIpRecord) {
                 this.nodeLocations[nodeId] = {
                     country: geoIpRecord.country,

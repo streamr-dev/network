@@ -1,6 +1,6 @@
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { Instruction, InstructionSender, SendInstructionFn } from '../../../network-tracker/src/logic/InstructionSender'
-import { Metrics, MetricsContext } from '../../src/helpers/MetricsContext'
+import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/InstructionSender'
+import { Metrics, MetricsContext } from 'streamr-network/dist/src/helpers/MetricsContext'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')
 const MOCK_STREAM_PART_2 = StreamPartIDUtils.parse('stream-id#2')
@@ -12,7 +12,7 @@ const MAX_WAIT = 2000
 let mockInstructionIdSuffix = 0
 
 const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
-    mockInstructionIdSuffix++
+    mockInstructionIdSuffix += 1
     return {
         nodeId: `mock-node-id-${mockInstructionIdSuffix}`,
         streamPartId,

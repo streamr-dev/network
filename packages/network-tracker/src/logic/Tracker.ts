@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
@@ -21,7 +21,6 @@ import {
     COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE
 } from 'streamr-network'
-import { TrackerLayer } from 'streamr-client-protocol'
 import { InstructionSender } from './InstructionSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 
@@ -49,7 +48,7 @@ export interface TrackerOptions {
 export type OverlayPerStreamPart = Record<StreamPartID, OverlayTopology>
 
 // nodeId => connected nodeId => rtt
-export type OverlayConnectionRtts = Record<NodeId,Record<NodeId,number>>
+export type OverlayConnectionRtts = Record<NodeId, Record<NodeId, number>>
 
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -58,7 +57,7 @@ export interface Tracker {
 // TODO: Testnet (3rd iteration) compatibility, rm when no more testnet nodes
 export function convertTestNet3Status(statusMessage: StatusMessage): void {
     if (statusMessage.status.stream !== undefined) {
-        const streamKey: string | undefined = statusMessage.status.stream.streamKey
+        const { streamKey } = statusMessage.status.stream
         let id = ''
         let partition = 0
         if (streamKey !== undefined) {
@@ -66,8 +65,9 @@ export function convertTestNet3Status(statusMessage: StatusMessage): void {
             if (parsedId !== undefined) {
                 id = parsedId
             }
+
             if (parsedPartition !== undefined) {
-                partition = parseInt(parsedPartition)
+                partition = parseInt(parsedPartition, 10)
             }
         }
 
@@ -78,8 +78,9 @@ export function convertTestNet3Status(statusMessage: StatusMessage): void {
 
         let counter = 0
         if (statusMessage.status.stream.counter !== undefined) {
-            counter = parseInt(statusMessage.status.stream.counter)
+            counter = parseInt(statusMessage.status.stream.counter, 10)
         }
+        // eslint-disable-next-line no-param-reassign
         statusMessage.status = {
             ...statusMessage.status,
             streamPart: {
@@ -102,7 +103,7 @@ export class Tracker extends EventEmitter {
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
     private readonly instructionSender: InstructionSender
-    private readonly extraMetadatas: Record<NodeId,Record<string, unknown>>
+    private readonly extraMetadatas: Record<NodeId, Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
     private readonly statusSchemaValidator: StatusValidator
@@ -114,6 +115,7 @@ export class Tracker extends EventEmitter {
         if (!Number.isInteger(opts.maxNeighborsPerNode)) {
             throw new Error('maxNeighborsPerNode is not an integer')
         }
+
         if (!(opts.protocols.trackerServer instanceof TrackerServer)) {
             throw new Error('Provided protocols are not correct')
         }
@@ -210,7 +212,7 @@ export class Tracker extends EventEmitter {
         this.logger.debug('stopping')
 
         this.instructionSender.stop()
-        
+
         await this.trackerServer.stop()
         this.stopped = true
     }
@@ -239,6 +241,7 @@ export class Tracker extends EventEmitter {
         if (this.stopped) {
             return
         }
+
         if (this.overlayPerStreamPart[streamPartId]) {
             const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
 
@@ -296,11 +299,11 @@ export class Tracker extends EventEmitter {
         return Object.keys(this.overlayPerStreamPart) as StreamPartID[]
     }
 
-    getAllNodeLocations(): Readonly<Record<NodeId,Location>> {
+    getAllNodeLocations(): Readonly<Record<NodeId, Location>> {
         return this.locationManager.getAllNodeLocations()
     }
 
-    getAllExtraMetadatas(): Readonly<Record<NodeId,Record<string, unknown>>> {
+    getAllExtraMetadatas(): Readonly<Record<NodeId, Record<string, unknown>>> {
         return this.extraMetadatas
     }
 

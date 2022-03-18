@@ -1,10 +1,9 @@
-import { Tracker } from '../../../network-tracker/src/logic/Tracker'
+import { Tracker, startTracker } from 'streamr-network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { startTracker } from '../../src/composition'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
 import { startServerWsEndpoint } from '../utils'

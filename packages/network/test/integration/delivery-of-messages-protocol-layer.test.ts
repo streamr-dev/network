@@ -6,19 +6,17 @@ import {
     StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
+import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from "streamr-network-tracker"
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { TrackerServer, Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { RtcSignaller } from "../../src/logic/RtcSignaller"
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { MetricsContext } from "../../src/helpers/MetricsContext"
-import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import NodeWebRtcConnectionFactory from "../../src/connection/webrtc/NodeWebRtcConnection"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
-
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/

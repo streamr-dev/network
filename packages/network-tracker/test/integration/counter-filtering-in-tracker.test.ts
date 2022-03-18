@@ -1,14 +1,12 @@
-import { Status } from '../../src/identifiers'
+import { Status, NodeId } from 'streamr-network/dist/src/identifiers'
 import { runAndWaitForEvents, wait } from 'streamr-test-utils'
+import { Tracker } from '../../src/logic/Tracker'
+import { startTracker } from '../../src/startTracker'
 
-import { PeerInfo } from '../../src/connection/PeerInfo'
-import { startTracker, Tracker } from '../../src/composition'
-import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
-import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
-import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { NodeId } from '../../src/logic/Node'
-import { toStreamID } from "streamr-client-protocol"
+import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint } from 'streamr-network'
+import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
+import { getTopology } from '../../src/logic/trackerSummaryUtils'
+import { toStreamID } from 'streamr-client-protocol'
 
 const WAIT_TIME = 2000
 
@@ -52,7 +50,7 @@ describe('tracker: instruction counter filtering', () => {
         await runAndWaitForEvents([
             () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
         ], [
-            [ nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
+            [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
         ])
 
         await runAndWaitForEvents([

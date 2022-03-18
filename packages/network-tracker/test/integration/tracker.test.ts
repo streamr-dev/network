@@ -1,11 +1,11 @@
-import { Tracker } from '../../../network-tracker/src/logic/Tracker'
-import { NetworkNode } from '../../src/logic/NetworkNode'
+import { Tracker } from '../../src/logic/Tracker'
+import { startTracker } from '../../src/startTracker'
+
 import { runAndWaitForEvents, runAndWaitForConditions } from 'streamr-test-utils'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as NodeEvent } from '../../src/logic/Node'
-import { Event as TrackerServerEvent } from '../../../network-tracker/src/protocol/TrackerServer'
-import { getTopology } from '../../../network-tracker/src/logic/trackerSummaryUtils'
+import { createNetworkNode, NodeEvent, NetworkNode } from 'streamr-network'
+import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
+import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 describe('check tracker, nodes and statuses from nodes', () => {
@@ -39,16 +39,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         subscriberOne.subscribe(StreamPartIDUtils.parse('stream-2#2'))
 
-        await runAndWaitForEvents([ () => { subscriberOne.subscribe(StreamPartIDUtils.parse('stream-1#0')) },
-            () => { subscriberTwo.subscribe(StreamPartIDUtils.parse('stream-1#0')) }],[
+        await runAndWaitForEvents([() => { subscriberOne.subscribe(StreamPartIDUtils.parse('stream-1#0')) },
+            () => { subscriberTwo.subscribe(StreamPartIDUtils.parse('stream-1#0')) }], [
             [subscriberOne, NodeEvent.NODE_SUBSCRIBED],
             [subscriberTwo, NodeEvent.NODE_SUBSCRIBED],
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
         ])
 
-        await runAndWaitForEvents([ () => { subscriberOne.subscribe(StreamPartIDUtils.parse('stream-2#2')) },
-            () => { subscriberTwo.subscribe(StreamPartIDUtils.parse('stream-2#2')) }],[
+        await runAndWaitForEvents([() => { subscriberOne.subscribe(StreamPartIDUtils.parse('stream-2#2')) },
+            () => { subscriberTwo.subscribe(StreamPartIDUtils.parse('stream-2#2')) }], [
             [subscriberOne, NodeEvent.NODE_SUBSCRIBED],
             [subscriberTwo, NodeEvent.NODE_SUBSCRIBED],
             // @ts-expect-error private field
@@ -96,19 +96,19 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
     */
     it('tracker should update correctly overlays on subscribe/unsubscribe', async () => {
-        
-        await runAndWaitForEvents(() => { subscriberOne.unsubscribe(StreamPartIDUtils.parse('stream-2#2')) },[
+
+        await runAndWaitForEvents(() => { subscriberOne.unsubscribe(StreamPartIDUtils.parse('stream-2#2')) }, [
             [subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED],
-            
+
             // @ts-expect-error private field
             [tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED]
-            
+
         ])
 
         expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1#0': {
-                subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
-                subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}],
+                subscriberOne: [{ neighborId: 'subscriberTwo', rtt: null }],
+                subscriberTwo: [{ neighborId: 'subscriberOne', rtt: null }],
             },
             'stream-2#2': {
                 subscriberTwo: []
@@ -149,6 +149,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
         )
 
         expect(getTopology(tracker.getOverlayPerStreamPart(), tracker.getOverlayConnectionRtts())).toEqual({})
-    
+
     }, 10 * 1000)
 })

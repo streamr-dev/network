@@ -2,56 +2,56 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.statusSchema = void 0;
 const streamStatusSchemaLatest = {
-    type: "object",
+    type: 'object',
     properties: {
         id: {
-            type: "string"
+            type: 'string'
         },
         partition: {
-            type: "number"
+            type: 'number'
         },
         neighbors: {
-            type: "array"
+            type: 'array'
         },
         counter: {
-            type: "number"
+            type: 'number'
         }
     },
-    required: ["id", "partition", "neighbors", "counter"]
+    required: ['id', 'partition', 'neighbors', 'counter']
 };
 const rttSchema = {
-    type: ["object", "null"],
+    type: ['object', 'null'],
     additionalProperties: true
 };
 const locationSchema = {
-    type: "object",
+    type: 'object',
     properties: {
         latitude: {
-            type: ["number", "null"]
+            type: ['number', 'null']
         },
         longitude: {
-            type: ["number", "null"]
+            type: ['number', 'null']
         },
         country: {
-            type: ["string", "null"]
+            type: ['string', 'null']
         },
         city: {
-            type: ["string", "null"]
+            type: ['string', 'null']
         }
     },
     additionalProperties: false
 };
 exports.statusSchema = {
-    type: "object",
+    type: 'object',
     properties: {
         streamPart: streamStatusSchemaLatest,
         rtts: rttSchema,
         location: locationSchema,
         started: {
-            type: "string"
+            type: 'string'
         },
     },
-    required: ["streamPart"],
+    required: ['streamPart'],
     additionalProperties: true
 };
 //# sourceMappingURL=schemas.js.map
