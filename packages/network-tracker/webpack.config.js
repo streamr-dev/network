@@ -44,8 +44,8 @@ const aliases = (env) => {
         'process': 'process/browser',
         [path.resolve(__dirname, 'src/logic/tracker/LocationManager.ts')]:
             path.resolve(__dirname, 'src/browser/LocationManager.ts'),
-        [path.resolve(__dirname, 'src/connection/NodeWebRtcConnection.ts')]:
-            path.resolve(__dirname, 'src/connection/BrowserWebRtcConnection.ts'),
+        [path.resolve(__dirname, 'src/connection/webrtc/NodeWebRtcConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/webrtc/BrowserWebRtcConnection.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')]:
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
