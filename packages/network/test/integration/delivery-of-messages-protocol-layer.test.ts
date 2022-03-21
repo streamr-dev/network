@@ -30,7 +30,7 @@ describe('delivery of messages in protocol layer', () => {
     let trackerServer: TrackerServer
 
     beforeAll(async () => {
-        console.log(require('streamr-network-tracker'))
+        // console.log(require('streamr-network-tracker'))
         signallingTracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
