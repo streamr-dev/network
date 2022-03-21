@@ -74,7 +74,7 @@ module.exports = (env, argv) => {
             type: 'filesystem',
         },
         mode: isProduction ? 'production' : 'development',
-        entry: './src/composition.ts',
+        entry: './src/browser.ts',
         devtool: "source-map",
         module: {
             rules: [
