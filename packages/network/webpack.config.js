@@ -24,7 +24,6 @@ const externals = (env) => {
 const fallbacks = (env) => {
     const fallbacks = {
         'fs': require.resolve('browserify-fs'),
-        '/src/logic/tracker/LocationManager.ts': false,
         'module': false,
         'net': false
     }
@@ -42,21 +41,13 @@ const fallbacks = (env) => {
 const aliases = (env) => {
     const aliases = {
         'process': 'process/browser',
-        [path.resolve(__dirname, 'src/logic/tracker/LocationManager.ts')]:
-            path.resolve(__dirname, 'src/browser/LocationManager.ts'),
-        [path.resolve(__dirname, 'src/connection/NodeWebRtcConnection.ts')]:
-            path.resolve(__dirname, 'src/connection/BrowserWebRtcConnection.ts'),
+        [path.resolve(__dirname, 'src/connection/webrtc/NodeWebRtcConnection.ts')]:
+            path.resolve(__dirname, 'src/connection/webrtc/BrowserWebRtcConnection.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')]:
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
         ['@pm2/io']: path.resolve(__dirname, 'src/browser/Pm2Shim.ts')
-    }
-    if (env !== 'test') {
-        return Object.assign(aliases, {
-            [path.resolve(__dirname, 'src/helpers/trackerHttpEndpoints.ts')]:
-                false
-        })
     }
     return aliases
 }
