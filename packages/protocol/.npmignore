@@ -4,7 +4,7 @@
 tsconfig.json
 /contracts
 .eslintignore
-.eslintrc.js
+.eslintrc
 jest.config.js
 
 # Logs

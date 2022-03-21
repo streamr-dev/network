@@ -1,6 +1,6 @@
 .codedeploy
 .eslintignore
-.eslintrc.js
+.eslintrc
 examples
 .github
 .idea
