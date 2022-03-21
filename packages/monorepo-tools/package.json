@@ -1,6 +1,7 @@
 {
     "name": "@streamr/monorepo-tools",
     "version": "0.0.0",
+    "private": true,
     "devDependencies": {
         "@streamr/dev-config": "^1.0.0",
         "@types/cli-table": "^0.3.0",
