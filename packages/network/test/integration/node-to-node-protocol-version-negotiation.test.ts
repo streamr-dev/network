@@ -24,7 +24,7 @@ describe('Node-to-Node protocol version negotiation', () => {
     let nodeToNode2: NodeToNode
 
     beforeEach(async () => {
-        console.log(require('streamr-network-tracker'))
+        // console.log(require('streamr-network-tracker'))
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
