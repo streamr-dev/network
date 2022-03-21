@@ -32,7 +32,7 @@ describe('multi trackers', () => {
     let nodeTwo: NetworkNode
 
     beforeEach(async () => {
-        // console.log(require('streamr-network-tracker'))
+        console.log(require('streamr-network-tracker'))
         trackerOne = await startTracker({
             listen: {
                 hostname: '127.0.0.1',

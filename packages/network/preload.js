@@ -4,13 +4,14 @@ process.once("loaded", () => {
     let Express = require('express')
     let HTTP = require('http')
     let HTTPS = require('https')
-    // import * as tracker from 'streamr-network-tracker'
-    //
-    // window['streamr-network-tracker'] = tracker
+    // import * as tracker from
+
+    window['streamr-network-tracker'] = require('streamr-network-tracker')
     window.WebSocket = WebSocket
     window.Express = Express
     window.HTTP = HTTP
     window.HTTPS = HTTPS
     // eslint-disable-next-line no-underscore-dangle
     window._streamr_electron_test = true
+    console.log(window)
 })
