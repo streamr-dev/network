@@ -13,6 +13,7 @@ module.exports = function (config) {
         reporters: ['spec'],
         files: [
             './karma-setup.js',
+            './test/unit/NetworkNode.test.ts',
             './test/browser/BrowserWebRtcConnection.test.ts',
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts',
             './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
@@ -20,6 +21,7 @@ module.exports = function (config) {
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
+            './test/unit/NetworkNode.test.ts': ['webpack'],
             './test/browser/BrowserWebRtcConnection.test.ts': ['webpack'],
             './test/browser/IntegrationBrowserWebRtcConnection.test.ts': ['webpack'],
             './test/integration/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/': ['webpack'],

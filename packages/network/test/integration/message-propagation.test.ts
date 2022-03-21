@@ -16,6 +16,7 @@ describe('message propagation in network', () => {
     let n4: NetworkNode
 
     beforeAll(async () => {
+        console.log(require('streamr-network-tracker'))
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',

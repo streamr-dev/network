@@ -7,6 +7,7 @@ import { createNetworkNode } from 'streamr-network'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { getStreamParts } from '../utils'
+import { start } from 'repl'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = toStreamID('stream-7') // assigned to trackerOne (arbitrarily by hashing algo)
@@ -32,6 +33,7 @@ describe('multi trackers', () => {
     let nodeTwo: NetworkNode
 
     beforeEach(async () => {
+        console.log(require('streamr-network-tracker'))
         trackerOne = await startTracker({
             listen: {
                 hostname: '127.0.0.1',

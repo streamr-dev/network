@@ -30,6 +30,8 @@ export declare function convertTestNet3Status(statusMessage: StatusMessage): voi
 export declare class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode;
     private readonly trackerServer;
+    /** @internal */
+    readonly peerInfo: PeerInfo;
     private readonly overlayPerStreamPart;
     private readonly overlayConnectionRtts;
     private readonly locationManager;
