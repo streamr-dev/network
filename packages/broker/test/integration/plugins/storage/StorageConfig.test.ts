@@ -1,6 +1,7 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol, Tracker } from 'streamr-network'
+import { Protocol } from 'streamr-network'
+import { Tracker } from 'streamr-network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'

@@ -1,4 +1,4 @@
-import { Tracker } from 'streamr-network'
+import { Tracker } from 'streamr-network-tracker'
 import { createClient, startTestTracker } from '../../../utils'
 import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
