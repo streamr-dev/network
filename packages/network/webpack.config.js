@@ -15,7 +15,8 @@ const externals = (env) => {
             'http': 'HTTP',
             'https': 'HTTPS',
             'express': 'Express',
-            'ws': 'WebSocket'
+            'ws': 'WebSocket',
+            'streamr-network-tracker': 'StreamrNetworkTracker',
         })
     }
     return externals
