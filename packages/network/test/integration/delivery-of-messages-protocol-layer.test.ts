@@ -21,6 +21,9 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
+
 describe('delivery of messages in protocol layer', () => {
     let signallingTracker: Tracker | undefined
     let nodeToNode1: NodeToNode
@@ -154,7 +157,9 @@ describe('delivery of messages in protocol layer', () => {
         })
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.StatusMessage)
+        if (typeof _streamr_electron_test !== 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.status).toEqual({
@@ -251,7 +256,9 @@ describe('delivery of messages in protocol layer', () => {
         )
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        if (typeof _streamr_electron_test !== 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
@@ -268,7 +275,9 @@ describe('delivery of messages in protocol layer', () => {
         nodeToTracker.sendRtcConnect('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'))
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        if (typeof _streamr_electron_test !== 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))

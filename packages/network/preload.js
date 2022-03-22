@@ -4,7 +4,6 @@ process.once("loaded", () => {
     let Express = require('express')
     let HTTP = require('http')
     let HTTPS = require('https')
-    // import * as tracker from
 
     window.StreamrNetworkTracker = require('streamr-network-tracker')
     window.WebSocket = WebSocket
