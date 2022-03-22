@@ -157,8 +157,8 @@ describe('delivery of messages in protocol layer', () => {
         })
         const [msg, source]: any = await messagePromise
 
-        if (typeof _streamr_electron_test !== 'undefined') {
-            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        if (typeof _streamr_electron_test === 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.StatusMessage)
         }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
@@ -256,7 +256,7 @@ describe('delivery of messages in protocol layer', () => {
         )
         const [msg, source]: any = await messagePromise
 
-        if (typeof _streamr_electron_test !== 'undefined') {
+        if (typeof _streamr_electron_test === 'undefined') {
             expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         }
         expect(source).toEqual('node1')
@@ -275,7 +275,7 @@ describe('delivery of messages in protocol layer', () => {
         nodeToTracker.sendRtcConnect('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'))
         const [msg, source]: any = await messagePromise
 
-        if (typeof _streamr_electron_test !== 'undefined') {
+        if (typeof _streamr_electron_test === 'undefined') {
             expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
         }
         expect(source).toEqual('node1')
