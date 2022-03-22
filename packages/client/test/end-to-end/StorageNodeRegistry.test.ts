@@ -6,7 +6,7 @@ import { Stream } from '../../src'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { afterAll } from 'jest-circus'
 
-const TEST_TIMEOUT = 60 * 1000
+const TEST_TIMEOUT = 30 * 1000
 
 describe('StorageNodeRegistry', () => {
     let creatorWallet: Wallet
@@ -55,7 +55,7 @@ describe('StorageNodeRegistry', () => {
         expect(storageNodes).toHaveLength(0)
         stored = await creatorClient.getStoredStreams(DOCKER_DEV_STORAGE_NODE)
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
-    })
+    }, TEST_TIMEOUT)
 
     it('registerStorageEventListener: picks up add and remove events', async () => {
         const cb = jest.fn()
