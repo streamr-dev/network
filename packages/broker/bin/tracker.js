@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
-const { startTracker, Logger } = require('streamr-network-tracker')
+const { startTracker } = require('streamr-network-tracker')
+const { Logger } = require('streamr-network')
 const ethers = require('ethers')
 const { SlackBot } = require('@streamr/slackbot')
 
