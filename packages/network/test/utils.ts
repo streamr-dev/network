@@ -3,7 +3,7 @@ import { MetricsContext } from '../dist/src/helpers/MetricsContext'
 import { Tracker } from 'streamr-network-tracker'
 import { PeerInfo } from '../dist/src/connection/PeerInfo'
 import { startHttpServer } from '../dist/src/connection/ws/ServerWsEndpoint'
-import { Node } from '../dist/src/logic/Node'
+import { Node } from '../src/logic/Node'
 import { ServerWsEndpoint } from '../dist/src/connection/ws/ServerWsEndpoint'
 
 export const startServerWsEndpoint = async (
