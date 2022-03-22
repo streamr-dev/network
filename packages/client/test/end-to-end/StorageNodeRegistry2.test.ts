@@ -45,9 +45,11 @@ describe('StorageNodeRegistry2', () => {
     })
 
     it('creates a node', async () => {
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry('{"http": "http://10.200.10.1:8891"}')
-        const createdNodeUrl = await client.getStorageNodeUrl(storageNodeAddress)
-        expect(createdNodeUrl).toEqual('http://10.200.10.1:8891')
+        const expectedUrl = `http://mock.com/${Date.now()}`
+        const metadata = JSON.stringify({ http: expectedUrl })
+        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(metadata)
+        const createdNodeUrl = await storageNodeClient.getStorageNodeUrl(storageNodeAddress)
+        expect(createdNodeUrl).toEqual(expectedUrl)
     })
 
     it('add stream to storage node', async () => {
@@ -110,6 +112,6 @@ describe('StorageNodeRegistry2', () => {
 
     it('delete a node ', async () => {
         await storageNodeClient.removeNodeFromStorageNodeRegistry()
-        return expect(client.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
+        return expect(storageNodeClient.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
     })
 })
