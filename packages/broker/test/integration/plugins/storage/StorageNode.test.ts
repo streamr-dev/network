@@ -35,7 +35,7 @@ describe('StorageNode', () => {
             httpPort: httpPort1,
             enableCassandra: true
         })
-    })
+    }, 30 * 1000)
 
     afterAll(async () => {
         await tracker?.stop()
