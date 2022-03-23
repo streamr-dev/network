@@ -361,7 +361,8 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-                "rpcs"
+                "rpcs",
+                "chainId"
             ],
             "properties": {
                 "chainId": {
