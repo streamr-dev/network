@@ -112,6 +112,6 @@ describe('StorageNodeRegistry2', () => {
 
     it('delete a node ', async () => {
         await storageNodeClient.removeNodeFromStorageNodeRegistry()
-        return expect(client.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
+        return expect(storageNodeClient.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
     })
 })
