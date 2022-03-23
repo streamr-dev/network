@@ -22,7 +22,7 @@ COPY --chown=streamr:streamr --from=build /usr/src/network/ .
 
 ENV LOG_LEVEL=info
 
-RUN ln -s packages/broker/tracker.js tracker.js
+RUN ln -s packages/broker/bin/tracker.js tracker.js
 
 EXPOSE 1883/tcp
 EXPOSE 7170/tcp
