@@ -7,12 +7,6 @@ const POLL_INTERVAL = 50
 const INDEXING_INTERVAL = 100
 const MOCK_QUERY = 'mock-query'
 
-const getMockCallResults = (fn: jest.Mock<Promise<number>>) => {
-    return fn.mock.results
-        .filter((item) => item.type === 'return')
-        .map((item) => item.value)
-}
-
 interface IndexState {
     blockNumber: number
     queryResult: any
@@ -126,7 +120,6 @@ describe('SynchronizedGraphQLClient', () => {
         })
         expect(sendQuery).toBeCalledTimes(1)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        expect(getMockCallResults(getIndexBlockNumber)).toEqual([0, 0, 2, 2, 4])
     })
 
     it('required block number is not a poll result', async () => {
@@ -138,7 +131,6 @@ describe('SynchronizedGraphQLClient', () => {
         })
         expect(sendQuery).toBeCalledTimes(1)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        expect(getMockCallResults(getIndexBlockNumber)).toEqual([0, 0, 2, 2, 4])
     })
 
     it('multiple queries for same block', async () => {
@@ -158,7 +150,6 @@ describe('SynchronizedGraphQLClient', () => {
         })
         expect(sendQuery).toBeCalledTimes(2)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        expect(getMockCallResults(getIndexBlockNumber)).toEqual([0, 0, 2, 2, 4, 4, 7])
     })
 
     it('multiple queries for different blocks', async () => {
@@ -177,7 +168,6 @@ describe('SynchronizedGraphQLClient', () => {
         })
         expect(sendQuery).toBeCalledTimes(2)
         expect(sendQuery).toBeCalledWith(MOCK_QUERY)
-        expect(getMockCallResults(getIndexBlockNumber)).toEqual([0, 0, 2, 2, 4, 4, 7, 7, 8])
     })
 
     it('timeout', async () => {

@@ -37,7 +37,7 @@ export class StoragePoller {
 
     async poll(): Promise<void> {
         logger.info('polling...')
-        const { streams, blockNumber } = await this.streamrClient.getStoredStreamsOf(this.clusterId)
+        const { streams, blockNumber } = await this.streamrClient.getStoredStreams(this.clusterId)
         logger.info('found %d streams at block %d', streams.length, blockNumber)
         this.onNewSnapshot(streams, blockNumber)
     }
