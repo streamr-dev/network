@@ -7,7 +7,7 @@ import {
     createClient,
     createTestStream,
     fetchPrivateKeyWithGas,
-    startTestTracker
+    startTestTracker, createAssignmentStream
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
@@ -44,6 +44,7 @@ describe('DataMetadataEndpoints', () => {
             },
         })
         await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
+        await createAssignmentStream(storageNodeAccount.privateKey)
         storageNode = await startBroker({
             name: 'storageNode',
             privateKey: storageNodeAccount.privateKey,

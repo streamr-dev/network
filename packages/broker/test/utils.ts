@@ -1,4 +1,11 @@
-import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientConfig } from 'streamr-client'
+import StreamrClient, {
+    ConfigTest,
+    MaybeAsync,
+    Stream,
+    StreamPermission,
+    StreamProperties,
+    StreamrClientConfig
+} from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
@@ -230,5 +237,27 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         return wasDone
     } finally {
         clearTimeout(t)
+    }
+}
+
+export async function createAssignmentStream(storageNodePrivateKey: string): Promise<Stream> {
+    const client = new StreamrClient({
+        ...ConfigTest,
+        auth: {
+            privateKey: storageNodePrivateKey
+        }
+    })
+    try {
+        const stream = await client.getOrCreateStream({
+            id: '/assignments',
+            partitions: 0
+        })
+        await stream.grantPermissions({
+            public: true,
+            permissions: [StreamPermission.SUBSCRIBE]
+        })
+        return stream
+    } finally {
+        await client?.destroy()
     }
 }
