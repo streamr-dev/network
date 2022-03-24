@@ -1,15 +1,15 @@
-FROM --platform=$BUILDPLATFORM node:16.14-bullseye as build
+FROM node:16.14-bullseye as build
 WORKDIR /usr/src/network
+RUN npm install -g npm@8.1 --no-audit
 RUN npm config set \
 	unsafe-perm=true \
-    npm install -g npm@8.4.1 --no-audit \
 	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
 	npm run bootstrap-pkg -- streamr-network-tracker && \
 	npm run prune-pkg -- streamr-network-tracker
 
-FROM --platform=$BUILDPLATFORM node:16.14-bullseye-slim
+FROM node:16.14-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
