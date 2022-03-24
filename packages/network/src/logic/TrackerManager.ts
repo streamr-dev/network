@@ -1,5 +1,6 @@
 import { StreamPartID, TrackerLayer, Utils } from 'streamr-client-protocol'
-import { Location, Rtts, TrackerInfo, NodeId, TrackerId, COUNTER_LONE_NODE } from '../identifiers'
+import { Location, Rtts, TrackerInfo, NodeId, TrackerId } from '../identifiers'
+import { COUNTER_LONE_NODE } from '../constants'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamPartManager } from './StreamPartManager'

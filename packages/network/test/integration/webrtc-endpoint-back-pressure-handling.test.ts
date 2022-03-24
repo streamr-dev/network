@@ -6,9 +6,9 @@ import { startTracker, Tracker } from 'streamr-network-tracker'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { wait } from 'streamr-test-utils'
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/webrtc/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker

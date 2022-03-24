@@ -15,11 +15,13 @@ export {
     RtcAnswerMessage,
     RelayMessage,
     RtcConnectMessage,
-    RtcSubTypes,
+    RtcSubTypes
+} from './identifiers'
+export {
     COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     DEFAULT_MAX_NEIGHBOR_COUNT
-} from './identifiers'
+} from './constants'
 export { NetworkNode } from './logic/NetworkNode'
 export { Event as NodeEvent } from './logic/Node'
 export { Logger } from './helpers/Logger'

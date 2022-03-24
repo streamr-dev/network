@@ -5,7 +5,7 @@ import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-tes
 import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
-import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const trackerPort = 38482

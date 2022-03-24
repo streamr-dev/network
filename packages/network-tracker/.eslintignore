@@ -1,11 +1,6 @@
 node_modules/**
 coverage/**
 dist/**
-test/unit/StubbedStreamrClient.js
 streamr-docker-dev/**
-vendor/**
-test/exports/**
-test/benchmarks/**
-test/memory/*
 docs/**
 .idea/**

@@ -21,7 +21,7 @@
   "scripts": {
     "build": "npm run prepare",
     "build-browser": "webpack --mode=development --progress",
-    "check": "tsc -p ../network/tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -37,7 +37,7 @@
     "test": "jest",
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-flakey": "jest test/flakey",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest test/integration/",
     "test-simulator": "jest --projects simulator.jest.config.js -- test/",
     "test-types": "npm run check",
     "test-unit": "jest test/unit",

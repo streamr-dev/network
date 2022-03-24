@@ -1,7 +1,8 @@
 import { MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamPartStatus } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
-import { NodeId, COUNTER_UNSUBSCRIBE } from '../identifiers'
+import { NodeId } from '../identifiers'
+import { COUNTER_UNSUBSCRIBE } from '../constants'
 import _ from 'lodash'
 
 interface StreamPartState {

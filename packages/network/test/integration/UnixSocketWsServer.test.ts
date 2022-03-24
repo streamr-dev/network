@@ -1,7 +1,7 @@
 import { ServerWsEndpoint, startHttpServer } from '../../src/connection/ws/ServerWsEndpoint'
-import { PeerInfo } from "../../src/connection/PeerInfo"
-import WebSocket from "ws"
-import { waitForCondition } from "streamr-test-utils"
+import { PeerInfo } from '../../src/connection/PeerInfo'
+import WebSocket from 'ws'
+import { waitForCondition } from 'streamr-test-utils'
 
 describe('ServerWsEndpoint', () => {
     let serverWsEndpoint: ServerWsEndpoint | undefined = undefined

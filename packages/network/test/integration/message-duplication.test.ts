@@ -4,7 +4,7 @@ import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-prot
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode } from '../../src/composition'
-import { Event as NodeEvent } from "../../src/logic/Node"
+import { Event as NodeEvent } from '../../src/logic/Node'
 
 const { StreamMessage, MessageID } = MessageLayer
 

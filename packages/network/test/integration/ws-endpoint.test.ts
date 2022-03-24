@@ -5,7 +5,7 @@ import { waitForEvent, wait } from 'streamr-test-utils'
 import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 // eslint-disable-next-line no-underscore-dangle

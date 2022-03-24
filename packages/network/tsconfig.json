@@ -3,7 +3,7 @@
     "compilerOptions": {
         "noEmit": true,
         "composite": true,
-        "outDir": "./dist"
+        "outDir": "dist"
     },
     "include": [
       "src/**/*",

@@ -5,9 +5,9 @@ import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/webrtc/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {

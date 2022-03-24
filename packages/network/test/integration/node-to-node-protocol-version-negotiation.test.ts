@@ -10,7 +10,7 @@ import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/webrtc/NodeWebRtcConnection"
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker

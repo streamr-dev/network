@@ -4,7 +4,7 @@ import { MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-cl
 import { waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode } from '../../src/composition'
-import { Event as NodeEvent } from "../../src/logic/Node"
+import { Event as NodeEvent } from '../../src/logic/Node'
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
