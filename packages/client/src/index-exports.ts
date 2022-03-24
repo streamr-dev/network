@@ -59,6 +59,7 @@ export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
 export { SignalListener } from './utils/Signal'
 export * from './types'
+export { formStorageNodeAssignmentStreamId } from './utils/index'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 

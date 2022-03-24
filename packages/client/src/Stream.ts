@@ -26,7 +26,7 @@ import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import Subscriber from './subscribe/Subscriber'
-import { withTimeout } from './utils'
+import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
 export interface StreamProperties {
@@ -196,7 +196,7 @@ class StreamrStream implements StreamMetadata {
     async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}) {
         let assignmentSubscription
         try {
-            assignmentSubscription = await this._subscriber.subscribe(`${nodeAddress}/assignments`)
+            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
             await withTimeout(

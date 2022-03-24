@@ -13,6 +13,7 @@ import { MaybeAsync } from '../types'
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
 import { Debug } from './log'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
 
@@ -670,4 +671,8 @@ export const withTimeout = async <T>(
     })
     await Promise.race([task, timeoutPromise])
     clearTimeout(timeoutRef!)
+}
+
+export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
+    return toStreamID('/assignments', clusterAddress)
 }

@@ -240,24 +240,40 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     }
 }
 
-export async function createAssignmentStream(storageNodePrivateKey: string): Promise<Stream> {
+export async function startStorageNode(
+    storageNodePrivateKey: string,
+    httpPort: number,
+    trackerPort: number
+): Promise<Broker> {
     const client = new StreamrClient({
         ...ConfigTest,
         auth: {
             privateKey: storageNodePrivateKey
-        }
+        },
     })
     try {
-        const stream = await client.getOrCreateStream({
-            id: '/assignments',
-            partitions: 0
-        })
-        await stream.grantPermissions({
-            public: true,
-            permissions: [StreamPermission.SUBSCRIBE]
-        })
-        return stream
+        await client.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort}"}`)
+        await createAssignmentStream(client)
     } finally {
-        await client?.destroy()
+        client?.destroy()
     }
+    return startBroker({
+        name: 'storageNode',
+        privateKey: storageNodePrivateKey,
+        trackerPort,
+        httpPort,
+        enableCassandra: true,
+    })
+}
+
+async function createAssignmentStream(client: StreamrClient): Promise<Stream> {
+    const stream = await client.getOrCreateStream({
+        id: '/assignments',
+        partitions: 1
+    })
+    await stream.grantPermissions({
+        public: true,
+        permissions: [StreamPermission.SUBSCRIBE]
+    })
+    return stream
 }

@@ -10,6 +10,7 @@ import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { Multimap } from '../utils'
 import { StreamRegistry } from '../../../src/StreamRegistry'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
@@ -31,7 +32,14 @@ export class FakeStorageNode extends FakeBrubeckNode {
                 })
                 networkNode.subscribe(streamPartId)
                 this.publishToNode(new StreamMessage({
-                    messageId: new MessageID(toStreamID(`${this.id}/assignments`), 0, Date.now(), idx, this.id, ''),
+                    messageId: new MessageID(
+                        toStreamID(formStorageNodeAssignmentStreamId(this.id)),
+                        0,
+                        Date.now(),
+                        idx,
+                        this.id,
+                        ''
+                    ),
                     content: {
                         streamPart: streamPartId,
                     }

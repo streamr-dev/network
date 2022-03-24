@@ -7,9 +7,10 @@ import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { MetricsContext } from 'streamr-network'
-import { Stream } from 'streamr-client'
-import { logger } from 'ethers'
+import { MetricsContext, Logger } from 'streamr-network'
+import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
+
+const logger = new Logger(module)
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -41,10 +42,10 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
 
     async start(): Promise<void> {
         const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
-        const assignmentPickUpStream = await this.streamrClient.getStream(`${clusterId}/assignments`)
+        const assignmentStream = await this.streamrClient.getStream(formStorageNodeAssignmentStreamId(clusterId))
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.cassandra = await this.startCassandraStorage(metricsContext)
-        this.storageConfig = await this.startStorageConfig(clusterId, assignmentPickUpStream)
+        this.storageConfig = await this.startStorageConfig(clusterId, assignmentStream)
         this.messageListener = (msg) => {
             if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
