@@ -1,25 +1,51 @@
-import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import {
+    EthereumAddress,
+    MessageID,
+    StreamID,
+    StreamMessage,
+    StreamPartID,
+    toStreamID
+} from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { Multimap } from '../utils'
+import { StreamRegistry } from '../../../src/StreamRegistry'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
+    private readonly streamRegistry: StreamRegistry
 
-    constructor(address: EthereumAddress, activeNodes: ActiveNodes, name?: string) {
+    constructor(address: EthereumAddress, activeNodes: ActiveNodes, name: string, streamRegistry: StreamRegistry) {
         super(address, activeNodes, undefined, name)
+        this.streamRegistry = streamRegistry
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
-        const streamPartId = toStreamPartID(streamId, 0) // TODO all partitions
+        const stream = await this.streamRegistry.getStream(streamId)
         const networkNode = await this.getNode()
-        if (!networkNode.subsciptions.has(streamPartId)) {
-            networkNode.addMessageListener((msg: StreamMessage) => {
-                this.storeMessage(msg)
-            })
-            networkNode.subscribe(streamPartId)
-        }
+        stream.getStreamParts().forEach((streamPartId, idx) => {
+            if (!networkNode.subsciptions.has(streamPartId)) {
+                networkNode.addMessageListener((msg: StreamMessage) => {
+                    this.storeMessage(msg)
+                })
+                networkNode.subscribe(streamPartId)
+                this.publishToNode(new StreamMessage({
+                    messageId: new MessageID(
+                        toStreamID(formStorageNodeAssignmentStreamId(this.id)),
+                        0,
+                        Date.now(),
+                        idx,
+                        this.id,
+                        ''
+                    ),
+                    content: {
+                        streamPart: streamPartId,
+                    }
+                }))
+            }
+        })
     }
 
     private storeMessage(msg: StreamMessage): void {

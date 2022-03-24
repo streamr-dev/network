@@ -10,7 +10,8 @@ import {
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
     fetchPrivateKeyWithGas,
-    startTestTracker
+    startTestTracker,
+    startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
 
@@ -52,16 +53,7 @@ describe('StorageConfig', () => {
 
     beforeEach(async () => {
         tracker = await startTestTracker(TRACKER_PORT)
-        const storageNodeClient = await createClient(tracker, storageNodeAccount.privateKey)
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${HTTP_PORT}"}`)
-        storageNode = await startBroker({
-            name: 'storageNode',
-            privateKey: storageNodeAccount.privateKey,
-            trackerPort: TRACKER_PORT,
-            httpPort: HTTP_PORT,
-            restUrl: REST_URL,
-            enableCassandra: true
-        })
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, TRACKER_PORT)
         broker = await startBroker({
             name: 'broker',
             privateKey: brokerAccount.privateKey,

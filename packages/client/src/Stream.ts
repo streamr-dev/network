@@ -3,7 +3,6 @@
  */
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { until } from './utils'
 import { inspect } from './utils/log'
 
 import { Rest } from './Rest'
@@ -15,11 +14,20 @@ import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { EthereumAddress, StreamID, StreamMetadata } from 'streamr-client-protocol'
-import { DEFAULT_PARTITION } from './StreamIDBuilder'
+import {
+    EthereumAddress,
+    StreamID,
+    StreamMetadata,
+    StreamPartID,
+    toStreamPartID
+} from 'streamr-client-protocol'
+import { range } from 'lodash'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
+import Subscriber from './subscribe/Subscriber'
+import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
+import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 
 export interface StreamProperties {
     id: string
@@ -80,6 +88,7 @@ class StreamrStream implements StreamMetadata {
     protected _rest: Rest
     protected _resends: Resends
     protected _publisher: Publisher
+    protected _subscriber: Subscriber
     protected _streamEndpoints: StreamEndpoints
     protected _streamEndpointsCached: StreamEndpointsCached
     protected _streamRegistry: StreamRegistry
@@ -99,6 +108,7 @@ class StreamrStream implements StreamMetadata {
         this._rest = _container.resolve<Rest>(Rest)
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
+        this._subscriber = _container.resolve<Subscriber>(Subscriber)
         this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
         this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
@@ -125,6 +135,10 @@ class StreamrStream implements StreamMetadata {
             // @ts-expect-error
             this[key] = props[key]
         }
+    }
+
+    getStreamParts(): StreamPartID[] {
+        return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
     }
 
     toObject(): StreamProperties {
@@ -179,48 +193,22 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: {
-        timeout?: number,
-        pollInterval?: number
-    } = {}) {
+    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}) {
+        let assignmentSubscription
         try {
-            const storageNodeUrl = await this._nodeRegistry.getStorageNodeUrl(nodeAddress)
+            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
+            const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
             await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
-            await this.waitUntilStorageAssigned(waitOptions, storageNodeUrl)
+            await withTimeout(
+                propagationPromise,
+                // eslint-disable-next-line no-underscore-dangle
+                waitOptions.timeout ?? this._clientConfig._timeouts.storageNode.timeout,
+                'timed out waiting for storage nodes to respond'
+            )
         } finally {
             this._streamEndpointsCached.clearStream(this.id)
+            await assignmentSubscription?.unsubscribe() // should never reject...
         }
-    }
-
-    async waitUntilStorageAssigned({
-        timeout,
-        pollInterval
-    }: {
-        timeout?: number,
-        pollInterval?: number
-    } = {}, url: string) {
-        // wait for propagation: the storage node sees the change and
-        // is ready to store the any stream data which we publish
-        await until(
-            () => this.isStreamStoredInStorageNode(this.id, url),
-            // eslint-disable-next-line no-underscore-dangle
-            timeout ?? this._clientConfig._timeouts.storageNode.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            pollInterval ?? this._clientConfig._timeouts.storageNode.retryInterval,
-            () => `Propagation timeout when adding stream to a storage node: ${this.id}`
-        )
-    }
-
-    private async isStreamStoredInStorageNode(streamId: StreamID, nodeurl: string) {
-        const url = `${nodeurl}/streams/${encodeURIComponent(streamId)}/storage/partitions/${DEFAULT_PARTITION}`
-        const response = await this._httpFetcher.fetch(url)
-        if (response.status === 200) {
-            return true
-        }
-        if (response.status === 404) { // eslint-disable-line padding-line-between-statements
-            return false
-        }
-        throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
     /**
