@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix timeout issue of method `addToStorageNode` when used with storage node cluster
+
 ### Security
 
 ## [6.0.1] - 2022-02-24
