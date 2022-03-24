@@ -19,9 +19,12 @@ provides a full tracker executable, and a stripped-down network node executable.
 
 
 The primary executable for running a broker node in the Streamr Network resides in the
-[streamr-broker](https://github.com/streamr-dev/broker) package. Although _streamr-network_ contains a
+[streamr-broker](https://github.com/streamr-dev/network-monorepo/packages/broker) package. Although _streamr-network_ contains a
 fully-operational minimal network node implementation, we recommend running the node executable found in
 _streamr-broker_ as it includes useful client-facing features for interacting with the Streamr Network.
+
+[streamr-network-tracker](https://github.com/streamr-dev/network-monorepo/packages/network-tracker) contains the code repository
+to develop and run the Trackers required by the Network Nodes for peer discovery.
 
 The [wiki](https://github.com/streamr-dev/network/wiki) outlines the technical and architectural
 decisions of the project. It provides thorough explanations of some the more involved features.
