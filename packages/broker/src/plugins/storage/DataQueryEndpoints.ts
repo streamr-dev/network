@@ -4,7 +4,7 @@
 import express, { Request, Response, Router } from 'express'
 import { StreamMessage } from 'streamr-client-protocol'
 import { Logger, Metrics, MetricsContext } from 'streamr-network'
-import { Readable, Transform } from 'stream'
+import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
 
@@ -81,22 +81,21 @@ const createEndpointRoute = (
                             'Content-Type': format.contentType
                         })
                     })
-                    data.on('close', () => {
-                        res.end()
-                    })
-                    data.on('error', (err: any) => {
-                        logger.error(`Stream error in DataQueryEndpoints: ${streamId}`, err)
-                        if (!res.headersSent) {
-                            res.status(500).json({
-                                error: 'Failed to fetch data!'
-                            })
+                    pipeline(
+                        data,
+                        new ResponseTransform(format, version),
+                        res,
+                        (err) => {
+                            if (err !== undefined) {
+                                logger.error(`Stream error in DataQueryEndpoints: ${streamId}`, err)
+                                if (!res.headersSent) {
+                                    res.status(500).json({
+                                        error: 'Failed to fetch data!'
+                                    })
+                                }
+                            }
                         }
-                    })
-                    data.pipe(new ResponseTransform(format, version)).pipe(res)
-                    res.on('close', () => {
-                        // stops streaming the data if the client aborts fetch
-                        data.destroy()
-                    })
+                    )
                 },
                 (errorMessage: string) => sendError(errorMessage, res)
             )
