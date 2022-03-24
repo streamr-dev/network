@@ -12,3 +12,46 @@
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
 The repository for running a Tracker for the Streamr Network's Brubeck network.
+
+## Install
+
+### NPM
+
+```bash
+npm i -g streamr-network-tracker
+```
+
+### Docker
+
+```bash
+docker pull streamr/tracker
+```
+
+## Development
+
+```bash
+git clone https://github.com/streamr-dev/network-monorepo.git
+npm ci
+cd packages/network-tracker
+```
+
+## Testing
+
+```bash
+# unit tests
+npm run test-unit
+# integration tests
+npm run test-integration
+# run all
+npm run test
+```
+
+### Network Tests
+It is recommended to build and run the tests in the network package when doing changes to the Tracker.
+
+```bash
+# In Monorepo Root
+npm run build
+cd packages/network
+npm run test
+```
