@@ -81,18 +81,20 @@ const createEndpointRoute = (
                             'Content-Type': format.contentType
                         })
                     })
+                    data.once('error', () => {
+                        if (!res.headersSent) {
+                            res.status(500).json({
+                                error: 'Failed to fetch data!'
+                            })
+                        }
+                    })
                     pipeline(
                         data,
                         new ResponseTransform(format, version),
                         res,
                         (err) => {
                             if (err !== undefined) {
-                                logger.error(`Stream error in DataQueryEndpoints: ${streamId}`, err)
-                                if (!res.headersSent) {
-                                    res.status(500).json({
-                                        error: 'Failed to fetch data!'
-                                    })
-                                }
+                                logger.error(`Pipeline error in DataQueryEndpoints: ${streamId}`, err)
                             }
                         }
                     )
