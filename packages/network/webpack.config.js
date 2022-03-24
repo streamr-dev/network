@@ -11,6 +11,8 @@ const externals = (env) => {
         'node-datachannel': 'commonjs node-datachannel',
     }
     if (env === 'test') {
+        // Imported modules to run in the NodeJS sandbox of Electron
+        // Assigned in preload.js
         return Object.assign(externals, {
             'http': 'HTTP',
             'https': 'HTTPS',
