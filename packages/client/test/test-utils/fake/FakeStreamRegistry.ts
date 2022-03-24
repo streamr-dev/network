@@ -1,5 +1,5 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
-import { EthereumAddress, StreamID, StreamIDUtils, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
     StreamPermission,
