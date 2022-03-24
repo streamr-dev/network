@@ -2,7 +2,7 @@ FROM --platform=$BUILDPLATFORM node:16.14-bullseye as build
 WORKDIR /usr/src/network
 RUN npm config set \
 	unsafe-perm=true \
-    npm install -g npm@8.4.1 --no-audit
+    npm install -g npm@8.4.1 --no-audit \
 	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
