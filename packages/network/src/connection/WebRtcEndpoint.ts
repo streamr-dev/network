@@ -135,17 +135,25 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.statusReportTimer = setInterval(() => {
             const connectedPeerIds = []
             const pendingPeerIds = []
-            for (const peerId of Object.keys(this.connections)) {
+            const undefinedStates = []
+            const connections = Object.keys(this.connections)
+            for (const peerId of connections) {
                 const lastState = this.connections[peerId].getLastState()
                 if (lastState === 'connected') {
                     connectedPeerIds.push(peerId)
                 } else if (lastState === 'connecting') {
                     pendingPeerIds.push(peerId)
+                } else if (lastState === undefined) {
+                    undefinedStates.push(peerId)
                 }
             }
-            const suffix = (pendingPeerIds.length > 0) ? ', still trying to connect: %s' : ''
-            this.logger.info(`Successfully connected to %d peers (%s)${suffix}`,
-                connectedPeerIds.length, getPeerNameList(connectedPeerIds), getPeerNameList(pendingPeerIds))
+            if (connections.length > 0 && connections.length === undefinedStates.length) {
+                this.logger.warn('Cannot determine webrtc datachannel connection states')
+            } else {
+                const suffix = (pendingPeerIds.length > 0) ? ', still trying to connect: %s' : ''
+                this.logger.info(`Successfully connected to %d peers (%s)${suffix}`,
+                    connectedPeerIds.length, getPeerNameList(connectedPeerIds), getPeerNameList(pendingPeerIds))
+            }
         }, STATUS_REPORT_INTERVAL_MS)
     }
 
