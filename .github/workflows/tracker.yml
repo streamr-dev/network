@@ -98,13 +98,14 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: "parity-node0 broker-node-no-storage-1"
+          services-to-start: "tracker-1"
+          branch: "NET-744-tracker-container"
       - run: |
           for (( i=0; i < 5; i=i+1 )); do
-              curl -s http://localhost:8791/volume;
+              curl -s http://localhost:30301/topology;
               res=$?;
               if test "$res" != "0"; then
-                  echo "Attempting to connect to broker retrying in $wait_time seconds";
+                  echo "Attempting to connect to tracker retrying in $wait_time seconds";
                   sleep $wait_time;
                   wait_time=$(( 2*wait_time )) ;
               else
