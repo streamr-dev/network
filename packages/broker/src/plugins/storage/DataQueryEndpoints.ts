@@ -93,7 +93,7 @@ const createEndpointRoute = (
                         new ResponseTransform(format, version),
                         res,
                         (err) => {
-                            if (err !== undefined) {
+                            if ((err !== undefined) && (err !== null)) {
                                 logger.error(`Pipeline error in DataQueryEndpoints: ${streamId}`, err)
                             }
                         }

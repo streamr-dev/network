@@ -340,7 +340,7 @@ export class Storage extends EventEmitter {
                 (err: Error | null) => {
                     if (err) {
                         resultStream.destroy(err)
-                        streams.forEach((s) => s.destroy(err))
+                        streams.forEach((s) => s.destroy(undefined))
                     }
                 }
             )
