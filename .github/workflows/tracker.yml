@@ -131,11 +131,10 @@ jobs:
           docker rm $(docker ps -a -q)
   docker-push:
     name: "Docker Image: push"
-#    needs: [test, test-docker]
+    needs: [test, test-docker]
     runs-on: ubuntu-latest
     # only push for nightly runs and manual triggers
-#    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-    
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v3
       - name: Cache Docker layers
