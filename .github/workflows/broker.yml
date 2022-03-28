@@ -88,6 +88,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=development
       - name: Build
         uses: docker/build-push-action@v2.10.0
         with:
@@ -96,8 +98,6 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          build-args: |
-            NODE_ENV=development
           tags: streamr/broker-node:dev
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
@@ -163,6 +163,8 @@ jobs:
         with:
           driver-opts: |
             network=host
+          build-args: |
+            NODE_ENV=production
       - uses: docker/login-action@v1.14.1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -210,8 +212,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           load: false
-          build-args: |
-            NODE_ENV=production
           # only one of these should have tags
           tags: ${{ steps.docker_meta_success.outputs.tags }}${{ steps.docker_meta_failure.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}

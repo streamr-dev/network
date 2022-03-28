@@ -5,6 +5,7 @@ SHELL = /bin/bash
 .PHONY: docker-build
 docker-build:
 	docker build \
+		--no-cache \
 		--progress=plain \
 		--build-arg NODE_ENV=development \
 		--tag streamr/broker-node:dev .
