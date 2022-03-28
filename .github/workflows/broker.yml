@@ -60,7 +60,7 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-      - run: npm run test-integration
+      - run: sh flaky.sh
         env:
           CI: true
           LOG_LEVEL: warn
