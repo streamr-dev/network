@@ -280,7 +280,7 @@ export class Storage extends EventEmitter {
             publisherId,
             msgChainId,
         })
-    
+
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) {
                 resultStream.end()
@@ -300,7 +300,7 @@ export class Storage extends EventEmitter {
                 ]
             } else {
                 queries = [
-                    { 
+                    {
                         where: 'WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ?',
                         params: [streamId, partition, bucketIds, fromTimestamp, fromSequenceNo]
                     },
@@ -314,7 +314,7 @@ export class Storage extends EventEmitter {
                     }
                 ]
             }
-            
+
             queries.forEach((q) => {
                 if (publisherId !== undefined) {
                     q.where += ' AND publisher_id = ?'
@@ -323,7 +323,7 @@ export class Storage extends EventEmitter {
                 if (msgChainId !== undefined) {
                     q.where += ' AND msg_chain_id = ?'
                     q.params.push(msgChainId)
-                }    
+                }
             })
 
             const streams = queries.map((q) => {
@@ -338,8 +338,10 @@ export class Storage extends EventEmitter {
                 }),
                 resultStream,
                 (err: Error | null) => {
-                    resultStream.destroy(err || undefined)
-                    streams.forEach((s) => s.destroy(err || undefined))
+                    if (err) {
+                        resultStream.destroy(err)
+                        streams.forEach((s) => s.destroy(undefined))
+                    }
                 }
             )
         })
