@@ -18,7 +18,7 @@ RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
 RUN usermod -d /home/streamr -l streamr node && groupmod -n streamr node
 USER streamr
 WORKDIR /home/streamr/network
-COPY --chown=streamr:streamr --from=build /usr/src/network/ .
+COPY --chown=root:root --from=build /usr/src/network/ .
 
 ENV LOG_LEVEL=info
 
