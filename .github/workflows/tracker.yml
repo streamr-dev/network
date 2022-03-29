@@ -31,7 +31,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm run bootstrap-pkg streamr-network-tracker
+          npm run bootstrap-pkg @streamr/network-tracker
       - run: npm run eslint
       - run: npm run test-unit
         env:
