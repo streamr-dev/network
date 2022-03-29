@@ -8,7 +8,7 @@ export { StreamrClientEvents } from './events'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
-export { ResendSubscription } from './subscribe/ResendSubscription'
+export { ResendSubscription, ResendSubscriptionEvents } from './subscribe/ResendSubscription'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,

@@ -94,7 +94,7 @@ describeRepeats('sequential resend subscribe', () => {
             })
 
             const onResent = jest.fn()
-            sub.onResent(onResent)
+            sub.once('resendComplete', onResent)
 
             const message = Msg()
             // eslint-disable-next-line no-await-in-loop
