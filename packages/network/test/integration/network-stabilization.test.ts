@@ -1,4 +1,4 @@
-import { Tracker, startTracker, getTopology } from 'streamr-network-tracker'
+import { Tracker, startTracker, getTopology } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import assert from 'assert'
 

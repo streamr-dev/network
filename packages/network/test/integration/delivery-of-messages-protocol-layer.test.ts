@@ -6,7 +6,7 @@ import {
     StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
-import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from 'streamr-network-tracker'
+import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'

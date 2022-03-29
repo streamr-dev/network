@@ -3,7 +3,7 @@ import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response} from 'express'
 import { Logger } from 'streamr-network'
-import { Tracker } from 'streamr-network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 

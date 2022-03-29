@@ -62,6 +62,7 @@
   "devDependencies": {
     "@jest/fake-timers": "^27.0.5",
     "@streamr/dev-config": "^1.0.0",
+    "@streamr/network-tracker": "1.0.0",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",
     "@types/jest": "^27.0.2",
@@ -100,7 +101,6 @@
     "patch-package": "^6.4.7",
     "path-browserify": "^1.0.1",
     "source-map-loader": "^3.0.0",
-    "streamr-network-tracker": "0.0.1",
     "streamr-test-utils": "^2.0.0",
     "ts-jest": "^27.0.5",
     "ts-loader": "^9.2.6",

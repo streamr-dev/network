@@ -1,6 +1,6 @@
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from '../dist/src/helpers/MetricsContext'
-import { Tracker } from 'streamr-network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../dist/src/connection/PeerInfo'
 import { startHttpServer } from '../dist/src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'

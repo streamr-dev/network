@@ -1,6 +1,6 @@
 // Loads non-browser compatible components to Electron's NodeJS sandbox during tests
 process.once("loaded", () => {
-    window.StreamrNetworkTracker = require('streamr-network-tracker')
+    window.StreamrNetworkTracker = require('@streamr/network-tracker')
     window.WebSocket = require('ws')
     window.Express = require('express')
     window.HTTP = require('http')

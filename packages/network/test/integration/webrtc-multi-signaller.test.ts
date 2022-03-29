@@ -1,6 +1,6 @@
 import { MetricsContext } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, TrackerEvent, startTracker } from 'streamr-network-tracker'
+import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from 'streamr-test-utils'
 import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'

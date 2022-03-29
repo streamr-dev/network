@@ -9,7 +9,7 @@ import StreamrClient, {
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'

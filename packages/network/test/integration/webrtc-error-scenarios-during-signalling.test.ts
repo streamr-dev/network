@@ -1,6 +1,6 @@
 import { runAndWaitForEvents } from 'streamr-test-utils'
 
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'

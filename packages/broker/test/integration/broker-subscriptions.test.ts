@@ -1,7 +1,7 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { Tracker } from 'streamr-network-tracker'
+import { Tracker } from '@streamr/network-tracker'
 import { fastWallet, wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, getStreamParts, startTestTracker } from '../utils'

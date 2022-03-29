@@ -1,4 +1,4 @@
-import { Tracker, startTracker, TrackerServerEvent } from 'streamr-network-tracker'
+import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { runAndWaitForEvents } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 

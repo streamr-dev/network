@@ -1,5 +1,5 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { waitForEvent } from 'streamr-test-utils'
 

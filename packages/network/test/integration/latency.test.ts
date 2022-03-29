@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 import { MetricsContext, createNetworkNode } from '../../src/composition'

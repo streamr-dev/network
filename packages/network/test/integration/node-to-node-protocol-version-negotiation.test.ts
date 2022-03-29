@@ -2,7 +2,7 @@ import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"

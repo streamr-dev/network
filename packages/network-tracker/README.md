@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# streamr-network-tracker
+# @streamr/network-tracker
 
 [![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/network/Eslint,%20Test%20and%20Publish/master)](https://github.com/streamr-dev/network/actions)
 [![npm release](https://img.shields.io/npm/v/streamr-network?style=flat)](https://www.npmjs.com/package/streamr-network)
@@ -18,7 +18,7 @@ The repository for running a Tracker for the Streamr Network's Brubeck network.
 ### NPM
 
 ```bash
-npm i -g streamr-network-tracker
+npm i -g @streamr/network-tracker
 ```
 
 ### Docker

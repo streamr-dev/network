@@ -1,4 +1,4 @@
-import { Tracker, startTracker } from 'streamr-network-tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent, wait } from 'streamr-test-utils'
 
