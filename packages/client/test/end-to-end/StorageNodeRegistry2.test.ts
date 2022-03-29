@@ -70,14 +70,10 @@ describe('StorageNodeRegistry2', () => {
                 promise.resolve()
             }
         })
-        try {
-            client.on('addToStorageNode', onAddToStorageNode)
-            await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
-            await promise
-            expect(onAddToStorageNode).toBeCalledTimes(1)
-        } finally {
-            client.off('addToStorageNode', onAddToStorageNode)
-        }
+        client.on('addToStorageNode', onAddToStorageNode)
+        await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
+        await promise
+        expect(onAddToStorageNode).toBeCalledTimes(1)
     })
 
     describe('getStorageNodes', () => {

@@ -152,6 +152,7 @@ class StreamrClientBase implements Context {
     })
 
     destroy = pOnce(async () => {
+        this.eventEmitter.removeAllListeners()
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),

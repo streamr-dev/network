@@ -80,9 +80,6 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-
-        listenerClient.off('addToStorageNode', onAdd)
-        listenerClient.off('removeFromStorageNode', onRemove)
     }, TEST_TIMEOUT)
 
     it('getStoredStreams', async () => {
