@@ -23,7 +23,7 @@ enum State {
 export default class Session {
     private state: State
     private sessionTokenPromise?: Promise<string>
-    private eventEmitter: EventEmitter
+    private eventEmitter: EventEmitter<State>
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -31,7 +31,7 @@ export default class Session {
     ) {
         this.state = State.LOGGED_OUT
         this.options = options
-        this.eventEmitter = new EventEmitter()
+        this.eventEmitter = new EventEmitter<State>()
         if (!this.options.sessionToken) {
             this.options.unauthenticated = true
         }
