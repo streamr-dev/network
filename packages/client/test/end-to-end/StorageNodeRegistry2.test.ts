@@ -59,7 +59,7 @@ describe('StorageNodeRegistry2', () => {
 
     it('storage event listener', async () => {
         const promise = Promise
-        const onAddToStorageNode = (event: StorageNodeAssignmentEvent) => {
+        const onAddToStorageNode = jest.fn().mockImplementation((event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === storageNodeAddress) {
                 expect(event).toEqual({
@@ -69,7 +69,7 @@ describe('StorageNodeRegistry2', () => {
                 })
                 promise.resolve()
             }
-        }
+        })
         try {
             client.on('addToStorageNode', onAddToStorageNode)
             await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)

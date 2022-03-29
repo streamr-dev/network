@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
 - Method `stream.update()` now requires a parameter `props`
 - Storage node assignment events:
-  - add a listener with `on('addToStorageNode')` / `on('removeFromStorageNode')` instead of `registerStorageEventListeners()`
-  - remove a listener with `off('addToStorageNode')` / `off('removeFromStorageNode')` instead of `unRegisterStorageEventListeners()`
+  - method `registerStorageEventListeners(listener)` replaced with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
+  - method `unRegisterStorageEventListeners()` replaced with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
 - Resent event:
   - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
 
