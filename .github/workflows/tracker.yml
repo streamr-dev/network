@@ -79,7 +79,7 @@ jobs:
         uses: docker/build-push-action@v2.10.0
         with:
           context: .
-          file: ./Dockerfile-tracker
+          file: ./Dockerfile.tracker
           platforms: linux/amd64
           push: false
           load: true
@@ -191,7 +191,7 @@ jobs:
         uses: docker/build-push-action@v2.10.0
         with:
           context: .
-          file: ./Dockerfile-tracker
+          file: ./Dockerfile.tracker
           platforms: linux/amd64,linux/arm64
           push: true
           load: false

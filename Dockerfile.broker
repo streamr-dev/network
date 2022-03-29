@@ -1,15 +1,15 @@
-FROM node:16.14-bullseye as build
+FROM --platform=$BUILDPLATFORM node:16.14-bullseye as build
 WORKDIR /usr/src/network
-RUN npm install -g npm@8.1 --no-audit
+RUN npm install -g npm@8.5 --no-audit
 RUN npm config set \
 	unsafe-perm=true \
 	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
-	npm run bootstrap-pkg -- streamr-network-tracker && \
-	npm run prune-pkg -- streamr-network-tracker
+	npm run bootstrap-pkg -- streamr-broker && \
+	npm run prune-pkg -- streamr-broker
 
-FROM node:16.14-bullseye-slim
+FROM --platform=$BUILDPLATFORM node:16.14-bullseye-slim
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV:-production}
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
@@ -23,7 +23,11 @@ COPY --chown=streamr:streamr --from=build /usr/src/network/ .
 
 ENV LOG_LEVEL=info
 
-WORKDIR /home/streamr/network/packages/network-tracker
+EXPOSE 1883/tcp
+EXPOSE 7170/tcp
+EXPOSE 7171/tcp
 
-# start tracker
-CMD ["./bin/tracker.js"]
+WORKDIR /home/streamr/network/packages/broker
+
+# start broker from default config
+CMD ["./bin/broker.js"]
