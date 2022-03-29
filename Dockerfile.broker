@@ -1,6 +1,6 @@
 FROM --platform=$BUILDPLATFORM node:16.14-bullseye as build
 WORKDIR /usr/src/network
-RUN npm install -g npm@8.5 --no-audit
+RUN npm install -g npm@8.1 --no-audit
 RUN npm config set \
 	unsafe-perm=true \
 	python="$(which python3)"
