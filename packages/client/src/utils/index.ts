@@ -7,7 +7,7 @@ import mem from 'mem'
 import { L } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
-import LRU from '../../vendor/quick-lru'
+import LRU from '../../vendor/quick-lru/index'
 import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
