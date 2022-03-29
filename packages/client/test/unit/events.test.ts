@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { initEventGateway, StreamrClientEventEmitter } from '../../src/events'
 
 type MockGatewayListener = () => void
@@ -17,11 +18,11 @@ describe('events', () => {
         const listenerCounts: number[] = []
         const onEventEmitterChange = (name: string) => {
             if (name === MOCK_EVENT_NAME) {
-                listenerCounts.push(emitter.listenerCount(MOCK_EVENT_NAME))
+                listenerCounts.push(emitter.getListenerCount(MOCK_EVENT_NAME))
             }
         }
-        emitter.on('addEventListener', onEventEmitterChange)
-        emitter.on('removeEventListener', onEventEmitterChange)
+        emitter.getObserver().on('addEventListener', onEventEmitterChange)
+        emitter.getObserver().on('removeEventListener', onEventEmitterChange)
         const listener1 = () => {}
         const listener2 = () => {}
         emitter.on(MOCK_EVENT_NAME, listener1)
