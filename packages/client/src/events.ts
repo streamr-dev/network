@@ -45,13 +45,37 @@ export class StreamrClientEventEmitter<C = any> extends EventEmitter3<StreamrCli
         return this
     }
 
+    removeAllListeners(event?: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents) {
+        if (event !== undefined) {
+            super.removeAllListeners(event)
+            this.emitListenerEvent('removeEventListener', event)
+        } else {
+            // first all events which may have listeners
+            for (const eventName of this.eventNames()) {
+                if (!StreamrClientEventEmitter.isObserverEvent(eventName)) {
+                    this.removeAllListeners(eventName)
+                }
+            }
+            // and then possible meta events (addEventListener, removeEventListener)
+            super.removeAllListeners()
+        }
+        return this
+    }
+
     private emitListenerEvent(
         eventName: keyof ObservableEventEmitterEvents, sourceEvent: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents
     ) {
-        if ((sourceEvent !== 'addEventListener') && (sourceEvent !== 'removeEventListener')) {
+        if (!StreamrClientEventEmitter.isObserverEvent(sourceEvent)) {
             this.emit(eventName, sourceEvent)
         }
     }
+
+    static isObserverEvent(
+        eventName: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents
+    ): eventName is keyof ObservableEventEmitterEvents {
+        return ((eventName === 'addEventListener') || (eventName === 'removeEventListener'))
+    }
+
 }
 
 export const initEventGateway = <L extends (...args: any[]) => void>(
