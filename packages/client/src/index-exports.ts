@@ -4,6 +4,7 @@
 export * from './StreamrClient'
 export * from './Stream'
 export * from './encryption/Encryption'
+export { StreamrClientEvents } from './events'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'

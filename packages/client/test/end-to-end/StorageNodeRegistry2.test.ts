@@ -59,24 +59,24 @@ describe('StorageNodeRegistry2', () => {
 
     it('storage event listener', async () => {
         const promise = Promise
-        const callback = (event: StorageNodeAssignmentEvent) => {
+        const onAddToStorageNode = (event: StorageNodeAssignmentEvent) => {
             // check if they are values from this test and not other test running in parallel
             if (event.streamId === createdStream.id && event.nodeAddress === storageNodeAddress) {
                 expect(event).toEqual({
                     blockNumber: expect.any(Number),
                     streamId: createdStream.id,
-                    nodeAddress: storageNodeAddress,
-                    type: 'added'
+                    nodeAddress: storageNodeAddress
                 })
                 promise.resolve()
             }
         }
         try {
-            await client.registerStorageEventListener(callback)
+            client.on('addToStorageNode', onAddToStorageNode)
             await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
             await promise
+            expect(onAddToStorageNode).toBeCalledTimes(1)
         } finally {
-            await client?.unregisterStorageEventListeners()
+            client.off('addToStorageNode', onAddToStorageNode)
         }
     })
 

@@ -17,7 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
 - Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
 - Method `stream.update()` now requires a parameter `props`
-- Method `unRegisterStorageEventListeners()` renamed to `unregisterStorageEventListeners()`
+- Storage node assignment events:
+  - add a listener with `on('addToStorageNode')` / `on('removeFromStorageNode')` instead of `registerStorageEventListeners()`
+  - remove a listener with `off('addToStorageNode')` / `off('removeFromStorageNode')` instead of `unRegisterStorageEventListeners()`
 
 ### Deprecated
 

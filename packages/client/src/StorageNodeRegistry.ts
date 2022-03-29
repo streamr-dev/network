@@ -16,13 +16,13 @@ import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
 import { SynchronizedGraphQLClient, createWriteContract } from './utils/SynchronizedGraphQLClient'
+import { StreamrClientEventEmitter, StreamrClientEvents, EventEmitterInjectionToken, initEventGateway } from './events'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
 export type StorageNodeAssignmentEvent = {
     streamId: string,
     nodeAddress: EthereumAddress,
-    type: 'added' | 'removed'
     blockNumber: number
 }
 
@@ -60,6 +60,7 @@ type StorageNodeQueryResult = {
         }
     }
 }
+
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
 
@@ -74,7 +75,8 @@ export class StorageNodeRegistry {
         @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig,
+        @inject(EventEmitterInjectionToken) eventEmitter: StreamrClientEventEmitter
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
@@ -82,6 +84,31 @@ export class StorageNodeRegistry {
             new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainProvider),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
+        this.initStreamAssignmentEventListener('addToStorageNode', 'Added', eventEmitter)
+        this.initStreamAssignmentEventListener('removeFromStorageNode', 'Removed', eventEmitter)
+    }
+
+    initStreamAssignmentEventListener(clientEvent: keyof StreamrClientEvents, contractEvent: string, eventEmitter: StreamrClientEventEmitter) {
+        type Listener = (streamId: string, nodeAddress: string, extra: any) => void
+        initEventGateway<Listener>(
+            clientEvent,
+            () => {
+                const listener = (streamId: string, nodeAddress: string, extra: any) => {
+                    const payload = {
+                        streamId,
+                        nodeAddress,
+                        blockNumber: extra.blockNumber
+                    }
+                    eventEmitter.emit(clientEvent, payload)
+                }
+                this.streamStorageRegistryContractReadonly.on(contractEvent, listener)
+                return listener
+            },
+            (listener: Listener) => {
+                this.streamStorageRegistryContractReadonly.off(contractEvent, listener)
+            },
+            eventEmitter
+        )
     }
 
     // --------------------------------------------------------------------------------------------
@@ -188,19 +215,6 @@ export class StorageNodeRegistry {
             const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildAllNodesQuery()) as AllNodesQueryResult
             return res.nodes.map((node) => node.id)
         }
-    }
-
-    async registerStorageEventListener(callback: (event: StorageNodeAssignmentEvent) => any) {
-        this.streamStorageRegistryContractReadonly.on('Added', (streamId: string, nodeAddress: EthereumAddress, extra: any) => {
-            callback({ streamId, nodeAddress, type: 'added', blockNumber: extra.blockNumber })
-        })
-        this.streamStorageRegistryContractReadonly.on('Removed', (streamId: string, nodeAddress: EthereumAddress, extra: any) => {
-            callback({ streamId, nodeAddress, type: 'removed', blockNumber: extra.blockNumber })
-        })
-    }
-
-    async unregisterStorageEventListeners() {
-        this.streamStorageRegistryContractReadonly.removeAllListeners()
     }
 
     async stop() {

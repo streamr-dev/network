@@ -36,8 +36,7 @@ describe('StorageNodeRegistry', () => {
     afterAll(async () => {
         await Promise.allSettled([
             creatorClient?.destroy(),
-            listenerClient?.destroy(),
-            listenerClient?.unregisterStorageEventListeners()
+            listenerClient?.destroy()
         ])
     })
 
@@ -57,28 +56,33 @@ describe('StorageNodeRegistry', () => {
         expect(stored.streams.some((s) => s.id === stream.id)).toBe(false)
     }, TEST_TIMEOUT)
 
-    it('registerStorageEventListener: picks up add and remove events', async () => {
-        const cb = jest.fn()
-        listenerClient.registerStorageEventListener(cb)
+    it('event listener: picks up add and remove events', async () => {
+        const onAdd = jest.fn()
+        const onRemove = jest.fn()
+
+        listenerClient.on('addToStorageNode', onAdd)
+        listenerClient.on('removeFromStorageNode', onRemove)
 
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
 
-        await until(() => cb.mock.calls.length >= 2)
+        await until(() => onAdd.mock.calls.length >= 1 && onRemove.mock.calls.length >= 1)
 
-        expect(cb).toHaveBeenCalledTimes(2)
-        expect(cb).toHaveBeenNthCalledWith(1, {
+        expect(onAdd).toHaveBeenCalledTimes(1)
+        expect(onAdd).toHaveBeenNthCalledWith(1, {
             blockNumber: expect.any(Number),
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
-            type: 'added'
         })
-        expect(cb).toHaveBeenNthCalledWith(2, {
+        expect(onRemove).toHaveBeenCalledTimes(1)
+        expect(onRemove).toHaveBeenNthCalledWith(1, {
             blockNumber: expect.any(Number),
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
-            type: 'removed'
         })
+
+        listenerClient.off('addToStorageNode', onAdd)
+        listenerClient.off('removeFromStorageNode', onRemove)
     }, TEST_TIMEOUT)
 
     it('getStoredStreams', async () => {
