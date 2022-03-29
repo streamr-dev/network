@@ -1,7 +1,6 @@
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import StrictEventEmitter from 'strict-event-emitter-types'
+import EventEmitter from 'eventemitter3'
 import debug from 'debug'
-import { EventEmitter } from 'events'
 import { NameDirectory } from 'streamr-network'
 
 const log = debug('Streamr:contract')
@@ -13,7 +12,7 @@ export interface ContractEvent {
 }
 
 export type ObservableContract<T extends Contract> = T & {
-    eventEmitter: StrictEventEmitter<EventEmitter, ContractEvent>
+    eventEmitter: EventEmitter<ContractEvent>
 }
 
 export async function waitForTx(
@@ -27,7 +26,7 @@ const isTransaction = (returnValue: any): returnValue is ContractTransaction => 
     return (returnValue.wait !== undefined && (typeof returnValue.wait === 'function'))
 }
 
-const createLogger = (eventEmitter: StrictEventEmitter<EventEmitter, ContractEvent>): void => {
+const createLogger = (eventEmitter: EventEmitter<ContractEvent>): void => {
     eventEmitter.on('onMethodExecute', (methodName: string) => {
         log(`execute ${methodName}`)
     })
@@ -72,7 +71,7 @@ const withErrorHandling = async <T>(
 const createWrappedContractMethod = (
     originalMethod: (...args: any) => Promise<any>,
     methodName: string,
-    eventEmitter: StrictEventEmitter<EventEmitter, ContractEvent>
+    eventEmitter: EventEmitter<ContractEvent>
 ) => {
     return async (...args: any) => {
         eventEmitter.emit('onMethodExecute', methodName)
@@ -102,7 +101,7 @@ export const withErrorHandlingAndLogging = <T extends Contract>(
     contract: Contract,
     contractName: string,
 ): ObservableContract<T> => {
-    const eventEmitter = new EventEmitter()
+    const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
