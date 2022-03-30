@@ -69,14 +69,14 @@ export class ObservableEventEmitter<E extends Events<E>> {
  * when a first event listener for the event name is added, and the stop() callback is called
  * when the last event listener is removed.
  */
-export const initEventGateway = <E extends Events<E>, P>(
-    eventName: keyof E,
-    start: <T extends keyof E>(emit: (payload: Parameters<E[T]>[0]) => void) => P,
+export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
+    eventName: T,
+    start: (emit: (payload: Parameters<E[T]>[0]) => void) => P,
     stop: (listener: P) => void,
     emitter: ObservableEventEmitter<E>
 ) => {
     const observer = emitter.getObserver()
-    const emit = <T extends keyof E>(payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
+    const emit = (payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
     let producer: P | undefined
     observer.on('addEventListener', (sourceEvent: keyof E) => {
         if ((sourceEvent === eventName) && (producer === undefined)) {

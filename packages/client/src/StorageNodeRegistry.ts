@@ -90,7 +90,7 @@ export class StorageNodeRegistry {
 
     initStreamAssignmentEventListener(clientEvent: keyof StreamrClientEvents, contractEvent: string, eventEmitter: StreamrClientEventEmitter) {
         type Listener = (streamId: string, nodeAddress: string, extra: any) => void
-        initEventGateway<StreamrClientEvents, Listener>(
+        initEventGateway(
             clientEvent,
             (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
