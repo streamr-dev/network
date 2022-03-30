@@ -1,27 +1,37 @@
-import { initEventGateway, StreamrClientEventEmitter } from '../../src/events'
+import 'reflect-metadata'
+import { initEventGateway, ObservableEventEmitter } from '../../src/events'
+
+interface FooPayload {
+    x: string,
+    y: number
+}
+
+interface MockEvents {
+    foo: (payload: FooPayload) => void
+    bar: (payload: number) => void
+}
 
 type MockGatewayListener = () => void
 
-const MOCK_EVENT_NAME = 'addToStorageNode'
+const MOCK_EVENT_NAME = 'foo'
 const MOCK_EVENT_PAYLOAD = {
-    streamId: '',
-    nodeAddress: '',
-    blockNumber: 123
+    x: 'mock',
+    y: 123
 }
-const OTHER_EVENT_NAME = 'removeFromStorageNode'
+const OTHER_EVENT_NAME = 'bar'
 
 describe('events', () => {
 
     it('observable listeners', () => {
-        const emitter = new StreamrClientEventEmitter()
+        const emitter = new ObservableEventEmitter<MockEvents>()
         const listenerCounts: number[] = []
         const onEventEmitterChange = (name: string) => {
             if (name === MOCK_EVENT_NAME) {
-                listenerCounts.push(emitter.listenerCount(MOCK_EVENT_NAME))
+                listenerCounts.push(emitter.getListenerCount(MOCK_EVENT_NAME))
             }
         }
-        emitter.on('addEventListener', onEventEmitterChange)
-        emitter.on('removeEventListener', onEventEmitterChange)
+        emitter.getObserver().on('addEventListener', onEventEmitterChange)
+        emitter.getObserver().on('removeEventListener', onEventEmitterChange)
         const listener1 = () => {}
         const listener2 = () => {}
         emitter.on(MOCK_EVENT_NAME, listener1)
@@ -35,12 +45,12 @@ describe('events', () => {
 
     describe('gateway', () => {
 
-        let emitter: StreamrClientEventEmitter
+        let emitter: ObservableEventEmitter<MockEvents>
         let start: () => MockGatewayListener
         let stop: (listener: MockGatewayListener) => void
 
         beforeEach(() => {
-            emitter = new StreamrClientEventEmitter()
+            emitter = new ObservableEventEmitter<MockEvents>()
             start = jest.fn().mockReturnValue(() => {})
             stop = jest.fn()
         })
