@@ -4,12 +4,24 @@ on:
   workflow_call:
     inputs:
       docker_file:
-        required: true
         type: string
+        required: true
       test_services_to_start:
         type: string
       test_script:
         type: string
+      push_image:
+        type: boolean
+      build_platforms:
+        type: string
+        required: true
+
+    secrets:
+      dockerhub_username:
+        description: 'Required if the docker image is pushed'
+        required: false
+      dockerhub_token:
+        required: false
 
 jobs:
   build:
@@ -28,12 +40,18 @@ jobs:
         with:
           driver-opts: |
             network=host
+      - uses: docker/login-action@v1.14.1
+      - if: ${{inputs.push_image && secrets.dockerhub_username && secrets.dockerhub_token}}
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build
         uses: docker/build-push-action@v2.10.0
         with:
           context: .
           file: ${{inputs.docker_file}}
-          platforms: linux/amd64
+          platforms: ${{inputs.build_platforms}}
           push: false
           load: true
           build-args: |
@@ -53,7 +71,9 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: ${{inputs.test_services_to_start}}
-      - run: ${{inputs.test_script}}
+      - name: Run test script
+        if: ${{inputs.test_services_to_start && inputs.test_script }}
+        run: ${{inputs.test_script}}
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0
