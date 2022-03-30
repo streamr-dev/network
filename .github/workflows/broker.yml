@@ -76,7 +76,7 @@ jobs:
     name: "Docker Image: test"
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
+      docker_file: ./Dockerfile.broker
       test_services_to_start: "parity-node0 broker-node-no-storage-1"
       test_script: |
         for (( i=0; i < 5; i=i+1 )); do
