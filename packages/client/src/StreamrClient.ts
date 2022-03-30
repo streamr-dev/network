@@ -98,7 +98,6 @@ class StreamrClientBase implements Context {
         Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
         Plugin(this, this.storageNodeRegistry)
-        Plugin(this, this.eventEmitter)
 
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
