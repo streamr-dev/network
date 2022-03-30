@@ -61,27 +61,34 @@ export class ObservableEventEmitter<E extends object> {
     }
 }
 
-export const initEventGateway = <E extends object, L extends (...args: any[]) => void>(
-    eventName: keyof StreamrClientEvents,
-    start: () => L,
-    stop: (listener: L) => void,
+/*
+ * Initializes a gateway which can produce events to the given emitter. The gateway is running
+ * when there are any listeners for the given eventName: the start() callback is called
+ * when a first event listener for the event name is added, and the stop() callback is called
+ * when the last event listener is removed.
+ */
+export const initEventGateway = <E extends object, P>(
+    eventName: keyof E,
+    start: (emit: (payload: any) => void) => P,
+    stop: (listener: P) => void,
     emitter: ObservableEventEmitter<E>
 ) => {
     const observer = emitter.getObserver()
-    let listener: L | undefined
+    const emit = (payload: any) => emitter.emit(eventName, payload)
+    let producer: P | undefined
     observer.on('addEventListener', (sourceEvent: keyof E) => {
-        if ((sourceEvent === eventName) && (listener === undefined)) {
-            listener = start()
+        if ((sourceEvent === eventName) && (producer === undefined)) {
+            producer = start(emit)
         }
     })
     observer.on('removeEventListener', (sourceEvent: keyof E) => {
-        if ((sourceEvent === eventName) && (listener !== undefined) && (emitter.getListenerCount(eventName as any) === 0)) {
-            stop(listener)
-            listener = undefined
+        if ((sourceEvent === eventName) && (producer !== undefined) && (emitter.getListenerCount(eventName as any) === 0)) {
+            stop(producer)
+            producer = undefined
         }
     })
     if (emitter.getListenerCount(eventName as any) > 0) {
-        listener = start()
+        producer = start(emit)
     }
 }
 

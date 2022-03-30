@@ -92,14 +92,13 @@ export class StorageNodeRegistry {
         type Listener = (streamId: string, nodeAddress: string, extra: any) => void
         initEventGateway<StreamrClientEvents, Listener>(
             clientEvent,
-            () => {
+            (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
-                    const payload = {
+                    emit({
                         streamId,
                         nodeAddress,
                         blockNumber: extra.blockNumber
-                    }
-                    eventEmitter.emit(clientEvent, payload)
+                    })
                 }
                 this.streamStorageRegistryContractReadonly.on(contractEvent, listener)
                 return listener
