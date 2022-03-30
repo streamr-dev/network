@@ -257,7 +257,7 @@ If you choose one of the above resend options when subscribing, you can listen o
 
 ```js
 const sub = await streamr.subscribe(options)
-sub.onResent(() => {
+sub.once('resendComplete', () => {
     console.log('Received all requested historical messages! Now switching to real time!')
 })
 ```
