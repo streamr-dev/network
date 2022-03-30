@@ -16,7 +16,7 @@ import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
 import { SynchronizedGraphQLClient, createWriteContract } from './utils/SynchronizedGraphQLClient'
-import { StreamrClientEventEmitter, StreamrClientEvents, EventEmitterInjectionToken, initEventGateway } from './events'
+import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from './events'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -76,7 +76,7 @@ export class StorageNodeRegistry {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig,
-        @inject(EventEmitterInjectionToken) eventEmitter: StreamrClientEventEmitter
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
     ) {
         this.clientConfig = clientConfig
         this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
@@ -90,16 +90,15 @@ export class StorageNodeRegistry {
 
     initStreamAssignmentEventListener(clientEvent: keyof StreamrClientEvents, contractEvent: string, eventEmitter: StreamrClientEventEmitter) {
         type Listener = (streamId: string, nodeAddress: string, extra: any) => void
-        initEventGateway<Listener>(
+        initEventGateway(
             clientEvent,
-            () => {
+            (emit: (payload: StorageNodeAssignmentEvent) => void) => {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
-                    const payload = {
+                    emit({
                         streamId,
                         nodeAddress,
                         blockNumber: extra.blockNumber
-                    }
-                    eventEmitter.emit(clientEvent, payload)
+                    })
                 }
                 this.streamStorageRegistryContractReadonly.on(contractEvent, listener)
                 return listener

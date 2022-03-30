@@ -27,7 +27,7 @@ import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { EventEmitterInjectionToken, StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -98,7 +98,6 @@ class StreamrClientBase implements Context {
         Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
         Plugin(this, this.storageNodeRegistry)
-        Plugin(this, this.eventEmitter)
 
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
@@ -193,8 +192,6 @@ class StreamrClientBase implements Context {
  */
 export function initContainer(config: StrictStreamrClientConfig, parentContainer = rootContainer) {
     const c = parentContainer.createChildContainer()
-    const eventEmitter = new StreamrClientEventEmitter()
-    c.register(EventEmitterInjectionToken, { useValue: eventEmitter } as any)
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
@@ -271,7 +268,7 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
             c.resolve<StreamIDBuilder>(StreamIDBuilder),
-            c.resolve(EventEmitterInjectionToken)
+            c.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         )
     }
 }

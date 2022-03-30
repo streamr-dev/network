@@ -10,7 +10,7 @@ describe('events', () => {
             client.on('addToStorageNode', () => {})
             await client.destroy()
             // @ts-expect-error private
-            expect(client.eventEmitter.eventNames()).toHaveLength(0)
+            expect(client.eventEmitter.getListenerCount()).toBe(0)
         })
 
         it('resend subcription', async () => {
@@ -27,7 +27,7 @@ describe('events', () => {
             await client.destroy()
             expect(onResendComplete).not.toBeCalled()
             // @ts-expect-error private
-            expect(subscription.eventEmitter.eventNames()).toHaveLength(0)
+            expect(subscription.eventEmitter.listenerCount()).toBe(0)
         })
 
     })

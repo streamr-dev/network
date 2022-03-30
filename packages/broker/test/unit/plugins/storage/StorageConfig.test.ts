@@ -22,7 +22,7 @@ function makeStubStream(streamId: string): Stream {
 
 describe(StorageConfig, () => {
     let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
-    let storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => any)>
+    let storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => void)>
     let stubClient: Pick<StreamrClient, 'getStream' | 'getStoredStreams' | 'on' | 'off' >
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
     let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>

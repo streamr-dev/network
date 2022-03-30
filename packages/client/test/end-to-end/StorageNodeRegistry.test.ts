@@ -30,7 +30,6 @@ describe('StorageNodeRegistry', () => {
                 privateKey: listenerWallet.privateKey,
             },
         })
-        stream = await createTestStream(creatorClient, module)
     }, TEST_TIMEOUT)
 
     afterAll(async () => {
@@ -41,6 +40,8 @@ describe('StorageNodeRegistry', () => {
     })
 
     it('add and remove', async () => {
+        stream = await createTestStream(creatorClient, module)
+
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         let storageNodes = await stream.getStorageNodes()
         expect(storageNodes.length).toBe(1)
@@ -57,8 +58,16 @@ describe('StorageNodeRegistry', () => {
     }, TEST_TIMEOUT)
 
     it('event listener: picks up add and remove events', async () => {
-        const onAdd = jest.fn()
-        const onRemove = jest.fn()
+        stream = await createTestStream(creatorClient, module)
+
+        const onAddPayloads: any[] = []
+        const onRemovePayloads: any[] = []
+        const onAdd = (payload: any) => {
+            onAddPayloads.push(payload)
+        }
+        const onRemove = (payload: any) => {
+            onRemovePayloads.push(payload)
+        }
 
         listenerClient.on('addToStorageNode', onAdd)
         listenerClient.on('removeFromStorageNode', onRemove)
@@ -66,16 +75,17 @@ describe('StorageNodeRegistry', () => {
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
 
-        await until(() => onAdd.mock.calls.length >= 1 && onRemove.mock.calls.length >= 1)
+        await until(() => {
+            return onAddPayloads.find(({ streamId }) => streamId === stream.id)
+                && onRemovePayloads.find(({ streamId }) => streamId === stream.id)
+        })
 
-        expect(onAdd).toHaveBeenCalledTimes(1)
-        expect(onAdd).toHaveBeenNthCalledWith(1, {
+        expect(onAddPayloads).toContainEqual({
             blockNumber: expect.any(Number),
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-        expect(onRemove).toHaveBeenCalledTimes(1)
-        expect(onRemove).toHaveBeenNthCalledWith(1, {
+        expect(onRemovePayloads).toContainEqual({
             blockNumber: expect.any(Number),
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,

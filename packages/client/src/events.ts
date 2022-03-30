@@ -1,104 +1,99 @@
-import EventEmitter3, { EventNames, EventListener } from 'eventemitter3'
+import { Lifecycle, scoped } from 'tsyringe'
+import EventEmitter3 from 'eventemitter3'
 import { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
+
+type Events<T> = { [K in keyof T]: (payload: any) => void }
 
 export interface StreamrClientEvents {
     addToStorageNode: (payload: StorageNodeAssignmentEvent) => void,
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
 }
 
-interface ObservableEventEmitterEvents {
-    addEventListener: (eventName: keyof StreamrClientEvents) => void
-    removeEventListener: (eventName: keyof StreamrClientEvents) => void
+interface ObserverEvents<E extends Events<E>> {
+    addEventListener: (eventName: keyof E) => void
+    removeEventListener: (eventName: keyof E) => void
 }
 
 /*
- * An observable EventEmitter: emits an addEventListener/removeEventListener event when a listener
- * is added or removed
+ * Emits an addEventListener/removeEventListener event to a separate EventEmitter
+ * whenever a listener is added or removed
  */
-export class StreamrClientEventEmitter<C = any> extends EventEmitter3<StreamrClientEvents & ObservableEventEmitterEvents> {
+export class ObservableEventEmitter<E extends Events<E>> {
 
-    on<T extends EventNames<StreamrClientEvents & ObservableEventEmitterEvents>>(
-        event: T, fn: EventListener<StreamrClientEvents & ObservableEventEmitterEvents, T>, context?: C
-    ) {
-        super.on(event, fn, context)
-        this.emitListenerEvent('addEventListener', event)
-        return this
+    private delegate: EventEmitter3<any> = new EventEmitter3()
+    private observer: EventEmitter3<ObserverEvents<E>> = new EventEmitter3()
+
+    on<T extends keyof E>(eventName: T, listener: E[T]) {
+        this.delegate.on(eventName, listener)
+        this.observer.emit('addEventListener', eventName)
     }
 
-    once<T extends EventNames<StreamrClientEvents & ObservableEventEmitterEvents>>(
-        event: T, fn: EventListener<StreamrClientEvents & ObservableEventEmitterEvents, T>, context?: C
-    ) {
-        const wrappedFn: any = (...args: any[]) => {
-            (fn as any).apply(context, args)
-            this.emitListenerEvent('removeEventListener', event)
+    once<T extends keyof E>(eventName: T, listener: E[T]) {
+        const wrappedFn = (payload: Parameters<E[T]>[0]) => {
+            listener(payload)
+            this.observer.emit('removeEventListener', eventName)
         }
-        super.once(event, wrappedFn, context)
-        this.emitListenerEvent('addEventListener', event)
-        return this
+        this.delegate.once(eventName, wrappedFn)
+        this.observer.emit('addEventListener', eventName)
     }
 
-    off<T extends EventNames<StreamrClientEvents & ObservableEventEmitterEvents>>(
-        event: T, fn: EventListener<StreamrClientEvents & ObservableEventEmitterEvents, T>, context?: C
-    ) {
-        super.off(event, fn, context)
-        this.emitListenerEvent('removeEventListener', event)
-        return this
+    off<T extends keyof E>(eventName: T, listener: E[T]) {
+        this.delegate.off(eventName, listener)
+        this.observer.emit('removeEventListener', eventName)
     }
 
-    removeAllListeners(event?: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents) {
-        if (event !== undefined) {
-            super.removeAllListeners(event)
-            this.emitListenerEvent('removeEventListener', event)
-        } else {
-            // first all events which may have listeners
-            for (const eventName of this.eventNames()) {
-                if (!StreamrClientEventEmitter.isObserverEvent(eventName)) {
-                    this.removeAllListeners(eventName)
-                }
-            }
-            // and then possible meta events (addEventListener, removeEventListener)
-            super.removeAllListeners()
-        }
-        return this
-    }
-
-    private emitListenerEvent(
-        eventName: keyof ObservableEventEmitterEvents, sourceEvent: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents
-    ) {
-        if (!StreamrClientEventEmitter.isObserverEvent(sourceEvent)) {
-            this.emit(eventName, sourceEvent)
+    removeAllListeners() {
+        const eventNames = this.delegate.eventNames()
+        this.delegate.removeAllListeners()
+        for (const eventName of eventNames) {
+            this.observer.emit('removeEventListener', eventName)
         }
     }
 
-    static isObserverEvent(
-        eventName: keyof StreamrClientEvents | keyof ObservableEventEmitterEvents
-    ): eventName is keyof ObservableEventEmitterEvents {
-        return ((eventName === 'addEventListener') || (eventName === 'removeEventListener'))
+    emit<T extends keyof E>(eventName: T, payload: Parameters<E[T]>[0]) {
+        this.delegate.emit(eventName, payload)
     }
 
+    getListenerCount<T extends keyof E>(eventName: T) {
+        return this.delegate.listenerCount(eventName)
+    }
+
+    getObserver() {
+        return this.observer
+    }
 }
 
-export const initEventGateway = <L extends (...args: any[]) => void>(
-    eventName: keyof StreamrClientEvents,
-    start: () => L,
-    stop: (listener: L) => void,
-    emitter: StreamrClientEventEmitter
+/*
+ * Initializes a gateway which can produce events to the given emitter. The gateway is running
+ * when there are any listeners for the given eventName: the start() callback is called
+ * when a first event listener for the event name is added, and the stop() callback is called
+ * when the last event listener is removed.
+ */
+export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
+    eventName: T,
+    start: (emit: (payload: Parameters<E[T]>[0]) => void) => P,
+    stop: (listener: P) => void,
+    emitter: ObservableEventEmitter<E>
 ) => {
-    let listener: L | undefined
-    emitter.on('addEventListener', (sourceEvent: keyof StreamrClientEvents) => {
-        if ((sourceEvent === eventName) && (listener === undefined)) {
-            listener = start()
+    const observer = emitter.getObserver()
+    const emit = (payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
+    let producer: P | undefined
+    observer.on('addEventListener', (sourceEvent: keyof E) => {
+        if ((sourceEvent === eventName) && (producer === undefined)) {
+            producer = start(emit)
         }
     })
-    emitter.on('removeEventListener', (sourceEvent: keyof StreamrClientEvents) => {
-        if ((sourceEvent === eventName) && (listener !== undefined) && (emitter.listenerCount(eventName) === 0)) {
-            stop(listener)
-            listener = undefined
+    observer.on('removeEventListener', (sourceEvent: keyof E) => {
+        if ((sourceEvent === eventName) && (producer !== undefined) && (emitter.getListenerCount(eventName) === 0)) {
+            stop(producer)
+            producer = undefined
         }
     })
-    if (emitter.listenerCount(eventName) > 0) {
-        listener = start()
+    if (emitter.getListenerCount(eventName) > 0) {
+        producer = start(emit)
     }
 }
 
-export const EventEmitterInjectionToken = Symbol('EventEmitterInjectionToken')
+@scoped(Lifecycle.ContainerScoped)
+export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents> {
+}
