@@ -2,12 +2,14 @@ import { Lifecycle, scoped } from 'tsyringe'
 import EventEmitter3 from 'eventemitter3'
 import { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 
+type Events<T> = { [K in keyof T]: (payload: any) => void }
+
 export interface StreamrClientEvents {
     addToStorageNode: (payload: StorageNodeAssignmentEvent) => void,
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
 }
 
-interface ObserverEvents<E extends object> {
+interface ObserverEvents<E extends Events<E>> {
     addEventListener: (eventName: keyof E) => void
     removeEventListener: (eventName: keyof E) => void
 }
@@ -16,27 +18,27 @@ interface ObserverEvents<E extends object> {
  * Emits an addEventListener/removeEventListener event to a separate EventEmitter
  * whenever a listener is added or removed
  */
-export class ObservableEventEmitter<E extends object> {
+export class ObservableEventEmitter<E extends Events<E>> {
 
-    private delegate: EventEmitter3<E> = new EventEmitter3()
+    private delegate: EventEmitter3<any> = new EventEmitter3()
     private observer: EventEmitter3<ObserverEvents<E>> = new EventEmitter3()
 
     on<T extends keyof E>(eventName: T, listener: E[T]) {
-        this.delegate.on(eventName as any, listener as any)
+        this.delegate.on(eventName, listener)
         this.observer.emit('addEventListener', eventName)
     }
 
     once<T extends keyof E>(eventName: T, listener: E[T]) {
-        const wrappedFn = (payload: any) => {
-            (listener as any)(payload)
+        const wrappedFn = (payload: Parameters<E[T]>[0]) => {
+            listener(payload)
             this.observer.emit('removeEventListener', eventName)
         }
-        this.delegate.once(eventName as any, wrappedFn as any)
+        this.delegate.once(eventName, wrappedFn)
         this.observer.emit('addEventListener', eventName)
     }
 
     off<T extends keyof E>(eventName: T, listener: E[T]) {
-        this.delegate.off(eventName as any, listener as any)
+        this.delegate.off(eventName, listener)
         this.observer.emit('removeEventListener', eventName)
     }
 
@@ -48,12 +50,12 @@ export class ObservableEventEmitter<E extends object> {
         }
     }
 
-    emit<T extends keyof E>(eventName: T, payload: any) {
-        (this.delegate.emit as any)(eventName, payload)
+    emit<T extends keyof E>(eventName: T, payload: Parameters<E[T]>[0]) {
+        this.delegate.emit(eventName, payload)
     }
 
     getListenerCount<T extends keyof E>(eventName: T) {
-        return this.delegate.listenerCount(eventName as any)
+        return this.delegate.listenerCount(eventName)
     }
 
     getObserver() {
@@ -67,14 +69,14 @@ export class ObservableEventEmitter<E extends object> {
  * when a first event listener for the event name is added, and the stop() callback is called
  * when the last event listener is removed.
  */
-export const initEventGateway = <E extends object, P>(
+export const initEventGateway = <E extends Events<E>, P>(
     eventName: keyof E,
-    start: (emit: (payload: any) => void) => P,
+    start: <T extends keyof E>(emit: (payload: Parameters<E[T]>[0]) => void) => P,
     stop: (listener: P) => void,
     emitter: ObservableEventEmitter<E>
 ) => {
     const observer = emitter.getObserver()
-    const emit = (payload: any) => emitter.emit(eventName, payload)
+    const emit = <T extends keyof E>(payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
     let producer: P | undefined
     observer.on('addEventListener', (sourceEvent: keyof E) => {
         if ((sourceEvent === eventName) && (producer === undefined)) {
@@ -82,12 +84,12 @@ export const initEventGateway = <E extends object, P>(
         }
     })
     observer.on('removeEventListener', (sourceEvent: keyof E) => {
-        if ((sourceEvent === eventName) && (producer !== undefined) && (emitter.getListenerCount(eventName as any) === 0)) {
+        if ((sourceEvent === eventName) && (producer !== undefined) && (emitter.getListenerCount(eventName) === 0)) {
             stop(producer)
             producer = undefined
         }
     })
-    if (emitter.getListenerCount(eventName as any) > 0) {
+    if (emitter.getListenerCount(eventName) > 0) {
         producer = start(emit)
     }
 }
