@@ -1,7 +1,6 @@
 import { Wallet } from 'ethers'
 import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
 import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -55,29 +54,6 @@ describe('StorageNodeRegistry2', () => {
     it('add stream to storage node', async () => {
         await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
         expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(true)
-    })
-
-    it('storage event listener', async () => {
-        const promise = Promise
-        const onAddToStorageNode = jest.fn().mockImplementation((event: StorageNodeAssignmentEvent) => {
-            // check if they are values from this test and not other test running in parallel
-            if (event.streamId === createdStream.id && event.nodeAddress === storageNodeAddress) {
-                expect(event).toEqual({
-                    blockNumber: expect.any(Number),
-                    streamId: createdStream.id,
-                    nodeAddress: storageNodeAddress
-                })
-                promise.resolve()
-            }
-        })
-        try {
-            client.on('addToStorageNode', onAddToStorageNode)
-            await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
-            await promise
-            expect(onAddToStorageNode).toBeCalledTimes(1)
-        } finally {
-            client.off('addToStorageNode', onAddToStorageNode)
-        }
     })
 
     describe('getStorageNodes', () => {

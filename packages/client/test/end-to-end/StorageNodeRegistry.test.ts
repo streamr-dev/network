@@ -62,15 +62,12 @@ describe('StorageNodeRegistry', () => {
 
         const onAddPayloads: any[] = []
         const onRemovePayloads: any[] = []
-        const onAdd = (payload: any) => {
+        listenerClient.on('addToStorageNode', (payload: any) => {
             onAddPayloads.push(payload)
-        }
-        const onRemove = (payload: any) => {
+        })
+        listenerClient.on('removeFromStorageNode', (payload: any) => {
             onRemovePayloads.push(payload)
-        }
-
-        listenerClient.on('addToStorageNode', onAdd)
-        listenerClient.on('removeFromStorageNode', onRemove)
+        })
 
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         await stream.removeFromStorageNode(DOCKER_DEV_STORAGE_NODE)
@@ -90,9 +87,6 @@ describe('StorageNodeRegistry', () => {
             nodeAddress: DOCKER_DEV_STORAGE_NODE,
             streamId: stream.id,
         })
-
-        listenerClient.off('addToStorageNode', onAdd)
-        listenerClient.off('removeFromStorageNode', onRemove)
     }, TEST_TIMEOUT)
 
     it('getStoredStreams', async () => {

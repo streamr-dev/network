@@ -6,6 +6,7 @@ import { ConfigInjectionToken } from '../Config'
 import OrderMessages from './OrderMessages'
 import Resends, { ResendOptions } from './Resends'
 import EventEmitter from 'eventemitter3'
+import { DestroySignal } from '../DestroySignal'
 
 export interface ResendSubscriptionEvents {
     resendComplete: () => void
@@ -34,6 +35,10 @@ export class ResendSubscription<T> extends Subscription<T> {
         this.pipe(this.orderMessages.transform())
         this.onBeforeFinally(async () => {
             this.orderMessages.stop()
+        })
+        const destroySignal = container.resolve(DestroySignal)
+        destroySignal.onDestroy(() => {
+            this.eventEmitter.removeAllListeners()
         })
     }
 
