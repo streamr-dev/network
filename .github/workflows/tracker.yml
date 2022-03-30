@@ -60,22 +60,22 @@ jobs:
   test-docker:
     name: "Docker Image: test"
     uses: ./.github/workflows/docker-build.yml
-      with:
-        docker_file: ./Dockerfile.tracker
-        test_services_to_start: "tracker-1"
-        test_script: |
-          for (( i=0; i < 5; i=i+1 )); do
-              curl -s http://localhost:30301/topology;
-              res=$?;
-              if test "$res" != "0"; then
-                  echo "Attempting to connect to tracker retrying in $wait_time seconds";
-                  sleep $wait_time;
-                  wait_time=$(( 2*wait_time )) ;
-              else
-                  exit 0
-              fi;
-          done;
-          exit 1
+    with:
+      docker_file: ./Dockerfile.tracker
+      test_services_to_start: "tracker-1"
+      test_script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            curl -s http://localhost:30301/topology;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to tracker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1
 
   docker-push:
     name: "Docker Image: push"
