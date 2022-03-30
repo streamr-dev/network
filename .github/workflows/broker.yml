@@ -75,6 +75,8 @@ jobs:
   test-docker:
     name: "Docker Image: test"
     uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: Dockerfile.broker
 
   docker-push:
     name: "Docker Image: push"
