@@ -290,8 +290,7 @@ describe('Storage', () => {
         })
     })
 
-    // TODO: fix flaky test in NET-646
-    test.skip('multiple buckets', async () => {
+    test('multiple buckets', async () => {
         const messageCount = 3 * MAX_BUCKET_MESSAGE_COUNT
         await storeMockMessages({ streamId, streamPartition: 777, minTimestamp: 123000000, maxTimestamp: 456000000, count: messageCount, storage })
 
