@@ -91,6 +91,7 @@ jobs:
             fi;
         done;
         exit 1
+
   docker-push:
     name: "Docker Image: push"
     needs: [test-unit, test-integration, test-docker]
