@@ -3,12 +3,12 @@ name: "Docker build"
 on:
   workflow_call:
     inputs:
-      docker-file:
+      docker_file:
         required: true
         type: string
-      test-services-to-start:
+      test_services_to_start:
         type: string
-      test-script:
+      test_script:
         type: string
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         uses: docker/build-push-action@v2.10.0
         with:
           context: .
-          file: ${{inputs.docker-file}}
+          file: ${{inputs.docker_file}}
           platforms: linux/amd64
           push: false
           load: true
@@ -49,10 +49,11 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - name: Start Streamr Docker Stack
+        if: ${{inputs.test_services_to_start && inputs.test_script }}
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
-          services-to-start: ${{inputs.test-services-to-start}}
-      - run: ${{inputs.test-script}}
+          services-to-start: ${{inputs.test_services_to_start}}
+      - run: ${{inputs.test_script}}
       - name: Collect docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2.2.0
