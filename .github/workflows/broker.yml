@@ -76,8 +76,21 @@ jobs:
     name: "Docker Image: test"
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: Dockerfile.broker
-
+      docker-file: Dockerfile.broker
+      test-services-to-start: "parity-node0 broker-node-no-storage-1"
+      test-script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            curl -s http://localhost:8791/volume;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to broker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1
   docker-push:
     name: "Docker Image: push"
     needs: [test-unit, test-integration, test-docker]
