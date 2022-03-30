@@ -5,6 +5,7 @@ RUN npm config set \
 	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
+    npm run bootstrap-pkg -- streamr-client && \
 	npm run bootstrap-pkg -- streamr-broker && \
 	npm run prune-pkg -- streamr-broker
 
