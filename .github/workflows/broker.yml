@@ -78,7 +78,7 @@ jobs:
     with:
       docker_file: ./Dockerfile.broker
       test_services_to_start: "parity-node0 broker-node-no-storage-1"
-      build_platform: linux/amd64
+      build_platforms: linux/amd64
       test_script: |
         for (( i=0; i < 5; i=i+1 )); do
             curl -s http://localhost:8791/volume;
