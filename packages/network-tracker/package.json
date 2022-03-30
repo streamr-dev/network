@@ -9,6 +9,9 @@
   },
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
+  "bin": {
+    "streamr-tracker": "bin/tracker.js"
+  },
   "main": "dist/src/composition.js",
   "types": "dist/src/composition.d.ts",
   "scripts": {
