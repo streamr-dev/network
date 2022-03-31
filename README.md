@@ -27,6 +27,9 @@ Monorepo for Streamr Network packages.
 
 ## Install
 
+| NodeJS version v16.13.x is recommended |
+| --- |
+
 Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to manage monorepo.
 
 **Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
