@@ -5,18 +5,14 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from '../utils'
-import { inspect } from '../utils/log'
-import { Context, ContextError } from '../utils/Context'
+import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
-
-import { StreamEndpoints } from '../StreamEndpoints'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
 import BrubeckNode from '../BrubeckNode'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 export type { PublishMetadata }
 
@@ -37,9 +33,7 @@ export default class BrubeckPublisher implements Context, Stoppable {
         private pipeline: PublishPipeline,
         private node: BrubeckNode,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
-        @inject(delay(() => StreamEndpoints)) private streamEndpoints: StreamEndpoints,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
+        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -135,65 +129,6 @@ export default class BrubeckPublisher implements Context, Stoppable {
         } finally {
             this.inProgress.delete(items)
         }
-    }
-
-    async waitForStorage(streamMessage: StreamMessage, {
-        // eslint-disable-next-line no-underscore-dangle
-        interval = this.config._timeouts.storageNode.retryInterval,
-        // eslint-disable-next-line no-underscore-dangle
-        timeout = this.config._timeouts.storageNode.timeout,
-        count = 100,
-        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
-            return msgTarget.signature === msgGot.signature
-        }
-    }: {
-        interval?: number
-        timeout?: number
-        count?: number
-        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
-    } = {}) {
-        if (!streamMessage) {
-            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
-        }
-
-        /* eslint-disable no-await-in-loop */
-        const start = Date.now()
-        let last: any
-        // eslint-disable-next-line no-constant-condition
-        let found = false
-        while (!found && !this.isStopped) {
-            const duration = Date.now() - start
-            if (duration > timeout) {
-                this.debug('waitForStorage timeout %o', {
-                    timeout,
-                    duration
-                }, {
-                    streamMessage,
-                    last: last!.map((l: any) => l.content),
-                })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(streamMessage)}`)
-                err.streamMessage = streamMessage
-                throw err
-            }
-
-            last = await this.streamEndpoints.getStreamLast(streamMessage.getStreamPartID(), count)
-
-            for (const lastMsg of last) {
-                if (messageMatchFn(streamMessage, lastMsg)) {
-                    found = true
-                    this.debug('last message found')
-                    return
-                }
-            }
-
-            this.debug('message not found, retrying... %o', {
-                msg: streamMessage.getParsedContent(),
-                'last 3': last.slice(-3).map(({ content }: any) => content)
-            })
-
-            await wait(interval)
-        }
-        /* eslint-enable no-await-in-loop */
     }
 
     /** @internal */

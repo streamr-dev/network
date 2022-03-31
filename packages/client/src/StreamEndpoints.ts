@@ -81,7 +81,7 @@ export class StreamEndpoints implements Context {
         context: Context,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
-        @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistry)) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
     ) {
         this.id = instanceId(this)

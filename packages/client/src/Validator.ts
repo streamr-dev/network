@@ -1,7 +1,7 @@
 /**
  * Validation Wrapper
  */
-import { inject, Lifecycle, scoped } from 'tsyringe'
+import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
     StreamMessageValidator,
@@ -36,7 +36,7 @@ export default class Validator extends StreamMessageValidator implements Stoppab
     private doValidation: StreamMessageValidator['validate']
     constructor(
         context: Context,
-        streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamEndpointsCached)) streamEndpoints: StreamEndpointsCached,
         @inject(ConfigInjectionToken.Subscribe) private options: SubscribeConfig,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
