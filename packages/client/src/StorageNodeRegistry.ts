@@ -216,13 +216,6 @@ export class StorageNodeRegistry {
         }
     }
 
-    async stop() {
-        if (this.nodeRegistryContract) {
-            this.nodeRegistryContract.removeAllListeners()
-            this.nodeRegistryContract.provider.removeAllListeners()
-        }
-    }
-
     // --------------------------------------------------------------------------------------------
     // GraphQL queries
     // --------------------------------------------------------------------------------------------

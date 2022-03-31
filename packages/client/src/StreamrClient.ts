@@ -155,7 +155,6 @@ class StreamrClientBase implements Context {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.resends.stop(),
             this.publisher.stop(),
             this.subscriber.stop(),
         ]
