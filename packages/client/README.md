@@ -15,6 +15,9 @@
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
 
+| If you are using the Streamr Client in Node, NodeJS version v16.13.x is required |
+| --- |
+
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Contents
