@@ -80,7 +80,6 @@ jobs:
       image_name: streamr/broker-node
       test_services_to_start: "parity-node0 broker-node-no-storage-1"
       build_platforms: linux/amd64
-      test_success: ${{!(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure')}}
       test_script: |
         for (( i=0; i < 5; i=i+1 )); do
             curl -s http://localhost:8791/volume;

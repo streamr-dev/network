@@ -7,7 +7,7 @@ on:
         type: string
         required: true
       image_name:
-        type: boolean
+        type: string
         required: true
       test_services_to_start:
         type: string
@@ -19,7 +19,7 @@ on:
         type: string
         required: true
       test_success:
-        required: true
+        description: required when pushing images
         type: boolean
 
     secrets:
@@ -57,7 +57,7 @@ jobs:
         uses: docker/metadata-action@v3.6.2
         if: ${{inputs.push_image}}
         with:
-          images: streamr/broker-node
+          images: ${{inputs.image_name}}
           tags: |
             type=sha
             type=ref,event=branch
