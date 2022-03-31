@@ -18,6 +18,8 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 - [Contribute](#contribute)
 
 ## Install
+| NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
 
 ```
 npm install -g @streamr/cli-tools
