@@ -1,9 +1,9 @@
-import mqtt from 'async-mqtt'
+import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import { MqttServer } from '../../../../src/plugins/mqtt/MqttServer'
 
 const MQTT_PORT = 1883
 
-const createClient = (apiKey?: string) => {
+const createClient = (apiKey?: string): Promise<AsyncMqttClient> => {
     return mqtt.connectAsync('mqtt://localhost:' + MQTT_PORT, (apiKey !== undefined) ? {
         username: '',
         password: apiKey,
@@ -11,9 +11,9 @@ const createClient = (apiKey?: string) => {
 }
 
 describe('MQTT server', () => {
-
-    let server: MqttServer
     const REQUIRED_API_KEY = 'required-api-key'
+    let server: MqttServer
+    let client: AsyncMqttClient
 
     describe('authentication required', () => {
 
@@ -25,11 +25,12 @@ describe('MQTT server', () => {
         })
 
         afterEach(async () => {
-            await server.stop()
+            await client?.end(true)
+            await server?.stop()
         })
 
         it('connect with required authentication', async () => {
-            const client = await createClient(REQUIRED_API_KEY)
+            client = await createClient(REQUIRED_API_KEY)
             expect(client).toBeDefined()
         })
 
@@ -44,7 +45,7 @@ describe('MQTT server', () => {
     })
 
     describe('authentication not required', () => {
-
+        let client: AsyncMqttClient
         let server: MqttServer
 
         beforeEach(async () => {
@@ -55,16 +56,17 @@ describe('MQTT server', () => {
         })
 
         afterEach(async () => {
-            await server.stop()
+            await client?.end(true)
+            await server?.stop()
         })
 
         it('connect without authentication', async () => {
-            const client = await createClient(undefined)
+            client = await createClient(undefined)
             expect(client).toBeDefined()
         })
 
         it('connect with some authentication', async () => { 
-            const client = await createClient('ignorable-api-key')
+            client = await createClient('ignorable-api-key')
             expect(client).toBeDefined()
         })
 

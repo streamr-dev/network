@@ -8,7 +8,6 @@ import {
 import { Broker } from "../../../../src/broker"
 import StreamrClient from 'streamr-client'
 
-const httpPort1 = 12501
 const trackerPort = 12503
 
 describe('StorageNode', () => {
@@ -23,13 +22,13 @@ describe('StorageNode', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1, trackerPort)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, trackerPort)
     }, 30 * 1000)
 
     afterAll(async () => {
         await tracker?.stop()
         await storageNode?.stop()
-        await storageNodeClient?.stop()
+        await storageNodeClient?.destroy()
     })
 
     it('has node id same as address', async () => {

@@ -47,8 +47,8 @@ describe('StorageConfig', () => {
         })
     })
 
-    afterAll(() => {
-        cassandraClient.shutdown()
+    afterAll(async () => {
+        await cassandraClient?.shutdown()
     })
 
     beforeEach(async () => {
