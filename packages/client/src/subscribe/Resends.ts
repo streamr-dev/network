@@ -248,9 +248,4 @@ export default class Resend implements Context {
             msgChainId,
         })
     }
-
-    /** @internal */
-    async stop() {
-        await this.storageNodeRegistry.stop()
-    }
 }
