@@ -22,7 +22,7 @@ describe('StorageNode', () => {
 
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
-        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1, trackerPort)
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, 1234, trackerPort)
     }, 30 * 1000)
 
     afterAll(async () => {
