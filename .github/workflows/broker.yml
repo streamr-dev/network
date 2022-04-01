@@ -97,7 +97,7 @@ jobs:
 
   docker-push:
     name: "Docker Image: push"
-    needs: [test, test-docker]
+    needs: [test-unit, test-integration, test-docker]
     # only push for nightly runs and manual triggers
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
