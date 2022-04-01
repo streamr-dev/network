@@ -94,72 +94,19 @@ jobs:
         done;
         exit 1
 
+
   docker-push:
     name: "Docker Image: push"
-    needs: [test-unit, test-integration, test-docker]
-    runs-on: self-hosted
+    needs: [test, test-docker]
     # only push for nightly runs and manual triggers
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-v1-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1.6.0
-        with:
-          driver-opts: |
-            network=host
-      - uses: docker/login-action@v1.14.1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Docker meta
-        id: docker_meta_success
-        uses: docker/metadata-action@v3.6.2
-        # if test steps succeeded
-        if: ${{ always() && !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
-        with:
-          images: streamr/broker-node
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=semver,pattern=v{{version}}
-            type=raw,value=dev,enable=${{ !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
-            type=raw,value=debug,enable=${{ (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && startsWith(github.ref, 'refs/tags/v') }}
-            type=schedule,pattern=nightly
-      - name: Setup qemu
-        uses: docker/setup-qemu-action@v1.2.0
-        with:
-          platforms: arm64
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1.6.0
-        with:
-          driver-opts: |
-            network=host
-      - name: Build & Push
-        uses: docker/build-push-action@v2.10.0
-        with:
-          context: .
-          file: ./Dockerfile.broker
-          platforms: linux/amd64,linux/arm64
-          push: true
-          load: false
-          build-args: |
-            NODE_ENV=production
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-      # Temp fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.broker
+      image_name: streamr/broker-node
+      build_platforms: linux/amd64,linux/arm64
+      push_image: true
+      test_success: ${{ !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}

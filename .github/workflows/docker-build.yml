@@ -103,7 +103,7 @@ jobs:
         with:
           context: .
           file: ${{inputs.docker_file}}
-          platforms: ${{inputs.build_pltforms}}
+          platforms: ${{inputs.build_platforms}}
           push: true
           load: false
           build-args: |
