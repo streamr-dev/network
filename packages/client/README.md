@@ -15,6 +15,9 @@
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
 
+| If you are using the Streamr Client in Node, NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
+
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Contents
@@ -257,7 +260,7 @@ If you choose one of the above resend options when subscribing, you can listen o
 
 ```js
 const sub = await streamr.subscribe(options)
-sub.onResent(() => {
+sub.once('resendComplete', () => {
     console.log('Received all requested historical messages! Now switching to real time!')
 })
 ```
@@ -727,27 +730,72 @@ Both of these properties should be disabled in tandem for message ordering and g
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
 
 
-### Proxy publishing
+### Proxy publishing and subscribing
 
 In some cases the client might be interested in publishing messages without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.
 
-Proxy publishing is done on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
+Setting subscribe proxies can be useful for cases where broker nodes with public IP addresses do not exist in a stream.
+
+Proxy publishing and subscribing are handled on the network overlay level. This means that there is no need to know the IP address of the node that will be used as a proxy. Instead, the node needs to know the ID of the network node it wants to connect to. It is not possible to set publish / subscribe proxies for a stream that is already being "traditionally" subscribed or published to and vice versa.
 
 ```js
-// Open publish proxy to a node on stream
-await publishingClient.setPublishProxy(stream, '0x12345...')
 
 // Open publish proxy to multiple nodes on stream
-await publishingClient.setPublishProxies(stream, ['0x11111...', '0x22222...'])
-
-// Remove publish proxy to a node on stream
-await publishingClient.removePublishProxy(stream, '0x12345...')
+await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
 
 // Remove publish proxy to multiple nodes on stream
-await publishingClient.removePublishProxies(stream, ['0x11111...', '0x22222...'])
+await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.PUBLISH)
+
+// Open publish proxy to multiple nodes on stream
+await publishingClient.openProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
+
+// Remove publish proxy to multiple nodes on stream
+await publishingClient.closeProxyConnections(stream, ['0x11111...', '0x22222...'], ProxyDirection.SUBSCRIBE)
 ```
 
-IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections.
+IMPORTANT: The node that is used as a proxy must have set the option on the network layer to accept incoming proxy connections and must have joined to the stream that a proxy connection is wanted for.
+
+Example client config:
+
+```json
+{
+    ...
+    "network": {
+        ...
+        "acceptProxyConnections": true
+    }
+}
+```
+
+Example broker config
+
+```json
+{
+    ...
+    "client": {
+        ...
+        "network": {
+            ...
+            "acceptProxyConnections": true
+        }
+    },
+    "plugins": {
+        ...
+        "subscriber": {
+            "streams": [
+                {
+                    "streamId": "STREAM_ID",
+                    "streamPartition": 0
+                },
+                {
+                    "streamId": "STREAM_ID2",
+                    "streamPartition": 0
+                },
+            ]
+        }
+    }
+}
+```
 
 ### Logging
 

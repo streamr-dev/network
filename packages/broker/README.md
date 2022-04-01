@@ -22,8 +22,8 @@ The broker node extends the minimal network node provided by the
 - [Misc](#misc)
 
 ## Install
-
-Prerequisites are [Node.js](https://nodejs.org/) `16.x` and npm version `8.x`.
+| NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
 
 To install streamr-broker:
 ```bash

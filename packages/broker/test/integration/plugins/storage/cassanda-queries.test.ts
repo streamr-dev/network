@@ -113,20 +113,16 @@ describe('cassanda-queries', () => {
                 bucketKeepAliveSeconds: 1
             }
         })
-        realClient = new Client({
-            contactPoints,
-            localDataCenter,
-            keyspace
-        })
+        realClient = storage.cassandraClient
         await Promise.all(MOCK_MESSAGES.map((msg) => storage.store(msg)))
         await waitForStoredMessageCount(MOCK_MESSAGES.length)
     })
 
     afterAll(async () => {
-        await storage?.close()
+        await storage?.close() // also cleans up realClient
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
         const proxyClient = new ProxyClient(realClient) as any
         storage.cassandraClient = proxyClient
         storage.bucketManager.cassandraClient = proxyClient

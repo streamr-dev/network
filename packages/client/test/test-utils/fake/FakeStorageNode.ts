@@ -26,7 +26,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
         const stream = await this.streamRegistry.getStream(streamId)
         const networkNode = await this.getNode()
         stream.getStreamParts().forEach((streamPartId, idx) => {
-            if (!networkNode.subsciptions.has(streamPartId)) {
+            if (!networkNode.subscriptions.has(streamPartId)) {
                 networkNode.addMessageListener((msg: StreamMessage) => {
                     this.storeMessage(msg)
                 })

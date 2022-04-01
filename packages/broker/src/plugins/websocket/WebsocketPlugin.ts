@@ -21,9 +21,6 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
 
     constructor(options: PluginOptions) {
         super(options)
-        if (this.streamrClient === undefined) {
-            throw new Error('StreamrClient is not available')   
-        }
     }
 
     async start(): Promise<void> {

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Storage node assignment events:
   - method `registerStorageEventListeners(listener)` replaced with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
   - method `unRegisterStorageEventListeners()` replaced with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
+- Resent event:
+  - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
 
 ### Deprecated
 

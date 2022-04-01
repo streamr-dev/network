@@ -1,30 +1,34 @@
 import assert from 'assert'
 
-import { PublishStreamConnectionRequest, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxyConnectionRequest, ControlMessage, toStreamID } from '../../../../src/index'
+import { ProxyDirection } from '../../../../src/utils/types'
 
 const VERSION = 2
 const streamId = toStreamID('stream')
 const streamPartition = 0
 const senderId = 'node'
+const direction = ProxyDirection.SUBSCRIBE
 
 // Message definitions
-const message = new PublishStreamConnectionRequest({
+const message = new ProxyConnectionRequest({
     version: VERSION,
     streamId,
     streamPartition,
+    direction,
     senderId,
     requestId: 'requestId'
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    ControlMessage.TYPES.PublishStreamConnectionRequest,
+    ControlMessage.TYPES.ProxyConnectionRequest,
     'requestId',
     streamId,
     streamPartition,
-    senderId
+    senderId,
+    direction
 ])
 
-describe('PublishStreamConnectionRequestSerializerV2', () => {
+describe('ProxyConnectionRequestSerializerV2', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             assert.deepStrictEqual(ControlMessage.deserialize(serializedMessage), message)

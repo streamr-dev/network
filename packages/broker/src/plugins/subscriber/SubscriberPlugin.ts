@@ -22,9 +22,6 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
 
     constructor(options: PluginOptions) {
         super(options)
-        if (this.streamrClient === undefined) {
-            throw new Error('StreamrClient is not available')
-        }
         this.streamParts = this.pluginConfig.streams.map((stream) => {
             return toStreamPartID(toStreamID(stream.streamId), stream.streamPartition)
         })

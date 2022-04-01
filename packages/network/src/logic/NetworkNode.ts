@@ -1,5 +1,5 @@
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { Event as NodeEvent, Event, Node, NodeOptions } from './Node'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { Event as NodeEvent, Node, NodeOptions } from './Node'
 import { NodeId } from '../identifiers'
 
 /*
@@ -17,37 +17,20 @@ export class NetworkNode extends Node {
         this.extraMetadata = metadata
     }
 
-    publish(streamMessage: StreamMessage): void {
+    publish(streamMessage: StreamMessage): void | never {
+        const streamPartId = streamMessage.getStreamPartID()
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
+            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        }
         this.onDataReceived(streamMessage)
     }
 
-    async joinStreamPartAsPurePublisher(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        let resolveHandler: any
-        let rejectHandler: any
-        await Promise.all([
-            new Promise<void>((resolve, reject) => {
-                resolveHandler = (node: string, stream: StreamPartID) => {
-                    if (node === contactNodeId && stream === streamPartId) {
-                        resolve()
-                    }
-                }
-                rejectHandler = (node: string, stream: StreamPartID) => {
-                    if (node === contactNodeId && stream === streamPartId) {
-                        reject(`Joining stream as pure publisher failed on contact-node ${contactNodeId} for stream ${streamPartId}`)
-                    }
-                }
-                this.on(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
-                this.on(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
-            }),
-            this.openOutgoingStreamConnection(streamPartId, contactNodeId)
-        ]).finally(() => {
-            this.off(Event.PUBLISH_STREAM_ACCEPTED, resolveHandler)
-            this.off(Event.PUBLISH_STREAM_REJECTED, rejectHandler)
-        })
+    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+        await this.addProxyConnection(streamPartId, contactNodeId, direction)
     }
 
-    async leavePurePublishingStreamPart(streamPartId: StreamPartID, contactNodeId: string): Promise<void> {
-        await this.closeOutgoingStreamConnection(streamPartId, contactNodeId)
+    async closeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+        await this.removeProxyConnection(streamPartId, contactNodeId, direction)
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
@@ -59,15 +42,25 @@ export class NetworkNode extends Node {
     }
 
     subscribe(streamPartId: StreamPartID): void {
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        }
         this.subscribeToStreamIfHaveNotYet(streamPartId)
     }
 
     async subscribeAndWaitForJoin(streamPartId: StreamPartID, timeout?: number): Promise<number> {
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.PUBLISH)) {
+            throw new Error(`Cannot subscribe to ${streamPartId} as proxy publish connections have been set`)
+        }
         return this.subscribeAndWaitForJoinOperation(streamPartId, timeout)
     }
 
     async waitForJoinAndPublish(streamMessage: StreamMessage, timeout?: number): Promise<number> {
-        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamMessage.getStreamPartID(), timeout)
+        const streamPartId = streamMessage.getStreamPartID()
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
+            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        }
+        const numOfNeighbors = await this.subscribeAndWaitForJoin(streamPartId, timeout)
         this.onDataReceived(streamMessage)
         return numOfNeighbors
     }
@@ -80,6 +73,20 @@ export class NetworkNode extends Node {
         return this.streamPartManager.isSetUp(streamPartId)
             ? this.streamPartManager.getNeighborsForStreamPart(streamPartId)
             : []
+    }
+
+    hasStreamPart(streamPartId: StreamPartID): boolean {
+        return this.streamPartManager.isSetUp(streamPartId)
+    }
+
+    hasProxyConnection(streamPartId: StreamPartID, contactNodeId: NodeId, direction: ProxyDirection): boolean {
+        if (direction === ProxyDirection.PUBLISH) {
+            return this.streamPartManager.hasOutOnlyConnection(streamPartId, contactNodeId)
+        } else if (direction === ProxyDirection.SUBSCRIBE) {
+            return this.streamPartManager.hasInOnlyConnection(streamPartId, contactNodeId)
+        } else {
+            throw new Error(`Assertion failed expected ProxyDirection but received ${direction}`)
+        }
     }
 
     getRtt(nodeId: NodeId): number|undefined {

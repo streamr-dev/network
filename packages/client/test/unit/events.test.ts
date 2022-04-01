@@ -22,25 +22,38 @@ const OTHER_EVENT_NAME = 'bar'
 
 describe('events', () => {
 
-    it('observable listeners', () => {
-        const emitter = new ObservableEventEmitter<MockEvents>()
-        const listenerCounts: number[] = []
-        const onEventEmitterChange = (name: string) => {
-            if (name === MOCK_EVENT_NAME) {
-                listenerCounts.push(emitter.getListenerCount(MOCK_EVENT_NAME))
+    describe('observable listeners', () => {
+
+        it('happy path', () => {
+            const emitter = new ObservableEventEmitter<MockEvents>()
+            const listenerCounts: number[] = []
+            const onEventEmitterChange = (name: string) => {
+                if (name === MOCK_EVENT_NAME) {
+                    listenerCounts.push(emitter.getListenerCount(MOCK_EVENT_NAME))
+                }
             }
-        }
-        emitter.getObserver().on('addEventListener', onEventEmitterChange)
-        emitter.getObserver().on('removeEventListener', onEventEmitterChange)
-        const listener1 = () => {}
-        const listener2 = () => {}
-        emitter.on(MOCK_EVENT_NAME, listener1)
-        emitter.on(MOCK_EVENT_NAME, listener2)
-        emitter.once(MOCK_EVENT_NAME, () => {})
-        emitter.emit(MOCK_EVENT_NAME, MOCK_EVENT_PAYLOAD)
-        emitter.off(MOCK_EVENT_NAME, listener1)
-        emitter.off(MOCK_EVENT_NAME, listener2)
-        expect(listenerCounts).toEqual([1, 2, 3, 2, 1, 0])
+            emitter.getObserver().on('addEventListener', onEventEmitterChange)
+            emitter.getObserver().on('removeEventListener', onEventEmitterChange)
+            const listener1 = () => {}
+            const listener2 = () => {}
+            emitter.on(MOCK_EVENT_NAME, listener1)
+            emitter.on(MOCK_EVENT_NAME, listener2)
+            emitter.once(MOCK_EVENT_NAME, () => {})
+            emitter.emit(MOCK_EVENT_NAME, MOCK_EVENT_PAYLOAD)
+            emitter.off(MOCK_EVENT_NAME, listener1)
+            emitter.off(MOCK_EVENT_NAME, listener2)
+            expect(listenerCounts).toEqual([1, 2, 3, 2, 1, 0])
+        })
+
+        it('removeAllListeners: emits removeEventListener for all registered StreamrClientEvents', () => {
+            const emitter = new ObservableEventEmitter<MockEvents>()
+            const eventNames: string[] = []
+            emitter.on(MOCK_EVENT_NAME, () => {})
+            emitter.getObserver().on('removeEventListener', (eventName: string) => eventNames.push(eventName))
+            emitter.on(OTHER_EVENT_NAME, () => {})
+            emitter.removeAllListeners()
+            expect(eventNames).toEqual([MOCK_EVENT_NAME, OTHER_EVENT_NAME])
+        })
     })
 
     describe('gateway', () => {

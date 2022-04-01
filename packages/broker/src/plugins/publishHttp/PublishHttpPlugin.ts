@@ -5,9 +5,6 @@ export class PublishHttpPlugin extends Plugin<void> {
 
     constructor(options: PluginOptions) {
         super(options)
-        if (this.streamrClient === undefined) {
-            throw new Error('StreamrClient is not available')   
-        }
     }
 
     async start(): Promise<void> {

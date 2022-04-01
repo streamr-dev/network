@@ -47,7 +47,8 @@ export const ConfigTest = {
                 http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
             }
         ],
-        webrtcDisallowPrivateAddresses: false
+        webrtcDisallowPrivateAddresses: false,
+        stunUrls: []
     },
     mainChainRPCs: {
         name: 'dev_ethereum',

@@ -141,15 +141,18 @@ export const createClient = async (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
+    const networkOptions = {
+        ...ConfigTest?.network,
+        trackers: [tracker.getConfigRecord()],
+        ...clientOptions?.network
+    }
     return new StreamrClient({
         ...ConfigTest,
         auth: {
             privateKey
         },
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
-        network: {
-            trackers: [tracker.getConfigRecord()]
-        },
+        network: networkOptions,
         ...clientOptions,
     })
 }
