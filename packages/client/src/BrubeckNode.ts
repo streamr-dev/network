@@ -217,6 +217,7 @@ export default class BrubeckNode implements Context {
         }
     }
 
+    /** @internal */
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
@@ -228,6 +229,7 @@ export default class BrubeckNode implements Context {
         }
     }
 
+    /** @internal */
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
