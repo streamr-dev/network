@@ -17,7 +17,7 @@ import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
-import { range } from 'lodash'
+import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
@@ -164,14 +164,15 @@ export default class Resend implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAdresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
-        if (!nodeAdresses.length) {
+        const nodeAddresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
+        if (!nodeAddresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
 
-        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAdresses[0]) // TODO: handle multiple nodes
+        const nodeAddress = nodeAddresses[random(0, nodeAddresses.length)]
+        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAddress)
         const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
