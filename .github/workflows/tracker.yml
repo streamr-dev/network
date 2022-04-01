@@ -91,6 +91,7 @@ jobs:
       build_platforms: linux/amd64,linux/arm64
       push_image: true
       test_success: ${{ !(needs.test.result == 'failure' || needs.test-docker.result == 'failure') }}
+    secrets:
       dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
 
