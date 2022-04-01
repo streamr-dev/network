@@ -194,6 +194,11 @@ export class StreamPartManager {
         return this.streamParts.get(streamPartId)!.inOnly.has(node)
     }
 
+    hasOnewayConnection(streamPartId: StreamPartID, node: NodeId): boolean {
+        this.ensureThatIsSetUp(streamPartId)
+        return this.streamParts.get(streamPartId)!.outOnly.has(node) || this.streamParts.get(streamPartId)!.inOnly.has(node)
+    }
+
     hasInboundConnection(streamPartId: StreamPartID, node: NodeId): boolean {
         return this.hasInOnlyConnection(streamPartId, node) || this.hasNeighbor(streamPartId, node)
     }

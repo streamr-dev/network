@@ -1,4 +1,5 @@
 import ValidationError from '../errors/ValidationError'
+import { ProxyDirection } from './types'
 
 export function validateIsNotNullOrUndefined(varName: string, varValue: unknown): void | never {
     if (varValue === undefined) {
@@ -56,6 +57,16 @@ export function validateIsArray(varName: string, varValue: unknown, allowNull = 
     validateIsNotNullOrUndefined(varName, varValue)
     if (!Array.isArray(varValue)) {
         throw new ValidationError(`Expected ${varName} to be an array but was a ${typeof varValue} (${varValue}).`)
+    }
+}
+
+export function validateIsDirection(varName: string, varValue: unknown, allowNull = false): void | never {
+    if (allowNull && varValue == null) {
+        return
+    }
+    validateIsNotNullOrUndefined(varName, varValue)
+    if (varValue as ProxyDirection in ProxyDirection) {
+        throw new ValidationError(`Expected ${varName} to be a ProxyDirection but was a ${typeof varValue} (${varValue}).`)
     }
 }
 

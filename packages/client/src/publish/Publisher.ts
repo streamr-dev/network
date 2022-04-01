@@ -139,30 +139,6 @@ export default class BrubeckPublisher implements Context, Stoppable {
         return this.keyExchange.stop()
     }
 
-    async setPublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async removePublishProxy(streamDefinition: StreamDefinition, nodeId: string): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId)
-    }
-
-    async setPublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map((nodeId) => this.node.openPublishProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
-    }
-
-    async removePublishProxies(streamDefinition: StreamDefinition, nodeIds: string[]): Promise<void> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        await Promise.allSettled([
-            ...nodeIds.map(async (nodeId) => this.node.closePublishProxyConnectionOnStreamPart(streamPartId, nodeId))
-        ])
-    }
-
     /** @internal */
     async start() {
         this.isStopped = false
