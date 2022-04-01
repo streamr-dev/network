@@ -28,6 +28,7 @@ import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -83,7 +84,8 @@ class StreamrClientBase implements Context {
         private dataunions: DataUnions,
         private streamRegistry: StreamRegistry,
         private storageNodeRegistry: StorageNodeRegistry,
-        private streamIdBuilder: StreamIDBuilder
+        private streamIdBuilder: StreamIDBuilder,
+        private eventEmitter: StreamrClientEventEmitter
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
@@ -153,10 +155,10 @@ class StreamrClientBase implements Context {
     })
 
     destroy = pOnce(async () => {
+        this.eventEmitter.removeAllListeners()
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.resends.stop(),
             this.publisher.stop(),
             this.subscriber.stop(),
         ]
@@ -173,6 +175,18 @@ class StreamrClientBase implements Context {
     /** @internal */
     disableDebugLogging() { // eslint-disable-line class-methods-use-this
         Debug.disable()
+    }
+
+    on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+        this.eventEmitter.on(eventName, listener as any)
+    }
+
+    once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+        this.eventEmitter.once(eventName, listener as any)
+    }
+
+    off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+        this.eventEmitter.off(eventName, listener as any)
     }
 }
 
@@ -257,7 +271,8 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
-            c.resolve<StreamIDBuilder>(StreamIDBuilder)
+            c.resolve<StreamIDBuilder>(StreamIDBuilder),
+            c.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
         )
     }
 }

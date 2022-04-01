@@ -4,10 +4,11 @@
 export * from './StreamrClient'
 export * from './Stream'
 export * from './encryption/Encryption'
+export { StreamrClientEvents } from './events'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
-export { ResendSubscription } from './subscribe/ResendSubscription'
+export { ResendSubscription, ResendSubscriptionEvents } from './subscribe/ResendSubscription'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,
@@ -59,6 +60,7 @@ export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
 export { SignalListener } from './utils/Signal'
 export * from './types'
+export { formStorageNodeAssignmentStreamId } from './utils/index'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 

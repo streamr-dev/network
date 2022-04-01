@@ -1,5 +1,4 @@
 import { Contract, ContractTransaction } from '@ethersproject/contracts'
-import { Signer } from '@ethersproject/abstract-signer'
 import type { StreamRegistryV3 as StreamRegistryContract } from './ethereumArtifacts/StreamRegistryV3'
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -19,10 +18,10 @@ import {
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { omit } from 'lodash'
-import { GraphQLClient } from './utils/GraphQLClient'
+import { createWriteContract, SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
 import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from './searchStreams'
 import { filter, map } from './utils/GeneratorUtils'
-import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
+import { ObservableContract, waitForTx, withErrorHandlingAndLogging } from './utils/contract'
 import {
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -56,10 +55,9 @@ export class StreamRegistry implements Context {
     readonly id
     /** @internal */
     readonly debug
-    private streamRegistryContract?: StreamRegistryContract
-    private streamRegistryContractsReadonly: StreamRegistryContract[]
+    private streamRegistryContract?: ObservableContract<StreamRegistryContract>
+    private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
     private chainProviders: Provider[]
-    private chainSigner?: Signer
 
     constructor(
         context: Context,
@@ -67,7 +65,7 @@ export class StreamRegistry implements Context {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
-        @inject(GraphQLClient) private graphQLClient: GraphQLClient,
+        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(StreamEndpointsCached) private streamEndpointsCached: StreamEndpointsCached
     ) {
         this.id = instanceId(this)
@@ -75,10 +73,10 @@ export class StreamRegistry implements Context {
         this.debug('create')
         this.chainProviders = this.ethereum.getAllStreamRegistryChainProviders()
         this.streamRegistryContractsReadonly = this.chainProviders.map((provider: Provider) => {
-            return withErrorHandlingAndLogging(
+            return withErrorHandlingAndLogging<StreamRegistryContract>(
                 new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, provider),
                 'streamRegistry'
-            ) as StreamRegistryContract
+            )
         })
     }
 
@@ -92,12 +90,15 @@ export class StreamRegistry implements Context {
     // --------------------------------------------------------------------------------------------
 
     private async connectToStreamRegistryContract() {
-        if (!this.chainSigner || !this.streamRegistryContract) {
-            this.chainSigner = await this.ethereum.getStreamRegistryChainSigner()
-            this.streamRegistryContract = withErrorHandlingAndLogging(
-                new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, this.chainSigner),
-                'streamRegistry'
-            ) as StreamRegistryContract
+        if (!this.streamRegistryContract) {
+            const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
+                this.config.streamRegistryChainAddress,
+                StreamRegistryArtifact,
+                chainSigner,
+                'streamRegistry',
+                this.graphQLClient
+            )
         }
     }
 
@@ -194,21 +195,6 @@ export class StreamRegistry implements Context {
         ])
     }
 
-    /** @internal */
-    async streamExistsOnTheGraph(streamIdOrPath: string): Promise<boolean> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Checking if stream exists on theGraph %s', streamId)
-        try {
-            await this.getStreamFromGraph(streamId)
-            return true
-        } catch (err) {
-            if (err.errorCode === 'NOT_FOUND') {
-                return false
-            }
-            throw err
-        }
-    }
-
     /**
      * @category Important
      */
@@ -250,17 +236,9 @@ export class StreamRegistry implements Context {
         }
         this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
         return map(
-            filter(fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
-                (item: SearchStreamsResultItem) => {
-                    try {
-                        Stream.parsePropertiesFromMetadata(item.stream.metadata)
-                        return true
-                    } catch (err) {
-                        this.debug('Omitting stream %s from result because %s', item.stream.id, err.message)
-                        return false
-                    }
-                }),
-            (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata)
+            fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
+            (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata),
+            (err: Error, item: SearchStreamsResultItem) => this.debug('Omitting stream %s from result because %s', item.stream.id, err.message)
         )
     }
 

@@ -186,9 +186,11 @@ export default class PublishPipeline implements Context, Stoppable {
      * Creates a Defer to be resolved when message gets sent to node.
      */
     async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
-        // TODO the logged object contains a huge streamDefiniton if a Stream object is
-        // used -> truncate to minimal e.g. with streamDefinitionToString?
-        this.debug('publish >> %o', publishMetadata)
+        this.debug('publish >> %o', {
+            streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
+            timestamp: publishMetadata.timestamp,
+            partitionKey: publishMetadata.partitionKey
+        })
         this.startQueue()
 
         const defer = Defer<StreamMessage<T>>()

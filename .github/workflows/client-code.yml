@@ -76,7 +76,6 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
       - name: Run tests
         run: npm run test-integration
@@ -111,7 +110,7 @@ jobs:
           dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'

@@ -49,9 +49,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     constructor(options: PluginOptions) {
         super(options)
-        if (this.streamrClient === undefined) {
-            throw new Error('StreamrClient is not available')
-        }
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000

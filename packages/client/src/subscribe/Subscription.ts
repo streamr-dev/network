@@ -35,9 +35,4 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     waitForNeighbours(numNeighbours?: number, timeout?: number) {
         return this.context.waitForNeighbours(numNeighbours, timeout)
     }
-
-    async unsubscribe() {
-        this.end()
-        await this.return()
-    }
 }

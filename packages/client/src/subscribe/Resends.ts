@@ -2,13 +2,13 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { EthereumAddress, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
-import { MessageStream, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
 import SubscribePipeline from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
@@ -16,6 +16,8 @@ import { BrubeckContainer } from '../Container'
 import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { range } from 'lodash'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -75,6 +77,7 @@ export default class Resend implements Context {
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
+        @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
         @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer
     ) {
@@ -100,6 +103,27 @@ export default class Resend implements Context {
         }
 
         return sub
+    }
+
+    /**
+     * Resend for all partitions of a stream.
+     */
+    async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
+        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        if (partitions === 1) {
+            // nothing interesting to do, treat as regular subscription
+            return this.resend<T>(streamId, options, onMessage)
+        }
+
+        // create resend for each partition
+        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
+            return this.resend<T>({
+                streamId,
+                partition: streamPartition,
+            }, options)
+        }))
+
+        return pullManyToOne(this, subs, onMessage)
     }
 
     private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
@@ -138,7 +162,7 @@ export default class Resend implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAdresses = await this.storageNodeRegistry.getStorageNodesOf(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAdresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAdresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
@@ -223,10 +247,5 @@ export default class Resend implements Context {
             publisherId,
             msgChainId,
         })
-    }
-
-    /** @internal */
-    async stop() {
-        await this.storageNodeRegistry.stop()
     }
 }

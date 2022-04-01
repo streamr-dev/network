@@ -4,6 +4,7 @@ function toNumber(value: any): number | undefined {
 
 const sideChainConfig = {
     name: 'streamr',
+    chainId: 8995,
     rpcs: [{
         url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,
@@ -46,10 +47,12 @@ export const ConfigTest = {
                 http: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'}:30303`
             }
         ],
-        webrtcDisallowPrivateAddresses: false
+        webrtcDisallowPrivateAddresses: false,
+        stunUrls: []
     },
     mainChainRPCs: {
         name: 'dev_ethereum',
+        chainId: 8995,
         rpcs: [{
             url: process.env.ETHEREUM_SERVER_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8545`,
             timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000

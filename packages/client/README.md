@@ -15,6 +15,9 @@
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
 
+| If you are using the Streamr Client in Node, NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
+
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
 
 ## Contents
@@ -44,7 +47,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 
 ### Subscribing
 ```js 
-const streamId = 'binance-streamr.eth/ETHUSDT/ticker'
+const streamId = 'streamr.eth/demos/helsinki-trams'
 
 streamr.subscribe(streamId, (message) => {
     // handle for individual messages
@@ -257,7 +260,7 @@ If you choose one of the above resend options when subscribing, you can listen o
 
 ```js
 const sub = await streamr.subscribe(options)
-sub.onResent(() => {
+sub.once('resendComplete', () => {
     console.log('Received all requested historical messages! Now switching to real time!')
 })
 ```

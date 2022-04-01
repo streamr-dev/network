@@ -1,13 +1,13 @@
 import http from 'http'
 import { Tracker } from 'streamr-network'
 import { Wallet } from 'ethers'
-import StreamrClient, { ConfigTest, Stream } from 'streamr-client'
+import StreamrClient, { Stream } from 'streamr-client'
 import {
-    startBroker,
     createClient,
     createTestStream,
     fetchPrivateKeyWithGas,
-    startTestTracker
+    startTestTracker,
+    startStorageNode
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
 
@@ -37,21 +37,8 @@ describe('DataMetadataEndpoints', () => {
     beforeAll(async () => {
         storageNodeAccount = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(trackerPort)
-        const storageNodeClient = new StreamrClient({
-            ...ConfigTest,
-            auth: {
-                privateKey: storageNodeAccount.privateKey
-            },
-        })
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort1}"}`)
-        storageNode = await startBroker({
-            name: 'storageNode',
-            privateKey: storageNodeAccount.privateKey,
-            trackerPort,
-            httpPort: httpPort1,
-            enableCassandra: true,
-        })
         client1 = await createClient(tracker, await fetchPrivateKeyWithGas())
+        storageNode = await startStorageNode(storageNodeAccount.privateKey, httpPort1, trackerPort)
     })
 
     afterAll(async () => {

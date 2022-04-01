@@ -100,4 +100,58 @@ export class MessageStream<
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.forEachBefore(fn) as MessageStream<T, InType, OutType>
     }
+
+    async unsubscribe(): Promise<void> {
+        this.end()
+        await this.return()
+    }
+}
+
+export async function pullManyToOne<T>(
+    context: Context,
+    inputStreams: MessageStream<T>[],
+    onMessage?: MessageStreamOnMessage<T>
+): Promise<MessageStream<T, StreamMessage<T>, StreamMessage<T>>> {
+    if (inputStreams.length === 1) {
+        if (onMessage) {
+            inputStreams[0].useLegacyOnMessageHandler(onMessage)
+        }
+        return inputStreams[0]
+    }
+
+    // output stream
+    const outputStream = new MessageStream<T>(context)
+
+    if (onMessage) {
+        outputStream.useLegacyOnMessageHandler(onMessage)
+    }
+
+    // Should end if output ended or all inputStreams done.
+    function shouldEnd(): boolean {
+        if (outputStream.isDone()) {
+            return true
+        }
+
+        return inputStreams.every((s) => s.isDone())
+    }
+
+    // End output stream and all inputStreams if should end.
+    function maybeEnd(): void {
+        if (!shouldEnd()) { return }
+        inputStreams.forEach((sub) => {
+            if (!sub.isCleaningUp) {
+                sub.end()
+            }
+        })
+        outputStream.end()
+        outputStream.return()
+    }
+
+    // pull inputStreams into output stream
+    for (const sub of inputStreams) {
+        sub.onFinally(() => maybeEnd())
+        sub.onError((err) => outputStream.handleError(err))
+        outputStream.pull(sub, { endDest: false })
+    }
+    return outputStream
 }

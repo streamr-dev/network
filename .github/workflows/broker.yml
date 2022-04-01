@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -89,13 +89,15 @@ jobs:
           driver-opts: |
             network=host
       - name: Build
-        uses: docker/build-push-action@v2.9.0
+        uses: docker/build-push-action@v2.10.0
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
           push: false
           load: true
+          build-args: |
+            NODE_ENV=development
           tags: streamr/broker-node:dev
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
@@ -130,7 +132,7 @@ jobs:
           dest: 'logs'
       - name: Upload logs to GitHub
         if: failure()
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3
         with:
           name: docker-logs-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
@@ -150,7 +152,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
@@ -189,6 +191,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern=v{{version}}
             type=raw,value=dev
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && startsWith(github.ref, 'refs/tags/v') }}
             type=schedule,pattern=nightly
       - name: Setup qemu
         uses: docker/setup-qemu-action@v1.2.0
@@ -200,13 +203,15 @@ jobs:
           driver-opts: |
             network=host
       - name: Build & Push
-        uses: docker/build-push-action@v2.9.0
+        uses: docker/build-push-action@v2.10.0
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           load: false
+          build-args: |
+            NODE_ENV=production
           # only one of these should have tags
           tags: ${{ steps.docker_meta_success.outputs.tags }}${{ steps.docker_meta_failure.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}

@@ -1,4 +1,11 @@
-import StreamrClient, { ConfigTest, MaybeAsync, Stream, StreamProperties, StreamrClientConfig } from 'streamr-client'
+import StreamrClient, {
+    ConfigTest,
+    MaybeAsync,
+    Stream,
+    StreamPermission,
+    StreamProperties,
+    StreamrClientConfig
+} from 'streamr-client'
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
@@ -134,15 +141,18 @@ export const createClient = async (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
+    const networkOptions = {
+        ...ConfigTest?.network,
+        trackers: [tracker.getConfigRecord()],
+        ...clientOptions?.network
+    }
     return new StreamrClient({
         ...ConfigTest,
         auth: {
             privateKey
         },
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
-        network: {
-            trackers: [tracker.getConfigRecord()]
-        },
+        network: networkOptions,
         ...clientOptions,
     })
 }
@@ -163,8 +173,6 @@ export const createTestStream = async (
         id,
         ...props
     })
-    // @ts-expect-error internal method TODO remove this wait when NET-606 is implemented
-    await until(async () => streamrClient.streamExistsOnTheGraph(id), 9999, 500)
     return stream
 }
 
@@ -233,4 +241,42 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     } finally {
         clearTimeout(t)
     }
+}
+
+export async function startStorageNode(
+    storageNodePrivateKey: string,
+    httpPort: number,
+    trackerPort: number
+): Promise<Broker> {
+    const client = new StreamrClient({
+        ...ConfigTest,
+        auth: {
+            privateKey: storageNodePrivateKey
+        },
+    })
+    try {
+        await client.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort}"}`)
+        await createAssignmentStream(client)
+    } finally {
+        client?.destroy()
+    }
+    return startBroker({
+        name: 'storageNode',
+        privateKey: storageNodePrivateKey,
+        trackerPort,
+        httpPort,
+        enableCassandra: true,
+    })
+}
+
+async function createAssignmentStream(client: StreamrClient): Promise<Stream> {
+    const stream = await client.getOrCreateStream({
+        id: '/assignments',
+        partitions: 1
+    })
+    await stream.grantPermissions({
+        public: true,
+        permissions: [StreamPermission.SUBSCRIBE]
+    })
+    return stream
 }

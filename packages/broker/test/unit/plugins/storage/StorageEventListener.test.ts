@@ -1,13 +1,11 @@
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
-import { StorageNodeAssignmentEvent, Stream, StreamrClient } from 'streamr-client'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
 import { afterEach } from 'jest-circus'
 import { wait } from 'streamr-test-utils'
 
 describe(StorageEventListener, () => {
-    let stubClient: Pick<StreamrClient, 'getStream'
-        | 'registerStorageEventListener'
-        | 'unregisterStorageEventListeners'>
-    let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
+    let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>
+    const storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => any)> = new Map()
     let onEvent: jest.Mock<void, [stream: Stream, type: 'added' | 'removed', block: number]>
     let listener: StorageEventListener
 
@@ -19,12 +17,11 @@ describe(StorageEventListener, () => {
                     partitions: 3
                 } as Stream
             },
-            async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any): Promise<void> {
-                storageEventListener = cb
+            on(eventName: keyof StreamrClientEvents, listener: any) {
+                storageEventListeners.set(eventName, listener)
             },
-            unregisterStorageEventListeners: jest.fn()
+            off: jest.fn()
         }
-        storageEventListener = undefined
         onEvent = jest.fn()
         listener = new StorageEventListener('clusterId', stubClient as StreamrClient, onEvent)
     })
@@ -34,41 +31,40 @@ describe(StorageEventListener, () => {
     })
 
     it('start() registers storage event listener on client', async () => {
-        expect(storageEventListener).toBeUndefined()
+        expect(storageEventListeners.size).toBe(0)
         await listener.start()
-        expect(storageEventListener).toBeDefined()
+        expect(storageEventListeners.size).toBe(2)
     })
 
     it('destroy() unregisters storage event listener on client', async () => {
-        expect(stubClient.unregisterStorageEventListeners).toHaveBeenCalledTimes(0)
+        expect(stubClient.off).toHaveBeenCalledTimes(0)
         await listener.destroy()
-        expect(stubClient.unregisterStorageEventListeners).toHaveBeenCalledTimes(1)
+        expect(stubClient.off).toHaveBeenCalledTimes(2)
     })
 
-    function assignStorageNode(recipient: string) {
-        storageEventListener!({
+    function addToStorageNode(recipient: string) {
+        storageEventListeners.get('addToStorageNode')!({
             nodeAddress: recipient,
             streamId: 'streamId',
-            type: 'added',
-            blockNumber: 8694
+            blockNumber: 1234
         })
     }
 
     it('storage node assignment event gets passed to onEvent', async () => {
         await listener.start()
-        assignStorageNode('clusterId')
+        addToStorageNode('clusterId')
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(1)
         expect(onEvent).toHaveBeenCalledWith(
             { id: 'streamId', partitions: 3 },
             'added',
-            8694
+            1234
         )
     })
 
     it('storage node assignment events meant for another recipient are ignored', async () => {
         await listener.start()
-        assignStorageNode('otherClusterId')
+        addToStorageNode('otherClusterId')
         await wait(0)
         expect(onEvent).toHaveBeenCalledTimes(0)
     })

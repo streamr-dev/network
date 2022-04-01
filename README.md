@@ -26,6 +26,8 @@ Monorepo for Streamr Network packages.
 [![Network – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml)
 
 ## Install
+| NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
 
 Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to manage monorepo.
 

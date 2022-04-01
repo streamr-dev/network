@@ -18,6 +18,8 @@ See [Changelog](CHANGELOG.md) for version information and changes.
 - [Contribute](#contribute)
 
 ## Install
+| NodeJS version `16.13.x` and NPM version `8.x` is required |
+| --- |
 
 ```
 npm install -g @streamr/cli-tools
@@ -36,7 +38,7 @@ Run `streamr <command> <subcommand> --help` to get more information about a a co
 
 If there is a stream parameter in a command, it can be defined as a full id (e.g. `0x1234567890123456789012345678901234567890/foo/bar`) or a path (e.g. `/foo/bar`). If path notation is used, the stream ID is made by prefixing the authenticated Ethereum address (`--private-key <key>`) to the path.
 
-### subscribe
+### Subscribe
 Used to subscribe to a stream and output real-time JSON objects to stdout line-by-line.
 
 For example, to subscribe to a public stream such as the tram demo do
@@ -50,7 +52,13 @@ To subscribe to a private stream and authenticate with an Ethereum private key:
 streamr stream subscribe streamId --private-key <key>
 ```
 
-###  publish
+To subscribe to a particular [stream partition](https://streamr.network/docs/streams/partitioning), use the partition flag:
+
+```
+streamr stream subscribe streamId -p <partition_number>
+```
+
+###  Publish
 Used to publish events to a stream from stdin line-by-line. Each line should be a valid JSON object.
 
 Example of use:
@@ -59,7 +67,7 @@ streamr stream publish <streamId> --private-key <key>
 ```
 
 
-### generate
+### Generate
 Generate random JSON objects to stdout line-by-line.
 
 Useful for generating test data to be published to a stream with `publish`, e.g.:
@@ -67,7 +75,7 @@ Useful for generating test data to be published to a stream with `publish`, e.g.
 streamr mock-data generate | streamr stream publish <streamId> --private-key <key>
 ```
 
-### search
+### Search
 Query a list of streams by a search term and/or permissions. E.g.:
 ```
 streamr stream search foobar --user 0x1234567890123456789012345678901234567890
@@ -105,13 +113,13 @@ streamr stream search --user --public --all subscribe --private-key <key>
 
 If more than one permission is needed, specify the permissions in a comma-separated list (e.g. `--all subscribe,publish`). It returns streams where _all_ listed permissions are granted. If just _any_ of the permissions is required, use `--any` instead of `--all`. Please prefer `--all` to `--any` when possible as it has better query performance.
 
-### show
+### Show
 Show detailed information about a specific stream
 ```
 streamr stream show <streamId> --private-key <key>
 ```
 
-### create
+### Create
 Create a new stream
 ```
 streamr stream create <streamId> --private-key <key>
@@ -124,7 +132,7 @@ streamr stream create yourdomain.ens/foobar
 ```
 
 
-### resend
+### Resend
 Request a resend of historical data printed as JSON objects to stdout line-by-line.
 
 For example, to fetch the 10 latest messages of a public stream such as the tram demo do
