@@ -6,7 +6,7 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } fr
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import Ethereum from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
@@ -27,6 +27,8 @@ export interface NetworkNodeStub {
     getRtt: (nodeId: string) => number|undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
+    hasStreamPart: (streamPartId: StreamPartID) => boolean
+    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
 }
 
 /**
@@ -201,7 +203,7 @@ export default class BrubeckNode implements Context {
         try {
             this.destroySignal.assertNotDestroyed(this)
 
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 // use .then instead of async/await so
                 // this.cachedNode.publish call can be sync
                 return this.startNodeTask().then((node) => {
@@ -209,31 +211,38 @@ export default class BrubeckNode implements Context {
                 })
             }
 
-            return this.cachedNode.publish(streamMessage)
+            return this.cachedNode!.publish(streamMessage)
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
         }
     }
 
-    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    /** @internal */
+    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 
-    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    /** @internal */
+    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
+
+    private isStarting(): boolean {
+        return !this.cachedNode || !this.startNodeComplete
+    }
 }
+
