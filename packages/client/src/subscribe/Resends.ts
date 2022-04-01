@@ -169,7 +169,7 @@ export default class Resend implements Context {
             throw err
         }
 
-        const nodeAddress = nodeAddresses[random(0, nodeAddresses.length)]
+        const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
         const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAddress)
         const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
