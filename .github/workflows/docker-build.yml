@@ -54,8 +54,8 @@ jobs:
       - uses: docker/login-action@v1.14.1
         if: ${{inputs.push_image}}
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.dockerhub_username }}
+          password: ${{ secrets.dockerhub_token }}
 
       - name: Docker meta
         id: docker_meta_success
