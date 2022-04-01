@@ -4,13 +4,6 @@
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import {
-    ContentType,
-    EncryptionType,
-    EthereumAddress,
-    SignatureType,
-    StreamMessageType
-} from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
@@ -27,22 +20,6 @@ export interface StreamValidationInfo {
     partitions: number
     requireSignedData: boolean
     storageDays: number
-}
-
-export interface StreamMessageAsObject { // TODO this could be in streamr-protocol
-    streamId: string
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: EthereumAddress
-    msgChainId: string
-    messageType: StreamMessageType
-    contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string|null
-    content: any
-    signatureType: SignatureType
-    signature: string|null
 }
 
 const agentSettings = {
