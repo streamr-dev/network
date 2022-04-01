@@ -10,8 +10,6 @@ import { CancelableGenerator, ICancelable } from '../utils/iterators'
 import PublishPipeline, { PublishMetadata } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
-import BrubeckNode from '../BrubeckNode'
-import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 
 export type { PublishMetadata }
@@ -29,8 +27,6 @@ export default class BrubeckPublisher implements Context, Stoppable {
     constructor(
         context: Context,
         private pipeline: PublishPipeline,
-        private node: BrubeckNode,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange
     ) {
         this.id = instanceId(this)
