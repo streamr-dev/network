@@ -50,7 +50,6 @@ export class FakeStorageNode extends FakeBrubeckNode {
 
     private storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
-        console.log('STORE MESSAGE: ' + msg.getTimestamp() + ' ' + msg.serializedContent)
         this.streamPartMessages.add(streamPartId, msg)
     }
 

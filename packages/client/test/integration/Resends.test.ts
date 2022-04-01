@@ -7,7 +7,7 @@ import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { createRelativeTestStreamId } from '../test-utils/utils'
 
 describe('Resends', () => {
-    
+
     describe('waitForStorage', () => {
 
         let client: StreamrClient

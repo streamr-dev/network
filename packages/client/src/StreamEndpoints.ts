@@ -9,20 +9,18 @@ import {
     EncryptionType,
     EthereumAddress,
     SignatureType,
-    StreamMessageType,
-    StreamPartIDUtils
+    StreamMessageType
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
 import { Stream } from './Stream'
-import { ErrorCode, NotFoundError } from './authFetch'
+import { ErrorCode } from './authFetch'
 import { Rest } from './Rest'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
 
 export interface StreamValidationInfo {
     id: string

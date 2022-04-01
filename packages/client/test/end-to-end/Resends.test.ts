@@ -10,7 +10,6 @@ import {
     createTestStream,
     fetchPrivateKeyWithGas,
     Msg,
-    createRelativeTestStreamId
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Resend from '../../src/subscribe/Resends'

@@ -87,6 +87,7 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         throw new Error('not implemented')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     get<T extends object>(_urlParts: UrlParts, _options: FetchOptions = {}): Promise<T> {
         throw new Error('not implemented')
     }

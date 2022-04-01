@@ -16,8 +16,6 @@ import { StreamDefinition } from '../types'
 
 export type { PublishMetadata }
 
-const wait = (ms: number = 0) => new Promise((resolve) => setTimeout(resolve, ms))
-
 @scoped(Lifecycle.ContainerScoped)
 export default class BrubeckPublisher implements Context, Stoppable {
     readonly id

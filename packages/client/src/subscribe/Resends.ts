@@ -270,8 +270,8 @@ export default class Resend implements Context {
             throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
         }
 
-        const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
-        const streamDefinition = { streamId, partition}
+        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
+        const streamDefinition = { streamId, partition }
 
         /* eslint-disable no-await-in-loop */
         const start = Date.now()
