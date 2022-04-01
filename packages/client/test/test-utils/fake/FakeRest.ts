@@ -21,21 +21,6 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         this.storageNodeRegistry = storageNodeRegistry as unknown as FakeStorageNodeRegistry
     }
 
-    async get<T extends object>(urlParts: UrlParts, options: FetchOptions = {}): Promise<T> {
-        const url = urlParts.map((p) => encodeURIComponent(p)).join('/')
-        const request = FakeRest.getResendRequest(url)
-        if ((request !== undefined) && (request.resendType === 'last')) {
-            const { count, format } = options.query!
-            if (format === undefined) { // by default in "object" format
-                const storageNode = await this.storageNodeRegistry.getRandomStorageNodeFor(request.streamPartId)
-                const msgs = await storageNode.getLast(request.streamPartId, count)
-                return msgs.map((m) => m.toObject()) as any
-            }
-        }
-        throw new Error('not implemented: ' + url)
-    }
-
-    // TODO reduce copy-paste between get() and fetchStream()
     async fetchStream(url: string): Promise<Readable> {
         const request = FakeRest.getResendRequest(url)
         if (request !== undefined) {
@@ -99,6 +84,10 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
 
     // eslint-disable-next-line class-methods-use-this
     request(_urlParts: UrlParts, _opts: FetchOptions): Promise<Response> {
+        throw new Error('not implemented')
+    }
+
+    get<T extends object>(_urlParts: UrlParts, _options: FetchOptions = {}): Promise<T> {
         throw new Error('not implemented')
     }
 

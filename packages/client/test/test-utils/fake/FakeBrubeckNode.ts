@@ -61,8 +61,10 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
             .forEach(async (n) => {
                 const networkNode = await n.getNode()
                 if (networkNode.subsciptions.has(msg.getStreamPartID())) {
-                    const deserialized = StreamMessage.deserialize(serialized)
-                    networkNode.messageListeners.forEach((listener) => listener(deserialized))
+                    networkNode.messageListeners.forEach((listener) => {
+                        const deserialized = StreamMessage.deserialize(serialized)
+                        listener(deserialized)
+                    })
                 }
             })
     }
