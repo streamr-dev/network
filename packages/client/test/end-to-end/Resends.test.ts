@@ -616,20 +616,4 @@ describeRepeats('resends', () => {
         const messages = await sub.collectContent()
         expect(messages).toEqual([publishedMessage])
     })
-
-    it('getStreamLast', async () => {
-        const stream2 = await client.createStream({
-            id: await createRelativeTestStreamId(module),
-        })
-
-        // does error if has no storage assigned
-        await expect(async () => {
-            await client.getStreamLast(stream2.id)
-        }).rejects.toThrow()
-
-        // does not error if has storage assigned
-        await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const result = await client.getStreamLast(stream2.id)
-        expect(result).toEqual([])
-    })
 })
