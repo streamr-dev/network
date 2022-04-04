@@ -11,7 +11,7 @@ import type { AuthenticatedConfig } from '../Ethereum'
 import { ConfigInjectionToken } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Signer {
+export class Signer {
     signData
     constructor(@inject(ConfigInjectionToken.Auth) authOptions: AuthenticatedConfig) {
         this.signData = Signer.getSigningFunction(authOptions)

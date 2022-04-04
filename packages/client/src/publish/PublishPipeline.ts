@@ -12,7 +12,7 @@ import { Stoppable } from '../utils/Stoppable'
 
 import { MessageCreator } from './MessageCreator'
 import { BrubeckNode } from '../BrubeckNode'
-import Signer from './Signer'
+import { Signer } from './Signer'
 import { Encrypt } from './Encrypt'
 import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
