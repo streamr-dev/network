@@ -13,7 +13,7 @@ import {
     createRelativeTestStreamId
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Resend from '../../src/subscribe/Resends'
+import { Resends } from '../../src/subscribe/Resends'
 
 import { Stream } from '../../src/Stream'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -33,7 +33,7 @@ describeRepeats('resends', () => {
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
-    let subscriber: Resend
+    let subscriber: Resends
 
     beforeAll(async () => {
         client = new StreamrClient({

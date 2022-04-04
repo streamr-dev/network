@@ -4,7 +4,7 @@ import { Subscription } from './Subscription'
 import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { ConfigInjectionToken } from '../Config'
 import { OrderMessages } from './OrderMessages'
-import Resends, { ResendOptions } from './Resends'
+import { ResendOptions, Resends } from './Resends'
 import EventEmitter from 'eventemitter3'
 import { DestroySignal } from '../DestroySignal'
 

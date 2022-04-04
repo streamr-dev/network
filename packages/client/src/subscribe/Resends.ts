@@ -69,7 +69,7 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Resend implements Context {
+export class Resends implements Context {
     readonly id
     readonly debug
 
