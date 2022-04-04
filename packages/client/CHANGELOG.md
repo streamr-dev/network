@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - method `unRegisterStorageEventListeners()` replaced with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
 - Resent event:
   - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
+- Behavior changes: 
+  - resends support multiple storage nodes (the data is fetched from a random storage node)
 
 ### Deprecated
 
