@@ -10,7 +10,7 @@ import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class PublisherEncryption implements Stoppable {
+export class Encrypt implements Stoppable {
     isStopped = false
 
     constructor(
