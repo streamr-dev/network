@@ -10,7 +10,7 @@ import { Context, ContextError } from '../utils/Context'
 import { PushPipeline, Pipeline } from '../utils/Pipeline'
 import { Stoppable } from '../utils/Stoppable'
 
-import StreamMessageCreator from './MessageCreator'
+import { MessageCreator } from './MessageCreator'
 import { BrubeckNode } from '../BrubeckNode'
 import Signer from './Signer'
 import { Encrypt } from './Encrypt'
@@ -72,7 +72,7 @@ export default class PublishPipeline implements Context, Stoppable {
     constructor(
         context: Context,
         private node: BrubeckNode,
-        private messageCreator: StreamMessageCreator,
+        private messageCreator: MessageCreator,
         private signer: Signer,
         private validator: Validator,
         private destroySignal: DestroySignal,
