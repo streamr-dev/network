@@ -67,6 +67,7 @@ jobs:
       image_name: streamr/tracker
       test_script: |
         for (( i=0; i < 5; i=i+1 )); do
+            docker inspect --format '{{json .State.Health }}' streamr-dev-tracker-1
             curl -s http://localhost:30301/topology;
             res=$?;
             if test "$res" != "0"; then
