@@ -1,7 +1,7 @@
 import pLimit from 'p-limit'
 
 import { MaybeAsync } from '../types'
-import AggregatedError from './AggregatedError'
+import { AggregatedError } from './AggregatedError'
 
 /**
  * Takes a sequence of async steps & a check function.
