@@ -35,25 +35,19 @@ describe('Resends', () => {
 
         it('no match', async () => {
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const mockId = Date.now()
             const msg = new StreamMessage({
                 messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {
-                    mockId
-                }
+                content: {}
             })
-            await client.publish(stream.id, msg.getParsedContent())
-            const collectedIds: Set<number> = new Set()
+            const publishedMsg = await client.publish(stream.id, msg.getParsedContent())
+            const messageMatchFn = jest.fn().mockReturnValue(false)
             await expect(() => client.waitForStorage(msg, {
-                interval: 100,
-                timeout: 4000,
+                interval: 50,
+                timeout: 100,
                 count: 1,
-                messageMatchFn: (_msgTarget: StreamMessage, msgGot: StreamMessage) => {
-                    collectedIds.add((msgGot.getParsedContent() as any).mockId)
-                    return false
-                }
+                messageMatchFn
             })).rejects.toThrow('timed out')
-            expect(Array.from(collectedIds)).toEqual([mockId])
+            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), publishedMsg)
         })
 
         it('no message', async () => {
@@ -63,8 +57,8 @@ describe('Resends', () => {
                 content: {}
             })
             await expect(() => client.waitForStorage(msg, {
-                interval: 100,
-                timeout: 2000,
+                interval: 50,
+                timeout: 100,
                 count: 1,
                 messageMatchFn: () => {
                     return true
@@ -78,9 +72,6 @@ describe('Resends', () => {
                 content: {}
             })
             await expect(() => client.waitForStorage(msg, {
-                interval: 100,
-                timeout: 2000,
-                count: 1,
                 messageMatchFn: () => {
                     return true
                 }
