@@ -16,7 +16,7 @@ import { Stoppable } from '../utils/Stoppable'
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { Ethereum } from '../Ethereum'
-import StreamPartitioner from './StreamPartitioner'
+import { StreamPartitioner } from './StreamPartitioner'
 
 export type MessageCreateOptions<T = unknown> = {
     content: T,

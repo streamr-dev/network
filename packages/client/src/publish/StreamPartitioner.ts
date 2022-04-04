@@ -10,7 +10,7 @@ import { StreamEndpointsCached } from '../StreamEndpointsCached'
 export type PartitionKey = string | number | undefined
 
 @scoped(Lifecycle.ContainerScoped)
-export default class StreamPartitioner {
+export class StreamPartitioner {
     constructor(
         private streamEndpoints: StreamEndpointsCached,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
