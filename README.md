@@ -16,6 +16,7 @@ Monorepo for Streamr Network packages.
 * [protocol](packages/protocol/README.md) (streamr-client-protocol)
 * [test-utils](packages/test-utils/README.md) (streamr-test-utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
+* [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
 
 ## CI Status
 
@@ -24,6 +25,7 @@ Monorepo for Streamr Network packages.
 [![Protocol – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/protocol.yml)
 [![Broker – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/broker.yml)
 [![Network – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/network.yml)
+[![Tracker – Lint, Test and Publish](https://github.com/streamr-dev/monorepo/actions/workflows/tracker.yml/badge.svg)](https://github.com/streamr-dev/monorepo/actions/workflows/tracker.yml)
 
 ## Install
 | NodeJS version `16.13.x` and NPM version `8.x` is required |
