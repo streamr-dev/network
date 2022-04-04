@@ -26,7 +26,7 @@ type ScaffoldOptions = {
 
 const noop = () => {}
 
-export default function Scaffold(
+export function Scaffold(
     sequence: Step[] = [],
     _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
