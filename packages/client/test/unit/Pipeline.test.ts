@@ -1,4 +1,4 @@
-import IteratorTest, { expected, MAX_ITEMS } from './IteratorTest'
+import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 import { wait } from 'streamr-test-utils'
 
 import { Pipeline, PushPipeline } from '../../src/utils/Pipeline'
