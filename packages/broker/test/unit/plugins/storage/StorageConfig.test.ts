@@ -1,7 +1,8 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID} from 'streamr-client-protocol'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
+import { range } from 'lodash'
 
 const { parse } = StreamPartIDUtils
 
@@ -16,7 +17,10 @@ const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
 function makeStubStream(streamId: string): Stream {
     return {
         id: toStreamID(streamId),
-        partitions: PARTITION_COUNT_LOOKUP[streamId]
+        partitions: PARTITION_COUNT_LOOKUP[streamId],
+        getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
+            return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+        }
     } as Stream
 }
 
