@@ -9,7 +9,7 @@ import Signal from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
-import SubscribePipeline from './SubscribePipeline'
+import { SubscribePipeline } from './SubscribePipeline'
 import { BrubeckContainer } from '../Container'
 import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
 

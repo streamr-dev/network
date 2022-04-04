@@ -17,7 +17,7 @@ import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
-export default function SubscribePipeline<T = unknown>(
+export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
     streamPartId: StreamPartID,
     context: Context,

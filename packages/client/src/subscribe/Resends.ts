@@ -9,7 +9,7 @@ import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
-import SubscribePipeline from './SubscribePipeline'
+import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
