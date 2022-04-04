@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
-import BrubeckNode from '../../src/BrubeckNode'
+import { BrubeckNode } from '../../src/BrubeckNode'
 import Publisher from '../../src/publish/Publisher'
 import { initContainer } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'

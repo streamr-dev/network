@@ -11,7 +11,7 @@ import { MessageStream } from './MessageStream'
 import { Subscription } from './Subscription'
 import SubscribePipeline from './SubscribePipeline'
 import { BrubeckContainer } from '../Container'
-import BrubeckNode, { NetworkNodeStub } from '../BrubeckNode'
+import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
 
 /**
  * Manages adding & removing subscriptions to node as needed.

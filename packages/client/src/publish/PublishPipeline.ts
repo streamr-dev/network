@@ -11,7 +11,7 @@ import { PushPipeline, Pipeline } from '../utils/Pipeline'
 import { Stoppable } from '../utils/Stoppable'
 
 import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from '../BrubeckNode'
+import { BrubeckNode } from '../BrubeckNode'
 import Signer from './Signer'
 import Encrypt from './Encrypt'
 import Validator from '../Validator'

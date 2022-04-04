@@ -1,6 +1,6 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
-import BrubeckNode from '../../../src/BrubeckNode'
+import { BrubeckNode } from '../../../src/BrubeckNode'
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig } from '../../../src/Config'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { AuthConfig } from '../../../src/Ethereum'

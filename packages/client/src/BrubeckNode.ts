@@ -36,7 +36,7 @@ export interface NetworkNodeStub {
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class BrubeckNode implements Context {
+export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
     /** @internal */
