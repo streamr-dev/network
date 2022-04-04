@@ -6,7 +6,7 @@ import { getSidechainTestWallet, tokenAdminWalletSidechain } from '../devEnviron
 import { ConfigTest } from '../../../src/ConfigTest'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
 import { createMockAddress, expectInvalidAddress } from '../../test-utils/utils'
-import authFetch from '../../../src/authFetch'
+import { authFetch } from '../../../src/authFetch'
 import { getEndpointUrl } from '../../../src/utils'
 import { fastWallet } from 'streamr-test-utils'
 

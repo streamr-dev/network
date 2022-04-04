@@ -2,7 +2,7 @@ import { Server } from 'http'
 import express, { Application } from 'express'
 import { wait } from 'streamr-test-utils'
 
-import authFetch from '../../src/authFetch'
+import { authFetch } from '../../src/authFetch'
 import * as utils from '../../src/utils'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
