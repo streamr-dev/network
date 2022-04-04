@@ -9,7 +9,7 @@ import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, createStrictConfig } from './Config'
 import { BrubeckContainer } from './Container'
 
-import Publisher from './publish/Publisher'
+import { Publisher } from './publish/Publisher'
 import Subscriber from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import Resends, { ResendOptions } from './subscribe/Resends'

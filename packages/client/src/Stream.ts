@@ -7,7 +7,7 @@ import { inspect } from './utils/log'
 
 import { Rest } from './Rest'
 import Resends from './subscribe/Resends'
-import Publisher from './publish/Publisher'
+import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './StreamRegistry'
 import { Ethereum } from './Ethereum'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
