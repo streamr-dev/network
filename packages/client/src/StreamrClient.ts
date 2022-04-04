@@ -10,7 +10,7 @@ import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, c
 import { BrubeckContainer } from './Container'
 
 import { Publisher } from './publish/Publisher'
-import Subscriber from './subscribe/Subscriber'
+import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'

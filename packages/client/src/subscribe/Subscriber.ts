@@ -16,7 +16,7 @@ import { range } from 'lodash'
  */
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Subscriber implements Context {
+export class Subscriber implements Context {
     readonly id
     readonly debug
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()

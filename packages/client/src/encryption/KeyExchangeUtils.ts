@@ -12,7 +12,7 @@ import { pOnce, Defer, instanceId, Deferred } from '../utils'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 
-import Subscriber from '../subscribe/Subscriber'
+import { Subscriber } from '../subscribe/Subscriber'
 import { Publisher } from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
 import { Ethereum } from '../Ethereum'

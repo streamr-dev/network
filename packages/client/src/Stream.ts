@@ -25,7 +25,7 @@ import { range } from 'lodash'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
 import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
-import Subscriber from './subscribe/Subscriber'
+import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 

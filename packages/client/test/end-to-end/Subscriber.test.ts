@@ -14,7 +14,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import { Subscription } from '../../src/subscribe/Subscription'
-import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscriber } from '../../src/subscribe/Subscriber'
 import { ConfigTest, StreamDefinition } from '../../src'
 
 const MAX_ITEMS = 3
