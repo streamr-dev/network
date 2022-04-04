@@ -12,7 +12,7 @@ import {
 } from './KeyExchangeUtils'
 
 import { EncryptionUtil, GroupKey } from './Encryption'
-import GroupKeyStoreFactory from './GroupKeyStoreFactory'
+import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {

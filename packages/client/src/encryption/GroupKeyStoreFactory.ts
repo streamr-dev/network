@@ -12,7 +12,7 @@ import { GroupKey } from './Encryption'
 import { StreamID } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class GroupKeyStoreFactory implements Context {
+export class GroupKeyStoreFactory implements Context {
     /** @internal */
     readonly id
     /** @internal */
