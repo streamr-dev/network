@@ -17,7 +17,7 @@ import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
 
-export { default as uuid } from './uuid'
+export { uuid } from './uuid'
 export { AggregatedError, Scaffold }
 
 export function randomString(length = 20) {
