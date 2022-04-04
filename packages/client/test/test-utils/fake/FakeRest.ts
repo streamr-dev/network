@@ -5,7 +5,7 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FetchOptions, Rest, UrlParts } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { Response } from 'node-fetch'
-import Session from '../../../src/Session'
+import { Session } from '../../../src/Session'
 import { URLSearchParams } from 'url'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }

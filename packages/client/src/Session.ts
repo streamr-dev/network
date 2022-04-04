@@ -20,7 +20,7 @@ enum State {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Session {
+export class Session {
     private state: State
     private sessionTokenPromise?: Promise<string>
     private eventEmitter: EventEmitter<State>

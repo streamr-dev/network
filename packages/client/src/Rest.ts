@@ -11,7 +11,7 @@ import { Context } from './utils/Context'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 
-import Session from './Session'
+import { Session } from './Session'
 import { BrubeckContainer } from './Container'
 import { StreamMessage } from 'streamr-client-protocol'
 import split2 from 'split2'
