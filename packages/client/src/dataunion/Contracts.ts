@@ -5,7 +5,7 @@ import { verifyMessage, Wallet } from '@ethersproject/wallet'
 import { Debug } from '../utils/log'
 import { binanceAdapterABI, dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetAmbABI, sidechainAmbABI } from './abi'
 import { BigNumber } from '@ethersproject/bignumber'
-import StreamrEthereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 import DataUnionAPI from './index'
 import { EthereumAddress } from 'streamr-client-protocol'
 import { AmbMessageHash } from './DataUnion'
@@ -19,7 +19,7 @@ function validateAddress(name: string, address: EthereumAddress) {
 }
 
 export default class Contracts {
-    ethereum: StreamrEthereum
+    ethereum: Ethereum
     factoryMainnetAddress: EthereumAddress
     factorySidechainAddress: EthereumAddress
     templateMainnetAddress: EthereumAddress

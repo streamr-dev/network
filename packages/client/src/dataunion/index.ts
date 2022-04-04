@@ -7,7 +7,7 @@ import { keccak256 } from '@ethersproject/keccak256'
 
 import { EthereumAddress } from 'streamr-client-protocol'
 
-import Ethereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 import { Rest } from '../Rest'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from '../Config'
 import { DataUnion, DataUnionDeployOptions } from './DataUnion'

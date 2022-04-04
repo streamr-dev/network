@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 
-import Ethereum from './Ethereum'
+import { Ethereum } from './Ethereum'
 import { uuid, counterId, pOnce } from './utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'

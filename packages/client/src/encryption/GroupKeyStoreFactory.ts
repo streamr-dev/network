@@ -4,7 +4,7 @@ import { CacheAsyncFn, instanceId } from '../utils'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import Ethereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
 import GroupKeyStore from './GroupKeyStore'

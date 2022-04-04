@@ -15,7 +15,7 @@ import { DestroySignal } from '../DestroySignal'
 import Subscriber from '../subscribe/Subscriber'
 import Publisher from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
-import Ethereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './Encryption'

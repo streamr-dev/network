@@ -6,7 +6,7 @@ import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import EncryptionUtil from '../encryption/Encryption'
-import Ethereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 @scoped(Lifecycle.ContainerScoped)

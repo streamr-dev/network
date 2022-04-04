@@ -10,7 +10,7 @@ import {
 } from '../../../src/permission'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
-import Ethereum from '../../../src/Ethereum'
+import { Ethereum } from '../../../src/Ethereum'
 import { NotFoundError } from '../../../src/authFetch'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src'
