@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { ethers } from 'ethers'
 import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
-import EncryptionUtil, { GroupKey } from '../../src/encryption/Encryption'
+import { GroupKey, EncryptionUtil } from '../../src/encryption/Encryption'
 
 const { StreamMessage, MessageID } = MessageLayer
 

@@ -11,7 +11,7 @@ import {
     KeyExchangeStream,
 } from './KeyExchangeUtils'
 
-import EncryptionUtil, { GroupKey } from './Encryption'
+import { EncryptionUtil, GroupKey } from './Encryption'
 import GroupKeyStoreFactory from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 
