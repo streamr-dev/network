@@ -7,7 +7,7 @@ import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { Ethereum } from '../Ethereum'
 
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
-import GroupKeyStore from './GroupKeyStore'
+import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './Encryption'
 import { StreamID } from 'streamr-client-protocol'
 
