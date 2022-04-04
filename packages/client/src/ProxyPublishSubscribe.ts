@@ -5,7 +5,7 @@ import { BrubeckNode } from './BrubeckNode'
 import { ProxyDirection } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class ProxyPublishSubscribe {
+export class ProxyPublishSubscribe {
     constructor(
         private node: BrubeckNode,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,

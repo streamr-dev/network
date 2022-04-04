@@ -11,7 +11,7 @@ import { BrubeckContainer } from './Container'
 
 import Publisher from './publish/Publisher'
 import Subscriber from './subscribe/Subscriber'
-import ProxyPublishSubscribe from './ProxyPublishSubscribe'
+import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import Resends, { ResendOptions } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { BrubeckNode } from './BrubeckNode'
