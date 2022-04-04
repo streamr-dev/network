@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 
 const { ErrorMessage, RelayMessage } = TrackerLayer

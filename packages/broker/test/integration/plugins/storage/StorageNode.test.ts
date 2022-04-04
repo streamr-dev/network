@@ -1,4 +1,4 @@
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
 import {
     fetchPrivateKeyWithGas,

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { OverlayTopology } from '../../src/logic/tracker/OverlayTopology'
+import { OverlayTopology } from '../../../network-tracker/src/logic/OverlayTopology'
 
 const numOfRounds = 10
 const numOfNeighbors = 4

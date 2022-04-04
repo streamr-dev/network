@@ -1,10 +1,9 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from 'streamr-test-utils'
 import { toStreamID, TrackerLayer, toStreamPartID } from 'streamr-client-protocol'
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/node/Node'
+import { createNetworkNode } from '../../src/composition'
+import { Event as NodeEvent } from '../../src/logic/Node'
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions

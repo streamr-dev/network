@@ -23,6 +23,7 @@
         "packages/client",
         "packages/dev-config",
         "packages/network",
+        "packages/network-tracker",
         "packages/protocol",
         "packages/test-utils"
     ],

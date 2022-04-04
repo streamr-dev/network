@@ -1,11 +1,11 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker, startTracker } from '@streamr/network-tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray, wait } from 'streamr-test-utils'
 import { TrackerLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { Event as NodeEvent } from '../../src/logic/node/Node'
+import { Event as NodeEvent } from '../../src/logic/Node'
 import { getStreamParts } from '../utils'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?

@@ -1,8 +1,10 @@
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { MetricsContext, Tracker } from '../src/composition'
-import { PeerInfo } from '../src/connection/PeerInfo'
-import { ServerWsEndpoint, startHttpServer } from '../src/connection/ws/ServerWsEndpoint'
-import { Node } from '../src/logic/node/Node'
+import { MetricsContext } from '../dist/src/helpers/MetricsContext'
+import { Tracker } from '@streamr/network-tracker'
+import { PeerInfo } from '../dist/src/connection/PeerInfo'
+import { startHttpServer } from '../dist/src/connection/ws/ServerWsEndpoint'
+import { Node } from '../src/logic/Node'
+import { ServerWsEndpoint } from '../dist/src/connection/ws/ServerWsEndpoint'
 
 export const startServerWsEndpoint = async (
     host: string,
@@ -16,7 +18,7 @@ export const startServerWsEndpoint = async (
         port: port
     }
     const httpServer = await startHttpServer(listen, undefined, undefined)
-    return  new ServerWsEndpoint(listen, false, httpServer, peerInfo, metricsContext, pingInterval)
+    return new ServerWsEndpoint(listen, false, httpServer, peerInfo, metricsContext, pingInterval)
 }
 
 export const createStreamPartId = (streamIdAsStr: string, streamPartition: number): StreamPartID => {

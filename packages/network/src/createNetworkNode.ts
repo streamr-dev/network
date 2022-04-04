@@ -4,13 +4,13 @@ import { MetricsContext } from './helpers/MetricsContext'
 import { TrackerInfo, AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
 import { NodeToNode } from './protocol/NodeToNode'
-import { RtcSignaller } from './logic/node/RtcSignaller'
-import { NetworkNode } from './logic/node/NetworkNode'
+import { RtcSignaller } from './logic/RtcSignaller'
+import { NetworkNode } from './logic/NetworkNode'
 import { NegotiatedProtocolVersions } from './connection/NegotiatedProtocolVersions'
 import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
-import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from './connection/NodeWebRtcConnection'
+import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from './connection/webrtc/NodeWebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],

@@ -1,10 +1,10 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker, startTracker } from '@streamr/network-tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
 import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { Event as NodeEvent } from '../../src/logic/node/Node'
-import { startTracker, createNetworkNode } from '../../src/composition'
+import { Event as NodeEvent } from '../../src/logic/Node'
+import { createNetworkNode } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 

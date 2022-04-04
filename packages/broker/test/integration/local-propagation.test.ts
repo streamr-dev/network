@@ -1,6 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, startTestTracker } from '../utils'

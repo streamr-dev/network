@@ -1,12 +1,11 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { startTracker } from '../../src/composition'
 import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
-import { DisconnectionCode, Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const trackerPort = 38482

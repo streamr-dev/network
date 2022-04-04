@@ -1,5 +1,5 @@
 import StreamrClient, { StreamPermission } from 'streamr-client'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
 import { createClient, fetchPrivateKeyWithGas, Queue, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'

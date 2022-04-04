@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events'
-import { ConstructorOptions, WebRtcConnection } from '../connection/WebRtcConnection'
+import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
 import { Logger } from "../helpers/Logger"
 import { NameDirectory } from "../NameDirectory"
-import { WebRtcConnectionFactory } from "../connection/WebRtcEndpoint"
+import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"
 import { DescriptionType } from 'node-datachannel'
 
