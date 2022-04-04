@@ -33,7 +33,7 @@ export enum TRIGGER_TYPE {
  * ```
  */
 
-export default class Signal<ArgsType extends any[] = []> {
+export class Signal<ArgsType extends any[] = []> {
     static TRIGGER_TYPE = TRIGGER_TYPE
     /**
      *  Create a Signal's listen function with signal utility methods attached.

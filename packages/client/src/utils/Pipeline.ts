@@ -4,7 +4,7 @@ import { iteratorFinally } from './iterators'
 import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions, PullOptions } from './PushBuffer'
 import { ContextError, Context } from './Context'
 import * as G from './GeneratorUtils'
-import Signal, { ErrorSignal } from './Signal'
+import { ErrorSignal, Signal } from './Signal'
 
 export type PipelineTransform<InType = any, OutType = any> = (src: AsyncGenerator<InType>) => AsyncGenerator<OutType>
 export type FinallyFn = ((err?: Error) => void | Promise<void>)
