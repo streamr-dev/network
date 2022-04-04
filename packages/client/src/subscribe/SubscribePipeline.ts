@@ -7,7 +7,7 @@ import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID 
 import OrderMessages from './OrderMessages'
 import { MessageStream } from './MessageStream'
 
-import Validator from '../Validator'
+import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
 import { Context } from '../utils/Context'
