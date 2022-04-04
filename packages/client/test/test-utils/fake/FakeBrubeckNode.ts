@@ -62,6 +62,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
                 const networkNode = await n.getNode()
                 if (networkNode.subscriptions.has(msg.getStreamPartID())) {
                     networkNode.messageListeners.forEach((listener) => {
+                        // return a clone as client mutates message when it decrypts messages
                         const deserialized = StreamMessage.deserialize(serialized)
                         listener(deserialized)
                     })
