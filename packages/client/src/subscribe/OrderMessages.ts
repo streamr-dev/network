@@ -18,7 +18,7 @@ import { SubscribeConfig } from '../Config'
  * Implements gap filling
  */
 @injectable()
-export default class OrderMessages<T> implements Context {
+export class OrderMessages<T> implements Context {
     readonly id
     readonly debug
     stopSignal = Signal.once()
