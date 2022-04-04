@@ -10,7 +10,7 @@ import { Context, ContextError } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
 import { StreamEndpoints } from '../StreamEndpoints'
-import PublishPipeline, { PublishMetadata } from './PublishPipeline'
+import { PublishMetadata, PublishPipeline } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
 import { BrubeckNode } from '../BrubeckNode'

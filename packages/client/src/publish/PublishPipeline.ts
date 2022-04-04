@@ -58,7 +58,7 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export default class PublishPipeline implements Context, Stoppable {
+export class PublishPipeline implements Context, Stoppable {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
