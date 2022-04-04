@@ -1,5 +1,5 @@
 import { DependencyContainer } from 'tsyringe'
-import SubscriptionSession from './SubscriptionSession'
+import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription } from './Subscription'
 import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { ConfigInjectionToken } from '../Config'

@@ -4,7 +4,7 @@
  */
 import { StreamPartID } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
-import SubscriptionSession from './SubscriptionSession'
+import { SubscriptionSession } from './SubscriptionSession'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
 

@@ -1,7 +1,7 @@
 import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import SubscriptionSession from './SubscriptionSession'
+import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamID, StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'

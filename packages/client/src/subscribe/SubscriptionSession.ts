@@ -18,7 +18,7 @@ import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export default class SubscriptionSession<T> implements Context, Stoppable {
+export class SubscriptionSession<T> implements Context, Stoppable {
     readonly id
     readonly debug
     public readonly streamPartId: StreamPartID
