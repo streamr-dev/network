@@ -1,4 +1,4 @@
-import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
+import { DependencyContainer, inject, scoped, delay, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'
@@ -25,7 +25,7 @@ export class Subscriber implements Context {
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        private streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamEndpointsCached))private streamEndpoints: StreamEndpointsCached,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

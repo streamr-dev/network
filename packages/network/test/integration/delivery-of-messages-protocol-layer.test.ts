@@ -6,22 +6,23 @@ import {
     StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
+import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { NodeToNode, Event as NodeToNodeEvent } from '../../src/protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
-import { TrackerServer, Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { RtcSignaller } from "../../src/logic/node/RtcSignaller"
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { MetricsContext } from "../../src/helpers/MetricsContext"
-import { startTracker, Tracker } from "../../src/composition"
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
+import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
-
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
+
+// eslint-disable-next-line no-underscore-dangle
+declare let _streamr_electron_test: any
 
 describe('delivery of messages in protocol layer', () => {
     let signallingTracker: Tracker | undefined
@@ -156,7 +157,9 @@ describe('delivery of messages in protocol layer', () => {
         })
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.StatusMessage)
+        if (typeof _streamr_electron_test === 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.StatusMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.status).toEqual({
@@ -253,7 +256,9 @@ describe('delivery of messages in protocol layer', () => {
         )
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        if (typeof _streamr_electron_test === 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
@@ -270,7 +275,9 @@ describe('delivery of messages in protocol layer', () => {
         nodeToTracker.sendRtcConnect('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'))
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        if (typeof _streamr_electron_test === 'undefined') {
+            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))

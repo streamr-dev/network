@@ -4,47 +4,22 @@
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import {
-    ContentType,
-    EncryptionType,
-    EthereumAddress,
-    SignatureType,
-    StreamMessageType,
-    StreamPartIDUtils
-} from 'streamr-client-protocol'
 
 import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
 import { Stream } from './Stream'
-import { ErrorCode, NotFoundError } from './authFetch'
+import { ErrorCode } from './authFetch'
 import { Rest } from './Rest'
 import { StreamRegistry } from './StreamRegistry'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamIDBuilder } from './StreamIDBuilder'
-import { StreamDefinition } from './types'
 
 export interface StreamValidationInfo {
     id: string
     partitions: number
     requireSignedData: boolean
     storageDays: number
-}
-
-export interface StreamMessageAsObject { // TODO this could be in streamr-protocol
-    streamId: string
-    streamPartition: number
-    timestamp: number
-    sequenceNumber: number
-    publisherId: EthereumAddress
-    msgChainId: string
-    messageType: StreamMessageType
-    contentType: ContentType
-    encryptionType: EncryptionType
-    groupKeyId: string|null
-    content: any
-    signatureType: SignatureType
-    signature: string|null
 }
 
 const agentSettings = {
@@ -81,7 +56,7 @@ export class StreamEndpoints implements Context {
         context: Context,
         @inject(delay(() => Rest)) private readonly rest: Rest,
         @inject(delay(() => StorageNodeRegistry)) private readonly storageNodeRegistry: StorageNodeRegistry,
-        @inject(StreamRegistry) private readonly streamRegistry: StreamRegistry,
+        @inject(delay(() => StreamRegistry)) private readonly streamRegistry: StreamRegistry,
         @inject(StreamIDBuilder) private readonly streamIdBuilder: StreamIDBuilder,
     ) {
         this.id = instanceId(this)
@@ -106,32 +81,6 @@ export class StreamEndpoints implements Context {
             }
             throw err
         }
-    }
-
-    /** @internal */
-    async getStreamLast(streamDefinition: StreamDefinition, count = 1): Promise<StreamMessageAsObject[]> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        this.debug('getStreamLast %o', {
-            streamPartId,
-            count,
-        })
-        const stream = await this.streamRegistry.getStream(streamId)
-        const nodeAddresses = await stream.getStorageNodes()
-        if (nodeAddresses.length === 0) {
-            throw new NotFoundError('Stream: id=' + streamId + ' has no storage nodes!')
-        }
-        const chosenNode = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(chosenNode)
-        const normalizedStreamId = await this.streamIdBuilder.toStreamID(streamId)
-        const json = await this.rest.get<StreamMessageAsObject[]>([
-            'streams', normalizedStreamId, 'data', 'partitions', streamPartition, 'last',
-        ], {
-            query: { count },
-            useSession: false,
-            restUrl: nodeUrl
-        })
-        return json
     }
 
     async publishHttp(

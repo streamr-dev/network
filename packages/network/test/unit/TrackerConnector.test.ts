@@ -1,8 +1,8 @@
 import { wait } from 'streamr-test-utils'
 import { StreamPartID, StreamPartIDUtils, Utils } from 'streamr-client-protocol'
-import { TrackerConnector } from '../../src/logic/node/TrackerConnector'
+import { TrackerConnector } from '../../src/logic/TrackerConnector'
 import { TrackerInfo } from '../../src/identifiers'
-import { TrackerId } from '../../src/logic/tracker/Tracker'
+import { TrackerId } from '../../../network-tracker/src/logic/Tracker'
 
 const TTL_IN_MS = 10
 

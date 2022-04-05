@@ -1,10 +1,9 @@
-import { runAndWaitForEvents } from "streamr-test-utils"
-import { Tracker} from "../../src/logic/tracker/Tracker"
-import { NodeToTracker, Event as NodeToTrackerEvent } from "../../src/protocol/NodeToTracker"
-import { PeerInfo } from "../../src/connection/PeerInfo"
-import NodeClientWsEndpoint from "../../src/connection/ws/NodeClientWsEndpoint"
-import { startTracker } from "../../src/composition"
-import { Status } from "../../src/identifiers"
+import { runAndWaitForEvents } from 'streamr-test-utils'
+import { Tracker, startTracker} from '@streamr/network-tracker'
+import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
+import { PeerInfo } from '../../src/connection/PeerInfo'
+import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
+import { Status } from '../../src/identifiers'
 
 describe('Tracker disconnects from node if node sends invalid status data', () => {
     let tracker: Tracker

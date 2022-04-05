@@ -1,11 +1,10 @@
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
+import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
 
 import { wait, runAndWaitForEvents } from 'streamr-test-utils'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
-import { Event as NodeEvent } from '../../src/logic/node/Node'
+import { createNetworkNode } from '../../src/composition'
+import { Event as NodeEvent } from '../../src/logic/Node'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 
 /**

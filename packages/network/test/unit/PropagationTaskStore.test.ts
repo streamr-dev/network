@@ -1,10 +1,10 @@
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { NodeId } from '../../src/logic/node/Node'
+import { NodeId } from '../../src/identifiers'
 import { wait } from 'streamr-test-utils'
 import {
     PropagationTaskStore,
     PropagationTask
-} from '../../src/logic/node/propagation/PropagationTaskStore'
+} from '../../src/logic/propagation/PropagationTaskStore'
 import { createStreamPartId } from '../utils'
 
 function makeTask(streamId: string, partition: number, ts: number, neighbors: string[]): PropagationTask {

@@ -115,7 +115,7 @@ module.exports = (env, argv) => {
                 'node-fetch': path.resolve('./src/shim/node-fetch.ts'),
                 'streamr-client-protocol': path.resolve('../protocol/src'),
                 'streamr-network': path.resolve('../network/src/browser.ts'),
-                [path.join(__dirname, '../network/src/connection/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/BrowserWebRtcConnection.ts'),
+                [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/webrtc/BrowserWebRtcConnection.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
                 [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: require.resolve('streamr-network/src/helpers/logger/LoggerBrowser.ts'),

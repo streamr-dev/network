@@ -1,13 +1,13 @@
-import { MetricsContext, startTracker } from '../../src/composition'
+import { MetricsContext } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
-import { Tracker, Event as TrackerEvent } from '../../src/logic/tracker/Tracker'
+import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { Event as EndpointEvent } from '../../src/connection/IWebRtcEndpoint'
-import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
+import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {

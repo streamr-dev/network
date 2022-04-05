@@ -1,5 +1,5 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream, Queue, fetchPrivateKeyWithGas, startTestTracker } from '../../../utils'

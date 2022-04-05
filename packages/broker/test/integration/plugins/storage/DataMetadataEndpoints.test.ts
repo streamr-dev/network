@@ -1,5 +1,5 @@
 import http from 'http'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
 import StreamrClient, { Stream } from 'streamr-client'
 import {

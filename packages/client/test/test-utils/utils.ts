@@ -533,8 +533,7 @@ export function getPublishTestMessages(
 
 export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (lastPublished: StreamMessage, opts = {}) => {
-        // @ts-expect-error
-        return client.publisher.waitForStorage(lastPublished, {
+        return client.waitForStorage(lastPublished, {
             ...defaultOpts,
             ...opts,
         })

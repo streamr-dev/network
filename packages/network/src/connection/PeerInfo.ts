@@ -1,7 +1,5 @@
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { Location } from '../identifiers'
-import { NodeId } from '../logic/node/Node'
-import { TrackerId } from '../logic/tracker/Tracker'
+import { Location, NodeId, TrackerId } from '../identifiers'
 
 export type PeerId = NodeId | TrackerId | string
 

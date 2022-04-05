@@ -1,9 +1,9 @@
 import { waitForEvent } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { Event } from "../../src/connection/ws/AbstractWsEndpoint"
+import { Event } from '../../src/connection/ws/AbstractWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
 const STATE_OPEN = 1

@@ -1,6 +1,8 @@
 import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
-import { NodeId } from './logic/node/Node'
 import { MetricsContext } from './helpers/MetricsContext'
+
+export type NodeId = string
+export type TrackerId = string
 
 export interface Rtts {
     [key: string]: number

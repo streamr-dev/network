@@ -3,7 +3,7 @@ import type { StreamRegistryV3 as StreamRegistryContract } from './ethereumArtif
 import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
-import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import { Ethereum } from './Ethereum'
 import { instanceId, until } from './utils'
@@ -66,7 +66,7 @@ export class StreamRegistry implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(StreamEndpointsCached) private streamEndpointsCached: StreamEndpointsCached
+        @inject(delay(() => StreamEndpointsCached)) private streamEndpointsCached: StreamEndpointsCached
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)

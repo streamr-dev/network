@@ -1,15 +1,14 @@
-import { Event } from '../../src/connection/IWebRtcEndpoint'
+import { Event } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { startTracker } from '../../src/composition'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { startTracker, Tracker } from '@streamr/network-tracker'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { wait } from 'streamr-test-utils'
-import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
+import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
+import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
