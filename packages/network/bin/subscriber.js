@@ -34,7 +34,8 @@ const subscriber = createNetworkNode({
     name,
     id,
     trackers: trackerInfos,
-    metricsContext
+    metricsContext,
+    webrtcDisallowPrivateAddresses: false
 })
 logger.info('started subscriber id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, metrics: %s',
     id, name, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().metrics)
