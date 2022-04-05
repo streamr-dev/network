@@ -9,7 +9,7 @@ import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
-import SubscribePipeline from './SubscribePipeline'
+import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
@@ -70,7 +70,7 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Resend implements Context {
+export class Resends implements Context {
     readonly id
     readonly debug
 

@@ -32,7 +32,7 @@ export function getCachedMessageChain(cacheConfig: CacheConfig) {
 /**
  * Manage sequenceNumber & msgChainId for StreamMessages
  */
-export default class MessageChain {
+export class MessageChain {
     private readonly streamId: StreamID
     private readonly streamPartition: number
     readonly publisherId

@@ -2,7 +2,7 @@ import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStr
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
 const MAX_MESSAGES = 10

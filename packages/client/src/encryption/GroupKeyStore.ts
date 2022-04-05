@@ -69,7 +69,7 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     }
 }
 
-export default class GroupKeyStore implements Context {
+export class GroupKeyStore implements Context {
     readonly id
     readonly debug
     store

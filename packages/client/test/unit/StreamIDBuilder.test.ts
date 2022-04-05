@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import Ethereum from '../../src/Ethereum'
+import { Ethereum } from '../../src/Ethereum'
 import { StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamDefinition } from '../../src'
 

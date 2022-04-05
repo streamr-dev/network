@@ -10,7 +10,7 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import { dataUnionAdminPrivateKey, providerSidechain } from '../devEnvironment'
 import { ConfigTest } from '../../../src/ConfigTest'
-import authFetch from '../../../src/authFetch'
+import { authFetch } from '../../../src/authFetch'
 import { BrubeckConfig } from '../../../src/Config'
 import { DataUnion } from '../../../src'
 

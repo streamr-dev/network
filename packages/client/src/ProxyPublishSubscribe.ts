@@ -1,11 +1,11 @@
 import { StreamDefinition } from './types'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import BrubeckNode from './BrubeckNode'
+import { BrubeckNode } from './BrubeckNode'
 import { ProxyDirection } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class ProxyPublishSubscribe {
+export class ProxyPublishSubscribe {
     constructor(
         private node: BrubeckNode,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,

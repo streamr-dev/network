@@ -10,14 +10,14 @@ import pkg from '../../package.json'
 import LRU from '../../vendor/quick-lru'
 import { MaybeAsync } from '../types'
 
-import AggregatedError from './AggregatedError'
-import Scaffold from './Scaffold'
+import { AggregatedError } from './AggregatedError'
+import { Scaffold } from './Scaffold'
 import { Debug } from './log'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
 
-export { default as uuid } from './uuid'
+export { uuid } from './uuid'
 export { AggregatedError, Scaffold }
 
 export function randomString(length = 20) {

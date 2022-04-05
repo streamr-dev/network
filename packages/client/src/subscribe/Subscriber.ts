@@ -1,7 +1,7 @@
 import { DependencyContainer, inject, scoped, delay, Lifecycle } from 'tsyringe'
 import { allSettledValues, instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import SubscriptionSession from './SubscriptionSession'
+import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamID, StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
@@ -16,7 +16,7 @@ import { range } from 'lodash'
  */
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Subscriber implements Context {
+export class Subscriber implements Context {
     readonly id
     readonly debug
     readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()

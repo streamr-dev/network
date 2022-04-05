@@ -4,7 +4,7 @@ import { wait } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
 import { getPublishTestStreamMessages, createTestStream, Msg } from '../test-utils/utils'

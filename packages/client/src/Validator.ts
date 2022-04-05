@@ -29,7 +29,7 @@ export class SignatureRequiredError extends StreamMessageError {
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class Validator extends StreamMessageValidator implements Stoppable, Context {
+export class Validator extends StreamMessageValidator implements Stoppable, Context {
     id
     debug
     isStopped = false

@@ -15,7 +15,7 @@ import { MaybeAsync, StreamDefinition } from '../../src/types'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
 
-import Signal from '../../src/utils/Signal'
+import { Signal } from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { StreamPermission } from '../../src/permission'

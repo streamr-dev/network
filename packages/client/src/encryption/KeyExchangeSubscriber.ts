@@ -4,15 +4,15 @@ import {
 
 import { uuid, instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import Subscriber from '../subscribe/Subscriber'
+import { Subscriber } from '../subscribe/Subscriber'
 
 import {
     GroupKeyId,
     KeyExchangeStream,
 } from './KeyExchangeUtils'
 
-import EncryptionUtil, { GroupKey } from './Encryption'
-import GroupKeyStoreFactory from './GroupKeyStoreFactory'
+import { EncryptionUtil, GroupKey } from './Encryption'
+import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {

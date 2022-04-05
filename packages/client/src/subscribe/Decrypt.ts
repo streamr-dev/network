@@ -3,7 +3,7 @@
  */
 import { StreamMessage } from 'streamr-client-protocol'
 
-import EncryptionUtil, { UnableToDecryptError } from '../encryption/Encryption'
+import { EncryptionUtil, UnableToDecryptError } from '../encryption/Encryption'
 import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { Context } from '../utils/Context'

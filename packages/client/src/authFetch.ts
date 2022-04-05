@@ -123,7 +123,7 @@ export async function authRequest<T extends object>(
 
 }
 /** @internal */
-export default async function authFetch<T extends object>(
+export async function authFetch<T extends object>(
     url: string,
     opts?: any,
     requireNewToken = false,

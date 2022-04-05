@@ -1,5 +1,5 @@
 import { instanceId } from './index'
-import Gate from './Gate'
+import { Gate } from './Gate'
 import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
 import * as G from './GeneratorUtils'

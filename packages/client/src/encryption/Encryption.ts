@@ -341,7 +341,7 @@ type InitializedEncryptionUtil = O.Overwrite<EncryptionUtil, {
     publicKey: string,
 }>
 
-export default class EncryptionUtil extends EncryptionUtilBase {
+export class EncryptionUtil extends EncryptionUtilBase {
     /**
      * Creates a new instance + waits for ready.
      * Convenience.

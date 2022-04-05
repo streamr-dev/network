@@ -6,10 +6,10 @@ import { OrderingUtil, StreamMessage, StreamPartID, MessageRef, EthereumAddress 
 
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
-import Signal from '../utils/Signal'
+import { Signal } from '../utils/Signal'
 import { instanceId } from '../utils'
 
-import Resends from './Resends'
+import { Resends } from './Resends'
 import { MessageStream } from './MessageStream'
 import { SubscribeConfig } from '../Config'
 
@@ -18,7 +18,7 @@ import { SubscribeConfig } from '../Config'
  * Implements gap filling
  */
 @injectable()
-export default class OrderMessages<T> implements Context {
+export class OrderMessages<T> implements Context {
     readonly id
     readonly debug
     stopSignal = Signal.once()

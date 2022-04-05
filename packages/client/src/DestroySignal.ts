@@ -5,7 +5,7 @@ import { scoped, Lifecycle } from 'tsyringe'
 import { instanceId } from './utils'
 
 import { Context, ContextError } from './utils/Context'
-import Signal from './utils/Signal'
+import { Signal } from './utils/Signal'
 
 /**
  * Listen to onDestroy to fire cleanup code on destroy.

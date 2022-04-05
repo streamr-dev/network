@@ -4,15 +4,15 @@ import { CacheAsyncFn, instanceId } from '../utils'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import Ethereum from '../Ethereum'
+import { Ethereum } from '../Ethereum'
 
 import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
-import GroupKeyStore from './GroupKeyStore'
+import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './Encryption'
 import { StreamID } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class GroupKeyStoreFactory implements Context {
+export class GroupKeyStoreFactory implements Context {
     /** @internal */
     readonly id
     /** @internal */

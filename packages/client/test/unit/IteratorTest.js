@@ -5,7 +5,7 @@ export const MAX_ITEMS = 3
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const WAIT = 20
 
-export default function IteratorTest(name, fn) {
+export function IteratorTest(name, fn) {
     describe(`${name} IteratorTest`, () => {
         it('runs to completion', async () => {
             const received = []

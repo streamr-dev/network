@@ -3,7 +3,7 @@ import { container, DependencyContainer } from 'tsyringe'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
-import Session from '../../src/Session'
+import { Session } from '../../src/Session'
 import { ConfigTest } from '../../src/ConfigTest'
 import { LoginEndpoints } from '../../src/LoginEndpoints'
 import { fastPrivateKey } from 'streamr-test-utils'

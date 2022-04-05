@@ -5,12 +5,12 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import EncryptionUtil from '../encryption/Encryption'
-import Ethereum from '../Ethereum'
+import { EncryptionUtil } from '../encryption/Encryption'
+import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 @scoped(Lifecycle.ContainerScoped)
-export default class PublisherEncryption implements Stoppable {
+export class Encrypt implements Stoppable {
     isStopped = false
 
     constructor(

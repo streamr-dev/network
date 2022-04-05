@@ -2,7 +2,7 @@ import debug from 'debug'
 import { pull } from 'lodash'
 import { EthereumAddress, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
-import BrubeckNode, { NetworkNodeStub } from '../../../src/BrubeckNode'
+import { BrubeckNode, NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { ActiveNodes } from './ActiveNodes'
 

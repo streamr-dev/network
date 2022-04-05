@@ -8,7 +8,7 @@ import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import Ethereum from './Ethereum'
+import { Ethereum } from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
@@ -36,7 +36,7 @@ export interface NetworkNodeStub {
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class BrubeckNode implements Context {
+export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
     /** @internal */

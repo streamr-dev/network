@@ -33,7 +33,7 @@ import { Debug } from './log'
  * gate.close() // noop
  * ```
  */
-export default class Gate implements Context {
+export class Gate implements Context {
     readonly id
     readonly debug
     isLocked = false

@@ -1,4 +1,4 @@
-import Signal from '../../src/utils/Signal'
+import { Signal } from '../../src/utils/Signal'
 import { wait } from 'streamr-test-utils'
 
 describe('Signal', () => {

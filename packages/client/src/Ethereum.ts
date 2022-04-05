@@ -73,7 +73,7 @@ export type EthereumConfig = {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-class StreamrEthereum {
+export class Ethereum {
     static generateEthereumAccount() {
         const wallet = Wallet.createRandom()
         return {
@@ -332,5 +332,3 @@ class StreamrEthereum {
         return overrides
     }
 }
-
-export default StreamrEthereum

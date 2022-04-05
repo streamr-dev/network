@@ -26,7 +26,7 @@ function joinStackTraces(errs: Error[]): string {
     return errs.flatMap((err) => getStacks(err)).filter(Boolean).join('\n')
 }
 
-export default class AggregatedError extends Error {
+export class AggregatedError extends Error {
     errors: Set<Error>
     ownMessage: string
     ownStack?: string

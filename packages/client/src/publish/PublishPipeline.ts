@@ -10,11 +10,11 @@ import { Context, ContextError } from '../utils/Context'
 import { PushPipeline, Pipeline } from '../utils/Pipeline'
 import { Stoppable } from '../utils/Stoppable'
 
-import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from '../BrubeckNode'
-import Signer from './Signer'
-import Encrypt from './Encrypt'
-import Validator from '../Validator'
+import { MessageCreator } from './MessageCreator'
+import { BrubeckNode } from '../BrubeckNode'
+import { Signer } from './Signer'
+import { Encrypt } from './Encrypt'
+import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
 import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
@@ -58,7 +58,7 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export default class PublishPipeline implements Context, Stoppable {
+export class PublishPipeline implements Context, Stoppable {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
@@ -72,7 +72,7 @@ export default class PublishPipeline implements Context, Stoppable {
     constructor(
         context: Context,
         private node: BrubeckNode,
-        private messageCreator: StreamMessageCreator,
+        private messageCreator: MessageCreator,
         private signer: Signer,
         private validator: Validator,
         private destroySignal: DestroySignal,

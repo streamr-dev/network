@@ -3,7 +3,7 @@ import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { counterId } from '../../src/utils'
 import { LeaksDetector } from '../test-utils/utils'
 
-import IteratorTest, { expected } from './IteratorTest'
+import { expected, IteratorTest } from './IteratorTest'
 
 const WAIT = 20
 

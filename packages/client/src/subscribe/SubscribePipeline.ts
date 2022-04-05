@@ -4,20 +4,20 @@
 
 import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
 
-import OrderMessages from './OrderMessages'
+import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 
-import Validator from '../Validator'
+import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
 import { Context } from '../utils/Context'
 import { ConfigInjectionToken } from '../Config'
-import Resends from './Resends'
+import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 
-export default function SubscribePipeline<T = unknown>(
+export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
     streamPartId: StreamPartID,
     context: Context,

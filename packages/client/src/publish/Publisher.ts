@@ -7,7 +7,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
-import PublishPipeline, { PublishMetadata } from './PublishPipeline'
+import { PublishPipeline, PublishMetadata } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
 import { StreamDefinition } from '../types'
@@ -15,7 +15,7 @@ import { StreamDefinition } from '../types'
 export type { PublishMetadata }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class BrubeckPublisher implements Context, Stoppable {
+export class Publisher implements Context, Stoppable {
     readonly id
     readonly debug
     streamMessageQueue

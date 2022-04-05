@@ -1,4 +1,4 @@
-import AggregatedError from '../../src/utils/AggregatedError'
+import { AggregatedError } from '../../src/utils/AggregatedError'
 
 describe('AggregatedError', () => {
     describe('new', () => {
