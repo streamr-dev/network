@@ -1,19 +1,19 @@
 import { MetricsContext } from 'streamr-network'
-import { ConsoleAndPM2Metrics } from './ConsoleAndPM2Metrics'
+import { ConsoleMetrics } from './ConsoleMetrics'
 
-// TODO remove this class and use ConsoleAndPM2Metrics directly from MetricsPlugin
+// TODO remove this class and use ConsoleMetrics directly from MetricsPlugin
 export class VolumeLogger {
 
     metricsContext: MetricsContext
-    legacyMetrics?: ConsoleAndPM2Metrics
+    legacyMetrics?: ConsoleMetrics
 
     constructor(
-        consoleAndPM2IntervalInSeconds: number,
+        consoleIntervalInSeconds: number,
         metricsContext: MetricsContext,
     ) {
         this.metricsContext = metricsContext
-        if (consoleAndPM2IntervalInSeconds > 0) {
-            this.legacyMetrics = new ConsoleAndPM2Metrics(consoleAndPM2IntervalInSeconds, metricsContext)
+        if (consoleIntervalInSeconds > 0) {
+            this.legacyMetrics = new ConsoleMetrics(consoleIntervalInSeconds, metricsContext)
         }
     }
     

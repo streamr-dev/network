@@ -29,7 +29,6 @@
   "author": "Streamr Network AG <contact@streamr.com>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
-    "@pm2/io": "^5.0.0",
     "@streamr/network-tracker": "1.0.0",
     "@streamr/slackbot": "^1.1.0",
     "@types/cors": "^2.8.12",
