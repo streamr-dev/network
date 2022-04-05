@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export * from './encryption/Encryption'
+export * from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
@@ -51,8 +51,8 @@ export {
     XOR,
     Without
 } from './Ethereum'
-export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeUtils'
-export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/Encryption'
+export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeStream'
+export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/GroupKey'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'

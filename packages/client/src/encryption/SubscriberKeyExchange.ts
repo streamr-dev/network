@@ -9,9 +9,10 @@ import { Subscriber } from '../subscribe/Subscriber'
 import {
     GroupKeyId,
     KeyExchangeStream,
-} from './KeyExchangeUtils'
+} from './KeyExchangeStream'
 
-import { EncryptionUtil, GroupKey } from './Encryption'
+import { GroupKey } from './GroupKey'
+import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 

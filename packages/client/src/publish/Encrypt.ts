@@ -2,10 +2,10 @@
  * Encrypt StreamMessages in-place.
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { PublisherKeyExchange } from '../encryption/KeyExchangePublisher'
+import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
-import { EncryptionUtil } from '../encryption/Encryption'
+import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 

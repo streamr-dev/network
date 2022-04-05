@@ -14,8 +14,9 @@ import { Context } from '../utils/Context'
 import { Publisher } from '../publish/Publisher'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
-import { EncryptionUtil, GroupKey, StreamMessageProcessingError } from './Encryption'
-import { KeyExchangeStream } from './KeyExchangeUtils'
+import { GroupKey } from './GroupKey'
+import { EncryptionUtil, StreamMessageProcessingError } from './EncryptionUtil'
+import { KeyExchangeStream } from './KeyExchangeStream'
 
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 

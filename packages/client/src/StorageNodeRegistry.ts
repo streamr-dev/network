@@ -1,5 +1,4 @@
 import { Contract } from '@ethersproject/contracts'
-import { Provider } from '@ethersproject/providers'
 import debug from 'debug'
 import type { NodeRegistry as NodeRegistryContract } from './ethereumArtifacts/NodeRegistry'
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from './ethereumArtifacts/StreamStorageRegistry'
@@ -65,7 +64,6 @@ type StorageNodeQueryResult = {
 export class StorageNodeRegistry {
 
     private clientConfig: StrictStreamrClientConfig
-    private chainProvider: Provider
     private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
     private nodeRegistryContract?: NodeRegistryContract
     private streamStorageRegistryContract?: StreamStorageRegistryContract
@@ -79,9 +77,9 @@ export class StorageNodeRegistry {
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
     ) {
         this.clientConfig = clientConfig
-        this.chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        const chainProvider = this.ethereum.getStreamRegistryChainProvider()
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
-            new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, this.chainProvider),
+            new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
         this.initStreamAssignmentEventListener('addToStorageNode', 'Added', eventEmitter)

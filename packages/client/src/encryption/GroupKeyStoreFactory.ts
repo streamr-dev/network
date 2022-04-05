@@ -6,9 +6,9 @@ import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { Ethereum } from '../Ethereum'
 
-import { EncryptionConfig, parseGroupKeys } from './KeyExchangeUtils'
+import { EncryptionConfig, parseGroupKeys } from './KeyExchangeStream'
 import { GroupKeyStore } from './GroupKeyStore'
-import { GroupKey } from './Encryption'
+import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 
 @scoped(Lifecycle.ContainerScoped)
