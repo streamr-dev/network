@@ -76,7 +76,7 @@ class EncryptionUtilBase {
     // These overrides tell ts outputInHex returns string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
-    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false) {
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex = false) {
         this.validatePublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         if (outputInHex) {

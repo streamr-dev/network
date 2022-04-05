@@ -33,7 +33,7 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject) {
     return data
 }
 
-export interface GroupKey extends GroupKeyObject {}
+export type GroupKey = GroupKeyObject
 
 export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
@@ -99,7 +99,7 @@ export class GroupKey {
         }
 
         // eslint-disable-next-line no-extra-semi
-        ;(this.constructor as typeof GroupKey).validate(this)
+        (this.constructor as typeof GroupKey).validate(this)
     }
 
     equals(other: GroupKey) {

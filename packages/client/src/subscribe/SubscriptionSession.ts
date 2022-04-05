@@ -25,7 +25,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
     /** active subs */
     subscriptions: Set<Subscription<T>> = new Set()
     pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    isRetired: boolean = false
+    isRetired = false
     isStopped = false
     pipeline
     node
