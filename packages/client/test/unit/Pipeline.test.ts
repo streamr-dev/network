@@ -1,8 +1,10 @@
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 import { wait } from 'streamr-test-utils'
 
-import { Pipeline, PushPipeline } from '../../src/utils/Pipeline'
-import { PushBuffer, PullBuffer } from '../../src/utils/PushBuffer'
+import { Pipeline } from '../../src/utils/Pipeline'
+import { PushPipeline } from '../../src/utils/PushPipeline'
+import { PushBuffer } from '../../src/utils/PushBuffer'
+import { PullBuffer } from '../../src/utils/PullBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
 
 const WAIT = 20

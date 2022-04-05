@@ -1,6 +1,6 @@
 import LeakDetector from 'jest-leak-detector'
 import crypto from 'crypto'
-import { GroupKey } from '../../src/encryption/Encryption'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { uid, describeRepeats, mockContext } from '../test-utils/utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'

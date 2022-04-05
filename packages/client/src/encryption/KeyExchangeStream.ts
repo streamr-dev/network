@@ -18,7 +18,7 @@ import { Subscription } from '../subscribe/Subscription'
 import { Ethereum } from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
-import { GroupKey, GroupKeyish } from './Encryption'
+import { GroupKey, GroupKeyish } from './GroupKey'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>

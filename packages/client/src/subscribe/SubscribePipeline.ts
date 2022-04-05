@@ -9,7 +9,7 @@ import { MessageStream } from './MessageStream'
 
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
-import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { Context } from '../utils/Context'
 import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'

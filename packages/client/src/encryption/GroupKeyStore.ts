@@ -1,6 +1,6 @@
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
-import { GroupKey } from './Encryption'
+import { GroupKey } from './GroupKey'
 import { PersistentStore } from './PersistentStore'
 
 import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'

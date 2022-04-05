@@ -10,7 +10,7 @@ import {
 } from '../test-utils/utils'
 import { Defer, pLimitFn } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { GroupKey } from '../../src/encryption/Encryption'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'

@@ -3,7 +3,7 @@ import { getPublishTestStreamMessages, createTestStream } from '../test-utils/ut
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { GroupKey } from '../../src/encryption/Encryption'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'

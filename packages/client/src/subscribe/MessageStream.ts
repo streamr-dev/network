@@ -3,7 +3,8 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
-import { PushPipeline, PipelineTransform } from '../utils/Pipeline'
+import { PipelineTransform } from '../utils/Pipeline'
+import { PushPipeline } from '../utils/PushPipeline'
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
