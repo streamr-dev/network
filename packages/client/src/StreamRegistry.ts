@@ -57,7 +57,6 @@ export class StreamRegistry implements Context {
     readonly debug
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
-    private chainProviders: Provider[]
 
     constructor(
         context: Context,
@@ -71,8 +70,8 @@ export class StreamRegistry implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        this.chainProviders = this.ethereum.getAllStreamRegistryChainProviders()
-        this.streamRegistryContractsReadonly = this.chainProviders.map((provider: Provider) => {
+        const chainProviders = this.ethereum.getAllStreamRegistryChainProviders()
+        this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return withErrorHandlingAndLogging<StreamRegistryContract>(
                 new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, provider),
                 'streamRegistry'
