@@ -10,7 +10,7 @@ import { Logger } from 'streamr-network'
 const logger = new Logger(module)
 
 export interface MetricsPluginConfig {
-    consoleAndPM2IntervalInSeconds: number
+    consoleIntervalInSeconds: number
     nodeMetrics: {
         streamIdPrefix: string
     } | null
@@ -27,7 +27,7 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.volumeLogger = new VolumeLogger(
-            this.pluginConfig.consoleAndPM2IntervalInSeconds,
+            this.pluginConfig.consoleIntervalInSeconds,
             metricsContext,
         )
 

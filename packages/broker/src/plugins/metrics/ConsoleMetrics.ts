@@ -1,5 +1,3 @@
-import io from '@pm2/io'
-import Gauge from '@pm2/io/build/main/utils/metrics/gauge'
 import { MetricsContext, Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -8,75 +6,15 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-export class ConsoleAndPM2Metrics {
+export class ConsoleMetrics {
 
     reportingIntervalSeconds: number
     metricsContext: MetricsContext
     timeout?: NodeJS.Timeout
-    brokerConnectionCountMetric: Gauge
-    eventsInPerSecondMetric: Gauge
-    eventsOutPerSecondMetric: Gauge
-    kbInPerSecondMetric: Gauge
-    kbOutPerSecondMetric: Gauge
-    storageReadPerSecondMetric: Gauge
-    storageWritePerSecondMetric: Gauge
-    storageReadKbPerSecondMetric: Gauge
-    storageWriteKbPerSecondMetric: Gauge
-    totalBufferSizeMetric: Gauge
-    ongoingResendsMetric: Gauge
-    meanResendAgeMetric: Gauge
-    totalBatchesMetric: Gauge
-    meanBatchAge: Gauge
-    messageQueueSizeMetric: Gauge
 
     constructor(reportingIntervalSeconds: number, metricsContext: MetricsContext) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
         this.metricsContext = metricsContext
-        this.brokerConnectionCountMetric = io.metric({
-            name: 'brokerConnectionCountMetric'
-        })
-        this.eventsInPerSecondMetric = io.metric({
-            name: 'eventsIn/sec'
-        })
-        this.eventsOutPerSecondMetric = io.metric({
-            name: 'eventsOut/sec'
-        })
-        this.kbInPerSecondMetric = io.metric({
-            name: 'kbIn/sec'
-        })
-        this.kbOutPerSecondMetric = io.metric({
-            name: 'kbOut/sec'
-        })
-        this.storageReadPerSecondMetric = io.metric({
-            name: 'storageRead/sec'
-        })
-        this.storageWritePerSecondMetric = io.metric({
-            name: 'storageWrite/sec'
-        })
-        this.storageReadKbPerSecondMetric = io.metric({
-            name: 'storageReadKb/sec'
-        })
-        this.storageWriteKbPerSecondMetric = io.metric({
-            name: 'storageWriteKb/sec'
-        })
-        this.totalBufferSizeMetric = io.metric({
-            name: 'totalBufferSize'
-        })
-        this.ongoingResendsMetric = io.metric({
-            name: 'ongoingResends'
-        })
-        this.meanResendAgeMetric = io.metric({
-            name: 'meanResendAge'
-        })
-        this.totalBatchesMetric = io.metric({
-            name: 'totalBatches'
-        })
-        this.meanBatchAge = io.metric({
-            name: 'meanBatchAge'
-        })
-        this.messageQueueSizeMetric = io.metric({
-            name: 'messageQueueSize'
-        })
     }
 
     start(): void {
@@ -94,21 +32,11 @@ export class ConsoleAndPM2Metrics {
     }
 
     stop(): void {
-        io.destroy()
         clearTimeout(this.timeout!)
     }
 
     async reportAndReset(): Promise<void> {
         const report = await this.metricsContext.report(true)
-
-        // @ts-expect-error not enough typing info available
-        const outPerSecond = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].outMessages.rate : 0)
-            // @ts-expect-error not enough typing info available
-            + (report.metrics['broker/http'] ? report.metrics['broker/http'].outMessages.rate : 0)
-        // @ts-expect-error not enough typing info available
-        const kbOutPerSecond = ((report.metrics['broker/ws'] ? report.metrics['broker/ws'].outBytes.rate : 0)
-            // @ts-expect-error not enough typing info available
-            + (report.metrics['broker/http'] ? report.metrics['broker/http'].outBytes.rate : 0)) / 1000
 
         let storageReadCountPerSecond = 0
         let storageWriteCountPerSecond = 0
@@ -146,12 +74,10 @@ export class ConsoleAndPM2Metrics {
 
         let ongoingResends = 0
         let resendMeanAge = 0
-        let totalBuffer = report.metrics.WebRtcEndpoint.totalWebSocketBuffer as number
         const websocketMetrics = report.metrics['broker/ws']
         if (websocketMetrics !== undefined) {
             ongoingResends = websocketMetrics.numOfOngoingResends as number
             resendMeanAge = websocketMetrics.meanAgeOfOngoingResends as number
-            totalBuffer += websocketMetrics.totalWebSocketBuffer as number
         }
 
         logger.info(
@@ -181,21 +107,5 @@ export class ConsoleAndPM2Metrics {
             totalBatches,
             meanBatchAge
         )
-
-        this.eventsOutPerSecondMetric.set(outPerSecond)
-        this.kbOutPerSecondMetric.set(kbOutPerSecond)
-        this.storageReadPerSecondMetric.set(storageReadCountPerSecond)
-        this.storageWritePerSecondMetric.set(storageWriteCountPerSecond)
-        this.storageReadKbPerSecondMetric.set(storageReadKbPerSecond)
-        this.storageWriteKbPerSecondMetric.set(storageWriteKbPerSecond)
-        this.brokerConnectionCountMetric.set(brokerConnectionCount)
-        this.totalBufferSizeMetric.set(totalBuffer)
-        this.ongoingResendsMetric.set(ongoingResends)
-        this.meanResendAgeMetric.set(resendMeanAge)
-        this.messageQueueSizeMetric.set(messageQueueSize)
-        if (report.metrics['broker/cassandra']) {
-            this.totalBatchesMetric.set(totalBatches)
-            this.meanBatchAge.set(meanBatchAge)
-        }
     }
 }

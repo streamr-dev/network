@@ -4,12 +4,12 @@
   "type": "object",
   "description": "Metrics plugin configuration",
   "required": [
-    "consoleAndPM2IntervalInSeconds",
+    "consoleIntervalInSeconds",
     "nodeMetrics"
   ],
   "additionalProperties": false,
   "properties": {
-    "consoleAndPM2IntervalInSeconds": {
+    "consoleIntervalInSeconds": {
       "type": "integer",
       "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
       "minimum": 0,
