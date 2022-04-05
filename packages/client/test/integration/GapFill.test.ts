@@ -345,7 +345,7 @@ describe('GapFill', () => {
                 }
             }
             expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            expect(calledResend).toHaveBeenCalledTimes(3)
+            expect(calledResend).toHaveBeenCalledTimes(2 * 3) // another 3 come from resend done in publishTestMessages
         })
     })
 })

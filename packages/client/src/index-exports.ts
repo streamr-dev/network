@@ -20,7 +20,7 @@ export {
     PublicPermissionAssignment
 } from './permission'
 export { UserDetails } from './LoginEndpoints'
-export { StreamValidationInfo, StreamMessageAsObject } from './StreamEndpoints'
+export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
@@ -64,10 +64,6 @@ export { formStorageNodeAssignmentStreamId } from './utils/index'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 
-// TODO should export these to support StreamMessageAsObject:
-// export {
-//   StreamMessageType, ContentType, EncryptionType, SignatureType
-// } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
 export { Contract } from '@ethersproject/contracts'
