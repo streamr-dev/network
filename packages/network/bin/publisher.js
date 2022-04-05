@@ -52,7 +52,8 @@ const publisher = createNetworkNode({
     name,
     id,
     trackers: trackerInfos,
-    metricsContext
+    metricsContext,
+    webrtcDisallowPrivateAddresses: false
 })
 logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
     id, name, program.opts().ip, program.opts().trackers.join(', '),

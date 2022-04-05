@@ -150,9 +150,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             if (connections.length > 0 && connections.length === undefinedStates.length) {
                 this.logger.warn('Cannot determine webrtc datachannel connection states')
             } else {
-                const suffix = (pendingPeerIds.length > 0) ? ', still trying to connect: %s' : ''
-                this.logger.info(`Connected to %d peers (%s)${suffix}`,
-                    connectedPeerIds.length, getPeerNameList(connectedPeerIds), getPeerNameList(pendingPeerIds))
+                const suffix = (pendingPeerIds.length > 0) ? ', trying to connect to %d peers' : ''
+                this.logger.info(`Connected to %d peers${suffix}`,
+                    connectedPeerIds.length, pendingPeerIds.length)
+                this.logger.debug(`Connected to peers: ${getPeerNameList(connectedPeerIds) || '[]'}`)
+                this.logger.debug(`Connecting to peers: ${getPeerNameList(pendingPeerIds) || '[]'}`)
             }
         }, STATUS_REPORT_INTERVAL_MS)
     }
