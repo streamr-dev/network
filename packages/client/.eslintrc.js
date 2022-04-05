@@ -1,10 +1,9 @@
 module.exports = {
-    parser: '@typescript-eslint/parser',
     plugins: [
-        '@typescript-eslint'
+        'import'
     ],
     extends: [
-        'streamr-nodejs'
+        'eslint-config-monorepo'
     ],
     parserOptions: {
         ecmaVersion: 2020,
