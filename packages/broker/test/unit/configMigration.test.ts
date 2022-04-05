@@ -243,7 +243,7 @@ describe('Config migration', () => {
                 longitude: 56.78,
                 country: 'mock-country'
             })
-            expect(target.plugins.metrics.consoleAndPM2IntervalInSeconds).toBe(123)
+            expect(target.plugins.metrics.consoleIntervalInSeconds).toBe(123)
         })
     })
 

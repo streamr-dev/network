@@ -91,7 +91,7 @@ const convertTestnet3ToV1 = (source: any): Config => {
         } else if (name === 'metrics') {
             const targetConfig: any = {}
             if (sourceConfig.consoleAndPM2IntervalInSeconds !== 0) {
-                targetConfig.consoleAndPM2IntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
+                targetConfig.consoleIntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
             }
             target.plugins.metrics = targetConfig
         } else if (['legacyWebsocket', 'legacyMqtt'].includes(name)) {
