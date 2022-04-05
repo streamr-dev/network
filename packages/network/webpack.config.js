@@ -50,7 +50,6 @@ const aliases = (env) => {
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
         [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
             path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
-        ['@pm2/io']: path.resolve(__dirname, 'src/browser/Pm2Shim.ts'),
     }
     return aliases
 }
