@@ -73,12 +73,7 @@
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/jest": "^27.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
     "async-mqtt": "^2.6.1",
-    "eslint": "^7.32.0",
-    "eslint-config-streamr-ts": "^4.0.1",
-    "eslint-plugin-promise": "^5.1.0",
     "jest": "^27.2.5",
     "jest-circus": "^27.2.5",
     "jest-extended": "^0.11.5",

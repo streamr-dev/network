@@ -1,5 +1,5 @@
 module.exports = {
-    extends: 'eslint-config-monorepo',
+    extends: 'eslint-config-streamr-ts',
     rules: {
         'no-console': ['error', {allow: ['warn', 'error', 'info']}]
     }
