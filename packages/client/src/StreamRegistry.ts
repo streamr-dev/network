@@ -49,6 +49,20 @@ type StreamPublisherOrSubscriberItem = {
     userAddress: EthereumAddress
 }
 
+const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never {
+    if (err.errors) {
+        if (err.errors.some((e: any) => {
+            return e.reason && e.reason.code === 'CALL_EXCEPTION'
+        })) {
+            throw new NotFoundError('Stream not found: id=' + streamId)
+        } else {
+            throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
+        }
+    } else {
+        throw new Error(err)
+    }
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
     /** @internal */
@@ -210,7 +224,7 @@ export class StreamRegistry implements Context {
                 return contract.getStreamMetadata(streamId)
             })
         } catch (err) {
-            this.streamContractErrorProcessor(err, streamId, 'StreamRegistry')
+            streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
         return this.parseStream(streamId, metadata)
     }
@@ -439,7 +453,7 @@ export class StreamRegistry implements Context {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
             })
         } catch (err) {
-            return this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
+            return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -450,7 +464,7 @@ export class StreamRegistry implements Context {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
             })
         } catch (err) {
-            return this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
+            return streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -464,20 +478,5 @@ export class StreamRegistry implements Context {
                 return call(contract)
             })
         ])
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    private streamContractErrorProcessor(err: any, streamId: StreamID, registry: string): never {
-        if (err.errors) {
-            if (err.errors.some((e: any) => {
-                return e.reason && e.reason.code === 'CALL_EXCEPTION'
-            })) {
-                throw new NotFoundError('Stream not found: id=' + streamId)
-            } else {
-                throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
-            }
-        } else {
-            throw new Error(err)
-        }
     }
 }
