@@ -439,7 +439,7 @@ export class StreamRegistry implements Context {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
             })
         } catch (err) {
-            this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
+            return this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -450,7 +450,7 @@ export class StreamRegistry implements Context {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
             })
         } catch (err) {
-            this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
+            return this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -466,6 +466,7 @@ export class StreamRegistry implements Context {
         ])
     }
 
+    // eslint-disable-next-line class-methods-use-this
     private streamContractErrorProcessor(err: any, streamId: StreamID, registry: string): never {
         if (err.errors) {
             if (err.errors.some((e: any) => {
