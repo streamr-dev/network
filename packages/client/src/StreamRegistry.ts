@@ -209,8 +209,8 @@ export class StreamRegistry implements Context {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
                 return contract.getStreamMetadata(streamId)
             })
-        } catch {
-            throw new NotFoundError('Stream not found: id=' + streamId)
+        } catch (err) {
+            this.streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
         return this.parseStream(streamId, metadata)
     }
@@ -438,8 +438,8 @@ export class StreamRegistry implements Context {
             return await this.queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
             })
-        } catch {
-            throw new NotFoundError('stream not found: id: ' + streamId)
+        } catch (err) {
+            this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -449,8 +449,8 @@ export class StreamRegistry implements Context {
             return await this.queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))
             })
-        } catch {
-            throw new NotFoundError('stream not found: id: ' + streamId)
+        } catch (err) {
+            this.streamContractErrorProcessor(err, streamId, 'StreamPermission')
         }
     }
 
@@ -464,5 +464,19 @@ export class StreamRegistry implements Context {
                 return call(contract)
             })
         ])
+    }
+
+    private streamContractErrorProcessor(err: any, streamId: StreamID, registry: string): never {
+        if (err.errors) {
+            if (err.errors.some((e: any) => {
+                return e.reason && e.reason.code === 'CALL_EXCEPTION'
+            })) {
+                throw new NotFoundError('Stream not found: id=' + streamId)
+            } else {
+                throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
+            }
+        } else {
+            throw new Error(err)
+        }
     }
 }
