@@ -51,9 +51,7 @@ type StreamPublisherOrSubscriberItem = {
 
 const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
     if (err.errors) {
-        if (err.errors.some((e: any) => {
-            return e.reason && e.reason.code === 'CALL_EXCEPTION'
-        })) {
+        if (err.errors.some((e: any) => e.reason?.code === 'CALL_EXCEPTION')) {
             throw new NotFoundError('Stream not found: id=' + streamId)
         } else {
             throw new Error(`Could not reach the ${registry} Smart Contract: ${err.errors[0]}`)
