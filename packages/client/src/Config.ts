@@ -168,6 +168,12 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         rpcs: [{
             url: 'https://polygon-rpc.com',
             timeout: 120 * 1000
+        }, {
+            url: 'https://poly-rpc.gateway.pokt.network/',
+            timeout: 120 * 1000
+        }, {
+            url: 'https://rpc-mainnet.matic.network',
+            timeout: 120 * 1000
         }]
     },
     tokenAddress: '0x8f693ca8D21b157107184d29D398A8D082b38b76',
