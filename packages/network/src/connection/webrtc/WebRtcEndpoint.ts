@@ -131,7 +131,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         const getPeerNameList = (peerIds: PeerId[]) => {
             return peerIds.map((peerId) => NameDirectory.getName(peerId)).join(',')
         }
-        const STATUS_REPORT_INTERVAL_MS = 10 * 1000
+        const STATUS_REPORT_INTERVAL_MS = 5 * 60 * 1000
         this.statusReportTimer = setInterval(() => {
             const connectedPeerIds = []
             const pendingPeerIds = []
