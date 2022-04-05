@@ -49,7 +49,7 @@ type StreamPublisherOrSubscriberItem = {
     userAddress: EthereumAddress
 }
 
-const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never {
+const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: string): never => {
     if (err.errors) {
         if (err.errors.some((e: any) => {
             return e.reason && e.reason.code === 'CALL_EXCEPTION'
@@ -224,7 +224,7 @@ export class StreamRegistry implements Context {
                 return contract.getStreamMetadata(streamId)
             })
         } catch (err) {
-            streamContractErrorProcessor(err, streamId, 'StreamRegistry')
+            return streamContractErrorProcessor(err, streamId, 'StreamRegistry')
         }
         return this.parseStream(streamId, metadata)
     }
