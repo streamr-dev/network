@@ -33,8 +33,6 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject) {
     return data
 }
 
-export type GroupKey = GroupKeyObject
-
 export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
 // eslint-disable-next-line no-redeclare
