@@ -11,6 +11,16 @@ import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 
+// In the client API we use the term EncryptionKey instead of GroupKey.
+// The GroupKey name comes from the protocol. TODO: we could rename all classes
+// and methods to use the term EncryptionKey (except protocol-classes, which
+// should use the protocol level term GroupKey)
+export interface UpdateEncryptionKeyOptions {
+    streamId: string,
+    distributionMethod: 'rotate' | 'rekey',
+    key?: GroupKey
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStoreFactory implements Context {
     /** @internal */

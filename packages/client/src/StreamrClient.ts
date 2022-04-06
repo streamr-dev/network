@@ -21,7 +21,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
-import { GroupKeyStoreFactory } from './encryption/GroupKeyStoreFactory'
+import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
@@ -29,6 +29,7 @@ import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { toStreamID } from 'streamr-client-protocol'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -142,6 +143,25 @@ class StreamrClientBase implements Context {
         }
         await this.subscriber.addSubscription<T>(sub)
         return sub
+    }
+
+    async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
+        const streamId = toStreamID(opts.streamId)
+        if (opts.distributionMethod === 'rotate') {
+            if (opts.key === undefined) {
+                return this.groupKeyStore.rotateGroupKey(streamId)
+            } else {
+                return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
+            }
+        } else if (opts.distributionMethod === 'rekey') {
+            if (opts.key === undefined) {
+                return this.groupKeyStore.rekey(streamId)
+            } else {
+                throw new Error('Explicit key not supported in rekey')
+            }
+        } else {
+            throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
+        }
     }
 
     connect = pOnce(async () => {

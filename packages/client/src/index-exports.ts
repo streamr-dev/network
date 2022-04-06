@@ -53,6 +53,7 @@ export {
 } from './Ethereum'
 export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeStream'
 export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/GroupKey'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
