@@ -88,7 +88,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    createOrUpdateNodeInStorageNodeRegistry(_nodeMetadata: string): Promise<void> {
+    createOrUpdateNodeInStorageNodeRegistry(_httpUrl: string): Promise<void> {
         throw new Error('not implemented')
     }
 

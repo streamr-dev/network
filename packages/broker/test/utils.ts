@@ -255,7 +255,7 @@ export async function startStorageNode(
         },
     })
     try {
-        await client.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort}"}`)
+        await client.createOrUpdateNodeInStorageNodeRegistry(`http://127.0.0.1:${httpPort}`)
         await createAssignmentStream(client)
     } finally {
         client?.destroy()

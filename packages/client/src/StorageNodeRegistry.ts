@@ -132,11 +132,12 @@ export class StorageNodeRegistry {
         }
     }
 
-    async createOrUpdateNodeInStorageNodeRegistry(nodeMetadata: string): Promise<void> {
-        log('createOrUpdateNodeInStorageNodeRegistry %s -> %s', nodeMetadata)
+    async createOrUpdateNodeInStorageNodeRegistry(httpUrl: string): Promise<void> {
+        log('createOrUpdateNodeInStorageNodeRegistry %s', httpUrl)
+        const metadata = JSON.stringify({ http: httpUrl })
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
-        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(nodeMetadata, ethersOverrides))
+        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(metadata, ethersOverrides))
     }
 
     async removeNodeFromStorageNodeRegistry(): Promise<void> {
