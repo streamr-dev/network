@@ -45,7 +45,9 @@ describe('StorageNodeRegistry2', () => {
 
     it('creates a node', async () => {
         const url = `http://mock.com/${Date.now()}`
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(url)
+        await storageNodeClient.setStorageNodeMetadata({
+            http: url
+        })
         const createdNodeUrl = await storageNodeClient.getStorageNodeUrl(storageNodeAddress)
         expect(createdNodeUrl).toEqual(url)
     })
@@ -85,8 +87,8 @@ describe('StorageNodeRegistry2', () => {
         expect(isStored).toEqual(true)
     })
 
-    it('delete a node ', async () => {
-        await storageNodeClient.removeNodeFromStorageNodeRegistry()
+    it('delete a node', async () => {
+        await storageNodeClient.setStorageNodeMetadata(undefined)
         return expect(storageNodeClient.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
     })
 })

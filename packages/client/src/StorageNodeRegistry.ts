@@ -60,6 +60,10 @@ type StorageNodeQueryResult = {
     }
 }
 
+export interface StorageNodeMetadata {
+    http: string
+}
+
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
 
@@ -132,19 +136,15 @@ export class StorageNodeRegistry {
         }
     }
 
-    async createOrUpdateNodeInStorageNodeRegistry(httpUrl: string): Promise<void> {
-        log('createOrUpdateNodeInStorageNodeRegistry %s', httpUrl)
-        const metadata = JSON.stringify({ http: httpUrl })
+    async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
+        log('setStorageNodeMetadata %j', metadata)
         await this.connectToNodeRegistryContract()
         const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
-        await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(metadata, ethersOverrides))
-    }
-
-    async removeNodeFromStorageNodeRegistry(): Promise<void> {
-        log('removeNodeFromStorageNodeRegistry called')
-        await this.connectToNodeRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
-        await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
+        if (metadata !== undefined) {
+            await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
+        } else {
+            await waitForTx(this.nodeRegistryContract!.removeNodeSelf(ethersOverrides))
+        }
     }
 
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {

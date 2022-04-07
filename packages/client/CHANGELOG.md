@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method `getStorageNodesOf()` renamed to `getStorageNodes()`
 - Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
 - Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
-- Method `createOrUpdateNodeInStorageNodeRegistry()` now takes a http url as an argument instead of the entire metadata
+- Methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` replaced with single method `setStorageNodeMetadata()`
 - Method `stream.update()` now requires a parameter `props`
 - Storage node assignment events:
   - method `registerStorageEventListeners(listener)` replaced with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
