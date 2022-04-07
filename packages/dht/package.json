@@ -1,0 +1,46 @@
+{
+  "name": "@streamr/dht",
+  "version": "0.0.1",
+  "description": "Streamr Network DHT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/dht"
+  },
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "scripts": {
+    "build": "tsc -b tsconfig.node.json",
+    "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "coverage": "jest --coverage",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
+    "test": "jest"
+  },
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "@streamr/dev-config": "^1.0.0",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.10.6",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-streamr-ts": "^4.0.1",
+    "eslint-plugin-promise": "^5.1.0",
+    "jest": "^27.2.5",
+    "jest-circus": "^27.2.5",
+    "jest-extended": "^0.11.5",
+    "streamr-test-utils": "^2.0.0",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.5.2"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.5",
+    "pino-pretty": "^5.0.2",
+    "utf-8-validate": "^5.0.7"
+  }
+}

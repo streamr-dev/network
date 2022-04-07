@@ -1,0 +1,6 @@
+node_modules/**
+coverage/**
+dist/**
+streamr-docker-dev/**
+docs/**
+.idea/**
