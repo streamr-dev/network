@@ -131,8 +131,6 @@ type RangeRequest = BaseRequest<{
 export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/storage/query')
-        .addRecordedMetric('outBytes')
-        .addRecordedMetric('outMessages')
         .addRecordedMetric('lastRequests')
         .addRecordedMetric('fromRequests')
         .addRecordedMetric('rangeRequests')
