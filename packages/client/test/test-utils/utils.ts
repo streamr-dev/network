@@ -406,7 +406,7 @@ type PublishManyOpts = Partial<{
 }>
 
 export async function* publishManyGenerator(
-    total = 5,
+    total: number = 5,
     opts: PublishManyOpts = {}
 ): AsyncGenerator<PublishMetadata<any>> {
     const { delay = 10, sequenceNumber, timestamp, partitionKey, createMessage = Msg } = opts
@@ -464,7 +464,7 @@ export function getPublishTestStreamMessages(
     streamDefinition: StreamDefinition,
     defaultOpts: PublishTestMessageOptions = {}
 ) {
-    return async (maxMessages = 5, opts: PublishTestMessageOptions = {}) => {
+    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
             waitForLastCount,
@@ -525,7 +525,7 @@ export function getPublishTestMessages(
     defaultOpts: PublishTestMessageOptions = {}
 ) {
     const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
-    return async (maxMessages = 5, opts: PublishTestMessageOptions = {}) => {
+    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())
     }
@@ -540,7 +540,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     }
 }
 
-export async function sleep(ms = 0) {
+export async function sleep(ms: number = 0) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms)
     })

@@ -606,7 +606,7 @@ export async function allSettledValues(items: Parameters<(typeof Promise)['allSe
         .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
-export async function sleep(ms = 0) {
+export async function sleep(ms: number = 0) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms)
     })

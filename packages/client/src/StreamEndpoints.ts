@@ -88,7 +88,7 @@ export class StreamEndpoints implements Context {
         streamIdOrPath: string,
         data: any,
         requestOptions: any = {},
-        keepAlive = true
+        keepAlive: boolean = true
     ) {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('publishHttp %o', {

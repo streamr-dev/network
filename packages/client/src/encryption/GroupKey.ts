@@ -96,7 +96,6 @@ export class GroupKey {
             this.hex = Buffer.from(this.data).toString('hex')
         }
 
-        // eslint-disable-next-line no-extra-semi
         (this.constructor as typeof GroupKey).validate(this)
     }
 
