@@ -106,20 +106,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.metrics = metricsContext.create('WebRtcEndpoint')
             .addRecordedMetric('inSpeed')
             .addRecordedMetric('outSpeed')
-            .addRecordedMetric('msgSpeed')
             .addRecordedMetric('msgInSpeed')
             .addRecordedMetric('msgOutSpeed')
-            .addRecordedMetric('open')
-            .addRecordedMetric('close')
-            .addRecordedMetric('sendFailed')
             .addRecordedMetric('failedConnection')
             .addQueriedMetric('connections', () => Object.keys(this.connections).length)
-            .addQueriedMetric('pendingConnections', () => {
-                return Object.values(this.connections).filter((c) => !c.isOpen()).length
-            })
-            .addQueriedMetric('totalWebSocketBuffer', () => {
-                return Object.values(this.connections).reduce((total, c) => total + c.getBufferedAmount(), 0)
-            })
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
