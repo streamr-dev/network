@@ -147,7 +147,7 @@ export class SynchronizedGraphQLClient {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }
 
-    async sendQuery(gqlQuery: string): Promise<Object> {
+    async sendQuery(gqlQuery: string): Promise<any> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         return this.delegate.sendQuery(gqlQuery)
     }

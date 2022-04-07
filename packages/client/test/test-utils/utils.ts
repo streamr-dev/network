@@ -246,7 +246,7 @@ export class LeaksDetector {
 
     // returns a monkeypatch for leaksDetector._runGarbageCollector
     // that avoids running gc for every isLeaking check, only once.
-    private runGarbageCollectorOnce(original: Function) {
+    private runGarbageCollectorOnce(original: (...args: unknown[]) => void) {
         return (...args: any[]) => {
             if (this.didGC) {
                 return
