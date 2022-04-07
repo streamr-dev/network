@@ -26,7 +26,8 @@
         "packages/network",
         "packages/network-tracker",
         "packages/protocol",
-        "packages/test-utils"
+        "packages/test-utils",
+        "packages/dht"
     ],
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
