@@ -36,9 +36,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = new NodeClientWsEndpoint(peerInfo3, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEp3 = new NodeClientWsEndpoint(peerInfo3)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         nodeToTracker3 = new NodeToTracker(wsEp3)

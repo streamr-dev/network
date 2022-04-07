@@ -1,6 +1,5 @@
 import { Simulator } from './Simulator'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "../connection/ws/AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection_simulator'
 import fs from 'fs'
@@ -31,10 +30,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
         sslEnabled: boolean,
         httpServer: http.Server | https.Server | null,
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
         if (typeof listen !== "string") {
@@ -73,7 +71,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                     if (!this.getConnectionByPeerId(peerId)) {
                         this.acceptConnection(peerId, fromAddress)
                     } else {
-                        this.metrics.record('open:duplicateSocket', 1)
                         const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
 
                         Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
