@@ -176,7 +176,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 this.attemptProtocolVersionValidation(connection)
             })
         } else {
-            connection.once('localDescription', (type, description) => {
+            connection.once('localDescription', (_type, description) => {
                 this.rtcSignaller.sendRtcAnswer(routerId, connection.getPeerId(), connection.getConnectionId(), description)
                 this.attemptProtocolVersionValidation(connection)
             })
@@ -187,12 +187,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.once('open', () => {
             this.emit(Event.PEER_CONNECTED, connection.getPeerInfo())
-            this.metrics.record('open', 1)
         })
         connection.on('message', (message) => {
             this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
             this.metrics.record('inSpeed', message.length)
-            this.metrics.record('msgSpeed', 1)
             this.metrics.record('msgInSpeed', 1)
         })
         connection.once('close', () => {
@@ -205,7 +203,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.negotiatedProtocolVersions.removeNegotiatedProtocolVersion(targetPeerId)
             this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
             connection.removeAllListeners()
-            this.metrics.record('close', 1)
         })
         connection.on('bufferLow', () => {
             this.emit(Event.LOW_BACK_PRESSURE, connection.getPeerInfo())
@@ -398,12 +395,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         try {
             await this.connections[targetPeerId].send(message)
         } catch (err) {
-            this.metrics.record('sendFailed', 1)
             throw err
         }
 
         this.metrics.record('outSpeed', message.length)
-        this.metrics.record('msgSpeed', 1)
         this.metrics.record('msgOutSpeed', 1)
     }
 
