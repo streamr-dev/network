@@ -44,6 +44,11 @@ export class ConsoleMetrics {
         let storageWriteKbPerSecond = 0
         let totalBatches = 0
         let meanBatchAge = 0
+        let resendRate = {
+            last: 0,
+            from: 0,
+            range: 0
+        }
         if (report.metrics['broker/cassandra']) {
             // @ts-expect-error not enough typing info available
             storageReadCountPerSecond = report.metrics['broker/cassandra'].readCount.rate
@@ -72,12 +77,13 @@ export class ConsoleMetrics {
         const networkKbOutPerSecond = report.metrics.WebRtcEndpoint.outSpeed.rate / 1000
         const { messageQueueSize } = report.metrics.WebRtcEndpoint
 
-        let ongoingResends = 0
-        let resendMeanAge = 0
-        const websocketMetrics = report.metrics['broker/ws']
-        if (websocketMetrics !== undefined) {
-            ongoingResends = websocketMetrics.numOfOngoingResends as number
-            resendMeanAge = websocketMetrics.meanAgeOfOngoingResends as number
+        const storageQueryMetrics = report.metrics['broker/storage/query']
+        if (storageQueryMetrics !== undefined) {
+            resendRate = {
+                last: (storageQueryMetrics.lastRequests as any).rate,
+                from: (storageQueryMetrics.fromRequests as any).rate,
+                range: (storageQueryMetrics.rangeRequests as any).rate
+            }
         }
 
         logger.info(
@@ -89,7 +95,10 @@ export class ConsoleMetrics {
             + '\tNetwork out: %d events/s, %d kb/s\n'
             + '\tStorage read: %d events/s, %d kb/s\n'
             + '\tStorage write: %d events/s, %d kb/s\n'
-            + '\tTotal ongoing resends: %d (mean age %d ms)\n'
+            + '\tResends:\n'
+            + '\t- last: %d requests/s\n'
+            + '\t- from: %d requests/s\n'
+            + '\t- range: %d requests/s\n'
             + '\tTotal batches: %d (mean age %d ms)\n',
             brokerConnectionCount,
             networkConnectionCount,
@@ -102,8 +111,9 @@ export class ConsoleMetrics {
             formatNumber(storageReadKbPerSecond),
             formatNumber(storageWriteCountPerSecond),
             formatNumber(storageWriteKbPerSecond),
-            ongoingResends,
-            resendMeanAge,
+            resendRate.last,
+            resendRate.from,
+            resendRate.range,
             totalBatches,
             meanBatchAge
         )
