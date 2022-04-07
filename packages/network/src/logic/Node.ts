@@ -96,12 +96,6 @@ export class Node extends EventEmitter {
 
         this.metricsContext = opts.metricsContext || new MetricsContext('')
         this.metrics = this.metricsContext.create('node')
-            .addRecordedMetric('onDataReceived')
-            .addRecordedMetric('onDataReceived:invalidNumbering')
-            .addRecordedMetric('onDataReceived:gapMismatch')
-            .addRecordedMetric('onDataReceived:ignoredDuplicate')
-            .addRecordedMetric('propagateMessage')
-            .addRecordedMetric('onNodeDisconnect')
             .addFixedMetric('latency')
         this.publishMetrics = this.metricsContext.create('node/publish')
             .addRecordedMetric('bytes')
