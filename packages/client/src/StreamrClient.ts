@@ -20,7 +20,6 @@ import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
-import DataUnions from './dataunion'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
@@ -48,7 +47,6 @@ export interface StreamrClient extends Ethereum,
     Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<StorageNodeRegistry>,
-    Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
     Methods<Session>,
     Methods<Resends>,
@@ -81,7 +79,6 @@ class StreamrClientBase implements Context {
         private proxyPublishSubscribe: ProxyPublishSubscribe,
         private groupKeyStore: GroupKeyStoreFactory,
         private destroySignal: DestroySignal,
-        private dataunions: DataUnions,
         private streamRegistry: StreamRegistry,
         private storageNodeRegistry: StorageNodeRegistry,
         private streamIdBuilder: StreamIDBuilder,
@@ -99,7 +96,6 @@ class StreamrClientBase implements Context {
         Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
-        Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
         Plugin(this, this.storageNodeRegistry)
 
@@ -286,7 +282,6 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
-            c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
             c.resolve<StreamIDBuilder>(StreamIDBuilder),
@@ -310,5 +305,4 @@ export const Dependencies = {
     ProxyPublishSubscribe,
     GroupKeyStoreFactory,
     DestroySignal,
-    DataUnions,
 }

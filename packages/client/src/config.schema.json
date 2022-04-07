@@ -35,40 +35,6 @@
             "type": "string",
             "format": "ethereum-address"
         },
-        "dataUnion": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "minimumWithdrawTokenWei": {
-                    "anyOf": [{
-                        "type": "number"
-                    }, {
-                        "type": "string"
-                    }, {
-                        "type": "object"
-                    }]
-                },
-                "payForTransport": {
-                    "type": "boolean"
-                },
-                "factoryMainnetAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "factorySidechainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "templateMainnetAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                },
-                "templateSidechainAddress": {
-                    "type": "string",
-                    "format": "ethereum-address"
-                }
-            }
-        },
         "cache": {
             "type": "object",
             "additionalProperties": false,
@@ -126,42 +92,19 @@
                 }
             }
         },
-        "binanceAdapterAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
-        "binanceSmartChainAMBAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
-        "withdrawServerUrl": {
-            "type": "string",
-            "format": "uri"
-        },
         "mainChainRPCs": {
-            "anyOf": [{
-                "$ref": "#/definitions/chainConnectionInfoList"
-            }, {
-                "type": "string",
-                "format": "uri"
-            }]
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/chainConnectionInfoList"
+                },
+                {
+                    "type": "string",
+                    "format": "uri"
+                }
+            ]
         },
         "streamRegistryChainRPCs": {
             "$ref": "#/definitions/chainConnectionInfoList"
-        },
-        "dataUnionBinanceWithdrawalChainRPCs": {
-            "$ref": "#/definitions/chainConnectionInfoList"
-        },
-        "dataUnionChainRPCs": {
-            "$ref": "#/definitions/chainConnectionInfoList"
-        },
-        "tokenAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
-        "tokenSidechainAddress": {
-            "type": "string",
-            "format": "ethereum-address"
         },
         "ethereumNetworks": {
             "type": "object"
@@ -184,7 +127,11 @@
         },
         "verifySignatures": {
             "type": "string",
-            "enum": ["auto", "always", "never"]
+            "enum": [
+                "auto",
+                "always",
+                "never"
+            ]
         },
         "retryResendAfter": {
             "type": "number"
@@ -253,7 +200,9 @@
                         },
                         {
                             "type": "object",
-                            "required": [ "contractAddress" ],
+                            "required": [
+                                "contractAddress"
+                            ],
                             "additionalProperties": false,
                             "properties": {
                                 "contractAddress": {
@@ -308,19 +257,19 @@
                 }
             }
         },
-        "theGraphUrl" : {
-            "type" : "string",
+        "theGraphUrl": {
+            "type": "string",
             "format": "uri"
         },
-        "streamRegistryChainAddress" : {
+        "streamRegistryChainAddress": {
             "type": "string",
             "format": "ethereum-address"
         },
-        "storageNodeRegistryChainAddress" : {
+        "storageNodeRegistryChainAddress": {
             "type": "string",
             "format": "ethereum-address"
         },
-        "streamStorageRegistryChainAddress" : {
+        "streamStorageRegistryChainAddress": {
             "type": "string",
             "format": "ethereum-address"
         }

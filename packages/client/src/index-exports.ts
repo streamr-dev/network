@@ -28,7 +28,6 @@ export {
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    DataUnionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
     DebugConfig,
@@ -57,7 +56,6 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
 export { SignalListener } from './utils/Signal'
 export * from './types'
