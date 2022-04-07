@@ -39,6 +39,7 @@ export type SessionTokenAuthConfig = {
     sessionToken: string
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
 
 export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig> & Partial<SessionTokenAuthConfig>
