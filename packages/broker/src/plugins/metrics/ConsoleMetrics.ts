@@ -64,8 +64,6 @@ export class ConsoleMetrics {
             meanBatchAge = report.metrics['broker/cassandra'].batchManager.meanBatchAge
         }
 
-        const brokerConnectionCount = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].connections : 0)
-
         const networkConnectionCount = report.metrics.WebRtcEndpoint.connections
         // @ts-expect-error not enough typing info available
         const networkInPerSecond = report.metrics.WebRtcEndpoint.msgInSpeed.rate
@@ -88,7 +86,6 @@ export class ConsoleMetrics {
 
         logger.info(
             'Report\n'
-            + '\tBroker connections: %d\n'
             + '\tNetwork connections %d\n'
             + '\tQueued messages: %d\n'
             + '\tNetwork in: %d events/s, %d kb/s\n'
@@ -100,7 +97,6 @@ export class ConsoleMetrics {
             + '\t- from: %d requests/s\n'
             + '\t- range: %d requests/s\n'
             + '\tTotal batches: %d (mean age %d ms)\n',
-            brokerConnectionCount,
             networkConnectionCount,
             messageQueueSize,
             formatNumber(networkInPerSecond),
