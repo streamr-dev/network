@@ -76,6 +76,11 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
+    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async getStorageNodeUrl(_nodeAddress: EthereumAddress): Promise<string> {
         // return some dummy value: the receiving component passes the info to FakeRest,
         // and it is ignored there
