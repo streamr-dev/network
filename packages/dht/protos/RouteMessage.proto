@@ -7,6 +7,6 @@ message RouteMessage {
   string sourceId = 1;
   string nonce = 2;
   string destinationId = 3;
-  google.protobuf.Any message = 4;
+  google.protobuf.Any message = 4; // Contains a routed message ie. ICECandidate, ICEDescription
   string stunServer = 5; // This shouldn't ever be needed if the servers are in the open internet
 }

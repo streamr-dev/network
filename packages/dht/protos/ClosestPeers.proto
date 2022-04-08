@@ -4,10 +4,10 @@ option optimize_for = CODE_SIZE;
 
 message ClosestPeersRequest {
   string peerId = 1;
-  string nonce = 2;
+  string nonce = 2; // requestId
 }
 
 message ClosestPeersResponse {
   repeated string neighborIds = 1;
-  string nonce = 2;
+  string nonce = 2; // requestId
 }
