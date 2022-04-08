@@ -112,6 +112,7 @@ export function getVersionString() {
 
 export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['on']>[0]) {
     return new Promise((resolve, reject) => {
+        // eslint-disable-next-line prefer-const
         let onError: (error: Error) => void
         const onEvent = (value: any) => {
             emitter.off('error', onError)

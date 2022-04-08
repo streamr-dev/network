@@ -21,7 +21,7 @@ export {
 } from './permission'
 export { UserDetails } from './LoginEndpoints'
 export { StreamValidationInfo } from './StreamEndpoints'
-export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
+export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
     StreamrClientConfig,
