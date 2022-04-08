@@ -109,7 +109,9 @@ const convertV1ToV2 = (source: any): Config => {
     target.$schema = formSchemaUrl(TARGET_VERSION)
     const consoleAndPM2IntervalInSeconds = source.plugins.metrics?.consoleAndPM2IntervalInSeconds
     if ((consoleAndPM2IntervalInSeconds !== undefined) && (consoleAndPM2IntervalInSeconds !== 0)) {
-        target.plugins.metrics.consoleIntervalInSeconds = source.plugins.metrics.consoleAndPM2IntervalInSeconds
+        target.plugins.consoleMetrics = {
+            interval: source.plugins.metrics.consoleAndPM2IntervalInSeconds
+        }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
     return target as Config

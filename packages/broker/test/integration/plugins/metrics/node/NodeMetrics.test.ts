@@ -37,7 +37,6 @@ describe('NodeMetrics', () => {
             trackerPort,
             extraPlugins: {
                 metrics: {
-                    consoleIntervalInSeconds: 0,
                     nodeMetrics: {
                         streamIdPrefix
                     },
