@@ -42,7 +42,7 @@ class EmulatedTheGraphIndex {
 describe('SynchronizedGraphQLClient', () => {
 
     let theGraphIndex: EmulatedTheGraphIndex
-    let sendQuery: jest.Mock<Promise<Object>, []>
+    let sendQuery: jest.Mock<Promise<any>, []>
     let getIndexBlockNumber: jest.Mock<Promise<number>, []>
     let client: Pick<SynchronizedGraphQLClient, 'sendQuery' | 'updateRequiredBlockNumber'>
 

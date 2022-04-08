@@ -1,10 +1,9 @@
 module.exports = {
-    parser: '@typescript-eslint/parser',
     plugins: [
-        '@typescript-eslint'
+        'import'
     ],
     extends: [
-        'streamr-nodejs'
+        'eslint-config-monorepo'
     ],
     parserOptions: {
         ecmaVersion: 2020,
@@ -64,6 +63,8 @@ module.exports = {
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': ['error'],
         'no-empty-function': 'off',
+        '@typescript-eslint/ban-ts-comment': 'warn',
+        '@typescript-eslint/explicit-module-boundary-types': 'warn'
     },
     settings: {
         'import/resolver': {
