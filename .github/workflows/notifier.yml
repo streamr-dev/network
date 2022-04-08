@@ -1,0 +1,21 @@
+on:
+  workflow_run:
+    workflows: [broker]
+    types: [completed]
+
+jobs:
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: general
+          SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
+          SLACK_ICON: https://avatars.githubusercontent.com/u/8115255?s=200&v=4
+          SLACK_MESSAGE: More details on ${{ github.workflow.name }}
+          SLACK_TITLE: ${{ github.workflow.name }} run failed
+          SLACK_USERNAME: rtCamp
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
