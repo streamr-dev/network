@@ -6,3 +6,5 @@ lerna-debug.log
 *.heapsnapshot
 oldsrc
 dist
+google
+src/protocol/proto
