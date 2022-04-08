@@ -7,3 +7,4 @@ lerna-debug.log
 oldsrc
 dist
 google
+src/proto
