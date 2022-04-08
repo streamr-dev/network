@@ -16,7 +16,8 @@ jobs:
           SLACK_CHANNEL: network-log
           SLACK_COLOR: ${{ job.status }} # or a specific color like 'good' or '#ff00ff'
           SLACK_ICON: https://avatars.githubusercontent.com/u/8115255?s=200&v=4
-          SLACK_MESSAGE: More details on ${{ github.event.workflow.workflow_url }}
+          SLACK_MESSAGE: More details on ${{ github.event.workflow_run.workflow_url }} \n Artifacts at ${{ github.event.workflow_run.artifacts_url }}
           SLACK_TITLE: ${{ github.event.workflow.name }} run failed
-          SLACK_USERNAME: SlackNotifier
+          SLACK_USERNAME: Network-Monorepo-GitAction
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MSG_AUTHOR: ${{ github.event.workflow_run.workflow_url.head_commit.author.name }}
