@@ -4,4 +4,4 @@ dist/**
 streamr-docker-dev/**
 docs/**
 .idea/**
-google/**
+src/proto/**

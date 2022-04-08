@@ -7,4 +7,3 @@ lerna-debug.log
 oldsrc
 dist
 google
-src/protocol/proto

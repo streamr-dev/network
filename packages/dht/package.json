@@ -13,7 +13,7 @@
     "prebuild": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "check": "tsc -p ./tsconfig.json --noEmit",
-    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepare": "npm run build",
