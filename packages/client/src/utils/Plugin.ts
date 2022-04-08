@@ -42,6 +42,7 @@ export function Plugin<
 type MethodNames<T> = {
     // undefined extends T[K] to handle optional properties
     [K in keyof T]: (
+        // eslint-disable-next-line @typescript-eslint/ban-types
         (undefined extends T[K] ? never : T[K]) extends Function ? K : never
     )
 }[keyof T]
