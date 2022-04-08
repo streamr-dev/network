@@ -1,6 +1,6 @@
 on:
   workflow_run:
-    workflows: [Broker]
+    workflows: ["*"]
     types: [completed]
 
 jobs:
