@@ -4,7 +4,7 @@ import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
-import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { Stream } from '../../../src/Stream'
 import { Multimap } from '../utils'
 import { StreamRegistry } from '../../../src/StreamRegistry'
@@ -76,6 +76,11 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
+    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
+        throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
     async getStorageNodeUrl(_nodeAddress: EthereumAddress): Promise<string> {
         // return some dummy value: the receiving component passes the info to FakeRest,
         // and it is ignored there
@@ -88,17 +93,7 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    createOrUpdateNodeInStorageNodeRegistry(_nodeMetadata: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    removeNodeFromStorageNodeRegistry(): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    removeStreamFromStorageNode(_streamIdOrPath: string, _nodeAddress: string): Promise<void> {
+    async setStorageNodeMetadata(_metadata: StorageNodeMetadata | undefined): Promise<void> {
         throw new Error('not implemented')
     }
 

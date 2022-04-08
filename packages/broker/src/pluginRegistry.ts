@@ -7,6 +7,7 @@ import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
 import { StoragePlugin } from './plugins/storage/StoragePlugin'
 import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
+import { InfoPlugin } from './plugins/info/InfoPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
     switch (name) {
@@ -26,6 +27,8 @@ export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin
             return new BrubeckMinerPlugin(pluginOptions)
         case 'subscriber':
             return new SubscriberPlugin(pluginOptions)
+        case 'info':
+            return new InfoPlugin(pluginOptions)
         default:
             throw new Error(`Unknown plugin: ${name}`)
     }
