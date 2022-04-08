@@ -118,6 +118,7 @@ const configWizardMinimal = {
 const configWizardFull = {
     ...cloneDeep(configWizardMinimal),
     plugins: {
+        ...configWizardMinimal.plugins,
         'websocket': {
             'port': 1111
         },
@@ -190,6 +191,8 @@ describe('Config migration', () => {
                     }
                 },
                 plugins: {
+                    brubeckMiner: {},
+                    metrics: {},
                     websocket: {
                         port: 1111
                     },
