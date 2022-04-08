@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+message ClosestPeersResponse {
+  repeated string neighborIds = 1;
+  string nonce = 2;
+}

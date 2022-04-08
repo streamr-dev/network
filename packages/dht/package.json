@@ -20,7 +20,7 @@
     "test": "jest"
   },
   "dependencies": {
-
+    "@protobuf-ts/plugin": "^2.4.0"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+message ClosestPeersRequest {
+  string peerId = 1;
+  string nonce = 2;
+}
