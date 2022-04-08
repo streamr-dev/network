@@ -5,3 +5,6 @@ lerna-debug.log
 *.heapprofile
 *.heapsnapshot
 oldsrc
+dist
+google
+src/proto

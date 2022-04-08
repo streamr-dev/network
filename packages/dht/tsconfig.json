@@ -7,7 +7,8 @@
     },
     "include": [
         "src/**/*",
-        "test/**/*"
+        "test/**/*",
+        "google/**/*"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
