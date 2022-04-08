@@ -19,14 +19,14 @@
     "tracker": "bin/tracker.js"
   },
   "scripts": {
-    "build": "npm run prepare",
+    "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
     "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
-    "prepare": "tsc -b tsconfig.node.json",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json && NODE_ENV=production webpack --mode=production",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
