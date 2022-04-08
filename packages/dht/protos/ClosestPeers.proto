@@ -8,6 +8,24 @@ message ClosestPeersRequest {
 }
 
 message ClosestPeersResponse {
-  repeated string neighborIds = 1;
+  repeated Neighbor neighbor = 1;
   string nonce = 2; // requestId
+}
+
+message Neighbor {
+  string peerId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+}
+
+message ConnectivityMethod {
+  uint32 port = 2;
+  string ip = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
 }

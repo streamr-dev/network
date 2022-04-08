@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+message ConnectivityReportRequest {
+  string portNumber = 1;
+  string nonce = 2; // requestId
+}
+
+message ConnectivityReportResponse {
+  string open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  string nonce = 4; // requestId
+}
