@@ -5,7 +5,6 @@ An implementation of the Kademlia-based Streamr DHT used for the trackerless net
 ## Generating Protobuf code
 
 ```bash
-npx protoc --ts_out . --proto_path protos protos/ClosestPeersRequest.proto
-npx protoc --ts_out . --proto_path protos protos/ClosestPeersResponse.proto
- npx protoc --ts_out . --proto_path --ts_opt generate_dependencies protos protos/RouteMessage.proto
+npx protoc --ts_out ./src/protocol/ --proto_path protos protos/ClosestPeers.proto
+ npx protoc --ts_out ./src/protocol/ --proto_path --ts_opt generate_dependencies protos protos/RouteMessage.proto
 ```
