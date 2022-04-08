@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash'
 import { validateConfig as validateClientConfig } from 'streamr-client'
-import { createMigratedConfig, formSchemaUrl, needsMigration } from '../../src/config/migration'
+import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import WEBSOCKER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/websocket/config.schema.json'
 import MQTT_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/mqtt/config.schema.json'
@@ -8,7 +8,6 @@ import BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/brubeckMiner/c
 import METRICS_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/metrics/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
 
-const TARGET_CONFIG_VERSION = 1
 const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111111111111111'
 const MOCK_API_KEY = 'mock-api-key'
 
@@ -153,7 +152,10 @@ const validateTargetConfig = (config: any): void | never => {
 
 const testMigration = (source: any, assertTarget: (target: any) => void | never) => {
     expect(needsMigration(source)).toBe(true)
-    const target = createMigratedConfig(source)
+    let target = source
+    do {
+        target = createMigratedConfig(target)
+    } while (needsMigration(target))
     assertTarget(target)
     validateTargetConfig(target)
 }
@@ -163,7 +165,7 @@ describe('Config migration', () => {
         const source = configWizardMinimal
         testMigration(source, (target) => {
             expect(target).toStrictEqual({
-                $schema: formSchemaUrl(TARGET_CONFIG_VERSION),
+                $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
                     auth: {
                         privateKey: MOCK_PRIVATE_KEY
@@ -184,7 +186,7 @@ describe('Config migration', () => {
         const source = configWizardFull
         testMigration(source, (target) => {
             expect(target).toStrictEqual({
-                $schema: formSchemaUrl(TARGET_CONFIG_VERSION),
+                $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
                     auth: {
                         privateKey: MOCK_PRIVATE_KEY
@@ -266,7 +268,7 @@ describe('Config migration', () => {
 
     it('no migration', () => {
         const source = {
-            $schema: formSchemaUrl(TARGET_CONFIG_VERSION)
+            $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION)
         }
         expect(needsMigration(source)).toBe(false)
     })
