@@ -18,15 +18,15 @@
         "clean-package-locks": "npx --workspaces --include-workspace-root -c 'rm -f package-lock.json || true'"
     },
     "workspaces": [
-        "packages/broker",
-        "packages/cli-tools",
-        "packages/client",
         "packages/dev-config",
         "packages/eslint-config-monorepo",
-        "packages/network",
-        "packages/network-tracker",
+        "packages/test-utils",
         "packages/protocol",
-        "packages/test-utils"
+        "packages/network-tracker",
+        "packages/network",
+        "packages/client",
+        "packages/broker",
+        "packages/cli-tools"
     ],
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
