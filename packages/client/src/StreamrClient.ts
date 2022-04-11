@@ -146,6 +146,9 @@ class StreamrClientBase implements Context {
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
+        if (opts.streamId === undefined) {
+            throw new Error('streamId required')
+        }
         const streamId = toStreamID(opts.streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
