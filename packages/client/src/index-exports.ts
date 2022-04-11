@@ -51,8 +51,9 @@ export {
     XOR,
     Without
 } from './Ethereum'
-export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeStream'
-export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/GroupKey'
+export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
+export { GroupKey as EncryptionKey } from './encryption/GroupKey'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'

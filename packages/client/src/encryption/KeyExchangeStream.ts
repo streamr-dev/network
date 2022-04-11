@@ -24,7 +24,7 @@ export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
 
 export type EncryptionConfig = {
-    groupKeys: Record<string, GroupKeysSerialized>
+    encryptionKeys: Record<string, GroupKeysSerialized>
 }
 
 export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {
