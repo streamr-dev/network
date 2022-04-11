@@ -150,10 +150,10 @@ class StreamrClientBase implements Context {
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
                 return this.groupKeyStore.rotateGroupKey(streamId)
-            } else {
+            } else { // eslint-disable-line no-else-return
                 return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
             }
-        } else if (opts.distributionMethod === 'rekey') {
+        } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
             return this.groupKeyStore.rekey(streamId, opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
