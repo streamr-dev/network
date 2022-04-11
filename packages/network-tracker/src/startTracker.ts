@@ -36,7 +36,7 @@ export const startTracker = async ({
 }: TrackerOptions): Promise<Tracker> => {
     const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
     const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
-    const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, metricsContext, trackerPingInterval)
+    const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, trackerPingInterval)
 
     const tracker = new Tracker({
         peerInfo,

@@ -1,5 +1,5 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, Metrics } from 'streamr-network'
+import { Logger } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -19,8 +19,6 @@ const NAT_ANALYSIS_TIMEOUT = {
     errorCode: 'NAT_ANALYSIS_TIMEOUT'
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
-const METRIC_CONTEXT_NAME = 'broker/plugin/brubeckMiner'
-const METRIC_LATEST_CODE = 'latestCode'
 
 const logger = new Logger(module)
 
@@ -41,7 +39,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    metrics?: Metrics
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
@@ -56,8 +53,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     async start(): Promise<void> {
-        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
-        this.metrics = metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.latencyPoller = await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
         }, LATENCY_POLL_INTERVAL, true)
@@ -79,7 +74,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
-        this.metrics!.set(METRIC_LATEST_CODE, Date.now())
         const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
