@@ -1,11 +1,11 @@
 import fs from 'fs'
 import path from 'path'
-import { get, omitBy, set } from 'lodash'
+import { cloneDeep, get, omitBy, set } from 'lodash'
 import { Config, getDefaultFile, getLegacyDefaultFile } from './config'
 import { isValidConfig } from './validateConfig'
 import TEST_CONFIG_SCHEMA from './config-testnet.schema.json'
 
-export const CURRENT_CONFIGURATION_VERSION = 1
+export const CURRENT_CONFIGURATION_VERSION = 2
 
 export const formSchemaUrl = (version: number): string => {
     return `https://schema.streamr.network/config-v${version}.schema.json`
@@ -91,7 +91,7 @@ const convertTestnet3ToV1 = (source: any): Config => {
         } else if (name === 'metrics') {
             const targetConfig: any = {}
             if (sourceConfig.consoleAndPM2IntervalInSeconds !== 0) {
-                targetConfig.consoleIntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
+                targetConfig.consoleAndPM2IntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
             }
             target.plugins.metrics = targetConfig
         } else if (['legacyWebsocket', 'legacyMqtt'].includes(name)) {
@@ -103,12 +103,28 @@ const convertTestnet3ToV1 = (source: any): Config => {
     return target as Config
 }
 
+const convertV1ToV2 = (source: any): Config => {
+    const TARGET_VERSION = 2
+    const target = cloneDeep(source)
+    target.$schema = formSchemaUrl(TARGET_VERSION)
+    const consoleAndPM2IntervalInSeconds = source.plugins.metrics?.consoleAndPM2IntervalInSeconds
+    if ((consoleAndPM2IntervalInSeconds !== undefined) && (consoleAndPM2IntervalInSeconds !== 0)) {
+        target.plugins.consoleMetrics = {
+            interval: consoleAndPM2IntervalInSeconds
+        }
+        delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
+    }
+    return target as Config
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createMigratedConfig = (source: any): Config | never => {
     const version = getVersion(source)
     const isTestnetConfig = (version === undefined) && (isValidConfig(source, TEST_CONFIG_SCHEMA))
     if (isTestnetConfig) {
         return convertTestnet3ToV1(source)
+    } else if (version === 1) {
+        return convertV1ToV2(source)
     } else {
         throw new Error('Unable to migrate the config')
     }
