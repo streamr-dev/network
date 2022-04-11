@@ -40,6 +40,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Advanced usage](#advanced-usage)
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
+    - [Encryption keys](#encryption-keys)
     - [Proxy publishing](#proxy-publishing)
     - [Logging](#logging)
 
@@ -728,6 +729,50 @@ const streamr = new StreamrClient({
 Both of these properties should be disabled in tandem for message ordering and gap filling to be properly turned off.
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
+
+
+### Encryption keys
+
+Messages published to a non-public stream are always encrypted. The publishing client creates the encryption keys and delivers the keys to the subscribers automatically. In typical use cases, there is no need to manage encryption keys manually.
+
+#### Typical use cases
+
+A new encryption key is generated when a client is started. The key doesn't change during the lifetime of the client unless you explicitly update it.
+
+At any given time a subscriber can request a key from the publisher. When the publisher receives a request, it checks whether the subscriber has valid `StreamPermission.SUBSCRIBE` permission to the stream. If the permission exists, the client sends the encryption key to the subscriber. The subscriber can then use the key to decrypt any message which is encrypted with that key.
+
+Typically subscribers query the current encryption key. But if they need to access historical data (which is maybe encrypted with a previous encryption key), they may query some previous encryption key. A publisher client stores all previous encryption keys in a local database, and therefore it can respond to those queries automatically (if the client is online when the query happens).
+
+#### Manual key update
+
+You can manually update the encryption key by calling `client.updateEncryptionKey(...)`. That triggers the creation of a new encryption key, and the client starts to use that to encrypt the messages from this moment onwards.
+
+In practice, the update is needed if:
+
+- You want to prevent new subscribers from reading historical messages. When you update the key, the new subscribers get the new key. But as the historical data is encrypted with some previous key, those messages aren't decryptable by the new subscribers.
+- You want to prevent expired subscribers from reading new messages. When you update the key, but you don't distribute the new key to the expired subscribers, they aren't able to decrypt new messages.
+
+Both of the use cases are covered if you call:
+```
+client.updateEncryptionKey({
+	distributionMethod: 'rekey'
+})
+```
+
+You may want to call that method regularly (e.g. daily/weekly). Or you can call it when you observe that you have an expired subscriber (that is, someone bought your data stream for a limited period of time, and that period has now elapsed)
+
+#### Optimization: key rotation
+
+You can optimize the key distribution by using rotate instead of rekey. The optimization is applicable if you don't have subscriptions that can expire. In that situation you can update the key by calling:
+```
+client.updateEncryptionKey({
+	distributionMethod: 'rotate'
+})
+```
+
+In detail, the difference between the methods is:
+- In `rekey` method, the client sends the new key individually to each subscriber. Every subscriber receives a separate message which is encrypted with their public RSA key. The `StreamPermission.SUBSCRIBE` permission is checked for each subscriber before a key is sent. 
+- In `rotate` method, the key is broadcasted to the network in the metadata of the next message. The key is encrypted with the previous encryption key and therefore subscribers can use it only if they know the previous key (https://en.wikipedia.org/wiki/Forward_secrecy). As the key is broadcasted to everyone, no permissions are checked. As recently expired subscribers most likely have the previous key, they can use that new key, too.
 
 
 ### Proxy publishing and subscribing
