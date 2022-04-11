@@ -9,11 +9,11 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-export interface MetricsPluginConfig {
+export interface ConsoleMetricsPluginConfig {
     interval: number
 }
 
-export class ConsoleMetricsPlugin extends Plugin<MetricsPluginConfig> {
+export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
 
     private timeout?: NodeJS.Timeout
 
