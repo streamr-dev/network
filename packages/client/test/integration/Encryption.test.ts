@@ -243,13 +243,13 @@ describeRepeats('decryption', () => {
                 const groupKey1 = GroupKey.generate()
                 const groupKey2 = GroupKey.generate()
                 await publisher.updateEncryptionKey({
-                    streamId: stream.id, 
+                    streamId: stream.id,
                     key: groupKey1,
                     distributionMethod: 'rotate'
                 })
                 await publisher.publish(stream.id, msgs[0])
                 await publisher.updateEncryptionKey({
-                    streamId: stream.id, 
+                    streamId: stream.id,
                     key: groupKey2,
                     distributionMethod: 'rotate'
                 })
