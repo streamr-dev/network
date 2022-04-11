@@ -29,7 +29,6 @@ import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { toStreamID } from 'streamr-client-protocol'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -149,7 +148,7 @@ class StreamrClientBase implements Context {
         if (opts.streamId === undefined) {
             throw new Error('streamId required')
         }
-        const streamId = toStreamID(opts.streamId)
+        const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
                 return this.groupKeyStore.rotateGroupKey(streamId)
