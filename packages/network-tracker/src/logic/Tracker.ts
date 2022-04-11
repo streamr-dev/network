@@ -156,8 +156,8 @@ export class Tracker extends EventEmitter {
         attachRtcSignalling(this.trackerServer)
 
         this.metrics = metricsContext.create('tracker')
-            .addRecordedMetric('onNodeDisconnected')
-            .addRecordedMetric('processNodeStatus')
+            .addRecordedMetric('nodeDisconnected')
+            .addRecordedMetric('nodeStatusProcessed')
 
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
@@ -172,7 +172,7 @@ export class Tracker extends EventEmitter {
 
     onNodeDisconnected(node: NodeId): void {
         this.logger.debug('node %s disconnected', node)
-        this.metrics.record('onNodeDisconnected', 1)
+        this.metrics.record('nodeDisconnected', 1)
         this.removeNode(node)
     }
 
@@ -181,7 +181,7 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        this.metrics.record('processNodeStatus', 1)
+        this.metrics.record('nodeStatusProcessed', 1)
         const status = statusMessage.status as Status
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
