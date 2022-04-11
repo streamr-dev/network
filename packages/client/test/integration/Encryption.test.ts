@@ -429,7 +429,7 @@ describeRepeats('decryption', () => {
                     auth: {
                         privateKey: publisherPrivateKey
                     },
-                    groupKeys,
+                    encryptionKeys: groupKeys
                 })
 
                 // eslint-disable-next-line require-atomic-updates
