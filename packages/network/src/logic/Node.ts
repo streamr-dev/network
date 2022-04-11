@@ -27,6 +27,7 @@ export enum Event {
     NODE_DISCONNECTED = 'streamr:node:node-disconnected',
     MESSAGE_RECEIVED = 'streamr:node:message-received',
     UNSEEN_MESSAGE_RECEIVED = 'streamr:node:unseen-message-received',
+    DUPLICATE_MESSAGE_RECEIVED = 'streamr:node:duplicate-message-received',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
     PROXY_CONNECTION_ACCEPTED = 'streamr:node:proxy-connection-accepted',
@@ -55,6 +56,7 @@ export interface Node {
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
     on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.DUPLICATE_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PROXY_CONNECTION_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection) => void): this
@@ -328,6 +330,7 @@ export class Node extends EventEmitter {
             }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
+            this.emit(Event.DUPLICATE_MESSAGE_RECEIVED, streamMessage, source)
         }
     }
 

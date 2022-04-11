@@ -3,7 +3,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode, NodeEvent } from '../../src/composition'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -71,6 +71,12 @@ describe('optimization: do not propagate to sender', () => {
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not
     // propagating received messages back to their source
     test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
+        const onDuplicateMessage = jest.fn()
+        const nodes = [n1, n2, n3]
+        nodes.forEach((n) => {
+            n.on(NodeEvent.DUPLICATE_MESSAGE_RECEIVED, onDuplicateMessage)
+        })
+
         n1.publish(new StreamMessage({
             messageId: new MessageID(toStreamID('stream-id'), 0, 100, 0, 'publisher', 'session'),
             prevMsgRef: new MessageRef(99, 0),
@@ -79,25 +85,11 @@ describe('optimization: do not propagate to sender', () => {
             },
         }))
 
-        let n1Duplicates = 0
-        let n2Duplicates = 0
-        let n3Duplicates = 0
+        await waitForCondition(() => onDuplicateMessage.mock.calls.length > 0)
 
-        await waitForCondition(async () => {
-            // @ts-expect-error private variable
-            const reportN1 = await n1.metrics.report()
-            // @ts-expect-error private variable
-            const reportN2 = await n2.metrics.report()
-            // @ts-expect-error private variable
-            const reportN3 = await n3.metrics.report()
-
-            n1Duplicates = (reportN1['onDataReceived:ignoredDuplicate'] as any).total
-            n2Duplicates = (reportN2['onDataReceived:ignoredDuplicate'] as any).total
-            n3Duplicates = (reportN3['onDataReceived:ignoredDuplicate'] as any).total
-
-            return n1Duplicates + n2Duplicates + n3Duplicates > 0
-        })
-
-        expect(n1Duplicates + n2Duplicates + n3Duplicates).toEqual(2)
+        // TODO is it possible that waitForCondition() polls a state where 
+        // onDuplicateMessage.mock.calls.length === 1? (DUPLICATE_MESSAGE_RECEIVED events are 
+        // are usually emitten within few milliseconds)
+        expect(onDuplicateMessage.mock.calls.length).toEqual(2)
     })
 })
