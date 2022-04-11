@@ -437,7 +437,7 @@ describeRepeats('decryption', () => {
                     auth: {
                         privateKey: subscriberPrivateKey
                     },
-                    groupKeys,
+                    encryptionKeys: groupKeys
                 })
 
                 const contentClear: any[] = []
