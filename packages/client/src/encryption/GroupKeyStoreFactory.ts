@@ -45,6 +45,7 @@ export class GroupKeyStoreFactory implements Context {
                 return streamId
             }
         })
+        // TODO the streamIds in encryptionConfig.encryptionKeys should support path-format?
         this.initialGroupKeys = encryptionConfig.encryptionKeys
     }
 
