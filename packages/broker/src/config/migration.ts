@@ -110,7 +110,7 @@ const convertV1ToV2 = (source: any): Config => {
     const consoleAndPM2IntervalInSeconds = source.plugins.metrics?.consoleAndPM2IntervalInSeconds
     if ((consoleAndPM2IntervalInSeconds !== undefined) && (consoleAndPM2IntervalInSeconds !== 0)) {
         target.plugins.consoleMetrics = {
-            interval: source.plugins.metrics.consoleAndPM2IntervalInSeconds
+            interval: consoleAndPM2IntervalInSeconds
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
