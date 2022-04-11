@@ -68,7 +68,7 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getUrl(_urlParts: UrlParts, _query?: {}, _restUrl?: string): URL {
+    getUrl(_urlParts: UrlParts, _query?: any, _restUrl?: string): URL {
         throw new Error('not implemented')
     }
 

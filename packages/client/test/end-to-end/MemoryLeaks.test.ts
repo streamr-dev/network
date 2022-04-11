@@ -32,7 +32,7 @@ describe('MemoryLeaks', () => {
     }, TIMEOUT)
 
     describe('client container', () => {
-        let createContainer: Function
+        let createContainer: (opts?: any) => Promise<any>
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
                 config: StrictStreamrClientConfig;
@@ -95,7 +95,7 @@ describe('MemoryLeaks', () => {
     })
 
     describe('StreamrClient', () => {
-        let createClient: Function
+        let createClient: () => Promise<StreamrClient>
         beforeAll(() => {
             createClient = async (opts: any = {}) => {
                 const c = new StreamrClient({

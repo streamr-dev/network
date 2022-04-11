@@ -211,6 +211,7 @@ export class Signal<ArgsType extends any[] = []> {
     }
 
     getListenAsMethod() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const signal = this
         function listenAsMethod(): Promise<ArgsType[0]>
         function listenAsMethod<ReturnType>(this: ReturnType, cb: SignalListener<ArgsType>): ReturnType
