@@ -158,7 +158,6 @@ export class Tracker extends EventEmitter {
         this.metrics = metricsContext.create('tracker')
             .addRecordedMetric('onNodeDisconnected')
             .addRecordedMetric('processNodeStatus')
-            .addRecordedMetric('_removeNode')
 
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
@@ -271,7 +270,6 @@ export class Tracker extends EventEmitter {
     }
 
     private removeNode(node: NodeId): void {
-        this.metrics.record('_removeNode', 1)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]
