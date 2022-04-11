@@ -27,7 +27,7 @@ describe('publisher message validation', () => {
         streamId = stream.id
     }, TIMEOUT)
 
-    it('invalid message does not get published', async () => {
+    it('publishing message with insufficient permissions prevents message from getting sent to network', async () => {
         let subscriberReceivedMsgs = 0
         const subscription = await subscriberClient.subscribe(streamId, () => {
             subscriberReceivedMsgs += 1
