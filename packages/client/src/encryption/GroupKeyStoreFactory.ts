@@ -45,7 +45,7 @@ export class GroupKeyStoreFactory implements Context {
                 return streamId
             }
         })
-        this.initialGroupKeys = encryptionConfig.groupKeys
+        this.initialGroupKeys = encryptionConfig.encryptionKeys
     }
 
     private async getNewStore(streamId: StreamID) {
