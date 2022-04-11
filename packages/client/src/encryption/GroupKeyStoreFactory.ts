@@ -90,9 +90,9 @@ export class GroupKeyStoreFactory implements Context {
     }
 
     /** @internal */
-    async rekey(streamId: StreamID) {
+    async rekey(streamId: StreamID, newKey?: GroupKey) {
         const store = await this.getStore(streamId)
-        return store.rekey()
+        return store.rekey(newKey)
     }
 
     async stop() {

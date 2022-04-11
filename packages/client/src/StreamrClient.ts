@@ -154,11 +154,7 @@ class StreamrClientBase implements Context {
                 return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
             }
         } else if (opts.distributionMethod === 'rekey') {
-            if (opts.key === undefined) {
-                return this.groupKeyStore.rekey(streamId)
-            } else {
-                throw new Error('Explicit key not supported in rekey')
-            }
+            return this.groupKeyStore.rekey(streamId, opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
