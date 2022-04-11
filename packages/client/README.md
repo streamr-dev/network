@@ -755,7 +755,8 @@ In practice, the update is needed if:
 Both of the use cases are covered if you call:
 ```
 client.updateEncryptionKey({
-	distributionMethod: 'rekey'
+    streamId,
+    distributionMethod: 'rekey'
 })
 ```
 
@@ -766,7 +767,8 @@ You may want to call that method regularly (e.g. daily/weekly). Or you can call 
 You can optimize the key distribution by using rotate instead of rekey. The optimization is applicable if you don't have subscriptions that can expire. In that situation you can update the key by calling:
 ```
 client.updateEncryptionKey({
-	distributionMethod: 'rotate'
+    streamId,
+    distributionMethod: 'rotate'
 })
 ```
 
