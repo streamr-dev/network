@@ -85,11 +85,8 @@ describe('optimization: do not propagate to sender', () => {
             },
         }))
 
-        await waitForCondition(() => onDuplicateMessage.mock.calls.length > 0)
+        await waitForCondition(() => onDuplicateMessage.mock.calls.length >= 2)
 
-        // TODO is it possible that waitForCondition() polls a state where 
-        // onDuplicateMessage.mock.calls.length === 1? (DUPLICATE_MESSAGE_RECEIVED events are 
-        // are usually emitten within few milliseconds)
         expect(onDuplicateMessage.mock.calls.length).toEqual(2)
     })
 })
