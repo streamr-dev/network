@@ -5,9 +5,11 @@ import { StreamID } from 'streamr-client-protocol'
 
 const createClient = getCreateClient()
 
-const TIMEOUT = 10 * 1000
+const TIMEOUT = 20 * 1000
 
-describe('publisher message validation', () => {
+const PROPAGATION_WAIT_TIME = 2000
+
+describe('publisher message validation (NET-773)', () => {
     let publisherClient: StreamrClient
     let subscriberClient: StreamrClient
     let streamId: StreamID
@@ -38,7 +40,7 @@ describe('publisher message validation', () => {
         await expect(publisherClient.publish(streamId, { not: 'allowed' }))
             .rejects
             .toThrow(/is not a publisher on stream/)
-        await wait(2000)
+        await wait(PROPAGATION_WAIT_TIME)
         expect(subscriberReceivedMsgs).toEqual(0)
     }, TIMEOUT)
 })
