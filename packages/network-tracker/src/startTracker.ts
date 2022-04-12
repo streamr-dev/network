@@ -28,7 +28,7 @@ export const startTracker = async ({
     location,
     attachHttpEndpoints = true,
     maxNeighborsPerNode = DEFAULT_MAX_NEIGHBOR_COUNT,
-    metricsContext = new MetricsContext(id),
+    metricsContext = new MetricsContext(),
     trackerPingInterval,
     privateKeyFileName,
     certFileName,

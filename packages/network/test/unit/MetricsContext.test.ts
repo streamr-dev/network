@@ -8,7 +8,7 @@ describe('metrics', () => {
     beforeEach(() => {
         jest.useFakeTimers('modern')
         jest.setSystemTime(STARTUP_TIME)
-        context = new MetricsContext('peerId')
+        context = new MetricsContext()
     })
 
     afterEach(() => {

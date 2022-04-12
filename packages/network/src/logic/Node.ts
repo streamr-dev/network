@@ -96,7 +96,7 @@ export class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
         this.acceptProxyConnections = opts.acceptProxyConnections || false
 
-        this.metricsContext = opts.metricsContext || new MetricsContext('')
+        this.metricsContext = opts.metricsContext || new MetricsContext()
         this.metrics = this.metricsContext.create('node')
             .addFixedMetric('latency')
         this.publishMetrics = this.metricsContext.create('node/publish')

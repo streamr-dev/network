@@ -120,7 +120,7 @@ export class Tracker extends EventEmitter {
             throw new Error('Provided protocols are not correct')
         }
 
-        const metricsContext = opts.metricsContext || new MetricsContext('')
+        const metricsContext = opts.metricsContext || new MetricsContext()
         this.maxNeighborsPerNode = opts.maxNeighborsPerNode
         this.trackerServer = opts.protocols.trackerServer
         this.peerInfo = opts.peerInfo
