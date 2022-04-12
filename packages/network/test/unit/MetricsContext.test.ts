@@ -19,9 +19,6 @@ describe('metrics', () => {
     it('empty report', async () => {
         const rep = await context.report(false)
         expect(rep).toEqual({
-            peerId: 'peerId',
-            startTime: 100,
-            currentTime: 100,
             metrics: {}
         })
     })
@@ -33,9 +30,6 @@ describe('metrics', () => {
 
         const rep = await context.report()
         expect(rep).toEqual({
-            peerId: 'peerId',
-            startTime: 100,
-            currentTime: 100,
             metrics: {
                 metricOne: {},
                 metricTwo: {},
@@ -63,9 +57,6 @@ describe('metrics', () => {
 
         const rep = await context.report()
         expect(rep).toEqual({
-            peerId: 'peerId',
-            startTime: 100,
-            currentTime: 100,
             metrics: {
                 metricOne: {
                     a: 666,
