@@ -11,8 +11,6 @@ interface IndividualReport {
 }
 
 interface Report {
-    startTime: number
-    currentTime: number
     metrics: {
         [key: string]: IndividualReport
     }
@@ -118,13 +116,11 @@ export class Metrics {
 }
 
 export class MetricsContext {
-    private readonly startTime: number
     private readonly metrics: {
         [key: string]: Metrics
     }
 
     constructor() {
-        this.startTime = Date.now()
         this.metrics = {}
     }
 
@@ -145,8 +141,6 @@ export class MetricsContext {
             Object.values(this.metrics).forEach((metrics) => metrics.clearLast())
         }
         return {
-            startTime: this.startTime,
-            currentTime: Date.now(),
             metrics: Object.fromEntries(entries),
         }
     }
