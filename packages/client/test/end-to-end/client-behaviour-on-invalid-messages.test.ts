@@ -1,8 +1,13 @@
-import { ConfigTest, EncryptionUtil, GroupKey, StreamPermission, StreamrClient } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
+import { StreamPermission } from '../../src/permission'
+import { ConfigTest } from '../../src/ConfigTest'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createTestStream, fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
-import { fastPrivateKey, randomEthereumAddress, wait } from 'streamr-test-utils'
-import { MessageID, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { MessageID, SigningUtil, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { createNetworkNode, NetworkNode } from 'streamr-network'
+import { Wallet } from 'ethers'
 
 const createClient = getCreateClient()
 const TIMEOUT = 20 * 1000
@@ -35,7 +40,7 @@ describe('client behaviour on invalid message', () => {
     beforeEach(async () => {
         subscriberClient = await createClient({
             auth: {
-                privateKey: await fetchPrivateKeyWithGas()
+                privateKey: fastPrivateKey()
             }
         })
         publisherClient = await createClient({
@@ -74,12 +79,14 @@ describe('client behaviour on invalid message', () => {
             ...ConfigTest.network,
             id: 'networkNode',
         })
+        const publisherWallet = Wallet.createRandom()
         const msg = new StreamMessage({
-            messageId: new MessageID(streamId, 0, Date.now(), 0, randomEthereumAddress(), ''),
+            messageId: new MessageID(streamId, 0, Date.now(), 0, publisherWallet.address, ''),
             prevMsgRef: null,
             content: { not: 'allowed' }
         })
         EncryptionUtil.encryptStreamMessage(msg, GroupKey.generate())
+        msg.signature = await SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey.substring(2))
         networkNode.publish(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes
