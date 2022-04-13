@@ -1,12 +1,12 @@
 import { ConnectivityReportRequest } from '../proto/ConnectivityReport'
-import { ITransport } from '../transport/ITransport'
+import { AbstractTransport } from '../transport/AbstractTransport'
 import { v4 } from 'uuid'
 import EventEmitter = require('events')
 import { PeerID } from '../types'
 
 export class ConnectivityReport extends EventEmitter {
-    private readonly transport: ITransport
-    constructor(transport: ITransport) {
+    private readonly transport: AbstractTransport
+    constructor(transport: AbstractTransport) {
         super()
         this.transport = transport
     }

@@ -2,12 +2,12 @@ import EventEmitter = require("events");
 import { PeerID } from '../types'
 import { RouteMessageWrapper } from '../proto/RouteMessage'
 import { v4 } from 'uuid'
-import { ITransport } from '../transport/ITransport'
+import { AbstractTransport } from '../transport/AbstractTransport'
 
 export class RouteMessage extends EventEmitter {
     private readonly peerId: string
-    private readonly transport: ITransport
-    constructor(peerId: PeerID, transport: ITransport) {
+    private readonly transport: AbstractTransport
+    constructor(peerId: PeerID, transport: AbstractTransport) {
         super()
         this.peerId = peerId
         this.transport = transport

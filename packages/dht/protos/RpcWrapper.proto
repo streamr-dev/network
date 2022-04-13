@@ -1,0 +1,10 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+option optimize_for = CODE_SIZE;
+
+message RpcWrapper {
+  map<string, google.protobuf.Any> header = 1;
+  bytes body = 2;
+  string requestId = 3;
+}
