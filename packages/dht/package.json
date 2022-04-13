@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
-    "ts-node": "^10.7.0"
+    "ts-node": "^9.1.1"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
