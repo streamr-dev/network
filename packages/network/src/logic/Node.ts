@@ -154,7 +154,6 @@ export class Node extends EventEmitter {
             opts.protocols.nodeToTracker,
             opts,
             this.streamPartManager,
-            this.metrics,
             (includeRtt) => ({
                 started: this.started,
                 location: this.peerInfo.location,
