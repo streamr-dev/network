@@ -102,7 +102,7 @@ export class BrubeckNode implements Context {
             name: id,
             ...networkOptions,
             id,
-            metricsContext: new MetricsContext(options.name ?? id)
+            metricsContext: new MetricsContext()
         })
 
         if (!this.destroySignal.isDestroyed()) {

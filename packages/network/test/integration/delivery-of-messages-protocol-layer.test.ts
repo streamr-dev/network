@@ -52,7 +52,7 @@ describe('delivery of messages in protocol layer', () => {
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker),
-            new MetricsContext('node1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
         )
@@ -60,7 +60,7 @@ describe('delivery of messages in protocol layer', () => {
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('node2'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
         )

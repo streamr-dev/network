@@ -18,7 +18,7 @@ describe('latency metrics', () => {
             }
         })
         const trackerInfo = tracker.getConfigRecord()
-        metricsContext = new MetricsContext('node1')
+        metricsContext = new MetricsContext()
         node = createNetworkNode({
             id: 'node1',
             trackers: [trackerInfo],

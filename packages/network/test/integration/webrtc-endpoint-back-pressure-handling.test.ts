@@ -41,7 +41,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext('ep1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
         )
@@ -49,7 +49,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('ep'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
         )

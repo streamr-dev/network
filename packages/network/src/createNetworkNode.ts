@@ -31,7 +31,7 @@ export const createNetworkNode = ({
     name,
     location,
     trackers,
-    metricsContext = new MetricsContext(id),
+    metricsContext = new MetricsContext(),
     peerPingInterval,
     trackerPingInterval,
     disconnectionWaitTime,

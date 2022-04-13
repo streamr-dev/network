@@ -29,7 +29,7 @@ describe('InstructionSender', () => {
     beforeEach(() => {
         jest.useFakeTimers()
         jest.setSystemTime(STARTUP_TIME)
-        metrics = new MetricsContext('').create('test')
+        metrics = new MetricsContext().create('test')
         send = jest.fn().mockResolvedValue(true)
         sender = new InstructionSender({
             debounceWait: DEBOUNCE_WAIT,

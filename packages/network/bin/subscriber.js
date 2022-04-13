@@ -21,7 +21,7 @@ program
 const id = program.opts().id || 'SU'
 const name = program.opts().nodeName || id
 const logger = new Logger(module)
-const metricsContext = new MetricsContext(id)
+const metricsContext = new MetricsContext()
 
 const trackerInfos = program.opts().trackers.map((ws, i) => {
     return {

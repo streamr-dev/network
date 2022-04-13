@@ -52,7 +52,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext('node-endpoint1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory,
             5000
@@ -61,7 +61,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('node-endpoint2'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory,
             5000
@@ -70,7 +70,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, nodeToTracker3),
-            new MetricsContext('node-endpoint3'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo3),
             NodeWebRtcConnectionFactory,
             5000

@@ -43,7 +43,7 @@ const getTopologyStabilization = () => {
 }
 
 async function main() {
-    const metricsContext = new MetricsContext(id)
+    const metricsContext = new MetricsContext()
     try {
         await startTracker({
             listen,

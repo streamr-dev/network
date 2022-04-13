@@ -48,7 +48,7 @@ describe('WebRtcEndpoint', () => {
                 peerInfo1,
                 ["stun:stun.l.google.com:19302"],
                 new RtcSignaller(peerInfo1, nodeToTracker1),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo1),
                 factory
             )
@@ -56,7 +56,7 @@ describe('WebRtcEndpoint', () => {
                 peerInfo2,
                 ["stun:stun.l.google.com:19302"],
                 new RtcSignaller(peerInfo2, nodeToTracker2),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo2),
                 factory
             )
@@ -453,7 +453,7 @@ describe('WebRtcEndpoint', () => {
                 peerInfo,
                 [],
                 new RtcSignaller(peerInfo, nodeToTracker),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo),
                 NodeWebRtcConnectionFactory,
                 15000,    // newConnectionTimeout
