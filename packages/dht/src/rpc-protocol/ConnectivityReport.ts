@@ -11,7 +11,7 @@ export class ConnectivityReport extends EventEmitter {
         this.transport = transport
     }
 
-    requestConnectivityReport(port: number, entrypoint: PeerID) {
+    requestConnectivityReport(port: number, entrypoint: PeerID): void {
         const nonce = v4()
         const request: ConnectivityReportRequest = {
             port,
@@ -21,7 +21,7 @@ export class ConnectivityReport extends EventEmitter {
         this.transport.send(entrypoint, bytes)
     }
 
-    onConnectivityReport() {
+    onConnectivityReport(): void {
 
     }
 }

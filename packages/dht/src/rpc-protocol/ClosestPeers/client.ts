@@ -31,7 +31,7 @@ export class ClosestPeersClient extends EventEmitter {
 
     onGetClosestPeersResponse(response: Uint8Array): void {
         console.info('ClosestPeersClient: onResponse')
-        const { neighbors, nonce } = ClosestPeersResponse.fromBinary(response)
+        const { neighbors } = ClosestPeersResponse.fromBinary(response)
         this.emit(Event.RESPONSE_RECEIVED, neighbors)
     }
 }

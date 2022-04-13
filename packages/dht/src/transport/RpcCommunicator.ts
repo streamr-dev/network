@@ -19,10 +19,10 @@ export class RpcCommunicator extends EventEmitter {
         this.registerRequest(rpcWrapper.requestId, unary)
         // this.send()
     }
-
-    onIncomingMessage(unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper): void {
-
-    }
+    //
+    // onIncomingMessage(unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper): void {
+    //
+    // }
 
     registerRequest(requestId: string, unary: UnaryCall<object, object>): void {
         // TODO: add timeouts?

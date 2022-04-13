@@ -46,8 +46,8 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: RpcOptions): UnaryCall<I, O> {
-        let
+    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, _options: RpcOptions): UnaryCall<I, O> {
+        const
             requestBody = method.I.toBinary(input),
             defHeader = new Deferred<RpcMetadata>(),
             defMessage = new Deferred<O>(),
