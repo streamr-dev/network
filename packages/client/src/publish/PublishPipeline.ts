@@ -84,21 +84,21 @@ export class PublishPipeline implements Context, Stoppable {
         this.debug = context.debug.extend(this.id)
         this.streamMessageQueue = new PushPipeline<PublishQueueIn>()
             .pipe(this.toStreamMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
 
         this.publishQueue = new Pipeline<PublishQueueOut>(this.streamMessageQueue)
             .forEach(this.encryptMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.signMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.validateMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.consumeQueue.bind(this))
 
         destroySignal.onDestroy(this.stop.bind(this))
     }
 
-    private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
+    private filterNonSettled = ([_streamMessage, defer]: PublishQueueOut): boolean => {
         if (this.isStopped && !defer.isSettled()) {
             defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
             return false

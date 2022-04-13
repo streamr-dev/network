@@ -30,17 +30,15 @@ describe('publisher message validation (NET-773)', () => {
     }, TIMEOUT)
 
     it('publishing message with insufficient permissions prevents message from getting sent to network', async () => {
-        let subscriberReceivedMsgs = 0
-        const subscription = await subscriberClient.subscribe(streamId, () => {
-            subscriberReceivedMsgs += 1
-        })
-        subscription.onError((_err) => {
-            subscriberReceivedMsgs += 1
-        })
+        const onMessage = jest.fn()
+        const onError = jest.fn()
+        const subscription = await subscriberClient.subscribe(streamId, onMessage)
+        subscription.onError(onError)
         await expect(publisherClient.publish(streamId, { not: 'allowed' }))
             .rejects
             .toThrow(/is not a publisher on stream/)
         await wait(PROPAGATION_WAIT_TIME)
-        expect(subscriberReceivedMsgs).toEqual(0)
+        expect(onMessage).not.toHaveBeenCalled()
+        expect(onError).not.toHaveBeenCalled()
     }, TIMEOUT)
 })
