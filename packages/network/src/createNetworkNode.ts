@@ -28,8 +28,6 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 
 export const createNetworkNode = ({
     id = uuidv4(),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    name,
     location,
     trackers,
     metricsContext = new MetricsContext(),
