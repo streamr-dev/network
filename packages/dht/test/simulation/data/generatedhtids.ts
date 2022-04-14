@@ -23,13 +23,13 @@ const findNNearestNeighbors = function(ownIndex: number, ownId: Uint8Array, node
             if (j == ownIndex || retIndex.includes(j)) {
                 continue
             }
-            let distance= KBucket.distance(ownId, nodes[j])
+            const distance= KBucket.distance(ownId, nodes[j])
             if (distance < closestDistance) {
                 closestDistance = distance
                 closestIndex = j
             }
         }
-    retIndex.push(closestIndex)
+        retIndex.push(closestIndex)
     }
     return retIndex
 }
@@ -42,7 +42,7 @@ neighborWriter.write("{\n")
 const nodes: Array<Uint8Array> = []
 //const nodeNamesById: { [id: string]: number } = {} 
 
-const neighbors: { [id: string]: Array<{name: number, distance: number, id: Uint8Array}> } = {}
+//const neighbors: { [id: string]: Array<{name: number, distance: number, id: Uint8Array}> } = {}
 
 // generate nodeIds
 
@@ -57,7 +57,7 @@ writer.end()
 
 for (let i=0; i<NUM_NODES; i++) {
 
-    let neighborIds = findNNearestNeighbors(i, nodes[i], nodes, NUM_NEAREST)
+    const neighborIds = findNNearestNeighbors(i, nodes[i], nodes, NUM_NEAREST)
 
     const neighborNames: Array<{name: number, distance: number, id: Uint8Array}> = []
     for (let j=0; j < neighborIds.length; j++) {
@@ -71,7 +71,6 @@ for (let i=0; i<NUM_NODES; i++) {
     }
 }
 
-
 /*
 for (let i=0; i<NUM_NODES; i++) {
     const list: SortedContactList = new SortedContactList(nodes[i], [])
@@ -81,14 +80,13 @@ for (let i=0; i<NUM_NODES; i++) {
     const neighborIds = list.getContactIds()
     const neighborNames: Array<{name: number, distance: number, id: Uint8Array}> = []
     for (let j=0; j < neighborIds.length && j < 20; j++) {
-        neighborNames.push({name: nodeNamesById[JSON.stringify(neighborIds[j])], distance: KBucket.distance(nodes[i], neighborIds[j]), id: neighborIds[j]})
+        neighborNames.push({name: nodeNamesById[JSON.stringify(neighborIds[j])], 
+            distance: KBucket.distance(nodes[i], neighborIds[j]), id: neighborIds[j]})
     }
     neighbors[i] = neighborNames
     process.stdout.write('.')
 }
 */
-
-
 
 //neighborWriter.write(JSON.stringify(neighbors, null, 4))
 

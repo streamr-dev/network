@@ -41,12 +41,10 @@ export class SortedContactList {
         
     }
 
-    
     public addContacts(contacts: Contact[]): void {
         contacts.forEach( (contact) => this.addContact(contact))
     }
     
-
     public addContactsInBulk(contacts: Uint8Array[]): void {
         for (let i=0; i<contacts.length; i++) {
             if (Buffer.compare(contacts[i], this.ownId) == 0) {
