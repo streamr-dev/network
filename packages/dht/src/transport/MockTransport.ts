@@ -1,4 +1,3 @@
-import { wait } from 'streamr-test-utils'
 import { AbstractTransport } from './AbstractTransport'
 import { PeerID } from '../types'
 import { RpcWrapper } from '../proto/DhtRpc'
@@ -24,7 +23,6 @@ export class MockTransport extends AbstractTransport {
 
     async request(peerId: PeerID, message: Uint8Array, requestId: string): Promise<RpcWrapper> {
         this.requests.set(requestId, setTimeout(() => this.timeoutFn()))
-        await wait(100)
         this.send(peerId, message)
         return this.waitForResponse(requestId)
     }

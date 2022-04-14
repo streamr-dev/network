@@ -42,6 +42,10 @@ export class RpcCommunicator extends EventEmitter {
         this.ongoingRequests.set(requestId, unary)
     }
 
+    parseRpcCallType(rpcWrapper: RpcWrapper): void {
+        rpcWrapper.header
+    }
+
     // this.transport.request(request)
     //     .then((response: RpcWrapper) => {
     //         return
