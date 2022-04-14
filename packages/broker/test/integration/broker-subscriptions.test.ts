@@ -41,7 +41,6 @@ describe('broker subscriptions', () => {
         const broker2User = fastWallet()
         tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
-            name: 'broker1',
             privateKey: broker1User.privateKey,
             trackerPort,
             extraPlugins: {
@@ -51,7 +50,6 @@ describe('broker subscriptions', () => {
             }
         })
         broker2 = await startBroker({
-            name: 'broker2',
             privateKey: broker2User.privateKey,
             trackerPort,
             extraPlugins: {

@@ -56,7 +56,6 @@ describe('StorageConfig', () => {
         tracker = await startTestTracker(TRACKER_PORT)
         storageNode = await startStorageNode(storageNodeAccount.privateKey, HTTP_PORT, TRACKER_PORT)
         broker = await startBroker({
-            name: 'broker',
             privateKey: brokerAccount.privateKey,
             trackerPort: TRACKER_PORT,
             restUrl: REST_URL,

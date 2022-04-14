@@ -80,7 +80,6 @@ describe('BrubeckMinerPlugin', () => {
         await claimServer.start()
         brokerWallet = Wallet.createRandom()
         broker = await startBroker({
-            name: 'broker',
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,
             extraPlugins: {
