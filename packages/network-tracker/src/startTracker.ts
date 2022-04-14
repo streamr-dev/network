@@ -24,8 +24,6 @@ export interface TrackerOptions extends AbstractNodeOptions {
 export const startTracker = async ({
     listen,
     id = uuidv4(),
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    name,
     location,
     attachHttpEndpoints = true,
     maxNeighborsPerNode = DEFAULT_MAX_NEIGHBOR_COUNT,
