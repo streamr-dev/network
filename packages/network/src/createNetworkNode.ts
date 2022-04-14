@@ -28,6 +28,7 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 
 export const createNetworkNode = ({
     id = uuidv4(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     name,
     location,
     trackers,
@@ -44,7 +45,7 @@ export const createNetworkNode = ({
     webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
-    const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
+    const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
     const nodeToTracker = new NodeToTracker(endpoint)
 

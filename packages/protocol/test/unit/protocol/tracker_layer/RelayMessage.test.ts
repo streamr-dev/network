@@ -11,7 +11,6 @@ describe('RelayMessage', () => {
                 requestId: 'requestId',
                 originator: {
                     peerId: 'peerId',
-                    peerName: 'peerName',
                     peerType: 'node',
                     controlLayerVersions: [2],
                     messageLayerVersions: [32],
@@ -27,7 +26,6 @@ describe('RelayMessage', () => {
                 requestId: 'requestId',
                 originator: {
                     peerId: 'peerId',
-                    peerName: 'peerName',
                     peerType: 'node',
                     controlLayerVersions: [2],
                     messageLayerVersions: [32],
@@ -45,7 +43,6 @@ describe('RelayMessage', () => {
                 requestId: 'requestId',
                 originator: {
                     peerId: 'peerId',
-                    peerName: 'peerName',
                     peerType: 'node',
                     controlLayerVersions: [2],
                     messageLayerVersions: [32],
@@ -74,7 +71,6 @@ describe('RelayMessage', () => {
                 requestId: null as any,
                 originator: {
                     peerId: 'peerId',
-                    peerName: 'peerName',
                     peerType: 'node',
                     controlLayerVersions: [2],
                     messageLayerVersions: [32],
@@ -92,7 +88,6 @@ describe('RelayMessage', () => {
                 requestId: 'requestId',
                 originator: {
                     peerId: 'peerId',
-                    peerName: 'peerName',
                     peerType: 'node',
                     controlLayerVersions: [2],
                     messageLayerVersions: [32],
@@ -109,7 +104,6 @@ describe('RelayMessage', () => {
             assert.strictEqual(msg.requestId, 'requestId')
             assert.deepStrictEqual(msg.originator, {
                 peerId: 'peerId',
-                peerName: 'peerName',
                 peerType: 'node',
                 controlLayerVersions: [2],
                 messageLayerVersions: [32],
