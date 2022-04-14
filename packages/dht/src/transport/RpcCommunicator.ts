@@ -10,6 +10,7 @@ export class RpcCommunicator extends EventEmitter {
     constructor(dhtTransportClient: DhtTransportClient) {
         super()
         this.dhtTransportClient = dhtTransportClient
+        this.ongoingRequests = new Map()
         this.on(DhtTransportClientEvent.RPC_REQUEST, (unary, rpcWrapper) => {
             this.onOutgoingMessage(unary, rpcWrapper)
         })
