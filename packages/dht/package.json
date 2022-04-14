@@ -19,16 +19,19 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
-    "test": "jest"
+    "test": "jest",
+    "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.json generatedhtids.ts",
+    "run-dht-simulation": "ts-node $NODE_DEBUG_OPTION src/simulation/DhtSimulation.ts"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
-    "ts-node": "^9.1.1",
+    "k-bucket": "^5.1.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/express": "^4.17.13",
+    "@types/k-bucket": "^5.0.1",
     "@types/node": "^16.10.6",
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
@@ -41,6 +44,7 @@
     "jest-extended": "^0.11.5",
     "streamr-test-utils": "^2.0.0",
     "ts-jest": "^27.0.5",
+    "ts-node": "^9.1.1",
     "typescript": "^4.5.2"
   },
   "optionalDependencies": {
