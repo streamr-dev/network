@@ -1,5 +1,5 @@
 import { PeerID } from '../types'
-import { RpcWrapper } from '../proto/RpcWrapper'
+import { RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
 export enum Event {

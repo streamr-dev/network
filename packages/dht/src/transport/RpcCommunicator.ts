@@ -1,29 +1,41 @@
 import EventEmitter = require('events');
 import { DhtTransportClient, Event as DhtTransportClientEvent } from './DhtTransportClient'
-import { RpcWrapper } from '../proto/RpcWrapper'
+import { RpcWrapper } from '../proto/DhtRpc'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
+import { ConnectionManager, Event as ConnectionManagerEvent } from '../connection/ConnectionManager'
 
-// import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
 export class RpcCommunicator extends EventEmitter {
     private readonly dhtTransportClient: DhtTransportClient
+    private readonly dhtTransportServer: DhtTransportServer
+    private readonly connectionManager: ConnectionManager
     private readonly ongoingRequests: Map<string, UnaryCall<object, object>>
-    constructor(dhtTransportClient: DhtTransportClient) {
+    constructor(connectionManager: ConnectionManager, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
         super()
         this.dhtTransportClient = dhtTransportClient
+        this.dhtTransportServer = dhtTransportServer
+        this.connectionManager = connectionManager
         this.ongoingRequests = new Map()
-        this.on(DhtTransportClientEvent.RPC_REQUEST, (unary, rpcWrapper) => {
-            this.onOutgoingMessage(unary, rpcWrapper)
+        this.dhtTransportClient.on(DhtTransportClientEvent.RPC_REQUEST, (unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper) => {
+            this.onOutgoingMessage(rpcWrapper, unary)
         })
+        this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcWrapper: RpcWrapper) => {
+            this.onOutgoingMessage(rpcWrapper)
+        })
+        this.connectionManager.on(ConnectionManagerEvent.RPC_CALL, (bytes: Uint8Array) => this.onIncomingMessage(bytes))
     }
 
-    onOutgoingMessage(unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper): void {
-        this.registerRequest(rpcWrapper.requestId, unary)
+    onOutgoingMessage(rpcWrapper: RpcWrapper, unary?: UnaryCall<object, object>): void {
+        if (unary) {
+            this.registerRequest(rpcWrapper.requestId, unary)
+        }
         // this.send()
     }
-    //
-    // onIncomingMessage(unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper): void {
-    //
-    // }
+
+    onIncomingMessage(bytes: Uint8Array): void {
+        const rpcCall = RpcWrapper.fromBinary(bytes)
+        console.info(rpcCall)
+    }
 
     registerRequest(requestId: string, unary: UnaryCall<object, object>): void {
         // TODO: add timeouts?

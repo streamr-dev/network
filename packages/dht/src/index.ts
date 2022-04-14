@@ -1,13 +1,13 @@
 import { DhtTransportClient } from './transport/DhtTransportClient'
-import { getClosestPeersClient } from './proto/ClosestPeers.client'
+import { DhtRpcClient } from './proto/DhtRpc.client'
 import { MockTransport } from './transport/MockTransport'
 
 const main = async () => {
 
     const transport = new DhtTransportClient(new MockTransport())
-    const client = new getClosestPeersClient(transport)
+    const client = new DhtRpcClient(transport)
 
-    const response = client.rpc({peerId: 'peer', nonce: '1'})
+    const response = client.getClosestPeers({peerId: 'peer', nonce: '1'})
     await response.response
 }
 

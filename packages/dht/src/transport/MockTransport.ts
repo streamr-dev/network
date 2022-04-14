@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { AbstractTransport } from './AbstractTransport'
 import { PeerID } from '../types'
-import { RpcWrapper } from '../proto/RpcWrapper'
+import { RpcWrapper } from '../proto/DhtRpc'
 
 type MockSendFunction = (message: Uint8Array) => any
 export class MockTransport extends AbstractTransport {

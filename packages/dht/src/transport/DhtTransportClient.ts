@@ -15,7 +15,7 @@ import {
 import { v4 } from 'uuid'
 import { TODO } from '../types'
 import { AbstractTransport } from './AbstractTransport'
-import { RpcWrapper } from '../proto/RpcWrapper'
+import { RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
 export enum Event {
