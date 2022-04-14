@@ -242,7 +242,7 @@ describe('Config migration', () => {
         }
         source.plugins.metrics.consoleAndPM2IntervalInSeconds = 123
         testMigration(source, (target: any) => {
-            expect(target.client.network.name).toBe('mock-name')
+            expect(target.client.network.name).toBeUndefined()
             expect(target.client.network.location).toStrictEqual({
                 latitude: 12.34,
                 longitude: 56.78,
