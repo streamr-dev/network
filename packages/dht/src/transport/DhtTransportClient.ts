@@ -14,7 +14,6 @@ import {
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
 import { TODO } from '../types'
-import { AbstractTransport } from './AbstractTransport'
 import { RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
@@ -23,16 +22,22 @@ export enum Event {
 }
 
 export interface DhtTransportClient {
-    on(event: Event.RPC_REQUEST, listener: (unary: UnaryCall<object, object>, rpcWrapper: RpcWrapper) => void): this
+    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcWrapper: RpcWrapper) => void): this
+}
+
+export interface DeferredPromises {
+    header: Deferred<RpcMetadata>,
+    message: Deferred<object>,
+    status: Deferred<RpcStatus>,
+    trailer: Deferred<RpcMetadata>,
+    messageParser: (bytes: Uint8Array) => object
 }
 
 export class DhtTransportClient extends EventEmitter implements RpcTransport {
     protected readonly defaultOptions: TODO
-    protected readonly transport: AbstractTransport
 
-    constructor(transport: AbstractTransport) {
+    constructor() {
         super()
-        this.transport = transport
         this.defaultOptions = {}
     }
 
@@ -69,8 +74,15 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             defStatus.promise,
             defTrailer.promise,
         )
-        this.emit(Event.RPC_REQUEST, unary, request)
-
+        const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
+        const deferred: DeferredPromises = {
+            message: defMessage,
+            header: defHeader,
+            trailer: defTrailer,
+            status: defStatus,
+            messageParser: deferredParser
+        }
+        this.emit(Event.RPC_REQUEST, deferred, request)
         return unary
     }
 

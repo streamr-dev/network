@@ -64,7 +64,7 @@ message RouteMessageWrapper {
 }
 
 message RpcWrapper {
-  map<string, google.protobuf.Any> header = 1;
+  map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
 }
