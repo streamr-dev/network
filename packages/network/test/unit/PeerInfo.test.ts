@@ -24,7 +24,7 @@ describe('PeerInfo', () => {
     })
 
     it('toString', () => {
-        expect(nodeInfo.toString()).toEqual('NetworkNode<0x215836>')
+        expect(nodeInfo.toString()).toEqual('<0x215836>')
         expect(trackerInfo.toString()).toEqual('<0x4c56db>')
         expect(unknownInfo.toString()).toEqual('<0xeba138>')
     })
