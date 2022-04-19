@@ -1,5 +1,4 @@
 import { Schema } from 'ajv'
-import { router as volumeEndpoint } from './VolumeEndpoint'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { NodeMetrics } from './node/NodeMetrics'
@@ -34,7 +33,6 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
             this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
         }
         try {
-            this.addHttpServerRouter(volumeEndpoint(metricsContext))
             if (this.nodeMetrics !== undefined) {
                 await this.nodeMetrics.start()
             }
