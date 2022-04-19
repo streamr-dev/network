@@ -49,7 +49,7 @@ export const startTracker = async ({
     })
 
     if (attachHttpEndpoints) {
-        trackerHttpEndpoints(httpServer, tracker, metricsContext)
+        trackerHttpEndpoints(httpServer, tracker)
     }
 
     return tracker
