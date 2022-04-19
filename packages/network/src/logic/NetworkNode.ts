@@ -34,7 +34,7 @@ export class NetworkNode extends Node {
     }
 
     addMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
-        this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, (m) => cb(StreamMessage.deserialize(m.serialize()) as any))
+        this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
     removeMessageListener<T>(cb: (msg: StreamMessage<T>) => void): void {
