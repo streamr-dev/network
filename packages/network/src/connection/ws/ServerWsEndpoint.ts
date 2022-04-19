@@ -1,5 +1,4 @@
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "./AbstractWsEndpoint"
 import { staticLogger, ServerWsConnection } from './ServerWsConnection'
 import fs from 'fs'
@@ -28,10 +27,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
         sslEnabled: boolean,
         httpServer: http.Server | https.Server,
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
 
         this.httpServer = httpServer
         const protocol = sslEnabled ? 'wss' : 'ws'
@@ -80,7 +78,6 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                         if (!this.getConnectionByPeerId(peerId)) {
                             this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
                         } else {
-                            this.metrics.record('open:duplicateSocket', 1)
                             const failedMessage = `Connection for node: ${peerId} has already been established, rejecting duplicate`
                             ws.close(DisconnectionCode.DUPLICATE_SOCKET, failedMessage)
                             this.logger.warn(failedMessage)

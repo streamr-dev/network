@@ -21,7 +21,7 @@ import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
 import { LoginEndpoints } from './LoginEndpoints'
 import DataUnions from './dataunion'
-import { GroupKeyStoreFactory } from './encryption/GroupKeyStoreFactory'
+import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
@@ -142,6 +142,24 @@ class StreamrClientBase implements Context {
         }
         await this.subscriber.addSubscription<T>(sub)
         return sub
+    }
+
+    async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
+        if (opts.streamId === undefined) {
+            throw new Error('streamId required')
+        }
+        const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
+        if (opts.distributionMethod === 'rotate') {
+            if (opts.key === undefined) {
+                return this.groupKeyStore.rotateGroupKey(streamId)
+            } else { // eslint-disable-line no-else-return
+                return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
+            }
+        } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
+            return this.groupKeyStore.rekey(streamId, opts.key)
+        } else {
+            throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
+        }
     }
 
     connect = pOnce(async () => {

@@ -40,13 +40,14 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
 - [Advanced usage](#advanced-usage)
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
+    - [Encryption keys](#encryption-keys)
     - [Proxy publishing](#proxy-publishing)
     - [Logging](#logging)
 
 ## Getting started
 
 ### Subscribing
-```js 
+```js
 const streamId = 'streamr.eth/demos/helsinki-trams'
 
 streamr.subscribe(streamId, (message) => {
@@ -56,7 +57,7 @@ streamr.subscribe(streamId, (message) => {
 ```
 
 ### Publishing
-```js 
+```js
 // Requires MATIC tokens (Polygon blockchain gas token)
 const stream = await streamr.createStream({
     id: '/foo/bar'
@@ -104,7 +105,7 @@ ___
 See https://api-docs.streamr.network
 
 ### Client creation
-In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network. 
+In Streamr, Ethereum accounts are used for identity. You can generate an Ethereum private key using any Ethereum wallet, or you can use the utility function [`StreamrClient.generateEthereumAccount()`](#utility-functions), which returns the address and private key of a fresh Ethereum account. A private key is not required if you are only subscribing to public streams on the Network.
 
 ```js
 const streamr = new StreamrClient({
@@ -153,13 +154,13 @@ More information on Stream IDs can be found under the [stream creation project d
 ### Subscribing to a stream
 ```js
 const subscription = await streamr.subscribe(
-    streamId, 
+    streamId,
     (content, metadata) => { ... }
 )
 ```
-The callback's first parameter, `content`, will contain the value given to the `publish` method. 
+The callback's first parameter, `content`, will contain the value given to the `publish` method.
 
-The second parameter `metadata` is of type `StreamMessage`. It contains metadata about the message, e.g. timestamp. 
+The second parameter `metadata` is of type `StreamMessage`. It contains metadata about the message, e.g. timestamp.
 
 Unsubscribing from an existent subscription:
 ```js
@@ -208,7 +209,7 @@ const resend1 = await streamr.resend(
     streamId,
     {
         last: 10,
-    }, 
+    },
     onMessage
 )
 ```
@@ -251,8 +252,8 @@ const sub3 = await streamr.resend(
         },
         // when using from and to the following parameters are optional
         // but, if specified, both must be present
-        publisher: '0x12345...', 
-        msgChainId: 'ihuzetvg0c88ydd82z5o', 
+        publisher: '0x12345...',
+        msgChainId: 'ihuzetvg0c88ydd82z5o',
     }
 )
 ```
@@ -265,7 +266,7 @@ sub.once('resendComplete', () => {
 })
 ```
 
-Note that only one of the resend options can be used for a particular subscription. 
+Note that only one of the resend options can be used for a particular subscription.
 
 ### Searching for streams
 You can search for streams by specifying a search term:
@@ -275,7 +276,7 @@ const streams = await streamr.searchStreams('foo')
 Alternatively or additionally to the search term, you can search for streams based on permissions.
 
 To get all streams for which a user has any direct permission:
-```js 
+```js
 const streams = await streamr.searchStreams('foo', {
     user: '0x12345...'
 })
@@ -291,7 +292,7 @@ const streams = await streamr.searchStreams('foo', {
 It is also possible to filter by specific permissions by using `allOf` and `anyOf` properties. The `allOf` property should be preferred over `anyOf` when possible due to better query performance.
 
 If you want to find the streams you can subscribe to:
-```js 
+```js
 const streams = await streamr.searchStreams(undefined, {
     user: '0x12345...',
     allOf: [StreamPermission.SUBSCRIBE],
@@ -360,7 +361,7 @@ await stream.revokePermissions({
     public: true,
     permissions: [StreamPermission.SUBSCRIBE]
 })
-```        
+```
 
 
 The method `streamr.setPermissions` can be used to set an exact set of permissions for one or more streams. Note that if there are existing permissions for the same users in a stream, the previous permissions are overwritten. Note that this method cannot be used from a stream, but via the `StreamrClient` instance:
@@ -515,16 +516,16 @@ const receipt = await dataUnion.withdrawAllToSigned(
 // Or to authorize a fixed amount:
 const receipt = await dataUnion.withdrawAmountToSigned(
     '0x12345...', // member address
-    recipientAddress, 
-    100, // token amount, in wei 
-    signature, 
+    recipientAddress,
+    100, // token amount, in wei
+    signature,
 )
 ```
 
 Setting a new admin fee:
 ```js
 // Any number between 0 and 1, inclusive
-const receipt = await dataUnion.setAdminFee(0.4) 
+const receipt = await dataUnion.setAdminFee(0.4)
 ```
 #### Query functions
 These are available for everyone and anyone, to query publicly available info from a Data Union.
@@ -601,7 +602,7 @@ const dataUnion = await streamr.deployDataUnion({
     owner: ownerAddress, // Owner / admin of the newly created Data Union
     joinPartsAgent: [ownerAddress], // Able to add and remove members to/from the Data Union
     dataUnionName: /* Generated if not provided */, // NOT stored anywhere, only used for address derivation
-    adminFee: 0, // Must be between 0...1 
+    adminFee: 0, // Must be between 0...1
     sidechainPollingIntervalMs: 1000, //How often requests are sent to find out if the deployment has completed
     sidechainRetryTimeoutMs: 60000, // When to give up when waiting for the deployment to complete
     confirmations: 1, // Blocks to wait after Data Union mainnet contract deployment to consider it final
@@ -620,8 +621,8 @@ const dataUnion = await streamr.deployDataUnion({
 `dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed. Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means a Data Union deployed by a particular address with particular "name" will have a predictable address.
 
 ### Utility functions
-The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. 
-```js 
+The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`.
+```js
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
 ```
 In order to retrieve the client's address an async call must me made to `streamr.getAddress`
@@ -644,9 +645,9 @@ const streamId = `${address}/foo/bar`
 const streamId = `${address}/foo/bar#4`
 
 // Stream id + partition as an object
-const streamId = { 
-    id: `${address}/foo/bar`, 
-    partition: 4 
+const streamId = {
+    id: `${address}/foo/bar`,
+    partition: 4
 }
 ```
 
@@ -681,8 +682,8 @@ The partition key can be given as an argument to the `publish` methods, and the 
 
 ```js
 await stream.publish(
-    msg, 
-    Date.now(), 
+    msg,
+    Date.now(),
     msg.vehicleId // msg.vehicleId is the partition key here
 )
 ```
@@ -728,6 +729,52 @@ const streamr = new StreamrClient({
 Both of these properties should be disabled in tandem for message ordering and gap filling to be properly turned off.
 
 By disabling message ordering your application won't perform any filling nor sorting, dispatching messages as they come (faster) but without granting their collective integrity.
+
+
+### Encryption keys
+
+Messages published to a non-public stream are always encrypted. The publishing client creates the encryption keys and delivers them to the subscribers automatically. In most use cases, there is no need to manage encryption keys manually.
+
+#### Typical use cases
+
+A new encryption key is generated when publishing activity to a stream starts. The keys don't change during the lifetime of a client unless explicitly updated.
+
+At any given time a subscriber can request a key from a publisher. When the publisher receives a request, it checks whether the subscriber has valid `StreamPermission.SUBSCRIBE` permission to the stream. If a valid permission exists, the client sends the encryption key to the subscriber. The subscriber can then use the key to decrypt messages which are encrypted with that key.
+
+Typically subscribers query the current encryption key. But if they need to access to historical data, they may query previous encryption keys. A publisher client keeps track of all previous encryption keys in a local database, so it can respond to historical encryption key queries automatically. Therefore the publisher needs to stay online if historical decryption of its data is something that should be supported.
+
+#### Manual key update
+
+You can manually update the encryption key by calling `client.updateEncryptionKey(...)`. This triggers the creation of a new encryption key, after which the client starts to use that to encrypt published messages.
+
+In practice, an update is needed if:
+
+- You want to prevent new subscribers from reading historical messages. When you update the key, the new subscribers get the new key. But as the historical data is encrypted with some previous key, those messages aren't decryptable by the new subscribers.
+- You want to prevent expired subscribers from reading new messages. When you update the key, but you don't distribute the new key to the expired subscribers, they aren't able to decrypt new messages.
+
+Both of the use cases are covered if you call:
+```
+client.updateEncryptionKey({
+    streamId,
+    distributionMethod: 'rekey'
+})
+```
+
+You may want to call this method regularly (e.g. daily/weekly). Alternatively you can call it anytime you observe new expired subscribers (that is, someone bought your data stream for a limited period of time, and that period has now elapsed).
+
+#### Optimization: key rotation
+
+You can optimize the key distribution by using `rotate` instead of `rekey`. The optimization is applicable if subscriptions haven't expired or been removed. In that situation you can update the key by calling:
+```
+client.updateEncryptionKey({
+    streamId,
+    distributionMethod: 'rotate'
+})
+```
+
+In detail, the difference between the methods is:
+- In `rekey` method, the client sends the new key individually to each subscriber. Every subscriber receives a separate message which is encrypted with their public RSA key. The `StreamPermission.SUBSCRIBE` permission is checked by the publisher for each subscriber before a key is sent.
+- In optimized `rotate` method, the key is broadcasted to the network in the metadata of the next message. The key is encrypted with the previous encryption key and therefore subscribers can use it only if they know the previous key (https://en.wikipedia.org/wiki/Forward_secrecy). As the key is broadcasted to everyone, no permissions are checked. Note that recently expired subscribers most likely have the previous key, therefore they can use that new key, too.
 
 
 ### Proxy publishing and subscribing

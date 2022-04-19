@@ -43,7 +43,7 @@ const getTopologyStabilization = () => {
 }
 
 async function main() {
-    const metricsContext = new MetricsContext(id)
+    const metricsContext = new MetricsContext()
     try {
         await startTracker({
             listen,
@@ -67,12 +67,19 @@ async function main() {
         })
 
         if (program.opts().metrics) {
+            const previousTotals = {}
             setInterval(async () => {
                 const metrics = await metricsContext.report(true)
-                // output to console
-                if (program.opts().metrics) {
-                    logger.info(JSON.stringify(metrics, null, 4))
+                const output = {
+                    peerId: metrics.peerId,
                 }
+                Object.keys(metrics.metrics.tracker).forEach((key) => {
+                    const currentTotal = metrics.metrics.tracker[key].total
+                    const previousTotal = previousTotals[key] || 0
+                    output[key] = currentTotal - previousTotal
+                    previousTotals[key] = currentTotal
+                })
+                logger.info(JSON.stringify(output, null, 4))
             }, program.opts().metricsInterval)
         }
     } catch (err) {

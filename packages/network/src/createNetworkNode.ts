@@ -31,7 +31,7 @@ export const createNetworkNode = ({
     name,
     location,
     trackers,
-    metricsContext = new MetricsContext(id),
+    metricsContext = new MetricsContext(),
     peerPingInterval,
     trackerPingInterval,
     disconnectionWaitTime,
@@ -45,7 +45,7 @@ export const createNetworkNode = ({
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
     const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
     const nodeToTracker = new NodeToTracker(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)

@@ -1,5 +1,4 @@
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
 import { NodeClientWsConnection } from './NodeClientWsConnection_simulator'
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from './AbstractClientWsEndpoint_simulator'
@@ -15,10 +14,9 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
 
     constructor(
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
         Simulator.instance().addClientWsEndpoint(peerInfo, this.ownAddress, this)
     }
 
@@ -30,7 +28,6 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 Simulator.instance().wsConnect(this.ownAddress, this.peerInfo, serverUrl as string)
 
             } catch (err) {
-                this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
                 reject(err)
             }

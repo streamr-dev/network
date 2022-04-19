@@ -29,8 +29,8 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         const peerInfo2 = PeerInfo.newNode('ep2')
 
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         await nodeToTracker1.connectToTracker(tracker.getUrl(), PeerInfo.newTracker(tracker.getTrackerId()))
@@ -41,7 +41,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext('ep1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
         )
@@ -49,7 +49,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('ep'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
         )

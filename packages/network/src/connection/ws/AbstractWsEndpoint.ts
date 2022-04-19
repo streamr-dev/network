@@ -1,7 +1,6 @@
 import { EventEmitter } from "events"
 import { Logger } from "../../helpers/Logger"
 import { PeerId, PeerInfo } from "../PeerInfo"
-import { Metrics, MetricsContext } from "../../helpers/MetricsContext"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
 import { AbstractWsConnection } from './AbstractWsConnection'
@@ -46,14 +45,12 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     private stopped = false
 
     protected handshakeTimeoutRefs: Record<PeerId,NodeJS.Timeout>
-    protected readonly metrics: Metrics
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
     protected readonly handshakeTimer: number
 
     protected constructor(
         peerInfo: PeerInfo,
-        metricsContext: MetricsContext = new MetricsContext(peerInfo.peerId),
         pingInterval = 60 * 1000
     ) {
         super()
@@ -63,28 +60,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
         this.handshakeTimeoutRefs = {}
         this.handshakeTimer = 15 * 1000
-
-        this.metrics = metricsContext.create('WsEndpoint')
-            .addRecordedMetric('inSpeed')
-            .addRecordedMetric('outSpeed')
-            .addRecordedMetric('msgSpeed')
-            .addRecordedMetric('msgInSpeed')
-            .addRecordedMetric('msgOutSpeed')
-            .addRecordedMetric('open')
-            .addRecordedMetric('open:duplicateSocket')
-            .addRecordedMetric('open:failedException')
-            .addRecordedMetric('open:headersNotReceived')
-            .addRecordedMetric('open:missingParameter')
-            .addRecordedMetric('open:ownAddress')
-            .addRecordedMetric('close')
-            .addRecordedMetric('sendFailed')
-            .addRecordedMetric('webSocketError')
-            .addQueriedMetric('connections', () => this.getConnections().length)
-            .addQueriedMetric('rtts', () => this.getRtts())
-            .addQueriedMetric('totalWebSocketBuffer', () => {
-                return this.getConnections()
-                    .reduce((sum, connection) => sum + connection.getBufferedAmount(), 0)
-            })
     }
 
     async send(recipientId: PeerId, message: string): Promise<void> {
@@ -97,18 +72,13 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 connection.evaluateBackPressure()
                 await connection.send(message)
             } catch (err) {
-                this.metrics.record('sendFailed', 1)
                 this.logger.debug('sending to %s failed, reason %s', recipientId, err)
                 connection.terminate()
                 throw err
             }
 
             this.logger.trace('sent to %s message "%s"', recipientId, message)
-            this.metrics.record('outSpeed', message.length)
-            this.metrics.record('msgSpeed', 1)
-            this.metrics.record('msgOutSpeed', 1)
         } else {
-            this.metrics.record('sendFailed', 1)
             this.logger.trace('cannot send to %s, not connected', recipientId)
             throw new UnknownPeerError(`cannot send to ${recipientId} because not connected`)
         }
@@ -117,7 +87,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     close(recipientId: PeerId, code: DisconnectionCode, reason: DisconnectionReason): void {
         const connection = this.getConnectionByPeerId(recipientId)
         if (connection !== undefined) {
-            this.metrics.record('close', 1)
             try {
                 this.logger.trace('closing connection to %s, reason %s', recipientId, reason)
                 connection.close(code, reason)
@@ -184,7 +153,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
             }
         )
         this.connectionById.set(connection.getPeerId(), connection)
-        this.metrics.record('open', 1)
         this.logger.trace('added %s to connection list', connection.getPeerId())
         this.emit(Event.PEER_CONNECTED, peerInfo)
     }
@@ -196,9 +164,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         if (this.stopped) {
             return
         }
-        this.metrics.record('inSpeed', message.length)
-        this.metrics.record('msgSpeed', 1)
-        this.metrics.record('msgInSpeed', 1)
         this.logger.trace('<== received from %s message "%s"', connection.getPeerInfo(), message)
         this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
     }
@@ -207,7 +172,6 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
      * Implementer should invoke this whenever a connection is closed.
      */
     protected onClose(connection: C, code: DisconnectionCode, reason: DisconnectionReason): void {
-        this.metrics.record('close', 1)
         this.logger.trace('socket to %s closed (code %d, reason %s)', connection.getPeerId(), code, reason)
         this.connectionById.delete(connection.getPeerId())
         try {
