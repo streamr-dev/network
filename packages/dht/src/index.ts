@@ -4,18 +4,18 @@ import { RpcCommunicator } from './transport/RpcCommunicator'
 import { MockConnectionLayer } from './connection/MockConnectionLayer'
 import { DhtTransportServer } from './transport/DhtTransportServer'
 import { PeerID } from './types'
-import { RegisterDhtRpc } from './rpc-protocol/server'
+import { MockRegisterDhtRpc } from './rpc-protocol/server'
 
 const main = async () => {
     const clientTransport1 = new DhtTransportClient()
     const serverTransport1 = new DhtTransportServer()
-    serverTransport1.registerMethod('getClosestPeers', RegisterDhtRpc.getClosestPeers)
+    serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
     const mockConnectionLayer1 = new MockConnectionLayer()
     const rpcCommunicator1 = new RpcCommunicator(mockConnectionLayer1, clientTransport1, serverTransport1)
 
     const clientTransport2 = new DhtTransportClient()
     const serverTransport2 = new DhtTransportServer()
-    serverTransport2.registerMethod('getClosestPeers', RegisterDhtRpc.getClosestPeers)
+    serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
     const mockConnectionLayer2 = new MockConnectionLayer()
     const rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 

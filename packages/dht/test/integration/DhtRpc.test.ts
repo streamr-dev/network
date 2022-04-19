@@ -1,12 +1,11 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
 import { IConnectionLayer } from '../../src/connection/IConnectionLayer'
-import { MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
+import { MockRegisterDhtRpc, getMockNeighbors } from '../../src/rpc-protocol/server'
 import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { getMockNeighbors } from '../utils'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,

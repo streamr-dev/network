@@ -5,7 +5,7 @@ import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { getMockNeighbors } from '../utils'
+import { getMockNeighbors } from '../../src/rpc-protocol/server'
 
 describe('DhtClientRpcTransport', () => {
 

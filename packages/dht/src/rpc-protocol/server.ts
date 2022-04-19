@@ -1,6 +1,5 @@
-import { ClosestPeersRequest, ClosestPeersResponse } from '../proto/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, Neighbor, NodeType } from '../proto/DhtRpc'
 import { IDhtRpc } from '../proto/DhtRpc.server'
-import { getMockNeighbors } from '../../test/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../transport/DhtTransportServer'
 
@@ -22,4 +21,26 @@ export const MockRegisterDhtRpc = {
         const response = await MockDhtRpc.getClosestPeers(request, new DummyServerCallContext())
         return ClosestPeersResponse.toBinary(response)
     }
+}
+
+export const getMockNeighbors = (): Neighbor[] => {
+    const n1: Neighbor = {
+        peerId: 'Neighbor1',
+        type: NodeType.NODEJS,
+    }
+    const n2: Neighbor = {
+        peerId: 'Neighbor2',
+        type: NodeType.NODEJS,
+    }
+    const n3: Neighbor = {
+        peerId: 'Neighbor3',
+        type: NodeType.NODEJS,
+    }
+    const n4: Neighbor = {
+        peerId: 'Neighbor1',
+        type: NodeType.BROWSER,
+    }
+    return [
+        n1, n2, n3, n4
+    ]
 }
