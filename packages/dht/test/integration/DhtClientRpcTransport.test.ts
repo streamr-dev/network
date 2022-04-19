@@ -1,10 +1,11 @@
-import { ClosestPeersResponse, Neighbor, NodeType, RpcWrapper } from '../../src/proto/DhtRpc'
+import { ClosestPeersResponse, RpcWrapper } from '../../src/proto/DhtRpc'
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
 import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { getMockNeighbors } from '../utils'
 
 describe('DhtClientRpcTransport', () => {
 
@@ -13,27 +14,6 @@ describe('DhtClientRpcTransport', () => {
     })
 
     it('Happy Path getClosestNeighbors', async () => {
-        const getMockNeighbors = () => {
-            const n1: Neighbor = {
-                peerId: 'Neighbor1',
-                type: NodeType.NODEJS,
-            }
-            const n2: Neighbor = {
-                peerId: 'Neighbor2',
-                type: NodeType.NODEJS,
-            }
-            const n3: Neighbor = {
-                peerId: 'Neighbor3',
-                type: NodeType.NODEJS,
-            }
-            const n4: Neighbor = {
-                peerId: 'Neighbor1',
-                type: NodeType.BROWSER,
-            }
-            return [
-                n1, n2, n3, n4
-            ]
-        }
         const clientTransport = new DhtTransportClient()
         const serverTransport = new DhtTransportServer()
         const mockConnectionLayer = new MockConnectionLayer()
