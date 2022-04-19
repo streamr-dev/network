@@ -61,7 +61,11 @@ describe('Group Key Persistence', () => {
                 permissions: [StreamPermission.SUBSCRIBE]
             })
             const groupKey = GroupKey.generate()
-            await publisher.setNextGroupKey(stream.id, groupKey)
+            await publisher.updateEncryptionKey({
+                streamId: stream.id,
+                key: groupKey,
+                distributionMethod: 'rotate'
+            })
         })
 
         describe('publisher persists group key, can keep serving group key requests (resend)', () => {

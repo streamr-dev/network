@@ -36,9 +36,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = new NodeClientWsEndpoint(peerInfo3, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEp3 = new NodeClientWsEndpoint(peerInfo3)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         nodeToTracker3 = new NodeToTracker(wsEp3)
@@ -52,7 +52,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext('node-endpoint1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory,
             5000
@@ -61,7 +61,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('node-endpoint2'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory,
             5000
@@ -70,7 +70,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, nodeToTracker3),
-            new MetricsContext('node-endpoint3'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo3),
             NodeWebRtcConnectionFactory,
             5000

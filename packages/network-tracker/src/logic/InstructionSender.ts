@@ -79,7 +79,7 @@ export class InstructionSender {
         this.options = options ?? DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS
         this.sendInstruction = sendInstruction
         this.metrics = metrics
-            .addRecordedMetric('instructionsSent')
+            .addRecordedMetric('instructionSent')
     }
 
     addInstruction(instruction: Instruction): void {
@@ -108,7 +108,7 @@ export class InstructionSender {
     private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
             .map(async ({ nodeId, streamPartId, newNeighbors, counterValue }) => {
-                this.metrics.record('instructionsSent', 1)
+                this.metrics.record('instructionSent', 1)
                 try {
                     await this.sendInstruction(
                         nodeId,

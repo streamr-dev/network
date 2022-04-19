@@ -1,6 +1,5 @@
 import WebSocket from 'ws'
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { MetricsContext } from '../../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { AbstractWsConnection, ReadyState } from "./AbstractWsConnection"
 import { IMessageEvent, w3cwebsocket } from "websocket"
@@ -21,16 +20,13 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
 
     constructor(
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
 
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
-
-        this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
     }
 
     getServerUrlByPeerId(peerId: PeerId): string | undefined {
@@ -127,7 +123,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     }
 
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        this.metrics.record('webSocketError', 1)
         this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
         reject(error)
     }
@@ -138,7 +133,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     }
 
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        this.metrics.record('webSocketError', 1)
         this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
         connection.terminate()
     }

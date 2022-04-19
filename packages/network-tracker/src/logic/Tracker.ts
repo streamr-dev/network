@@ -120,7 +120,7 @@ export class Tracker extends EventEmitter {
             throw new Error('Provided protocols are not correct')
         }
 
-        const metricsContext = opts.metricsContext || new MetricsContext('')
+        const metricsContext = opts.metricsContext || new MetricsContext()
         this.maxNeighborsPerNode = opts.maxNeighborsPerNode
         this.trackerServer = opts.protocols.trackerServer
         this.peerInfo = opts.peerInfo
@@ -156,9 +156,8 @@ export class Tracker extends EventEmitter {
         attachRtcSignalling(this.trackerServer)
 
         this.metrics = metricsContext.create('tracker')
-            .addRecordedMetric('onNodeDisconnected')
-            .addRecordedMetric('processNodeStatus')
-            .addRecordedMetric('_removeNode')
+            .addRecordedMetric('nodeDisconnected')
+            .addRecordedMetric('nodeStatusProcessed')
 
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
@@ -173,7 +172,7 @@ export class Tracker extends EventEmitter {
 
     onNodeDisconnected(node: NodeId): void {
         this.logger.debug('node %s disconnected', node)
-        this.metrics.record('onNodeDisconnected', 1)
+        this.metrics.record('nodeDisconnected', 1)
         this.removeNode(node)
     }
 
@@ -182,7 +181,7 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        this.metrics.record('processNodeStatus', 1)
+        this.metrics.record('nodeStatusProcessed', 1)
         const status = statusMessage.status as Status
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {
@@ -271,7 +270,6 @@ export class Tracker extends EventEmitter {
     }
 
     private removeNode(node: NodeId): void {
-        this.metrics.record('_removeNode', 1)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
         delete this.extraMetadatas[node]

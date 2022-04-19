@@ -32,8 +32,8 @@ describe('WebRTC multisignaller test', () => {
             }
         })
 
-        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
-        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
+        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
 
         nodeToTracker1 = new NodeToTracker(ep1)
         nodeToTracker2 = new NodeToTracker(ep2)
@@ -64,7 +64,7 @@ describe('WebRTC multisignaller test', () => {
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext(''),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
             NodeWebRtcConnectionFactory
         )
@@ -72,7 +72,7 @@ describe('WebRTC multisignaller test', () => {
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext(''),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
             NodeWebRtcConnectionFactory
         )

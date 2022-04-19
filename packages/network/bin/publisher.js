@@ -47,7 +47,7 @@ function generateString(length) {
     return result
 }
 
-const metricsContext = new MetricsContext(id)
+const metricsContext = new MetricsContext()
 const publisher = createNetworkNode({
     name,
     id,

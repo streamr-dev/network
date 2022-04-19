@@ -82,7 +82,7 @@ jobs:
       build_platforms: linux/amd64
       test_script: |
         for (( i=0; i < 5; i=i+1 )); do
-            curl -s http://localhost:8791/volume;
+            curl -s http://localhost:8791/info;
             res=$?;
             if test "$res" != "0"; then
                 echo "Attempting to connect to broker retrying in $wait_time seconds";

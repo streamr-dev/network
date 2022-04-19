@@ -192,7 +192,7 @@
         "gapFillTimeout": {
             "type": "number"
         },
-        "groupKeys": {
+        "encryptionKeys": {
             "type": "object"
         },
         "network": {

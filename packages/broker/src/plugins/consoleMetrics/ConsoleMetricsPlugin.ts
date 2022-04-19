@@ -1,4 +1,7 @@
-import { MetricsContext, Logger } from 'streamr-network'
+import { Schema } from 'ajv'
+import { Plugin, PluginOptions } from '../../Plugin'
+import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
+import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
 
@@ -6,20 +9,20 @@ function formatNumber(n: number) {
     return n < 10 ? n.toFixed(1) : Math.round(n)
 }
 
-export class ConsoleMetrics {
+export interface ConsoleMetricsPluginConfig {
+    interval: number
+}
 
-    reportingIntervalSeconds: number
-    metricsContext: MetricsContext
-    timeout?: NodeJS.Timeout
+export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
 
-    constructor(reportingIntervalSeconds: number, metricsContext: MetricsContext) {
-        this.reportingIntervalSeconds = reportingIntervalSeconds
-        this.metricsContext = metricsContext
+    private timeout?: NodeJS.Timeout
+
+    constructor(options: PluginOptions) {
+        super(options)
     }
 
-    start(): void {
-        logger.info('starting legacy metrics reporting interval')
-        const reportingIntervalInMs = this.reportingIntervalSeconds * 1000
+    async start(): Promise<void> {
+        const reportingIntervalInMs = this.pluginConfig.interval * 1000
         const reportFn = async () => {
             try {
                 await this.reportAndReset()
@@ -30,13 +33,14 @@ export class ConsoleMetrics {
         }
         this.timeout = setTimeout(reportFn, reportingIntervalInMs)
     }
-
-    stop(): void {
+    
+    async stop(): Promise<void> {
         clearTimeout(this.timeout!)
     }
-
+    
     async reportAndReset(): Promise<void> {
-        const report = await this.metricsContext.report(true)
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        const report = await metricsContext.report(true)
 
         let storageReadCountPerSecond = 0
         let storageWriteCountPerSecond = 0
@@ -113,5 +117,9 @@ export class ConsoleMetrics {
             totalBatches,
             meanBatchAge
         )
+    }
+
+    getConfigSchema(): Schema {
+        return PLUGIN_CONFIG_SCHEMA
     }
 }

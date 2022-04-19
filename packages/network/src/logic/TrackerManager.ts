@@ -7,7 +7,6 @@ import { StreamPartManager } from './StreamPartManager'
 import { Logger } from '../helpers/Logger'
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
-import { Metrics } from '../helpers/MetricsContext'
 import { NameDirectory } from '../NameDirectory'
 
 const logger = new Logger(module)
@@ -50,7 +49,6 @@ export class TrackerManager {
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
     private readonly instructionRetryManager: InstructionRetryManager
-    private readonly metrics: Metrics
     private readonly getNodeDescriptor: GetNodeDescriptor
     private readonly subscriber: Subscriber
 
@@ -58,16 +56,12 @@ export class TrackerManager {
         nodeToTracker: NodeToTracker,
         opts: TrackerManagerOptions,
         streamPartManager: StreamPartManager,
-        metrics: Metrics,
         getNodeDescriptor: GetNodeDescriptor,
         subscriber: Subscriber
     ) {
         this.nodeToTracker =  nodeToTracker
         this.streamPartManager = streamPartManager
         this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
-        this.metrics = metrics
-            .addRecordedMetric('unexpectedTrackerInstructions')
-            .addRecordedMetric('trackerInstructions')
         this.getNodeDescriptor = getNodeDescriptor
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
@@ -190,12 +184,10 @@ export class TrackerManager {
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.getTrackerId(streamPartId)
         if (trackerId !== expectedTrackerId) {
-            this.metrics.record('unexpectedTrackerInstructions', 1)
             logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
             return
         }
 
-        this.metrics.record('trackerInstructions', 1)
         logger.trace('received instructions for %s, nodes to connect %o', streamPartId, nodeIds)
 
         this.subscriber.subscribeToStreamPartIfHaveNotYet(streamPartId, false)
