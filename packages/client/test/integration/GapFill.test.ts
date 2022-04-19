@@ -70,7 +70,8 @@ describe('GapFill', () => {
         if (!subscriber || !stream) { return }
         expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(await subscriber.getSubscriptions()).toEqual([])
+        const subscriptions = await subscriber.getSubscriptions()
+        expect(subscriptions).toHaveLength(0)
     })
 
     afterEach(async () => {
