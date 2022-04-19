@@ -1,0 +1,71 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+
+option optimize_for = CODE_SIZE;
+
+service DhtRpc {
+  rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+}
+
+message ClosestPeersRequest {
+  string peerId = 1;
+  string nonce = 2; // requestId
+}
+
+message ClosestPeersResponse {
+  repeated Neighbor neighbors = 1;
+  string nonce = 2; // requestId
+}
+
+message Neighbor {
+  string peerId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+}
+
+message ConnectivityMethod {
+  uint32 port = 2;
+  string ip = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
+}
+
+
+message ConnectivityReportRequest {
+  uint32 port = 1;
+  string nonce = 2; // requestId
+}
+
+message ConnectivityReportResponse {
+  string open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  string nonce = 4; // requestId
+}
+
+
+message RouteMessageWrapper {
+  string sourceId = 1;
+  string nonce = 2;
+  string destinationId = 3;
+  oneof message {
+    google.protobuf.Any closestPeersRequest = 4;
+    google.protobuf.Any closestPeersResponse = 5;
+    google.protobuf.Any rtcOffer = 6;
+    google.protobuf.Any rtcAnswer = 7;
+    google.protobuf.Any iceCandidate = 8;
+    google.protobuf.Any iceDescription = 9;
+  }
+}
+
+message RpcWrapper {
+  map<string, string> header = 1;
+  bytes body = 2;
+  string requestId = 3;
+}
+
