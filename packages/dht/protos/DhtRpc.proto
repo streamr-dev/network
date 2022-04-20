@@ -8,7 +8,7 @@ service DhtRpc {
 }
 
 message ClosestPeersRequest {
-  string peerId = 1;
+  bytes peerId = 1;
   string nonce = 2; // requestId
 }
 
@@ -18,7 +18,7 @@ message ClosestPeersResponse {
 }
 
 message Neighbor {
-  string peerId = 1;
+  bytes peerId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;

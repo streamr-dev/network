@@ -6,6 +6,7 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { getMockNeighbors } from '../../src/rpc-protocol/server'
+import { generateId } from '../../src/dht/helpers'
 
 describe('DhtClientRpcTransport', () => {
 
@@ -36,7 +37,7 @@ describe('DhtClientRpcTransport', () => {
 
         const client = new DhtRpcClient(clientTransport)
 
-        const response = client.getClosestPeers({peerId: 'peer', nonce: '1'})
+        const response = client.getClosestPeers({peerId: generateId('peer'), nonce: '1'})
         const res = await response.response
         expect(res.neighbors.length).toEqual(4)
         expect(res.neighbors[0]).toEqual(getMockNeighbors()[0])

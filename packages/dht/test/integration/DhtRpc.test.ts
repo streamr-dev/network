@@ -6,6 +6,8 @@ import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { Buffer } from "buffer"
+import { generateId } from '../../src/dht/helpers'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
@@ -45,11 +47,11 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy path', async () => {
 
-        const response1 = client1.getClosestPeers({ peerId: 'peer', nonce: '1' })
+        const response1 = client1.getClosestPeers({ peerId: generateId('peer'), nonce: '1' })
         const res1 = await response1.response
         expect(res1.neighbors).toEqual(getMockNeighbors())
 
-        const response2 = client2.getClosestPeers({ peerId: 'peer', nonce: '1' })
+        const response2 = client2.getClosestPeers({ peerId: generateId('peer'), nonce: '1' })
         const res2 = await response2.response
         expect(res2.neighbors).toEqual(getMockNeighbors())
     })

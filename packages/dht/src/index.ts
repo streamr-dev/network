@@ -5,6 +5,7 @@ import { MockConnectionLayer } from './connection/MockConnectionLayer'
 import { DhtTransportServer } from './transport/DhtTransportServer'
 import { PeerID } from './types'
 import { MockRegisterDhtRpc } from './rpc-protocol/server'
+import { Buffer } from "buffer"
 
 const main = async () => {
     const clientTransport1 = new DhtTransportClient()
@@ -29,11 +30,11 @@ const main = async () => {
     const client1 = new DhtRpcClient(clientTransport1)
     const client2 = new DhtRpcClient(clientTransport2)
 
-    const response1 = client1.getClosestPeers({peerId: 'peer', nonce: '1'})
+    const response1 = client1.getClosestPeers({peerId: Buffer.from('peer'), nonce: '1'})
     const res1 = await response1.response
     console.log(res1)
 
-    const response2 = client2.getClosestPeers({peerId: 'peer', nonce: '1'})
+    const response2 = client2.getClosestPeers({peerId: Buffer.from('peer'), nonce: '1'})
     const res2 = await response2.response
     console.log(res2)
 }

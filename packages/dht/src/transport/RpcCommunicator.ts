@@ -42,7 +42,7 @@ export class RpcCommunicator extends EventEmitter {
             this.registerRequest(rpcWrapper.requestId, deferredPromises)
         }
         const bytes = RpcWrapper.toBinary(rpcWrapper)
-        this.send(rpcWrapper.header.peerId as unknown as string, bytes)
+        this.send(rpcWrapper.header.peerId as unknown as PeerID, bytes)
     }
 
     async onIncomingMessage(bytes: Uint8Array): Promise<void> {
