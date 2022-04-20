@@ -1,7 +1,6 @@
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
-    describeRepeats,
     Msg,
     Debug,
     getPublishTestStreamMessages,
