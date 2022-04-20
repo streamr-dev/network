@@ -4,56 +4,38 @@ import { RpcCommunicator } from './transport/RpcCommunicator'
 import { MockConnectionLayer } from './connection/MockConnectionLayer'
 import { DhtTransportServer } from './transport/DhtTransportServer'
 import { PeerID } from './types'
-import { ClosestPeersResponse, Neighbor, NodeType, RpcWrapper } from './proto/DhtRpc'
+import { MockRegisterDhtRpc } from './rpc-protocol/server'
 
-const getMockNeighbors = () => {
-    const n1: Neighbor = {
-        peerId: 'Neighbor1',
-        type: NodeType.NODEJS,
-    }
-    const n2: Neighbor = {
-        peerId: 'Neighbor2',
-        type: NodeType.NODEJS,
-    }
-    const n3: Neighbor = {
-        peerId: 'Neighbor3',
-        type: NodeType.NODEJS,
-    }
-    const n4: Neighbor = {
-        peerId: 'Neighbor1',
-        type: NodeType.BROWSER,
-    }
-    return [
-        n1, n2, n3, n4
-    ]
-}
 const main = async () => {
+    const clientTransport1 = new DhtTransportClient()
+    const serverTransport1 = new DhtTransportServer()
+    serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
+    const mockConnectionLayer1 = new MockConnectionLayer()
+    const rpcCommunicator1 = new RpcCommunicator(mockConnectionLayer1, clientTransport1, serverTransport1)
 
-    const clientTransport = new DhtTransportClient()
-    const serverTransport = new DhtTransportServer()
-    const mockConnectionLayer = new MockConnectionLayer()
-    const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
-    rpcCommunicator.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-        const request = RpcWrapper.fromBinary(bytes)
-        const responseBody: ClosestPeersResponse = {
-            neighbors: getMockNeighbors(),
-            nonce: 'TO BE REMOVED'
-        }
-        const response: RpcWrapper = {
-            header: {
-                response: 'hiihii'
-            },
-            body: ClosestPeersResponse.toBinary(responseBody),
-            requestId: request.requestId
-        }
-        rpcCommunicator.onIncomingMessage(RpcWrapper.toBinary(response))
+    const clientTransport2 = new DhtTransportClient()
+    const serverTransport2 = new DhtTransportServer()
+    serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
+    const mockConnectionLayer2 = new MockConnectionLayer()
+    const rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
+
+    rpcCommunicator1.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
+        rpcCommunicator2.onIncomingMessage(bytes)
+    })
+    rpcCommunicator2.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
+        rpcCommunicator1.onIncomingMessage(bytes)
     })
 
-    const client = new DhtRpcClient(clientTransport)
+    const client1 = new DhtRpcClient(clientTransport1)
+    const client2 = new DhtRpcClient(clientTransport2)
 
-    const response = client.getClosestPeers({peerId: 'peer', nonce: '1'})
-    const res = await response.response
-    console.log(res)
+    const response1 = client1.getClosestPeers({peerId: 'peer', nonce: '1'})
+    const res1 = await response1.response
+    console.log(res1)
+
+    const response2 = client2.getClosestPeers({peerId: 'peer', nonce: '1'})
+    const res2 = await response2.response
+    console.log(res2)
 }
 
 main()

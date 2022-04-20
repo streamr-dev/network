@@ -34,7 +34,7 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcWrapper: RpcWrapper) => {
             this.onOutgoingMessage(rpcWrapper)
         })
-        this.connectionLayer.on(ConnectionLayerEvent.RPC_CALL, (bytes: Uint8Array) => this.onIncomingMessage(bytes))
+        this.connectionLayer.on(ConnectionLayerEvent.RPC_CALL, async (bytes: Uint8Array) => await this.onIncomingMessage(bytes))
     }
 
     onOutgoingMessage(rpcWrapper: RpcWrapper, deferredPromises?: DeferredPromises): void {
@@ -45,14 +45,26 @@ export class RpcCommunicator extends EventEmitter {
         this.send(rpcWrapper.header.peerId as unknown as string, bytes)
     }
 
-    onIncomingMessage(bytes: Uint8Array): void {
+    async onIncomingMessage(bytes: Uint8Array): Promise<void> {
         const rpcCall = RpcWrapper.fromBinary(bytes)
         if (rpcCall.header.response && this.ongoingRequests.has(rpcCall.requestId)) {
             this.resolveOngoingRequest(rpcCall)
+        } else if (rpcCall.header.request && rpcCall.header.method) {
+            await this.handleRequest(rpcCall)
         }
-        else if (rpcCall.header.request) {
-            // DhtTransportServer handling here
+    }
+
+    async handleRequest(rpcWrapper: RpcWrapper): Promise<void> {
+        const bytes = await this.dhtTransportServer.onRequest(rpcWrapper)
+        const responseWrapper: RpcWrapper = {
+            body: bytes,
+            header: {
+                response: "response",
+                method: rpcWrapper.header.method
+            },
+            requestId: rpcWrapper.requestId
         }
+        this.onOutgoingMessage(responseWrapper)
     }
 
     registerRequest(requestId: string, deferredPromises: DeferredPromises): void {

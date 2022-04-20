@@ -47,7 +47,8 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
 
     createRequestHeaders(method: MethodInfo): any {
         return {
-            method: method.service.typeName
+            method: method.localName,
+            request: 'request'
         }
     }
 
