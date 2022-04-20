@@ -23,7 +23,7 @@ const NUM_MESSAGES = 5
 
 jest.setTimeout(30000)
 
-describeRepeats('decryption', () => {
+describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []
@@ -272,8 +272,9 @@ describeRepeats('decryption', () => {
                 await onEncryptionMessageErr
             }, TIMEOUT * 2)
 
-            it('does not encrypt messages in stream without groupkey', async () => {
+            it('does not encrypt messages for public streams', async () => {
                 const stream2 = await createTestStream(publisher, module)
+                await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
                 let didFindStream2 = false
 
@@ -330,13 +331,6 @@ describeRepeats('decryption', () => {
                 }
 
                 const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
-
-                const groupKey = GroupKey.generate()
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    key: groupKey,
-                    distributionMethod: 'rotate'
-                })
 
                 await testSub(stream)
                 await testSub(stream2)

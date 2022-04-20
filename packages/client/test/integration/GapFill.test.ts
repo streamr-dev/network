@@ -7,9 +7,10 @@ import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, Msg } from '../test-utils/utils'
+import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamPermission } from '../../src'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -54,6 +55,7 @@ describe('GapFill', () => {
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
