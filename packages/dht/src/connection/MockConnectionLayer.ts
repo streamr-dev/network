@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import EventEmitter = require("events")
 import { IConnectionLayer } from './IConnectionLayer'
 import { PeerID } from '../types'
