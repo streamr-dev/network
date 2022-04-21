@@ -3,9 +3,7 @@ import { DhtRpcClient } from './proto/DhtRpc.client'
 import { RpcCommunicator } from './transport/RpcCommunicator'
 import { MockConnectionLayer } from './connection/MockConnectionLayer'
 import { DhtTransportServer } from './transport/DhtTransportServer'
-import { PeerID } from './types'
 import { MockRegisterDhtRpc } from './rpc-protocol/server'
-import { Buffer } from "buffer"
 import { PeerDescriptor } from './proto/DhtRpc'
 import { generateId } from './dht/helpers'
 

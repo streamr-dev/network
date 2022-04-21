@@ -4,9 +4,7 @@ import { IConnectionLayer } from '../../src/connection/IConnectionLayer'
 import { MockRegisterDhtRpc, getMockPeers } from '../../src/rpc-protocol/server'
 import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { Buffer } from "buffer"
 import { generateId } from '../../src/dht/helpers'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 

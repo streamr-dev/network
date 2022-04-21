@@ -1,6 +1,5 @@
 import KBucket from 'k-bucket'
 import { DhtPeer } from './DhtPeer'
-import { DhtRpcClient } from '../proto/DhtRpc.client'
 
 class ContactWrapper {
     public contacted = false

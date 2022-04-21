@@ -4,8 +4,9 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../transport/DhtTransportServer'
 import { generateId } from '../dht/helpers'
 import { DhtPeer } from '../dht/DhtPeer'
+import { TODO } from '../types'
 
-export const createRpcMethods = (fn: any): any => {
+export const createRpcMethods = (fn: TODO): any => {
     const DhtRpc: IDhtRpc = {
         async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const { peerDescriptor } = request

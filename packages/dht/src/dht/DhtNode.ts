@@ -1,4 +1,4 @@
-import { PeerID, TODO } from '../types'
+import { PeerID } from '../types'
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import { SortedContactList } from './SortedContactList'
