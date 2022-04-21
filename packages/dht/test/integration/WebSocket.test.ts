@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { WebSocketConnector } from "../../src/connection/WebSocketConnector"
 import { WebSocketServer } from "../../src/connection/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/ConnectionSource'

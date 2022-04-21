@@ -1,6 +1,6 @@
-import EventEmitter = require("events");
-import { ConnectionSource, Event as ConnectionSourceEvent } from "./ConnectionSource";
-import { ClientWebSocket } from "./ClientWebSocket";
+import { EventEmitter } from 'events'
+import { ConnectionSource, Event as ConnectionSourceEvent } from './ConnectionSource'
+import { ClientWebSocket } from './ClientWebSocket'
 import { Event as ConnectionEvent} from './Connection'
 
 export class WebSocketConnector extends EventEmitter implements ConnectionSource{

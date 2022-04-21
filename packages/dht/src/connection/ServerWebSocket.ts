@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { EventEmitter } from 'events'
 import { Connection, Event as ConnectionEvent } from './Connection'
 import { connection  as WsConnection} from 'websocket'
@@ -10,7 +12,7 @@ export class ServerWebSocket extends EventEmitter implements Connection {
         
         socket.on('message', (message) => {
             if (message.type === 'utf8') {
-                console.log('Received Message: ' + message.utf8Data); 
+                console.log('Received Message: ' + message.utf8Data)
             }
             else if (message.type === 'binary') {
                 console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
@@ -18,7 +20,7 @@ export class ServerWebSocket extends EventEmitter implements Connection {
             }
         })
         socket.on('close', (reasonCode, description) => {
-            //console.log((new Date()) + ' Peer ' + socket.remoteAddress + ' disconnected.');
+            //console.log((new Date()) + ' Peer ' + socket.remoteAddress + ' disconnected.')
             this.emit(ConnectionEvent.DISCONNECTED,reasonCode, description)
         })
 

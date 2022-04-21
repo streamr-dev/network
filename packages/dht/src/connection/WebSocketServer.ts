@@ -1,6 +1,8 @@
+/* eslint-disable no-console, @typescript-eslint/no-unused-vars */
+
 import * as http from 'http'
 import { EventEmitter } from 'events'
-import { server as WsServer, connection as WsConnection } from 'websocket'
+import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
 import { ConnectionSource, Event as ConnectionSourceEvent } from './ConnectionSource'
 
@@ -32,7 +34,7 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
                 autoAcceptConnections: false
             })
 
-            function originIsAllowed(origin: string) {
+            function originIsAllowed(_uorigin: string) {
                 // put logic here to detect whether the specified origin is allowed.
                 return true
             }
@@ -40,9 +42,9 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
             this.wsServer.on('request', (request) => {
                 if (!originIsAllowed(request.origin)) {
                     // Make sure we only accept requests from an allowed origin
-                    request.reject();
-                    console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-                    return;
+                    request.reject()
+                    console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.')
+                    return
                 }
 
                 const connection = request.accept(null, request.origin)

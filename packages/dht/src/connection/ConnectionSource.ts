@@ -1,4 +1,4 @@
-import { Connection } from './Connection';
+import { Connection } from './Connection'
 
 export enum Event {
     NEW_CONNECTION = 'streamr:dht:connectionsource:new_connection',
