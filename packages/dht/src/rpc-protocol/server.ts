@@ -1,9 +1,32 @@
-import { ClosestPeersRequest, ClosestPeersResponse, Neighbor, NodeType } from '../proto/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, Neighbor, NodeType, ConnectivityMethod } from '../proto/DhtRpc'
 import { IDhtRpc } from '../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../transport/DhtTransportServer'
-import { Buffer } from 'buffer'
 import { generateId } from '../dht/helpers'
+
+export const createRpcMethods = (fn: any): any => {
+    const DhtRpc: IDhtRpc = {
+        async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+            const { peerId } = request
+            const closestPeers = fn(peerId)
+            const response = {
+                neighbors: closestPeers,
+                nonce: 'aaaaaa'
+            }
+            return response
+        }
+    }
+
+    const RegisterDhtRpc = {
+        async getClosestPeers(bytes: Uint8Array): Promise<Uint8Array> {
+            const request = ClosestPeersRequest.fromBinary(bytes)
+            const response = await DhtRpc.getClosestPeers(request, new DummyServerCallContext())
+            return ClosestPeersResponse.toBinary(response)
+        }
+    }
+
+    return RegisterDhtRpc
+}
 
 const MockDhtRpc: IDhtRpc = {
     async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
