@@ -46,19 +46,19 @@ export class SortedContactList {
         contacts.forEach( (contact) => this.addContact(contact))
     }
     
-    public addContactsInBulk(contacts: Uint8Array[], client: DhtRpcClient): void {
-        for (let i=0; i<contacts.length; i++) {
-            if (Buffer.compare(contacts[i], this.ownId) == 0) {
-                continue
-            }
-
-            if (!this.contactsById.hasOwnProperty(JSON.stringify(contacts[i]))) {
-                this.contactsById[JSON.stringify(contacts[i])] = new ContactWrapper(new DhtPeer(contacts[i], client))
-                this.contactIds.push(contacts[i])
-            }
-        }
-        this.contactIds.sort(this.compareIds)
-    }
+    // public addContactsInBulk(contacts: Uint8Array[], client: DhtRpcClient): void {
+    //     for (let i=0; i<contacts.length; i++) {
+    //         if (Buffer.compare(contacts[i], this.ownId) == 0) {
+    //             continue
+    //         }
+    //
+    //         if (!this.contactsById.hasOwnProperty(JSON.stringify(contacts[i]))) {
+    //             this.contactsById[JSON.stringify(contacts[i])] = new ContactWrapper(new DhtPeer(contacts[i], client))
+    //             this.contactIds.push(contacts[i])
+    //         }
+    //     }
+    //     this.contactIds.sort(this.compareIds)
+    // }
 
     public setContacted(contactId: Uint8Array): void {
         if (this.contactsById.hasOwnProperty(JSON.stringify(contactId))) {

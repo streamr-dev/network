@@ -6,6 +6,7 @@ import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
+import { PeerDescriptor } from '../proto/DhtRpc'
 
 export class DhtNode {
     private readonly ALPHA = 3
@@ -18,9 +19,14 @@ export class DhtNode {
     private readonly dhtRpcClient: DhtRpcClient
     private readonly dhtTransportServer: DhtTransportServer
     private readonly rpcCommunicator: RpcCommunicator
+    private peerDescriptor: PeerDescriptor
 
     constructor(selfId: PeerID, dhtRpcClient: DhtRpcClient, dhtTransportServer: DhtTransportServer, rpcCommunicator: RpcCommunicator) {
         this.selfId = selfId
+        this.peerDescriptor = {
+            peerId: selfId,
+            type: 0
+        }
         this.peers = new Map()
         this.bucket = new KBucket({
             localNodeId: this.selfId,
@@ -33,11 +39,24 @@ export class DhtNode {
         this.bindDefaultServerMethods()
     }
 
-    public getClosestPeers(id: Uint8Array, caller: DhtPeer): DhtPeer[] {
-        const ret = this.bucket.closest(id)
+    public getNeighborList(): SortedContactList {
+        return this.neighborList
+    }
 
-        if (!this.bucket.get(id)) {
-            const contact = caller
+    public getSelfId(): PeerID {
+        return this.selfId
+    }
+
+    public getDhtRpcClient(): DhtRpcClient {
+        return this.dhtRpcClient
+    }
+
+    public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
+        console.log('getClosestPeers', caller)
+        const ret = this.bucket.closest(caller.peerId)
+
+        if (!this.bucket.get(caller.peerId)) {
+            const contact = new DhtPeer(caller, this.dhtRpcClient)
             this.bucket.add(contact)
             this.neighborList.addContact(contact)
         }
@@ -49,11 +68,12 @@ export class DhtNode {
         const promises = contactList.map(async (contact) => {
             this.neighborList.setContacted(contact.getPeerId())
             this.neighborList.setActive(contact.getPeerId())
-            const returnedContacts = await contact.getClosestPeers(this.selfId)
+            const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
             const dhtPeers = returnedContacts.map((peer) => {
-                return new DhtPeer(peer.peerId, this.dhtRpcClient)
+                return new DhtPeer(peer, this.dhtRpcClient)
             })
             this.neighborList.addContacts(dhtPeers)
+            console.log(dhtPeers.length)
             dhtPeers.forEach( (returnedContact) => {
                 if (!this.bucket.get(returnedContact.id)) {
                     this.bucket.add(returnedContact)
@@ -74,6 +94,7 @@ export class DhtNode {
         if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
             uncontacted = this.neighborList.getUncontactedContacts(this.K)
             if (uncontacted.length < 1) {
+                console.log("here")
                 return
             }
             await this.fillBuckets()
@@ -102,8 +123,10 @@ export class DhtNode {
         if (Buffer.compare(this.selfId, entrypoint.getPeerId()) == 0) {
             return
         }
+        this.bucket.add(entrypoint)
         const closest = this.bucket.closest(this.selfId, this.ALPHA)
         this.neighborList.addContacts(closest)
+
         await this.findContacts()
     }
 
@@ -114,5 +137,9 @@ export class DhtNode {
 
     public getRpcCommunicator(): RpcCommunicator {
         return this.rpcCommunicator
+    }
+
+    public setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.peerDescriptor = peerDescriptor
     }
 }

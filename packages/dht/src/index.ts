@@ -6,6 +6,8 @@ import { DhtTransportServer } from './transport/DhtTransportServer'
 import { PeerID } from './types'
 import { MockRegisterDhtRpc } from './rpc-protocol/server'
 import { Buffer } from "buffer"
+import { PeerDescriptor } from './proto/DhtRpc'
+import { generateId } from './dht/helpers'
 
 const main = async () => {
     const clientTransport1 = new DhtTransportClient()
@@ -20,21 +22,30 @@ const main = async () => {
     const mockConnectionLayer2 = new MockConnectionLayer()
     const rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
-    rpcCommunicator1.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-        rpcCommunicator2.onIncomingMessage(bytes)
+    rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+        rpcCommunicator2.onIncomingMessage(peerDescriptor, bytes)
     })
-    rpcCommunicator2.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-        rpcCommunicator1.onIncomingMessage(bytes)
+    rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+        rpcCommunicator1.onIncomingMessage(peerDescriptor, bytes)
     })
 
     const client1 = new DhtRpcClient(clientTransport1)
     const client2 = new DhtRpcClient(clientTransport2)
 
-    const response1 = client1.getClosestPeers({peerId: Buffer.from('peer'), nonce: '1'})
+    const peerDescriptor1: PeerDescriptor = {
+        peerId: generateId('peer1'),
+        type: 0
+    }
+
+    const peerDescriptor2: PeerDescriptor = {
+        peerId: generateId('peer2'),
+        type: 0
+    }
+    const response1 = client1.getClosestPeers({peerDescriptor: peerDescriptor1, nonce: '1'})
     const res1 = await response1.response
     console.log(res1)
 
-    const response2 = client2.getClosestPeers({peerId: Buffer.from('peer'), nonce: '1'})
+    const response2 = client2.getClosestPeers({peerDescriptor: peerDescriptor2, nonce: '1'})
     const res2 = await response2.response
     console.log(res2)
 }

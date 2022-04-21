@@ -8,16 +8,16 @@ service DhtRpc {
 }
 
 message ClosestPeersRequest {
-  bytes peerId = 1;
+  PeerDescriptor peerDescriptor = 1;
   string nonce = 2; // requestId
 }
 
 message ClosestPeersResponse {
-  repeated Neighbor neighbors = 1;
+  repeated PeerDescriptor peers = 1;
   string nonce = 2; // requestId
 }
 
-message Neighbor {
+message PeerDescriptor {
   bytes peerId = 1;
   NodeType type = 2;
   ConnectivityMethod udp = 3;
@@ -67,5 +67,7 @@ message RpcWrapper {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
+  PeerDescriptor senderDescriptor = 4;
+  PeerDescriptor targetDescriptor = 5;
 }
 

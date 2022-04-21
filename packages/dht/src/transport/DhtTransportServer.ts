@@ -1,4 +1,4 @@
-import { RpcWrapper } from '../proto/DhtRpc'
+import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
@@ -21,7 +21,7 @@ export class DhtTransportServer extends EventEmitter {
         this.methods = new Map()
     }
 
-    async onRequest(rpcWrapper: RpcWrapper): Promise<Uint8Array> {
+    async onRequest(peerDescriptor: PeerDescriptor, rpcWrapper: RpcWrapper): Promise<Uint8Array> {
         const fn = this.methods.get(rpcWrapper.header.method)!
         return await fn(rpcWrapper.body)
     }
