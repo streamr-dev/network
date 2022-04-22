@@ -7,6 +7,12 @@ import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
+import PQueue from 'p-queue'
+
+enum QueuedPromiseReturnTypes {
+    DONE = 'done',
+    LOOP = 'loop'
+}
 
 export class DhtNode {
     private readonly ALPHA = 3
@@ -20,7 +26,7 @@ export class DhtNode {
     private readonly dhtTransportServer: DhtTransportServer
     private readonly rpcCommunicator: RpcCommunicator
     private peerDescriptor: PeerDescriptor
-
+    private readonly queue: PQueue
     constructor(selfId: PeerID, dhtRpcClient: DhtRpcClient, dhtTransportServer: DhtTransportServer, rpcCommunicator: RpcCommunicator) {
         this.selfId = selfId
         this.peerDescriptor = {
@@ -36,7 +42,16 @@ export class DhtNode {
         this.neighborList = new SortedContactList(this.selfId, [])
         this.dhtTransportServer = dhtTransportServer
         this.rpcCommunicator = rpcCommunicator
+        this.queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
         this.bindDefaultServerMethods()
+    }
+
+    private async addtoQueue(fn: (...args: any[]) => Promise<string>, args: any[]): Promise<void> {
+        await this.queue.add(() => fn(args).then(async (ret) => {
+            if (ret === QueuedPromiseReturnTypes.LOOP) {
+                await this.addtoQueue(fn, args)
+            }
+        }))
     }
 
     public getNeighborList(): SortedContactList {
@@ -80,39 +95,38 @@ export class DhtNode {
         await Promise.allSettled(promises)
     }
 
-    private async findContacts(): Promise<void> {
+    private async findContacts(): Promise<string> {
         const oldClosestContactId = this.neighborList.getClosestContactId()
         let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
         if (uncontacted.length < 1) {
-            return
+            return QueuedPromiseReturnTypes.DONE
         }
 
         await this.getClosestPeersFromContacts(uncontacted)
         if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
             uncontacted = this.neighborList.getUncontactedContacts(this.K)
             if (uncontacted.length < 1) {
-                return
+                return 'done'
             }
-            await this.fillBuckets()
+            await this.addtoQueue(this.fillBuckets.bind(this), [])
         }
-        await this.findContacts()
+        return QueuedPromiseReturnTypes.LOOP
     }
 
-    private async fillBuckets(): Promise<void> {
+    private async fillBuckets(): Promise<string> {
         let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
         const oldClosestContactId = this.neighborList.getClosestContactId()
         await this.getClosestPeersFromContacts(uncontacted)
 
         if (this.neighborList.getActiveContacts().length >= this.K ||
             Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
-            return
+            return QueuedPromiseReturnTypes.DONE
         }
         uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
         if (uncontacted.length < 1) {
-            return
+            return QueuedPromiseReturnTypes.DONE
         }
-        await this.fillBuckets()
-
+        return QueuedPromiseReturnTypes.LOOP
     }
 
     async joinDht(entrypoint: DhtPeer): Promise<void> {
@@ -123,7 +137,7 @@ export class DhtNode {
         const closest = this.bucket.closest(this.selfId, this.ALPHA)
         this.neighborList.addContacts(closest)
 
-        await this.findContacts()
+        await this.addtoQueue(this.findContacts.bind(this), [])
     }
 
     private bindDefaultServerMethods() {
