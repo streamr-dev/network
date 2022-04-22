@@ -13,7 +13,7 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { PeerID, TODO } from '../types'
+import { TODO } from '../types'
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 

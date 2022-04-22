@@ -15,7 +15,7 @@ enum QueuedPromiseReturnTypes {
 }
 
 export class DhtNode {
-    private readonly ALPHA = 3
+    private readonly ALPHA = 4
     private K = 4
     private readonly peers: Map<PeerID, DhtPeer>
     private readonly selfId: PeerID
