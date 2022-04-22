@@ -52,7 +52,6 @@ export class DhtNode {
     }
 
     public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
-        console.log('getClosestPeers', caller)
         const ret = this.bucket.closest(caller.peerId)
 
         if (!this.bucket.get(caller.peerId)) {
@@ -73,7 +72,6 @@ export class DhtNode {
                 return new DhtPeer(peer, this.dhtRpcClient)
             })
             this.neighborList.addContacts(dhtPeers)
-            console.log(dhtPeers.length)
             dhtPeers.forEach( (returnedContact) => {
                 if (!this.bucket.get(returnedContact.id)) {
                     this.bucket.add(returnedContact)
@@ -94,7 +92,6 @@ export class DhtNode {
         if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
             uncontacted = this.neighborList.getUncontactedContacts(this.K)
             if (uncontacted.length < 1) {
-                console.log("here")
                 return
             }
             await this.fillBuckets()

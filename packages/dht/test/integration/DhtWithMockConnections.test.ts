@@ -23,17 +23,20 @@ describe('DhtClientRpcTransport', () => {
         rpcCommunicators = new Map()
         const createDhtNode = (stringId: string): DhtNode => {
             const id = generateId(stringId)
+            const peerDescriptor: PeerDescriptor = {
+                peerId: id,
+                type: 0
+            }
             const clientTransport = new DhtTransportClient()
             const serverTransport = new DhtTransportServer()
             const mockConnectionLayer = new MockConnectionLayer()
             const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
             const client = new DhtRpcClient(clientTransport)
             rpcCommunicators.set(stringId, rpcCommunicator)
-            rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            rpcCommunicator.setSendFn((targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
                 if (!peerDescriptor) {
                     throw new Error('peerdescriptor not set')
                 }
-                console.log(peerDescriptor)
                 rpcCommunicators.get(stringFromId(peerDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
             })
             return new DhtNode(id, client, serverTransport, rpcCommunicator)
@@ -53,18 +56,15 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy path', async () => {
         await dhtNode1.joinDht(entrypoint)
+        console.log("Node1 joined")
         await dhtNode2.joinDht(entrypoint)
-        await Promise.allSettled([
-            dhtNode3.joinDht(entrypoint),
-            dhtNode4.joinDht(entrypoint),
-            dhtNode5.joinDht(entrypoint)
-        ])
-        // console.log(dhtNode1.getNeighborList())
-        // console.log(dhtNode2.getNeighborList())
-        // console.log(dhtNode3.getNeighborList())
-        // console.log(dhtNode4.getNeighborList())
-        // console.log(dhtNode5.getNeighborList())
-
+        console.log("Node2 joined")
+        await dhtNode3.joinDht(entrypoint)
+        console.log("Node3 joined")
+        await dhtNode4.joinDht(entrypoint)
+        console.log("Node4 joined")
+        await dhtNode5.joinDht(entrypoint)
+        console.log("Node5 joined")
     })
 
 })

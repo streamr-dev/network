@@ -19,7 +19,6 @@ export class DhtPeer {
     }
 
     async getClosestPeers(targetPeerDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
-        console.log("getClosestPeers")
         const response = await this.dhtClient.getClosestPeers(
             { peerDescriptor: this.peerDescriptor, nonce: v4() },
             {
@@ -32,7 +31,6 @@ export class DhtPeer {
         if (status.code !== 'OK') {
             return []
         }
-        console.log(peers)
         return peers.peers
     }
 

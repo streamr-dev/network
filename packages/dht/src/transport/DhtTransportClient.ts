@@ -72,8 +72,6 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             targetDescriptor: options.targetDescriptor as PeerDescriptor
         }
 
-        console.log(request)
-
         const unary = new UnaryCall<I, O>(
             method,
             {},

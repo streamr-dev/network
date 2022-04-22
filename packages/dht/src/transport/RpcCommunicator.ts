@@ -43,7 +43,6 @@ export class RpcCommunicator extends EventEmitter {
             this.registerRequest(rpcWrapper.requestId, deferredPromises)
         }
         const bytes = RpcWrapper.toBinary(rpcWrapper)
-        console.log(rpcWrapper)
         this.send(rpcWrapper.targetDescriptor!, bytes)
     }
 
@@ -65,7 +64,7 @@ export class RpcCommunicator extends EventEmitter {
                 method: rpcWrapper.header.method
             },
             requestId: rpcWrapper.requestId,
-            targetDescriptor: senderDescriptor
+            targetDescriptor: rpcWrapper.senderDescriptor
         }
         this.onOutgoingMessage(responseWrapper)
     }

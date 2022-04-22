@@ -24,7 +24,6 @@ export const createRpcMethods = (fn: TODO): any => {
         async getClosestPeers(bytes: Uint8Array): Promise<Uint8Array> {
             const request = ClosestPeersRequest.fromBinary(bytes)
             const response = await DhtRpc.getClosestPeers(request, new DummyServerCallContext())
-            console.log(response)
             return ClosestPeersResponse.toBinary(response)
         }
     }
