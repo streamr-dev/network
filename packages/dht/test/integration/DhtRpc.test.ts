@@ -1,11 +1,12 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
 import { IConnectionLayer } from '../../src/connection/IConnectionLayer'
-import { MockRegisterDhtRpc, getMockNeighbors } from '../../src/rpc-protocol/server'
+import { MockRegisterDhtRpc, getMockPeers } from '../../src/rpc-protocol/server'
 import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { generateId } from '../../src/dht/helpers'
+import { PeerDescriptor } from '../../src/proto/DhtRpc'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
@@ -32,11 +33,11 @@ describe('DhtClientRpcTransport', () => {
         mockConnectionLayer2 = new MockConnectionLayer()
         rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
-        rpcCommunicator1.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-            rpcCommunicator2.onIncomingMessage(bytes)
+        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            rpcCommunicator2.onIncomingMessage(peerDescriptor, bytes)
         })
-        rpcCommunicator2.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-            rpcCommunicator1.onIncomingMessage(bytes)
+        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            rpcCommunicator1.onIncomingMessage(peerDescriptor, bytes)
         })
 
         client1 = new DhtRpcClient(clientTransport1)
@@ -45,13 +46,22 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy path', async () => {
 
-        const response1 = client1.getClosestPeers({ peerId: 'peer', nonce: '1' })
-        const res1 = await response1.response
-        expect(res1.neighbors).toEqual(getMockNeighbors())
+        const peerDescriptor1: PeerDescriptor = {
+            peerId: generateId('peer1'),
+            type: 0
+        }
 
-        const response2 = client2.getClosestPeers({ peerId: 'peer', nonce: '1' })
+        const peerDescriptor2: PeerDescriptor = {
+            peerId: generateId('peer2'),
+            type: 0
+        }
+        const response1 = client1.getClosestPeers({ peerDescriptor: peerDescriptor1, nonce: '1' })
+        const res1 = await response1.response
+        expect(res1.peers).toEqual(getMockPeers())
+
+        const response2 = client2.getClosestPeers({ peerDescriptor: peerDescriptor2, nonce: '1' })
         const res2 = await response2.response
-        expect(res2.neighbors).toEqual(getMockNeighbors())
+        expect(res2.peers).toEqual(getMockPeers())
     })
 
 })
