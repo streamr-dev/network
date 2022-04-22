@@ -3,6 +3,7 @@ import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { nodeFormatPeerDescriptor } from './helpers'
+import { DhtRpcOptions } from '../transport/DhtTransportClient'
 
 export class DhtPeer {
     private static counter = 0
@@ -19,18 +20,17 @@ export class DhtPeer {
         this.dhtClient = client
     }
 
-    async getClosestPeers(senderDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+    async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
         const request: ClosestPeersRequest = {
-            peerDescriptor: senderDescriptor,
+            peerDescriptor: sourceDescriptor,
             nonce: v4()
         }
-        const response = await this.dhtClient.getClosestPeers(
-            request,
-            {
-                senderDescriptor: senderDescriptor as PeerDescriptor,
-                targetDescriptor: this.peerDescriptor as PeerDescriptor
-            }
-        )
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor
+        }
+
+        const response = await this.dhtClient.getClosestPeers(request, options)
         const status = await response.status
         const peers = await response.response
         if (status.code !== 'OK') {

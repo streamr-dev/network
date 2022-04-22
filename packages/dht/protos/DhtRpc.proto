@@ -67,7 +67,7 @@ message RpcWrapper {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
-  PeerDescriptor senderDescriptor = 4;
+  PeerDescriptor sourceDescriptor = 4;
   PeerDescriptor targetDescriptor = 5;
 }
 
