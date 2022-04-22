@@ -13,7 +13,10 @@ describe('DhtClientRpcTransport', () => {
         dhtNode2: DhtNode,
         dhtNode3: DhtNode,
         dhtNode4: DhtNode,
-        dhtNode5: DhtNode
+        dhtNode5: DhtNode,
+        dhtNode6: DhtNode,
+        dhtNode7: DhtNode,
+        dhtNode8: DhtNode
 
     let entrypoint: DhtPeer
 
@@ -52,6 +55,10 @@ describe('DhtClientRpcTransport', () => {
         dhtNode3 = createDhtNode('peer2')
         dhtNode4 = createDhtNode('peer3')
         dhtNode5 = createDhtNode('peer4')
+        dhtNode6 = createDhtNode('peer5')
+        dhtNode7 = createDhtNode('peer6')
+        dhtNode8 = createDhtNode('peer7')
+
     })
 
     it('Happy path', async () => {
@@ -65,12 +72,21 @@ describe('DhtClientRpcTransport', () => {
         console.log("Node4 joined")
         await dhtNode5.joinDht(entrypoint)
         console.log("Node5 joined")
+        await dhtNode6.joinDht(entrypoint)
+        console.log("Node6 joined")
+        await dhtNode7.joinDht(entrypoint)
+        console.log("Node7 joined")
+        await dhtNode8.joinDht(entrypoint)
+        console.log("Node8 joined")
 
-        console.log(dhtNode1.getNeighborList().getStringIds())
-        console.log(dhtNode2.getNeighborList().getStringIds())
-        console.log(dhtNode3.getNeighborList().getStringIds())
-        console.log(dhtNode4.getNeighborList().getStringIds())
-        console.log(dhtNode5.getNeighborList().getStringIds())
+        expect(dhtNode1.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode2.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode3.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode4.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode5.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode6.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode7.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode8.getNeighborList().getStringIds().length).toEqual(7)
     })
 
 })

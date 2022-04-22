@@ -2,7 +2,7 @@ import { PeerID } from '../types'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
-import { nodeFormatPeerDescriptor, stringFromId } from './helpers'
+import { nodeFormatPeerDescriptor } from './helpers'
 
 export class DhtPeer {
     private static counter = 0

@@ -1,7 +1,6 @@
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { stringFromId } from '../dht/helpers'
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',

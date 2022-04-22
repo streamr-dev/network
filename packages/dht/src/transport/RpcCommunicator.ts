@@ -1,9 +1,9 @@
 import EventEmitter = require('events');
 import { DeferredPromises, DhtTransportClient, Event as DhtTransportClientEvent } from './DhtTransportClient'
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
-import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
+import { DhtTransportServer } from './DhtTransportServer'
 import { IConnectionManager, Event as ConnectionLayerEvent } from '../connection/IConnectionManager'
-import { nodeFormatPeerDescriptor, stringFromId } from '../dht/helpers'
+import { nodeFormatPeerDescriptor } from '../dht/helpers'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -31,9 +31,6 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportClient.on(DhtTransportClientEvent.RPC_REQUEST, (deferredPromises: DeferredPromises, rpcWrapper: RpcWrapper) => {
             this.onOutgoingMessage(rpcWrapper, deferredPromises)
         })
-        // this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcWrapper: RpcWrapper) => {
-        //     this.onOutgoingMessage(rpcWrapper)
-        // })
         this.connectionLayer.on(ConnectionLayerEvent.DATA, async (peerDescriptor: PeerDescriptor, bytes: Uint8Array) =>
             await this.onIncomingMessage(peerDescriptor, bytes)
         )
