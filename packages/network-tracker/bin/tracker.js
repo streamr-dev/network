@@ -11,7 +11,7 @@ const logger = new Logger(module)
 
 program
     .version(CURRENT_VERSION)
-    .usage('<ethereumPrivateKey> <trackerName>')
+    .usage('<ethereumPrivateKey>')
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
@@ -27,11 +27,10 @@ program
     .description('Run tracker with reporting')
     .parse(process.argv)
 
-if (program.args.length < 2) {
+if (program.args.length < 1) {
     program.help()
 }
 const privateKey = program.args[0]
-const name = program.args[1]
 const wallet = new ethers.Wallet(privateKey)
 const id = wallet.address
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {
@@ -41,7 +40,7 @@ const listen = program.opts().unixSocket ? program.opts().unixSocket : {
 
 const { slackBotToken, slackChannel } = program.opts()
 let slackbot
-const slackAlertHeader = `Tracker ${name} ${id}`
+const slackAlertHeader = `Tracker ${id}`
 if (slackBotToken && slackChannel) {
     slackbot = new SlackBot(slackChannel, slackBotToken)
 }
@@ -72,7 +71,6 @@ async function main() {
         await startTracker({
             listen,
             id,
-            name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
             attachHttpEndpoints: program.opts().attachHttpEndpoints,
             privateKeyFileName: program.opts().privateKeyFileName,
@@ -89,7 +87,6 @@ async function main() {
 
         logger.info('started tracker: %o', {
             id,
-            name,
             ...trackerObj
         })
     } catch (err) {
