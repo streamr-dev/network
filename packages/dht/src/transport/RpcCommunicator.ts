@@ -2,7 +2,7 @@ import EventEmitter = require('events');
 import { DeferredPromises, DhtTransportClient, Event as DhtTransportClientEvent } from './DhtTransportClient'
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
-import { IConnectionLayer, Event as ConnectionLayerEvent } from '../connection/IConnectionLayer'
+import { IConnectionManager, Event as ConnectionLayerEvent } from '../connection/IConnectionManager'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -17,10 +17,10 @@ export interface RpcCommunicator {
 export class RpcCommunicator extends EventEmitter {
     private readonly dhtTransportClient: DhtTransportClient
     private readonly dhtTransportServer: DhtTransportServer
-    private readonly connectionLayer: IConnectionLayer
+    private readonly connectionLayer: IConnectionManager
     private readonly ongoingRequests: Map<string, DeferredPromises>
     public send: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void
-    constructor(connectionLayer: IConnectionLayer, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
+    constructor(connectionLayer: IConnectionManager, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
         super()
         this.dhtTransportClient = dhtTransportClient
         this.dhtTransportServer = dhtTransportServer
@@ -33,7 +33,7 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcWrapper: RpcWrapper) => {
             this.onOutgoingMessage(rpcWrapper)
         })
-        this.connectionLayer.on(ConnectionLayerEvent.RPC_CALL, async (peerDescriptor: PeerDescriptor, bytes: Uint8Array) =>
+        this.connectionLayer.on(ConnectionLayerEvent.DATA, async (peerDescriptor: PeerDescriptor, bytes: Uint8Array) =>
             await this.onIncomingMessage(peerDescriptor, bytes)
         )
     }

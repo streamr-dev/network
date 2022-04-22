@@ -1,8 +1,8 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { IConnectionLayer } from '../../src/connection/IConnectionLayer'
-import { MockRegisterDhtRpc, getMockPeers } from '../../src/rpc-protocol/server'
-import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
+import { IConnectionManager } from '../../src/connection/IConnectionManager'
+import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/dht/helpers'
@@ -13,8 +13,8 @@ describe('DhtClientRpcTransport', () => {
         clientTransport2: DhtTransportClient,
         serverTransport1: DhtTransportServer,
         serverTransport2: DhtTransportServer,
-        mockConnectionLayer1: IConnectionLayer,
-        mockConnectionLayer2: IConnectionLayer,
+        mockConnectionLayer1: IConnectionManager,
+        mockConnectionLayer2: IConnectionManager,
         rpcCommunicator1: RpcCommunicator,
         rpcCommunicator2: RpcCommunicator,
         client1: DhtRpcClient,
@@ -24,13 +24,13 @@ describe('DhtClientRpcTransport', () => {
         clientTransport1 = new DhtTransportClient()
         serverTransport1 = new DhtTransportServer()
         serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer1 = new MockConnectionLayer()
+        mockConnectionLayer1 = new MockConnectionManager()
         rpcCommunicator1 = new RpcCommunicator(mockConnectionLayer1, clientTransport1, serverTransport1)
 
         clientTransport2 = new DhtTransportClient()
         serverTransport2 = new DhtTransportServer()
         serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer2 = new MockConnectionLayer()
+        mockConnectionLayer2 = new MockConnectionManager()
         rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {

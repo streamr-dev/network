@@ -1,7 +1,7 @@
 import { DhtTransportClient } from './transport/DhtTransportClient'
 import { DhtRpcClient } from './proto/DhtRpc.client'
 import { RpcCommunicator } from './transport/RpcCommunicator'
-import { MockConnectionLayer } from './connection/MockConnectionLayer'
+import { MockConnectionManager } from './connection/MockConnectionManager'
 import { DhtTransportServer } from './transport/DhtTransportServer'
 import { MockRegisterDhtRpc } from './rpc-protocol/server'
 import { PeerDescriptor } from './proto/DhtRpc'
@@ -11,13 +11,13 @@ const main = async () => {
     const clientTransport1 = new DhtTransportClient()
     const serverTransport1 = new DhtTransportServer()
     serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-    const mockConnectionLayer1 = new MockConnectionLayer()
+    const mockConnectionLayer1 = new MockConnectionManager()
     const rpcCommunicator1 = new RpcCommunicator(mockConnectionLayer1, clientTransport1, serverTransport1)
 
     const clientTransport2 = new DhtTransportClient()
     const serverTransport2 = new DhtTransportServer()
     serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-    const mockConnectionLayer2 = new MockConnectionLayer()
+    const mockConnectionLayer2 = new MockConnectionManager()
     const rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
     rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {

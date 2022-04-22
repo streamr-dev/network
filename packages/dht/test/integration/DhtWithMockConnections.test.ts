@@ -1,6 +1,6 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId, stringFromId } from '../../src/dht/helpers'
@@ -29,7 +29,7 @@ describe('DhtClientRpcTransport', () => {
             }
             const clientTransport = new DhtTransportClient()
             const serverTransport = new DhtTransportServer()
-            const mockConnectionLayer = new MockConnectionLayer()
+            const mockConnectionLayer = new MockConnectionManager()
             const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
             const client = new DhtRpcClient(clientTransport)
             rpcCommunicators.set(stringId, rpcCommunicator)
