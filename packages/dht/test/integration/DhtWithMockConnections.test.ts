@@ -63,21 +63,13 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy path', async () => {
         await dhtNode1.joinDht(entrypoint)
-        console.log("Node1 joined")
         await dhtNode2.joinDht(entrypoint)
-        console.log("Node2 joined")
         await dhtNode3.joinDht(entrypoint)
-        console.log("Node3 joined")
         await dhtNode4.joinDht(entrypoint)
-        console.log("Node4 joined")
         await dhtNode5.joinDht(entrypoint)
-        console.log("Node5 joined")
         await dhtNode6.joinDht(entrypoint)
-        console.log("Node6 joined")
         await dhtNode7.joinDht(entrypoint)
-        console.log("Node7 joined")
         await dhtNode8.joinDht(entrypoint)
-        console.log("Node8 joined")
 
         expect(dhtNode1.getNeighborList().getStringIds().length).toEqual(7)
         expect(dhtNode2.getNeighborList().getStringIds().length).toEqual(7)
