@@ -16,6 +16,7 @@ import { v4 } from 'uuid'
 import { PeerID, TODO } from '../types'
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
+import { stringFromId } from '../dht/helpers'
 
 export enum Event {
     RPC_REQUEST = 'streamr:dht-transport:request-new'

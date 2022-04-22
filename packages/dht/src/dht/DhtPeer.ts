@@ -1,7 +1,8 @@
 import { PeerID } from '../types'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { PeerDescriptor } from '../proto/DhtRpc'
+import { ClosestPeersRequest, PeerDescriptor } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
+import { nodeFormatPeerDescriptor, stringFromId } from './helpers'
 
 export class DhtPeer {
     private static counter = 0
@@ -18,12 +19,16 @@ export class DhtPeer {
         this.dhtClient = client
     }
 
-    async getClosestPeers(targetPeerDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+    async getClosestPeers(senderDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const request: ClosestPeersRequest = {
+            peerDescriptor: senderDescriptor,
+            nonce: v4()
+        }
         const response = await this.dhtClient.getClosestPeers(
-            { peerDescriptor: this.peerDescriptor, nonce: v4() },
+            request,
             {
-                senderDescriptor: this.peerDescriptor,
-                targetDescriptor: targetPeerDescriptor
+                senderDescriptor: senderDescriptor as PeerDescriptor,
+                targetDescriptor: this.peerDescriptor as PeerDescriptor
             }
         )
         const status = await response.status
@@ -31,7 +36,8 @@ export class DhtPeer {
         if (status.code !== 'OK') {
             return []
         }
-        return peers.peers
+        const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
+        return formatted
     }
 
     getPeerId(): PeerID {

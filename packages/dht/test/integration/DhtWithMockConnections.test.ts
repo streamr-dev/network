@@ -34,10 +34,10 @@ describe('DhtClientRpcTransport', () => {
             const client = new DhtRpcClient(clientTransport)
             rpcCommunicators.set(stringId, rpcCommunicator)
             rpcCommunicator.setSendFn((targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
-                if (!peerDescriptor) {
-                    throw new Error('peerdescriptor not set')
+                if (!targetDescriptor) {
+                    throw new Error('peer descriptor not set')
                 }
-                rpcCommunicators.get(stringFromId(peerDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
+                rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
             })
             return new DhtNode(id, client, serverTransport, rpcCommunicator)
         }
@@ -65,6 +65,12 @@ describe('DhtClientRpcTransport', () => {
         console.log("Node4 joined")
         await dhtNode5.joinDht(entrypoint)
         console.log("Node5 joined")
+
+        console.log(dhtNode1.getNeighborList().getStringIds())
+        console.log(dhtNode2.getNeighborList().getStringIds())
+        console.log(dhtNode3.getNeighborList().getStringIds())
+        console.log(dhtNode4.getNeighborList().getStringIds())
+        console.log(dhtNode5.getNeighborList().getStringIds())
     })
 
 })

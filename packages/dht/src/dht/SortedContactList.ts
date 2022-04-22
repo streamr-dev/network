@@ -1,5 +1,6 @@
 import KBucket from 'k-bucket'
 import { DhtPeer } from './DhtPeer'
+import { stringFromId } from './helpers'
 
 class ContactWrapper {
     public contacted = false
@@ -101,4 +102,7 @@ export class SortedContactList {
         return distance1 - distance2
     }
 
+    public getStringIds(): string[] {
+        return this.contactIds.map((id) => stringFromId(id))
+    }
 }

@@ -7,6 +7,7 @@ import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
+import { stringFromId } from './helpers'
 
 export class DhtNode {
     private readonly ALPHA = 3
@@ -53,7 +54,6 @@ export class DhtNode {
 
     public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
         const ret = this.bucket.closest(caller.peerId)
-
         if (!this.bucket.get(caller.peerId)) {
             const contact = new DhtPeer(caller, this.dhtRpcClient)
             this.bucket.add(contact)
@@ -138,5 +138,9 @@ export class DhtNode {
 
     public setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.peerDescriptor = peerDescriptor
+    }
+
+    public getPeerDescriptor(): PeerDescriptor {
+        return this.peerDescriptor
     }
 }
