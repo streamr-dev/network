@@ -55,11 +55,17 @@ describe('DhtClientRpcTransport', () => {
             peerId: generateId('peer2'),
             type: 0
         }
-        const response1 = client1.getClosestPeers({ peerDescriptor: peerDescriptor1, nonce: '1' })
+        const response1 = client1.getClosestPeers(
+            { peerDescriptor: peerDescriptor1, nonce: '1' },
+            { targetDescriptor: peerDescriptor2 }
+        )
         const res1 = await response1.response
         expect(res1.peers).toEqual(getMockPeers())
 
-        const response2 = client2.getClosestPeers({ peerDescriptor: peerDescriptor2, nonce: '1' })
+        const response2 = client2.getClosestPeers(
+            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { targetDescriptor: peerDescriptor1 }
+        )
         const res2 = await response2.response
         expect(res2.peers).toEqual(getMockPeers())
     })
