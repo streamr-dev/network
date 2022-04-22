@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 
-import EventEmitter = require("events")
-import { IConnectionLayer } from './IConnectionLayer'
+import { EventEmitter } from 'events'
+import { IConnectionManager } from './IConnectionManager'
 import { PeerID } from '../types'
 
-export class MockConnectionLayer extends EventEmitter implements IConnectionLayer {
+export class MockConnectionManager extends EventEmitter implements IConnectionManager {
     constructor() {
         super()
     }

@@ -1,7 +1,7 @@
 import { ClosestPeersResponse, RpcWrapper } from '../../src/proto/DhtRpc'
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
@@ -16,8 +16,8 @@ describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
         const clientTransport = new DhtTransportClient()
         const serverTransport = new DhtTransportServer()
-        const mockConnectionLayer = new MockConnectionLayer()
-        const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
+        const mockConnectionManager = new MockConnectionManager()
+        const rpcCommunicator = new RpcCommunicator(mockConnectionManager, clientTransport, serverTransport)
         rpcCommunicator.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
             const request = RpcWrapper.fromBinary(bytes)
             const responseBody: ClosestPeersResponse = {
