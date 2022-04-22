@@ -24,6 +24,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
 export const startTracker = async ({
     listen,
     id = uuidv4(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     name,
     location,
     attachHttpEndpoints = true,
@@ -34,7 +35,7 @@ export const startTracker = async ({
     certFileName,
     topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
-    const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
+    const peerInfo = PeerInfo.newTracker(id, undefined, undefined, location)
     const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
     const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, trackerPingInterval)
 
