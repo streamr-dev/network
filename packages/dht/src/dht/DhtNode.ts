@@ -8,6 +8,7 @@ import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import PQueue from 'p-queue'
+import { stringFromId } from './helpers'
 
 enum QueuedPromiseReturnTypes {
     DONE = 'done',
@@ -73,7 +74,6 @@ export class DhtNode {
             this.bucket.add(contact)
             this.neighborList.addContact(contact)
         }
-
         return ret
     }
 
@@ -106,8 +106,9 @@ export class DhtNode {
         if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
             uncontacted = this.neighborList.getUncontactedContacts(this.K)
             if (uncontacted.length < 1) {
-                return 'done'
+                return QueuedPromiseReturnTypes.DONE
             }
+            console.log(stringFromId(this.getSelfId()), "HERE1")
             await this.addtoQueue(this.fillBuckets.bind(this), [])
         }
         return QueuedPromiseReturnTypes.LOOP
@@ -116,6 +117,7 @@ export class DhtNode {
     private async fillBuckets(): Promise<string> {
         let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
         const oldClosestContactId = this.neighborList.getClosestContactId()
+        console.log(stringFromId(this.getSelfId()), "HERE2")
         await this.getClosestPeersFromContacts(uncontacted)
 
         if (this.neighborList.getActiveContacts().length >= this.K ||

@@ -16,7 +16,12 @@ describe('DhtClientRpcTransport', () => {
         dhtNode5: DhtNode,
         dhtNode6: DhtNode,
         dhtNode7: DhtNode,
-        dhtNode8: DhtNode
+        dhtNode8: DhtNode,
+        dhtNode9: DhtNode,
+        dhtNode10: DhtNode,
+        dhtNode11: DhtNode,
+        dhtNode12: DhtNode,
+        dhtNode13: DhtNode
 
     let entrypoint: DhtPeer
 
@@ -58,7 +63,11 @@ describe('DhtClientRpcTransport', () => {
         dhtNode6 = createDhtNode('peer5')
         dhtNode7 = createDhtNode('peer6')
         dhtNode8 = createDhtNode('peer7')
-
+        dhtNode9 = createDhtNode('peer8')
+        dhtNode10 = createDhtNode('peer9')
+        dhtNode11 = createDhtNode('peer10')
+        dhtNode12 = createDhtNode('peer11')
+        dhtNode13 = createDhtNode('peer12')
     })
 
     it('Happy path', async () => {
@@ -70,15 +79,25 @@ describe('DhtClientRpcTransport', () => {
         await dhtNode6.joinDht(entrypoint)
         await dhtNode7.joinDht(entrypoint)
         await dhtNode8.joinDht(entrypoint)
+        await dhtNode9.joinDht(entrypoint)
+        await dhtNode10.joinDht(entrypoint)
+        await dhtNode11.joinDht(entrypoint)
+        await dhtNode12.joinDht(entrypoint)
+        await dhtNode13.joinDht(entrypoint)
 
-        expect(dhtNode1.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode2.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode3.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode4.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode5.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode6.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode7.getNeighborList().getStringIds().length).toEqual(7)
-        expect(dhtNode8.getNeighborList().getStringIds().length).toEqual(7)
+        expect(dhtNode1.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode2.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode3.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode4.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode5.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode6.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode7.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode8.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode9.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode10.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode11.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode12.getNeighborList().getStringIds().length).toEqual(12)
+        expect(dhtNode13.getNeighborList().getStringIds().length).toEqual(12)
     })
 
 })
