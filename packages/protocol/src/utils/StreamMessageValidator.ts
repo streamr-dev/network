@@ -9,13 +9,10 @@ import { StreamIDUtils, StreamID } from './StreamID'
 import { EthereumAddress } from '.'
 
 export interface StreamMetadata {
-    partitions: number,
-    requireSignedData: boolean
+    partitions: number
 }
 
 export interface Options {
-    requireBrubeckValidation?: boolean
-
     getStream: (streamId: StreamID) => Promise<StreamMetadata>
     isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
@@ -37,7 +34,6 @@ const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
  * TODO later: support for unsigned messages can be removed when deprecated system-wide.
  */
 export default class StreamMessageValidator {
-    readonly requireBrubeckValidation: boolean
     readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
     readonly isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     readonly isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
@@ -45,21 +41,18 @@ export default class StreamMessageValidator {
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
-     *        The included fields should be at least: { partitions, requireSignedData }
+     *        The included fields should be at least: { partitions }
      * @param isPublisher async function(address, streamId): returns true if address is a permitted publisher on streamId
      * @param isSubscriber async function(address, streamId): returns true if address is a permitted subscriber on streamId
      * @param verify async function(address, payload, signature): returns true if the address and payload match the signature.
-     * @param requireBrubeckValidation whether to enable brubeck validation rules
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
-    constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify, requireBrubeckValidation=false }: Options) {
+    constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify }: Options) {
         StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
         this.getStream = getStream
         this.isPublisher = isPublisher
         this.isSubscriber = isSubscriber
         this.verify = verify
-
-        this.requireBrubeckValidation = requireBrubeckValidation
     }
 
     static checkInjectedFunctions(
@@ -147,16 +140,14 @@ export default class StreamMessageValidator {
         const stream = await this.getStream(streamMessage.getStreamId())
 
         // Checks against stream metadata
-        if ((stream.requireSignedData || this.requireBrubeckValidation) && !streamMessage.signature) {
+        if (!streamMessage.signature) {
             throw new StreamMessageError('Stream data is required to be signed.', streamMessage)
         }
 
         if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE){
-            if (this.requireBrubeckValidation){
-                const isPublicStream = await this.isSubscriber(PUBLIC_USER, streamMessage.getStreamId())
-                if (!isPublicStream){
-                    throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
-                }
+            const isPublicStream = await this.isSubscriber(PUBLIC_USER, streamMessage.getStreamId())
+            if (!isPublicStream){
+                throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
             }
         }
 

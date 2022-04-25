@@ -56,8 +56,7 @@ describe.skip('no memleaks when publishing a high quantity of large messages', (
         client.onError = jest.fn()
         client.on('error', onError)
         stream = await client.createStream({
-            id: `/${counterId('stream')}`,
-            requireSignedData: true,
+            id: `/${counterId('stream')}`
         })
         publishTestMessages = getPublishTestMessages(client, {
             stream

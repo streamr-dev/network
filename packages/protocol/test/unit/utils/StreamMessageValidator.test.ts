@@ -32,8 +32,7 @@ describe('StreamMessageValidator', () => {
     let groupKeyErrorResponse: StreamMessage
 
     const defaultGetStreamResponse = {
-        partitions: 10,
-        requireSignedData: true
+        partitions: 10
     }
 
     const getValidator = (customConfig?: any) => {
@@ -41,7 +40,7 @@ describe('StreamMessageValidator', () => {
             return new StreamMessageValidator(customConfig)
         } else {
             return new StreamMessageValidator({
-                getStream, isPublisher, isSubscriber, verify, requireBrubeckValidation: false
+                getStream, isPublisher, isSubscriber, verify
             })
         }
     }
@@ -142,10 +141,9 @@ describe('StreamMessageValidator', () => {
             await getValidator().validate(msgWithNewGroupKey)
         })
 
-        it ('rejects unsigned messages when Brubeck validation is required', async () => {
+        it ('rejects unsigned messages', async () => {
             getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireSignedData: false,
+                ...defaultGetStreamResponse
             })
 
             msg.signature = null
@@ -155,8 +153,7 @@ describe('StreamMessageValidator', () => {
                 getStream,
                 isPublisher,
                 isSubscriber,
-                verify,
-                requireBrubeckValidation: true
+                verify
             }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
@@ -167,8 +164,7 @@ describe('StreamMessageValidator', () => {
 
         it('accepts unsigned messages that dont need to be signed', async () => {
             getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireSignedData: false,
+                ...defaultGetStreamResponse
             })
 
             msg.signature = null
@@ -197,7 +193,7 @@ describe('StreamMessageValidator', () => {
             await getValidator().validate(msg)
         })
 
-        it('accepts unencrypted messages if Brubeck validation is required and the stream public', async () => {
+        it('accepts unencrypted messages if stream is public', async () => {
             getStream = sinon.stub().resolves({
                 ...defaultGetStreamResponse,
             })
@@ -209,8 +205,7 @@ describe('StreamMessageValidator', () => {
                 getStream,
                 isPublisher,
                 isSubscriber,
-                verify,
-                requireBrubeckValidation: true
+                verify
             }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
@@ -219,7 +214,7 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects unencrypted messages if Brubeck validation is required', async () => {
+        it('rejects unencrypted messages if stream is not public', async () => {
             getStream = sinon.stub().resolves({
                 ...defaultGetStreamResponse,
             })
@@ -230,8 +225,7 @@ describe('StreamMessageValidator', () => {
                 getStream,
                 isPublisher,
                 isSubscriber,
-                verify,
-                requireBrubeckValidation: true
+                verify
             }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')

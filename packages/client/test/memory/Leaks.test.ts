@@ -90,8 +90,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 await client.createStream({
-                    id: `/${counterId('stream')}`,
-                    requireSignedData: true,
+                    id: `/${counterId('stream')}`
                 })
             })
 
@@ -99,8 +98,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 const stream = await client.createStream({
-                    id: `/${counterId('stream')}`,
-                    requireSignedData: true,
+                    id: `/${counterId('stream')}`
                 })
                 const ethAddress = await client.getAddress()
                 await client.cached.isStreamPublisher(stream.id, ethAddress)
@@ -112,8 +110,7 @@ describeRepeats('Leaks', () => {
                 if (!client) { return }
 
                 const stream = await client.createStream({
-                    id: `/${counterId('stream')}`,
-                    requireSignedData: true,
+                    id: `/${counterId('stream')}`
                 })
                 const publishTestMessages = getPublishTestMessages(client, stream, {
                     retainMessages: false,
@@ -129,8 +126,7 @@ describeRepeats('Leaks', () => {
                     if (!client) { return }
 
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}`,
-                        requireSignedData: true,
+                        id: `/${counterId('stream')}`
                     })
                     let sub: Subscription | undefined = await client.subscribe(stream)
                     if (!sub) { throw new Error('no sub') }
@@ -157,8 +153,7 @@ describeRepeats('Leaks', () => {
 
                         leaksDetector = new LeaksDetector()
                         const stream = await client.createStream({
-                            id: `/${counterId('stream')}`,
-                            requireSignedData: true,
+                            id: `/${counterId('stream')}`
                         })
                         const sub = await client.subscribe(stream)
                         subLeak = new LeakDetector(sub)
@@ -194,8 +189,7 @@ describeRepeats('Leaks', () => {
 
                         leaksDetector = new LeaksDetector()
                         const stream = await client.createStream({
-                            id: `/${counterId('stream')}`,
-                            requireSignedData: true,
+                            id: `/${counterId('stream')}`
                         })
 
                         const publishTestMessages = getPublishTestMessages(client, stream, {
@@ -233,8 +227,7 @@ describeRepeats('Leaks', () => {
 
                         // leaksDetector = new LeaksDetector()
                         const stream = await client.createStream({
-                            id: `/${counterId('stream')}`,
-                            requireSignedData: true,
+                            id: `/${counterId('stream')}`
                         })
 
                         const publishTestMessages = getPublishTestMessages(client, stream, {

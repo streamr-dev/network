@@ -18,7 +18,6 @@ import { StreamIDBuilder } from './StreamIDBuilder'
 export interface StreamValidationInfo {
     id: string
     partitions: number
-    requireSignedData: boolean
     storageDays: number
 }
 
