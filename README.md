@@ -195,6 +195,22 @@ npm run build
 npm publish
 ```
 
+
+### broker
+```
+git checkout main
+cd packages/broker
+npm version <SEMVER_OPTION>
+git add package.json
+git commit -m "release(broker): vX.Y.Z"
+git tag broker/vX.Y.Z
+git push origin
+git push origin broker/vX.Y.Z
+
+npm run build
+npm publish
+```
+
 ## Important changes to the bootstrap/install scripts as of 48e165f:
 
 ### Key Changes
