@@ -46,8 +46,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         let storageWriteCountPerSecond = 0
         let storageReadKbPerSecond = 0
         let storageWriteKbPerSecond = 0
-        let totalBatches = 0
-        let meanBatchAge = 0
         let resendRate = {
             last: 0,
             from: 0,
@@ -62,10 +60,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             storageReadKbPerSecond = report.metrics['broker/cassandra'].readBytes.rate / 1000
             // @ts-expect-error not enough typing info available
             storageWriteKbPerSecond = report.metrics['broker/cassandra'].writeBytes.rate / 1000
-            // @ts-expect-error not enough typing info available
-            totalBatches = report.metrics['broker/cassandra'].batchManager.totalBatches
-            // @ts-expect-error not enough typing info available
-            meanBatchAge = report.metrics['broker/cassandra'].batchManager.meanBatchAge
         }
 
         const networkConnectionCount = report.metrics.WebRtcEndpoint.connections
@@ -97,8 +91,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             + '\tResends:\n'
             + '\t- last: %d requests/s\n'
             + '\t- from: %d requests/s\n'
-            + '\t- range: %d requests/s\n'
-            + '\tTotal batches: %d (mean age %d ms)\n',
+            + '\t- range: %d requests/s\n',
             networkConnectionCount,
             formatNumber(networkInPerSecond),
             formatNumber(networkKbInPerSecond),
@@ -111,8 +104,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             resendRate.last,
             resendRate.from,
             resendRate.range,
-            totalBatches,
-            meanBatchAge
         )
     }
 
