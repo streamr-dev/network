@@ -7,6 +7,7 @@ import { generateId, stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { wait } from 'streamr-test-utils'
 
 describe('DhtClientRpcTransport', () => {
     let entryPoint: DhtNode
@@ -35,6 +36,8 @@ describe('DhtClientRpcTransport', () => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
+                // Mock latency
+                await wait(Math.random() * (250 - 5) + 5)
                 rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
             })
             return new DhtNode(id, client, serverTransport, rpcCommunicator)
@@ -62,5 +65,5 @@ describe('DhtClientRpcTransport', () => {
             expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(50)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() * 2)
-    })
+    }, 60 * 1000)
 })
