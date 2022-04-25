@@ -5,6 +5,7 @@ option optimize_for = CODE_SIZE;
 
 service DhtRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc ping (PingRequest) returns (PingResponse);
 }
 
 message ClosestPeersRequest {
@@ -15,6 +16,14 @@ message ClosestPeersRequest {
 message ClosestPeersResponse {
   repeated PeerDescriptor peers = 1;
   string nonce = 2; // requestId
+}
+
+message PingRequest {
+  string nonce = 1;
+}
+
+message PingResponse {
+  string nonce = 1;
 }
 
 message PeerDescriptor {

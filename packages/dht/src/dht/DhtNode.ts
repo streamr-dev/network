@@ -32,9 +32,17 @@ export class DhtNode {
             localNodeId: this.selfId,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
-        this.bucket.on('ping', (_oldContacts, _newContact) => {
+        this.bucket.on('ping', async (oldContacts, newContact) => {
             // Here the node should call ping() on all old contacts. If one of them fails it should be removed
             // and replaced with the newContact
+            for (const contact of oldContacts) {
+                const alive = await contact.ping(this.peerDescriptor)
+                if (!alive) {
+                    this.bucket.remove(contact.id)
+                    this.bucket.add(newContact)
+                    break
+                }
+            }
         })
         this.dhtRpcClient = dhtRpcClient
         this.neighborList = new SortedContactList(this.selfId)
@@ -55,7 +63,7 @@ export class DhtNode {
         return this.dhtRpcClient
     }
 
-    public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
+    public onGetClosestPeers(caller: PeerDescriptor): DhtPeer[] {
         const ret = this.bucket.closest(caller.peerId, this.ALPHA)
         if (!this.bucket.get(caller.peerId)) {
             const contact = new DhtPeer(caller, this.dhtRpcClient)
@@ -130,8 +138,9 @@ export class DhtNode {
     }
 
     private bindDefaultServerMethods() {
-        const methods = createRpcMethods(this.getClosestPeers.bind(this))
+        const methods = createRpcMethods(this.onGetClosestPeers.bind(this))
         this.dhtTransportServer.registerMethod('getClosestPeers', methods.getClosestPeers)
+        this.dhtTransportServer.registerMethod('ping', methods.ping)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
