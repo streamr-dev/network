@@ -42,7 +42,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
     })
 
     let started = false
-    let httpServer: HttpServer|HttpsServer|undefined
+    let httpServer: HttpServer | HttpsServer | undefined
 
     const getNode = async (): Promise<NetworkNodeStub> => {
         if (!started) {
@@ -67,13 +67,8 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${nodeId} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            logger.info(`Tracker Configuration: ${
-                config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'
-            }`)
+            logger.info(`Tracker Configuration: ${config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'}`)
 
-            if (config.client.restUrl !== undefined) {
-                logger.info(`Configured with Streamr: ${config.client.restUrl}`)
-            }
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
             if (config.client.network?.webrtcDisallowPrivateAddresses === undefined || config.client.network.webrtcDisallowPrivateAddresses) {

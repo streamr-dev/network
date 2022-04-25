@@ -7,8 +7,7 @@ describe('StreamrClient Resend', () => {
     before(async (browser) => {
         // optionally forward url env vars as query params
         const url = process.env.WEBSOCKET_URL ? `&WEBSOCKET_URL=${encodeURIComponent(process.env.WEBSOCKET_URL)}` : ''
-        const restUrl = process.env.REST_URL ? `&REST_URL=${encodeURIComponent(process.env.REST_URL)}` : ''
-        const browserUrl = `http://localhost:8880?streamName=${streamName}${url}${restUrl}`
+        const browserUrl = `http://localhost:8880?streamName=${streamName}${url}`
         console.info(browserUrl)
         return browser.url(browserUrl)
     })

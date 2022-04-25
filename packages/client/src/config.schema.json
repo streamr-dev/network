@@ -109,10 +109,6 @@
         "ethereumNetworks": {
             "type": "object"
         },
-        "restUrl": {
-            "type": "string",
-            "format": "uri"
-        },
         "orderMessages": {
             "type": "boolean"
         },
