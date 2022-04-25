@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
@@ -18,6 +19,7 @@ describe('Resends', () => {
             stream = await client.createStream({
                 id: await createRelativeTestStreamId(module),
             })
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         })
 
         it('happy path', async () => {
