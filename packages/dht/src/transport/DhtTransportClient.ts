@@ -13,7 +13,7 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { PeerID, TODO } from '../types'
+import { TODO } from '../types'
 import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
@@ -34,7 +34,8 @@ export interface DeferredPromises {
 }
 
 export interface DhtRpcOptions extends RpcOptions {
-    targetPeerId: PeerID
+    targetDescriptor: PeerDescriptor,
+    sourceDescriptor: PeerDescriptor
 }
 
 export class DhtTransportClient extends EventEmitter implements RpcTransport {
@@ -56,7 +57,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: RpcOptions): UnaryCall<I, O> {
+    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: DhtRpcOptions): UnaryCall<I, O> {
         const
             requestBody = method.I.toBinary(input),
             defHeader = new Deferred<RpcMetadata>(),
@@ -68,7 +69,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             header: this.createRequestHeaders(method),
             body: requestBody,
             requestId: v4(),
-            senderDescriptor: options.senderDescriptor as PeerDescriptor,
+            sourceDescriptor: options.sourceDescriptor as PeerDescriptor,
             targetDescriptor: options.targetDescriptor as PeerDescriptor
         }
 

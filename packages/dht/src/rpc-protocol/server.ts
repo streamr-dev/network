@@ -2,14 +2,14 @@ import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor, NodeType } f
 import { IDhtRpc } from '../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../transport/DhtTransportServer'
-import { generateId } from '../dht/helpers'
+import { nodeFormatPeerDescriptor, generateId } from '../dht/helpers'
 import { DhtPeer } from '../dht/DhtPeer'
 import { TODO } from '../types'
 
 export const createRpcMethods = (fn: TODO): any => {
     const DhtRpc: IDhtRpc = {
         async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
-            const { peerDescriptor } = request
+            const peerDescriptor = nodeFormatPeerDescriptor(request.peerDescriptor!)
             const closestPeers = fn(peerDescriptor)
             const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDscriptor())
             const response = {
