@@ -141,27 +141,6 @@ describe('StreamMessageValidator', () => {
             await getValidator().validate(msgWithNewGroupKey)
         })
 
-        it ('rejects unsigned messages', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse
-            })
-
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify
-            }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
         it('rejects unsigned messages', async () => {
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
