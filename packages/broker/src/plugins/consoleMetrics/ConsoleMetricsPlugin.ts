@@ -77,7 +77,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         const networkKbInPerSecond = report.metrics.WebRtcEndpoint.inSpeed.rate / 1000
         // @ts-expect-error not enough typing info available
         const networkKbOutPerSecond = report.metrics.WebRtcEndpoint.outSpeed.rate / 1000
-        const { messageQueueSize } = report.metrics.WebRtcEndpoint
 
         const storageQueryMetrics = report.metrics['broker/storage/query']
         if (storageQueryMetrics !== undefined) {
@@ -91,7 +90,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         logger.info(
             'Report\n'
             + '\tNetwork connections %d\n'
-            + '\tQueued messages: %d\n'
             + '\tNetwork in: %d events/s, %d kb/s\n'
             + '\tNetwork out: %d events/s, %d kb/s\n'
             + '\tStorage read: %d events/s, %d kb/s\n'
@@ -102,7 +100,6 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             + '\t- range: %d requests/s\n'
             + '\tTotal batches: %d (mean age %d ms)\n',
             networkConnectionCount,
-            messageQueueSize,
             formatNumber(networkInPerSecond),
             formatNumber(networkKbInPerSecond),
             formatNumber(networkOutPerSecond),
