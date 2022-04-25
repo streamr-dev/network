@@ -1,19 +1,20 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { IConnectionLayer } from '../../src/connection/IConnectionLayer'
-import { MockRegisterDhtRpc, getMockNeighbors } from '../../src/rpc-protocol/server'
-import { MockConnectionLayer } from '../../src/connection/MockConnectionLayer'
+import { IConnectionManager } from '../../src/connection/IConnectionManager'
+import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { PeerID } from '../../src/types'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { generateId } from '../../src/dht/helpers'
+import { PeerDescriptor } from '../../src/proto/DhtRpc'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
         clientTransport2: DhtTransportClient,
         serverTransport1: DhtTransportServer,
         serverTransport2: DhtTransportServer,
-        mockConnectionLayer1: IConnectionLayer,
-        mockConnectionLayer2: IConnectionLayer,
+        mockConnectionLayer1: IConnectionManager,
+        mockConnectionLayer2: IConnectionManager,
         rpcCommunicator1: RpcCommunicator,
         rpcCommunicator2: RpcCommunicator,
         client1: DhtRpcClient,
@@ -23,20 +24,20 @@ describe('DhtClientRpcTransport', () => {
         clientTransport1 = new DhtTransportClient()
         serverTransport1 = new DhtTransportServer()
         serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer1 = new MockConnectionLayer()
+        mockConnectionLayer1 = new MockConnectionManager()
         rpcCommunicator1 = new RpcCommunicator(mockConnectionLayer1, clientTransport1, serverTransport1)
 
         clientTransport2 = new DhtTransportClient()
         serverTransport2 = new DhtTransportServer()
         serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer2 = new MockConnectionLayer()
+        mockConnectionLayer2 = new MockConnectionManager()
         rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
-        rpcCommunicator1.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-            rpcCommunicator2.onIncomingMessage(bytes)
+        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            rpcCommunicator2.onIncomingMessage(peerDescriptor, bytes)
         })
-        rpcCommunicator2.setSendFn((peerId: PeerID, bytes: Uint8Array) => {
-            rpcCommunicator1.onIncomingMessage(bytes)
+        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            rpcCommunicator1.onIncomingMessage(peerDescriptor, bytes)
         })
 
         client1 = new DhtRpcClient(clientTransport1)
@@ -45,13 +46,22 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy path', async () => {
 
-        const response1 = client1.getClosestPeers({ peerId: 'peer', nonce: '1' })
-        const res1 = await response1.response
-        expect(res1.neighbors).toEqual(getMockNeighbors())
+        const peerDescriptor1: PeerDescriptor = {
+            peerId: generateId('peer1'),
+            type: 0
+        }
 
-        const response2 = client2.getClosestPeers({ peerId: 'peer', nonce: '1' })
+        const peerDescriptor2: PeerDescriptor = {
+            peerId: generateId('peer2'),
+            type: 0
+        }
+        const response1 = client1.getClosestPeers({ peerDescriptor: peerDescriptor1, nonce: '1' })
+        const res1 = await response1.response
+        expect(res1.peers).toEqual(getMockPeers())
+
+        const response2 = client2.getClosestPeers({ peerDescriptor: peerDescriptor2, nonce: '1' })
         const res2 = await response2.response
-        expect(res2.neighbors).toEqual(getMockNeighbors())
+        expect(res2.peers).toEqual(getMockPeers())
     })
 
 })

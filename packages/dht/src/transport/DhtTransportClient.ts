@@ -13,8 +13,8 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { TODO } from '../types'
-import { RpcWrapper } from '../proto/DhtRpc'
+import { PeerID, TODO } from '../types'
+import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
 export enum Event {
@@ -33,6 +33,10 @@ export interface DeferredPromises {
     messageParser: (bytes: Uint8Array) => object
 }
 
+export interface DhtRpcOptions extends RpcOptions {
+    targetPeerId: PeerID
+}
+
 export class DhtTransportClient extends EventEmitter implements RpcTransport {
     protected readonly defaultOptions: TODO
 
@@ -41,18 +45,18 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         this.defaultOptions = {}
     }
 
-    mergeOptions(options?: Partial<RpcOptions>): RpcOptions {
+    mergeOptions(options?: Partial<DhtRpcOptions>): RpcOptions {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
     createRequestHeaders(method: MethodInfo): any {
         return {
             method: method.localName,
-            request: 'request'
+            request: 'request',
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, _options: RpcOptions): UnaryCall<I, O> {
+    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: RpcOptions): UnaryCall<I, O> {
         const
             requestBody = method.I.toBinary(input),
             defHeader = new Deferred<RpcMetadata>(),
@@ -63,7 +67,9 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         const request: RpcWrapper = {
             header: this.createRequestHeaders(method),
             body: requestBody,
-            requestId: v4()
+            requestId: v4(),
+            senderDescriptor: options.senderDescriptor as PeerDescriptor,
+            targetDescriptor: options.targetDescriptor as PeerDescriptor
         }
 
         const unary = new UnaryCall<I, O>(
