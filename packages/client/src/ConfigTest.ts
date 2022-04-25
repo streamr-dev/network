@@ -16,7 +16,6 @@ const sideChainConfig = {
  */
 export const ConfigTest = {
     theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
-    restUrl: process.env.REST_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || 'localhost'}/api/v2`,
     streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
     streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',

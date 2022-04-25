@@ -48,8 +48,6 @@ export type SubscribeConfig = {
 }
 
 export type ConnectionConfig = {
-    /** Core HTTP API calls go here */
-    restUrl: string
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
 }
@@ -89,11 +87,11 @@ export type StrictStreamrClientConfig = {
     /** @internal */
     debug: DebugConfig
 } & (
-        EthereumConfig
-        & ConnectionConfig
-        & SubscribeConfig
-        & EncryptionConfig
-    )
+    EthereumConfig
+    & ConnectionConfig
+    & SubscribeConfig
+    & EncryptionConfig
+)
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
     network: Partial<StrictStreamrClientConfig['network']>
@@ -110,7 +108,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     auth: {},
 
     // Streamr Core options
-    restUrl: 'https://streamr.network/api/v2',
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
     streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')

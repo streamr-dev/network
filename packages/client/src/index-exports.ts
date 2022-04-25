@@ -19,7 +19,6 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { UserDetails } from './LoginEndpoints'
 export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
@@ -46,7 +45,6 @@ export {
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig,
-    SessionTokenAuthConfig,
     XOR,
     Without
 } from './Ethereum'
