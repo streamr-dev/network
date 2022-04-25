@@ -1,6 +1,6 @@
 import { PeerID } from '../types'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { ClosestPeersRequest, PeerDescriptor } from '../proto/DhtRpc'
+import { ClosestPeersRequest, PeerDescriptor, PingRequest } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { nodeFormatPeerDescriptor } from './helpers'
 import { DhtRpcOptions } from '../transport/DhtTransportClient'
@@ -38,6 +38,22 @@ export class DhtPeer {
         }
         const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
         return formatted
+    }
+
+    async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
+        const request: PingRequest = {
+            nonce: v4()
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor
+        }
+        const response = await this.dhtClient.ping(request, options)
+        const pong = await response.response
+        if (pong.nonce === request.nonce) {
+            return true
+        }
+        return false
     }
 
     getPeerId(): PeerID {
