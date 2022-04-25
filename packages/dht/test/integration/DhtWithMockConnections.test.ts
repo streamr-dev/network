@@ -59,8 +59,7 @@ describe('DhtClientRpcTransport', () => {
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(50)
+            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() * 2)
         })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK() * 2)
     })
 })

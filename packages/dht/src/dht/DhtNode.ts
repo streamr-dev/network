@@ -33,6 +33,10 @@ export class DhtNode {
             localNodeId: this.selfId,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
+        this.bucket.on('ping', (_oldContacts, _newContact) => {
+            // Here the node should call ping() on all old contacts. If one of them fails it should be removed
+            // and replaced with the newContact
+        })
         this.dhtRpcClient = dhtRpcClient
         this.neighborList = new SortedContactList(this.selfId)
         this.dhtTransportServer = dhtTransportServer
@@ -53,7 +57,7 @@ export class DhtNode {
     }
 
     public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
-        const ret = this.bucket.closest(caller.peerId)
+        const ret = this.bucket.closest(caller.peerId, this.ALPHA)
         if (!this.bucket.get(caller.peerId)) {
             const contact = new DhtPeer(caller, this.dhtRpcClient)
             this.bucket.add(contact)
@@ -96,7 +100,6 @@ export class DhtNode {
     }
 
     async joinDht(entryPoint: DhtPeer): Promise<void> {
-        console.log(`Node with id: ${stringFromId(this.selfId)} joining dht`)
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
         if (Buffer.compare(this.selfId, entryPoint.getPeerId()) == 0) {
             return
@@ -109,7 +112,7 @@ export class DhtNode {
         while (true) {
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
             const oldClosestContactId = this.neighborList.getClosestContactId()
-            await Promise.all(uncontacted.map((contact) => queue.add(
+            await Promise.allSettled(uncontacted.map((contact) => queue.add(
                 (async () => await this.getClosestPeersFromContact(contact))
             )))
             if (this.neighborList.getActiveContacts().length >= this.K ||
