@@ -19,8 +19,6 @@ export interface Options {
     verify?: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
 }
 
-const PUBLIC_USER = '0x0000000000000000000000000000000000000000'
-
 /**
  * Validates observed StreamMessages according to protocol rules, regardless of observer.
  * Functions needed for external interactions are injected as constructor args.
@@ -142,13 +140,6 @@ export default class StreamMessageValidator {
         // Checks against stream metadata
         if (!streamMessage.signature) {
             throw new StreamMessageError('Stream data is required to be signed.', streamMessage)
-        }
-
-        if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE){
-            const isPublicStream = await this.isSubscriber(PUBLIC_USER, streamMessage.getStreamId())
-            if (!isPublicStream){
-                throw new StreamMessageError('Non-public streams require data to be encrypted.', streamMessage)
-            }
         }
 
         if (streamMessage.getStreamPartition() < 0 || streamMessage.getStreamPartition() >= stream.partitions) {

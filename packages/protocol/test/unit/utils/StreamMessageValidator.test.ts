@@ -162,71 +162,11 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('accepts unsigned messages that dont need to be signed', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse
-            })
-
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await getValidator().validate(msg)
-        })
-
-        it('rejects unsigned messages that should be signed', async () => {
+        it('rejects unsigned messages', async () => {
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('accepts valid encrypted messages', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse
-            })
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            await getValidator().validate(msg)
-        })
-
-        it('accepts unencrypted messages if stream is public', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-            })
-
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-            //msg.getPublisherId = () => { return '0x0000000000000000000000000000000000000000' }
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify
-            }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('rejects unencrypted messages if stream is not public', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-            })
-
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify
-            }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
