@@ -1,15 +1,17 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator, until } from '../test-utils/utils'
+import { getCreateClient, Msg, publishManyGenerator, uid, until } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src'
+import { StreamMessage } from 'streamr-client-protocol'
 
 const TEST_TIMEOUT = 60 * 1000
 
 jest.setTimeout(TEST_TIMEOUT)
 
-describeRepeats('StreamrClient', () => {
+describe('StreamrClient', () => {
     const MAX_MESSAGES = 10
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
@@ -56,6 +58,7 @@ describeRepeats('StreamrClient', () => {
         client = await createClient()
         client.debug('create stream >>')
         stream = await createStream()
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('create stream <<')
         expect(onError).toHaveBeenCalledTimes(0)
     })
@@ -92,7 +95,7 @@ describeRepeats('StreamrClient', () => {
                 }
             }
 
-            expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
+            expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s: StreamMessage) => s.getParsedContent()))
             expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
         })
 
@@ -111,10 +114,12 @@ describeRepeats('StreamrClient', () => {
                         break
                     }
                 }
-                expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
+                expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s: StreamMessage) => s.getParsedContent()))
                 return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createStream()
+            await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+
             const tasks = [
                 testPubSub(stream),
                 testPubSub(stream2),
