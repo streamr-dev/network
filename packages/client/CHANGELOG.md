@@ -9,7 +9,7 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
-## [6.0.2] - 2022-04-25
+## [6.0.3] - 2022-04-25
 
 ### Fixed
 
