@@ -8,7 +8,6 @@ import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import PQueue from 'p-queue'
-import { stringFromId } from './helpers'
 
 export class DhtNode {
     private readonly ALPHA = 3
