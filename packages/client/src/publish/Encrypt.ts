@@ -55,11 +55,6 @@ export default class PublisherEncryption implements Stoppable {
 
         const stream = await this.streamEndpoints.getStream(streamId)
 
-        if (!(await (this.keyExchange.hasAnyGroupKey(stream.id)))) {
-            // not needed
-            return
-        }
-
         const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(stream.id)
         if (this.isStopped) { return }
 

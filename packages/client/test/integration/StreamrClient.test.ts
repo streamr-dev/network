@@ -22,6 +22,7 @@ import * as G from '../../src/utils/GeneratorUtils'
 
 import { Stream } from '../../src/Stream'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { StreamPermission } from '../../src/permission'
 
 jest.setTimeout(60000)
 
@@ -67,6 +68,7 @@ describeRepeats('StreamrClient', () => {
             requireSignedData,
             ...opts,
         })
+        await s.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await until(async () => { return client.streamExistsOnTheGraph(s.id) }, 100000, 1000)
         expect(s.id).toBeTruthy()
         expect(s.requireSignedData).toBe(requireSignedData)

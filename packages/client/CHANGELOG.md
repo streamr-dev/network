@@ -9,6 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+## [6.0.3] - 2022-04-25
+
+### Fixed
+
+- Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
+
 ## [6.0.2] - 2022-03-04
 
 ### Fixed
