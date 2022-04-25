@@ -22,14 +22,10 @@ describe('Resends', () => {
 
         it('happy path', async () => {
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const mockId = Date.now()
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {
-                    mockId
-                }
-            })
-            const publishedMsg = await client.publish(stream.id, msg.getParsedContent())
+            const content = {
+                foo: Date.now()
+            }
+            const publishedMsg = await client.publish(stream.id, content)
             await client.waitForStorage(publishedMsg)
         })
 
@@ -38,13 +34,9 @@ describe('Resends', () => {
             const content = {
                 foo: Date.now()
             }
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content
-            })
-            await client.publish(stream.id, msg.getParsedContent())
+            const publishedMsg = await client.publish(stream.id, content)
             const messageMatchFn = jest.fn().mockReturnValue(false)
-            await expect(() => client.waitForStorage(msg, {
+            await expect(() => client.waitForStorage(publishedMsg, {
                 interval: 50,
                 timeout: 100,
                 count: 1,
