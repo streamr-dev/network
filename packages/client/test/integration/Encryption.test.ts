@@ -559,12 +559,14 @@ describe('decryption', () => {
 
         it('errors if rotating group key for no stream', async () => {
             await expect(async () => (
+                // @ts-expect-error
                 publisher.rotateGroupKey()
             )).rejects.toThrow('streamId')
         })
 
         it('errors if setting group key for no stream', async () => {
             await expect(async () => {
+                // @ts-expect-error
                 await publisher.setNextGroupKey(undefined, GroupKey.generate())
             }).rejects.toThrow('streamId')
         })

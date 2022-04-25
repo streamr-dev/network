@@ -7,6 +7,7 @@ import { Defer } from '../../src/utils'
 import { Stream } from '../../src/Stream'
 import { Subscription } from '../../src/subscribe/Subscription'
 import Subscriber from '../../src/subscribe/Subscriber'
+import { StreamPermission } from '../../src/permission'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -36,6 +37,7 @@ describeRepeats('Subscriber', () => {
             client.connect(),
         ])
         stream = await createTestStream(client, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream)
     })
