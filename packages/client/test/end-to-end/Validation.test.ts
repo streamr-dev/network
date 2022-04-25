@@ -1,14 +1,15 @@
-import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../test-utils/utils'
+import { createTestStream, getCreateClient, getPublishTestMessages } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
+import { StreamPermission } from '../../src'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)
 
-describeRepeats('Validation', () => {
+describe('Validation', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let client: StreamrClient
     let stream: Stream
@@ -25,6 +26,7 @@ describeRepeats('Validation', () => {
         stream = await createTestStream(client, module, {
             requireSignedData: true
         })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
         return client

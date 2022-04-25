@@ -35,11 +35,14 @@ describe('Resends', () => {
 
         it('no match', async () => {
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            const content = {
+                foo: Date.now()
+            }
             const msg = new StreamMessage({
                 messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {}
+                content
             })
-            const publishedMsg = await client.publish(stream.id, msg.getParsedContent())
+            await client.publish(stream.id, msg.getParsedContent())
             const messageMatchFn = jest.fn().mockReturnValue(false)
             await expect(() => client.waitForStorage(msg, {
                 interval: 50,
@@ -47,7 +50,9 @@ describe('Resends', () => {
                 count: 1,
                 messageMatchFn
             })).rejects.toThrow('timed out')
-            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), publishedMsg)
+            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), expect.anything())
+            expect(messageMatchFn.mock.calls[0][0].getParsedContent()).toEqual(content)
+            expect(messageMatchFn.mock.calls[0][1].getParsedContent()).toEqual(content)
         })
 
         it('no message', async () => {
