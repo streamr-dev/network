@@ -52,9 +52,7 @@ describe('GapFill', () => {
         // @ts-expect-error
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        stream = await createTestStream(client, module, {
-            requireSignedData: true
-        })
+        stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('connecting before test <<')
@@ -248,9 +246,7 @@ describe('GapFill', () => {
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await createTestStream(client, module, {
-                    requireSignedData: true,
-                })
+                stream = await createTestStream(client, module)
 
                 await expect(async () => {
                     await client.resend(

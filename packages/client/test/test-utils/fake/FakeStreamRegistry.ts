@@ -49,9 +49,11 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         this.ethereum = ethereum
         this.container = container
         this.streamEndpointsCached = streamEndpointsCached
+        const storageNodeAssignmentStreamPermissions = new Multimap<string,StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(DOCKER_DEV_STORAGE_NODE.toLowerCase(), StreamPermission.PUBLISH)
         this.registryItems.set(formStorageNodeAssignmentStreamId(DOCKER_DEV_STORAGE_NODE), {
             metadata: {},
-            permissions: new Multimap()
+            permissions: storageNodeAssignmentStreamPermissions
         })
     }
 
