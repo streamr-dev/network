@@ -40,14 +40,14 @@ describe('DhtClientRpcTransport', () => {
             return new DhtNode(id, client, serverTransport, rpcCommunicator)
         }
 
-        entryPoint = createDhtNode('entrypoint')
+        entryPoint = createDhtNode('0')
         const entrypointDescriptor: PeerDescriptor = {
             peerId: entryPoint.getSelfId(),
             type: 0
         }
         entryPointInfo = new DhtPeer(entrypointDescriptor, entryPoint.getDhtRpcClient())
         for (let i = 1; i < 100; i++) {
-            const node = createDhtNode(`peer-${i}`)
+            const node = createDhtNode(`${i}`)
             nodes.push(node)
         }
     })
@@ -61,5 +61,6 @@ describe('DhtClientRpcTransport', () => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
             expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() * 2)
         })
+        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
     })
 })

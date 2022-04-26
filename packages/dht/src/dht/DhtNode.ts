@@ -64,7 +64,7 @@ export class DhtNode {
     }
 
     public onGetClosestPeers(caller: PeerDescriptor): DhtPeer[] {
-        const ret = this.bucket.closest(caller.peerId, this.ALPHA)
+        const ret = this.bucket.closest(caller.peerId, this.K)
         if (!this.bucket.get(caller.peerId)) {
             const contact = new DhtPeer(caller, this.dhtRpcClient)
             this.bucket.add(contact)
