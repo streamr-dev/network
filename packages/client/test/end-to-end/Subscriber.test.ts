@@ -4,7 +4,6 @@ import { fastPrivateKey, wait } from 'streamr-test-utils'
 import {
     getPublishTestMessages,
     getCreateClient,
-    describeRepeats,
     collect,
     toStreamDefinition,
     createPartitionedTestStream,
@@ -21,7 +20,7 @@ const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 jest.setTimeout(60000)
 
-describeRepeats('Subscriber', () => {
+describe('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -30,8 +29,6 @@ describeRepeats('Subscriber', () => {
     let streamDefinition: StreamDefinition
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
-
-    const createClient = getCreateClient()
 
     beforeAll(async () => {
         const stream = await createPartitionedTestStream(module)
@@ -151,12 +148,14 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
+                const onErrorHandler = jest.fn()
+                sub.onError(onErrorHandler)
+
                 const received: unknown[] = []
-                await expect(async () => {
-                    for await (const msg of sub) {
-                        received.push(msg.getParsedContent())
-                    }
-                }).rejects.toThrow(err)
+                for await (const msg of sub) {
+                    received.push(msg.getParsedContent())
+                }
+                expect(onErrorHandler).toHaveBeenCalledWith(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
                 await wait(100)
             })
@@ -194,12 +193,14 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
+                const onErrorHandler = jest.fn()
+                sub.onError(onErrorHandler)
+
                 const received: any[] = []
-                await expect(async () => {
-                    for await (const m of v) {
-                        received.push(m.getParsedContent())
-                    }
-                }).rejects.toThrow(err)
+                for await (const m of v) {
+                    received.push(m.getParsedContent())
+                }
+                expect(onErrorHandler).toHaveBeenCalledWith(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
             })
 
@@ -224,10 +225,12 @@ describeRepeats('Subscriber', () => {
                     timestamp: 111111,
                 })
 
-                await expect(async () => {
-                    await sub1.collectContent(NUM_MESSAGES)
-                }).rejects.toThrow()
+                const onErrorHandler = jest.fn()
+                sub1.onError(onErrorHandler)
+
+                await sub1.collectContent(NUM_MESSAGES)
                 const received = await sub2.collectContent(NUM_MESSAGES)
+                expect(onErrorHandler).toHaveBeenCalledWith(err)
                 expect(received).toEqual(published)
                 expect(count).toEqual(MAX_ITEMS)
             })
@@ -314,130 +317,6 @@ describeRepeats('Subscriber', () => {
                 expect(onError2).toHaveBeenCalledTimes(0)
                 expect(count).toEqual(MAX_ITEMS)
                 expect(await M.count(streamDefinition)).toBe(0)
-            })
-
-            it('keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
-                const THROW_AFTER = MAX_ITEMS
-                const err = new Error('expected')
-                const sub1 = await M.subscribe(streamDefinition)
-                const sub2 = await M.subscribe(streamDefinition)
-
-                expect(sub1.context).toBe(sub2.context)
-                sub1.context.pipeline.forEachBefore((s, count) => {
-                    if (count === THROW_AFTER) {
-                        sub1.debug('throwing...', count, s)
-                        throw err
-                    }
-                })
-
-                const onMessage = jest.fn()
-                sub1.onMessage(onMessage)
-                sub1.onMessage((msg) => {
-                    received1.push(msg.getParsedContent())
-                })
-
-                const onSuppressError = jest.fn()
-                sub2.onError(onSuppressError)
-
-                const received1: any[] = []
-                const publishTask = publishTestMessages(NUM_MESSAGES, {
-                    timestamp: 111111,
-                })
-                publishTask.catch(() => {})
-
-                try {
-                    await expect(async () => {
-                        const received3 = await sub1.collectContent(NUM_MESSAGES)
-                        sub1.debug({ received3 })
-                    }).rejects.toThrow()
-                    const published = await publishTask
-                    const received2 = await sub2.collectContent(NUM_MESSAGES - 1)
-
-                    sub1.debug({ received1, received2 })
-                    expect(onSuppressError).toHaveBeenCalledTimes(1)
-                    expect(received1).toEqual(published.slice(0, THROW_AFTER))
-                    expect(received2).toEqual(published.filter((_msg, index) => index !== THROW_AFTER))
-                    // should get all messages but see a gap at message MAX_ITEMS
-                } finally {
-                    await publishTask
-                }
-            })
-
-            it('multiple publishers: keeps other subscriptions running if pipeline has error but subscription onError ignores it', async () => {
-                const THROW_AFTER = MAX_ITEMS
-                const sub1 = await M.subscribe(streamDefinition)
-                const sub2 = await M.subscribe(streamDefinition)
-
-                expect(sub1.context).toBe(sub2.context)
-                let msgChainId: string
-                let count1 = 0
-                let count2 = 0
-                sub1.context.pipeline.forEachBefore((s) => {
-                    const msgChain = s.getMsgChainId()
-                    if (msgChainId === undefined) {
-                        msgChainId = msgChain
-                    }
-                    try {
-                        if (count1 === THROW_AFTER || count2 === THROW_AFTER) {
-                            sub1.debug('throwing...', count1, count2, s)
-                            throw new Error('expected')
-                        }
-                    } finally {
-                        // count based on msgChain
-                        if (msgChainId === msgChain) {
-                            count1 += 1
-                        } else {
-                            count2 += 1
-                        }
-                    }
-                })
-
-                const received1: any[] = []
-                const onMessage = jest.fn()
-                sub1.onMessage(onMessage)
-                sub1.onMessage((msg) => {
-                    sub1.debug('msg', msg)
-                    received1.push(msg.getParsedContent())
-                })
-
-                const onSuppressError = jest.fn()
-                sub2.onError(onSuppressError)
-
-                const client2 = await createClient({
-                    auth: {
-                        privateKey
-                    }
-                })
-
-                const publishTestMessages2 = getPublishTestMessages(client2, streamDefinition)
-                const publishTask = publishTestMessages(NUM_MESSAGES, {
-                    timestamp: 111111,
-                })
-                publishTask.catch(() => {})
-                const publishTask2 = publishTestMessages2(NUM_MESSAGES, {
-                    timestamp: 222222,
-                })
-                publishTask2.catch(() => {})
-
-                try {
-                    await expect(async () => {
-                        await sub1.collectContent(NUM_MESSAGES)
-                    }).rejects.toThrow()
-                    const published1: any[] = await publishTask
-                    const published2: any[] = await publishTask2
-                    const received2 = await sub2.collectContent((NUM_MESSAGES * 2) - 2)
-
-                    expect(onSuppressError).toHaveBeenCalledTimes(2)
-                    // filter two msg chains
-                    const r1 = received2.filter(({ batchId }) => batchId === published1[0].batchId)
-                    const r2 = received2.filter(({ batchId }) => batchId === published2[0].batchId)
-                    // should get all messages but see a gap at message THROW_AFTER
-                    expect(r1).toEqual(published1.filter((opt: any) => opt.index !== THROW_AFTER))
-                    expect(r2).toEqual(published2.filter((opt: any) => opt.index !== THROW_AFTER))
-                } finally {
-                    await publishTask
-                    await publishTask2
-                }
             })
 
             /*
