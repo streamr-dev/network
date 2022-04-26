@@ -3,7 +3,6 @@ import { fastPrivateKey, wait } from 'streamr-test-utils'
 
 import {
     getPublishTestMessages,
-    getCreateClient,
     collect,
     toStreamDefinition,
     createPartitionedTestStream,
