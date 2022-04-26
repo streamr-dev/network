@@ -236,7 +236,6 @@ export class Storage extends EventEmitter {
             .addRecordedMetric('readBytes')
             .addRecordedMetric('writeCount')
             .addRecordedMetric('writeBytes')
-            .addQueriedMetric('batchManager', () => this.batchManager.metrics())
         this.on('read', (streamMessage: StreamMessage) => {
             cassandraMetrics.record('readCount', 1)
             cassandraMetrics.record('readBytes', streamMessage.getContent(false).length)
