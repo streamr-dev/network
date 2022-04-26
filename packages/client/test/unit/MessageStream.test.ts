@@ -1,9 +1,38 @@
-import { wait } from 'streamr-test-utils'
+import { wait, waitForCondition } from 'streamr-test-utils'
 import { counterId } from '../../src/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
-import { MessageStream } from '../../src/subscribe/MessageStream'
-import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
+import { MessageStream, MessageStreamOnMessage, pullManyToOne } from '../../src/subscribe/MessageStream'
+import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-protocol'
+import { Readable } from 'stream'
+
+const createMockMessage = (streamId: StreamID) => {
+    return new StreamMessage({
+        messageId: new MessageID(streamId, 0, 0, 0, 'publisherId', 'msgChainId'),
+        content: Msg()
+    })
+}
+
+const fromReadable = async (readable: Readable, context: Context, onMessage?: MessageStreamOnMessage<any>) => {
+    const result = new MessageStream<any>(context)
+    if (onMessage !== undefined) {
+        result.useLegacyOnMessageHandler(onMessage)
+    }
+    result.pull((async function* readStream() {
+        try {
+            yield* readable
+        } finally {
+            readable.destroy()
+        }
+    }()))
+    return result
+}
+
+const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
+    await waitForCondition(() => onMessage.mock.calls.length >= n, 1000, 100, () => {
+        return `Timeout while waiting for calls: got ${onMessage.mock.calls.length} out of ${n}`
+    })
+}
 
 describe('MessageStream', () => {
     const streamId = toStreamID('streamId')
@@ -277,5 +306,79 @@ describe('MessageStream', () => {
         await expect(async () => {
             await collectTask
         }).rejects.toThrow(err)
+    })
+
+    describe('onMessage', () => {
+
+        it('push', async () => {
+            const stream = new MessageStream<any>(context)
+            const onMessage = jest.fn()
+            stream.useLegacyOnMessageHandler(onMessage)
+            const msg = createMockMessage(streamId)
+            stream.push(msg)
+            await waitForCalls(onMessage, 1)
+            expect(onMessage).toBeCalledTimes(1)
+            expect(onMessage).toHaveBeenNthCalledWith(1, msg.getParsedContent(), msg)
+        })
+        
+        it('fromReadable', async () => {
+            const msg1 = createMockMessage(streamId)
+            const msg2 = createMockMessage(streamId)
+            const readable = Readable.from([msg1, msg2], { objectMode: true})
+            const onMessage = jest.fn()
+            fromReadable(readable, context, onMessage)
+            await waitForCalls(onMessage, 2)
+            expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), msg1)
+            expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), msg2)
+        })
+    })
+
+    describe('pullToMany', () => {
+        it('push', async () => {
+            const source1 = new MessageStream<any>(context)
+            const source2 = new MessageStream<any>(context)
+            const onMessage = jest.fn()
+            pullManyToOne(context, [source1, source2], onMessage)
+            const msg1 = createMockMessage(streamId)
+            source1.push(msg1)
+            const msg2 = createMockMessage(streamId)
+            source2.push(msg2)
+            await waitForCalls(onMessage, 2)
+            expect(onMessage).toBeCalledTimes(2)
+            expect(onMessage).toHaveBeenCalledWith(msg1.getParsedContent(), msg1)
+            expect(onMessage).toHaveBeenCalledWith(msg2.getParsedContent(), msg2)
+        })
+        
+        it('fromReadable with onMessage handler', async () => {
+            const msgA1 = createMockMessage(streamId)
+            const msgA2 = createMockMessage(streamId)
+            const msgB1 = createMockMessage(streamId)
+            const msgB2 = createMockMessage(streamId)
+            const onMessage = jest.fn()
+            const sourceA = await fromReadable(Readable.from([msgA1, msgA2], { objectMode: true}), context)
+            const sourceB = await fromReadable(Readable.from([msgB1, msgB2], { objectMode: true}), context)
+            pullManyToOne(context, [sourceA, sourceB], onMessage)
+            await waitForCalls(onMessage, 4)
+            expect(onMessage).toBeCalledTimes(4)
+            expect(onMessage).toHaveBeenCalledWith(msgA1.getParsedContent(), msgA1)
+            expect(onMessage).toHaveBeenCalledWith(msgA2.getParsedContent(), msgA2)
+            expect(onMessage).toHaveBeenCalledWith(msgB1.getParsedContent(), msgB1)
+            expect(onMessage).toHaveBeenCalledWith(msgB2.getParsedContent(), msgB2)
+        })
+
+        it('fromReadable without onMessage', async () => {
+            const msgA1 = createMockMessage(streamId)
+            const msgA2 = createMockMessage(streamId)
+            const msgB1 = createMockMessage(streamId)
+            const msgB2 = createMockMessage(streamId)
+            const sourceA = await fromReadable(Readable.from([msgA1, msgA2], { objectMode: true}), context)
+            const sourceB = await fromReadable(Readable.from([msgB1, msgB2], { objectMode: true}), context)
+            const merged = await pullManyToOne(context, [sourceA, sourceB])
+            const received: any[] = []
+            for await (const msg of merged) {
+                received.push(msg)
+            }
+            expect(received).toIncludeSameMembers([msgA1, msgA2, msgB1, msgB2])
+        })
     })
 })
