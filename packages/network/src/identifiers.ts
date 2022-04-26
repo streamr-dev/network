@@ -86,7 +86,6 @@ export type TrackerInfo = SmartContractRecord
 
 export interface AbstractNodeOptions {
     id?: NodeId
-    name?: string
     location?: Location
     metricsContext?: MetricsContext
     trackerPingInterval?: number

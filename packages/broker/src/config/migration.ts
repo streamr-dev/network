@@ -114,6 +114,9 @@ const convertV1ToV2 = (source: any): Config => {
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
+    if (target.client?.network?.name !== undefined) {
+        delete target.client.network.name 
+    }
     return target as Config
 }
 

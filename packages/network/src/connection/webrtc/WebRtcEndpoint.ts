@@ -110,9 +110,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             .addRecordedMetric('msgOutSpeed')
             .addRecordedMetric('failedConnection')
             .addQueriedMetric('connections', () => Object.keys(this.connections).length)
-            .addQueriedMetric('messageQueueSize', () => {
-                return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
-            })
 
         this.startConnectionStatusReport()
     }

@@ -99,10 +99,9 @@ export class BrubeckNode implements Context {
         const networkOptions = await this.getNormalizedNetworkOptions()
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
-            name: id,
             ...networkOptions,
             id,
-            metricsContext: new MetricsContext(options.name ?? id)
+            metricsContext: new MetricsContext()
         })
 
         if (!this.destroySignal.isDestroyed()) {

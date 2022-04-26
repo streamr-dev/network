@@ -1,18 +1,21 @@
 import 'reflect-metadata'
 import { container } from 'tsyringe'
-import { toStreamID } from 'streamr-client-protocol'
-import { BrubeckNode } from '../../src/BrubeckNode'
+import { StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { BrubeckNode, NetworkNodeStub } from '../../src/BrubeckNode'
 import { Publisher } from '../../src/publish/Publisher'
 import { initContainer } from '../../src'
 import { StreamRegistry } from '../../src/StreamRegistry'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
 import { createStrictConfig } from '../../src/Config'
+import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
+import { GroupKey } from '../../src/encryption/GroupKey'
 
 const AUTHENTICATED_USER = '0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf'
 const PRIVATE_KEY = '0x0000000000000000000000000000000000000000000000000000000000000001'
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
+const GROUP_KEY = GroupKey.generate()
 
 const createMockContainer = async (
     brubeckNode: Pick<BrubeckNode, 'publishToNode'>,
@@ -22,20 +25,34 @@ const createMockContainer = async (
             privateKey: PRIVATE_KEY
         }
     })
+    const groupKeyStoreFactory = {
+        getStore: () => {
+            return {
+                useGroupKey: async () => [GROUP_KEY, undefined]
+            }
+        }
+    }
     const { childContainer } = initContainer(config, container)
     return childContainer
         .registerSingleton(StreamRegistry, FakeStreamRegistry as any)
         .register(BrubeckNode, { useValue: brubeckNode as any })
+        .register(GroupKeyStoreFactory, { useValue: groupKeyStoreFactory } as any)
 }
 
 describe('Publisher', () => {
 
     let publisher: Pick<Publisher, 'publish' | 'stop'>
-    let brubeckNode: Pick<BrubeckNode, 'publishToNode'>
+    let brubeckNode: Pick<BrubeckNode, 'publishToNode' | 'getNode'>
 
     beforeEach(async () => {
         brubeckNode = {
-            publishToNode: jest.fn()
+            publishToNode: jest.fn(),
+            getNode: async () => {
+                return {
+                    addMessageListener: jest.fn(),
+                    subscribe: jest.fn()
+                } as unknown as NetworkNodeStub
+            } 
         }
         const mockContainer = await createMockContainer(brubeckNode)
         publisher = mockContainer.resolve(Publisher)
@@ -52,8 +69,8 @@ describe('Publisher', () => {
         const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
         expect(actual).toMatchObject({
             contentType: 0,
-            encryptionType: 0,
-            groupKeyId: null,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            groupKeyId: GROUP_KEY.id,
             messageId: {
                 msgChainId: expect.anything(),
                 publisherId: AUTHENTICATED_USER.toLowerCase(),
@@ -64,9 +81,9 @@ describe('Publisher', () => {
             },
             messageType: 27,
             newGroupKey: null,
-            parsedContent: { foo: 'bar' },
+            parsedContent: undefined,
             prevMsgRef: null,
-            serializedContent: '{"foo":"bar"}',
+            serializedContent: expect.anything(),
             signature: expect.anything(),
             signatureType: 2
         })

@@ -308,14 +308,6 @@ describe('tracker endpoint', () => {
         expect(jsonResult).toEqual({})
     })
 
-    it('/metrics/', async () => {
-        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metrics/`)
-        expect(status).toEqual(200)
-        expect(jsonResult.peerId).toEqual(tracker.getTrackerId())
-        expect(jsonResult.startTime).toBeGreaterThan(1600000000000)
-        expect(jsonResult.metrics).not.toBeUndefined()
-    })
-
     it('/metadata/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/metadata/`)
         expect(status).toEqual(200)

@@ -23,7 +23,7 @@ describe('NodeMetrics', () => {
     let updateMockMetricsData: any
 
     beforeEach(() => {
-        const metricsContext = new MetricsContext('')
+        const metricsContext = new MetricsContext()
         const webRtcMetricsProducer = metricsContext.create('WebRtcEndpoint')
             .addRecordedMetric('inSpeed')
             .addRecordedMetric('outSpeed')
