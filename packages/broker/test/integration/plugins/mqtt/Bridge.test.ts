@@ -33,7 +33,6 @@ describe('MQTT Bridge', () => {
         brokerUser = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
-            name: 'broker',
             privateKey: brokerUser.privateKey,
             trackerPort: TRACKER_PORT,
             extraPlugins: {

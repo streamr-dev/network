@@ -6,7 +6,7 @@ describe('PeerInfo', () => {
     let unknownInfo: PeerInfo
 
     beforeEach(() => {
-        nodeInfo = PeerInfo.newNode('0x21583691f17b9e36a4577520f8db04a19a2f2a0d', 'NetworkNode')
+        nodeInfo = PeerInfo.newNode('0x21583691f17b9e36a4577520f8db04a19a2f2a0d')
         trackerInfo = PeerInfo.newTracker('0x4c56dbe52abb0878ee05dc15b86d660e7ef3329e')
         unknownInfo = PeerInfo.newUnknown('0xeba1386b00de68dcc514ac5d7de7fcb48495c4c7')
     })
@@ -24,7 +24,7 @@ describe('PeerInfo', () => {
     })
 
     it('toString', () => {
-        expect(nodeInfo.toString()).toEqual('NetworkNode<0x215836>')
+        expect(nodeInfo.toString()).toEqual('<0x215836>')
         expect(trackerInfo.toString()).toEqual('<0x4c56db>')
         expect(unknownInfo.toString()).toEqual('<0xeba138>')
     })
@@ -44,13 +44,8 @@ describe('PeerInfo', () => {
         expect(peerInfo.isTracker()).toEqual(true)
     })
 
-    it('id is null if not given', () => {
-        const peerInfo = PeerInfo.newNode('nodeId')
-        expect(peerInfo.peerName).toEqual(null)
-    })
-
     it('use default location if not given', () => {
-        const peerInfo = PeerInfo.newNode('nodeId', 'nodeName',undefined , undefined, undefined)
+        const peerInfo = PeerInfo.newNode('nodeId', undefined, undefined, undefined)
         expect(peerInfo.location).toEqual(undefined)
     })
 })

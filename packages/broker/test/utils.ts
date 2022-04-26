@@ -19,7 +19,6 @@ import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migr
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
 interface TestConfig {
-    name: string
     trackerPort: number
     privateKey: string
     httpPort?: null | number
@@ -33,7 +32,6 @@ interface TestConfig {
 }
 
 export const formConfig = ({
-    name,
     trackerPort,
     privateKey,
     httpPort = null,
@@ -70,7 +68,6 @@ export const formConfig = ({
             },
             restUrl,
             network: {
-                name,
                 id: new Wallet(privateKey).address,
                 trackers: [
                     {
@@ -263,7 +260,6 @@ export async function startStorageNode(
         client?.destroy()
     }
     return startBroker({
-        name: 'storageNode',
         privateKey: storageNodePrivateKey,
         trackerPort,
         httpPort,

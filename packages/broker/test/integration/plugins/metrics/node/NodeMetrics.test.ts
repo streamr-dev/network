@@ -32,7 +32,6 @@ describe('NodeMetrics', () => {
         streamIdPrefix = stream.id.replace('sec', '')
 
         metricsGeneratingBroker = await startBroker({
-            name: 'metricsGeneratingBroker',
             privateKey: tmpAccount.privateKey,
             trackerPort,
             extraPlugins: {

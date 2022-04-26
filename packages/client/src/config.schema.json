@@ -202,9 +202,6 @@
                 "id": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
                 "location": {
                     "type": "object",
                     "additionalProperties": false,
