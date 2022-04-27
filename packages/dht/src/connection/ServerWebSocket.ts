@@ -2,7 +2,7 @@
 
 import { EventEmitter } from 'events'
 import { Connection, Event as ConnectionEvent } from './Connection'
-import { connection  as WsConnection} from 'websocket'
+import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../types'
 
 export class ServerWebSocket extends EventEmitter implements Connection {
@@ -11,9 +11,9 @@ export class ServerWebSocket extends EventEmitter implements Connection {
     private socket: WsConnection
     constructor(socket: WsConnection) {
         super()
-        
+
         this.connectionId = new ConnectionID()
-        
+
         socket.on('message', (message) => {
             console.log('ServerWebSocket::onMessage')
             if (message.type === 'utf8') {
@@ -21,12 +21,14 @@ export class ServerWebSocket extends EventEmitter implements Connection {
             }
             else if (message.type === 'binary') {
                 console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
-                this.emit(ConnectionEvent.DATA, new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
+                this.emit(ConnectionEvent.DATA,
+                    new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
+                        message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
             }
         })
         socket.on('close', (reasonCode, description) => {
             //console.log((new Date()) + ' Peer ' + socket.remoteAddress + ' disconnected.')
-            this.emit(ConnectionEvent.DISCONNECTED,reasonCode, description)
+            this.emit(ConnectionEvent.DISCONNECTED, reasonCode, description)
         })
 
         socket.on('error', (error) => {
