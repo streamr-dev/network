@@ -7,6 +7,7 @@ import { generateId, stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerID } from '../../src/types'
 
 describe('DhtClientRpcTransport', () => {
     let dhtNode1: DhtNode,
@@ -39,12 +40,12 @@ describe('DhtClientRpcTransport', () => {
                 }
                 rpcCommunicators.get(stringFromId(peerDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
             })
-            return new DhtNode(id, client, serverTransport, rpcCommunicator)
+            return new DhtNode(new PeerID(id), client, serverTransport, rpcCommunicator)
         }
 
         dhtNode1 = createDhtNode('entrypoint')
         const entrypointDescriptor: PeerDescriptor = {
-            peerId: dhtNode1.getSelfId(),
+            peerId: dhtNode1.getSelfId().value,
             type: 0
         }
         entrypoint = new DhtPeer(entrypointDescriptor, dhtNode1.getDhtRpcClient())

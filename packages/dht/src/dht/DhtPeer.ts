@@ -1,17 +1,24 @@
-import { PeerID } from '../types'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
+import { PeerID } from '../types'
 
 export class DhtPeer {
     private static counter = 0
-    public readonly id: PeerID
+    //public readonly id: PeerID
+    
+    private readonly peerId: PeerID
+
+    public get id(): Uint8Array {
+        return this.peerId.value
+    }
+
     private lastContacted: number
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
     private readonly dhtClient: DhtRpcClient
     constructor(peerDescriptor: PeerDescriptor, client: DhtRpcClient) {
-        this.id = peerDescriptor.peerId
+        this.peerId = new PeerID(peerDescriptor.peerId)
         this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
@@ -35,7 +42,7 @@ export class DhtPeer {
     }
 
     getPeerId(): PeerID {
-        return this.id
+        return this.peerId
     }
 
     getPeerDscriptor(): PeerDescriptor {

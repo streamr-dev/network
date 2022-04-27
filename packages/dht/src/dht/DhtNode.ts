@@ -24,16 +24,17 @@ export class DhtNode {
     constructor(selfId: PeerID, dhtRpcClient: DhtRpcClient, dhtTransportServer: DhtTransportServer, rpcCommunicator: RpcCommunicator) {
         this.selfId = selfId
         this.peerDescriptor = {
-            peerId: selfId,
+            peerId: selfId.value,
             type: 0
         }
         this.peers = new Map()
         this.bucket = new KBucket({
-            localNodeId: this.selfId,
+            localNodeId: this.selfId.value,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
+
         this.dhtRpcClient = dhtRpcClient
-        this.neighborList = new SortedContactList(this.selfId, [])
+        this.neighborList = new SortedContactList(this.selfId.value, [])
         this.dhtTransportServer = dhtTransportServer
         this.rpcCommunicator = rpcCommunicator
         this.bindDefaultServerMethods()
@@ -65,8 +66,8 @@ export class DhtNode {
 
     private async getClosestPeersFromContacts(contactList: DhtPeer[]) {
         const promises = contactList.map(async (contact) => {
-            this.neighborList.setContacted(contact.getPeerId())
-            this.neighborList.setActive(contact.getPeerId())
+            this.neighborList.setContacted(contact.getPeerId().value)
+            this.neighborList.setActive(contact.getPeerId().value)
             const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
             const dhtPeers = returnedContacts.map((peer) => {
                 return new DhtPeer(peer, this.dhtRpcClient)
@@ -117,11 +118,11 @@ export class DhtNode {
     }
 
     async joinDht(entrypoint: DhtPeer): Promise<void> {
-        if (Buffer.compare(this.selfId, entrypoint.getPeerId()) == 0) {
+        if (Buffer.compare(this.selfId.value, entrypoint.getPeerId().value) == 0) {
             return
         }
         this.bucket.add(entrypoint)
-        const closest = this.bucket.closest(this.selfId, this.ALPHA)
+        const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
 
         await this.findContacts()
