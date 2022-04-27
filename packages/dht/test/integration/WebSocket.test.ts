@@ -28,8 +28,10 @@ describe('WebSocket', () => {
                 const time = Date.now()
                 console.log('server side receiving message at ' + time)
 
-                console.log(bytes.toString())
+                console.log(JSON.stringify(bytes))
+               
                 expect(bytes.toString()).toBe('1,2,3,4')
+                console.log('calling done()')
                 done()
             })
         })
@@ -42,7 +44,7 @@ describe('WebSocket', () => {
                 const time = Date.now()
                 console.log('client side receiving message at ' + time)
 
-                console.log(bytes.toString())
+                console.log(JSON.stringify(bytes))
                 expect(bytes.toString()).toBe('1,2,3,4')
                 
                 const time2 = Date.now()

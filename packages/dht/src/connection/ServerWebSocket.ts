@@ -21,7 +21,7 @@ export class ServerWebSocket extends EventEmitter implements Connection {
             }
             else if (message.type === 'binary') {
                 console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
-                this.emit(ConnectionEvent.DATA, message.binaryData)
+                this.emit(ConnectionEvent.DATA, new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
             }
         })
         socket.on('close', (reasonCode, description) => {

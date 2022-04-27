@@ -45,7 +45,7 @@ describe('ConnectionManager', () => {
 
         const result2 = await connectionManager2.start()
 
-        expect(result2.ip).toEqual('localhost')
+        expect(result2.ip).toEqual('127.0.0.1')
         expect(result2.openInternet).toEqual(true)
 
         await connectionManager.stop()

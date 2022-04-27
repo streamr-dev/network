@@ -39,7 +39,7 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
                 const message = Message.fromBinary(data)
                 if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
                     console.log('received connectivity request')
-                    const connectivityRequest = ConnectivityRequestMessage.fromBinary(data)
+                    const connectivityRequest = ConnectivityRequestMessage.fromBinary(message.body)
 
                     let outgoingConnection: Connection | null = null
                     let connectivityResponseMessage: ConnectivityResponseMessage | null = null

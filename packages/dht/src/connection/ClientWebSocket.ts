@@ -17,26 +17,26 @@ export class ClientWebSocket extends EventEmitter implements Connection {
     }
 
     connect(address: string): void {
-        const socket = new WebSocket(address)
+        this.socket = new WebSocket(address)
     
-        socket.onerror = (error: Error) => {
+        this.socket.onerror = (error: Error) => {
             //console.log('Error', error)
             this.emit(ConnectionEvent.ERROR, error.name)
         }
         
-        socket.onopen = () => {
+        this.socket.onopen = () => {
             console.log('WebSocket Client Connected')
-            if (socket.readyState === socket.OPEN) {
+            if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 this.emit(ConnectionEvent.CONNECTED)
             }  
         }
         
-        socket.onclose = (event: ICloseEvent ) => {
+        this.socket.onclose = (event: ICloseEvent ) => {
             //console.log('Websocket Closed')
             this.emit(ConnectionEvent.DISCONNECTED, event.code, event.reason)
         }
         
-        socket.onmessage = (message: IMessageEvent) => {
+        this.socket.onmessage = (message: IMessageEvent) => {
             if (typeof message.data === 'string') {
                 console.log("Received string: '" + message.data + "'")
             }
