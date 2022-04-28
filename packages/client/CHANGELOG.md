@@ -9,6 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+## [6.0.4] - 2022-04-28
+
+### Fixed
+
+- Update `streamr-network` library that includes a fix to Firefox compatibility
+
 ## [6.0.3] - 2022-04-25
 
 ### Fixed
@@ -26,7 +32,8 @@ Remove this paragraph when content has been added.
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.3...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.4...HEAD
+[6.0.4]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.3...client/v6.0.4
 [6.0.3]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.2...client/v6.0.3
 [6.0.2]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.1...client/v6.0.2
 [6.0.1]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.0...client/v6.0.1
