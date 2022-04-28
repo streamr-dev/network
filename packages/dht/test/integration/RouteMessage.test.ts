@@ -3,11 +3,11 @@ import { stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { ClosestPeersRequest, PeerDescriptor, RpcWrapper, RouteMessageType } from '../../src/proto/DhtRpc'
-import { wait, waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode } from '../utils'
 
-describe('DhtClientRpcTransport', () => {
+describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
@@ -25,8 +25,6 @@ describe('DhtClientRpcTransport', () => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                // Mock latency
-                await wait(Math.random() * (30 - 5) + 5)
                 rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(senderDescriptor, bytes)
             }
         }
@@ -48,7 +46,7 @@ describe('DhtClientRpcTransport', () => {
         destinationNode.getRpcCommunicator().setSendFn(rpcFuntion(destinationNode.getPeerDescriptor()))
         rpcCommunicators.set(destinationId, destinationNode.getRpcCommunicator())
 
-        for (let i = 1; i < 15; i++) {
+        for (let i = 1; i < 50; i++) {
             const nodeId = `${i}`
             const node = createMockConnectionDhtNode(nodeId)
             node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))

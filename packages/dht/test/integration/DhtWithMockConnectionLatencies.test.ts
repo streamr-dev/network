@@ -6,7 +6,7 @@ import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { createMockConnectionDhtNode } from '../utils'
 
-describe('DhtClientRpcTransport', () => {
+describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
 
