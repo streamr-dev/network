@@ -27,7 +27,6 @@ interface TestConfig {
     enableCassandra?: boolean
     privateKeyFileName?: null | string
     certFileName?: null | string
-    restUrl?: string
     storageConfigRefreshInterval?: number
 }
 
@@ -38,10 +37,9 @@ export const formConfig = ({
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
-    const plugins: Record<string,any> = { ...extraPlugins }
+    const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
             plugins['storage'] = {
@@ -66,7 +64,6 @@ export const formConfig = ({
             auth: {
                 privateKey
             },
-            restUrl,
             network: {
                 id: new Wallet(privateKey).address,
                 trackers: [
@@ -148,7 +145,6 @@ export const createClient = async (
         auth: {
             privateKey
         },
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
         network: networkOptions,
         ...clientOptions,
     })

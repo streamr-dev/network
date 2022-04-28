@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - method `unRegisterStorageEventListeners()` replaced with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
 - Resent event:
   - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
-- Behavior changes: 
+- Behavior changes:
   - resends support multiple storage nodes (the data is fetched from a random storage node)
 - Configuration parameter `groupKeys` renamed to `encryptionKeys`
 - Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed all DataUnion code. New DataUnion client will be released under https://github.com/dataunions/data-unions
 - Remove method `getAllStorageNodes()`, use `getStorageNodes()` without arguments instead
 - Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
 - Remove method `disconnect()`, use `destroy()` instead
