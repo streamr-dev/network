@@ -60,11 +60,6 @@ export class StreamPartManager {
         this.streamParts.get(streamPartId)!.counter = counter
     }
 
-    isNewStream(streamPartId: StreamPartID): boolean {
-        this.ensureThatIsSetUp(streamPartId)
-        return this.streamParts.get(streamPartId)!.counter === 0
-    }
-
     addNeighbor(streamPartId: StreamPartID, node: NodeId): void {
         this.ensureThatIsSetUp(streamPartId)
         const { neighbors } = this.streamParts.get(streamPartId)!

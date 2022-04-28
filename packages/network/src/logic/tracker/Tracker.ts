@@ -5,7 +5,7 @@ import { Logger } from '../../helpers/Logger'
 import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
 import { Event as TrackerServerEvent, TrackerServer } from '../../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
-import { COUNTER_LONE_NODE, COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
+import { COUNTER_UNSUBSCRIBE, InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerId, PeerInfo } from '../../connection/PeerInfo'
@@ -232,29 +232,15 @@ export class Tracker extends EventEmitter {
         }
         if (this.overlayPerStreamPart[streamPartId]) {
             const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
-
-            // Send empty instruction if and only if the node is alone in the topology
-            if (this.overlayPerStreamPart[streamPartId].hasNode(node)
-                && this.overlayPerStreamPart[streamPartId].getNumberOfNodes() === 1
-                && Object.keys(instructions).length === 0) {
-                this.instructionSender.addInstruction({
-                    nodeId: node,
+            Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
+                const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
+                await this.instructionSender.addInstruction({
+                    nodeId,
                     streamPartId,
-                    newNeighbors: [],
-                    counterValue: COUNTER_LONE_NODE
+                    newNeighbors,
+                    counterValue
                 })
-            } else {
-                Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
-                    const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
-                    this.instructionSender.addInstruction({
-                        nodeId,
-                        streamPartId,
-                        newNeighbors,
-                        counterValue
-                    })
-                })
-            }
-
+            })
         }
     }
 
