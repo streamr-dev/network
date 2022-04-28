@@ -7,6 +7,8 @@ import { generateId, stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { createMockConnectionDhtNode } from '../utils'
+import { wait } from 'streamr-test-utils'
 
 describe('DhtClientRpcTransport', () => {
     let entryPoint: DhtNode
@@ -18,36 +20,28 @@ describe('DhtClientRpcTransport', () => {
 
     beforeEach(() => {
         rpcCommunicators = new Map()
-        nodes = []
-        const createDhtNode = (stringId: string): DhtNode => {
-            const id = generateId(stringId)
-            const peerDescriptor: PeerDescriptor = {
-                peerId: id,
-                type: 0
-            }
-            const clientTransport = new DhtTransportClient()
-            const serverTransport = new DhtTransportServer()
-            const mockConnectionLayer = new MockConnectionManager()
-            const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
-            const client = new DhtRpcClient(clientTransport)
-            rpcCommunicators.set(stringId, rpcCommunicator)
-            rpcCommunicator.setSendFn(async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+        const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
+            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(peerDescriptor, bytes)
-            })
-            return new DhtNode(id, client, serverTransport, rpcCommunicator)
+                rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(senderDescriptor, bytes)
+            }
         }
+        nodes = []
 
-        entryPoint = createDhtNode('0')
-        const entrypointDescriptor: PeerDescriptor = {
-            peerId: entryPoint.getSelfId(),
-            type: 0
-        }
-        entryPointInfo = new DhtPeer(entrypointDescriptor, entryPoint.getDhtRpcClient())
+        const entryPointId = '0'
+        entryPoint = createMockConnectionDhtNode(entryPointId)
+        entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
+        rpcCommunicators.set(entryPointId, entryPoint.getRpcCommunicator())
+
+        entryPointInfo = new DhtPeer(entryPoint.getPeerDescriptor(), entryPoint.getDhtRpcClient())
+
         for (let i = 1; i < 100; i++) {
-            const node = createDhtNode(`${i}`)
+            const nodeId = `${i}`
+            const node = createMockConnectionDhtNode(nodeId)
+            node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
+            rpcCommunicators.set(nodeId, node.getRpcCommunicator())
             nodes.push(node)
         }
     })
