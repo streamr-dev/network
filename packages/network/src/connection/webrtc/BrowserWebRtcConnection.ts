@@ -75,7 +75,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     protected doClose(err?: Error): void {
+        if (err !== undefined) {
         this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+        }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
