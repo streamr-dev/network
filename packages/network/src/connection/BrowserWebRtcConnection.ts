@@ -42,20 +42,6 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
             this.lastGatheringState = this.peerConnection?.iceGatheringState
         }
 
-        this.peerConnection.onconnectionstatechange = () => {
-            const state = this.peerConnection?.connectionState
-            this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
-            this.lastState = state
-
-            if (state === 'disconnected' || state === 'closed') {
-                this.close()
-            } else if (state === 'failed') {
-                this.close(new Error('connection failed'))
-            } else if (state === 'connecting') {
-                this.restartConnectionTimeout()
-            }
-        }
-
         if (this.isOffering()) {
             this.peerConnection.onnegotiationneeded = async () => {
                 try {
@@ -89,7 +75,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     protected doClose(err?: Error): void {
-        this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+        if (err !== undefined) {
+            this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+        }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
@@ -209,7 +197,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     private openDataChannel(dataChannel: RTCDataChannel): void {
+        this.lastState = 'connected'
         this.dataChannel = dataChannel
         this.emitOpen()
+    }
+
+    close(err?: Error): void {
+        this.lastState = 'close'
+        super.close(err)
     }
 }
