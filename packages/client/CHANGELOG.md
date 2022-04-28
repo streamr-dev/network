@@ -46,18 +46,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+
+## [6.0.4] - 2022-04-28
+
+### Fixed
+- Update `streamr-network` library that includes a fix to Firefox compatibility
+
+## [6.0.3] - 2022-04-25
+
+### Fixed
+- Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
+
 ## [6.0.2] - 2022-03-04
 
 ### Fixed
-
 - Fixed an issue in which method `searchStreams` would throw on invalid metadata (NET-730)
-
 
 ## [6.0.1] - 2022-02-24
 
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.2...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.4...HEAD
+[6.0.4]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.3...client/v6.0.4
+[6.0.3]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.2...client/v6.0.3
 [6.0.2]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.1...client/v6.0.2
 [6.0.1]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.0...client/v6.0.1
