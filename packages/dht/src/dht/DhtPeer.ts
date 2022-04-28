@@ -1,6 +1,6 @@
 import { PeerID } from '../types'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper, RpcWrapper } from '../proto/DhtRpc'
+import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { nodeFormatPeerDescriptor } from './helpers'
 import { DhtRpcOptions } from '../transport/DhtTransportClient'

@@ -1,14 +1,9 @@
-import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
-import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { generateId, stringFromId } from '../../src/dht/helpers'
+import { stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
-import { wait } from 'streamr-test-utils'
 
 describe('DhtClientRpcTransport', () => {
     let entryPoint: DhtNode
