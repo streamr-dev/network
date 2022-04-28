@@ -69,7 +69,7 @@ describe('subscribe and wait for the node to join the stream', () => {
         const firstNodeSecondStream = await nodes[0].subscribeAndWaitForJoin(stream2, TIMEOUT)
         expect(firstNodeNeighbors).toEqual(0)
         expect(firstNodeNeighborsRetry).toEqual(0)
-        expect(firstNodeSecondStream).toBeGreaterThanOrEqual(0)
+        expect(firstNodeSecondStream).toEqual(0)
 
         const secondNodeNeighbors = await nodes[1].subscribeAndWaitForJoin(stream1, TIMEOUT)
         const thirdNodeNeighbors = await nodes[2].subscribeAndWaitForJoin(stream1, TIMEOUT)
@@ -102,7 +102,7 @@ describe('subscribe and wait for the node to join the stream', () => {
             waitForEvent(nodes[0], NodeEvent.MESSAGE_RECEIVED),
             nodes[1].waitForJoinAndPublish(msg, TIMEOUT)
         ])
-        expect(firstNeighbors).toBeGreaterThanOrEqual(0)
+        expect(firstNeighbors).toEqual(0)
         expect(result[1]).toEqual(1)
     })
 
