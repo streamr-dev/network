@@ -1,24 +1,19 @@
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
-import { RouteMessageWrapper } from '../../src/proto/DhtRpc'
+import { createMockConnectionDhtNode } from '../utils'
 
 describe('Route Message With Mock Connections', () => {
     let node: DhtNode
 
-    beforeEach(() => {
+    beforeEach(async () => {
         node = createMockConnectionDhtNode('UnitNode')
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         await node.stop()
     })
 
     it ('canRoute', async () => {
-        const rpcWrapper = createWrappedClosestPeersRequest(node.getPeerDescriptor(), node.getPeerDescriptor())
-        // const routedMessage: RouteMessageWrapper = {
-        //     message: rpcWrapper,
-        //
-        // }
-        // node.canRoute()
+        // const rpcWrapper = createWrappedClosestPeersRequest(node.getPeerDescriptor(), node.getPeerDescriptor())
+
     })
 })
