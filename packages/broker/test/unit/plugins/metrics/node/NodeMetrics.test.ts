@@ -1,179 +1,73 @@
-import { MetricsContext } from 'streamr-network'
-import { Sample } from '../../../../../src/plugins/metrics/node/Sample'
+import { LevelSampler, Metric, MetricsContext } from 'streamr-network'
 import { NodeMetrics } from '../../../../../src/plugins/metrics/node/NodeMetrics'
-
-const getTime = (dateStr: string): number => {
-    return new Date(dateStr).getTime()
-}
-
-const getPeriod = (sample: Sample): { start: string, end: string } => {
-    const { period } = sample
-    return {
-        start: new Date(period.start).toISOString(),
-        end: new Date(period.end).toISOString()
-    }
-}
+import { waitForCondition } from 'streamr-test-utils'
+import StreamrClient from 'streamr-client'
 
 const MOCK_METRICS_VALUE = 123
+const MOCK_NODE_ID = '0x0000000000000000000000000000000000000000'
+
+const createMockMetric = () => new Metric((metric) => new LevelSampler(metric))
 
 describe('NodeMetrics', () => {
 
     let nodeMetrics: NodeMetrics
-    let publishListener: any
+    let onPublish: jest.Mock
     let updateMockMetricsData: any
 
     beforeEach(() => {
         const metricsContext = new MetricsContext()
-        const webRtcMetricsProducer = metricsContext.create('WebRtcEndpoint')
-            .addRecordedMetric('inSpeed')
-            .addRecordedMetric('outSpeed')
-            .addQueriedMetric('connections', () => MOCK_METRICS_VALUE)
-            .addRecordedMetric('failedConnection')
-        const nodeMetricsProducer = metricsContext.create('node')
-            .addFixedMetric('latency')
-        const nodePublishMetricsProducer = metricsContext.create('node/publish')
-            .addRecordedMetric('bytes')
-            .addRecordedMetric('count')
-        const storageMetricsProducer = metricsContext.create('broker/cassandra')
-            .addRecordedMetric('readBytes')
-            .addRecordedMetric('writeBytes')
-        updateMockMetricsData = (value: number) => {
-            webRtcMetricsProducer.record('inSpeed', value)
-            webRtcMetricsProducer.record('outSpeed', value)
-            webRtcMetricsProducer.record('failedConnection', value)
-            nodeMetricsProducer.set('latency', value)
-            storageMetricsProducer.record('readBytes', value)
-            storageMetricsProducer.record('writeBytes', value)
-            nodePublishMetricsProducer.record('bytes', value)
-            nodePublishMetricsProducer.record('count', value)
+        const webRtcMetricsProducer = {
+            inSpeed: createMockMetric(),
+            outSpeed: createMockMetric(),
+            connections: createMockMetric(),
+            failedConnection: createMockMetric()
         }
-        publishListener = jest.fn()
-        nodeMetrics = new NodeMetrics(metricsContext, {
-            publish: async (sample: Sample) => publishListener(sample)
-        } as any)
-    })
-
-    it('primary sample collected', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:05Z'))
-        expect(publishListener).toBeCalledTimes(1)
-        expect(getPeriod(publishListener.mock.calls[0][0])).toEqual({
-            start: '2000-01-02T03:04:00.000Z',
-            end: '2000-01-02T03:04:05.000Z'
-        })
-    })
-
-    it('minute aggregation', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:30Z'))
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:05:10Z'))
-        expect(publishListener).toBeCalledTimes(3)
-        expect(getPeriod(publishListener.mock.calls[2][0])).toEqual({
-            start: '2000-01-02T03:04:00.000Z',
-            end: '2000-01-02T03:05:00.000Z'
-        })
-    })
-
-    it('minute aggregation, exactly', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:05:00Z'))
-        expect(publishListener).toBeCalledTimes(2)
-        expect(getPeriod(publishListener.mock.calls[1][0])).toEqual({
-            start: '2000-01-02T03:04:00.000Z',
-            end: '2000-01-02T03:05:00.000Z'
-        })
-    })
-
-    it('hour aggregation', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:30Z'))
-        await nodeMetrics!.collectSample(getTime('2000-01-02T04:05:10Z'))
-        expect(publishListener).toBeCalledTimes(4)
-        expect(getPeriod(publishListener.mock.calls[2][0])).toEqual({
-            start: '2000-01-02T03:04:00.000Z',
-            end: '2000-01-02T03:05:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[3][0])).toEqual({
-            start: '2000-01-02T03:00:00.000Z',
-            end: '2000-01-02T04:00:00.000Z'
-        })
-    })
-
-    it('hour aggregation, exactly', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T04:00:00Z'))
-        expect(publishListener).toBeCalledTimes(3)
-        expect(getPeriod(publishListener.mock.calls[1][0])).toEqual({
-            start: '2000-01-02T03:59:00.000Z',
-            end: '2000-01-02T04:00:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[2][0])).toEqual({
-            start: '2000-01-02T03:00:00.000Z',
-            end: '2000-01-02T04:00:00.000Z'
-        })
-    })
-
-    it('day aggregation', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:30Z'))
-        await nodeMetrics!.collectSample(getTime('2000-01-03T04:05:10Z'))
-        expect(publishListener).toBeCalledTimes(5)
-        expect(getPeriod(publishListener.mock.calls[2][0])).toEqual({
-            start: '2000-01-02T03:04:00.000Z',
-            end: '2000-01-02T03:05:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[3][0])).toEqual({
-            start: '2000-01-02T03:00:00.000Z',
-            end: '2000-01-02T04:00:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[4][0])).toEqual({
-            start: '2000-01-02T00:00:00.000Z',
-            end: '2000-01-03T00:00:00.000Z'
-        })
-    })
-
-    it('day aggregation, exactly', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-03T00:00:00Z'))
-        expect(publishListener).toBeCalledTimes(4)
-        expect(getPeriod(publishListener.mock.calls[1][0])).toEqual({
-            start: '2000-01-02T23:59:00.000Z',
-            end: '2000-01-03T00:00:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[2][0])).toEqual({
-            start: '2000-01-02T23:00:00.000Z',
-            end: '2000-01-03T00:00:00.000Z'
-        })
-        expect(getPeriod(publishListener.mock.calls[3][0])).toEqual({
-            start: '2000-01-02T00:00:00.000Z',
-            end: '2000-01-03T00:00:00.000Z'
-        })
-    })
-
-    it('no data from MetricsContext', async () => {
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:05Z'))
-        expect(publishListener).toBeCalledTimes(1)
-        expect(publishListener).toBeCalledWith({
-            broker: {
-                messagesToNetworkPerSec: 0,
-                bytesToNetworkPerSec: 0
-            },
-            network: {
-                avgLatencyMs: 0,
-                bytesToPeersPerSec: 0,
-                bytesFromPeersPerSec: 0,
-                connections: MOCK_METRICS_VALUE,
-                webRtcConnectionFailures: 0
-            },
-            storage: {
-                bytesWrittenPerSec: 0,
-                bytesReadPerSec: 0
-            },
-            period: {
-                start: getTime('2000-01-02T03:04:00.000Z'),
-                end: getTime('2000-01-02T03:04:05.000Z')
+        metricsContext.addMetrics('WebRtcEndpoint', webRtcMetricsProducer)
+        const nodeMetricsProducer = {
+            latency: createMockMetric()
+        }
+        metricsContext.addMetrics('node', nodeMetricsProducer)
+        const nodePublishMetricsProducer = {
+            bytes: createMockMetric(),
+            count: createMockMetric()
+        }
+        metricsContext.addMetrics('node/publish', nodePublishMetricsProducer)
+        const storageMetricsProducer = {
+            readBytes: createMockMetric(),
+            writeBytes: createMockMetric()
+        }
+        metricsContext.addMetrics('broker/cassandra', storageMetricsProducer)
+        updateMockMetricsData = (value: number) => {
+            webRtcMetricsProducer.inSpeed.record(value)
+            webRtcMetricsProducer.outSpeed.record(value)
+            webRtcMetricsProducer.connections.record(value)
+            webRtcMetricsProducer.failedConnection.record(value)
+            nodeMetricsProducer.latency.record(value)
+            storageMetricsProducer.readBytes.record(value)
+            storageMetricsProducer.writeBytes.record(value)
+            nodePublishMetricsProducer.bytes.record(value)
+            nodePublishMetricsProducer.count.record(value)
+        }
+        onPublish = jest.fn()
+        const client: Pick<StreamrClient, 'publish' | 'getNode'> = {
+            publish: onPublish,
+            getNode: async () => {
+                return {
+                    getNodeId: () => MOCK_NODE_ID
+                } as any
             }
-        })
+        }
+        nodeMetrics = new NodeMetrics(metricsContext, client as any, 'mock.eth/')
     })
 
     it('mock data from MetricsContext', async () => {
         updateMockMetricsData(MOCK_METRICS_VALUE)
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:05Z'))
-        expect(publishListener).toBeCalledTimes(1)
-        expect(publishListener).toBeCalledWith({
+        nodeMetrics.start()
+        // this wait can take up to 10s 
+        // (less than 5s to get initial values and another 5s to collect sampled data)
+        // TODO: enable custom metrics intervals to be configured and use e.g. 100 ms interval here
+        await waitForCondition(() => onPublish.mock.calls.length > 0, 11000, 100)
+        expect(onPublish).toBeCalledWith('mock.eth/sec', {
             broker: {
                 messagesToNetworkPerSec: MOCK_METRICS_VALUE,
                 bytesToNetworkPerSec: MOCK_METRICS_VALUE
@@ -190,44 +84,12 @@ describe('NodeMetrics', () => {
                 bytesReadPerSec: MOCK_METRICS_VALUE
             },
             period: {
-                start: getTime('2000-01-02T03:04:00.000Z'),
-                end: getTime('2000-01-02T03:04:05.000Z')
+                start: expect.anything(),
+                end: expect.anything()
             }
-        })
-    })
-
-    it('calculates minute average', async () => {
-        updateMockMetricsData(10)
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:04:05Z'))
-        updateMockMetricsData(30)
-        await nodeMetrics!.collectSample(getTime('2000-01-02T03:05:05Z'))
-        expect(publishListener).toBeCalledTimes(3)
-        const minuteReport = publishListener.mock.calls[2][0]
-        // - for broker.avgLatencyMs we know the exact sample values as it is produced using addFixedMetric
-        // - for most of the others we know that the value is between 10-30 as the value is 
-        //   produced using addRecordedMetric
-        // - for network.connections we use the constant value as it is produced using addQueriedMetric
-        // TODO use https://github.com/jest-community/jest-extended#tobewithinstart-end
-        expect(minuteReport).toMatchObject({
-            broker: {
-                messagesToNetworkPerSec: expect.any(Number),
-                bytesToNetworkPerSec: expect.any(Number)
-            },
-            network: {
-                avgLatencyMs: 20,
-                bytesToPeersPerSec: expect.any(Number),
-                bytesFromPeersPerSec: expect.any(Number),
-                connections: MOCK_METRICS_VALUE,
-                webRtcConnectionFailures: expect.any(Number)
-            },
-            storage: {
-                bytesWrittenPerSec: expect.any(Number),
-                bytesReadPerSec: expect.any(Number)
-            },
-            period: {
-                start: getTime('2000-01-02T03:04:00.00Z'),
-                end: getTime('2000-01-02T03:05:00.00Z')
-            }
-        })
-    })
+        },
+        undefined,
+        MOCK_NODE_ID)
+        nodeMetrics.stop()
+    }, 11000)
 })
