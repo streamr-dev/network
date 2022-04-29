@@ -24,6 +24,9 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         this.onMessage((msg) => {
             this.debug('<< %o', msg)
         })
+        this.onError((err) => {
+            this.debug('<< onError: %o', err)
+        })
         // this.debug('create', this.key, new Error('Subscription').stack)
     }
 

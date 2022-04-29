@@ -9,6 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+### Fixed
+
+- Subscriptions now have a default error handler in case of errors in message processing (e.g. message validation failures).
+  This means that unhandled promise rejections will not occur when not setting an explicit error handler. The default error
+  handler will simply log the error and continue.
+
 ## [6.0.5] - 2022-05-10
 
 ### Fixed
