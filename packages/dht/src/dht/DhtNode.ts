@@ -91,10 +91,6 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     }
 
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
-        const seen = this.routerDuplicateDetector.test(routedMessage.nonce)
-        if (seen) {
-            return
-        }
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (stringFromId(routedMessage.destinationPeer!.peerId) === stringFromId(this.selfId)) {
             this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, routedMessage.message)
@@ -156,6 +152,9 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     public canRoute(routedMessage: RouteMessageWrapper): boolean {
         if (routedMessage.destinationPeer!.peerId === this.selfId) {
             return true
+        }
+        if (this.routerDuplicateDetector.test(routedMessage)) {
+            return false
         }
         const closestPeers = this.bucket.closest(routedMessage.destinationPeer!.peerId, this.K)
         const notRoutableCount = closestPeers.reduce((acc: number, curr: DhtPeer) => {

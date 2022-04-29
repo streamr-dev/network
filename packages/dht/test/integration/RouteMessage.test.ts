@@ -3,7 +3,7 @@ import { stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { PeerDescriptor, RpcWrapper, RouteMessageType } from '../../src/proto/DhtRpc'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent, waitForCondition } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 
@@ -95,5 +95,27 @@ describe('Route Message With Mock Connections', () => {
             destinationPeer: destinationNode.getPeerDescriptor(),
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toEqual(new Error('Could not route message forward'))
+    })
+
+    it('Receives multiple messages', async () => {
+        const numOfMessages = 100
+        await entryPoint.joinDht(entryPointInfo)
+        await sourceNode.joinDht(entryPointInfo)
+        await destinationNode.joinDht(entryPointInfo)
+
+        let receivedMessages = 0
+        destinationNode.on(MessageRouterEvent.DATA, () => {
+            receivedMessages += 1
+        })
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        for (let i = 0; i < numOfMessages; i++ ) {
+            sourceNode.routeMessage({
+                message: RpcWrapper.toBinary(rpcWrapper),
+                messageType: RouteMessageType.RPC_WRAPPER,
+                destinationPeer: destinationNode.getPeerDescriptor(),
+                sourcePeer: sourceNode.getPeerDescriptor()
+            })
+        }
+        await waitForCondition(() => receivedMessages === numOfMessages)
     })
 })
