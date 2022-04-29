@@ -1,6 +1,6 @@
 import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
-import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { MetricsContext } from '../../src/helpers/Metric'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'

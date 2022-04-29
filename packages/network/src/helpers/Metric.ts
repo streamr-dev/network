@@ -171,6 +171,10 @@ export class MetricsContext {
             this.metrics.set(id, definitions[key])
         })
     }
+
+    getMetric(id: string): Metric | undefined {
+        return this.metrics.get(id)
+    }
     
     createReportProducer(
         onReport: (report: MetricsReport) => unknown, 
