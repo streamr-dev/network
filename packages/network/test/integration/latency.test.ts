@@ -35,14 +35,14 @@ describe('latency metrics', () => {
     })
 
     it('should fetch empty metrics', async () => {
-        const { metrics } = await metricsContext.report()
-        expect(metrics.node.latency).toEqual(0)
+        const report = metricsContext.report()
+        expect(report.node.latency).toEqual(0)
     })
 
     it('should send a single message to Node1 and collect latency', (done) => {
         node.addMessageListener(async () => {
-            const { metrics } = await metricsContext.report()
-            expect(metrics.node.latency).toBeGreaterThan(0)
+            const report = metricsContext.report()
+            expect(report.node.latency).toBeGreaterThan(0)
             done()
         })
 
@@ -69,8 +69,8 @@ describe('latency metrics', () => {
             receivedMessages += 1
 
             if (receivedMessages === 5) {
-                const { metrics } = await metricsContext.report()
-                expect(metrics.node.latency).toBeGreaterThan(0)
+                const report = metricsContext.report()
+                expect(report.node.latency).toBeGreaterThan(0)
                 done()
             }
         })
