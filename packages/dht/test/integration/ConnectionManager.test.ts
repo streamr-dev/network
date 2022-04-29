@@ -1,11 +1,11 @@
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
+import { PeerID } from "../../src/PeerID"
 import { NodeType } from "../../src/proto/DhtRpc"
 
 describe('ConnectionManager', () => {
     beforeAll(async () => {
     })
 
-    /*
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager( { webSocketHost:'localhost', webSocketPort: 9991 } )
        
@@ -29,12 +29,12 @@ describe('ConnectionManager', () => {
         
         await connectionManager.stop()
     })
-    */
-
+    
     it('Can probe connectivity in open internet', async () => {
         const connectionManager = new ConnectionManager( { webSocketHost:'localhost', webSocketPort: 9993 } )
        
         const result = await connectionManager.start()
+        connectionManager.enableConnectivity(PeerID.fromIp(result.ip))
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -44,6 +44,7 @@ describe('ConnectionManager', () => {
         ]  } )
 
         const result2 = await connectionManager2.start()
+        connectionManager2.enableConnectivity(PeerID.fromIp(result2.ip))
 
         expect(result2.ip).toEqual('127.0.0.1')
         expect(result2.openInternet).toEqual(true)

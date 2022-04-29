@@ -1,7 +1,7 @@
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
-import { PeerID } from '../types'
+import { PeerID } from '../PeerID'
 
 export class DhtPeer {
     private static counter = 0
@@ -18,7 +18,7 @@ export class DhtPeer {
     public vectorClock: number
     private readonly dhtClient: DhtRpcClient
     constructor(peerDescriptor: PeerDescriptor, client: DhtRpcClient) {
-        this.peerId = new PeerID(peerDescriptor.peerId)
+        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++

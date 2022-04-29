@@ -13,7 +13,7 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { PeerID, TODO } from '../types'
+import { TODO } from '../types'
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
@@ -34,7 +34,7 @@ export interface DeferredPromises {
 }
 
 export interface DhtRpcOptions extends RpcOptions {
-    targetPeerId: PeerID
+    targetPeerId: string
 }
 
 export class DhtTransportClient extends EventEmitter implements RpcTransport {

@@ -1,4 +1,3 @@
-import { PeerID } from '../types'
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import { SortedContactList } from './SortedContactList'
@@ -7,11 +6,12 @@ import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
+import { PeerID } from '../PeerID'
 
 export class DhtNode {
     private readonly ALPHA = 3
     private K = 4
-    private readonly peers: Map<PeerID, DhtPeer>
+    private readonly peers: Map<string, DhtPeer>
     private readonly selfId: PeerID
     private readonly numberOfNodesPerKBucket = 1
     private readonly bucket: KBucket<DhtPeer>

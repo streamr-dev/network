@@ -7,6 +7,7 @@ import { WebSocketServer } from './WebSocketServer'
 import { Event as ConnectionSourceEvents } from './ConnectionSource'
 import { Event as ConnectionEvents } from './Connection'
 import { ServerWebSocket } from './ServerWebSocket'
+import { PeerID } from '../PeerID'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -15,7 +16,9 @@ export interface ConnectionManagerConfig {
 }
 
 export class ConnectionManager extends EventEmitter implements IConnectionManager {
+    public PROTOCOL_VERSION = '1.0'
 
+    private ownPeerID: PeerID | null = null
     private connections: { [peerId: string]: Connection } = {}
     //private newConnections: { [connectionId: string]: Connection } = {}
 
@@ -31,9 +34,9 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
         // Set up and start websocket server
 
         this.webSocketServer.on(ConnectionSourceEvents.NEW_CONNECTION, (connection: Connection) => {
-             
+
             //this.newConnections[connection.connectionId.toString()] = connection
-            console.log('server received new connection') 
+            console.log('server received new connection')
             connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
                 console.log('server received data')
                 const message = Message.fromBinary(data)
@@ -79,11 +82,12 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
                     connection.send(Message.toBinary(msg))
                 }
 
-                if (message.messageType === MessageType.HANDSHAKE) {
+                if (message.messageType === MessageType.HANDSHAKE && this.ownPeerID) {
                     const handshake = HandshakeMessage.fromBinary(message.body)
                     this.connections[handshake.sourceId] = connection
-                    const outgoingHandshake = HandshakeMessage.create()
-                    //outgoingHandshake.sourceId = this.ownId.toString()
+
+                    const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.toString(), protocolVersion: this.PROTOCOL_VERSION }
+
                     connection.send(HandshakeMessage.toBinary(outgoingHandshake))
                 }
             })
@@ -106,7 +110,7 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
                 }
                 catch (e) {
                     //console.log("Failed to connect to the entrypoints")
-                 
+
                     reject(new Error('Failed to connect to the entrypoints'))
                 }
 
@@ -116,35 +120,38 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
                     outgoingConnection.once(ConnectionEvents.DATA, (bytes) => {
                         const message: Message = Message.fromBinary(bytes)
                         const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
-                        
+
                         resolve(connectivityResponseMessage)
                     })
 
                     // send connectivity request
                     const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort }
-                    const msg: Message = { messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz', 
-                        body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage) }
-                    
-                    outgoingConnection.once(ConnectionEvents.ERROR, ()=> {
+                    const msg: Message = {
+                        messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
+                        body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
+                    }
+
+                    outgoingConnection.once(ConnectionEvents.ERROR, () => {
                         console.log('clientsocket error')
                     })
 
                     console.log('trying to send connectivity request')
                     outgoingConnection.send(Message.toBinary(msg))
-                    console.log('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)) )
-                    
+                    console.log('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
+
                     // set up normal listeners that send a handshake for new connections from webSocketConnector
 
                     this.webSocketConnector.on(ConnectionSourceEvents.NEW_CONNECTION, (connection: Connection) => {
-                        //this.newConnections[connection.connectionId.toString()] = connection
-                        connection.on(ConnectionEvents.DATA, (data: Uint8Array) => {
-                            const handshake = HandshakeMessage.fromBinary(data)
-                            this.connections[handshake.sourceId] = connection
-                        })
-                        const outgoingHandshake = HandshakeMessage.create()
-                        //outgoingHandshake.sourceId = this.ownId.toString()
 
-                        connection.send(HandshakeMessage.toBinary(outgoingHandshake))
+                        if (this.ownPeerID) {
+                            connection.on(ConnectionEvents.DATA, (data: Uint8Array) => {
+                                const handshake = HandshakeMessage.fromBinary(data)
+                                this.connections[handshake.sourceId] = connection
+                            })
+                            const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.toString(), 
+                                protocolVersion: this.PROTOCOL_VERSION }
+                            connection.send(HandshakeMessage.toBinary(outgoingHandshake))
+                        }
                     })
                 }
             }
@@ -162,13 +169,28 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
         })
     }
 
+    enableConnectivity(ownPeerID: PeerID): void {
+        // this enables dormant handshake listeners set during start()
+        this.ownPeerID = ownPeerID
+    }
+
     async stop(): Promise<void> {
         await this.webSocketServer.stop()
     }
 
-    send(peerDescriptor: PeerDescriptor, bytes: Uint8Array): void {
-        if (peerDescriptor.websocket) {
-            console.log(bytes)
+    // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
+    // or it might fail completely! Where should we buffer the outgoing data?
+
+    send(peerDescriptor: PeerDescriptor, bytes: Uint8Array): void{
+        if (this.connections.hasOwnProperty(PeerID.fromValue(peerDescriptor.peerId).toString())) {
+            this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()].send(bytes)
         }
+        
+        /*
+        else if (peerDescriptor.websocket) {
+            this.webSocketConnector.on
+            this.webSocketConnector.connect({host: peerDescriptor.websocket.ip, port: peerDescriptor.websocket.port})
+        }
+        */
     }
 }
