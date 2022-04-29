@@ -4,6 +4,10 @@ export { NodeClientWsEndpoint }
 export * as Protocol from 'streamr-client-protocol'
 export { MetricsContext, Metrics } from './helpers/MetricsContext'
 export {
+    scheduleAtFixedRate,
+    scheduleAtInterval
+} from './helpers/scheduler'
+export {
     Location,
     AbstractNodeOptions,
     NodeId,
