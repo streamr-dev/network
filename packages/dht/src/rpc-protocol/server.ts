@@ -48,7 +48,7 @@ export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, ca
                 error: routable ? '' : 'Could not forward the message'
             }
             if (routable) {
-                setImmediate(() => routeHandler(converted))
+                setImmediate(async () => await routeHandler(converted))
             }
             return response
         }

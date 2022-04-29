@@ -130,19 +130,26 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
         const closest = this.bucket.closest(params.destinationPeer.peerId, this.K)
             .filter((peer: DhtPeer) =>
-                !(peer.getPeerId() === params.sourcePeer.peerId || peer.getPeerId() === params.previousPeer?.peerId)
+                !(stringFromId(peer.getPeerId()) === stringFromId(params.sourcePeer!.peerId)
+                    || stringFromId(peer.getPeerId()) === stringFromId(params.previousPeer?.peerId || new Uint8Array()))
             )
         const initialLength = closest.length
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
             await queue.add(
                 (async () => {
-                    await closest.pop()!.routeMessage({
+                    const success = await closest.pop()!.routeMessage({
                         ...params,
                         previousPeer: this.getPeerDescriptor()
                     })
-                    successAcks += 1
+                    if (success) {
+                        successAcks += 1
+                    }
                 })
             )
+        }
+        if (successAcks === 0) {
+            // Should errors be backpropagated?
+            throw new Error('Could not route message forward')
         }
     }
 
@@ -152,7 +159,8 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         }
         const closestPeers = this.bucket.closest(routedMessage.destinationPeer!.peerId, this.K)
         const notRoutableCount = closestPeers.reduce((acc: number, curr: DhtPeer) => {
-            if (curr.getPeerId() === routedMessage.sourcePeer!.peerId || curr.getPeerId() === routedMessage.previousPeer!.peerId) {
+            if (stringFromId(curr.getPeerId()) === stringFromId(routedMessage.sourcePeer!.peerId)
+                || stringFromId(curr.getPeerId()) === stringFromId(routedMessage.previousPeer?.peerId || new Uint8Array())) {
                 return acc + 1
             }
             return acc

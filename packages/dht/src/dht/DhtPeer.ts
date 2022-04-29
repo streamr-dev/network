@@ -72,7 +72,7 @@ export class DhtPeer {
         }
         const response = await this.dhtClient.routeMessage(message, options)
         const ack = await response.response
-        if (!ack.error!.length) {
+        if (ack.error!.length > 0) {
             return false
         }
         return true

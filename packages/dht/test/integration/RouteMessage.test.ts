@@ -2,10 +2,10 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { ClosestPeersRequest, PeerDescriptor, RpcWrapper, RouteMessageType } from '../../src/proto/DhtRpc'
+import { PeerDescriptor, RpcWrapper, RouteMessageType } from '../../src/proto/DhtRpc'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
-import { createMockConnectionDhtNode } from '../utils'
+import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -72,20 +72,7 @@ describe('Route Message With Mock Connections', () => {
             routerNodes.map((node) => node.joinDht(entryPointInfo))
         )
 
-        const routedMessage: ClosestPeersRequest = {
-            peerDescriptor: sourceNode.getPeerDescriptor(),
-            nonce: '11111'
-        }
-        const rpcWrapper: RpcWrapper = {
-            body: ClosestPeersRequest.toBinary(routedMessage),
-            header: {
-                method: 'closestPeersRequest',
-                request: 'request'
-            },
-            requestId: 'testId',
-            sourceDescriptor: sourceNode.getPeerDescriptor(),
-            targetDescriptor: destinationNode.getPeerDescriptor()
-        }
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         await Promise.all([
             waitForEvent(destinationNode, MessageRouterEvent.DATA),
             sourceNode.routeMessage({
@@ -95,5 +82,18 @@ describe('Route Message With Mock Connections', () => {
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         ])
+    })
+
+    it('Destination node does not exist after first hop', async () => {
+        await entryPoint.joinDht(entryPointInfo)
+        await sourceNode.joinDht(entryPointInfo)
+
+        const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        await expect(sourceNode.routeMessage({
+            message: RpcWrapper.toBinary(rpcWrapper),
+            messageType: RouteMessageType.RPC_WRAPPER,
+            destinationPeer: destinationNode.getPeerDescriptor(),
+            sourcePeer: sourceNode.getPeerDescriptor()
+        })).rejects.toEqual(new Error('Could not route message forward'))
     })
 })
