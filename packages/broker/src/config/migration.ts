@@ -59,7 +59,6 @@ const convertTestnet3ToV1 = (source: any): Config => {
      * Also drop properties, which are settings about the environment (that is, Testnet3 values 
      * in the source config). As a consequence, the node will apply Brubeck mainnet defaults 
      * for these properties:
-     * - restUrl
      * - trackers
      * - network.stun and network.turn
      * - generateSessionId (the migrated node will always use session id)

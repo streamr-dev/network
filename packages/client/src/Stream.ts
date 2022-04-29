@@ -5,7 +5,6 @@ import { DependencyContainer, inject } from 'tsyringe'
 
 import { inspect } from './utils/log'
 
-import { Rest } from './Rest'
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './StreamRegistry'
@@ -83,7 +82,6 @@ class StreamrStream implements StreamMetadata {
     partitions!: number
     storageDays?: number
     inactivityThresholdHours?: number
-    protected _rest: Rest
     protected _resends: Resends
     protected _publisher: Publisher
     protected _subscriber: Subscriber
@@ -103,7 +101,6 @@ class StreamrStream implements StreamMetadata {
         Object.assign(this, props)
         this.id = props.id
         this.partitions = props.partitions ? props.partitions : 1
-        this._rest = _container.resolve<Rest>(Rest)
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
         this._subscriber = _container.resolve<Subscriber>(Subscriber)
