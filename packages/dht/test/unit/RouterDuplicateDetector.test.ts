@@ -7,10 +7,6 @@ describe('Route Message With Mock Connections', () => {
         detector = new RouterDuplicateDetector(2**15, 16, 5, 10)
     })
 
-    afterEach(async () => {
-        await node.stop()
-    })
-
     it('detects duplicates', async () => {
         detector.add('test')
         expect(detector.counter).toEqual(1)
@@ -39,7 +35,7 @@ describe('Route Message With Mock Connections', () => {
         expect(detector.test('test8')).toEqual(true)
         expect(detector.test('test9')).toEqual(true)
         detector.add('test10')
-        expect(detector.counter).toEqual(0)
+        expect(detector.counter).toEqual(1)
         expect(detector.test('test1')).toEqual(false)
         expect(detector.test('test6')).toEqual(true)
     })

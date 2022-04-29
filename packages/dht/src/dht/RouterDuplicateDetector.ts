@@ -19,12 +19,15 @@ export class RouterDuplicateDetector {
     }
 
     add(value: string): void {
-        if (this.counter >= this.nextFilterFillingLimit) {
+        if (this.nextFilter === null
+            && this.counter >= this.nextFilterFillingLimit
+            && this.counter < this.resetLimit
+        ) {
             this.nextFilter = new BloomFilter(this.numOfBits, this.numOfHashFunctions)
         } else if (this.counter >= this.resetLimit) {
+            this.counter = 0
             this.currentFilter = this.nextFilter!
             this.nextFilter = null
-            this.counter = 0
         }
         this.currentFilter.add(value)
         if (this.nextFilter) {
