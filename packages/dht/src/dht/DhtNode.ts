@@ -134,7 +134,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
             await queue.add(
                 (async () => {
-                    const success = await closest.pop()!.routeMessage({
+                    const success = await closest.shift()!.routeMessage({
                         ...params,
                         previousPeer: this.getPeerDescriptor()
                     })
@@ -144,8 +144,8 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
                 })
             )
         }
-        if (successAcks === 0) {
-            // Should errors be backpropagated?
+        // Only throw if originator
+        if (successAcks === 0 && (stringFromId(this.selfId) === stringFromId(params.sourcePeer!.peerId))) {
             throw new Error('Could not route message forward')
         }
     }
