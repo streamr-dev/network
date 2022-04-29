@@ -73,8 +73,6 @@ export type StrictStreamrClientConfig = {
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
-    /** joinPartAgent when using EE for join part handling */
-    streamrNodeAddress: EthereumAddress
     streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
     streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
     // noderegistry contracts and saves what streams are stored by which storagenodes
@@ -109,7 +107,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
-    streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
     // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
