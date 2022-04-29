@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - resends support multiple storage nodes (the data is fetched from a random storage node)
 - Configuration parameter `groupKeys` renamed to `encryptionKeys`
 - Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
+- Subscriptions now have a default error handler in case of errors in message processing (e.g. message validation failures).
+  This means that unhandled promise rejections will not occur when not setting an explicit error handler. The default error
+  handler will simply log the error and continue.
 
 ### Deprecated
 

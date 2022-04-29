@@ -4,7 +4,6 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
-    describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
@@ -16,7 +15,6 @@ import { Resends } from '../../src/subscribe/Resends'
 
 import { Stream } from '../../src/Stream'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-// import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
 
@@ -25,7 +23,7 @@ const MAX_MESSAGES = 5
 
 jest.setTimeout(60000)
 
-describeRepeats('resends', () => {
+describe('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -169,7 +167,7 @@ describeRepeats('resends', () => {
                 expect(await client.count(stream2.id)).toBe(0)
             })
 
-            it('handles errors in resend', async () => {
+            it('can ignore errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
                 await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
@@ -195,15 +193,13 @@ describeRepeats('resends', () => {
                 sub.once('resendComplete', onResent)
 
                 await publishTestMessagesStream2(3)
-                await expect(async () => {
-                    await sub.collect(5)
-                }).rejects.toThrow(err)
+                await sub.collect(3)
 
                 expect(await client.count(stream2.id)).toBe(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
             })
 
-            it('can ignore errors in resend', async () => {
+            it('can handle errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
                 await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
@@ -223,7 +219,7 @@ describeRepeats('resends', () => {
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
                 sub.once('resendComplete', onResent)
-                const onSubError = jest.fn(() => {})
+                const onSubError = jest.fn()
                 sub.onError(onSubError) // suppress
 
                 const published = await publishTestMessagesStream2(3)
