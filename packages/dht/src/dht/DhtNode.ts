@@ -64,7 +64,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         this.dhtTransportServer = dhtTransportServer
         this.dhtTransportClient = dhtTransportClient
         this.rpcCommunicator = rpcCommunicator
-        this.routerDuplicateDetector = new RouterDuplicateDetector(2**18, 16, 5000, 10000)
+        this.routerDuplicateDetector = new RouterDuplicateDetector(2**14, 16, 312, 684)
         this.bindDefaultServerMethods()
     }
 
