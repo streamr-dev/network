@@ -1,7 +1,6 @@
 import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
-import { BloomFilter } from 'bloomfilter'
 
 import { SortedContactList } from './SortedContactList'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
@@ -14,6 +13,7 @@ import { stringFromId } from './helpers'
 import { PeerID } from '../types'
 import { DhtPeer } from './DhtPeer'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
+import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 
 export class DhtNode extends EventEmitter implements IMessageRouter {
     private readonly ALPHA = 3
@@ -27,7 +27,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     private readonly dhtTransportClient: DhtTransportClient
     private readonly dhtTransportServer: DhtTransportServer
     private readonly rpcCommunicator: RpcCommunicator
-    private readonly routerDuplicateDetector: BloomFilter
+    private readonly routerDuplicateDetector: RouterDuplicateDetector
     private peerDescriptor: PeerDescriptor
     constructor(
         selfId: PeerID,
@@ -64,7 +64,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         this.dhtTransportServer = dhtTransportServer
         this.dhtTransportClient = dhtTransportClient
         this.rpcCommunicator = rpcCommunicator
-        this.routerDuplicateDetector = new BloomFilter(32 * 256, 16)
+        this.routerDuplicateDetector = new RouterDuplicateDetector(2**18, 16, 5000, 10000)
         this.bindDefaultServerMethods()
     }
 
@@ -153,7 +153,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         if (routedMessage.destinationPeer!.peerId === this.selfId) {
             return true
         }
-        if (this.routerDuplicateDetector.test(routedMessage)) {
+        if (this.routerDuplicateDetector.test(routedMessage.nonce)) {
             return false
         }
         const closestPeers = this.bucket.closest(routedMessage.destinationPeer!.peerId, this.K)
