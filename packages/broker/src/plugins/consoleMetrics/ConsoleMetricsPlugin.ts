@@ -1,12 +1,12 @@
 import { Schema } from 'ajv'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger } from 'streamr-network'
+import { Logger, MetricsReport } from 'streamr-network'
 
 const logger = new Logger(module)
 
 function formatNumber(n: number) {
-    return n < 10 ? n.toFixed(1) : Math.round(n)
+    return n < 10 ? n.toFixed(1) : String(Math.round(n))
 }
 
 export interface ConsoleMetricsPluginConfig {
@@ -15,33 +15,24 @@ export interface ConsoleMetricsPluginConfig {
 
 export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
 
-    private timeout?: NodeJS.Timeout
+    private producer?: { stop: () => void}
 
     constructor(options: PluginOptions) {
         super(options)
     }
 
     async start(): Promise<void> {
-        const reportingIntervalInMs = this.pluginConfig.interval * 1000
-        const reportFn = async () => {
-            try {
-                await this.reportAndReset()
-            } catch (e) {
-                logger.warn(`Error reporting metrics ${e}`)
-            }
-            this.timeout = setTimeout(reportFn, reportingIntervalInMs)
-        }
-        this.timeout = setTimeout(reportFn, reportingIntervalInMs)
+        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
+        this.producer = metricsContext.createReportProducer((report: MetricsReport) => {
+            this.printReport(report)
+        }, this.pluginConfig.interval * 1000, formatNumber)
     }
     
     async stop(): Promise<void> {
-        clearTimeout(this.timeout!)
+        this.producer?.stop()
     }
-    
-    async reportAndReset(): Promise<void> {
-        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
-        const report = await metricsContext.report(true)
-
+        
+    printReport(report: MetricsReport): void {
         let storageReadCountPerSecond = 0
         let storageWriteCountPerSecond = 0
         let storageReadKbPerSecond = 0
@@ -51,56 +42,48 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             from: 0,
             range: 0
         }
-        if (report.metrics['broker/cassandra']) {
-            // @ts-expect-error not enough typing info available
-            storageReadCountPerSecond = report.metrics['broker/cassandra'].readCount.rate
-            // @ts-expect-error not enough typing info available
-            storageWriteCountPerSecond = report.metrics['broker/cassandra'].writeCount.rate
-            // @ts-expect-error not enough typing info available
-            storageReadKbPerSecond = report.metrics['broker/cassandra'].readBytes.rate / 1000
-            // @ts-expect-error not enough typing info available
-            storageWriteKbPerSecond = report.metrics['broker/cassandra'].writeBytes.rate / 1000
+        if (report['broker/cassandra'] !== undefined) {
+            storageReadCountPerSecond = report['broker/cassandra'].readCount
+            storageWriteCountPerSecond = report['broker/cassandra'].writeCount
+            storageReadKbPerSecond = report['broker/cassandra'].readBytes / 1000
+            storageWriteKbPerSecond = report['broker/cassandra'].writeBytes / 1000
         }
 
-        const networkConnectionCount = report.metrics.WebRtcEndpoint.connections
-        // @ts-expect-error not enough typing info available
-        const networkInPerSecond = report.metrics.WebRtcEndpoint.msgInSpeed.rate
-        // @ts-expect-error not enough typing info available
-        const networkOutPerSecond = report.metrics.WebRtcEndpoint.msgOutSpeed.rate
-        // @ts-expect-error not enough typing info available
-        const networkKbInPerSecond = report.metrics.WebRtcEndpoint.inSpeed.rate / 1000
-        // @ts-expect-error not enough typing info available
-        const networkKbOutPerSecond = report.metrics.WebRtcEndpoint.outSpeed.rate / 1000
+        const networkConnectionCount = report.WebRtcEndpoint.connections
+        const networkInPerSecond = report.WebRtcEndpoint.msgInSpeed
+        const networkOutPerSecond = report.WebRtcEndpoint.msgOutSpeed
+        const networkKbInPerSecond = report.WebRtcEndpoint.inSpeed / 1000
+        const networkKbOutPerSecond = report.WebRtcEndpoint.outSpeed / 1000
 
-        const storageQueryMetrics = report.metrics['broker/storage/query']
+        const storageQueryMetrics = report['broker/storage/query']
         if (storageQueryMetrics !== undefined) {
             resendRate = {
-                last: (storageQueryMetrics.lastRequests as any).rate,
-                from: (storageQueryMetrics.fromRequests as any).rate,
-                range: (storageQueryMetrics.rangeRequests as any).rate
+                last: storageQueryMetrics.lastRequests,
+                from: storageQueryMetrics.fromRequests,
+                range: storageQueryMetrics.rangeRequests
             }
         }
 
         logger.info(
             'Report\n'
-            + '\tNetwork connections %d\n'
-            + '\tNetwork in: %d events/s, %d kb/s\n'
-            + '\tNetwork out: %d events/s, %d kb/s\n'
-            + '\tStorage read: %d events/s, %d kb/s\n'
-            + '\tStorage write: %d events/s, %d kb/s\n'
+            + '\tNetwork connections: %s\n'
+            + '\tNetwork in: %s events/s, %s kb/s\n'
+            + '\tNetwork out: %s events/s, %s kb/s\n'
+            + '\tStorage read: %s events/s, %s kb/s\n'
+            + '\tStorage write: %s events/s, %s kb/s\n'
             + '\tResends:\n'
-            + '\t- last: %d requests/s\n'
-            + '\t- from: %d requests/s\n'
-            + '\t- range: %d requests/s\n',
+            + '\t- last: %s requests/s\n'
+            + '\t- from: %s requests/s\n'
+            + '\t- range: %s requests/s\n',
             networkConnectionCount,
-            formatNumber(networkInPerSecond),
-            formatNumber(networkKbInPerSecond),
-            formatNumber(networkOutPerSecond),
-            formatNumber(networkKbOutPerSecond),
-            formatNumber(storageReadCountPerSecond),
-            formatNumber(storageReadKbPerSecond),
-            formatNumber(storageWriteCountPerSecond),
-            formatNumber(storageWriteKbPerSecond),
+            networkInPerSecond,
+            networkKbInPerSecond,
+            networkOutPerSecond,
+            networkKbOutPerSecond,
+            storageReadCountPerSecond,
+            storageReadKbPerSecond,
+            storageWriteCountPerSecond,
+            storageWriteKbPerSecond,
             resendRate.last,
             resendRate.from,
             resendRate.range,
