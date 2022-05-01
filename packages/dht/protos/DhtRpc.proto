@@ -5,6 +5,7 @@ option optimize_for = CODE_SIZE;
 
 service DhtRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc ping (PingRequest) returns (PingResponse);
 }
 
 // Used inside RpcMessage
@@ -17,6 +18,14 @@ message ClosestPeersRequest {
 message ClosestPeersResponse {
   repeated PeerDescriptor peers = 1;
   string nonce = 2; // requestId
+}
+
+message PingRequest {
+  string nonce = 1;
+}
+
+message PingResponse {
+  string nonce = 1;
 }
 
 message PeerDescriptor {
@@ -66,7 +75,7 @@ message ConnectivityResponseMessage {
 }
 
 message HandshakeMessage {
-  string sourceId = 1;
+  bytes sourceId = 1;
   string protocolVersion = 2;  
 }
 
@@ -74,7 +83,7 @@ message RpcMessage {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
-  PeerDescriptor senderDescriptor = 4;
+  PeerDescriptor sourceDescriptor = 4;
   PeerDescriptor targetDescriptor = 5;
 }
 

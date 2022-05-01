@@ -84,9 +84,9 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
 
                 if (message.messageType === MessageType.HANDSHAKE && this.ownPeerID) {
                     const handshake = HandshakeMessage.fromBinary(message.body)
-                    this.connections[handshake.sourceId] = connection
+                    this.connections[PeerID.fromValue(handshake.sourceId).toString()] = connection
 
-                    const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.toString(), protocolVersion: this.PROTOCOL_VERSION }
+                    const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.value, protocolVersion: this.PROTOCOL_VERSION }
 
                     connection.send(HandshakeMessage.toBinary(outgoingHandshake))
                 }
@@ -146,9 +146,9 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
                         if (this.ownPeerID) {
                             connection.on(ConnectionEvents.DATA, (data: Uint8Array) => {
                                 const handshake = HandshakeMessage.fromBinary(data)
-                                this.connections[handshake.sourceId] = connection
+                                this.connections[PeerID.fromValue(handshake.sourceId).toString()] = connection
                             })
-                            const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.toString(), 
+                            const outgoingHandshake: HandshakeMessage = { sourceId: this.ownPeerID.value, 
                                 protocolVersion: this.PROTOCOL_VERSION }
                             connection.send(HandshakeMessage.toBinary(outgoingHandshake))
                         }

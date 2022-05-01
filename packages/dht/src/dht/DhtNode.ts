@@ -7,8 +7,11 @@ import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import { PeerID } from '../PeerID'
+import PQueue from 'p-queue'
 
 export class DhtNode {
+    static objectCounter = 0
+    private objectId = 1
     private readonly ALPHA = 3
     private K = 4
     private readonly peers: Map<string, DhtPeer>
@@ -20,9 +23,10 @@ export class DhtNode {
     private readonly dhtTransportServer: DhtTransportServer
     private readonly rpcCommunicator: RpcCommunicator
     private peerDescriptor: PeerDescriptor
-
     constructor(selfId: PeerID, dhtRpcClient: DhtRpcClient, dhtTransportServer: DhtTransportServer, rpcCommunicator: RpcCommunicator) {
         this.selfId = selfId
+        this.objectId = DhtNode.objectCounter
+        DhtNode.objectCounter++
         this.peerDescriptor = {
             peerId: selfId.value,
             type: 0
@@ -32,9 +36,20 @@ export class DhtNode {
             localNodeId: this.selfId.value,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
-
+        this.bucket.on('ping', async (oldContacts, newContact) => {
+            // Here the node should call ping() on all old contacts. If one of them fails it should be removed
+            // and replaced with the newContact
+            for (const contact of oldContacts) {
+                const alive = await contact.ping(this.peerDescriptor)
+                if (!alive) {
+                    this.bucket.remove(contact.id)
+                    this.bucket.add(newContact)
+                    break
+                }
+            }
+        })
         this.dhtRpcClient = dhtRpcClient
-        this.neighborList = new SortedContactList(this.selfId.value, [])
+        this.neighborList = new SortedContactList(this.selfId.value)
         this.dhtTransportServer = dhtTransportServer
         this.rpcCommunicator = rpcCommunicator
         this.bindDefaultServerMethods()
@@ -52,85 +67,87 @@ export class DhtNode {
         return this.dhtRpcClient
     }
 
-    public getClosestPeers(caller: PeerDescriptor): DhtPeer[] {
-        const ret = this.bucket.closest(caller.peerId)
-
+    public onGetClosestPeers(caller: PeerDescriptor): DhtPeer[] {
+        const ret = this.bucket.closest(caller.peerId, this.K)
         if (!this.bucket.get(caller.peerId)) {
             const contact = new DhtPeer(caller, this.dhtRpcClient)
             this.bucket.add(contact)
             this.neighborList.addContact(contact)
         }
-
         return ret
     }
 
-    private async getClosestPeersFromContacts(contactList: DhtPeer[]) {
-        const promises = contactList.map(async (contact) => {
-            this.neighborList.setContacted(contact.getPeerId().value)
-            this.neighborList.setActive(contact.getPeerId().value)
-            const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
-            const dhtPeers = returnedContacts.map((peer) => {
-                return new DhtPeer(peer, this.dhtRpcClient)
-            })
-            this.neighborList.addContacts(dhtPeers)
-            dhtPeers.forEach( (returnedContact) => {
-                if (!this.bucket.get(returnedContact.id)) {
-                    this.bucket.add(returnedContact)
-                }
-            })
+    private async getClosestPeersFromContact(contact: DhtPeer): Promise<void> {
+        this.neighborList.setContacted(contact.getPeerId().value)
+        this.neighborList.setActive(contact.getPeerId().value)
+        const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
+        const dhtPeers = returnedContacts.map((peer) => {
+            return new DhtPeer(peer, this.dhtRpcClient)
         })
-        await Promise.allSettled(promises)
+        this.neighborList.addContacts(dhtPeers)
+        dhtPeers.forEach( (returnedContact) => {
+            if (!this.bucket.get(returnedContact.id)) {
+                this.bucket.add(returnedContact)
+            }
+        })
     }
 
-    private async findContacts(): Promise<void> {
-        const oldClosestContactId = this.neighborList.getClosestContactId()
-        let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-        if (uncontacted.length < 1) {
-            return
-        }
-
-        await this.getClosestPeersFromContacts(uncontacted)
-        if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
-            uncontacted = this.neighborList.getUncontactedContacts(this.K)
+    private async contactEntrypoints(): Promise<void> {
+        while (true) {
+            const oldClosestContactId = this.neighborList.getClosestContactId()
+            let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
             if (uncontacted.length < 1) {
                 return
             }
-            await this.fillBuckets()
+
+            await this.getClosestPeersFromContact(uncontacted[0])
+            if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+                uncontacted = this.neighborList.getUncontactedContacts(this.K)
+                if (uncontacted.length < 1) {
+                    return
+                }
+            }
         }
-        await this.findContacts()
     }
 
-    private async fillBuckets(): Promise<void> {
-        let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-        const oldClosestContactId = this.neighborList.getClosestContactId()
-        await this.getClosestPeersFromContacts(uncontacted)
+    async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
+        
+        const entryPoint = new DhtPeer(entryPointDescriptor, this.dhtRpcClient)
 
-        if (this.neighborList.getActiveContacts().length >= this.K ||
-            Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
+        if (Buffer.compare(this.selfId.value, entryPoint.getPeerId().value) == 0) {
             return
         }
-        uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-        if (uncontacted.length < 1) {
-            return
-        }
-        await this.fillBuckets()
-
-    }
-
-    async joinDht(entrypoint: DhtPeer): Promise<void> {
-        if (Buffer.compare(this.selfId.value, entrypoint.getPeerId().value) == 0) {
-            return
-        }
-        this.bucket.add(entrypoint)
+        this.bucket.add(entryPoint)
         const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
+        await this.contactEntrypoints()
 
-        await this.findContacts()
+        while (true) {
+            let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+            const oldClosestContactId = this.neighborList.getClosestContactId()
+            await Promise.allSettled(uncontacted.map((contact) => queue.add(
+                (async () => await this.getClosestPeersFromContact(contact))
+            )))
+            if (this.neighborList.getActiveContacts().length >= this.K ||
+                Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+                break
+            }
+            uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+            if (uncontacted.length < 1) {
+                break
+            }
+        }
+    }
+
+    public getBucketSize(): number {
+        return this.bucket.count()
     }
 
     private bindDefaultServerMethods() {
-        const methods = createRpcMethods(this.getClosestPeers.bind(this))
+        const methods = createRpcMethods(this.onGetClosestPeers.bind(this))
         this.dhtTransportServer.registerMethod('getClosestPeers', methods.getClosestPeers)
+        this.dhtTransportServer.registerMethod('ping', methods.ping)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
@@ -139,5 +156,13 @@ export class DhtNode {
 
     public setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.peerDescriptor = peerDescriptor
+    }
+
+    public getPeerDescriptor(): PeerDescriptor {
+        return this.peerDescriptor
+    }
+
+    public getK(): number {
+        return this.K
     }
 }

@@ -5,6 +5,7 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { wait } from 'streamr-test-utils'
 import { PeerID } from '../../src/PeerID'
 
 describe('DhtClientRpcTransport', () => {
@@ -19,8 +20,6 @@ describe('DhtClientRpcTransport', () => {
         rpcCommunicators = new Map()
         nodes = []
         const createDhtNode = (stringId: string): DhtNode => {
-            ///const id = generateId(stringId)
-            
             const pId = PeerID.fromString(stringId)
             const peerDescriptor: PeerDescriptor = {
                 peerId: pId.value,
@@ -36,10 +35,8 @@ describe('DhtClientRpcTransport', () => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                if (!rpcCommunicators.has(PeerID.fromValue(targetDescriptor.peerId).toString())) {
-                    console.error(PeerID.fromValue(targetDescriptor.peerId).toString() + 'does not exist!!')
-                    throw new Error('peer not found')
-                }
+                // Mock latency
+                await wait(Math.random() * (250 - 5) + 5)
                 rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(peerDescriptor, bytes)
             })
             return new DhtNode(pId, client, serverTransport, rpcCommunicator)
@@ -50,7 +47,7 @@ describe('DhtClientRpcTransport', () => {
             peerId: entryPoint.getSelfId().value,
             type: 0
         }
-       
+        
         for (let i = 1; i < 100; i++) {
             const node = createDhtNode(`${i}`)
             nodes.push(node)
@@ -63,9 +60,9 @@ describe('DhtClientRpcTransport', () => {
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
             expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() * 2)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
-    })
+    }, 60 * 1000)
 })

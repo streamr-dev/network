@@ -2,18 +2,21 @@ import { UUID } from "./UUID"
 
 export class PeerID {
 
-    private ip: string | null = null
-    private uuid: UUID | null = null
-    private data: Uint8Array | null = null
+    private data: Uint8Array = new Uint8Array(20)
 
-    protected constructor({ ip, value }: { ip?: string; value?: Uint8Array } = {}) {
-
+    protected constructor({ ip, value, stringValue }: { ip?: string; value?: Uint8Array; stringValue?: string } = {}) {
         if (ip) {
-            this.ip = ip
-            this.uuid = new UUID()
+            const ipNum = this.ip2Int(ip)
+            const view = new DataView(this.data.buffer)
+            view.setInt32(0, ipNum)
+
+            this.data.set((new UUID()).value, 4)
         }
         else if (value) {
             this.data = value
+        }
+        else if (stringValue) {
+            this.data.set(Uint8Array.from(Buffer.from(stringValue)))
         }
     }
 
@@ -23,6 +26,10 @@ export class PeerID {
 
     static fromValue(val: Uint8Array): PeerID {
         return new PeerID({ value: val })
+    }
+
+    static fromString(s: string): PeerID {
+        return new PeerID({ stringValue: s })
     }
 
     private ip2Int(ip: string): number {
@@ -43,30 +50,10 @@ export class PeerID {
     }
 
     toString(): string {
-        if (this.data) {
-            return JSON.stringify(this.data)
-        }
-        else {
-            return this.ip + ':' + this.uuid?.toString()
-        }
+        return Buffer.from(this.data).toString()
     }
 
     get value(): Uint8Array {
-        if (this.ip && this.uuid) {
-
-            const ret = new Uint8Array(20)
-            const ipNum = this.ip2Int(this.ip)
-            const view = new DataView(ret.buffer)
-            view.setInt32(0, ipNum)
-            ret.set(this.uuid.value, 4)
-
-            return ret
-        }
-        else if (this.data) {
-            return this.data
-        }
-        else {
-            return new Uint8Array(20)
-        }
+        return this.data
     }
 }

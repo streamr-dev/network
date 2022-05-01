@@ -1,7 +1,9 @@
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { PeerDescriptor } from '../proto/DhtRpc'
+import { ClosestPeersRequest, PeerDescriptor, PingRequest } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../PeerID'
+import { nodeFormatPeerDescriptor } from './helpers'
+import { DhtRpcOptions } from '../transport/DhtTransportClient'
 
 export class DhtPeer {
     private static counter = 0
@@ -23,22 +25,44 @@ export class DhtPeer {
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
+        this.getClosestPeers = this.getClosestPeers.bind(this)
+        this.ping = this.ping.bind(this)
     }
 
-    async getClosestPeers(targetPeerDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
-        const response = await this.dhtClient.getClosestPeers(
-            { peerDescriptor: this.peerDescriptor, nonce: v4() },
-            {
-                senderDescriptor: this.peerDescriptor,
-                targetDescriptor: targetPeerDescriptor
-            }
-        )
+    async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
+        const request: ClosestPeersRequest = {
+            peerDescriptor: sourceDescriptor,
+            nonce: v4()
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor
+        }
+
+        const response = await this.dhtClient.getClosestPeers(request, options)
         const status = await response.status
         const peers = await response.response
         if (status.code !== 'OK') {
             return []
         }
-        return peers.peers
+        const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
+        return formatted
+    }
+
+    async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
+        const request: PingRequest = {
+            nonce: v4()
+        }
+        const options: DhtRpcOptions = {
+            sourceDescriptor: sourceDescriptor as PeerDescriptor,
+            targetDescriptor: this.peerDescriptor as PeerDescriptor
+        }
+        const response = await this.dhtClient.ping(request, options)
+        const pong = await response.response
+        if (pong.nonce === request.nonce) {
+            return true
+        }
+        return false
     }
 
     getPeerId(): PeerID {

@@ -15,6 +15,8 @@ export interface RpcCommunicator {
 }
 
 export class RpcCommunicator extends EventEmitter {
+    private static objectCounter = 0
+    private objectId = 0
     private readonly dhtTransportClient: DhtTransportClient
     private readonly dhtTransportServer: DhtTransportServer
     private readonly connectionLayer: IConnectionManager
@@ -22,6 +24,9 @@ export class RpcCommunicator extends EventEmitter {
     public send: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void
     constructor(connectionLayer: IConnectionManager, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
         super()
+        this.objectId = RpcCommunicator.objectCounter
+        RpcCommunicator.objectCounter++
+
         this.dhtTransportClient = dhtTransportClient
         this.dhtTransportServer = dhtTransportServer
         this.connectionLayer = connectionLayer
@@ -64,7 +69,8 @@ export class RpcCommunicator extends EventEmitter {
                 method: rpcMessage.header.method
             },
             requestId: rpcMessage.requestId,
-            targetDescriptor: rpcMessage.senderDescriptor
+            targetDescriptor: rpcMessage.sourceDescriptor,
+            sourceDescriptor: rpcMessage.targetDescriptor
         }
         this.onOutgoingMessage(responseWrapper)
     }
@@ -75,7 +81,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     setSendFn(fn: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void): void {
-        this.send = fn
+        this.send = fn.bind(this)
     }
 
     resolveOngoingRequest(response: RpcMessage): void {
