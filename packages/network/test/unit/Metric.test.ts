@@ -9,18 +9,21 @@ describe('metrics', () => {
     describe('producer', () => {
 
         let context: MetricsContext
-        let reports: MetricsReport[]
+        let reports: (MetricsReport & { generationTime: number })[]
         let producer: { stop: () => void }
     
         const getReport = (timestamp: number) => {
-            return reports.find((report) => (timestamp >= report.period.start && timestamp < report.period.end))
+            return reports.find((report) => (timestamp <= report.generationTime))
         }
     
         beforeEach(() => {
             context = new MetricsContext()
             reports = []
             producer = context.createReportProducer((report) => {
-                reports.push(report)
+                reports.push({
+                    ...report,
+                    generationTime: Date.now()
+                })
             }, REPORT_INTERVAL)
         })
     
