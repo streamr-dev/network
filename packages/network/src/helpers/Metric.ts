@@ -10,8 +10,8 @@ interface MetricEvents {
 
 export abstract class Sampler {
 
-    protected metric: Metric
-    private listener: any
+    protected readonly metric: Metric
+    private readonly listener: any
 
     constructor(metric: Metric) {
         this.metric = metric
@@ -34,8 +34,8 @@ export abstract class Sampler {
 export class Metric {
 
     private latestValue: number | undefined
-    private eventEmitter: EventEmitter<MetricEvents> = new EventEmitter()
-    private samplerFactory: (metric: Metric) => Sampler
+    private readonly eventEmitter: EventEmitter<MetricEvents> = new EventEmitter()
+    private readonly samplerFactory: (metric: Metric) => Sampler
 
     constructor(samplerFactory: (metric: Metric) => Sampler, initialValue?: number) {
         this.samplerFactory = samplerFactory
