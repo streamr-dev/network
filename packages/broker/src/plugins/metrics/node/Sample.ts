@@ -24,12 +24,10 @@ export interface Sample {
     }
 }
 
-const CONTEXT_STORAGE = 'broker.plugin.storage'
-
 export class SampleFactory {
 
     static createSample(report: MetricsReport): Sample {
-        const storageMetricsEnabled = report[CONTEXT_STORAGE] !== undefined
+        const storageMetricsEnabled = report.broker?.plugin?.storage !== undefined
         return {
             node: {
                 publishMessagesPerSecond: report.node.publishMessagesPerSecond,
@@ -43,8 +41,8 @@ export class SampleFactory {
             broker: (storageMetricsEnabled) ? {
                 plugin: {
                     storage: {
-                        readBytesPerSecond: report[CONTEXT_STORAGE].readBytesPerSecond,
-                        writeBytesPerSecond: report[CONTEXT_STORAGE].writeBytesPerSecond
+                        readBytesPerSecond: report.broker.plugin.storage.readBytesPerSecond,
+                        writeBytesPerSecond: report.broker.plugin.storage.writeBytesPerSecond
                     }
                 }
             } : undefined,

@@ -42,7 +42,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
             from: 0,
             range: 0
         }
-        const storageMetrics = report['broker.plugin.storage']
+        const storageMetrics = report.broker?.plugin?.storage
         if (storageMetrics !== undefined) {
             storageReadMessagesPerSecond = storageMetrics.readMessagesPerSecond
             storageWriteMessagesPerSecond = storageMetrics.writeMessagesPerSecond
