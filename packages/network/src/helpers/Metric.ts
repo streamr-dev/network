@@ -2,6 +2,12 @@ import EventEmitter from 'eventemitter3'
 import { set } from 'lodash'
 import { scheduleAtFixedRate } from './scheduler'
 
+export type MetricsDefinition = Record<string,Metric>
+
+interface MetricEvents {
+    record: (value: number) => void
+}
+
 export abstract class Sampler {
 
     protected metric: Metric
@@ -23,12 +29,6 @@ export abstract class Sampler {
     protected abstract onRecord(value: number): void
 
     abstract getAggregatedValue(): number | undefined
-}
-
-export type MetricsDefinition = Record<string,Metric>
-
-interface MetricEvents {
-    record: (value: number) => void
 }
 
 export class Metric {
