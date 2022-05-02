@@ -1,4 +1,4 @@
-import { DhtRpcClient } from '../proto/DhtRpc.client'
+import { IDhtRpcClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor, PingRequest } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../PeerID'
@@ -7,9 +7,8 @@ import { DhtRpcOptions } from '../transport/DhtTransportClient'
 
 export class DhtPeer {
     private static counter = 0
-    //public readonly id: PeerID
     
-    private readonly peerId: PeerID
+    public readonly peerId: PeerID
 
     public get id(): Uint8Array {
         return this.peerId.value
@@ -18,8 +17,9 @@ export class DhtPeer {
     private lastContacted: number
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
-    private readonly dhtClient: DhtRpcClient
-    constructor(peerDescriptor: PeerDescriptor, client: DhtRpcClient) {
+    private readonly dhtClient: IDhtRpcClient
+    
+    constructor(peerDescriptor: PeerDescriptor, client: IDhtRpcClient) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
@@ -63,10 +63,6 @@ export class DhtPeer {
             return true
         }
         return false
-    }
-
-    getPeerId(): PeerID {
-        return this.peerId
     }
 
     getPeerDscriptor(): PeerDescriptor {

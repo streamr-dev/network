@@ -23,6 +23,7 @@ export class DhtNode {
     private readonly dhtTransportServer: DhtTransportServer
     private readonly rpcCommunicator: RpcCommunicator
     private peerDescriptor: PeerDescriptor
+    
     constructor(selfId: PeerID, dhtRpcClient: DhtRpcClient, dhtTransportServer: DhtTransportServer, rpcCommunicator: RpcCommunicator) {
         this.selfId = selfId
         this.objectId = DhtNode.objectCounter
@@ -49,7 +50,7 @@ export class DhtNode {
             }
         })
         this.dhtRpcClient = dhtRpcClient
-        this.neighborList = new SortedContactList(this.selfId.value)
+        this.neighborList = new SortedContactList(this.selfId)
         this.dhtTransportServer = dhtTransportServer
         this.rpcCommunicator = rpcCommunicator
         this.bindDefaultServerMethods()
@@ -78,8 +79,8 @@ export class DhtNode {
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer): Promise<void> {
-        this.neighborList.setContacted(contact.getPeerId().value)
-        this.neighborList.setActive(contact.getPeerId().value)
+        this.neighborList.setContacted(contact.peerId)
+        this.neighborList.setActive(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
         const dhtPeers = returnedContacts.map((peer) => {
             return new DhtPeer(peer, this.dhtRpcClient)
@@ -96,12 +97,13 @@ export class DhtNode {
         while (true) {
             const oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+            //console.log(JSON.stringify(uncontacted))
             if (uncontacted.length < 1) {
                 return
             }
 
             await this.getClosestPeersFromContact(uncontacted[0])
-            if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+            if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
                 if (uncontacted.length < 1) {
                     return
@@ -111,16 +113,18 @@ export class DhtNode {
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
-        
-        const entryPoint = new DhtPeer(entryPointDescriptor, this.dhtRpcClient)
-
+       
+        const entryPoint = new DhtPeer(entryPointDescriptor, this.dhtRpcClient) 
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
-        if (Buffer.compare(this.selfId.value, entryPoint.getPeerId().value) == 0) {
+        
+        if (this.selfId.equals(entryPoint.peerId)) {
             return
         }
+        
         this.bucket.add(entryPoint)
         const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
+        
         await this.contactEntrypoints()
 
         while (true) {
@@ -130,7 +134,7 @@ export class DhtNode {
                 (async () => await this.getClosestPeersFromContact(contact))
             )))
             if (this.neighborList.getActiveContacts().length >= this.K ||
-                Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+                oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 break
             }
             uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

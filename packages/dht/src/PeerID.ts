@@ -13,7 +13,7 @@ export class PeerID {
             this.data.set((new UUID()).value, 4)
         }
         else if (value) {
-            this.data = value
+            this.data = new Uint8Array(value.slice(0))
         }
         else if (stringValue) {
             this.data.set(Uint8Array.from(Buffer.from(stringValue)))
@@ -47,6 +47,10 @@ export class PeerID {
             (value >> 8) & 0xff,
             value & 0xff
         ].join('.')
+    }
+
+    equals(other: PeerID): boolean {
+        return (Buffer.compare(this.data, other.value) == 0) 
     }
 
     toString(): string {

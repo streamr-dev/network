@@ -19,7 +19,6 @@ describe('DhtClientRpcTransport', () => {
         rpcCommunicators = new Map()
         nodes = []
         const createDhtNode = (stringId: string): DhtNode => {
-            ///const id = generateId(stringId)
             
             const pId = PeerID.fromString(stringId)
             const peerDescriptor: PeerDescriptor = {
