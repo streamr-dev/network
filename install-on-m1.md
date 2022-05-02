@@ -44,7 +44,7 @@ export OPENSSL_ROOT_DIR=/opt/homebrew/Cellar/openssl@1.1/1.1.1n/
 export OPENSSL_INCLUDE_DIR=/opt/homebrew/Cellar/openssl@1.1/1.1.1n/include
 ```
 
-* Install networ-monorepo from scratch: 
+* Install network-monorepo from scratch: 
 ```
 npm install
 ```
