@@ -78,7 +78,7 @@ describe('NodeMetrics', () => {
         const partition = keyToArrayIndex(NUM_OF_PARTITIONS, nodeId.toLowerCase())
 
         await client.subscribe({ id, partition }, (content: any) => {
-            const isReady = content.network.connections > 0
+            const isReady = content.node.connectionAverageCount > 0
             if (isReady && (report === undefined)) {
                 report = content
             }
@@ -86,20 +86,22 @@ describe('NodeMetrics', () => {
 
         await waitForCondition(() => report !== undefined, 15000, 100)
         expect(report!).toMatchObject({
+            node: {
+                publishMessagesPerSecond: expect.any(Number),
+                publishBytesPerSecond: expect.any(Number),
+                latencyAverageMs: expect.any(Number),
+                sendBytesPerSecond: expect.any(Number),
+                receiveBytesPerSecond: expect.any(Number),
+                connectionAverageCount: expect.any(Number),
+                connectionTotalFailureCount: expect.any(Number)
+            },
             broker: {
-                messagesToNetworkPerSec: expect.any(Number),
-                bytesToNetworkPerSec: expect.any(Number),
-            },
-            network: {
-                avgLatencyMs: expect.any(Number),
-                bytesToPeersPerSec: expect.any(Number),
-                bytesFromPeersPerSec: expect.any(Number),
-                connections: expect.any(Number),
-                webRtcConnectionFailures: expect.any(Number)
-            },
-            storage: {
-                bytesWrittenPerSec: expect.any(Number),
-                bytesReadPerSec: expect.any(Number)
+                plugin: {
+                    storage: {
+                        writeBytesPerSecond: expect.any(Number),
+                        readBytesPerSecond: expect.any(Number)
+                    }
+                }
             },
             period: {
                 start: expect.any(Number),

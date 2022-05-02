@@ -1,21 +1,23 @@
 import { MetricsReport } from 'streamr-network'
 
 export interface Sample {
-    broker: {
-        messagesToNetworkPerSec: number
-        bytesToNetworkPerSec: number
+    node: {
+        publishMessagesPerSecond: number
+        publishBytesPerSecond: number
+        latencyAverageMs: number
+        sendBytesPerSecond: number
+        receiveBytesPerSecond: number
+        connectionAverageCount: number,
+        connectionTotalFailureCount: number
     },
-    network: {
-        avgLatencyMs: number
-        bytesToPeersPerSec: number
-        bytesFromPeersPerSec: number
-        connections: number,
-        webRtcConnectionFailures: number
+    broker?: {
+        plugin: {
+            storage: {
+                writeBytesPerSecond: number,
+                readBytesPerSecond: number
+            }
+        }
     },
-    storage?: {
-        bytesWrittenPerSec: number
-        bytesReadPerSec: number
-    }
     period: {
         start: number,
         end: number
@@ -29,20 +31,22 @@ export class SampleFactory {
     static createSample(report: MetricsReport): Sample {
         const storageMetricsEnabled = report[CONTEXT_STORAGE] !== undefined
         return {
-            broker: {
-                messagesToNetworkPerSec: report['node/publish'].count,
-                bytesToNetworkPerSec: report['node/publish'].bytes,
+            node: {
+                publishMessagesPerSecond: report['node/publish'].count,
+                publishBytesPerSecond: report['node/publish'].bytes,
+                latencyAverageMs: report.node?.latency,
+                sendBytesPerSecond: report.WebRtcEndpoint.outSpeed,
+                receiveBytesPerSecond: report.WebRtcEndpoint.inSpeed,
+                connectionAverageCount: report.WebRtcEndpoint.connections,
+                connectionTotalFailureCount: report.WebRtcEndpoint.failedConnection
             },
-            network: {
-                avgLatencyMs: report.node?.latency,
-                bytesToPeersPerSec: report.WebRtcEndpoint.outSpeed,
-                bytesFromPeersPerSec: report.WebRtcEndpoint.inSpeed,
-                connections: report.WebRtcEndpoint.connections,
-                webRtcConnectionFailures: report.WebRtcEndpoint.failedConnection
-            },
-            storage: (storageMetricsEnabled) ? {
-                bytesWrittenPerSec: report[CONTEXT_STORAGE].writeBytes,
-                bytesReadPerSec: report[CONTEXT_STORAGE].readBytes
+            broker: (storageMetricsEnabled) ? {
+                plugin: {
+                    storage: {
+                        writeBytesPerSecond: report[CONTEXT_STORAGE].writeBytes,
+                        readBytesPerSecond: report[CONTEXT_STORAGE].readBytes
+                    }
+                }
             } : undefined,
             period: report.period
         }
