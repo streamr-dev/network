@@ -16,7 +16,7 @@ The current (April 19th 2022) main branch of streamr-network-monorepo  does not 
 
 Running `npm install` also requires a couple of preparations, because 
 
-* Python 2 is not avaialable by default on macOS 12.3 (which prevents the package weak-napi from compiling)
+* Python 2 is not available by default on macOS 12.3 (which prevents the package weak-napi from compiling)
 * Package node-datachannel does not come with pre-compiled M1 binaries, and gets recompiled
 
 
