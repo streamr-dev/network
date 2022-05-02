@@ -144,8 +144,7 @@ export async function pullManyToOne<T>(
                 sub.end()
             }
         })
-        outputStream.end()
-        outputStream.return()
+        outputStream.endWrite()
     }
 
     // pull inputStreams into output stream
