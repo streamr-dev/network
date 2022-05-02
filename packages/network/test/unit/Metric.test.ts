@@ -1,5 +1,5 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
-import { AverageSampler, CountSampler, LevelSampler, Metric, MetricsContext, MetricsReport, RateSampler } from '../../src/helpers/Metric'
+import { AverageMetric, CountMetric, LevelMetric, MetricsContext, MetricsReport, RateMetric } from '../../src/helpers/Metric'
 
 const REPORT_INTERVAL = 100
 const ONE_SECOND = 1000
@@ -30,14 +30,14 @@ describe('metrics', () => {
     
         it('happy path', async () => {
             const metricOne = {
-                count: new Metric((metric) => new CountSampler(metric)),
+                count: new CountMetric(),
             }
             context.addMetrics('metricOne', metricOne)
             context.addMetrics('metricTwo', {})
             const metricThree = {
-                average: new Metric((metric) => new AverageSampler(metric)),
-                level: new Metric((metric) => new LevelSampler(metric)),
-                rate: new Metric((metric) => new RateSampler(metric))
+                average: new AverageMetric(),
+                level: new LevelMetric(),
+                rate: new RateMetric()
             }
             context.addMetrics('metricThree', metricThree)
             metricThree.level.record(30)
@@ -93,7 +93,7 @@ describe('metrics', () => {
     
         it('no data', async () => {
             context.addMetrics('foo', {
-                bar: new Metric((metric) => new CountSampler(metric))
+                bar: new CountMetric()
             })
             await waitForCondition(() => reports.length > 0)
             expect(reports[0]).toMatchObject({
@@ -113,7 +113,7 @@ describe('metrics', () => {
         describe('count', () => {
 
             it('happy path', () => {
-                const metric = new Metric((metric) => new CountSampler(metric))
+                const metric = new CountMetric()
                 const sampler = metric.createSampler()
                 sampler.start(Date.now())
                 metric.record(3)
@@ -126,7 +126,7 @@ describe('metrics', () => {
         describe('average', () => {
 
             it('happy path', () => {
-                const metric = new Metric((metric) => new AverageSampler(metric))
+                const metric = new AverageMetric()
                 const sampler = metric.createSampler()
                 sampler.start(Date.now())
                 metric.record(7)
@@ -136,7 +136,7 @@ describe('metrics', () => {
             })
             
             it('no data', () => {
-                const metric = new Metric((metric) => new AverageSampler(metric))
+                const metric = new AverageMetric()
                 const sampler = metric.createSampler()
                 sampler.start(Date.now())
                 sampler.stop(Date.now())
@@ -147,7 +147,7 @@ describe('metrics', () => {
         describe('level', () => {
 
             it('happy path', () => {
-                const metric = new Metric((metric) => new LevelSampler(metric))
+                const metric = new LevelMetric()
                 const sampler = metric.createSampler()
                 sampler.start(Date.now())
                 metric.record(10)
@@ -157,7 +157,7 @@ describe('metrics', () => {
             })
     
             it('include latest before start', () => {
-                const metric = new Metric((metric) => new LevelSampler(metric))
+                const metric = new LevelMetric()
                 const sampler = metric.createSampler()
                 metric.record(20)
                 sampler.start(Date.now())
@@ -168,7 +168,7 @@ describe('metrics', () => {
             })
 
             it('no data', () => {
-                const metric = new Metric((metric) => new LevelSampler(metric))
+                const metric = new LevelMetric()
                 const sampler = metric.createSampler()
                 sampler.start(Date.now())
                 sampler.stop(Date.now())
@@ -179,7 +179,7 @@ describe('metrics', () => {
         describe('rate', () => {
 
             it('happy path', () => {
-                const metric = new Metric((metric) => new RateSampler(metric))
+                const metric = new RateMetric()
                 const sampler = metric.createSampler()
                 sampler.start(10000)
                 metric.record(88)
@@ -189,7 +189,7 @@ describe('metrics', () => {
             })
             
             it('no data', () => {
-                const metric = new Metric((metric) => new RateSampler(metric))
+                const metric = new RateMetric()
                 const sampler = metric.createSampler()
                 sampler.start(10000)
                 sampler.stop(14000)
@@ -201,7 +201,7 @@ describe('metrics', () => {
     it('same id cannot be created twice', () => {
         const context = new MetricsContext()
         const metric = {
-            foo: new Metric((metric) => new CountSampler(metric))
+            foo: new CountMetric()
         }
         context.addMetrics('mockNamespace', metric)
         expect(() => {

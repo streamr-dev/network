@@ -6,10 +6,10 @@ export {
     Metric, 
     MetricsDefinition, 
     Sampler,
-    CountSampler, 
-    AverageSampler, 
-    LevelSampler, 
-    RateSampler,
+    CountMetric, 
+    AverageMetric, 
+    LevelMetric, 
+    RateMetric,
     MetricsContext, 
     MetricsReport
 } from './helpers/Metric'

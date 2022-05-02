@@ -7,7 +7,7 @@ import {
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { AverageSampler, Metric, MetricsContext, MetricsDefinition, RateSampler } from '../helpers/Metric'
+import { AverageMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -107,12 +107,12 @@ export class Node extends EventEmitter {
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
         this.metrics = {
-            latency: new Metric((m) => new AverageSampler(m))
+            latency: new AverageMetric()
         }
         this.metricsContext.addMetrics('node', this.metrics)
         this.publishMetrics = {
-            bytes: new Metric((m) => new RateSampler(m)),
-            count: new Metric((m) => new RateSampler(m))
+            bytes: new RateMetric(),
+            count: new RateMetric()
         }
         this.metricsContext.addMetrics('node/publish', this.publishMetrics)
 

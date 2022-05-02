@@ -21,7 +21,7 @@ import {
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
-    RateSampler
+    RateMetric
 } from 'streamr-network'
 import { InstructionSender } from './InstructionSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
@@ -163,8 +163,8 @@ export class Tracker extends EventEmitter {
         attachRtcSignalling(this.trackerServer)
 
         this.metrics = {
-            nodeDisconnected: new Metric((metric) => new RateSampler(metric)),
-            nodeStatusProcessed: new Metric((metric) => new RateSampler(metric))
+            nodeDisconnected: new RateMetric(),
+            nodeStatusProcessed: new RateMetric()
         }
         metricsContext.addMetrics('tracker', this.metrics)
 

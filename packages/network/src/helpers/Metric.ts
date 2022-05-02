@@ -69,7 +69,7 @@ export class Metric {
  *
  * E.g. count of failed connections
  */
-export class CountSampler extends Sampler {
+class CountSampler extends Sampler {
 
     protected sum: number = 0
 
@@ -82,13 +82,19 @@ export class CountSampler extends Sampler {
     }
 }
 
+export class CountMetric extends Metric {
+    constructor() {
+        super((m) => new CountSampler(m))
+    }
+}
+
 /*
  * Average of all records within a sampling period. If the sampling data is
  * continuous, you may want to use LevelSampler instead.
  *
  * E.g. average latency
  */
-export class AverageSampler extends CountSampler {
+class AverageSampler extends CountSampler {
 
     private count: number = 0
 
@@ -106,6 +112,12 @@ export class AverageSampler extends CountSampler {
     }
 }
 
+export class AverageMetric extends Metric {
+    constructor() {
+        super((m) => new AverageSampler(m))
+    }
+}
+
 /*
  * Average level of the records during a sampling period. Takes the average of the
  * recorded values, but also includes the current level as a first sample when
@@ -113,7 +125,7 @@ export class AverageSampler extends CountSampler {
  * 
  * E.g. average count of currently active connections
  */
-export class LevelSampler extends AverageSampler {
+class LevelSampler extends AverageSampler {
     start(now: number): void {
         super.start(now)
         const latest = this.metric.getLatestValue()
@@ -123,12 +135,18 @@ export class LevelSampler extends AverageSampler {
     }
 }
 
+export class LevelMetric extends Metric {
+    constructor(initialValue?: number) {
+        super((m) => new LevelSampler(m), initialValue)
+    }
+}
+
 /*
  * Sum of records divided by seconds.
  *
  * E.g. download speed (bytes per second)
  */
-export class RateSampler extends CountSampler {
+class RateSampler extends CountSampler {
     private startTimestamp: number | undefined = undefined
     private stopTimestamp: number | undefined = undefined
 
@@ -149,6 +167,12 @@ export class RateSampler extends CountSampler {
         } else {
             return undefined
         }
+    }
+}
+
+export class RateMetric extends Metric {
+    constructor() {
+        super((m) => new RateSampler(m))
     }
 }
 

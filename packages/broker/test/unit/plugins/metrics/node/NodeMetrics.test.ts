@@ -1,4 +1,4 @@
-import { LevelSampler, Metric, MetricsContext } from 'streamr-network'
+import { LevelMetric, MetricsContext } from 'streamr-network'
 import { NodeMetrics } from '../../../../../src/plugins/metrics/node/NodeMetrics'
 import { waitForCondition } from 'streamr-test-utils'
 import StreamrClient from 'streamr-client'
@@ -6,7 +6,7 @@ import StreamrClient from 'streamr-client'
 const MOCK_METRICS_VALUE = 123
 const MOCK_NODE_ID = '0x0000000000000000000000000000000000000000'
 
-const createMockMetric = () => new Metric((metric) => new LevelSampler(metric))
+const createMockMetric = () => new LevelMetric()
 
 describe('NodeMetrics', () => {
 

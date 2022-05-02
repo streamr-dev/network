@@ -4,7 +4,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
-import { CountSampler, LevelSampler, Metric, MetricsContext, MetricsDefinition, RateSampler } from '../../helpers/Metric'
+import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../../helpers/Metric'
 import {
     AnswerOptions,
     ConnectOptions,
@@ -113,12 +113,12 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
 
         this.metrics = {
-            inSpeed: new Metric((m) => new RateSampler(m)),
-            outSpeed: new Metric((m) => new RateSampler(m)),
-            msgInSpeed: new Metric((m) => new RateSampler(m)),
-            msgOutSpeed: new Metric((m) => new RateSampler(m)),
-            failedConnection: new Metric((m) => new CountSampler(m)),
-            connections: new Metric((m) => new LevelSampler(m), 0),
+            inSpeed: new RateMetric(),
+            outSpeed: new RateMetric(),
+            msgInSpeed: new RateMetric(),
+            msgOutSpeed: new RateMetric(),
+            failedConnection: new CountMetric(),
+            connections: new LevelMetric(0)
         }
         metricsContext.addMetrics('WebRtcEndpoint', this.metrics)
 

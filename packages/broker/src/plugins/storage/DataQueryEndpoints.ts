@@ -3,7 +3,7 @@
  */
 import express, { Request, Response, Router } from 'express'
 import { StreamMessage } from 'streamr-client-protocol'
-import { Logger, Metric, MetricsContext, RateSampler } from 'streamr-network'
+import { Logger, Metric, MetricsContext, RateMetric } from 'streamr-network'
 import { Readable, Transform, pipeline } from 'stream'
 import { Storage } from './Storage'
 import { Format, getFormat } from './DataQueryFormat'
@@ -131,9 +131,9 @@ type RangeRequest = BaseRequest<{
 export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = {
-        lastRequests: new Metric((metric) => new RateSampler(metric)),
-        fromRequests: new Metric((metric) => new RateSampler(metric)),
-        rangeRequests: new Metric((metric) => new RateSampler(metric))
+        lastRequests: new RateMetric(),
+        fromRequests: new RateMetric(),
+        rangeRequests: new RateMetric()
     }
     metricsContext.addMetrics('broker/storage/query', metrics)
 

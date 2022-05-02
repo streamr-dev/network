@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { StreamPartID } from 'streamr-client-protocol'
-import { Logger, NodeId, MetricsContext, MetricsDefinition, Metric, RateSampler } from 'streamr-network'
+import { Logger, NodeId, MetricsContext, MetricsDefinition, Metric, RateMetric } from 'streamr-network'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
@@ -83,7 +83,7 @@ export class InstructionSender {
         this.options = options ?? DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS
         this.sendInstruction = sendInstruction
         this.metrics = {
-            instructionSent: new Metric((metric) => new RateSampler(metric))
+            instructionSent: new RateMetric()
         }
         metricsContext.addMetrics('tracker', this.metrics)
     }
