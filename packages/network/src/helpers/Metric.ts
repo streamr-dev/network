@@ -71,7 +71,7 @@ export class Metric {
  */
 class CountSampler extends Sampler {
 
-    protected sum: number = 0
+    private sum: number = 0
 
     protected onRecord(value: number): void {
         this.sum += value
@@ -94,12 +94,13 @@ export class CountMetric extends Metric {
  *
  * E.g. average latency
  */
-class AverageSampler extends CountSampler {
+class AverageSampler extends Sampler {
 
+    private sum: number = 0
     private count: number = 0
 
     protected onRecord(value: number): void {
-        super.onRecord(value)
+        this.sum += value
         this.count++
     }
 
@@ -146,7 +147,8 @@ export class LevelMetric extends Metric {
  *
  * E.g. download speed (bytes per second)
  */
-class RateSampler extends CountSampler {
+class RateSampler extends Sampler {
+    private sum: number = 0
     private startTimestamp: number | undefined = undefined
     private stopTimestamp: number | undefined = undefined
 
@@ -158,6 +160,10 @@ class RateSampler extends CountSampler {
     stop(now: number): void {
         super.stop(now)
         this.stopTimestamp = now
+    }
+
+    protected onRecord(value: number): void {
+        this.sum += value
     }
 
     getAggregatedValue(): number | undefined {
