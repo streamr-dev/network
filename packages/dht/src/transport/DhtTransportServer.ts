@@ -1,6 +1,7 @@
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { promiseTimeout } from '../dht/helpers'
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
@@ -23,7 +24,7 @@ export class DhtTransportServer extends EventEmitter {
 
     async onRequest(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<Uint8Array> {
         const fn = this.methods.get(rpcMessage.header.method)!
-        return await fn(rpcMessage.body)
+        return await promiseTimeout(1000, fn(rpcMessage.body))
     }
 
     registerMethod(name: string, fn: RegisteredMethod): void {
