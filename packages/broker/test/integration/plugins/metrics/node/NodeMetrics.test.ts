@@ -98,8 +98,8 @@ describe('NodeMetrics', () => {
             broker: {
                 plugin: {
                     storage: {
-                        writeBytesPerSecond: expect.any(Number),
-                        readBytesPerSecond: expect.any(Number)
+                        readBytesPerSecond: expect.any(Number),
+                        writeBytesPerSecond: expect.any(Number)
                     }
                 }
             },

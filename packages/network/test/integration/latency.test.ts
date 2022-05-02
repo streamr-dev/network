@@ -25,7 +25,7 @@ describe('latency metrics', () => {
             metricsContext
         })
         onMetricRecord = jest.fn()
-        metricsContext.getMetric('node.latency')!.on('record', onMetricRecord)
+        metricsContext.getMetric('node.latencyAverageMs')!.on('record', onMetricRecord)
         node.start()
     })
 

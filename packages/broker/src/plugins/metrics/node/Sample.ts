@@ -24,7 +24,7 @@ export interface Sample {
     }
 }
 
-const CONTEXT_STORAGE = 'broker/cassandra'
+const CONTEXT_STORAGE = 'broker.plugin.storage'
 
 export class SampleFactory {
 
@@ -32,19 +32,19 @@ export class SampleFactory {
         const storageMetricsEnabled = report[CONTEXT_STORAGE] !== undefined
         return {
             node: {
-                publishMessagesPerSecond: report['node/publish'].count,
-                publishBytesPerSecond: report['node/publish'].bytes,
-                latencyAverageMs: report.node?.latency,
-                sendBytesPerSecond: report.WebRtcEndpoint.outSpeed,
-                receiveBytesPerSecond: report.WebRtcEndpoint.inSpeed,
-                connectionAverageCount: report.WebRtcEndpoint.connections,
-                connectionTotalFailureCount: report.WebRtcEndpoint.failedConnection
+                publishMessagesPerSecond: report.node.publishMessagesPerSecond,
+                publishBytesPerSecond: report.node.publishBytesPerSecond,
+                latencyAverageMs: report.node?.latencyAverageMs,
+                sendBytesPerSecond: report.node.sendBytesPerSecond,
+                receiveBytesPerSecond: report.node.receiveMessagesPerSecond,
+                connectionAverageCount: report.node.connectionAverageCount,
+                connectionTotalFailureCount: report.node.connectionTotalFailureCount
             },
             broker: (storageMetricsEnabled) ? {
                 plugin: {
                     storage: {
-                        writeBytesPerSecond: report[CONTEXT_STORAGE].writeBytes,
-                        readBytesPerSecond: report[CONTEXT_STORAGE].readBytes
+                        readBytesPerSecond: report[CONTEXT_STORAGE].readBytesPerSecond,
+                        writeBytesPerSecond: report[CONTEXT_STORAGE].writeBytesPerSecond
                     }
                 }
             } : undefined,

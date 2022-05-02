@@ -52,12 +52,9 @@ export interface NodeOptions extends TrackerManagerOptions {
 }
 
 interface Metrics extends MetricsDefinition {
-    latency: Metric
-}
-
-interface PublishMetrics extends MetricsDefinition {
-    bytes: Metric
-    count: Metric
+    publishMessagesPerSecond: Metric
+    publishBytesPerSecond: Metric
+    latencyAverageMs: Metric
 }
 
 export interface Node {
@@ -90,7 +87,6 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly publishMetrics: PublishMetrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
@@ -107,14 +103,11 @@ export class Node extends EventEmitter {
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
         this.metrics = {
-            latency: new AverageMetric()
+            publishMessagesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric(),
+            latencyAverageMs: new AverageMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        this.publishMetrics = {
-            bytes: new RateMetric(),
-            count: new RateMetric()
-        }
-        this.metricsContext.addMetrics('node/publish', this.publishMetrics)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
@@ -208,7 +201,7 @@ export class Node extends EventEmitter {
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
             const now = new Date().getTime()
             const currentLatency = now - message.messageId.timestamp
-            this.metrics.latency.record(currentLatency)
+            this.metrics.latencyAverageMs.record(currentLatency)
         })
     }
 
@@ -328,8 +321,8 @@ export class Node extends EventEmitter {
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, source)
             if (source === null) {
-                this.publishMetrics.count.record(1)
-                this.publishMetrics.bytes.record(streamMessage.getSerializedContent().length)
+                this.metrics.publishMessagesPerSecond.record(1)
+                this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
             }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
