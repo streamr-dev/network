@@ -140,9 +140,9 @@ export class RpcCommunicator extends EventEmitter {
         }
         let error
         if (response.responseError === RpcResponseError.SERVER_TIMOUT) {
-            error = new Err.RpcTimeoutError('Server timed out on request')
+            error = new Err.RpcTimeoutError('Server timed out on request', response.requestId)
         } else {
-            error = new Err.RpcTimeoutError('Server error on request')
+            error = new Err.RpcRequestError('Server error on request', response.requestId)
         }
         const deferredPromises = ongoingRequest!.deferredPromises
         deferredPromises.message.reject(error)
