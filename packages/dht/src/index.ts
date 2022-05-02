@@ -14,7 +14,7 @@ const main = async () => {
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
     const client = new DhtRpcClient(clientTransport)
-    new DhtNode(PeerID.fromValue(id), client, serverTransport, rpcCommunicator)
+    new DhtNode(PeerID.fromValue(id), client, clientTransport, serverTransport, rpcCommunicator)
 }
 
 main()

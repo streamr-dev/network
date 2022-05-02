@@ -1,11 +1,11 @@
 syntax = "proto3";
-import "google/protobuf/any.proto";
 
 option optimize_for = CODE_SIZE;
 
 service DhtRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
+  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 // Used inside RpcMessage
@@ -46,18 +46,36 @@ enum NodeType {
   BROWSER = 1;
 }
 
+message ConnectivityReportRequest {
+  uint32 port = 1;
+  string nonce = 2; // requestId
+}
+
+message ConnectivityReportResponse {
+  string open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  string nonce = 4; // requestId
+}
+
+enum RouteMessageType {
+  RPC_WRAPPER = 0;
+}
+
 message RouteMessageWrapper {
-  string sourceId = 1;
+  PeerDescriptor sourcePeer = 1;
   string nonce = 2;
-  string destinationId = 3;
-  oneof message {
-    google.protobuf.Any closestPeersRequest = 4;
-    google.protobuf.Any closestPeersResponse = 5;
-    google.protobuf.Any rtcOffer = 6;
-    google.protobuf.Any rtcAnswer = 7;
-    google.protobuf.Any iceCandidate = 8;
-    google.protobuf.Any iceDescription = 9;
-  }
+  PeerDescriptor destinationPeer = 3;
+  PeerDescriptor previousPeer = 4;
+  RouteMessageType messageType = 5;
+  bytes message = 6;
+}
+
+message RouteMessageAck {
+  PeerDescriptor sourcePeer = 1;
+  string nonce = 2;
+  PeerDescriptor destinationPeer = 3;
+  string error = 4;
 }
 
 // Correspond to the MessageType Enum

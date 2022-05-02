@@ -4,7 +4,9 @@ import {
     PeerDescriptor,
     NodeType,
     PingRequest,
-    PingResponse
+    PingResponse,
+    RouteMessageWrapper,
+    RouteMessageAck
 } from '../proto/DhtRpc'
 import { IDhtRpc } from '../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -13,7 +15,7 @@ import { nodeFormatPeerDescriptor, generateId } from '../dht/helpers'
 import { DhtPeer } from '../dht/DhtPeer'
 import { TODO } from '../types'
 
-export const createRpcMethods = (getClosestPeersFn: TODO): any => {
+export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, canRoute: TODO): any => {
     const DhtRpc: IDhtRpc = {
         async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const peerDescriptor = nodeFormatPeerDescriptor(request.peerDescriptor!)
@@ -30,6 +32,25 @@ export const createRpcMethods = (getClosestPeersFn: TODO): any => {
                 nonce: request.nonce
             }
             return response
+        },
+        async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+            const converted = {
+                ...routed,
+                destinationPeer: nodeFormatPeerDescriptor(routed.destinationPeer!),
+                sourcePeer: nodeFormatPeerDescriptor(routed.sourcePeer!)
+            }
+            const routable = canRoute(converted)
+
+            const response: RouteMessageAck = {
+                nonce: routed.nonce,
+                destinationPeer: routed.sourcePeer,
+                sourcePeer: routed.destinationPeer,
+                error: routable ? '' : 'Could not forward the message'
+            }
+            if (routable) {
+                setImmediate(async () => await routeHandler(converted))
+            }
+            return response
         }
     }
 
@@ -43,6 +64,11 @@ export const createRpcMethods = (getClosestPeersFn: TODO): any => {
             const request = PingRequest.fromBinary(bytes)
             const response = await DhtRpc.ping(request, new DummyServerCallContext())
             return PingResponse.toBinary(response)
+        },
+        async routeMessage(bytes: Uint8Array): Promise<Uint8Array> {
+            const message = RouteMessageWrapper.fromBinary(bytes)
+            const response = await DhtRpc.routeMessage(message, new DummyServerCallContext())
+            return RouteMessageAck.toBinary(response)
         }
     }
 
@@ -64,6 +90,15 @@ const MockDhtRpc: IDhtRpc = {
             nonce: request.nonce
         }
         return response
+    },
+    async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const response: RouteMessageAck = {
+            nonce: routed.nonce,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: ''
+        }
+        return response
     }
 }
 
@@ -77,6 +112,11 @@ export const MockRegisterDhtRpc = {
         const request = PingRequest.fromBinary(bytes)
         const response = await MockDhtRpc.ping(request, new DummyServerCallContext())
         return PingResponse.toBinary(response)
+    },
+    async routeMessage(bytes: Uint8Array): Promise<Uint8Array> {
+        const message = RouteMessageWrapper.fromBinary(bytes)
+        const response = await MockDhtRpc.routeMessage(message, new DummyServerCallContext())
+        return RouteMessageAck.toBinary(response)
     }
 }
 

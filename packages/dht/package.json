@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
+    "bloomfilter": "^0.0.18",
     "k-bucket": "^5.1.0",
     "p-queue": "6.3.0",
     "uuid": "^8.3.2",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
+    "@types/bloomfilter": "^0.0.0",
     "@types/express": "^4.17.13",
     "@types/k-bucket": "^5.0.1",
     "@types/node": "^16.10.6",

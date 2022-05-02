@@ -1,13 +1,10 @@
-import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
-import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/PeerID'
+import { createMockConnectionDhtNode } from '../utils'
 
-describe('DhtClientRpcTransport', () => {
+describe('Mock Connection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
 
@@ -17,41 +14,31 @@ describe('DhtClientRpcTransport', () => {
 
     beforeEach(() => {
         rpcCommunicators = new Map()
-        nodes = []
-        const createDhtNode = (stringId: string): DhtNode => {
-            
-            const pId = PeerID.fromString(stringId)
-            const peerDescriptor: PeerDescriptor = {
-                peerId: pId.value,
-                type: 0
-            }
-            const clientTransport = new DhtTransportClient()
-            const serverTransport = new DhtTransportServer()
-            const mockConnectionLayer = new MockConnectionManager()
-            const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
-            const client = new DhtRpcClient(clientTransport)
-            rpcCommunicators.set(pId.toString(), rpcCommunicator)
-            rpcCommunicator.setSendFn(async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+        const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
+            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                if (!rpcCommunicators.has(PeerID.fromValue(targetDescriptor.peerId).toString())) {
-                    console.error(PeerID.fromValue(targetDescriptor.peerId).toString() + 'does not exist!!')
-                    throw new Error('peer not found')
-                }
-                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(peerDescriptor, bytes)
-            })
-            return new DhtNode(pId, client, serverTransport, rpcCommunicator)
+                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, bytes)
+            }
         }
+        nodes = []
 
-        entryPoint = createDhtNode('0')
+        const entryPointId = '0'
+        entryPoint = createMockConnectionDhtNode(entryPointId)
+        entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
+        rpcCommunicators.set(entryPointId, entryPoint.getRpcCommunicator())
+
         entrypointDescriptor = {
             peerId: entryPoint.getSelfId().value,
             type: 0
         }
        
         for (let i = 1; i < 100; i++) {
-            const node = createDhtNode(`${i}`)
+            const nodeId = `${i}`
+            const node = createMockConnectionDhtNode(nodeId)
+            node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
+            rpcCommunicators.set(nodeId, node.getRpcCommunicator())
             nodes.push(node)
         }
     })

@@ -119,4 +119,8 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         e.serviceName  = method.service.typeName
         throw e
     }
+
+    stop(): void {
+        this.removeAllListeners()
+    }
 }

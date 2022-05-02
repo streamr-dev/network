@@ -93,4 +93,9 @@ export class RpcCommunicator extends EventEmitter {
         deferredPromises!.trailer.resolve({})
         this.ongoingRequests.delete(response.requestId)
     }
+
+    stop(): void {
+        this.removeAllListeners()
+        this.send = () => {}
+    }
 }
