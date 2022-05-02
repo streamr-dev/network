@@ -1,24 +1,33 @@
-import { PeerID } from '../types'
-import { DhtRpcClient } from '../proto/DhtRpc.client'
+import { IDhtRpcClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
+import { PeerID } from '../PeerID'
 import { nodeFormatPeerDescriptor } from './helpers'
 import { DhtRpcOptions } from '../transport/DhtTransportClient'
 import { RouteMessageParams } from '../rpc-protocol/IMessageRouter'
 
 export class DhtPeer {
     private static counter = 0
-    public readonly id: PeerID
+    
+    public readonly peerId: PeerID
+
+    public get id(): Uint8Array {
+        return this.peerId.value
+    }
+
     private lastContacted: number
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
-    private readonly dhtClient: DhtRpcClient
-    constructor(peerDescriptor: PeerDescriptor, client: DhtRpcClient) {
-        this.id = peerDescriptor.peerId
+    private readonly dhtClient: IDhtRpcClient
+    
+    constructor(peerDescriptor: PeerDescriptor, client: IDhtRpcClient) {
+        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
+        this.getClosestPeers = this.getClosestPeers.bind(this)
+        this.ping = this.ping.bind(this)
     }
 
     async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
@@ -76,10 +85,6 @@ export class DhtPeer {
             return false
         }
         return true
-    }
-
-    getPeerId(): PeerID {
-        return this.id
     }
 
     getPeerDscriptor(): PeerDescriptor {

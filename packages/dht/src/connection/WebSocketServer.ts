@@ -11,7 +11,7 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
     private httpServer: http.Server | null = null
     private wsServer: WsServer | null = null
 
-    start(port: number): Promise<void> {
+    start({ host, port }: { host?: string; port?: number } = {}): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 console.log((new Date()) + ' Received request for ' + request.url)
@@ -19,10 +19,23 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
                 response.end()
             })
 
-            this.httpServer.listen(port, () => {
-                console.log((new Date()) + ' Server is listening on port ' + port)
-                resolve()
-            })
+            if (host) {
+                this.httpServer.listen(port, host, () => {
+                    console.log((new Date()) + ' Server is listening on port ' + port)
+                    resolve()
+                })
+            }
+
+            else if (port) {
+                this.httpServer.listen(port, () => {
+                    console.log((new Date()) + ' Server is listening on port ' + port)
+                    resolve()
+                })
+            }
+
+            else {
+                reject('Listen port for WebSocket server not given')
+            }
 
             this.wsServer = new WsServer({
                 httpServer: this.httpServer,
