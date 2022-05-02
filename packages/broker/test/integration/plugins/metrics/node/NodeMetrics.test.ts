@@ -1,7 +1,7 @@
 import StreamrClient, { StreamPermission } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
-import { createClient, fetchPrivateKeyWithGas, startBroker, startTestTracker } from '../../../../utils'
+import { createClient, fetchPrivateKeyWithGas, startBroker, startTestTracker, STREAMR_DOCKER_DEV_HOST } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 import { v4 as uuid } from 'uuid'
 import { EthereumAddress, keyToArrayIndex } from 'streamr-client-protocol'
@@ -20,11 +20,11 @@ describe('NodeMetrics', () => {
     let streamIdPrefix: string
 
     beforeAll(async () => {
-        const tmpAccount = new Wallet(await fetchPrivateKeyWithGas())
+        const brokerWallet = new Wallet(await fetchPrivateKeyWithGas())
 
-        nodeAddress = tmpAccount.address
+        nodeAddress = brokerWallet.address
         tracker = await startTestTracker(trackerPort)
-        client = await createClient(tracker, tmpAccount.privateKey)
+        client = await createClient(tracker, brokerWallet.privateKey)
 
         const stream = await client.createStream({
             id: `/metrics/nodes/${uuid()}/sec`,
@@ -32,15 +32,31 @@ describe('NodeMetrics', () => {
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: nodeAddress })
         streamIdPrefix = stream.id.replace('sec', '')
+        // a previous test run may have created the assignment stream
+        await client.getOrCreateStream({
+            id: '/assignments'
+        })
 
         metricsGeneratingBroker = await startBroker({
-            privateKey: tmpAccount.privateKey,
+            privateKey: brokerWallet.privateKey,
             trackerPort,
             extraPlugins: {
                 metrics: {
                     nodeMetrics: {
                         streamIdPrefix
+                    }
+                },
+                storage: {
+                    cassandra: {
+                        hosts: [STREAMR_DOCKER_DEV_HOST],
+                        datacenter: 'datacenter1',
+                        username: '',
+                        password: '',
+                        keyspace: 'streamr_dev_v2',
                     },
+                    storageConfig: {
+                        refreshInterval: 0
+                    }
                 }
             }
         })
@@ -72,7 +88,7 @@ describe('NodeMetrics', () => {
         expect(report!).toMatchObject({
             broker: {
                 messagesToNetworkPerSec: expect.any(Number),
-                bytesToNetworkPerSec: expect.any(Number)
+                bytesToNetworkPerSec: expect.any(Number),
             },
             network: {
                 avgLatencyMs: expect.any(Number),
@@ -80,6 +96,10 @@ describe('NodeMetrics', () => {
                 bytesFromPeersPerSec: expect.any(Number),
                 connections: expect.any(Number),
                 webRtcConnectionFailures: expect.any(Number)
+            },
+            storage: {
+                bytesWrittenPerSec: expect.any(Number),
+                bytesReadPerSec: expect.any(Number)
             },
             period: {
                 start: expect.any(Number),
