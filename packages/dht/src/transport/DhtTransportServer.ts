@@ -33,6 +33,10 @@ export class DhtTransportServer extends EventEmitter {
     removeMethod(name: string): void {
         this.methods.delete(name)
     }
+
+    stop(): void {
+        this.methods.clear()
+    }
 }
 
 export class DummyServerCallContext implements ServerCallContext {
