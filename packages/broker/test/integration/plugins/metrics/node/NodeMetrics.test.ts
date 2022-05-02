@@ -1,10 +1,12 @@
 import StreamrClient, { StreamPermission } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
-import { createClient, fetchPrivateKeyWithGas, Queue, startBroker, startTestTracker } from '../../../../utils'
+import { createClient, fetchPrivateKeyWithGas, startBroker, startTestTracker } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
 import { v4 as uuid } from 'uuid'
 import { EthereumAddress, keyToArrayIndex } from 'streamr-client-protocol'
+import { MetricsReport } from 'streamr-network'
+import { waitForCondition } from 'streamr-test-utils'
 
 const trackerPort = 47745
 
@@ -53,18 +55,21 @@ describe('NodeMetrics', () => {
     })
 
     it('should retrieve the a `sec` metrics', async () => {
-        const messageQueue = new Queue<any>()
+        let report: MetricsReport | undefined
 
         const id = `${streamIdPrefix}sec`
         const nodeId = (await metricsGeneratingBroker.getNode()).getNodeId()
         const partition = keyToArrayIndex(NUM_OF_PARTITIONS, nodeId.toLowerCase())
 
         await client.subscribe({ id, partition }, (content: any) => {
-            messageQueue.push({ content })
+            const isReady = content.network.connections > 0
+            if (isReady && (report === undefined)) {
+                report = content
+            }
         })
 
-        const message = await messageQueue.pop(30 * 1000)
-        expect(message.content).toMatchObject({
+        await waitForCondition(() => report !== undefined, 15000, 100)
+        expect(report!).toMatchObject({
             broker: {
                 messagesToNetworkPerSec: expect.any(Number),
                 bytesToNetworkPerSec: expect.any(Number)

@@ -7,7 +7,7 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 describe('latency metrics', () => {
     let tracker: Tracker
-    let metricsContext: MetricsContext
+    let onMetricRecord: jest.Mock
     let node: NetworkNode
 
     beforeEach(async () => {
@@ -18,12 +18,14 @@ describe('latency metrics', () => {
             }
         })
         const trackerInfo = tracker.getConfigRecord()
-        metricsContext = new MetricsContext()
+        const metricsContext = new MetricsContext()
         node = createNetworkNode({
             id: 'node1',
             trackers: [trackerInfo],
             metricsContext
         })
+        onMetricRecord = jest.fn()
+        metricsContext.getMetric('node.latency')!.on('record', onMetricRecord)
         node.start()
     })
 
@@ -35,14 +37,13 @@ describe('latency metrics', () => {
     })
 
     it('should fetch empty metrics', async () => {
-        const { metrics } = await metricsContext.report()
-        expect(metrics.node.latency).toEqual(0)
+        expect(onMetricRecord).not.toBeCalled()
     })
 
     it('should send a single message to Node1 and collect latency', (done) => {
         node.addMessageListener(async () => {
-            const { metrics } = await metricsContext.report()
-            expect(metrics.node.latency).toBeGreaterThan(0)
+            expect(onMetricRecord).toBeCalledTimes(1)
+            expect(onMetricRecord.mock.calls[0][0]).toBeGreaterThan(0)
             done()
         })
 
@@ -69,8 +70,8 @@ describe('latency metrics', () => {
             receivedMessages += 1
 
             if (receivedMessages === 5) {
-                const { metrics } = await metricsContext.report()
-                expect(metrics.node.latency).toBeGreaterThan(0)
+                expect(onMetricRecord).toBeCalledTimes(5)
+                expect(onMetricRecord.mock.calls[0][0]).toBeGreaterThan(0)
                 done()
             }
         })

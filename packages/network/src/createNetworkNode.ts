@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from './helpers/MetricsContext'
+import { MetricsContext } from './helpers/Metric'
 
 import { TrackerInfo, AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'

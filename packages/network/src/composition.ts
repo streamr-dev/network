@@ -2,7 +2,21 @@ import 'setimmediate'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 export { NodeClientWsEndpoint }
 export * as Protocol from 'streamr-client-protocol'
-export { MetricsContext, Metrics } from './helpers/MetricsContext'
+export { 
+    Metric, 
+    MetricsDefinition, 
+    Sampler,
+    CountMetric, 
+    AverageMetric, 
+    LevelMetric, 
+    RateMetric,
+    MetricsContext, 
+    MetricsReport
+} from './helpers/Metric'
+export {
+    scheduleAtFixedRate,
+    scheduleAtInterval
+} from './helpers/scheduler'
 export {
     Location,
     AbstractNodeOptions,

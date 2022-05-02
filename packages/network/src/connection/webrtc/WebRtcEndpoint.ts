@@ -4,7 +4,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
-import { Metrics, MetricsContext } from '../../helpers/MetricsContext'
+import { CountMetric, LevelMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../../helpers/Metric'
 import {
     AnswerOptions,
     ConnectOptions,
@@ -26,6 +26,15 @@ class WebRtcError extends Error {
         // exclude this constructor from stack trace
         Error.captureStackTrace(this, WebRtcError)
     }
+}
+
+interface Metrics extends MetricsDefinition {
+    inSpeed: Metric
+    outSpeed: Metric
+    msgInSpeed: Metric
+    msgOutSpeed: Metric,
+    failedConnection: Metric
+    connections: Metric
 }
 
 export interface WebRtcConnectionFactory {
@@ -103,13 +112,15 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.onErrorFromSignaller(options)
         })
 
-        this.metrics = metricsContext.create('WebRtcEndpoint')
-            .addRecordedMetric('inSpeed')
-            .addRecordedMetric('outSpeed')
-            .addRecordedMetric('msgInSpeed')
-            .addRecordedMetric('msgOutSpeed')
-            .addRecordedMetric('failedConnection')
-            .addQueriedMetric('connections', () => Object.keys(this.connections).length)
+        this.metrics = {
+            inSpeed: new RateMetric(),
+            outSpeed: new RateMetric(),
+            msgInSpeed: new RateMetric(),
+            msgOutSpeed: new RateMetric(),
+            failedConnection: new CountMetric(),
+            connections: new LevelMetric(0)
+        }
+        metricsContext.addMetrics('WebRtcEndpoint', this.metrics)
 
         this.startConnectionStatusReport()
     }
@@ -187,8 +198,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.on('message', (message) => {
             this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
-            this.metrics.record('inSpeed', message.length)
-            this.metrics.record('msgInSpeed', 1)
+            this.metrics.inSpeed.record(message.length)
+            this.metrics.msgInSpeed.record(1)
         })
         connection.once('close', () => {
             if (this.connections[targetPeerId] === connection) {
@@ -196,6 +207,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 // removed and possibly replaced. This check avoids deleting new
                 // connection.
                 delete this.connections[targetPeerId]
+                this.onConnectionCountChange()
             }
             this.negotiatedProtocolVersions.removeNegotiatedProtocolVersion(targetPeerId)
             this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
@@ -208,7 +220,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
         })
         connection.on('failed', () => {
-            this.metrics.record('failedConnection', 1)
+            this.metrics.failedConnection.record(1)
         })
 
         return connection
@@ -228,7 +240,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
                 this.logger.warn(e)
             }
             this.connections[peerId] = connection
-
+            this.onConnectionCountChange()
         } else if (this.connections[peerId].getConnectionId() !== 'none') {
             connection = this.replaceConnection(peerId, routerId)
 
@@ -309,6 +321,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             deferredConnectionAttempt = conn.stealDeferredConnectionAttempt()
         }
         delete this.connections[peerId]
+        this.onConnectionCountChange()
         conn.close()
 
         // Set up new connection
@@ -322,6 +335,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.logger.warn(e)
         }
         this.connections[peerId] = connection
+        this.onConnectionCountChange()
         return connection
     }
 
@@ -362,6 +376,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
 
         this.connections[targetPeerId] = connection
+        this.onConnectionCountChange()
         connection.connect()
 
         if (!trackerInstructed && !connection.isOffering()) {
@@ -395,8 +410,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             throw err
         }
 
-        this.metrics.record('outSpeed', message.length)
-        this.metrics.record('msgOutSpeed', 1)
+        this.metrics.outSpeed.record(message.length)
+        this.metrics.msgOutSpeed.record(1)
     }
 
     private attemptProtocolVersionValidation(connection: WebRtcConnection): void {
@@ -417,6 +432,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         if (connection) {
             this.logger.debug('close connection to %s due to %s', NameDirectory.getName(receiverPeerId), reason)
             delete this.connections[receiverPeerId]
+            this.onConnectionCountChange()
             connection.close()
         }
     }
@@ -463,6 +479,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.stopped = true
         const { connections, messageQueues } = this
         this.connections = {}
+        this.onConnectionCountChange()
         this.messageQueues = {}
         this.rtcSignaller.setOfferListener(() => {})
         this.rtcSignaller.setAnswerListener(() => {})
@@ -478,5 +495,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
     getAllConnectionNodeIds(): PeerId[] {
         return Object.keys(this.connections)
+    }
+
+    private onConnectionCountChange() {
+        this.metrics.connections.record(Object.keys(this.connections).length)
     }
 }
