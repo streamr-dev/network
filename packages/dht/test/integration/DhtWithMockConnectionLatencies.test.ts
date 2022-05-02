@@ -30,7 +30,7 @@ describe('Mock connection Dht joining with latencies', () => {
         const entryPointId = '0'
         entryPoint = createMockConnectionDhtNode(entryPointId)
         entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
-        rpcCommunicators.set(entryPointId, entryPoint.getRpcCommunicator())
+        rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
 
         entrypointDescriptor = {
             peerId: entryPoint.getSelfId().value,
@@ -41,7 +41,7 @@ describe('Mock connection Dht joining with latencies', () => {
             const nodeId = `${i}`
             const node = createMockConnectionDhtNode(nodeId)
             node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
-            rpcCommunicators.set(nodeId, node.getRpcCommunicator())
+            rpcCommunicators.set(PeerID.fromString(nodeId).toString(), node.getRpcCommunicator())
             nodes.push(node)
         }
     })

@@ -3,7 +3,7 @@
 import { SortedContactList } from '../../src/dht/SortedContactList'
 import { PeerID } from '../../src/PeerID'
 import { IDhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
+import { NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
 import type { PingResponse } from "../../src/proto//DhtRpc"
 import type { PingRequest } from "../../src/proto//DhtRpc"
 import type { ClosestPeersResponse } from "../../src/proto//DhtRpc"
@@ -18,6 +18,10 @@ class MockRpcClient implements IDhtRpcClient {
     }
     ping(input: PingRequest, options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
         return {} as UnaryCall<PingRequest, PingResponse>
+    }
+
+    routeMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+        return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
 }
 
