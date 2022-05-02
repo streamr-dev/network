@@ -1,4 +1,4 @@
-#  Starting network-monorepo development from scratch on M1 Macs 
+#  Starting network-monorepo development from scratch on an M1 Mac
 
 These instructions were tested on 
 
