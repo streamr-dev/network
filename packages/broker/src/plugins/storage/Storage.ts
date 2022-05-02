@@ -1,5 +1,5 @@
 import { auth, Client, types, tracker } from 'cassandra-driver'
-import { Metric, MetricsContext, RateSampler } from 'streamr-network'
+import { MetricsContext, RateMetric } from 'streamr-network'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'
@@ -232,10 +232,10 @@ export class Storage extends EventEmitter {
 
     enableMetrics(metricsContext: MetricsContext): void {
         const metrics = {
-            readCount: new Metric((m) => new RateSampler(m)),
-            readBytes: new Metric((m) => new RateSampler(m)),
-            writeCount: new Metric((m) => new RateSampler(m)),
-            writeBytes: new Metric((m) => new RateSampler(m)),
+            readCount: new RateMetric(),
+            readBytes: new RateMetric(),
+            writeCount: new RateMetric(),
+            writeBytes: new RateMetric()
         }
         metricsContext.addMetrics('broker/cassandra', metrics)
         this.on('read', (streamMessage: StreamMessage) => {
