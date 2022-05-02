@@ -207,7 +207,7 @@ export class MetricsContext {
     }
     
     createReportProducer(
-        onReport: (report: MetricsReport) => unknown, 
+        onReport: (report: MetricsReport) => void, 
         interval: number,
         formatNumber?: (value: number) => string
     ): { stop: () => void } {
