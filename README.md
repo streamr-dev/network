@@ -31,7 +31,7 @@ Monorepo for Streamr Network packages.
 | NodeJS version `16.13.x` and NPM version `8.x` is required |
 | --- |
 
-Installation on m1 Macs requires additional steps, see [install-on-m1.md](/install-on-m1)
+Installation on an M1 Mac requires additional steps, see [install-on-m1.md](/install-on-m1)
 
 Uses [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces) to manage monorepo.
 
