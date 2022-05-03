@@ -19,7 +19,6 @@ import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migr
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
 interface TestConfig {
-    name: string
     trackerPort: number
     privateKey: string
     httpPort?: null | number
@@ -28,22 +27,19 @@ interface TestConfig {
     enableCassandra?: boolean
     privateKeyFileName?: null | string
     certFileName?: null | string
-    restUrl?: string
     storageConfigRefreshInterval?: number
 }
 
 export const formConfig = ({
-    name,
     trackerPort,
     privateKey,
     httpPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
-    const plugins: Record<string,any> = { ...extraPlugins }
+    const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
             plugins['storage'] = {
@@ -68,9 +64,7 @@ export const formConfig = ({
             auth: {
                 privateKey
             },
-            restUrl,
             network: {
-                name,
                 id: new Wallet(privateKey).address,
                 trackers: [
                     {
@@ -151,7 +145,6 @@ export const createClient = async (
         auth: {
             privateKey
         },
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
         network: networkOptions,
         ...clientOptions,
     })
@@ -263,7 +256,6 @@ export async function startStorageNode(
         client?.destroy()
     }
     return startBroker({
-        name: 'storageNode',
         privateKey: storageNodePrivateKey,
         trackerPort,
         httpPort,

@@ -1,12 +1,12 @@
 import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { Response } from 'node-fetch'
+import { URLSearchParams } from 'url'
+
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FetchOptions, Rest, UrlParts } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
-import { Response } from 'node-fetch'
-import { Session } from '../../../src/Session'
-import { URLSearchParams } from 'url'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
@@ -73,11 +73,6 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    get session(): Session {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     fetch<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
@@ -88,7 +83,7 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    get<T extends object>(_urlParts: UrlParts, _options: FetchOptions = {}): Promise<T> {
+    get<T extends object>(_urlParts: UrlParts, _options: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 

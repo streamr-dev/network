@@ -32,8 +32,7 @@ describe('StreamMessageValidator', () => {
     let groupKeyErrorResponse: StreamMessage
 
     const defaultGetStreamResponse = {
-        partitions: 10,
-        requireSignedData: true
+        partitions: 10
     }
 
     const getValidator = (customConfig?: any) => {
@@ -41,7 +40,7 @@ describe('StreamMessageValidator', () => {
             return new StreamMessageValidator(customConfig)
         } else {
             return new StreamMessageValidator({
-                getStream, isPublisher, isSubscriber, verify, requireBrubeckValidation: false
+                getStream, isPublisher, isSubscriber, verify
             })
         }
     }
@@ -142,97 +141,11 @@ describe('StreamMessageValidator', () => {
             await getValidator().validate(msgWithNewGroupKey)
         })
 
-        it ('rejects unsigned messages when Brubeck validation is required', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireSignedData: false,
-            })
-
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify,
-                requireBrubeckValidation: true
-            }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('accepts unsigned messages that dont need to be signed', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-                requireSignedData: false,
-            })
-
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await getValidator().validate(msg)
-        })
-
-        it('rejects unsigned messages that should be signed', async () => {
+        it('rejects unsigned messages', async () => {
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('accepts valid encrypted messages', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse
-            })
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            await getValidator().validate(msg)
-        })
-
-        it('accepts unencrypted messages if Brubeck validation is required and the stream public', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-            })
-
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-            //msg.getPublisherId = () => { return '0x0000000000000000000000000000000000000000' }
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify,
-                requireBrubeckValidation: true
-            }).validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
-                return true
-            })
-        })
-
-        it('rejects unencrypted messages if Brubeck validation is required', async () => {
-            getStream = sinon.stub().resolves({
-                ...defaultGetStreamResponse,
-            })
-
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-
-            await assert.rejects(getValidator({
-                getStream,
-                isPublisher,
-                isSubscriber,
-                verify,
-                requireBrubeckValidation: true
-            }).validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert((getStream as any).calledOnce, 'getStream not called once!')
                 assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)

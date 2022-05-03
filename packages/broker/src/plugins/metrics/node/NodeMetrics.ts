@@ -1,101 +1,62 @@
-import { MetricsContext } from 'streamr-network'
-import { scheduleAtFixedRate } from '../../../helpers/scheduler'
-import { MetricsPublisher } from './MetricsPublisher'
-import { PERIOD_LENGTHS, Sample } from './Sample'
+import StreamrClient from 'streamr-client'
+import { Logger, MetricsContext, MetricsReport } from 'streamr-network'
 import { SampleFactory } from './Sample'
 
-type AggregatorListener = (data: Sample) => Promise<void>
+const logger = new Logger(module)
 
-/** 
- * Aggregator of timebased samples. Periods are fixed-length UTC periods 
- * (e.g. 24 * 60 * 60 * 1000 is a UTC day from 00:00 (inclusive) to 00:00 next day (exclusive))
- */
-export class Aggregator {
-
-    periodLength: number
-    sampleFactory: SampleFactory
-    listener: AggregatorListener
-    samples: Sample[] = []
-    startTimestamp?: number
-
-    constructor(periodLength: number, sampleFactory: SampleFactory, listener: AggregatorListener) {
-        this.periodLength = periodLength
-        this.sampleFactory = sampleFactory
-        this.listener = listener
-    }
-
-    async addSample(sample: Sample): Promise<void> {
-        this.samples.push(sample)
-        const sampleStart = sample.period.start
-        if (this.startTimestamp === undefined) {
-            const elapsedTime = (sampleStart % this.periodLength)
-            this.startTimestamp = sampleStart - elapsedTime
-        }
-    }
-
-    async addSamples(samples: Sample[]): Promise<void> {
-        for await (const sample of samples) {
-            await this.addSample(sample)
-        }
-    }
-
-    async onTick(now: number): Promise<void> {
-        if ((this.startTimestamp !== undefined) && (now >= this.startTimestamp + this.periodLength)) {
-            const aggregated = await this.sampleFactory.createAggregated(this.samples, {
-                start: this.startTimestamp,
-                end: this.startTimestamp + this.periodLength
-            })
-            await this.listener(aggregated)
-            this.samples = []
-            this.startTimestamp = undefined
-        }
+const PERIODS = {
+    FIVE_SECONDS: {
+        duration: 5 * 1000,
+        streamIdSuffix: 'sec'
+    },
+    ONE_MINUTE: {
+        duration: 60 * 1000,
+        streamIdSuffix: 'min'
+    },
+    ONE_HOUR: {
+        duration: 60 * 60 * 1000,
+        streamIdSuffix: 'hour'
+    },
+    ONE_DAY: {
+        duration: 24 * 60 * 60 * 1000,
+        streamIdSuffix: 'day'
     }
 }
 
 export class NodeMetrics {
 
-    publisher: MetricsPublisher
-    scheduler?: { stop: () => void }
-    sampleFactory: SampleFactory
-    dayAggregator: Aggregator
-    hourAggregator: Aggregator
-    minuteAggregator: Aggregator
+    private readonly client: StreamrClient
+    private readonly streamIdPrefix: string
+    private metricsContext: MetricsContext
+    private producers: { stop: () => void }[] = []
 
-    constructor(metricsContext: MetricsContext, publisher: MetricsPublisher) {
-        this.publisher = publisher
-        const createListener = (propagationTarget?: Aggregator) => {
-            return async (sample: Sample) => {
-                if (propagationTarget !== undefined) {
-                    await propagationTarget.addSample(sample)
-                }
-                this.publisher.publish(sample)
-            }
+    constructor(metricsContext: MetricsContext, client: StreamrClient, streamIdPrefix: string) {
+        this.metricsContext = metricsContext
+        this.client = client
+        this.streamIdPrefix = streamIdPrefix
+    }
+
+    private async publish(report: MetricsReport, streamIdSuffix: string): Promise<void> {
+        const streamId = `${this.streamIdPrefix}${streamIdSuffix}`
+        const nodeId = (await this.client.getNode()).getNodeId()
+        const partitionKey = nodeId.toLowerCase()
+        try {
+            const sample = SampleFactory.createSample(report)
+            await this.client.publish(streamId, sample, undefined, partitionKey)
+        } catch (e: any) {
+            logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
-        this.sampleFactory = new SampleFactory(metricsContext)
-        this.dayAggregator = new Aggregator(PERIOD_LENGTHS.ONE_DAY, this.sampleFactory, createListener())
-        this.hourAggregator = new Aggregator(PERIOD_LENGTHS.ONE_HOUR, this.sampleFactory, createListener(this.dayAggregator))
-        this.minuteAggregator = new Aggregator(PERIOD_LENGTHS.ONE_MINUTE, this.sampleFactory, createListener(this.hourAggregator))
     }
 
     async start(): Promise<void> {
-        this.scheduler = scheduleAtFixedRate(async (now) => {
-            await this.collectSample(now)
-        }, PERIOD_LENGTHS.FIVE_SECONDS)
-    }
-
-    async collectSample(now: number): Promise<void> {
-        const sample = await this.sampleFactory.createPrimary({
-            start: now - PERIOD_LENGTHS.FIVE_SECONDS,
-            end: now
+        this.producers = Object.values(PERIODS).map((period) => {
+            return this.metricsContext.createReportProducer(async (report: MetricsReport) => {
+                await this.publish(report, period.streamIdSuffix)
+            }, period.duration)
         })
-        await this.publisher.publish(sample)
-        await this.minuteAggregator.addSample(sample)
-        for await (const aggregator of [this.minuteAggregator, this.hourAggregator, this.dayAggregator]) {
-            await aggregator.onTick(sample.period.end)
-        }
     }
 
     async stop(): Promise<void> {
-        this.scheduler?.stop()
+        this.producers.forEach((producer) => producer.stop())
     }
 }

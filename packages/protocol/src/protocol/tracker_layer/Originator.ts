@@ -3,6 +3,5 @@ export interface Originator {
     peerType: string
     controlLayerVersions: number[]
     messageLayerVersions: number[]
-    peerName: string | null
     location: any
 }

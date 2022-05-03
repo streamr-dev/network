@@ -15,11 +15,13 @@ import {
     StreamPartStatus,
     DisconnectionCode,
     DisconnectionReason,
-    Metrics,
     MetricsContext,
     Logger,
     COUNTER_LONE_NODE,
-    COUNTER_UNSUBSCRIBE
+    COUNTER_UNSUBSCRIBE,
+    MetricsDefinition,
+    Metric,
+    RateMetric
 } from 'streamr-network'
 import { InstructionSender } from './InstructionSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
@@ -49,6 +51,11 @@ export type OverlayPerStreamPart = Record<StreamPartID, OverlayTopology>
 
 // nodeId => connected nodeId => rtt
 export type OverlayConnectionRtts = Record<NodeId, Record<NodeId, number>>
+
+interface Metrics extends MetricsDefinition {
+    nodeDisconnected: Metric
+    nodeStatusProcessed: Metric
+}
 
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -155,14 +162,16 @@ export class Tracker extends EventEmitter {
         })
         attachRtcSignalling(this.trackerServer)
 
-        this.metrics = metricsContext.create('tracker')
-            .addRecordedMetric('nodeDisconnected')
-            .addRecordedMetric('nodeStatusProcessed')
+        this.metrics = {
+            nodeDisconnected: new RateMetric(),
+            nodeStatusProcessed: new RateMetric()
+        }
+        metricsContext.addMetrics('tracker', this.metrics)
 
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
-            this.metrics
+            metricsContext
         )
     }
 
@@ -172,7 +181,7 @@ export class Tracker extends EventEmitter {
 
     onNodeDisconnected(node: NodeId): void {
         this.logger.debug('node %s disconnected', node)
-        this.metrics.record('nodeDisconnected', 1)
+        this.metrics.nodeDisconnected.record(1)
         this.removeNode(node)
     }
 
@@ -181,7 +190,7 @@ export class Tracker extends EventEmitter {
             return
         }
 
-        this.metrics.record('nodeStatusProcessed', 1)
+        this.metrics.nodeStatusProcessed.record(1)
         const status = statusMessage.status as Status
         const isMostRecent = this.instructionCounter.isMostRecent(status, source)
         if (!isMostRecent) {

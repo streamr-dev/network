@@ -5,7 +5,7 @@ describe('NegotiatedProtocolVersions', () => {
     let negotiatedProtocolVersions: NegotiatedProtocolVersions
 
     beforeEach(() => {
-        const peerInfo = PeerInfo.newNode('node', null, [1,2], [30,31,32])
+        const peerInfo = PeerInfo.newNode('node', [1,2], [30,31,32])
         negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
         negotiatedProtocolVersions.negotiateProtocolVersion('peer2', [1,2,3,4,5], [29,30,31,32,33])
         negotiatedProtocolVersions.negotiateProtocolVersion('peer3', [1,5], [29,31])

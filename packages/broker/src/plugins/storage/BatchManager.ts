@@ -155,19 +155,4 @@ export class BatchManager extends EventEmitter {
             batch.scheduleInsert()
         }
     }
-
-    metrics(): { totalBatches: number, meanBatchAge: number } {
-        const now = Date.now()
-        const { batches, pendingBatches } = this
-        const totalBatches = Object.values(batches).length + Object.values(pendingBatches).length
-        const meanBatchAge = totalBatches === 0 ? 0
-            : [
-                ...Object.values(batches),
-                ...Object.values(pendingBatches)
-            ].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
-        return {
-            totalBatches,
-            meanBatchAge
-        }
-    }
 }

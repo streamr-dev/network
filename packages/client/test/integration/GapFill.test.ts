@@ -7,9 +7,10 @@ import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { getPublishTestStreamMessages, createTestStream, Msg } from '../test-utils/utils'
+import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamPermission } from '../../src'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -51,9 +52,8 @@ describe('GapFill', () => {
         // @ts-expect-error
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        stream = await createTestStream(client, module, {
-            requireSignedData: true
-        })
+        stream = await createTestStream(client, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
@@ -70,7 +70,8 @@ describe('GapFill', () => {
         if (!subscriber || !stream) { return }
         expect(await subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(await subscriber.getSubscriptions()).toEqual([])
+        const subscriptions = await subscriber.getSubscriptions()
+        expect(subscriptions).toHaveLength(0)
     })
 
     afterEach(async () => {
@@ -245,9 +246,7 @@ describe('GapFill', () => {
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
-                stream = await createTestStream(client, module, {
-                    requireSignedData: true,
-                })
+                stream = await createTestStream(client, module)
 
                 await expect(async () => {
                     await client.resend(

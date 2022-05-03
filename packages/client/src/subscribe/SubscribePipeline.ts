@@ -91,7 +91,7 @@ export function SubscribePipeline<T = unknown>(
             await validate.validate(streamMessage)
         })
         // decrypt
-        .forEach(decrypt.decrypt)
+        .map(decrypt.decrypt)
         // parse content
         .forEach(async (streamMessage) => {
             streamMessage.getParsedContent()
