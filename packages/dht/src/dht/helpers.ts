@@ -1,12 +1,7 @@
-import { PeerID } from '../types'
 import { PeerDescriptor } from '../proto/DhtRpc'
 
 export const generateId = (stringId: string): Uint8Array => {
     return Uint8Array.from(Buffer.from(stringId))
-}
-
-export const stringFromId = (id: PeerID): string => {
-    return Buffer.from(id.buffer).toString()
 }
 
 export const nodeFormatPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerDescriptor => {
@@ -15,4 +10,22 @@ export const nodeFormatPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerDe
         peerId: Uint8Array.from(peerDescriptor.peerId)
     }
     return formatted
+}
+
+export function promiseTimeout<T>(ms: number, givenPromise: Promise<T>): Promise<T> {
+    const timeoutPromise = new Promise((resolve, reject) => {
+        const timeoutRef = setTimeout(() => {
+            reject(new Error('timed out in ' + ms + 'ms.'))
+        }, ms)
+
+        // Clear timeout if promise wins race
+        givenPromise
+            .finally(() => clearTimeout(timeoutRef))
+            .catch(() => null)
+    })
+
+    return Promise.race([
+        givenPromise,
+        timeoutPromise
+    ]) as Promise<T>
 }

@@ -5,11 +5,11 @@ import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import {
     createTestStream,
-    describeRepeats,
     fetchPrivateKeyWithGas,
     getPublishTestStreamMessages,
     getWaitForStorage
 } from '../test-utils/utils'
+import { StreamPermission } from '../../src'
 
 const NUM_MESSAGES = 8
 const PARTITIONS = 3
@@ -17,7 +17,7 @@ const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 20000 : 10000
 
 jest.setTimeout(60000)
 
-describeRepeats('ResendAll', () => {
+describe('ResendAll', () => {
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -42,6 +42,7 @@ describeRepeats('ResendAll', () => {
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('createStream <<')
         client.debug('addToStorageNode >>')
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)

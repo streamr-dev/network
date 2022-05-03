@@ -1,7 +1,12 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    getCreateClient, getPublishTestMessages, describeRepeats, uid, addAfterFn, createTestStream, fetchPrivateKeyWithGas,
+    addAfterFn,
+    createTestStream,
+    fetchPrivateKeyWithGas,
+    getCreateClient,
+    getPublishTestMessages,
+    uid,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
@@ -15,7 +20,7 @@ jest.setTimeout(50000)
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
 
-describeRepeats('PubSub with multiple clients', () => {
+describe('PubSub with multiple clients', () => {
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient
@@ -486,9 +491,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 privateKey: await fetchPrivateKeyWithGas()
             }
         })
-        // otherClient.on('error', getOnError(errors))
-        const otherUser = await otherClient.getAddress()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await otherClient.connect()
 
         const receivedMessagesOther: Record<string, any[]> = {}

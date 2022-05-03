@@ -10,15 +10,11 @@ program
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('[configFile]')
-    .option('--restUrl <url>', 'override restUrl with given value')
     .option('--networkId <id>', 'override networkId with given value')
     .option('--test', 'test the configuration (does not start the broker)')
     .action(async (configFile) => {
         try {
             const config = readConfigAndMigrateIfNeeded(configFile)
-            if (program.opts().restUrl) {
-                config.client.restUrl = program.opts().restUrl
-            }
             if (program.opts().networkId) {
                 config.network.id = program.opts().networkId
             }

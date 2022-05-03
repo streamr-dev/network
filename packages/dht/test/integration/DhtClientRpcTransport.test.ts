@@ -1,4 +1,4 @@
-import { ClosestPeersResponse, PeerDescriptor, RpcWrapper } from '../../src/proto/DhtRpc'
+import { ClosestPeersResponse, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
@@ -19,19 +19,19 @@ describe('DhtClientRpcTransport', () => {
         const mockConnectionManager = new MockConnectionManager()
         const rpcCommunicator = new RpcCommunicator(mockConnectionManager, clientTransport, serverTransport)
         rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
-            const request = RpcWrapper.fromBinary(bytes)
+            const request = RpcMessage.fromBinary(bytes)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
                 nonce: 'TO BE REMOVED'
             }
-            const response: RpcWrapper = {
+            const response: RpcMessage = {
                 header: {
                     response: 'hiihii'
                 },
                 body: ClosestPeersResponse.toBinary(responseBody),
                 requestId: request.requestId
             }
-            rpcCommunicator.onIncomingMessage(peerDescriptor, RpcWrapper.toBinary(response))
+            rpcCommunicator.onIncomingMessage(peerDescriptor, RpcMessage.toBinary(response))
         })
 
         const client = new DhtRpcClient(clientTransport)

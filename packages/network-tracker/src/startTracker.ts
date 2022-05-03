@@ -24,7 +24,6 @@ export interface TrackerOptions extends AbstractNodeOptions {
 export const startTracker = async ({
     listen,
     id = uuidv4(),
-    name,
     location,
     attachHttpEndpoints = true,
     maxNeighborsPerNode = DEFAULT_MAX_NEIGHBOR_COUNT,
@@ -34,7 +33,7 @@ export const startTracker = async ({
     certFileName,
     topologyStabilization
 }: TrackerOptions): Promise<Tracker> => {
-    const peerInfo = PeerInfo.newTracker(id, name, undefined, undefined, location)
+    const peerInfo = PeerInfo.newTracker(id, undefined, undefined, location)
     const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
     const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, trackerPingInterval)
 
@@ -49,7 +48,7 @@ export const startTracker = async ({
     })
 
     if (attachHttpEndpoints) {
-        trackerHttpEndpoints(httpServer, tracker, metricsContext)
+        trackerHttpEndpoints(httpServer, tracker)
     }
 
     return tracker

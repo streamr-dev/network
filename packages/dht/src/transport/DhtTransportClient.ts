@@ -14,7 +14,7 @@ import {
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
 import { TODO } from '../types'
-import { PeerDescriptor, RpcWrapper } from '../proto/DhtRpc'
+import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 
 export enum Event {
@@ -22,7 +22,7 @@ export enum Event {
 }
 
 export interface DhtTransportClient {
-    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcWrapper: RpcWrapper) => void): this
+    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => void): this
 }
 
 export interface DeferredPromises {
@@ -39,11 +39,18 @@ export interface DhtRpcOptions extends RpcOptions {
 }
 
 export class DhtTransportClient extends EventEmitter implements RpcTransport {
+    static objectCount = 0
+    private objectId = 1    
     protected readonly defaultOptions: TODO
 
     constructor() {
         super()
-        this.defaultOptions = {}
+        this.objectId = DhtTransportClient.objectCount
+        DhtTransportClient.objectCount++
+        
+        this.defaultOptions = {
+            timeout: 2000
+        }
     }
 
     mergeOptions(options?: Partial<DhtRpcOptions>): RpcOptions {
@@ -65,7 +72,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             defStatus = new Deferred<RpcStatus>(),
             defTrailer = new Deferred<RpcMetadata>()
 
-        const request: RpcWrapper = {
+        const request: RpcMessage = {
             header: this.createRequestHeaders(method),
             body: requestBody,
             requestId: v4(),
@@ -90,7 +97,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             status: defStatus,
             messageParser: deferredParser
         }
-        this.emit(Event.RPC_REQUEST, deferred, request)
+        this.emit(Event.RPC_REQUEST, deferred, request, options)
         return unary
     }
 

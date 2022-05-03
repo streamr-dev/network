@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
@@ -18,36 +19,34 @@ describe('Resends', () => {
             stream = await client.createStream({
                 id: await createRelativeTestStreamId(module),
             })
+            await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         })
 
         it('happy path', async () => {
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const mockId = Date.now()
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {
-                    mockId
-                }
-            })
-            const publishedMsg = await client.publish(stream.id, msg.getParsedContent())
+            const content = {
+                foo: Date.now()
+            }
+            const publishedMsg = await client.publish(stream.id, content)
             await client.waitForStorage(publishedMsg)
         })
 
         it('no match', async () => {
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-            const msg = new StreamMessage({
-                messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
-                content: {}
-            })
-            const publishedMsg = await client.publish(stream.id, msg.getParsedContent())
+            const content = {
+                foo: Date.now()
+            }
+            const publishedMsg = await client.publish(stream.id, content)
             const messageMatchFn = jest.fn().mockReturnValue(false)
-            await expect(() => client.waitForStorage(msg, {
+            await expect(() => client.waitForStorage(publishedMsg, {
                 interval: 50,
                 timeout: 100,
                 count: 1,
                 messageMatchFn
             })).rejects.toThrow('timed out')
-            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), publishedMsg)
+            expect(messageMatchFn).toHaveBeenCalledWith(expect.anything(), expect.anything())
+            expect(messageMatchFn.mock.calls[0][0].getParsedContent()).toEqual(content)
+            expect(messageMatchFn.mock.calls[0][1].getParsedContent()).toEqual(content)
         })
 
         it('no message', async () => {

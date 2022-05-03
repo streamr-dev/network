@@ -6,4 +6,5 @@ export enum Event {
 
 export interface ConnectionSource {
     on(event: Event.NEW_CONNECTION, listener: (connection: Connection) => void): this
+    once(event: Event.NEW_CONNECTION, listener: (connection: Connection) => void): this
 }

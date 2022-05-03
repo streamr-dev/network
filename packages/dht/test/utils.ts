@@ -1,14 +1,14 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { generateId } from '../src/dht/helpers'
 import { DhtTransportClient } from '../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../src/transport/DhtTransportServer'
 import { MockConnectionManager } from '../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../src/proto/DhtRpc.client'
-import { ClosestPeersRequest, PeerDescriptor, RpcWrapper } from '../src/proto/DhtRpc'
+import { ClosestPeersRequest, PeerDescriptor, RpcMessage } from '../src/proto/DhtRpc'
+import { PeerID } from '../src/PeerID'
 
 export const createMockConnectionDhtNode = (stringId: string): DhtNode => {
-    const id = generateId(stringId)
+    const id = PeerID.fromString(stringId)
     const clientTransport = new DhtTransportClient()
     const serverTransport = new DhtTransportServer()
     const mockConnectionLayer = new MockConnectionManager()
@@ -20,13 +20,13 @@ export const createMockConnectionDhtNode = (stringId: string): DhtNode => {
 export const createWrappedClosestPeersRequest = (
     sourceDescriptor: PeerDescriptor,
     destinationDescriptor: PeerDescriptor
-): RpcWrapper => {
+): RpcMessage => {
 
     const routedMessage: ClosestPeersRequest = {
         peerDescriptor: sourceDescriptor,
         nonce: '11111'
     }
-    const rpcWrapper: RpcWrapper = {
+    const rpcWrapper: RpcMessage = {
         body: ClosestPeersRequest.toBinary(routedMessage),
         header: {
             method: 'closestPeersRequest',
