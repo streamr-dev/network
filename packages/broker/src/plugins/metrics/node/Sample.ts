@@ -34,7 +34,7 @@ export class SampleFactory {
                 publishBytesPerSecond: report.node.publishBytesPerSecond,
                 latencyAverageMs: report.node?.latencyAverageMs,
                 sendBytesPerSecond: report.node.sendBytesPerSecond,
-                receiveBytesPerSecond: report.node.receiveMessagesPerSecond,
+                receiveBytesPerSecond: report.node.receiveBytesPerSecond,
                 connectionAverageCount: report.node.connectionAverageCount,
                 connectionTotalFailureCount: report.node.connectionTotalFailureCount
             },
