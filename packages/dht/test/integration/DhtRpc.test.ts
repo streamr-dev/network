@@ -9,7 +9,7 @@ import { generateId } from '../../src/dht/helpers'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
-import RpcTimeoutError = Err.RpcTimeoutError
+import RpcTimeoutError = Err.RpcTimeout
 import { afterEach } from 'jest-circus'
 
 describe('DhtClientRpcTransport', () => {
@@ -107,12 +107,20 @@ describe('DhtClientRpcTransport', () => {
             await wait(3000)
             return new Uint8Array()
         })
-        const response2 = client2.getClosestPeers(
+        const response = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response2.response).rejects.toEqual(
+        await expect(response.response).rejects.toEqual(
             new RpcTimeoutError('Server error on request')
         )
+    })
+
+    it('Server responds with error on unknown method', async () => {
+        const response = client2.ping(
+            { nonce: '1' },
+            { targetDescriptor: peerDescriptor1 }
+        )
+        await expect(response.response).rejects.toEqual(new Error('Server does not implement method ping'))
     })
 })

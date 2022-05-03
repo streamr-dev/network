@@ -5,7 +5,10 @@ export enum ErrorCode {
     CONNECTION_FAILED = 'CONNECTION_FAILED',
     FILE_NOT_FOUND = 'FILE_NOT_FOUND',
     RPC_TIMEOUT = 'RPC_TIMEOUT',
-    RPC_REQUEST = 'RPC_REQUEST'
+    RPC_REQUEST = 'RPC_REQUEST',
+    COULD_NOT_ROUTE = 'COULD_NOT_ROUTE',
+    NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
+    UNKNOWN_RPC_METHOD = 'UNKNOWN_RPC_METHOD'
 }
 
 export namespace Err {
@@ -18,6 +21,9 @@ export namespace Err {
 
     export class ConnectionFailed extends Err { constructor( message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_FAILED, message, originalError) } }
     export class FileNotFound extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.FILE_NOT_FOUND, message, originalError) } }
-    export class RpcTimeoutError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_TIMEOUT, message, originalError) } }
-    export class RpcRequestError extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_REQUEST, message, originalError) } }
+    export class RpcTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_TIMEOUT, message, originalError) } }
+    export class RpcRequest extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.RPC_REQUEST, message, originalError) } }
+    export class CouldNotRoute extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_ROUTE, message, originalError) } }
+    export class NotImplemented extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NOT_IMPLEMENTED, message, originalError) } }
+    export class UnknownRpcMethod extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError) } }
 }

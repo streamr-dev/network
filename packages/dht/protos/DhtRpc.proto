@@ -66,6 +66,7 @@ enum RpcResponseError {
   SERVER_TIMOUT = 0;
   CLIENT_TIMEOUT = 1;
   SERVER_ERROR = 2;
+  UNKNOWN_RPC_METHOD = 3;
 }
 
 message RouteMessageWrapper {

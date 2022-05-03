@@ -1,5 +1,5 @@
 import EventEmitter = require('events')
-import { Err } from '../errors'
+import { Err, ErrorCode } from '../errors'
 import {
     DeferredPromises,
     DhtRpcOptions,
@@ -91,6 +91,10 @@ export class RpcCommunicator extends EventEmitter {
                 sourceDescriptor: rpcMessage.targetDescriptor
             }
         } catch (err) {
+            let errorType = RpcResponseError.SERVER_ERROR
+            if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
+                errorType = RpcResponseError.UNKNOWN_RPC_METHOD
+            }
             responseWrapper = {
                 body: new Uint8Array(),
                 header: {
@@ -100,7 +104,7 @@ export class RpcCommunicator extends EventEmitter {
                 requestId: rpcMessage.requestId,
                 targetDescriptor: rpcMessage.sourceDescriptor,
                 sourceDescriptor: rpcMessage.targetDescriptor,
-                responseError: RpcResponseError.SERVER_ERROR
+                responseError: errorType
             }
         }
 
@@ -140,9 +144,11 @@ export class RpcCommunicator extends EventEmitter {
         }
         let error
         if (response.responseError === RpcResponseError.SERVER_TIMOUT) {
-            error = new Err.RpcTimeoutError('Server timed out on request', response.requestId)
+            error = new Err.RpcTimeout('Server timed out on request')
+        } else if (response.responseError === RpcResponseError.UNKNOWN_RPC_METHOD) {
+            error = new Err.RpcRequest(`Server does not implement method ${response.header.method}`)
         } else {
-            error = new Err.RpcRequestError('Server error on request', response.requestId)
+            error = new Err.RpcRequest('Server error on request')
         }
         const deferredPromises = ongoingRequest!.deferredPromises
         deferredPromises.message.reject(error)
@@ -153,7 +159,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     requestTimeoutFn(deferredPromises: DeferredPromises): void {
-        const error = new Err.RpcTimeoutError('Rpc request timed out')
+        const error = new Err.RpcTimeout('Rpc request timed out')
         deferredPromises.message.reject(error)
         deferredPromises.header.reject(error)
         deferredPromises.status.reject({code: 'DEADLINE_EXCEEDED', detail: 'Rpc request timed out'})
