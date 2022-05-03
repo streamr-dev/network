@@ -48,7 +48,9 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         this.objectId = DhtTransportClient.objectCount
         DhtTransportClient.objectCount++
         
-        this.defaultOptions = {}
+        this.defaultOptions = {
+            timeout: 2000
+        }
     }
 
     mergeOptions(options?: Partial<DhtRpcOptions>): RpcOptions {
@@ -95,7 +97,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
             status: defStatus,
             messageParser: deferredParser
         }
-        this.emit(Event.RPC_REQUEST, deferred, request)
+        this.emit(Event.RPC_REQUEST, deferred, request, options)
         return unary
     }
 
