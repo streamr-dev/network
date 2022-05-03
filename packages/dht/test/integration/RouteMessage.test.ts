@@ -16,6 +16,7 @@ describe('Route Message With Mock Connections', () => {
 
     let rpcCommunicators: Map<string, RpcCommunicator>
 
+    const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
 
@@ -31,7 +32,6 @@ describe('Route Message With Mock Connections', () => {
             }
         }
 
-        const entryPointId = '0'
         entryPoint = createMockConnectionDhtNode(entryPointId)
         entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
         rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())

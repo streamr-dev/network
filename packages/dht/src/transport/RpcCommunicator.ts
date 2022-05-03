@@ -33,7 +33,14 @@ export class RpcCommunicator extends EventEmitter {
     private readonly connectionLayer: IConnectionManager
     private readonly ongoingRequests: Map<string, OngoingRequest>
     public send: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void
-    constructor(connectionLayer: IConnectionManager, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
+    private readonly defaultRpcRequestTimeout: number
+
+    constructor(
+        connectionLayer: IConnectionManager,
+        dhtTransportClient: DhtTransportClient,
+        dhtTransportServer: DhtTransportServer,
+        rpcRequestTimeout?: number
+    ) {
         super()
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
@@ -52,6 +59,7 @@ export class RpcCommunicator extends EventEmitter {
         this.connectionLayer.on(ConnectionLayerEvent.DATA, async (peerDescriptor: PeerDescriptor, bytes: Uint8Array) =>
             await this.onIncomingMessage(peerDescriptor, bytes)
         )
+        this.defaultRpcRequestTimeout = rpcRequestTimeout || 5000
     }
 
     onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
@@ -76,42 +84,32 @@ export class RpcCommunicator extends EventEmitter {
         }
     }
 
-    async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
-        let responseWrapper: RpcMessage
-        try {
-            const bytes = await this.dhtTransportServer.onRequest(senderDescriptor, rpcMessage)
-            responseWrapper = {
-                body: bytes,
-                header: {
-                    response: "response",
-                    method: rpcMessage.header.method
-                },
-                requestId: rpcMessage.requestId,
-                targetDescriptor: rpcMessage.sourceDescriptor,
-                sourceDescriptor: rpcMessage.targetDescriptor
-            }
-        } catch (err) {
-            let errorType = RpcResponseError.SERVER_ERROR
-            if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
-                errorType = RpcResponseError.UNKNOWN_RPC_METHOD
-            }
-            responseWrapper = {
-                body: new Uint8Array(),
-                header: {
-                    response: "response",
-                    method: rpcMessage.header.method
-                },
-                requestId: rpcMessage.requestId,
-                targetDescriptor: rpcMessage.sourceDescriptor,
-                sourceDescriptor: rpcMessage.targetDescriptor,
-                responseError: errorType
-            }
-        }
-
-        this.onOutgoingMessage(responseWrapper)
+    setSendFn(fn: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void): void {
+        this.send = fn.bind(this)
     }
 
-    registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = 5000): void {
+    private async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        let response: RpcMessage
+        try {
+            const bytes = await this.dhtTransportServer.onRequest(senderDescriptor, rpcMessage)
+            response = this.createResponseRpcMessage({
+                request: rpcMessage,
+                body: bytes
+            })
+        } catch (err) {
+            let responseError = RpcResponseError.SERVER_ERROR
+            if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
+                responseError = RpcResponseError.UNKNOWN_RPC_METHOD
+            }
+            response = this.createResponseRpcMessage({
+                request: rpcMessage,
+                responseError
+            })
+        }
+        this.onOutgoingMessage(response)
+    }
+
+    private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {
         const ongoingRequest: OngoingRequest = {
             deferredPromises,
             timeoutRef: setTimeout(() => this.requestTimeoutFn(deferredPromises), timeout)
@@ -119,25 +117,17 @@ export class RpcCommunicator extends EventEmitter {
         this.ongoingRequests.set(requestId, ongoingRequest)
     }
 
-    setSendFn(fn: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void): void {
-        this.send = fn.bind(this)
-    }
-
-    resolveOngoingRequest(response: RpcMessage): void {
+    private resolveOngoingRequest(response: RpcMessage): void {
         const ongoingRequest = this.ongoingRequests.get(response.requestId)!
         if (ongoingRequest.timeoutRef) {
             clearTimeout(ongoingRequest.timeoutRef)
         }
         const deferredPromises = ongoingRequest!.deferredPromises
-        const parsedResponse = deferredPromises.messageParser(response.body)
-        deferredPromises.message.resolve(parsedResponse)
-        deferredPromises.header.resolve({})
-        deferredPromises.status.resolve({code: 'OK', detail: ''})
-        deferredPromises.trailer.resolve({})
+        this.resolveDeferredPromises(deferredPromises, response)
         this.ongoingRequests.delete(response.requestId)
     }
 
-    rejectOngoingRequest(response: RpcMessage): void {
+    private rejectOngoingRequest(response: RpcMessage): void {
         const ongoingRequest = this.ongoingRequests.get(response.requestId)!
         if (ongoingRequest.timeoutRef) {
             clearTimeout(ongoingRequest.timeoutRef)
@@ -151,19 +141,44 @@ export class RpcCommunicator extends EventEmitter {
             error = new Err.RpcRequest('Server error on request')
         }
         const deferredPromises = ongoingRequest!.deferredPromises
-        deferredPromises.message.reject(error)
-        deferredPromises.header.reject(error)
-        deferredPromises.status.reject({code: 'SERVER_ERROR', detail: error.message})
-        deferredPromises.trailer.reject(error)
+        this.rejectDeferredPromises(deferredPromises, error, 'SERVER_ERROR')
         this.ongoingRequests.delete(response.requestId)
     }
 
-    requestTimeoutFn(deferredPromises: DeferredPromises): void {
+    private requestTimeoutFn(deferredPromises: DeferredPromises): void {
         const error = new Err.RpcTimeout('Rpc request timed out')
+        this.rejectDeferredPromises(deferredPromises, error, 'DEADLINE_EXCEEDED')
+    }
+
+    private rejectDeferredPromises(deferredPromises: DeferredPromises, error: Error, code: string): void {
         deferredPromises.message.reject(error)
         deferredPromises.header.reject(error)
-        deferredPromises.status.reject({code: 'DEADLINE_EXCEEDED', detail: 'Rpc request timed out'})
+        deferredPromises.status.reject({code, detail: error.message})
         deferredPromises.trailer.reject(error)
+    }
+
+    private resolveDeferredPromises(deferredPromises: DeferredPromises, response: RpcMessage): void {
+        const parsedResponse = deferredPromises.messageParser(response.body)
+        deferredPromises.message.resolve(parsedResponse)
+        deferredPromises.header.resolve({})
+        deferredPromises.status.resolve({ code: 'OK', detail: '' })
+        deferredPromises.trailer.resolve({})
+    }
+
+    private createResponseRpcMessage(
+        { request, body, responseError }: { request: RpcMessage, body?: Uint8Array, responseError?: RpcResponseError }
+    ): RpcMessage {
+        return {
+            body: body ? body : new Uint8Array(),
+            header: {
+                response: "response",
+                method: request.header.method
+            },
+            requestId: request.requestId,
+            targetDescriptor: request.sourceDescriptor,
+            sourceDescriptor: request.targetDescriptor,
+            responseError
+        }
     }
 
     stop(): void {
