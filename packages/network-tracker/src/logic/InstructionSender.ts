@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { StreamPartID } from 'streamr-client-protocol'
-import { Logger, NodeId, Metrics } from 'streamr-network'
+import { Logger, NodeId, MetricsContext, MetricsDefinition, Metric, RateMetric } from 'streamr-network'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
@@ -65,6 +65,10 @@ export type SendInstructionFn = (
     counter: number
 ) => Promise<void>
 
+interface Metrics extends MetricsDefinition {
+    instructionSent: Metric
+}
+
 export class InstructionSender {
     private readonly streamPartBuffers = new Map<StreamPartID, StreamPartInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
@@ -74,12 +78,14 @@ export class InstructionSender {
     constructor(
         options: TopologyStabilizationOptions | undefined,
         sendInstruction: SendInstructionFn,
-        metrics: Metrics
+        metricsContext: MetricsContext
     ) {
         this.options = options ?? DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS
         this.sendInstruction = sendInstruction
-        this.metrics = metrics
-            .addRecordedMetric('instructionSent')
+        this.metrics = {
+            instructionSent: new RateMetric()
+        }
+        metricsContext.addMetrics('tracker', this.metrics)
     }
 
     addInstruction(instruction: Instruction): void {
@@ -108,7 +114,7 @@ export class InstructionSender {
     private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
             .map(async ({ nodeId, streamPartId, newNeighbors, counterValue }) => {
-                this.metrics.record('instructionSent', 1)
+                this.metrics.instructionSent.record(1)
                 try {
                     await this.sendInstruction(
                         nodeId,

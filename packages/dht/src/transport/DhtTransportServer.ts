@@ -1,6 +1,9 @@
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { promiseTimeout } from '../dht/helpers'
+import { Err } from '../errors'
+import UnknownRpcMethod = Err.UnknownRpcMethod
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
@@ -22,8 +25,12 @@ export class DhtTransportServer extends EventEmitter {
     }
 
     async onRequest(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<Uint8Array> {
-        const fn = this.methods.get(rpcMessage.header.method)!
-        return await fn(rpcMessage.body)
+        const methodName = rpcMessage.header.method
+        const fn = this.methods.get(methodName)
+        if (!fn) {
+            throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
+        }
+        return await promiseTimeout(1000, fn!(rpcMessage.body))
     }
 
     registerMethod(name: string, fn: RegisteredMethod): void {
@@ -62,11 +69,11 @@ export class DummyServerCallContext implements ServerCallContext {
         detail: ''
     }
     sendResponseHeaders(_data: RpcMetadata): void {
-        throw new Error('Method not implemented.')
+        throw new Err.NotImplemented('Method not implemented.')
     }
     cancelled = false
     onCancel(_cb: () => void): () => void {
-        throw new Error('Method not implemented.')
+        throw new Err.NotImplemented('Method not implemented.')
     }
     constructor() {}
 }

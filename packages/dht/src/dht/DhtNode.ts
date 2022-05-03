@@ -12,6 +12,7 @@ import { PeerDescriptor, RouteMessageType, RouteMessageWrapper } from '../proto/
 import { IMessageRouter, RouteMessageParams, Event as MessageRouterEvent } from '../rpc-protocol/IMessageRouter'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
+import { Err } from '../errors'
 
 export class DhtNode extends EventEmitter implements IMessageRouter {
     static objectCounter = 0
@@ -149,7 +150,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         }
         // Only throw if originator
         if (successAcks === 0 && this.selfId.equals(PeerID.fromValue(params.sourcePeer!.peerId))) {
-            throw new Error('Could not route message forward')
+            throw new Err.CouldNotRoute(`Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toString()} failed.`)
         }
     }
 

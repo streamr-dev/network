@@ -7,6 +7,8 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/dht/helpers'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { wait } from 'streamr-test-utils'
+import { Err } from '../../src/errors'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
@@ -20,7 +22,17 @@ describe('DhtClientRpcTransport', () => {
         client1: DhtRpcClient,
         client2: DhtRpcClient
 
-    beforeAll(() => {
+    const peerDescriptor1: PeerDescriptor = {
+        peerId: generateId('peer1'),
+        type: 0
+    }
+
+    const peerDescriptor2: PeerDescriptor = {
+        peerId: generateId('peer2'),
+        type: 0
+    }
+
+    beforeEach(() => {
         clientTransport1 = new DhtTransportClient()
         serverTransport1 = new DhtTransportServer()
         serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
@@ -33,9 +45,16 @@ describe('DhtClientRpcTransport', () => {
         mockConnectionLayer2 = new MockConnectionManager()
         rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
+        clientTransport2 = new DhtTransportClient()
+        serverTransport2 = new DhtTransportServer()
+        serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
+        mockConnectionLayer2 = new MockConnectionManager()
+        rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
+
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
         })
+        
         rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
         })
@@ -44,17 +63,16 @@ describe('DhtClientRpcTransport', () => {
         client2 = new DhtRpcClient(clientTransport2)
     })
 
+    afterEach(async () => {
+        await rpcCommunicator1.stop()
+        await rpcCommunicator2.stop()
+        await serverTransport1.stop()
+        await serverTransport2.stop()
+        await clientTransport1.stop()
+        await clientTransport2.stop()
+    })
+    
     it('Happy path', async () => {
-
-        const peerDescriptor1: PeerDescriptor = {
-            peerId: generateId('peer1'),
-            type: 0
-        }
-
-        const peerDescriptor2: PeerDescriptor = {
-            peerId: generateId('peer2'),
-            type: 0
-        }
         const response1 = client1.getClosestPeers(
             { peerDescriptor: peerDescriptor1, nonce: '1' },
             { targetDescriptor: peerDescriptor2 }
@@ -69,5 +87,41 @@ describe('DhtClientRpcTransport', () => {
         const res2 = await response2.response
         expect(res2.peers).toEqual(getMockPeers())
     })
+    
+    it('Default RPC timeout, client side', async () => {
+        rpcCommunicator2.setSendFn(async (_peerDescriptor: PeerDescriptor, _messsage: Message) => {
+            await wait(3000)
+        })
+        const response2 = client2.getClosestPeers(
+            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { targetDescriptor: peerDescriptor1 }
+        )
+        await expect(response2.response).rejects.toEqual(
+            new Err.RpcTimeout('Rpc request timed out')
+        )
+    })
 
+    it('Server side timeout', async () => {
+        serverTransport1.registerMethod('getClosestPeers', async () => {
+            await wait(3000)
+            return new Uint8Array()
+        })
+        const response = client2.getClosestPeers(
+            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { targetDescriptor: peerDescriptor1 }
+        )
+        await expect(response.response).rejects.toEqual(
+            new Err.RpcTimeout('Server error on request')
+        )
+    })
+    
+    it('Server responds with error on unknown method', async () => {
+        const response = client2.ping(
+            { nonce: '1' },
+            { targetDescriptor: peerDescriptor1 }
+        )
+        await expect(response.response).rejects.toEqual(
+            new Err.UnknownRpcMethod('Server does not implement method ping')
+        )
+    })
 })

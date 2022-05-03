@@ -154,11 +154,29 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Releasing
 
+### Network
+```
+git checkout main
+cd packages/network
+npm version <SEMVER_OPTION>
+# Go thru other packages' package.json and update streamr-network entry (if present) to newly generated version
+git add package.json
+git commit -m "release(network): vX.Y.Z"
+git tag network/vX.Y.Z
+git push origin
+git push origin network/vX.Y.Z
+
+npm publish
+```
+
 ### Client
+- Update & Editorialize CHANGELOG.md as necessary 
+
 ```
 git checkout main
 cd packages/client
 npm version <SEMVER_OPTION>
+# Go thru broker's and cli-tools' package.json and update streamr-client entry to newly generated version
 git add package.json
 git commit -m "release(client): vX.Y.Z"
 git tag client/vX.Y.Z
@@ -175,6 +193,39 @@ cd ..
 npm run docs
 aws s3 cp ./docs s3://api-docs.streamr.network/client/vX.Y --recursive --profile streamr-api-docs-upload
 # and update the API reference link in s3://api-docs.streamr.network/index.html
+```
+
+### cli-tools
+- Update & Editorialize CHANGELOG.md as necessary 
+
+```
+git checkout main
+cd packages/cli-tools
+npm version <SEMVER_OPTION>
+git add package.json
+git commit -m "release(cli-tools): vX.Y.Z"
+git tag cli-tools/vX.Y.Z
+git push origin
+git push origin cli-tools/vX.Y.Z
+
+npm run build
+npm publish
+```
+
+
+### broker
+```
+git checkout main
+cd packages/broker
+npm version <SEMVER_OPTION>
+git add package.json
+git commit -m "release(broker): vX.Y.Z"
+git tag broker/vX.Y.Z
+git push origin
+git push origin broker/vX.Y.Z
+
+npm run build
+npm publish
 ```
 
 ## Important changes to the bootstrap/install scripts as of 48e165f:

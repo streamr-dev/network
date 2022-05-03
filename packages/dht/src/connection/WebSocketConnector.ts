@@ -19,6 +19,7 @@ export class WebSocketConnector extends EventEmitter implements ConnectionSource
         else if (host && port) {
             address = 'ws://' + host + ':' + port
         }
+
         socket.connect(address)
         return socket
     }

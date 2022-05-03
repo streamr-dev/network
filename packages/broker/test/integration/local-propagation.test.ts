@@ -26,7 +26,6 @@ describe('local propagation', () => {
         brokerWallet = new Wallet(await fetchPrivateKeyWithGas())
 
         broker = await startBroker({
-            name: 'broker1',
             privateKey: brokerWallet.privateKey,
             trackerPort,
             httpPort,

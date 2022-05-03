@@ -76,8 +76,7 @@ export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, ca
 }
 
 const MockDhtRpc: IDhtRpc = {
-    async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
-        console.info('RPC server processing getClosestPeers request for', request.peerDescriptor!.peerId)
+    async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
             peers: neighbors,

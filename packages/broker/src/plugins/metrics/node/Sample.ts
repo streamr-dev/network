@@ -1,17 +1,4 @@
-import _ from 'lodash'
-import { MetricsContext } from 'streamr-network'
-
-export interface Period {
-    start: number,
-    end: number
-}
-
-export const PERIOD_LENGTHS = {
-    FIVE_SECONDS: 5 * 1000,
-    ONE_MINUTE: 60 * 1000,
-    ONE_HOUR: 60 * 60 * 1000,
-    ONE_DAY: 24 * 60 * 60 * 1000
-}
+import { MetricsReport } from 'streamr-network'
 
 export interface Sample {
     broker: {
@@ -29,77 +16,35 @@ export interface Sample {
         bytesWrittenPerSec: number
         bytesReadPerSec: number
     }
-    period: Period,
+    period: {
+        start: number,
+        end: number
+    }
 }
 
 const CONTEXT_STORAGE = 'broker/cassandra'
 
-const areStorageMetricsAvailable = (metricsContext: MetricsContext): boolean => {
-    // TODO add a method to metricsContext to query current metrics
-    return (metricsContext as any).metrics[CONTEXT_STORAGE] !== undefined
-}
-
 export class SampleFactory {
 
-    static BASIC_METRICS = [
-        'broker.messagesToNetworkPerSec',
-        'broker.bytesToNetworkPerSec',
-        'network.avgLatencyMs',
-        'network.bytesToPeersPerSec',
-        'network.bytesFromPeersPerSec',
-        'network.connections',
-        'network.webRtcConnectionFailures'
-    ]
-    
-    static STORAGE_METRICS = [
-        'storage.bytesWrittenPerSec',
-        'storage.bytesReadPerSec',
-    ]
-
-    metricsContext: MetricsContext
-    storageMetricsEnabled: boolean
-
-    constructor(metricsContext: MetricsContext) {
-        this.metricsContext = metricsContext
-        this.storageMetricsEnabled = areStorageMetricsAvailable(metricsContext)
-    }
-
-    async createPrimary(period: Period): Promise<Sample> {
-        const metricsReport = await this.metricsContext.report(true)
+    static createSample(report: MetricsReport): Sample {
+        const storageMetricsEnabled = report[CONTEXT_STORAGE] !== undefined
         return {
             broker: {
-                messagesToNetworkPerSec: (metricsReport.metrics['node/publish'].count as any).rate as number,
-                bytesToNetworkPerSec: (metricsReport.metrics['node/publish'].bytes as any).rate as number,
+                messagesToNetworkPerSec: report['node/publish'].count,
+                bytesToNetworkPerSec: report['node/publish'].bytes,
             },
             network: {
-                avgLatencyMs: metricsReport.metrics.node.latency as number,
-                bytesToPeersPerSec: (metricsReport.metrics.WebRtcEndpoint.outSpeed as any).rate,
-                bytesFromPeersPerSec: (metricsReport.metrics.WebRtcEndpoint.inSpeed as any).rate,
-                connections: metricsReport.metrics.WebRtcEndpoint.connections as number,
-                webRtcConnectionFailures: (metricsReport.metrics.WebRtcEndpoint.failedConnection as any).last
+                avgLatencyMs: report.node?.latency,
+                bytesToPeersPerSec: report.WebRtcEndpoint.outSpeed,
+                bytesFromPeersPerSec: report.WebRtcEndpoint.inSpeed,
+                connections: report.WebRtcEndpoint.connections,
+                webRtcConnectionFailures: report.WebRtcEndpoint.failedConnection
             },
-            storage: (this.storageMetricsEnabled) ? {
-                bytesWrittenPerSec: (metricsReport.metrics[CONTEXT_STORAGE].writeBytes as any).rate,
-                bytesReadPerSec: (metricsReport.metrics[CONTEXT_STORAGE].readBytes as any).rate,
+            storage: (storageMetricsEnabled) ? {
+                bytesWrittenPerSec: report[CONTEXT_STORAGE].writeBytes,
+                bytesReadPerSec: report[CONTEXT_STORAGE].readBytes
             } : undefined,
-            period
+            period: report.period
         }
-    }
-
-    createAggregated(samples: Sample[], period: Period): Sample {
-        const result: Partial<Sample> = {
-            period
-        }
-        const fillAverages = (fields: string[]) => {
-            fields.forEach((field) => {
-                const fieldValues = samples.map((data) => _.get(data, field))
-                _.set(result, field, _.mean(fieldValues))
-            })
-        }
-        fillAverages(SampleFactory.BASIC_METRICS)
-        if (this.storageMetricsEnabled) {
-            fillAverages(SampleFactory.STORAGE_METRICS)
-        }
-        return result as Sample
     }
 }

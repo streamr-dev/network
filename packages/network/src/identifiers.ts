@@ -1,5 +1,5 @@
 import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
-import { MetricsContext } from './helpers/MetricsContext'
+import { MetricsContext } from './helpers/Metric'
 
 export type NodeId = string
 export type TrackerId = string
@@ -86,7 +86,6 @@ export type TrackerInfo = SmartContractRecord
 
 export interface AbstractNodeOptions {
     id?: NodeId
-    name?: string
     location?: Location
     metricsContext?: MetricsContext
     trackerPingInterval?: number

@@ -2,7 +2,6 @@ import { Schema } from 'ajv'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { NodeMetrics } from './node/NodeMetrics'
-import { MetricsPublisher } from './node/MetricsPublisher'
 import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
@@ -24,13 +23,11 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
 
         if (this.pluginConfig.nodeMetrics !== null) {
-            const nodeId = (await this.streamrClient.getNode()).getNodeId()
-            const metricsPublisher = new MetricsPublisher(
-                nodeId,
+            this.nodeMetrics = new NodeMetrics(
+                metricsContext,
                 this.streamrClient!,
                 this.pluginConfig.nodeMetrics.streamIdPrefix
             )
-            this.nodeMetrics = new NodeMetrics(metricsContext, metricsPublisher)
         }
         try {
             if (this.nodeMetrics !== undefined) {
