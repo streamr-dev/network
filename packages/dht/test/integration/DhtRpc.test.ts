@@ -6,7 +6,7 @@ import { MockConnectionManager } from '../../src/connection/MockConnectionManage
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/dht/helpers'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
@@ -33,11 +33,11 @@ describe('DhtClientRpcTransport', () => {
         mockConnectionLayer2 = new MockConnectionManager()
         rpcCommunicator2 = new RpcCommunicator(mockConnectionLayer2, clientTransport2, serverTransport2)
 
-        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
-            rpcCommunicator2.onIncomingMessage(peerDescriptor, bytes)
+        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
+            rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
         })
-        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
-            rpcCommunicator1.onIncomingMessage(peerDescriptor, bytes)
+        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
+            rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
         })
 
         client1 = new DhtRpcClient(clientTransport1)

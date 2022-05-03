@@ -1,24 +1,24 @@
+import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
-
 import { SortedContactList } from './SortedContactList'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
+import { PeerID } from '../PeerID'
 import { PeerDescriptor, RouteMessageType, RouteMessageWrapper } from '../proto/DhtRpc'
 import { IMessageRouter, RouteMessageParams, Event as MessageRouterEvent } from '../rpc-protocol/IMessageRouter'
-import { stringFromId } from './helpers'
-import { PeerID } from '../types'
-import { DhtPeer } from './DhtPeer'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 
 export class DhtNode extends EventEmitter implements IMessageRouter {
+    static objectCounter = 0
+    private objectId = 1
     private readonly ALPHA = 3
     private K = 4
-    private readonly peers: Map<PeerID, DhtPeer>
+    private readonly peers: Map<string, DhtPeer>
     private readonly selfId: PeerID
     private readonly numberOfNodesPerKBucket = 1
     private readonly bucket: KBucket<DhtPeer>
@@ -29,6 +29,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     private readonly rpcCommunicator: RpcCommunicator
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private peerDescriptor: PeerDescriptor
+    
     constructor(
         selfId: PeerID,
         dhtRpcClient: DhtRpcClient,
@@ -38,13 +39,15 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     ) {
         super()
         this.selfId = selfId
+        this.objectId = DhtNode.objectCounter
+        DhtNode.objectCounter++
         this.peerDescriptor = {
-            peerId: selfId,
+            peerId: selfId.value,
             type: 0
         }
         this.peers = new Map()
         this.bucket = new KBucket({
-            localNodeId: this.selfId,
+            localNodeId: this.selfId.value,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
         })
         this.bucket.on('ping', async (oldContacts, newContact) => {
@@ -93,7 +96,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
 
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
         this.routerDuplicateDetector.add(routedMessage.nonce)
-        if (stringFromId(routedMessage.destinationPeer!.peerId) === stringFromId(this.selfId)) {
+        if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, routedMessage.message)
         } else {
             await this.routeMessage({
@@ -127,8 +130,8 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
         const closest = this.bucket.closest(params.destinationPeer.peerId, this.K)
             .filter((peer: DhtPeer) =>
-                !(stringFromId(peer.getPeerId()) === stringFromId(params.sourcePeer!.peerId)
-                    || stringFromId(peer.getPeerId()) === stringFromId(params.previousPeer?.peerId || new Uint8Array()))
+                !(peer.peerId.equals(PeerID.fromValue(params.sourcePeer!.peerId))
+                    || (peer.peerId.equals(PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array()))))
             )
         const initialLength = closest.length
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
@@ -145,13 +148,13 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
             )
         }
         // Only throw if originator
-        if (successAcks === 0 && (stringFromId(this.selfId) === stringFromId(params.sourcePeer!.peerId))) {
+        if (successAcks === 0 && this.selfId.equals(PeerID.fromValue(params.sourcePeer!.peerId))) {
             throw new Error('Could not route message forward')
         }
     }
 
     public canRoute(routedMessage: RouteMessageWrapper): boolean {
-        if (routedMessage.destinationPeer!.peerId === this.selfId) {
+        if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             return true
         }
         if (this.routerDuplicateDetector.test(routedMessage.nonce)) {
@@ -159,8 +162,8 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         }
         const closestPeers = this.bucket.closest(routedMessage.destinationPeer!.peerId, this.K)
         const notRoutableCount = closestPeers.reduce((acc: number, curr: DhtPeer) => {
-            if (stringFromId(curr.getPeerId()) === stringFromId(routedMessage.sourcePeer!.peerId)
-                || stringFromId(curr.getPeerId()) === stringFromId(routedMessage.previousPeer?.peerId || new Uint8Array())) {
+            if (curr.peerId.equals(PeerID.fromValue(routedMessage.sourcePeer!.peerId)
+                || curr.peerId.equals(PeerID.fromValue(routedMessage.previousPeer?.peerId || new Uint8Array())))) {
                 return acc + 1
             }
             return acc
@@ -169,8 +172,8 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer) {
-        this.neighborList.setContacted(contact.getPeerId())
-        this.neighborList.setActive(contact.getPeerId())
+        this.neighborList.setContacted(contact.peerId)
+        this.neighborList.setActive(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
         const dhtPeers = returnedContacts.map((peer) => {
             return new DhtPeer(peer, this.dhtRpcClient)
@@ -187,12 +190,13 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         while (true) {
             const oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
+            //console.log(JSON.stringify(uncontacted))
             if (uncontacted.length < 1) {
                 return
             }
 
             await this.getClosestPeersFromContact(uncontacted[0])
-            if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+            if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
                 if (uncontacted.length < 1) {
                     return
@@ -201,14 +205,19 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         }
     }
 
-    async joinDht(entryPoint: DhtPeer): Promise<void> {
+    async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
+       
+        const entryPoint = new DhtPeer(entryPointDescriptor, this.dhtRpcClient) 
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
-        if (Buffer.compare(this.selfId, entryPoint.getPeerId()) == 0) {
+        
+        if (this.selfId.equals(entryPoint.peerId)) {
             return
         }
+        
         this.bucket.add(entryPoint)
-        const closest = this.bucket.closest(this.selfId, this.ALPHA)
+        const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
+        
         await this.contactEntrypoints()
 
         while (true) {
@@ -218,7 +227,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
                 (async () => await this.getClosestPeersFromContact(contact))
             )))
             if (this.neighborList.getActiveContacts().length >= this.K ||
-                Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
+                oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 break
             }
             uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

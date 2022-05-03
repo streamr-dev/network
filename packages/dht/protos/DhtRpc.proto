@@ -8,6 +8,8 @@ service DhtRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
+// Used inside RpcMessage
+
 message ClosestPeersRequest {
   PeerDescriptor peerDescriptor = 1;
   string nonce = 2; // requestId
@@ -44,7 +46,6 @@ enum NodeType {
   BROWSER = 1;
 }
 
-
 message ConnectivityReportRequest {
   uint32 port = 1;
   string nonce = 2; // requestId
@@ -77,7 +78,28 @@ message RouteMessageAck {
   string error = 4;
 }
 
-message RpcWrapper {
+// Correspond to the MessageType Enum
+
+message ConnectivityRequestMessage {
+  uint32 port = 1;
+  //string nonce = 2; // requestId
+}
+
+message ConnectivityResponseMessage {
+  bool open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  ConnectivityMethod websocket = 4;
+  //string nonce = 4; // requestId
+}
+
+message HandshakeMessage {
+  bytes sourceId = 1;
+  string protocolVersion = 2;
+  PeerDescriptor peerDescriptor = 3;
+}
+
+message RpcMessage {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
@@ -85,3 +107,17 @@ message RpcWrapper {
   PeerDescriptor targetDescriptor = 5;
 }
 
+// Wraps all messages
+
+enum MessageType {
+  CONNECTIVITY_REQUEST = 0;
+  CONNECTIVITY_RESPONSE = 1;
+  HANDSHAKE = 2;
+  RPC = 3;
+}
+
+message Message {
+  string messageId = 1;
+  MessageType messageType = 2;
+  bytes body = 3;
+}

@@ -1,6 +1,6 @@
 import KBucket from 'k-bucket'
+import { PeerID } from '../PeerID'
 import { DhtPeer } from './DhtPeer'
-import { stringFromId } from './helpers'
 
 class ContactWrapper {
     public contacted = false
@@ -10,49 +10,48 @@ class ContactWrapper {
 }
 
 export class SortedContactList {
-    private ownId: Uint8Array
+    private ownId: PeerID
     private contactsById: { [id: string]: ContactWrapper } = {}
-    private contactIds: Uint8Array[] = []
+    private contactIds: PeerID[] = []
 
-    constructor(ownId: Uint8Array) {
+    constructor(ownId: PeerID) {
 
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
     }
 
-    public getClosestContactId(): Uint8Array {
+    public getClosestContactId(): PeerID {
         return this.contactIds[0]
     }
 
-    public getContactIds(): Uint8Array[] {
+    public getContactIds(): PeerID[] {
         return this.contactIds
     }
 
     public addContact(contact: DhtPeer): void {
-        if (Buffer.compare(contact.id, this.ownId) == 0) {
+        if (this.ownId.equals(contact.peerId)) {
             return
         }
-        if (!this.contactsById.hasOwnProperty(JSON.stringify(contact.id))) {
-            this.contactsById[JSON.stringify(contact.id)] = new ContactWrapper(contact)
-            this.contactIds.push(contact.id)
+        if (!this.contactsById.hasOwnProperty(contact.peerId.toString())) {
+            this.contactsById[contact.peerId.toString()] = new ContactWrapper(contact)
+            this.contactIds.push(contact.peerId)
             this.contactIds.sort(this.compareIds)
-        }
-        
+        }  
     }
 
     public addContacts(contacts: DhtPeer[]): void {
         contacts.forEach( (contact) => this.addContact(contact))
     }
 
-    public setContacted(contactId: Uint8Array): void {
-        if (this.contactsById.hasOwnProperty(JSON.stringify(contactId))) {
-            this.contactsById[JSON.stringify(contactId)].contacted = true
+    public setContacted(contactId: PeerID): void {
+        if (this.contactsById.hasOwnProperty(contactId.toString())) {
+            this.contactsById[contactId.toString()].contacted = true
         }
     }
 
-    public setActive(contactId: Uint8Array): void {
-        if (this.contactsById.hasOwnProperty(JSON.stringify(contactId))) {
-            this.contactsById[JSON.stringify(contactId)].active = true
+    public setActive(contactId: PeerID): void {
+        if (this.contactsById.hasOwnProperty(contactId.toString())) {
+            this.contactsById[contactId.toString()].active = true
         }
     }
 
@@ -60,8 +59,8 @@ export class SortedContactList {
         const ret: DhtPeer[] = []
         for (let i = 0; i < this.contactIds.length; i++) {
             const contactId = this.contactIds[i]
-            if (!this.contactsById[JSON.stringify(contactId)].contacted) {
-                ret.push(this.contactsById[JSON.stringify(contactId)].contact)
+            if (!this.contactsById[contactId.toString()].contacted) {
+                ret.push(this.contactsById[contactId.toString()].contact)
                 if (ret.length >= num) {
                     return ret
                 }
@@ -73,21 +72,21 @@ export class SortedContactList {
     public getActiveContacts(): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
-            if (!this.contactsById[JSON.stringify(contactId)].active) {
-                ret.push(this.contactsById[JSON.stringify(contactId)].contact)
+            if (!this.contactsById[contactId.toString()].active) {
+                ret.push(this.contactsById[contactId.toString()].contact)
             }
         })
         return ret
     }
 
-    public compareIds(id1: Uint8Array, id2: Uint8Array): number {
-        const distance1 = KBucket.distance(this.ownId, id1)
-        const distance2 = KBucket.distance(this.ownId, id2)
+    public compareIds(id1: PeerID, id2: PeerID): number {
+        const distance1 = KBucket.distance(this.ownId.value, id1.value)
+        const distance2 = KBucket.distance(this.ownId.value, id2.value)
         return distance1 - distance2
     }
 
     public getStringIds(): string[] {
-        return this.contactIds.map((id) => stringFromId(id))
+        return this.contactIds.map((peerId) => peerId.toString())
     }
 
     public getSize(): number {

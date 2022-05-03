@@ -1,26 +1,25 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { stringFromId } from '../../src/dht/helpers'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { DhtPeer } from '../../src/dht/DhtPeer'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerID } from '../../src/PeerID'
 import { createMockConnectionDhtNode } from '../utils'
 
 describe('Mock Connection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
 
-    let entryPointInfo: DhtPeer
+    let entrypointDescriptor: PeerDescriptor
 
     let rpcCommunicators: Map<string, RpcCommunicator>
 
     beforeEach(() => {
         rpcCommunicators = new Map()
         const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            return async (targetDescriptor: PeerDescriptor, message: Message) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                rpcCommunicators.get(stringFromId(targetDescriptor.peerId))!.onIncomingMessage(senderDescriptor, bytes)
+                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
             }
         }
         nodes = []
@@ -28,23 +27,26 @@ describe('Mock Connection DHT Joining', () => {
         const entryPointId = '0'
         entryPoint = createMockConnectionDhtNode(entryPointId)
         entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
-        rpcCommunicators.set(entryPointId, entryPoint.getRpcCommunicator())
+        rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
 
-        entryPointInfo = new DhtPeer(entryPoint.getPeerDescriptor(), entryPoint.getDhtRpcClient())
-
+        entrypointDescriptor = {
+            peerId: entryPoint.getSelfId().value,
+            type: 0
+        }
+       
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
             const node = createMockConnectionDhtNode(nodeId)
             node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
-            rpcCommunicators.set(nodeId, node.getRpcCommunicator())
+            rpcCommunicators.set(PeerID.fromString(nodeId).toString(), node.getRpcCommunicator())
             nodes.push(node)
         }
     })
 
     it ('Happy path', async () => {
-        await entryPoint.joinDht(entryPointInfo)
+        await entryPoint.joinDht(entrypointDescriptor)
         await Promise.allSettled(
-            nodes.map((node) => node.joinDht(entryPointInfo))
+            nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
