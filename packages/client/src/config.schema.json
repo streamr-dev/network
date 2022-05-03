@@ -31,10 +31,6 @@
                 }
             }
         },
-        "streamrNodeAddress": {
-            "type": "string",
-            "format": "ethereum-address"
-        },
         "cache": {
             "type": "object",
             "additionalProperties": false,
