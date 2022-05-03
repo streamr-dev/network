@@ -9,8 +9,6 @@ import { generateId } from '../../src/dht/helpers'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
-import RpcTimeoutError = Err.RpcTimeout
-import { afterEach } from 'jest-circus'
 
 describe('DhtClientRpcTransport', () => {
     let clientTransport1: DhtTransportClient,
@@ -98,7 +96,7 @@ describe('DhtClientRpcTransport', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response2.response).rejects.toEqual(
-            new RpcTimeoutError('Rpc request timed out')
+            new Err.RpcTimeout('Rpc request timed out')
         )
     })
 
@@ -112,7 +110,7 @@ describe('DhtClientRpcTransport', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new RpcTimeoutError('Server error on request')
+            new Err.RpcTimeout('Server error on request')
         )
     })
 
@@ -121,6 +119,8 @@ describe('DhtClientRpcTransport', () => {
             { nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response.response).rejects.toEqual(new Error('Server does not implement method ping'))
+        await expect(response.response).rejects.toEqual(
+            new Err.UnknownRpcMethod('Server does not implement method ping')
+        )
     })
 })

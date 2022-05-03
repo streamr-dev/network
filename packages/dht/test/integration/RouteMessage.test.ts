@@ -16,6 +16,9 @@ describe('Route Message With Mock Connections', () => {
 
     let rpcCommunicators: Map<string, RpcCommunicator>
 
+    const sourceId = 'eeeeeeeee'
+    const destinationId = '000000000'
+
     beforeEach(async () => {
         routerNodes = []
         rpcCommunicators = new Map()
@@ -38,12 +41,10 @@ describe('Route Message With Mock Connections', () => {
             type: 0
         }
 
-        const sourceId = 'eeeeeeeee'
         sourceNode = createMockConnectionDhtNode(sourceId)
         sourceNode.getRpcCommunicator().setSendFn(rpcFuntion(sourceNode.getPeerDescriptor()))
         rpcCommunicators.set(PeerID.fromString(sourceId).toString(), sourceNode.getRpcCommunicator())
 
-        const destinationId = '000000000'
         destinationNode = createMockConnectionDhtNode(destinationId)
         destinationNode.getRpcCommunicator().setSendFn(rpcFuntion(destinationNode.getPeerDescriptor()))
         rpcCommunicators.set(PeerID.fromString(destinationId).toString(), destinationNode.getRpcCommunicator())
@@ -95,7 +96,7 @@ describe('Route Message With Mock Connections', () => {
             messageType: RouteMessageType.RPC_WRAPPER,
             destinationPeer: destinationNode.getPeerDescriptor(),
             sourcePeer: sourceNode.getPeerDescriptor()
-        })).rejects.toEqual(new Error('Could not route message forward'))
+        })).rejects.toThrow()
     })
 
     it('Receives multiple messages', async () => {
