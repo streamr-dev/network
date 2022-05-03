@@ -90,7 +90,9 @@ describe('NodeMetrics', () => {
                 publishMessagesPerSecond: expect.any(Number),
                 publishBytesPerSecond: expect.any(Number),
                 latencyAverageMs: expect.any(Number),
+                sendMessagesPerSecond: expect.any(Number),
                 sendBytesPerSecond: expect.any(Number),
+                receiveMessagesPerSecond: expect.any(Number),
                 receiveBytesPerSecond: expect.any(Number),
                 connectionAverageCount: expect.any(Number),
                 connectionTotalFailureCount: expect.any(Number)
@@ -98,8 +100,13 @@ describe('NodeMetrics', () => {
             broker: {
                 plugin: {
                     storage: {
+                        readMessagesPerSecond: expect.any(Number),
                         readBytesPerSecond: expect.any(Number),
-                        writeBytesPerSecond: expect.any(Number)
+                        writeMessagesPerSecond: expect.any(Number),
+                        writeBytesPerSecond: expect.any(Number),
+                        resendLastQueriesPerSecond: expect.any(Number),
+                        resendFromQueriesPerSecond: expect.any(Number),
+                        resendRangeQueriesPerSecond: expect.any(Number)
                     }
                 }
             },
