@@ -3,7 +3,6 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/PeerID'
 import { createMockConnectionDhtNode } from '../utils'
-import { afterEach } from 'jest-circus'
 
 describe('Mock Connection DHT Joining', () => {
     let entryPoint: DhtNode
