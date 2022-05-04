@@ -229,7 +229,6 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         this.bucket.add(entryPoint)
         const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
-
         await this.contactEntrypoints()
 
         while (true) {
