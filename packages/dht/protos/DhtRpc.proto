@@ -58,10 +58,6 @@ message ConnectivityReportResponse {
   string nonce = 4; // requestId
 }
 
-enum RouteMessageType {
-  RPC_WRAPPER = 0;
-}
-
 enum RpcResponseError {
   SERVER_TIMOUT = 0;
   CLIENT_TIMEOUT = 1;
@@ -74,7 +70,7 @@ message RouteMessageWrapper {
   string nonce = 2;
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
-  RouteMessageType messageType = 5;
+  MessageType messageType = 5;
   bytes message = 6;
 }
 
@@ -96,12 +92,14 @@ message ConnectivityResponseMessage {
   bool open_internet = 1;
   string ip = 2;
   string natType = 3;
+  ConnectivityMethod websocket = 4;
   //string nonce = 4; // requestId
 }
 
 message HandshakeMessage {
   bytes sourceId = 1;
-  string protocolVersion = 2;  
+  string protocolVersion = 2;
+  PeerDescriptor peerDescriptor = 3;
 }
 
 message RpcMessage {

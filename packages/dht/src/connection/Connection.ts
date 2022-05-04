@@ -1,3 +1,4 @@
+import { PeerDescriptor } from "../proto/DhtRpc"
 import { ConnectionID } from "../types"
 
 export enum Event {
@@ -21,6 +22,10 @@ export interface Connection {
     once(event: Event.CONNECTED, listener: () => void): this
     once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
 
+    setPeerDescriptor(peerDescriptor: PeerDescriptor): void
+    get peerDescriptor(): PeerDescriptor | null
+
     send(data: Uint8Array): void
+    sendBufferedMessages(): void
     close(): void
 }

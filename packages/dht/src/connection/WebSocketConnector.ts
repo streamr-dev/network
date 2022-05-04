@@ -5,13 +5,13 @@ import { Event as ConnectionEvent, Connection } from './Connection'
 
 export class WebSocketConnector extends EventEmitter implements ConnectionSource {
 
-    connect({ host, port, url }: { host?: string; port?: number; url?: string; } = {}): void {
+    connect({ host, port, url }: { host?: string; port?: number; url?: string; } = {}): ClientWebSocket {
         const socket = new ClientWebSocket()
 
         socket.once(ConnectionEvent.CONNECTED, () => {
-            this.emit(ConnectionSourceEvent.NEW_CONNECTION, socket)
+            this.emit(ConnectionSourceEvent.CONNECTED, socket)
         })
-
+        
         let address = ''
         if (url) {
             address = url
@@ -21,6 +21,7 @@ export class WebSocketConnector extends EventEmitter implements ConnectionSource
         }
 
         socket.connect(address)
+        return socket
     }
 
     connectAsync({ host, port, url, timeoutMs }:

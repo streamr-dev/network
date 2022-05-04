@@ -64,7 +64,7 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
 
                 console.log((new Date()) + ' Connection accepted.')
 
-                this.emit(ConnectionSourceEvent.NEW_CONNECTION, new ServerWebSocket(connection))
+                this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })
         })
     }

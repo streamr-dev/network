@@ -1,4 +1,4 @@
-import { ClosestPeersResponse, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { ClosestPeersResponse, Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
@@ -6,6 +6,7 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { getMockPeers } from '../../src/rpc-protocol/server'
 import { generateId } from '../../src/dht/helpers'
+import { v4 } from 'uuid'
 
 describe('DhtClientRpcTransport', () => {
 
@@ -18,12 +19,13 @@ describe('DhtClientRpcTransport', () => {
         const serverTransport = new DhtTransportServer()
         const mockConnectionManager = new MockConnectionManager()
         const rpcCommunicator = new RpcCommunicator(mockConnectionManager, clientTransport, serverTransport)
-        rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, bytes: Uint8Array) => {
-            const request = RpcMessage.fromBinary(bytes)
+        rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
+            const request = RpcMessage.fromBinary(message.body)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
                 nonce: 'TO BE REMOVED'
             }
+            
             const response: RpcMessage = {
                 header: {
                     response: 'hiihii'
@@ -31,7 +33,8 @@ describe('DhtClientRpcTransport', () => {
                 body: ClosestPeersResponse.toBinary(responseBody),
                 requestId: request.requestId
             }
-            rpcCommunicator.onIncomingMessage(peerDescriptor, RpcMessage.toBinary(response))
+            const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(response)}
+            rpcCommunicator.onIncomingMessage(peerDescriptor, msg)
         })
 
         const client = new DhtRpcClient(clientTransport)

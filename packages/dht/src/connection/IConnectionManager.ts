@@ -1,10 +1,10 @@
-import { PeerDescriptor } from '../proto/DhtRpc'
+import { Message, PeerDescriptor } from '../proto/DhtRpc'
 
 export enum Event {
-    DATA = 'streamr:dht:connection:connectionmanager:data'
+    MESSAGE = 'streamr:dht:connection:iconnectionmanager:message'
 }
 
 export interface IConnectionManager {
-    on(event: Event.DATA, listener: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void): this
-    send(peerDescriptor: PeerDescriptor, bytes: Uint8Array): void
+    on(event: Event.MESSAGE, listener: (peerDescriptor: PeerDescriptor, message: Message) => void): this
+    send(peerDescriptor: PeerDescriptor, message: Message): void
 }

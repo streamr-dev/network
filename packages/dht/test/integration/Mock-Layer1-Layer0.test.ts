@@ -1,6 +1,6 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'
 import { PeerID } from '../../src/PeerID'
 
@@ -31,11 +31,11 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     beforeEach(async () => {
         layer0RpcCommunicators = new Map()
         const layer0RpcSend = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            return async (targetDescriptor: PeerDescriptor, message: Message) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                layer0RpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, bytes)
+                layer0RpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
             }
         }
 

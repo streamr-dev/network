@@ -4,11 +4,13 @@ import { EventEmitter } from 'events'
 import { Connection, Event as ConnectionEvent } from './Connection'
 import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../types'
+import { PeerDescriptor } from '../proto/DhtRpc'
 
 export class ServerWebSocket extends EventEmitter implements Connection {
-
     public connectionId: ConnectionID
     private socket: WsConnection
+    private remotePeerDescriptor: PeerDescriptor|null = null
+
     constructor(socket: WsConnection) {
         super()
 
@@ -42,8 +44,19 @@ export class ServerWebSocket extends EventEmitter implements Connection {
         this.socket.sendBytes(Buffer.from(data))
     }
 
+    sendBufferedMessages(): void {
+    }
+
     close(): void {
         this.socket.close()
+    }
+
+    setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.remotePeerDescriptor = peerDescriptor
+    }
+
+    get peerDescriptor(): PeerDescriptor | null {
+        return this.remotePeerDescriptor
     }
 
     public get remoteAddress(): string {

@@ -6,9 +6,9 @@ import { RpcCommunicator } from '../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../src/proto/DhtRpc.client'
 import { Event as MessageRouterEvent } from '../src/rpc-protocol/IMessageRouter'
 import {
-    ClosestPeersRequest,
+    ClosestPeersRequest, Message,
     PeerDescriptor,
-    RouteMessageType,
+    MessageType,
     RpcMessage
 } from '../src/proto/DhtRpc'
 import { PeerID } from '../src/PeerID'
@@ -33,17 +33,17 @@ export const createMockConnectionLayer1Node = (stringId: string, layer0Node: Dht
     const serverTransport = new DhtTransportServer()
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport, 10000)
-    rpcCommunicator.setSendFn(async (peerDescriptor, bytes) => {
+    rpcCommunicator.setSendFn(async (peerDescriptor, message) => {
         await layer0Node.routeMessage({
-            message: bytes,
-            messageType: RouteMessageType.RPC_WRAPPER,
+            message: message.body,
+            messageType: MessageType.RPC,
             destinationPeer: peerDescriptor,
             sourcePeer: descriptor
         })
     })
     const client = new DhtRpcClient(clientTransport)
-    layer0Node.on(MessageRouterEvent.DATA, async (peerDescriptor: PeerDescriptor, messageType: RouteMessageType, bytes: Uint8Array) => {
-        await rpcCommunicator.onIncomingMessage(peerDescriptor, bytes)
+    layer0Node.on(MessageRouterEvent.DATA, async (peerDescriptor: PeerDescriptor, messageType: MessageType, message: Message) => {
+        await rpcCommunicator.onIncomingMessage(peerDescriptor, message)
     })
     return new DhtNode(id, client, clientTransport, serverTransport, rpcCommunicator)
 }
