@@ -1,6 +1,6 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RpcMessage, RouteMessageType, Message } from '../../src/proto/DhtRpc'
+import { PeerDescriptor, RpcMessage, MessageType, Message } from '../../src/proto/DhtRpc'
 import { waitForEvent, waitForCondition } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
@@ -16,6 +16,7 @@ describe('Route Message With Mock Connections', () => {
 
     let rpcCommunicators: Map<string, RpcCommunicator>
 
+    const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
 
@@ -31,7 +32,6 @@ describe('Route Message With Mock Connections', () => {
             }
         }
 
-        const entryPointId = '0'
         entryPoint = createMockConnectionDhtNode(entryPointId)
         entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
         rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
@@ -80,7 +80,7 @@ describe('Route Message With Mock Connections', () => {
             waitForEvent(destinationNode, MessageRouterEvent.DATA),
             sourceNode.routeMessage({
                 message: RpcMessage.toBinary(rpcWrapper),
-                messageType: RouteMessageType.RPC_WRAPPER,
+                messageType: MessageType.RPC,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
@@ -93,7 +93,7 @@ describe('Route Message With Mock Connections', () => {
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         await expect(sourceNode.routeMessage({
             message: RpcMessage.toBinary(rpcWrapper),
-            messageType: RouteMessageType.RPC_WRAPPER,
+            messageType: MessageType.RPC,
             destinationPeer: destinationNode.getPeerDescriptor(),
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toThrow()
@@ -112,7 +112,7 @@ describe('Route Message With Mock Connections', () => {
         for (let i = 0; i < numOfMessages; i++ ) {
             sourceNode.routeMessage({
                 message: RpcMessage.toBinary(rpcWrapper),
-                messageType: RouteMessageType.RPC_WRAPPER,
+                messageType: MessageType.RPC,
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
@@ -140,7 +140,7 @@ describe('Route Message With Mock Connections', () => {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
                         await node.routeMessage({
                             message: RpcMessage.toBinary(rpcWrapper),
-                            messageType: RouteMessageType.RPC_WRAPPER,
+                            messageType: MessageType.RPC,
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor()
                         })

@@ -8,8 +8,13 @@ import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
-import { PeerDescriptor, RouteMessageType, RouteMessageWrapper } from '../proto/DhtRpc'
-import { IMessageRouter, RouteMessageParams, Event as MessageRouterEvent } from '../rpc-protocol/IMessageRouter'
+import {
+    Message,
+    MessageType,
+    PeerDescriptor,
+    RouteMessageWrapper
+} from '../proto/DhtRpc'
+import { Event as MessageRouterEvent, IMessageRouter, RouteMessageParams } from '../rpc-protocol/IMessageRouter'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
@@ -98,10 +103,11 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, routedMessage.message)
+            const message = this.wrapRoutedMessage(routedMessage)
+            this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, message)
         } else {
             await this.routeMessage({
-                messageType: routedMessage.messageType as RouteMessageType,
+                messageType: routedMessage.messageType as MessageType,
                 message: routedMessage.message,
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
@@ -109,6 +115,15 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
                 messageId: routedMessage.nonce
             })
         }
+    }
+
+    private wrapRoutedMessage(routedMessage: RouteMessageWrapper): Message {
+        const message: Message = {
+            messageType: routedMessage.messageType,
+            messageId: routedMessage.nonce,
+            body: routedMessage.message
+        }
+        return message
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {
