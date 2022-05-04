@@ -228,7 +228,6 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
 
     send(peerDescriptor: PeerDescriptor, message: Message): void {
         if (this.connections.hasOwnProperty(PeerID.fromValue(peerDescriptor.peerId).toString())) {
-            console.log("sending to", peerDescriptor.peerId.toString(), "from", PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString())
             this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()].send(Message.toBinary(message))
         }
 

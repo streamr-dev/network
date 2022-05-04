@@ -2,7 +2,6 @@ import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { createLayer0Peer, createPeerDescriptor } from '../utils'
-import { PeerID } from '../../src/PeerID'
 
 describe('Layer0', () => {
     const epPeerDescriptor = {
@@ -34,7 +33,7 @@ describe('Layer0', () => {
         await epConnectionManager.start()
         epConnectionManager.enableConnectivity(epPeerDescriptor)
 
-        epDhtNode = createLayer0Peer(PeerID.fromValue(epPeerDescriptor.peerId), epConnectionManager)
+        epDhtNode = createLayer0Peer(epPeerDescriptor, epConnectionManager)
 
         await epDhtNode.joinDht(epPeerDescriptor)
 
@@ -74,14 +73,14 @@ describe('Layer0', () => {
         peerDescriptor4 = createPeerDescriptor(res4, '4')
 
         connectionManager1.enableConnectivity(peerDescriptor1)
-        connectionManager1.enableConnectivity(peerDescriptor2)
-        connectionManager1.enableConnectivity(peerDescriptor3)
-        connectionManager1.enableConnectivity(peerDescriptor4)
+        connectionManager2.enableConnectivity(peerDescriptor2)
+        connectionManager3.enableConnectivity(peerDescriptor3)
+        connectionManager4.enableConnectivity(peerDescriptor4)
 
-        node1 = createLayer0Peer(PeerID.fromValue(peerDescriptor1.peerId), connectionManager1)
-        node2 = createLayer0Peer(PeerID.fromValue(peerDescriptor2.peerId), connectionManager2)
-        node3 = createLayer0Peer(PeerID.fromValue(peerDescriptor3.peerId), connectionManager3)
-        node4 = createLayer0Peer(PeerID.fromValue(peerDescriptor4.peerId), connectionManager4)
+        node1 = createLayer0Peer(peerDescriptor1, connectionManager1)
+        node2 = createLayer0Peer(peerDescriptor2, connectionManager2)
+        node3 = createLayer0Peer(peerDescriptor3, connectionManager3)
+        node4 = createLayer0Peer(peerDescriptor4, connectionManager4)
     })
 
     afterEach(async() => {
@@ -99,11 +98,16 @@ describe('Layer0', () => {
     })
 
     it('Happy path', async () => {
-        console.log("HAPPY PATH STARTING...")
-        await node1.joinDht(epPeerDescriptor)
-        console.log("NODE1 JOINED")
-        await node2.joinDht(epPeerDescriptor)
-        await node3.joinDht(epPeerDescriptor)
-        await node4.joinDht(epPeerDescriptor)
+        await Promise.all([
+            node1.joinDht(epPeerDescriptor),
+            node2.joinDht(epPeerDescriptor),
+            node3.joinDht(epPeerDescriptor),
+            node4.joinDht(epPeerDescriptor)
+        ])
+        expect(node1.getBucketSize()).toBeGreaterThanOrEqual(3)
+        expect(node2.getBucketSize()).toBeGreaterThanOrEqual(4)
+        expect(node3.getBucketSize()).toBeGreaterThanOrEqual(4)
+        expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
+
     })
 })

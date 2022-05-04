@@ -37,20 +37,17 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     private peerDescriptor: PeerDescriptor
     
     constructor(
-        selfId: PeerID,
+        peerDescriptor: PeerDescriptor,
         dhtRpcClient: DhtRpcClient,
         dhtTransportClient: DhtTransportClient,
         dhtTransportServer: DhtTransportServer,
         rpcCommunicator: RpcCommunicator
     ) {
         super()
-        this.selfId = selfId
         this.objectId = DhtNode.objectCounter
         DhtNode.objectCounter++
-        this.peerDescriptor = {
-            peerId: selfId.value,
-            type: 0
-        }
+        this.peerDescriptor = peerDescriptor
+        this.selfId = PeerID.fromValue(this.peerDescriptor.peerId)
         this.peers = new Map()
         this.bucket = new KBucket({
             localNodeId: this.selfId.value,
@@ -206,7 +203,6 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         while (true) {
             const oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-            //console.log(JSON.stringify(uncontacted))
             if (uncontacted.length < 1) {
                 return
             }
@@ -233,7 +229,7 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         this.bucket.add(entryPoint)
         const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
-        
+
         await this.contactEntrypoints()
 
         while (true) {
