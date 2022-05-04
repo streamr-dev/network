@@ -188,5 +188,9 @@ export class RpcCommunicator extends EventEmitter {
     stop(): void {
         this.removeAllListeners()
         this.send = () => {}
+        this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
+            clearTimeout(ongoingRequest.timeoutRef)
+        })
+        this.ongoingRequests.clear()
     }
 }

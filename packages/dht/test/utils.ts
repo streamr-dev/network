@@ -23,7 +23,7 @@ export const createMockConnectionDhtNode = (stringId: string): DhtNode => {
         peerId: id.value,
         type: NodeType.NODEJS
     }
-    const clientTransport = new DhtTransportClient()
+    const clientTransport = new DhtTransportClient(2000)
     const serverTransport = new DhtTransportServer()
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
