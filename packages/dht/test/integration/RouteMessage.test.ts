@@ -1,6 +1,6 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RpcMessage, RouteMessageType } from '../../src/proto/DhtRpc'
+import { PeerDescriptor, RpcMessage, RouteMessageType, Message } from '../../src/proto/DhtRpc'
 import { waitForEvent, waitForCondition } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
@@ -23,11 +23,11 @@ describe('Route Message With Mock Connections', () => {
         routerNodes = []
         rpcCommunicators = new Map()
         const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            return async (targetDescriptor: PeerDescriptor, message: Message) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, bytes)
+                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
             }
         }
 

@@ -96,12 +96,14 @@ message ConnectivityResponseMessage {
   bool open_internet = 1;
   string ip = 2;
   string natType = 3;
+  ConnectivityMethod websocket = 4;
   //string nonce = 4; // requestId
 }
 
 message HandshakeMessage {
   bytes sourceId = 1;
-  string protocolVersion = 2;  
+  string protocolVersion = 2;
+  PeerDescriptor peerDescriptor = 3;
 }
 
 message RpcMessage {

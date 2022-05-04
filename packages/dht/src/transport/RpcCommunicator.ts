@@ -1,3 +1,5 @@
+import { IConnectionManager, Event as ConnectionLayerEvent } from '../connection/IConnectionManager'
+import { v4 } from 'uuid'
 import EventEmitter = require('events')
 import { Err, ErrorCode } from '../errors'
 import {
@@ -6,9 +8,8 @@ import {
     DhtTransportClient,
     Event as DhtTransportClientEvent
 } from './DhtTransportClient'
-import { PeerDescriptor, RpcMessage, RpcResponseError } from '../proto/DhtRpc'
+import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } from '../proto/DhtRpc'
 import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
-import { Event as ConnectionLayerEvent, IConnectionManager } from '../connection/IConnectionManager'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -32,7 +33,7 @@ export class RpcCommunicator extends EventEmitter {
     private readonly dhtTransportServer: DhtTransportServer
     private readonly connectionLayer: IConnectionManager
     private readonly ongoingRequests: Map<string, OngoingRequest>
-    public send: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void
+    public send: (peerDescriptor: PeerDescriptor, message: Message) => void
     constructor(connectionLayer: IConnectionManager, dhtTransportClient: DhtTransportClient, dhtTransportServer: DhtTransportServer) {
         super()
         this.objectId = RpcCommunicator.objectCounter
@@ -49,8 +50,8 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
-        this.connectionLayer.on(ConnectionLayerEvent.DATA, async (peerDescriptor: PeerDescriptor, bytes: Uint8Array) =>
-            await this.onIncomingMessage(peerDescriptor, bytes)
+        this.connectionLayer.on(ConnectionLayerEvent.MESSAGE, async (peerDescriptor: PeerDescriptor, message: Message) =>
+            await this.onIncomingMessage(peerDescriptor, message)
         )
     }
 
@@ -59,12 +60,12 @@ export class RpcCommunicator extends EventEmitter {
         if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
-        const bytes = RpcMessage.toBinary(rpcMessage)
-        this.send(rpcMessage.targetDescriptor!, bytes)
+        const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage)}
+        this.send(rpcMessage.targetDescriptor!, msg)
     }
 
-    async onIncomingMessage(senderDescriptor: PeerDescriptor, bytes: Uint8Array): Promise<void> {
-        const rpcCall = RpcMessage.fromBinary(bytes)
+    async onIncomingMessage(senderDescriptor: PeerDescriptor, message: Message): Promise<void> {
+        const rpcCall = RpcMessage.fromBinary(message.body)
         if (rpcCall.header.response && this.ongoingRequests.has(rpcCall.requestId)) {
             if (rpcCall.responseError) {
                 this.rejectOngoingRequest(rpcCall)
@@ -119,7 +120,7 @@ export class RpcCommunicator extends EventEmitter {
         this.ongoingRequests.set(requestId, ongoingRequest)
     }
 
-    setSendFn(fn: (peerDescriptor: PeerDescriptor, bytes: Uint8Array) => void): void {
+    setSendFn(fn: (peerDescriptor: PeerDescriptor, message: Message) => void): void {
         this.send = fn.bind(this)
     }
 
