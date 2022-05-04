@@ -49,7 +49,7 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
         DhtTransportClient.objectCount++
         
         this.defaultOptions = {
-            timeout: defaultTimeout || 2000
+            timeout: defaultTimeout || 5000
         }
     }
 

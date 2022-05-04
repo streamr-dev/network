@@ -46,6 +46,13 @@ describe('Mock connection Dht joining with latencies', () => {
         }
     })
 
+    afterEach(async () => {
+        await Promise.all([
+            entryPoint.stop(),
+            ...nodes.map(async (node) => await node.stop())
+        ])
+    })
+
     it ('Happy path', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
         await Promise.allSettled(
