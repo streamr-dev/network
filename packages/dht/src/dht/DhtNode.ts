@@ -12,8 +12,7 @@ import {
     Message,
     MessageType,
     PeerDescriptor,
-    RouteMessageWrapper,
-    RpcMessage
+    RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { Event as MessageRouterEvent, IMessageRouter, RouteMessageParams } from '../rpc-protocol/IMessageRouter'
 import { DhtTransportClient } from '../transport/DhtTransportClient'

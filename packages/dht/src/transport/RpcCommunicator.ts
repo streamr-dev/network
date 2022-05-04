@@ -74,7 +74,6 @@ export class RpcCommunicator extends EventEmitter {
 
     async onIncomingMessage(senderDescriptor: PeerDescriptor, message: Message): Promise<void> {
         if (message.messageType !== MessageType.RPC) {
-            console.log("RpcCommunicator can only parse RpcMessage wrappers", message.messageType)
             return
         }
         const rpcCall = RpcMessage.fromBinary(message.body)
