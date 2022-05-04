@@ -2,23 +2,12 @@
 
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Event as ConnectionManagerEvents } from "../../src/connection/IConnectionManager"
-import { PeerID } from "../../src/PeerID"
-import { ConnectivityResponseMessage, Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
+import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
+import { createPeerDescriptor } from '../utils'
 
 describe('ConnectionManager', () => {
     beforeAll(async () => {
     })
-
-    const createPeerDescriptor = (msg: ConnectivityResponseMessage): PeerDescriptor => {
-
-        const ret: PeerDescriptor = {
-            peerId: PeerID.fromIp(msg.ip).value,
-            type: NodeType.NODEJS,
-            websocket: {ip: msg.websocket!.ip, port: msg.websocket!.port}
-        }
-        return ret 
-    }
-
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9991 })
 

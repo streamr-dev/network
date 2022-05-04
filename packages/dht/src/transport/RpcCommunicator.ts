@@ -64,6 +64,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
+        console.log("OUT", this.objectId, rpcMessage.targetDescriptor!.peerId.toString())
         const requestOptions = this.dhtTransportClient.mergeOptions(options)
         if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
@@ -73,6 +74,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     async onIncomingMessage(senderDescriptor: PeerDescriptor, message: Message): Promise<void> {
+        console.log("IN", this.objectId, senderDescriptor.peerId.toString())
         if (message.messageType !== MessageType.RPC) {
             return
         }
@@ -84,7 +86,9 @@ export class RpcCommunicator extends EventEmitter {
                 this.resolveOngoingRequest(rpcCall)
             }
         } else if (rpcCall.header.request && rpcCall.header.method) {
+            console.log("prosessing request")
             await this.handleRequest(senderDescriptor, rpcCall)
+            console.log("processed request")
         }
     }
 

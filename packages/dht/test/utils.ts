@@ -9,9 +9,10 @@ import {
     ClosestPeersRequest, Message,
     PeerDescriptor,
     MessageType,
-    RpcMessage
+    RpcMessage, ConnectivityResponseMessage, NodeType
 } from '../src/proto/DhtRpc'
 import { PeerID } from '../src/PeerID'
+import { ConnectionManager } from '../src/connection/ConnectionManager'
 
 export const createMockConnectionDhtNode = (stringId: string): DhtNode => {
     const id = PeerID.fromString(stringId)
@@ -68,4 +69,24 @@ export const createWrappedClosestPeersRequest = (
         targetDescriptor: destinationDescriptor
     }
     return rpcWrapper
+}
+
+export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
+    const ret: PeerDescriptor = {
+        peerId: peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value,
+        type: NodeType.NODEJS,
+        websocket: {ip: msg.websocket!.ip, port: msg.websocket!.port}
+    }
+    return ret
+}
+
+export const createLayer0Peer = (peerId: PeerID, connectionManager: ConnectionManager): DhtNode => {
+    const clientTransport = new DhtTransportClient()
+    const serverTransport = new DhtTransportServer()
+    const rpcCommunicator = new RpcCommunicator(connectionManager, clientTransport, serverTransport)
+    const client = new DhtRpcClient(clientTransport)
+    rpcCommunicator.setSendFn((peerDescriptor, message) => {
+        connectionManager.send(peerDescriptor, message)
+    })
+    return new DhtNode(peerId, client, clientTransport, serverTransport, rpcCommunicator)
 }

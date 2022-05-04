@@ -42,6 +42,7 @@ export class ClientWebSocket extends EventEmitter implements Connection {
                 console.log("Received string: '" + message.data + "'")
             }
             else {
+                console.log("client socket data")
                 this.emit(ConnectionEvent.DATA, new Uint8Array(message.data))
             }
         }
