@@ -4,6 +4,7 @@ import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { PeerID } from '../../src/PeerID'
 import { createMockConnectionDhtNode } from '../utils'
+import { afterEach } from 'jest-circus'
 
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
@@ -44,6 +45,13 @@ describe('Mock connection Dht joining with latencies', () => {
             rpcCommunicators.set(PeerID.fromString(nodeId).toString(), node.getRpcCommunicator())
             nodes.push(node)
         }
+    })
+
+    afterEach(async () => {
+        await Promise.all([
+            entryPoint.stop(),
+            ...nodes.map(async (node) => await node.stop())
+        ])
     })
 
     it ('Happy path', async () => {
