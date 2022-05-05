@@ -29,10 +29,10 @@ class WebRtcError extends Error {
 }
 
 interface WebRtcEndpointMetrics extends MetricsDefinition {
-    sendMessagesPerSecond: Metric,
-    sendBytesPerSecond: Metric,
-    receiveMessagesPerSecond: Metric,
-    receiveBytesPerSecond: Metric,
+    sendMessagesPerSecond: Metric
+    sendBytesPerSecond: Metric
+    receiveMessagesPerSecond: Metric
+    receiveBytesPerSecond: Metric
     connectionAverageCount: Metric
     connectionTotalFailureCount: Metric
 }
