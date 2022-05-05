@@ -140,6 +140,7 @@
         "@ethersproject/transactions": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
         "@ethersproject/web": "^5.5.0",
+        "@streamr/config": "^1.1.0",
         "@types/debug": "^4.1.7",
         "ajv": "^8.8.2",
         "ajv-formats": "^2.1.1",
