@@ -28,13 +28,13 @@ class WebRtcError extends Error {
     }
 }
 
-interface Metrics extends MetricsDefinition {
-    inSpeed: Metric
-    outSpeed: Metric
-    msgInSpeed: Metric
-    msgOutSpeed: Metric,
-    failedConnection: Metric
-    connections: Metric
+interface WebRtcEndpointMetrics extends MetricsDefinition {
+    sendMessagesPerSecond: Metric
+    sendBytesPerSecond: Metric
+    receiveMessagesPerSecond: Metric
+    receiveBytesPerSecond: Metric
+    connectionAverageCount: Metric
+    connectionTotalFailureCount: Metric
 }
 
 export interface WebRtcConnectionFactory {
@@ -53,7 +53,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly newConnectionTimeout: number
     private readonly pingInterval: number
     private readonly logger: Logger
-    private readonly metrics: Metrics
+    private readonly metrics: WebRtcEndpointMetrics
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
@@ -113,14 +113,14 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
 
         this.metrics = {
-            inSpeed: new RateMetric(),
-            outSpeed: new RateMetric(),
-            msgInSpeed: new RateMetric(),
-            msgOutSpeed: new RateMetric(),
-            failedConnection: new CountMetric(),
-            connections: new LevelMetric(0)
+            sendMessagesPerSecond: new RateMetric(),
+            sendBytesPerSecond: new RateMetric(),
+            receiveMessagesPerSecond: new RateMetric(),
+            receiveBytesPerSecond: new RateMetric(),
+            connectionAverageCount: new LevelMetric(0),
+            connectionTotalFailureCount: new CountMetric()
         }
-        metricsContext.addMetrics('WebRtcEndpoint', this.metrics)
+        metricsContext.addMetrics('node', this.metrics)
 
         this.startConnectionStatusReport()
     }
@@ -198,8 +198,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         })
         connection.on('message', (message) => {
             this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
-            this.metrics.inSpeed.record(message.length)
-            this.metrics.msgInSpeed.record(1)
+            this.metrics.receiveMessagesPerSecond.record(1)
+            this.metrics.receiveBytesPerSecond.record(message.length)
         })
         connection.once('close', () => {
             if (this.connections[targetPeerId] === connection) {
@@ -220,7 +220,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
         })
         connection.on('failed', () => {
-            this.metrics.failedConnection.record(1)
+            this.metrics.connectionTotalFailureCount.record(1)
         })
 
         return connection
@@ -410,8 +410,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             throw err
         }
 
-        this.metrics.outSpeed.record(message.length)
-        this.metrics.msgOutSpeed.record(1)
+        this.metrics.sendMessagesPerSecond.record(1)
+        this.metrics.sendBytesPerSecond.record(message.length)
     }
 
     private attemptProtocolVersionValidation(connection: WebRtcConnection): void {
@@ -498,6 +498,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     private onConnectionCountChange() {
-        this.metrics.connections.record(Object.keys(this.connections).length)
+        this.metrics.connectionAverageCount.record(Object.keys(this.connections).length)
     }
 }

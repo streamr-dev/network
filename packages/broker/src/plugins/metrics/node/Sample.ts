@@ -1,48 +1,50 @@
 import { MetricsReport } from 'streamr-network'
 
 export interface Sample {
-    broker: {
-        messagesToNetworkPerSec: number
-        bytesToNetworkPerSec: number
+    node: {
+        publishMessagesPerSecond: number
+        publishBytesPerSecond: number
+        latencyAverageMs: number
+        sendBytesPerSecond: number
+        receiveBytesPerSecond: number
+        connectionAverageCount: number,
+        connectionTotalFailureCount: number
     },
-    network: {
-        avgLatencyMs: number
-        bytesToPeersPerSec: number
-        bytesFromPeersPerSec: number
-        connections: number,
-        webRtcConnectionFailures: number
+    broker?: {
+        plugin: {
+            storage: {
+                writeBytesPerSecond: number,
+                readBytesPerSecond: number
+            }
+        }
     },
-    storage?: {
-        bytesWrittenPerSec: number
-        bytesReadPerSec: number
-    }
     period: {
         start: number,
         end: number
     }
 }
 
-const CONTEXT_STORAGE = 'broker/cassandra'
-
 export class SampleFactory {
 
     static createSample(report: MetricsReport): Sample {
-        const storageMetricsEnabled = report[CONTEXT_STORAGE] !== undefined
+        const storageMetricsEnabled = report.broker?.plugin?.storage !== undefined
         return {
-            broker: {
-                messagesToNetworkPerSec: report['node/publish'].count,
-                bytesToNetworkPerSec: report['node/publish'].bytes,
+            node: {
+                publishMessagesPerSecond: report.node.publishMessagesPerSecond,
+                publishBytesPerSecond: report.node.publishBytesPerSecond,
+                latencyAverageMs: report.node?.latencyAverageMs,
+                sendBytesPerSecond: report.node.sendBytesPerSecond,
+                receiveBytesPerSecond: report.node.receiveBytesPerSecond,
+                connectionAverageCount: report.node.connectionAverageCount,
+                connectionTotalFailureCount: report.node.connectionTotalFailureCount
             },
-            network: {
-                avgLatencyMs: report.node?.latency,
-                bytesToPeersPerSec: report.WebRtcEndpoint.outSpeed,
-                bytesFromPeersPerSec: report.WebRtcEndpoint.inSpeed,
-                connections: report.WebRtcEndpoint.connections,
-                webRtcConnectionFailures: report.WebRtcEndpoint.failedConnection
-            },
-            storage: (storageMetricsEnabled) ? {
-                bytesWrittenPerSec: report[CONTEXT_STORAGE].writeBytes,
-                bytesReadPerSec: report[CONTEXT_STORAGE].readBytes
+            broker: (storageMetricsEnabled) ? {
+                plugin: {
+                    storage: {
+                        readBytesPerSecond: report.broker.plugin.storage.readBytesPerSecond,
+                        writeBytesPerSecond: report.broker.plugin.storage.writeBytesPerSecond
+                    }
+                }
             } : undefined,
             period: report.period
         }
