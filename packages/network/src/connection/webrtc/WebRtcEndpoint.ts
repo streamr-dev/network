@@ -476,6 +476,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     stop(): void {
+        if (this.stopped === true) {
+            throw new Error('already stopped')
+        }
         this.stopped = true
         const { connections, messageQueues } = this
         this.connections = {}
