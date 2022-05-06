@@ -141,8 +141,6 @@ const convertV1ToV2 = (source: any): Config => {
     return target as Config
 }
 
-// const streamId = `${this.streamIdPrefix}${streamIdSuffix}`
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createMigratedConfig = (source: any): Config | never => {
     const version = getVersion(source)
