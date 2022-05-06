@@ -65,8 +65,6 @@ export class RpcCommunicator extends EventEmitter {
         this.connectionLayer.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message, appId?: string) => {
             if (!appId || appId === this.appId) {
                 await this.onIncomingMessage(peerDescriptor, message)
-            } else {
-                console.log(appId, this.appId)
             }
         })
         this.defaultRpcRequestTimeout = params.rpcRequestTimeout || 5000
