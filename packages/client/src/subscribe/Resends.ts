@@ -13,16 +13,21 @@ import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
-import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { fetchStream } from '../fetchStream'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
+
+const createQueryString = (query: Record<string, any>) => {
+    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+    return new URLSearchParams(withoutEmpty).toString()
+}
 
 const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
     const queryMap = {
@@ -79,7 +84,6 @@ export class Resends implements Context {
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
-        @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
     ) {
@@ -186,7 +190,7 @@ export class Resends implements Context {
             count += 1
         })
 
-        const dataStream = await this.rest.fetchStream(url)
+        const dataStream = await fetchStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream

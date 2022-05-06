@@ -2,7 +2,6 @@ import { Server } from 'http'
 import express, { Application } from 'express'
 import { wait } from 'streamr-test-utils'
 
-import { authFetch } from '../../src/authFetch'
 import * as utils from '../../src/utils'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
@@ -52,13 +51,6 @@ describeRepeats('utils', () => {
 
         afterAll(async () => {
             await wait(1000) // wait a moment for server to truly close
-        })
-
-        describe('authFetch', () => {
-            it('should return normally', async () => {
-                const res = await authFetch<TestResponse>(baseUrl + testUrl)
-                expect(res.test).toBeTruthy()
-            })
         })
     })
 

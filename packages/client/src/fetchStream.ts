@@ -1,11 +1,11 @@
-/**
- * Wrap fetch with default headers
- */
-
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
 import { getVersionString, counterId } from './utils'
+import { Readable } from 'stream'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
+import split2 from 'split2'
+import { StreamMessage } from 'streamr-client-protocol'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -68,7 +68,42 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-export async function authRequest(
+export async function fetchStream(
+    url: string,
+    opts = {},
+    abortController = new AbortController()
+): Promise<Readable> {
+    const startTime = Date.now()
+    const response = await authRequest(url, {
+        signal: abortController.signal,
+        ...opts,
+    })
+    if (!response.body) {
+        throw new Error('No Response Body')
+    }
+
+    try {
+        // in the browser, response.body will be a web stream. Convert this into a node stream.
+        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+        const stream = source.pipe(split2((message: string) => {
+            return StreamMessage.deserialize(message)
+        }))
+
+        stream.once('close', () => {
+            abortController.abort()
+        })
+
+        return Object.assign(stream, {
+            startTime,
+        })
+    } catch (err) {
+        abortController.abort()
+        throw err
+    }
+}
+
+async function authRequest(
     url: string,
     opts?: any,
     debug?: Debugger,
@@ -108,25 +143,4 @@ export async function authRequest(
     const errorCode = parseErrorCode(body)
     const ErrorClass = ERROR_TYPES.get(errorCode)!
     throw new ErrorClass(`Request ${debug.namespace} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
-}
-
-/** @internal */
-export async function authFetch<T extends object>(
-    url: string,
-    opts?: any,
-    debug?: Debugger,
-    fetchFn?: typeof fetch
-): Promise<T> {
-    const id = counterId('authFetch')
-    debug = debug || Debug('utils').extend(id) // eslint-disable-line no-param-reassign
-
-    const response = await authRequest(url, opts, debug, fetchFn)
-    // can only be ok response
-    const body = await response.text()
-    try {
-        return JSON.parse(body || '{}') as T
-    } catch (e) {
-        debug('%s – failed to parse body: %s', url, e.stack)
-        throw new AuthFetchError(e.message, response, body)
-    }
 }

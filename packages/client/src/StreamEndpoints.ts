@@ -7,7 +7,7 @@ import { instanceId } from './utils'
 import { Context } from './utils/Context'
 
 import { Stream } from './Stream'
-import { ErrorCode } from './authFetch'
+import { ErrorCode } from './fetchStream'
 import { StreamRegistry } from './StreamRegistry'
 
 export interface StreamValidationInfo {
