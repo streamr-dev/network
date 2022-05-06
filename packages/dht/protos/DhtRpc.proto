@@ -71,7 +71,7 @@ message RouteMessageWrapper {
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
   string appId = 5;
-  bytes message = 6;
+  bytes message = 6; // Expected to be of type Message
 }
 
 message RouteMessageAck {
