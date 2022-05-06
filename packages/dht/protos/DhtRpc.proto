@@ -70,7 +70,7 @@ message RouteMessageWrapper {
   string nonce = 2;
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
-  string appId = 5;
+  string appId = 5; // application-specific id
   bytes message = 6; // Expected to be of type Message
 }
 

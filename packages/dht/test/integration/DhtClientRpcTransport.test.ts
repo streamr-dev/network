@@ -18,7 +18,11 @@ describe('DhtClientRpcTransport', () => {
         const clientTransport = new DhtTransportClient()
         const serverTransport = new DhtTransportServer()
         const mockConnectionManager = new MockConnectionManager()
-        const rpcCommunicator = new RpcCommunicator(mockConnectionManager, clientTransport, serverTransport)
+        const rpcCommunicator = new RpcCommunicator({
+            connectionLayer: mockConnectionManager,
+            dhtTransportClient: clientTransport,
+            dhtTransportServer: serverTransport
+        })
         rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             const request = RpcMessage.fromBinary(message.body)
             const responseBody: ClosestPeersResponse = {

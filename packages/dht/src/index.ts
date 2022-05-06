@@ -16,7 +16,11 @@ const main = async () => {
     const clientTransport = new DhtTransportClient()
     const serverTransport = new DhtTransportServer()
     const mockConnectionLayer = new MockConnectionManager()
-    const rpcCommunicator = new RpcCommunicator(mockConnectionLayer, clientTransport, serverTransport)
+    const rpcCommunicator = new RpcCommunicator({
+        connectionLayer: mockConnectionLayer,
+        dhtTransportClient: clientTransport,
+        dhtTransportServer: serverTransport
+    })
     const client = new DhtRpcClient(clientTransport)
     new DhtNode(peerDescriptor, client, clientTransport, serverTransport, rpcCommunicator)
 }
