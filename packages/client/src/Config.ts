@@ -101,28 +101,24 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'netwo
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
-const info = Chains.load('production')
-
-const mainChainRpcs = info.ethereum.rpcEndpoints.map(({ url }) => ({
-    url,
-    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-}))
-
-const sideChainRpcs = info.polygon.rpcEndpoints.map(({ url }) => ({
-    url,
-    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-}))
+const chainConfig = Chains.load('production')
 
 const mainChainConfig = {
     name: 'ethereum',
-    chainId: info.ethereum.id,
-    rpcs: mainChainRpcs
+    chainId: chainConfig.ethereum.id,
+    rpcs: chainConfig.ethereum.rpcEndpoints.map(({ url }) => ({
+        url,
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+    }))
 }
 
 const sideChainConfig = {
     name: 'polygon',
-    chainId: info.polygon.id,
-    rpcs: sideChainRpcs
+    chainId: chainConfig.polygon.id,
+    rpcs: chainConfig.polygon.rpcEndpoints.map(({ url }) => ({
+        url,
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+    }))
 }
 
 /**
@@ -150,19 +146,19 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
     mainChainRPCs: mainChainConfig,
     streamRegistryChainRPCs: sideChainConfig,
-    streamRegistryChainAddress: info.polygon.contracts.StreamRegistry,
-    streamStorageRegistryChainAddress: info.polygon.contracts.StreamStorageRegistry,
-    storageNodeRegistryChainAddress: info.polygon.contracts.StorageNodeRegistry,
-    ensCacheChainAddress: info.polygon.contracts.ENSCache,
+    streamRegistryChainAddress: chainConfig.polygon.contracts.StreamRegistry,
+    streamStorageRegistryChainAddress: chainConfig.polygon.contracts.StreamStorageRegistry,
+    storageNodeRegistryChainAddress: chainConfig.polygon.contracts.StorageNodeRegistry,
+    ensCacheChainAddress: chainConfig.polygon.contracts.ENSCache,
     network: {
         trackers: {
-            contractAddress: info.ethereum.contracts.TrackerRegistry
+            contractAddress: chainConfig.ethereum.contracts.TrackerRegistry
         },
         acceptProxyConnections: false
     },
     ethereumNetworks: {
         polygon: {
-            chainId: info.polygon.id,
+            chainId: chainConfig.polygon.id,
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },

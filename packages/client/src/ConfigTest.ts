@@ -4,22 +4,24 @@ function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
 
-const info = Chains.load('development')
+const chainConfig = Chains.load('development')
 
-const mainChainRpcs = info.ethereum.rpcEndpoints.map(({ url }) => ({
-    url,
-    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-}))
-
-const sideChainRpcs = info.streamr.rpcEndpoints.map(({ url }) => ({
-    url,
-    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
-}))
+const mainChainConfig = {
+    name: 'dev_ethereum',
+    chainId: chainConfig.ethereum.id,
+    rpcs: chainConfig.ethereum.rpcEndpoints.map(({ url }) => ({
+        url,
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+    }))
+}
 
 const sideChainConfig = {
     name: 'streamr',
-    chainId: info.streamr.id,
-    rpcs: sideChainRpcs
+    chainId: chainConfig.streamr.id,
+    rpcs: chainConfig.streamr.rpcEndpoints.map(({ url }) => ({
+        url,
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+    }))
 }
 
 /**
@@ -27,9 +29,9 @@ const sideChainConfig = {
  */
 export const ConfigTest = {
     theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
-    streamRegistryChainAddress: info.streamr.contracts.StreamRegistry,
-    streamStorageRegistryChainAddress: info.streamr.contracts.StreamStorageRegistry,
-    storageNodeRegistryChainAddress: info.streamr.contracts.StorageNodeRegistry,
+    streamRegistryChainAddress: chainConfig.streamr.contracts.StreamRegistry,
+    streamStorageRegistryChainAddress: chainConfig.streamr.contracts.StreamStorageRegistry,
+    storageNodeRegistryChainAddress: chainConfig.streamr.contracts.StorageNodeRegistry,
     network: {
         trackers: [
             {
@@ -49,11 +51,7 @@ export const ConfigTest = {
         webrtcDisallowPrivateAddresses: false,
         stunUrls: []
     },
-    mainChainRPCs: {
-        name: 'dev_ethereum',
-        chainId: info.ethereum.id,
-        rpcs: mainChainRpcs
-    },
+    mainChainRPCs: mainChainConfig,
     streamRegistryChainRPCs: sideChainConfig,
     maxRetries: 2,
     _timeouts: {
