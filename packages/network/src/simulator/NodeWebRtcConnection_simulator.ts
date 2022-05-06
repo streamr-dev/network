@@ -9,9 +9,6 @@ import { DescriptionType } from 'node-datachannel'
 const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-        //nodeDataChannel.cleanup()
     }
 })
 

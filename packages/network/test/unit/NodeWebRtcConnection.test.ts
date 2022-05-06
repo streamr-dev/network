@@ -55,7 +55,6 @@ describe('NodeWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
-        NodeWebRtcConnectionFactory.cleanUp()
     })
 
     it('can connect', async () => {
