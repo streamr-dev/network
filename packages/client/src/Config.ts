@@ -15,7 +15,6 @@ import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 import { Chains } from '@streamr/config'
-import { toNumber } from 'lodash'
 
 export type CacheConfig = {
     maxSize: number,
