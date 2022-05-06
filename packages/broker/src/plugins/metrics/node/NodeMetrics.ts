@@ -1,6 +1,5 @@
 import StreamrClient from 'streamr-client'
 import { Logger, MetricsContext, MetricsReport } from 'streamr-network'
-import { SampleFactory } from './Sample'
 
 const logger = new Logger(module)
 
@@ -41,8 +40,7 @@ export class NodeMetrics {
         const nodeId = (await this.client.getNode()).getNodeId()
         const partitionKey = nodeId.toLowerCase()
         try {
-            const sample = SampleFactory.createSample(report)
-            await this.client.publish(streamId, sample, undefined, partitionKey)
+            await this.client.publish(streamId, report, undefined, partitionKey)
         } catch (e: any) {
             logger.warn(`Unable to publish NodeMetrics: ${e.message}`)
         }
