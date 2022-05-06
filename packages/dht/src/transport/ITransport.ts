@@ -5,6 +5,6 @@ export enum Event {
 }
 
 export interface ITransport {
-    on(event: Event.DATA, listener: (peerDescriptor: PeerDescriptor, message: Message) => void): this
-    send(peerDescriptor: PeerDescriptor, msg: Message): void
+    on(event: Event.DATA, listener: (peerDescriptor: PeerDescriptor, message: Message, appId?: string) => void): this
+    send(peerDescriptor: PeerDescriptor, msg: Message, appId?: string): void
 }

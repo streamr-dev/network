@@ -43,13 +43,15 @@ export class DhtNode extends EventEmitter implements ITransport {
     private readonly rpcCommunicator: RpcCommunicator
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private peerDescriptor: PeerDescriptor
+    private readonly appId: string
     
     constructor(
         peerDescriptor: PeerDescriptor,
         dhtRpcClient: DhtRpcClient,
         dhtTransportClient: DhtTransportClient,
         dhtTransportServer: DhtTransportServer,
-        rpcCommunicator: RpcCommunicator
+        rpcCommunicator: RpcCommunicator,
+        appId = 'layer0'
     ) {
         super()
         this.objectId = DhtNode.objectCounter
@@ -57,6 +59,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.peerDescriptor = peerDescriptor
         this.selfId = PeerID.fromValue(this.peerDescriptor.peerId)
         this.peers = new Map()
+        this.appId = appId
         this.bucket = new KBucket({
             localNodeId: this.selfId.value,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
@@ -109,7 +112,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             const message = Message.fromBinary(routedMessage.message)
-            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message)
+            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message, routedMessage.appId)
         } else {
             await this.routeMessage({
                 message: routedMessage.message,
@@ -122,11 +125,11 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
     }
 
-    public send(targetPeerDescriptor: PeerDescriptor, msg: Message): void {
+    public send(targetPeerDescriptor: PeerDescriptor, msg: Message, appId?: string): void {
         const params: RouteMessageParams = {
             message: Message.toBinary(msg),
             destinationPeer: targetPeerDescriptor,
-            appId: 'layer0',
+            appId: appId? appId : 'layer0',
             sourcePeer: this.peerDescriptor
         }
         this.routeMessage(params)

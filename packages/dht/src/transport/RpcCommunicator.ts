@@ -16,6 +16,14 @@ export enum Event {
     INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
 }
 
+export interface RpcCommunicatorConstructor {
+    connectionLayer: ITransport,
+    dhtTransportClient: DhtTransportClient,
+    dhtTransportServer: DhtTransportServer,
+    rpcRequestTimeout?: number,
+    appId?: string
+}
+
 export interface RpcCommunicator {
     on(event: Event.OUTGOING_MESSAGE, listener: () => void): this
     on(event: Event.INCOMING_MESSAGE, listener: () => void): this
@@ -35,20 +43,17 @@ export class RpcCommunicator extends EventEmitter {
     private readonly ongoingRequests: Map<string, OngoingRequest>
     public send: (peerDescriptor: PeerDescriptor, message: Message) => void
     private readonly defaultRpcRequestTimeout: number
+    private readonly appId: string
 
-    constructor(
-        connectionLayer: ITransport,
-        dhtTransportClient: DhtTransportClient,
-        dhtTransportServer: DhtTransportServer,
-        rpcRequestTimeout?: number
-    ) {
+    constructor(params: RpcCommunicatorConstructor) {
         super()
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
 
-        this.dhtTransportClient = dhtTransportClient
-        this.dhtTransportServer = dhtTransportServer
-        this.connectionLayer = connectionLayer
+        this.appId = params.appId || 'layer0'
+        this.dhtTransportClient = params.dhtTransportClient
+        this.dhtTransportServer = params.dhtTransportServer
+        this.connectionLayer = params.connectionLayer
         this.ongoingRequests = new Map()
         this.send = ((_peerDescriptor, _bytes) => { throw new Error('send not defined') })
         this.dhtTransportClient.on(DhtTransportClientEvent.RPC_REQUEST, (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => {
@@ -57,10 +62,14 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
-        this.connectionLayer.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) =>
-            await this.onIncomingMessage(peerDescriptor, message)
-        )
-        this.defaultRpcRequestTimeout = rpcRequestTimeout || 5000
+        this.connectionLayer.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message, appId?: string) => {
+            if (!appId || appId === this.appId) {
+                await this.onIncomingMessage(peerDescriptor, message)
+            } else {
+                console.log(appId, this.appId)
+            }
+        })
+        this.defaultRpcRequestTimeout = params.rpcRequestTimeout || 5000
     }
 
     onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
