@@ -14,6 +14,8 @@ import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
+import { Chains } from '@streamr/config'
+import { toNumber } from 'lodash'
 
 export type CacheConfig = {
     maxSize: number,
@@ -99,6 +101,30 @@ export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'netwo
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
 
+const info = Chains.load('production')
+
+const mainChainRpcs = info.ethereum.rpcEndpoints.map(({ url }) => ({
+    url,
+    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+}))
+
+const sideChainRpcs = info.polygon.rpcEndpoints.map(({ url }) => ({
+    url,
+    timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+}))
+
+const mainChainConfig = {
+    name: 'ethereum',
+    chainId: info.ethereum.id,
+    rpcs: mainChainRpcs
+}
+
+const sideChainConfig = {
+    name: 'polygon',
+    chainId: info.polygon.id,
+    rpcs: sideChainRpcs
+}
+
 /**
  * @category Important
  */
@@ -107,7 +133,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Streamr Core options
     theGraphUrl: 'https://api.thegraph.com/subgraphs/name/streamr-dev/streams',
-    // storageNodeAddressDev = new StorageNode('0xde1112f631486CfC759A50196853011528bC5FA0', '')
 
     // P2P Streamr Network options
     orderMessages: true,
@@ -123,34 +148,21 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Ethereum related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-    mainChainRPCs: undefined, // Default to ethers.js default provider settings
-    streamRegistryChainRPCs: {
-        name: 'polygon',
-        chainId: 137,
-        rpcs: [{
-            url: 'https://polygon-rpc.com',
-            timeout: 120 * 1000
-        }, {
-            url: 'https://poly-rpc.gateway.pokt.network/',
-            timeout: 120 * 1000
-        }, {
-            url: 'https://rpc-mainnet.matic.network',
-            timeout: 120 * 1000
-        }]
-    },
-    streamRegistryChainAddress: '0x0D483E10612F327FC11965Fc82E90dC19b141641',
-    streamStorageRegistryChainAddress: '0xe8e2660CeDf2a59C917a5ED05B72df4146b58399',
-    storageNodeRegistryChainAddress: '0x080F34fec2bc33928999Ea9e39ADc798bEF3E0d6',
-    ensCacheChainAddress: '0x870528c1aDe8f5eB4676AA2d15FC0B034E276A1A',
+    mainChainRPCs: mainChainConfig,
+    streamRegistryChainRPCs: sideChainConfig,
+    streamRegistryChainAddress: info.polygon.contracts.StreamRegistry,
+    streamStorageRegistryChainAddress: info.polygon.contracts.StreamStorageRegistry,
+    storageNodeRegistryChainAddress: info.polygon.contracts.StorageNodeRegistry,
+    ensCacheChainAddress: info.polygon.contracts.ENSCache,
     network: {
         trackers: {
-            contractAddress: '0xab9BEb0e8B106078c953CcAB4D6bF9142BeF854d'
+            contractAddress: info.ethereum.contracts.TrackerRegistry
         },
         acceptProxyConnections: false
     },
     ethereumNetworks: {
         polygon: {
-            chainId: 137,
+            chainId: info.polygon.id,
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
