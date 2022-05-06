@@ -55,7 +55,6 @@ describe('BrowserWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
-        BrowserWebRtcConnectionFactory.cleanUp()
     })
 
     it('can connect', async () => {

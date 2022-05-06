@@ -6,9 +6,6 @@ import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 const BrowserWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-
     }
 })
 

@@ -70,9 +70,6 @@ function DataChannelEmitter(dataChannel: DataChannel) {
 const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-        nodeDataChannel.cleanup()
     }
 })
 

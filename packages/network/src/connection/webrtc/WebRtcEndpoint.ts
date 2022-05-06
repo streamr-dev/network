@@ -39,7 +39,6 @@ interface WebRtcEndpointMetrics extends MetricsDefinition {
 
 export interface WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection
-    cleanUp(): void
 }
 
 export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
@@ -493,7 +492,6 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
-        this.connectionFactory.cleanUp()
     }
 
     getAllConnectionNodeIds(): PeerId[] {
