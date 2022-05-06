@@ -4,7 +4,7 @@ import { v4 } from 'uuid'
 import { PeerID } from '../PeerID'
 import { nodeFormatPeerDescriptor } from './helpers'
 import { DhtRpcOptions } from '../transport/DhtTransportClient'
-import { RouteMessageParams } from '../rpc-protocol/IMessageRouter'
+import { RouteMessageParams } from './DhtNode'
 
 export class DhtPeer {
     private static counter = 0
@@ -68,11 +68,11 @@ export class DhtPeer {
 
     async routeMessage(params: RouteMessageParams): Promise<boolean> {
         const message: RouteMessageWrapper = {
-            messageType: params.messageType,
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
+            appId: params.appId,
             nonce: params.messageId || v4()
         }
         const options: DhtRpcOptions = {

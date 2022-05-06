@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RpcMessage, MessageType, Message } from '../../src/proto/DhtRpc'
-import { waitForEvent, waitForCondition } from 'streamr-test-utils'
+import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/PeerID'
@@ -19,6 +19,7 @@ describe('Route Message With Mock Connections', () => {
     const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
+    const APP_ID = 'layer0'
 
     beforeEach(async () => {
         routerNodes = []
@@ -76,12 +77,17 @@ describe('Route Message With Mock Connections', () => {
         )
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const message: Message = {
+            messageId: 'tsatsa',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
         await Promise.all([
             waitForEvent(destinationNode, MessageRouterEvent.DATA),
             sourceNode.routeMessage({
-                message: RpcMessage.toBinary(rpcWrapper),
-                messageType: MessageType.RPC,
+                message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
+                appId: APP_ID,
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         ])
@@ -91,10 +97,15 @@ describe('Route Message With Mock Connections', () => {
         await sourceNode.joinDht(entryPointDescriptor)
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
-        await expect(sourceNode.routeMessage({
-            message: RpcMessage.toBinary(rpcWrapper),
+        const message: Message = {
+            messageId: 'tsutsu',
             messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
+        await expect(sourceNode.routeMessage({
+            message: Message.toBinary(message),
             destinationPeer: destinationNode.getPeerDescriptor(),
+            appId: APP_ID,
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toThrow()
     })
@@ -109,11 +120,16 @@ describe('Route Message With Mock Connections', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const message: Message = {
+            messageId: 'tsutsu',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
         for (let i = 0; i < numOfMessages; i++ ) {
             sourceNode.routeMessage({
-                message: RpcMessage.toBinary(rpcWrapper),
-                messageType: MessageType.RPC,
+                message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
+                appId: APP_ID,
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         }
@@ -138,10 +154,15 @@ describe('Route Message With Mock Connections', () => {
                 await Promise.all(routers.map(async (receiver) => {
                     if (!node.getSelfId().equals(receiver.getSelfId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
-                        await node.routeMessage({
-                            message: RpcMessage.toBinary(rpcWrapper),
+                        const message: Message = {
+                            messageId: 'tsutsu',
                             messageType: MessageType.RPC,
+                            body: RpcMessage.toBinary(rpcWrapper)
+                        }
+                        await node.routeMessage({
+                            message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
+                            appId: APP_ID,
                             sourcePeer: node.getPeerDescriptor()
                         })
                     }

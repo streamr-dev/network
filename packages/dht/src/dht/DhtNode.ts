@@ -10,16 +10,24 @@ import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
 import {
     Message,
-    MessageType,
     PeerDescriptor,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
-import { Event as MessageRouterEvent, IMessageRouter, RouteMessageParams } from '../rpc-protocol/IMessageRouter'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
+import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 
-export class DhtNode extends EventEmitter implements IMessageRouter {
+export interface RouteMessageParams {
+    message: Uint8Array
+    destinationPeer: PeerDescriptor
+    sourcePeer: PeerDescriptor
+    appId: string
+    previousPeer?: PeerDescriptor
+    messageId?: string
+}
+
+export class DhtNode extends EventEmitter implements ITransport {
     static objectCounter = 0
     private objectId = 1
     private readonly ALPHA = 3
@@ -100,27 +108,28 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            const message = this.wrapRoutedMessage(routedMessage)
-            this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, message)
+            const message = Message.fromBinary(routedMessage.message)
+            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message)
         } else {
             await this.routeMessage({
-                messageType: routedMessage.messageType as MessageType,
                 message: routedMessage.message,
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
                 sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
+                appId: routedMessage.appId,
                 messageId: routedMessage.nonce
             })
         }
     }
 
-    private wrapRoutedMessage(routedMessage: RouteMessageWrapper): Message {
-        const message: Message = {
-            messageType: routedMessage.messageType,
-            messageId: routedMessage.nonce,
-            body: routedMessage.message
+    public send(targetPeerDescriptor: PeerDescriptor, msg: Message): void {
+        const params: RouteMessageParams = {
+            message: Message.toBinary(msg),
+            destinationPeer: targetPeerDescriptor,
+            appId: 'layer0',
+            sourcePeer: this.peerDescriptor
         }
-        return message
+        this.routeMessage(params)
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {

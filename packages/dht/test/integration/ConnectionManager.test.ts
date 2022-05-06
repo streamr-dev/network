@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { Event as ConnectionManagerEvents } from "../../src/connection/IConnectionManager"
+import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
 import { createPeerDescriptor } from '../utils'
 
@@ -90,7 +90,7 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, reject) => {
-            connectionManager2.on(ConnectionManagerEvents.MESSAGE, async (peerDescriptor: PeerDescriptor, message: Message) => {
+            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
