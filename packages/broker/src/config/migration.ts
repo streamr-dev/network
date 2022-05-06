@@ -113,7 +113,7 @@ const convertV1ToV2 = (source: any): Config => {
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
-    const metricsPluginStreamIdPrefix = source.plugins.metrics?.streamIdPrefix
+    const metricsPluginStreamIdPrefix = source.plugins.metrics?.nodeMetrics?.streamIdPrefix
     if (metricsPluginStreamIdPrefix !== undefined) {
         target.plugins.metrics.periods = [
             {
@@ -133,7 +133,7 @@ const convertV1ToV2 = (source: any): Config => {
                 streamId: `${metricsPluginStreamIdPrefix}/day`
             }
         ]
-        delete target.plugins.metrics.streamIdPrefix
+        delete target.plugins.metrics.nodeMetrics
     }
     if (target.client?.network?.name !== undefined) {
         delete target.client.network.name 
