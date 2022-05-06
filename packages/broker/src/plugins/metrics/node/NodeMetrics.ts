@@ -3,40 +3,25 @@ import { Logger, MetricsContext, MetricsReport } from 'streamr-network'
 
 const logger = new Logger(module)
 
-const PERIODS = {
-    FIVE_SECONDS: {
-        duration: 5 * 1000,
-        streamIdSuffix: 'sec'
-    },
-    ONE_MINUTE: {
-        duration: 60 * 1000,
-        streamIdSuffix: 'min'
-    },
-    ONE_HOUR: {
-        duration: 60 * 60 * 1000,
-        streamIdSuffix: 'hour'
-    },
-    ONE_DAY: {
-        duration: 24 * 60 * 60 * 1000,
-        streamIdSuffix: 'day'
-    }
+export interface PeriodConfig {
+    streamId: string,
+    duration: number
 }
 
 export class NodeMetrics {
 
     private readonly client: StreamrClient
-    private readonly streamIdPrefix: string
     private metricsContext: MetricsContext
+    private reportConfigs: PeriodConfig[]
     private producers: { stop: () => void }[] = []
 
-    constructor(metricsContext: MetricsContext, client: StreamrClient, streamIdPrefix: string) {
+    constructor(metricsContext: MetricsContext, client: StreamrClient, periodConfigs: PeriodConfig[]) {
         this.metricsContext = metricsContext
         this.client = client
-        this.streamIdPrefix = streamIdPrefix
+        this.reportConfigs = periodConfigs
     }
 
-    private async publish(report: MetricsReport, streamIdSuffix: string): Promise<void> {
-        const streamId = `${this.streamIdPrefix}${streamIdSuffix}`
+    private async publish(report: MetricsReport, streamId: string): Promise<void> {
         const nodeId = (await this.client.getNode()).getNodeId()
         const partitionKey = nodeId.toLowerCase()
         try {
@@ -47,10 +32,10 @@ export class NodeMetrics {
     }
 
     async start(): Promise<void> {
-        this.producers = Object.values(PERIODS).map((period) => {
+        this.producers = this.reportConfigs.map((config) => {
             return this.metricsContext.createReportProducer(async (report: MetricsReport) => {
-                await this.publish(report, period.streamIdSuffix)
-            }, period.duration)
+                await this.publish(report, config.streamId)
+            }, config.duration)
         })
     }
 

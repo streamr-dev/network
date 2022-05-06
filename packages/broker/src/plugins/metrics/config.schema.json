@@ -3,25 +3,43 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "description": "Metrics plugin configuration",
-  "required": [
-    "nodeMetrics"
-  ],
   "additionalProperties": false,
   "properties": {
-    "nodeMetrics" : {
-      "type": [
-        "object",
-        "null"
-      ],
-      "additionalProperties": false,
-      "default": {},
-      "properties": {
-        "streamIdPrefix": {
-          "type": "string",
-          "description": "Base streamId before granularities (sec, min, hour) for the firehose metrics stream",
-          "default": "streamr.eth/metrics/nodes/firehose/"
+    "periods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "streamId",
+          "duration"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          }
+        } 
+      },
+      "default": [
+        {
+          "duration": 5000,
+          "streamId": "streamr.eth/metrics/nodes/firehose/sec"
+        },
+        {
+          "duration": 60000,
+          "streamId": "streamr.eth/metrics/nodes/firehose/min"
+        },
+        {
+          "duration": 3600000,
+          "streamId": "streamr.eth/metrics/nodes/firehose/hour"
+        },
+        {
+          "duration": 86400000,
+          "streamId": "streamr.eth/metrics/nodes/firehose/day"
         }
-      }
+      ]
     }
   }
 }

@@ -1,15 +1,13 @@
 import { Schema } from 'ajv'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { NodeMetrics } from './node/NodeMetrics'
+import { NodeMetrics, PeriodConfig } from './node/NodeMetrics'
 import { Logger } from 'streamr-network'
 
 const logger = new Logger(module)
 
 export interface MetricsPluginConfig {
-    nodeMetrics: {
-        streamIdPrefix: string
-    } | null
+    periods: PeriodConfig[]
 }
 
 export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
@@ -21,18 +19,13 @@ export class MetricsPlugin extends Plugin<MetricsPluginConfig> {
 
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
-
-        if (this.pluginConfig.nodeMetrics !== null) {
-            this.nodeMetrics = new NodeMetrics(
-                metricsContext,
-                this.streamrClient!,
-                this.pluginConfig.nodeMetrics.streamIdPrefix
-            )
-        }
+        this.nodeMetrics = new NodeMetrics(
+            metricsContext,
+            this.streamrClient!,
+            this.pluginConfig.periods
+        )
         try {
-            if (this.nodeMetrics !== undefined) {
-                await this.nodeMetrics.start()
-            }
+            await this.nodeMetrics.start()
         } catch (e) {
             // TODO remove this catch block after testnet is completed (it is ok to that the plugin throws an error and Broker doesn't start)
             logger.warn(`Unable to start MetricsPlugin: ${e.message}`)

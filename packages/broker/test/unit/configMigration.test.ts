@@ -241,6 +241,7 @@ describe('Config migration', () => {
             city: null
         }
         source.plugins.metrics.consoleAndPM2IntervalInSeconds = 123
+        source.plugins.metrics.nodeMetrics.streamIdPrefix = 'mock-prefix'
         testMigration(source, (target: any) => {
             expect(target.client.network.name).toBeUndefined()
             expect(target.client.network.location).toStrictEqual({
@@ -249,6 +250,26 @@ describe('Config migration', () => {
                 country: 'mock-country'
             })
             expect(target.plugins.consoleMetrics.interval).toBe(123)
+            expect(target.plugins.metrics).toEqual({
+                periods: [
+                    {
+                        duration: 5000,
+                        streamId: 'mock-prefix/sec'
+                    },
+                    {
+                        duration: 60000,
+                        streamId: 'mock-prefix/min'
+                    },
+                    {
+                        duration: 3600000,
+                        streamId: 'mock-prefix/hour'
+                    },
+                    {
+                        duration: 86400000,
+                        streamId: 'mock-prefix/day'
+                    }
+                ]
+            })
         })
     })
 

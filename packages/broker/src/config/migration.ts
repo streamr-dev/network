@@ -113,11 +113,35 @@ const convertV1ToV2 = (source: any): Config => {
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
+    const metricsPluginStreamIdPrefix = source.plugins.metrics?.streamIdPrefix
+    if (metricsPluginStreamIdPrefix !== undefined) {
+        target.plugins.metrics.periods = [
+            {
+                duration: 5000,
+                streamId: `${metricsPluginStreamIdPrefix}/sec`
+            },
+            {
+                duration: 60000,
+                streamId: `${metricsPluginStreamIdPrefix}/min`
+            },
+            {
+                duration: 3600000,
+                streamId: `${metricsPluginStreamIdPrefix}/hour`
+            },
+            {
+                duration: 86400000,
+                streamId: `${metricsPluginStreamIdPrefix}/day`
+            }
+        ]
+        delete target.plugins.metrics.streamIdPrefix
+    }
     if (target.client?.network?.name !== undefined) {
         delete target.client.network.name 
     }
     return target as Config
 }
+
+// const streamId = `${this.streamIdPrefix}${streamIdSuffix}`
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createMigratedConfig = (source: any): Config | never => {
