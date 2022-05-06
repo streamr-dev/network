@@ -103,12 +103,14 @@ export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc3
 
 const chainConfig = Chains.load('production')
 
+const DEFAULT_RPC_TIMEOUT = 120 * 1000
+
 const mainChainConfig = {
     name: 'ethereum',
     chainId: chainConfig.ethereum.id,
     rpcs: chainConfig.ethereum.rpcEndpoints.map(({ url }) => ({
         url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        timeout: DEFAULT_RPC_TIMEOUT
     }))
 }
 
@@ -117,7 +119,7 @@ const sideChainConfig = {
     chainId: chainConfig.polygon.id,
     rpcs: chainConfig.polygon.rpcEndpoints.map(({ url }) => ({
         url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        timeout: DEFAULT_RPC_TIMEOUT
     }))
 }
 

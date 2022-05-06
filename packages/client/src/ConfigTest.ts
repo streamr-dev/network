@@ -6,12 +6,14 @@ function toNumber(value: any): number | undefined {
 
 const chainConfig = Chains.load('development')
 
+const DEFAULT_RPC_TIMEOUT = 30 * 1000
+
 const mainChainConfig = {
     name: 'dev_ethereum',
     chainId: chainConfig.ethereum.id,
     rpcs: chainConfig.ethereum.rpcEndpoints.map(({ url }) => ({
         url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? DEFAULT_RPC_TIMEOUT
     }))
 }
 
@@ -20,7 +22,7 @@ const sideChainConfig = {
     chainId: chainConfig.streamr.id,
     rpcs: chainConfig.streamr.rpcEndpoints.map(({ url }) => ({
         url,
-        timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000
+        timeout: toNumber(process.env.TEST_TIMEOUT) ?? DEFAULT_RPC_TIMEOUT
     }))
 }
 
