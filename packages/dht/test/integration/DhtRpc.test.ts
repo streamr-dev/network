@@ -1,6 +1,6 @@
 import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
 import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
-import { IConnectionManager } from '../../src/connection/IConnectionManager'
+import { ITransport } from '../../src/transport/ITransport'
 import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
@@ -15,8 +15,8 @@ describe('DhtClientRpcTransport', () => {
         clientTransport2: DhtTransportClient,
         serverTransport1: DhtTransportServer,
         serverTransport2: DhtTransportServer,
-        mockConnectionLayer1: IConnectionManager,
-        mockConnectionLayer2: IConnectionManager,
+        mockConnectionLayer1: ITransport,
+        mockConnectionLayer2: ITransport,
         rpcCommunicator1: RpcCommunicator,
         rpcCommunicator2: RpcCommunicator,
         client1: DhtRpcClient,

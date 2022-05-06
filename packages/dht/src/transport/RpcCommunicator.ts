@@ -1,4 +1,3 @@
-import { Event as ConnectionLayerEvent, IConnectionManager } from '../connection/IConnectionManager'
 import { v4 } from 'uuid'
 import { Err, ErrorCode } from '../errors'
 import {
@@ -10,6 +9,7 @@ import {
 import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } from '../proto/DhtRpc'
 import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
 import EventEmitter = require('events')
+import { ITransport, Event as ITransportEvent  } from './ITransport'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -31,13 +31,13 @@ export class RpcCommunicator extends EventEmitter {
     private objectId = 0
     private readonly dhtTransportClient: DhtTransportClient
     private readonly dhtTransportServer: DhtTransportServer
-    private readonly connectionLayer: IConnectionManager
+    private readonly connectionLayer: ITransport
     private readonly ongoingRequests: Map<string, OngoingRequest>
     public send: (peerDescriptor: PeerDescriptor, message: Message) => void
     private readonly defaultRpcRequestTimeout: number
 
     constructor(
-        connectionLayer: IConnectionManager,
+        connectionLayer: ITransport,
         dhtTransportClient: DhtTransportClient,
         dhtTransportServer: DhtTransportServer,
         rpcRequestTimeout?: number
@@ -57,7 +57,7 @@ export class RpcCommunicator extends EventEmitter {
         this.dhtTransportServer.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
-        this.connectionLayer.on(ConnectionLayerEvent.MESSAGE, async (peerDescriptor: PeerDescriptor, message: Message) =>
+        this.connectionLayer.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) =>
             await this.onIncomingMessage(peerDescriptor, message)
         )
         this.defaultRpcRequestTimeout = rpcRequestTimeout || 5000

@@ -2,9 +2,9 @@
 
 import { Message, PeerDescriptor } from '../proto/DhtRpc'
 import { EventEmitter } from 'events'
-import { IConnectionManager } from './IConnectionManager'
+import { ITransport } from '../transport/ITransport'
 
-export class MockConnectionManager extends EventEmitter implements IConnectionManager {
+export class MockConnectionManager extends EventEmitter implements ITransport {
     constructor() {
         super()
     }

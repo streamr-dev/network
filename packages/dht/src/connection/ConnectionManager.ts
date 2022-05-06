@@ -1,5 +1,4 @@
 import EventEmitter from 'events'
-import { IConnectionManager, Event } from './IConnectionManager'
 import { ConnectivityRequestMessage, ConnectivityResponseMessage, HandshakeMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
 import { Connection } from './Connection'
 import { WebSocketConnector } from './WebSocketConnector'
@@ -8,6 +7,7 @@ import { Event as ConnectionSourceEvents } from './ConnectionSource'
 import { Event as ConnectionEvents } from './Connection'
 import { ServerWebSocket } from './ServerWebSocket'
 import { PeerID } from '../PeerID'
+import { ITransport, Event } from '../transport/ITransport'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -15,7 +15,7 @@ export interface ConnectionManagerConfig {
     entryPoints?: PeerDescriptor[]
 }
 
-export class ConnectionManager extends EventEmitter implements IConnectionManager {
+export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
 
     private ownPeerDescriptor: PeerDescriptor | null = null
@@ -215,7 +215,7 @@ export class ConnectionManager extends EventEmitter implements IConnectionManage
             }
         }
         else {
-            this.emit(Event.MESSAGE, connection.peerDescriptor, message)
+            this.emit(Event.DATA, connection.peerDescriptor, message)
         }
     }
 

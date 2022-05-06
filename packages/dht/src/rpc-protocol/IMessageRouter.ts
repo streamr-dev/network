@@ -5,6 +5,7 @@ export interface RouteMessageParams {
     destinationPeer: PeerDescriptor
     sourcePeer: PeerDescriptor
     messageType: MessageType
+    appId: string
     previousPeer?: PeerDescriptor
     messageId?: string
 }
