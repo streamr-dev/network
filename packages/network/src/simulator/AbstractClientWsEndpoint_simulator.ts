@@ -13,7 +13,6 @@ export type HandshakeValues = { uuid: string, peerId: PeerId }
 /*
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(peerInfo: PeerInfo): C
-    cleanUp(): void
 }
 */
 

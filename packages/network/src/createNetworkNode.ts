@@ -10,7 +10,7 @@ import { NegotiatedProtocolVersions } from './connection/NegotiatedProtocolVersi
 import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from './connection/NodeWebRtcConnection'
+import { webRtcConnectionFactory} from './connection/NodeWebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
@@ -56,7 +56,7 @@ export const createNetworkNode = ({
         webRtcSignaller,
         metricsContext,
         negotiatedProtocolVersions,
-        NodeWebRtcConnectionFactory,
+        webRtcConnectionFactory,
         newWebrtcConnectionTimeout,
         peerPingInterval,
         webrtcDatachannelBufferThresholdLow,

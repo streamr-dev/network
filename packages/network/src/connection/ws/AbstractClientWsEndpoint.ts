@@ -11,7 +11,6 @@ export type HandshakeValues = { uuid: string, peerId: PeerId }
 
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(socket: SupportedWs, peerInfo: PeerInfo): C
-    cleanUp(): void
 }
 
 export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> extends AbstractWsEndpoint<C> {

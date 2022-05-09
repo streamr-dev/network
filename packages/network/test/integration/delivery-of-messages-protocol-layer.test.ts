@@ -15,7 +15,7 @@ import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProto
 import { MetricsContext } from "../../src/helpers/MetricsContext"
 import { startTracker, Tracker } from "../../src/composition"
 import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { webRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
 
@@ -53,7 +53,7 @@ describe('delivery of messages in protocol layer', () => {
             new RtcSignaller(peerInfo1, nodeToTracker),
             new MetricsContext('node1'),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
         const wrtcEndpoint2 =  new WebRtcEndpoint(
             peerInfo2,
@@ -61,7 +61,7 @@ describe('delivery of messages in protocol layer', () => {
             new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext('node2'),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
 
         // @ts-expect-error: private field

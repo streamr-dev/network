@@ -30,7 +30,8 @@ class WebRtcError extends Error {
 
 export interface WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection
-    cleanUp(): void
+    registerWebRtcEndpoint(): void
+    unregisterWebRtcEndpoint(): void
 }
 
 export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
@@ -82,6 +83,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
         this.disallowPrivateAddresses = webrtcDisallowPrivateAddresses
         this.maxMessageSize = maxMessageSize
+
+        this.connectionFactory.registerWebRtcEndpoint()
 
         rtcSignaller.setOfferListener(async (options: OfferOptions) => {
             this.onRtcOfferFromSignaller(options)
@@ -468,6 +471,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
 
     stop(): void {
+        if (this.stopped === true) {
+            throw new Error('already stopped')
+        }
         this.stopped = true
         const { connections, messageQueues } = this
         this.connections = {}
@@ -481,7 +487,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         this.removeAllListeners()
         Object.values(connections).forEach((connection) => connection.close())
         Object.values(messageQueues).forEach((queue) => queue.clear())
-        this.connectionFactory.cleanUp()
+        this.connectionFactory.unregisterWebRtcEndpoint()
     }
 
     getAllConnectionNodeIds(): PeerId[] {

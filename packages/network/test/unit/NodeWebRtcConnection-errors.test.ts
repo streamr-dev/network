@@ -1,4 +1,4 @@
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { webRtcConnectionFactory } from "../../src/connection/NodeWebRtcConnection"
 import { MessageQueue} from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/WebRtcConnection"
 import { DeferredConnectionAttempt } from "../../src/connection/DeferredConnectionAttempt"
@@ -23,8 +23,8 @@ const connectionOpts2: ConstructorOptions = {
 
 describe('NodeWebRtcConnection', () => {
 
-    const conn1 = NodeWebRtcConnectionFactory.createConnection(connectionOpts1)
-    const conn2 = NodeWebRtcConnectionFactory.createConnection(connectionOpts2)
+    const conn1 = webRtcConnectionFactory.createConnection(connectionOpts1)
+    const conn2 = webRtcConnectionFactory.createConnection(connectionOpts2)
 
     conn1.on('localCandidate', (candidate, mid) => {
         conn2.addRemoteCandidate(candidate, mid)
@@ -46,7 +46,6 @@ describe('NodeWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
-        NodeWebRtcConnectionFactory.cleanUp()
     })
 
     it('can connect', async () => {
