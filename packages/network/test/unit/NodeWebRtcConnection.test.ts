@@ -1,4 +1,4 @@
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { runAndWaitForEvents } from 'streamr-test-utils'
 import { MessageQueue} from '../../src/connection/MessageQueue'
 import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
@@ -24,19 +24,19 @@ const connectionOpts2: ConstructorOptions = {
 
 describe('NodeWebRtcConnection', () => {
 
-    const conn1 = NodeWebRtcConnectionFactory.createConnection(connectionOpts1)
-    const conn2 = NodeWebRtcConnectionFactory.createConnection(connectionOpts2)
+    const conn1 = webRtcConnectionFactory.createConnection(connectionOpts1)
+    const conn2 = webRtcConnectionFactory.createConnection(connectionOpts2)
 
-    conn1.on('localCandidate', (candidate, mid) => {
+    conn1.on('localCandidate', (candidate: any, mid: any) => {
         conn2.addRemoteCandidate(candidate, mid)
     })
-    conn2.on('localCandidate', (candidate, mid) => {
+    conn2.on('localCandidate', (candidate: any, mid: any) => {
         conn1.addRemoteCandidate(candidate, mid)
     })
-    conn1.on('localDescription', (type, description) => {
+    conn1.on('localDescription', (type: any, description: any) => {
         conn2.setRemoteDescription(description, type)
     })
-    conn2.on('localDescription', (type, description) => {
+    conn2.on('localDescription', (type: any, description: any) => {
         conn1.setRemoteDescription(description, type)
     })
     beforeAll(async () => {
