@@ -10,6 +10,8 @@ import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } fr
 import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
 import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
+import { ConnectionManager } from '../connection/ConnectionManager'
+import { DEFAULT_APP_ID } from '../dht/DhtNode'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -50,7 +52,7 @@ export class RpcCommunicator extends EventEmitter {
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
 
-        this.appId = params.appId || 'layer0'
+        this.appId = params.appId || DEFAULT_APP_ID
         this.dhtTransportClient = params.dhtTransportClient
         this.dhtTransportServer = params.dhtTransportServer
         this.connectionLayer = params.connectionLayer
@@ -157,7 +159,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private requestTimeoutFn(deferredPromises: DeferredPromises): void {
-        const error = new Err.RpcTimeout('Rpc request timed out')
+        const error = new Err.RpcTimeout('Rpc request timed out', new Error())
         this.rejectDeferredPromises(deferredPromises, error, 'DEADLINE_EXCEEDED')
     }
 
@@ -190,6 +192,13 @@ export class RpcCommunicator extends EventEmitter {
             sourceDescriptor: request.targetDescriptor,
             responseError
         }
+    }
+
+    public getConnectionManager(): ConnectionManager | never {
+        if (this.appId === DEFAULT_APP_ID) {
+            return this.connectionLayer as ConnectionManager
+        }
+        throw new Err.LayerViolation('RpcCommunicator can only access ConnectionManager on layer 0')
     }
 
     stop(): void {

@@ -117,7 +117,7 @@ describe('ConnectionManager', () => {
         expect(result.openInternet).toEqual(true)
 
         const connectionManager2 = new ConnectionManager({
-            webSocketPort: 9996, entryPoints: [
+            webSocketPort: 9999, entryPoints: [
                 peerDescriptor
             ]
         })
@@ -147,8 +147,10 @@ describe('ConnectionManager', () => {
         await promise
         await Promise.all([
             waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
-            connectionManager.disconnect(peerDescriptor2)
+            connectionManager.disconnect(peerDescriptor2, undefined, 100)
         ])
+        await connectionManager.stop()
+        await connectionManager2.stop()
     })
 
     afterAll(async () => {

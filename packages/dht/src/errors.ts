@@ -8,7 +8,8 @@ export enum ErrorCode {
     RPC_REQUEST = 'RPC_REQUEST',
     COULD_NOT_ROUTE = 'COULD_NOT_ROUTE',
     NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
-    UNKNOWN_RPC_METHOD = 'UNKNOWN_RPC_METHOD'
+    UNKNOWN_RPC_METHOD = 'UNKNOWN_RPC_METHOD',
+    LAYER_VIOLATION = 'LAYER_VIOLATION'
 }
 
 export namespace Err {
@@ -26,4 +27,6 @@ export namespace Err {
     export class CouldNotRoute extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_ROUTE, message, originalError) } }
     export class NotImplemented extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NOT_IMPLEMENTED, message, originalError) } }
     export class UnknownRpcMethod extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError) } }
+    export class LayerViolation extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.LAYER_VIOLATION, message, originalError) } }
+
 }

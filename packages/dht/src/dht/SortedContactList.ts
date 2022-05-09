@@ -92,4 +92,8 @@ export class SortedContactList {
     public getSize(): number {
         return this.contactIds.length
     }
+
+    public isContact(id: PeerID): boolean {
+        return !!this.contactsById[id.toString()]
+    }
 }
