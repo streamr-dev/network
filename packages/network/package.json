@@ -49,7 +49,7 @@
     "heap": "^0.2.6",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
-    "node-datachannel": "^0.2.4",
+    "node-datachannel": "^0.3.2",
     "pino": "^6.11.3",
     "setimmediate": "^1.0.5",
     "streamr-client-protocol": "^12.0.0",
