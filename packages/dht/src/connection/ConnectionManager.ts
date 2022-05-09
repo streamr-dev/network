@@ -1,11 +1,11 @@
 import EventEmitter from 'events'
 import { ConnectivityRequestMessage, ConnectivityResponseMessage, HandshakeMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
 import { Connection } from './Connection'
-import { WebSocketConnector } from './WebSocketConnector'
-import { WebSocketServer } from './WebSocketServer'
+import { WebSocketConnector } from './WebSocket/WebSocketConnector'
+import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { Event as ConnectionSourceEvents } from './ConnectionSource'
 import { Event as ConnectionEvents } from './Connection'
-import { ServerWebSocket } from './ServerWebSocket'
+import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
 import { ITransport, Event } from '../transport/ITransport'
 
@@ -227,15 +227,29 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     // or it might fail completely! Where should we buffer the outgoing data?
 
     send(peerDescriptor: PeerDescriptor, message: Message): void {
-        if (this.connections.hasOwnProperty(PeerID.fromValue(peerDescriptor.peerId).toString())) {
-            this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()].send(Message.toBinary(message))
+        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        if (this.connections.hasOwnProperty(stringId)) {
+            this.connections[stringId].send(Message.toBinary(message))
         }
 
         else if (peerDescriptor.websocket) {
             const connection = this.webSocketConnector.connect({ host: peerDescriptor.websocket.ip, port: peerDescriptor.websocket.port })
             connection.setPeerDescriptor(peerDescriptor)
-            this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()] = connection
+            this.connections[stringId] = connection
             connection.send(Message.toBinary(message))
         }
+    }
+
+    disconnect(peerDescriptor: PeerDescriptor, reason?: string): void {
+        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        if (this.connections.hasOwnProperty(stringId)) {
+            console.log(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
+            this.connections[stringId].close()
+        }
+    }
+
+    getConnection(peerDescriptor: PeerDescriptor): Connection | null {
+        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        return this.connections[stringId] || null
     }
 }

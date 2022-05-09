@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 
 import { EventEmitter } from 'events'
-import { Connection, Event as ConnectionEvent } from './Connection'
+import { Connection, Event as ConnectionEvent } from '../Connection'
 import { connection as WsConnection } from 'websocket'
-import { ConnectionID } from '../types'
-import { PeerDescriptor } from '../proto/DhtRpc'
+import { ConnectionID } from '../../types'
+import { PeerDescriptor } from '../../proto/DhtRpc'
 
 export class ServerWebSocket extends EventEmitter implements Connection {
     public connectionId: ConnectionID

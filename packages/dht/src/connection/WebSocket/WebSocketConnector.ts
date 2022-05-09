@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
-import { ConnectionSource, Event as ConnectionSourceEvent } from './ConnectionSource'
+import { ConnectionSource, Event as ConnectionSourceEvent } from '../ConnectionSource'
 import { ClientWebSocket } from './ClientWebSocket'
-import { Event as ConnectionEvent, Connection } from './Connection'
+import { Event as ConnectionEvent, Connection } from '../Connection'
 
 export class WebSocketConnector extends EventEmitter implements ConnectionSource {
 

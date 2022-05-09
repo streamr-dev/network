@@ -4,6 +4,9 @@ import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
 import { createPeerDescriptor } from '../utils'
+import { waitForEvent } from 'streamr-test-utils'
+import { Event as ConnectionEvent } from '../../src/connection/Connection'
+import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 
 describe('ConnectionManager', () => {
     beforeAll(async () => {
@@ -102,7 +105,52 @@ describe('ConnectionManager', () => {
         await connectionManager.stop()
         await connectionManager2.stop()
     })
-    
+
+    it('Can disconnect', async () => {
+        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9997 })
+
+        const result = await connectionManager.start()
+        const peerDescriptor = createPeerDescriptor(result)
+        connectionManager.enableConnectivity(peerDescriptor)
+
+        expect(result.ip).toEqual('localhost')
+        expect(result.openInternet).toEqual(true)
+
+        const connectionManager2 = new ConnectionManager({
+            webSocketPort: 9996, entryPoints: [
+                peerDescriptor
+            ]
+        })
+
+        const result2 = await connectionManager2.start()
+        const peerDescriptor2 = createPeerDescriptor(result2)
+        connectionManager2.enableConnectivity(peerDescriptor2)
+
+        expect(result2.ip).toEqual('127.0.0.1')
+        expect(result2.openInternet).toEqual(true)
+
+        const arr = new Uint8Array(10)
+        const msg: Message = {
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: arr
+        }
+
+        const promise = new Promise<void>((resolve, reject) => {
+            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+                expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+        connectionManager.send(peerDescriptor2, msg)
+
+        await promise
+        await Promise.all([
+            waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
+            connectionManager.disconnect(peerDescriptor2)
+        ])
+    })
+
     afterAll(async () => {
     })
 })
