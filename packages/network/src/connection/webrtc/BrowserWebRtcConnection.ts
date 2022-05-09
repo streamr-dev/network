@@ -4,7 +4,6 @@ import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
-    activeWebRtcEndpointCount = 0
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
     }
