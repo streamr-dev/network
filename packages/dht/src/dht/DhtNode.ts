@@ -79,6 +79,7 @@ export class DhtNode extends EventEmitter implements ITransport {
                 if (!alive) {
                     this.bucket.remove(contact.id)
                     this.bucket.add(newContact)
+                    this.neighborList.removeContact(contact.peerId)
                     break
                 }
             }
@@ -95,6 +96,8 @@ export class DhtNode extends EventEmitter implements ITransport {
                 this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
             } else {
                 this.bucket.remove(contact.peerId.value)
+                this.neighborList.removeContact(contact.peerId)
+                this.addClosestContactToBucket()
             }
         })
         this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
@@ -102,7 +105,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         })
 
         this.dhtRpcClient = dhtRpcClient
-        this.neighborList = new SortedContactList(this.selfId)
+        this.neighborList = new SortedContactList(this.selfId, this.K * 4)
         this.dhtTransportServer = dhtTransportServer
         this.dhtTransportClient = dhtTransportClient
         this.rpcCommunicator = rpcCommunicator
@@ -325,6 +328,22 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public getKBucketPeers(): PeerDescriptor[] {
         return this.bucket.toArray().map((dhtPeer) => dhtPeer.getPeerDescriptor())
+    }
+
+    private addClosestContactToBucket(): void {
+        const closest = this.getClosestActiveContactNotInBucket()
+        if (closest) {
+            this.bucket.add(closest)
+        }
+    }
+
+    private getClosestActiveContactNotInBucket(): DhtPeer | null {
+        for (const contactId of this.neighborList.getContactIds()) {
+            if (!this.bucket.get(contactId.value) && this.neighborList.isActive(contactId)) {
+                return this.neighborList.getContact(contactId.toString()).contact
+            }
+        }
+        return null
     }
 
     public stop(): void {
