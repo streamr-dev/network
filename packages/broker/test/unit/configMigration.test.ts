@@ -277,4 +277,77 @@ describe('Config migration', () => {
         const source = {}
         expect(() => createMigratedConfig(source)).toThrow('Unable to migrate the config')
     })
+
+    describe('from v1 to v2', () => {
+
+        let source: any
+
+        beforeEach(() => {
+            source = {
+                $schema: 'https://schema.streamr.network/config-v1.schema.json',
+                client: {
+                    auth: {
+                        privateKey: MOCK_PRIVATE_KEY
+                    }
+                },
+                plugins: {}
+            }
+        })
+        
+        it('minimal', () => {
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            })
+        })
+
+        it('metrics: default', () => {
+            source.plugins = {
+                metrics: {}
+            }
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            })
+        })
+
+        it('metrics: custom stream', () => {
+            source.plugins = {
+                metrics: {
+                    nodeMetrics: {
+                        streamIdPrefix: 'mock-prefix'
+                    }
+                }
+            }
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json',
+                plugins: {
+                    metrics: {
+                        periods: [
+                            {
+                                duration: 5000,
+                                streamId: 'mock-prefix/sec'
+                            },
+                            {
+                                duration: 60000,
+                                streamId: 'mock-prefix/min'
+                            },
+                            {
+                                duration: 3600000,
+                                streamId: 'mock-prefix/hour'
+                            },
+                            {
+                                duration: 86400000,
+                                streamId: 'mock-prefix/day'
+                            }
+                        ]        
+                    }
+                }
+            })
+        })
+    })
 })
