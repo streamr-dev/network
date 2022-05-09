@@ -1,6 +1,6 @@
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/InstructionSender'
-import { Metrics, MetricsContext } from 'streamr-network/dist/src/helpers/MetricsContext'
+import { MetricsContext } from 'streamr-network'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')
 const MOCK_STREAM_PART_2 = StreamPartIDUtils.parse('stream-id#2')
@@ -22,19 +22,17 @@ const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
 }
 
 describe('InstructionSender', () => {
-    let metrics: Metrics
     let send: jest.Mock<ReturnType<SendInstructionFn>, Parameters<SendInstructionFn>>
     let sender: InstructionSender
 
     beforeEach(() => {
         jest.useFakeTimers()
         jest.setSystemTime(STARTUP_TIME)
-        metrics = new MetricsContext('').create('test')
         send = jest.fn().mockResolvedValue(true)
         sender = new InstructionSender({
             debounceWait: DEBOUNCE_WAIT,
             maxWait: MAX_WAIT
-        }, send, metrics)
+        }, send, new MetricsContext())
     })
 
     afterEach(() => {

@@ -1,10 +1,11 @@
-import StreamrClient, { StreamPermission } from 'streamr-client'
+import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
-import { createClient, fetchPrivateKeyWithGas, Queue, startBroker, startTestTracker } from '../../../../utils'
+import { createClient, fetchPrivateKeyWithGas, startBroker, startTestTracker, STREAMR_DOCKER_DEV_HOST } from '../../../../utils'
 import { Broker } from '../../../../../src/broker'
-import { v4 as uuid } from 'uuid'
 import { EthereumAddress, keyToArrayIndex } from 'streamr-client-protocol'
+import { MetricsReport } from 'streamr-network'
+import { waitForCondition } from 'streamr-test-utils'
 
 const trackerPort = 47745
 
@@ -15,32 +16,48 @@ describe('NodeMetrics', () => {
     let metricsGeneratingBroker: Broker
     let nodeAddress: EthereumAddress
     let client: StreamrClient
-    let streamIdPrefix: string
+    let stream: Stream
 
     beforeAll(async () => {
-        const tmpAccount = new Wallet(await fetchPrivateKeyWithGas())
+        const brokerWallet = new Wallet(await fetchPrivateKeyWithGas())
 
-        nodeAddress = tmpAccount.address
+        nodeAddress = brokerWallet.address
         tracker = await startTestTracker(trackerPort)
-        client = await createClient(tracker, tmpAccount.privateKey)
+        client = await createClient(tracker, brokerWallet.privateKey)
 
-        const stream = await client.createStream({
-            id: `/metrics/nodes/${uuid()}/sec`,
+        stream = await client.createStream({
+            id: `/metrics/${Date.now()}`,
             partitions: NUM_OF_PARTITIONS
         })
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: nodeAddress })
-        streamIdPrefix = stream.id.replace('sec', '')
+        // a previous test run may have created the assignment stream
+        await client.getOrCreateStream({
+            id: '/assignments'
+        })
 
         metricsGeneratingBroker = await startBroker({
-            name: 'metricsGeneratingBroker',
-            privateKey: tmpAccount.privateKey,
+            privateKey: brokerWallet.privateKey,
             trackerPort,
             extraPlugins: {
                 metrics: {
-                    consoleIntervalInSeconds: 0,
-                    nodeMetrics: {
-                        streamIdPrefix
+                    periods: [
+                        {
+                            duration: 100,
+                            streamId: stream.id
+                        }
+                    ]
+                },
+                storage: {
+                    cassandra: {
+                        hosts: [STREAMR_DOCKER_DEV_HOST],
+                        datacenter: 'datacenter1',
+                        username: '',
+                        password: '',
+                        keyspace: 'streamr_dev_v2',
                     },
+                    storageConfig: {
+                        refreshInterval: 0
+                    }
                 }
             }
         })
@@ -55,33 +72,48 @@ describe('NodeMetrics', () => {
     })
 
     it('should retrieve the a `sec` metrics', async () => {
-        const messageQueue = new Queue<any>()
+        let report: MetricsReport | undefined
 
-        const id = `${streamIdPrefix}sec`
         const nodeId = (await metricsGeneratingBroker.getNode()).getNodeId()
         const partition = keyToArrayIndex(NUM_OF_PARTITIONS, nodeId.toLowerCase())
 
-        await client.subscribe({ id, partition }, (content: any) => {
-            messageQueue.push({ content })
+        await client.subscribe({ id: stream.id, partition }, (content: any) => {
+            const isReady = content.node.connectionAverageCount > 0
+            if (isReady && (report === undefined)) {
+                report = content
+            }
         })
 
-        const message = await messageQueue.pop(30 * 1000)
-        expect(message.content).toMatchObject({
-            broker: {
-                messagesToNetworkPerSec: expect.any(Number),
-                bytesToNetworkPerSec: expect.any(Number)
+        await waitForCondition(() => report !== undefined)
+        expect(report!).toMatchObject({
+            node: {
+                publishMessagesPerSecond: expect.any(Number),
+                publishBytesPerSecond: expect.any(Number),
+                latencyAverageMs: expect.any(Number),
+                sendMessagesPerSecond: expect.any(Number),
+                sendBytesPerSecond: expect.any(Number),
+                receiveMessagesPerSecond: expect.any(Number),
+                receiveBytesPerSecond: expect.any(Number),
+                connectionAverageCount: expect.any(Number),
+                connectionTotalFailureCount: expect.any(Number)
             },
-            network: {
-                avgLatencyMs: expect.any(Number),
-                bytesToPeersPerSec: expect.any(Number),
-                bytesFromPeersPerSec: expect.any(Number),
-                connections: expect.any(Number),
-                webRtcConnectionFailures: expect.any(Number)
+            broker: {
+                plugin: {
+                    storage: {
+                        readMessagesPerSecond: expect.any(Number),
+                        readBytesPerSecond: expect.any(Number),
+                        writeMessagesPerSecond: expect.any(Number),
+                        writeBytesPerSecond: expect.any(Number),
+                        resendLastQueriesPerSecond: expect.any(Number),
+                        resendFromQueriesPerSecond: expect.any(Number),
+                        resendRangeQueriesPerSecond: expect.any(Number)
+                    }
+                }
             },
             period: {
                 start: expect.any(Number),
                 end: expect.any(Number)
             }
         })
-    }, 35000)
+    })
 })

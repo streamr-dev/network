@@ -1,6 +1,5 @@
 //import WebSocket from 'ws'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { MetricsContext } from '../helpers/MetricsContext'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
 import { AbstractWsConnection, ReadyState } from '../connection/ws/AbstractWsConnection'
 import { Simulator, cleanAddress } from './Simulator'
@@ -13,7 +12,6 @@ export type HandshakeValues = { uuid: string, peerId: PeerId }
 /*
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {
     createConnection(peerInfo: PeerInfo): C
-    cleanUp(): void
 }
 */
 
@@ -26,17 +24,14 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
 
     constructor(
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
 
         this.ownAddress = v4()
         this.connectionsByServerUrl = new Map()
         this.serverUrlByPeerId = new Map()
         this.pendingConnections = new Map()
-
-        this.metrics.addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
     }
 
     getServerUrlByPeerId(peerId: PeerId): string | undefined {
@@ -150,7 +145,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     }
 
     protected onHandshakeError(serverUrl: string, error: Error, reject: (reason?: any) => void): void {
-        this.metrics.record('webSocketError', 1)
         this.logger.trace('failed to connect to %s, error: %o', serverUrl, error)
         reject(error)
     }
@@ -161,7 +155,6 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
     }
 
     protected ongoingConnectionError(serverPeerId: PeerId, error: Error, connection: AbstractWsConnection): void {
-        this.metrics.record('webSocketError', 1)
         this.logger.trace('Connection to %s failed, error: %o', serverPeerId, error)
         connection.terminate()
     }

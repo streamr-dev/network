@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from './helpers/MetricsContext'
+import { MetricsContext } from './helpers/Metric'
 
 import { TrackerInfo, AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
@@ -10,7 +10,7 @@ import { NegotiatedProtocolVersions } from './connection/NegotiatedProtocolVersi
 import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from './connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
@@ -28,10 +28,9 @@ export interface NetworkNodeOptions extends AbstractNodeOptions {
 
 export const createNetworkNode = ({
     id = uuidv4(),
-    name,
     location,
     trackers,
-    metricsContext = new MetricsContext(id),
+    metricsContext = new MetricsContext(),
     peerPingInterval,
     trackerPingInterval,
     disconnectionWaitTime,
@@ -44,8 +43,8 @@ export const createNetworkNode = ({
     webrtcDisallowPrivateAddresses = true,
     acceptProxyConnections
 }: NetworkNodeOptions): NetworkNode => {
-    const peerInfo = PeerInfo.newNode(id, name, undefined, undefined, location)
-    const endpoint = new NodeClientWsEndpoint(peerInfo, metricsContext, trackerPingInterval)
+    const peerInfo = PeerInfo.newNode(id, undefined, undefined, location)
+    const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
     const nodeToTracker = new NodeToTracker(endpoint)
 
     const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)
@@ -56,7 +55,7 @@ export const createNetworkNode = ({
         webRtcSignaller,
         metricsContext,
         negotiatedProtocolVersions,
-        NodeWebRtcConnectionFactory,
+        webRtcConnectionFactory,
         newWebrtcConnectionTimeout,
         peerPingInterval,
         webrtcDatachannelBufferThresholdLow,

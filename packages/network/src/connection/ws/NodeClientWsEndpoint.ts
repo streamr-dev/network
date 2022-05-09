@@ -1,6 +1,5 @@
 import WebSocket from 'ws'
 import { PeerId, PeerInfo } from '../PeerInfo'
-import { MetricsContext } from '../../helpers/MetricsContext'
 import { DisconnectionCode, DisconnectionReason } from "./AbstractWsEndpoint"
 import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeClientWsConnection'
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
@@ -8,10 +7,9 @@ import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./Abstract
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
     constructor(
         peerInfo: PeerInfo,
-        metricsContext?: MetricsContext,
         pingInterval?: number
     ) {
-        super(peerInfo, metricsContext, pingInterval)
+        super(peerInfo, pingInterval)
     }
 
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
@@ -36,7 +34,6 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 })
 
             } catch (err) {
-                this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)
                 reject(err)
             }

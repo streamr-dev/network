@@ -1,7 +1,6 @@
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
-    describeRepeats,
     Msg,
     Debug,
     getPublishTestStreamMessages,
@@ -23,7 +22,7 @@ const NUM_MESSAGES = 5
 
 jest.setTimeout(30000)
 
-describeRepeats('decryption', () => {
+describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []
@@ -158,7 +157,11 @@ describeRepeats('decryption', () => {
                 }))
 
                 // publisher.once('error', done.reject)
-                await publisher.setNextGroupKey(stream.id, groupKey)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey,
+                    distributionMethod: 'rotate'
+                })
                 // Publish after subscribed
                 await Promise.all([
                     publisher.publish(stream.id, msg),
@@ -174,7 +177,11 @@ describeRepeats('decryption', () => {
                     stream: stream.id,
                 })
 
-                await publisher.setNextGroupKey(stream.id, groupKey)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey,
+                    distributionMethod: 'rotate'
+                })
                 const onEncryptionMessageErr = checkEncryptionMessages(publisher)
 
                 await publisher.publish(stream.id, msg)
@@ -200,7 +207,11 @@ describeRepeats('decryption', () => {
                 // sub.once('error', done.reject)
 
                 const groupKey = GroupKey.generate()
-                await publisher.setNextGroupKey(stream.id, groupKey)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey,
+                    distributionMethod: 'rotate'
+                })
 
                 await publisher.publish(stream.id, msg)
                 const received = await sub.collect(1)
@@ -230,9 +241,17 @@ describeRepeats('decryption', () => {
                 // msg3 gk3 -
                 const groupKey1 = GroupKey.generate()
                 const groupKey2 = GroupKey.generate()
-                await publisher.setNextGroupKey(stream.id, groupKey1)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey1,
+                    distributionMethod: 'rotate'
+                })
                 await publisher.publish(stream.id, msgs[0])
-                await publisher.setNextGroupKey(stream.id, groupKey2)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey2,
+                    distributionMethod: 'rotate'
+                })
                 await publisher.publish(stream.id, msgs[1])
                 await publisher.publish(stream.id, msgs[2])
                 const received = await sub.collect(msgs.length)
@@ -252,8 +271,9 @@ describeRepeats('decryption', () => {
                 await onEncryptionMessageErr
             }, TIMEOUT * 2)
 
-            it('does not encrypt messages in stream without groupkey', async () => {
+            it('does not encrypt messages for public streams', async () => {
                 const stream2 = await createTestStream(publisher, module)
+                await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
                 let didFindStream2 = false
 
@@ -311,9 +331,6 @@ describeRepeats('decryption', () => {
 
                 const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
 
-                const groupKey = GroupKey.generate()
-                await publisher.setNextGroupKey(stream.id, groupKey)
-
                 await testSub(stream)
                 await testSub(stream2)
                 // const tasks = [
@@ -334,7 +351,11 @@ describeRepeats('decryption', () => {
                 })
 
                 const groupKey = GroupKey.generate()
-                await publisher.setNextGroupKey(stream.id, groupKey)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    key: groupKey,
+                    distributionMethod: 'rotate'
+                })
 
                 const published: any[] = []
                 // @ts-expect-error
@@ -362,13 +383,19 @@ describeRepeats('decryption', () => {
                     stream: stream.id,
                 })
 
-                await publisher.rotateGroupKey(stream.id)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    distributionMethod: 'rotate'
+                })
                 const publishedStreamMessages: any[] = []
                 // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
-                    await publisher.rotateGroupKey(stream.id)
+                    await publisher.updateEncryptionKey({
+                        streamId: stream.id,
+                        distributionMethod: 'rotate'
+                    })
                 })
                 const published = await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
 
@@ -395,7 +422,7 @@ describeRepeats('decryption', () => {
                     auth: {
                         privateKey: publisherPrivateKey
                     },
-                    groupKeys,
+                    encryptionKeys: groupKeys
                 })
 
                 // eslint-disable-next-line require-atomic-updates
@@ -403,7 +430,7 @@ describeRepeats('decryption', () => {
                     auth: {
                         privateKey: subscriberPrivateKey
                     },
-                    groupKeys,
+                    encryptionKeys: groupKeys
                 })
 
                 const contentClear: any[] = []
@@ -421,7 +448,10 @@ describeRepeats('decryption', () => {
 
                 const publishStream = publishTestMessagesGenerator(publisher, stream, NUM_MESSAGES)
                 await publisher.connect()
-                await publisher.rotateGroupKey(stream.id)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    distributionMethod: 'rotate'
+                })
                 const sub = (await subscriber.subscribe({
                     stream: stream.id,
                 }))
@@ -438,10 +468,16 @@ describeRepeats('decryption', () => {
 
             it('client.resend last can get the historical keys for previous encrypted messages', async () => {
                 // Publish encrypted messages with different keys
-                await publisher.rotateGroupKey(stream.id)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    distributionMethod: 'rotate'
+                })
                 // @ts-expect-error
                 publisher.publisher.streamMessageQueue.forEach(async () => {
-                    await publisher.rotateGroupKey(stream.id)
+                    await publisher.updateEncryptionKey({
+                        streamId: stream.id,
+                        distributionMethod: 'rotate'
+                    })
                 })
                 const published: any[] = []
                 // @ts-expect-error
@@ -469,10 +505,16 @@ describeRepeats('decryption', () => {
 
             it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
                 // Publish encrypted messages with different keys
-                await publisher.rotateGroupKey(stream.id)
+                await publisher.updateEncryptionKey({
+                    streamId: stream.id,
+                    distributionMethod: 'rotate'
+                })
                 // @ts-expect-error
                 publisher.publisher.publishQueue.forEach(async () => {
-                    await publisher.rotateGroupKey(stream.id)
+                    await publisher.updateEncryptionKey({
+                        streamId: stream.id,
+                        distributionMethod: 'rotate'
+                    })
                 })
                 const published = await publishTestMessages(5, {
                     waitForLast: true,
@@ -506,7 +548,11 @@ describeRepeats('decryption', () => {
                         }
                     }
 
-                    await publisher.setNextGroupKey(stream.id, groupKey)
+                    await publisher.updateEncryptionKey({
+                        streamId: stream.id,
+                        key: groupKey,
+                        distributionMethod: 'rotate'
+                    })
                     contentClear = []
 
                     // @ts-expect-error
@@ -517,7 +563,10 @@ describeRepeats('decryption', () => {
 
                     // @ts-expect-error
                     publisher.publisher.publishQueue.forEach(async () => {
-                        await publisher.rotateGroupKey(stream.id)
+                        await publisher.updateEncryptionKey({
+                            streamId: stream.id,
+                            distributionMethod: 'rotate'
+                        })
                     })
 
                     sub = await subscriber.subscribe({
@@ -594,14 +643,18 @@ describeRepeats('decryption', () => {
         it('errors if rotating group key for no stream', async () => {
             await expect(async () => (
                 // @ts-expect-error
-                publisher.rotateGroupKey()
+                publisher.updateEncryptionKey()
             )).rejects.toThrow('streamId')
         })
 
         it('errors if setting group key for no stream', async () => {
             await expect(async () => {
-                // @ts-expect-error
-                await publisher.setNextGroupKey(undefined, GroupKey.generate())
+                await publisher.updateEncryptionKey({
+                    // @ts-expect-error
+                    streamId: undefined,
+                    key: GroupKey.generate(),
+                    distributionMethod: 'rotate'
+                })
             }).rejects.toThrow('streamId')
         })
 
@@ -653,13 +706,19 @@ describeRepeats('decryption', () => {
                     }
                 })
 
-                await publisher.rotateGroupKey(testStream.id)
+                await publisher.updateEncryptionKey({
+                    streamId: testStream.id,
+                    distributionMethod: 'rotate'
+                })
                 const published: any[] = []
                 // @ts-expect-error
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
-                    await publisher.rotateGroupKey(testStream.id)
+                    await publisher.updateEncryptionKey({
+                        streamId: testStream.id,
+                        distributionMethod: 'rotate'
+                    })
                 })
 
                 await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
@@ -672,7 +731,11 @@ describeRepeats('decryption', () => {
             const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
 
             const groupKey = GroupKey.generate()
-            await publisher.setNextGroupKey(stream.id, groupKey)
+            await publisher.updateEncryptionKey({
+                streamId: stream.id,
+                key: groupKey,
+                distributionMethod: 'rotate'
+            })
 
             await testSub(stream)
             await testSub(stream2)
@@ -741,9 +804,17 @@ describeRepeats('decryption', () => {
             const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
 
             const groupKey = GroupKey.generate()
-            await publisher.setNextGroupKey(stream.id, groupKey)
+            await publisher.updateEncryptionKey({
+                streamId: stream.id,
+                key: groupKey,
+                distributionMethod: 'rotate'
+            })
             const groupKey2 = GroupKey.generate()
-            await publisher.setNextGroupKey(stream2.id, groupKey2)
+            await publisher.updateEncryptionKey({
+                streamId: stream2.id,
+                key: groupKey2,
+                distributionMethod: 'rotate'
+            })
 
             await testSub(stream)
             await testSub(stream2)
@@ -774,7 +845,10 @@ describeRepeats('decryption', () => {
             // and subscriber errored with something about group key or
             // permissions
 
-            await publisher.rotateGroupKey(stream.id)
+            await publisher.updateEncryptionKey({
+                streamId: stream.id,
+                distributionMethod: 'rotate'
+            })
 
             await stream.grantPermissions({
                 user: await subscriber.getAddress(),
@@ -809,7 +883,10 @@ describeRepeats('decryption', () => {
                             user: await subscriber.getAddress(),
                             permissions: [StreamPermission.SUBSCRIBE]
                         })
-                        await publisher.rekey(stream.id)
+                        await publisher.updateEncryptionKey({
+                            streamId: stream.id,
+                            distributionMethod: 'rekey'
+                        })
                     }
                 }
             })

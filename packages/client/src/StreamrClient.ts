@@ -15,13 +15,10 @@ import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { BrubeckNode } from './BrubeckNode'
-import { Session } from './Session'
 import { DestroySignal } from './DestroySignal'
 import { StreamEndpoints } from './StreamEndpoints'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { LoginEndpoints } from './LoginEndpoints'
-import DataUnions from './dataunion'
-import { GroupKeyStoreFactory } from './encryption/GroupKeyStoreFactory'
+import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
 import { Methods, Plugin } from './utils/Plugin'
@@ -45,12 +42,9 @@ export interface StreamrClient extends Ethereum,
     Methods<StreamRegistry>,
     // connect/pOnce in BrubeckNode are pOnce, we override them anyway
     Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
-    Methods<LoginEndpoints>,
     Methods<Publisher>,
     Methods<StorageNodeRegistry>,
-    Methods<DataUnions>,
     Methods<GroupKeyStoreFactory>,
-    Methods<Session>,
     Methods<Resends>,
     Methods<ProxyPublishSubscribe>{
 }
@@ -72,8 +66,6 @@ class StreamrClientBase implements Context {
         context: Context,
         private node: BrubeckNode,
         private ethereum: Ethereum,
-        private session: Session,
-        private loginEndpoints: LoginEndpoints,
         private streamEndpoints: StreamEndpoints,
         private resends: Resends,
         private publisher: Publisher,
@@ -81,7 +73,6 @@ class StreamrClientBase implements Context {
         private proxyPublishSubscribe: ProxyPublishSubscribe,
         private groupKeyStore: GroupKeyStoreFactory,
         private destroySignal: DestroySignal,
-        private dataunions: DataUnions,
         private streamRegistry: StreamRegistry,
         private storageNodeRegistry: StorageNodeRegistry,
         private streamIdBuilder: StreamIDBuilder,
@@ -89,17 +80,14 @@ class StreamrClientBase implements Context {
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
-        Plugin(this, this.loginEndpoints)
         Plugin(this, this.streamEndpoints)
         Plugin(this, this.ethereum)
         Plugin(this, this.publisher)
         Plugin(this, this.subscriber)
         Plugin(this, this.proxyPublishSubscribe)
         Plugin(this, this.resends)
-        Plugin(this, this.session)
         Plugin(this, this.node)
         Plugin(this, this.groupKeyStore)
-        Plugin(this, this.dataunions)
         Plugin(this, this.streamRegistry)
         Plugin(this, this.storageNodeRegistry)
 
@@ -142,6 +130,24 @@ class StreamrClientBase implements Context {
         }
         await this.subscriber.addSubscription<T>(sub)
         return sub
+    }
+
+    async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
+        if (opts.streamId === undefined) {
+            throw new Error('streamId required')
+        }
+        const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
+        if (opts.distributionMethod === 'rotate') {
+            if (opts.key === undefined) {
+                return this.groupKeyStore.rotateGroupKey(streamId)
+            } else { // eslint-disable-line no-else-return
+                return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
+            }
+        } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
+            return this.groupKeyStore.rekey(streamId, opts.key)
+        } else {
+            throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
+        }
     }
 
     connect = pOnce(async () => {
@@ -259,8 +265,6 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<Context>(Context as any),
             c.resolve<BrubeckNode>(BrubeckNode),
             c.resolve<Ethereum>(Ethereum),
-            c.resolve<Session>(Session),
-            c.resolve<LoginEndpoints>(LoginEndpoints),
             c.resolve<StreamEndpoints>(StreamEndpoints),
             c.resolve<Resends>(Resends),
             c.resolve<Publisher>(Publisher),
@@ -268,7 +272,6 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe),
             c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
             c.resolve<DestroySignal>(DestroySignal),
-            c.resolve<DataUnions>(DataUnions),
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
             c.resolve<StreamIDBuilder>(StreamIDBuilder),
@@ -282,8 +285,6 @@ export const Dependencies = {
     Context,
     BrubeckNode,
     StorageNodeRegistry,
-    Session,
-    LoginEndpoints,
     StreamEndpoints,
     StreamEndpointsCached,
     Resends,
@@ -292,5 +293,4 @@ export const Dependencies = {
     ProxyPublishSubscribe,
     GroupKeyStoreFactory,
     DestroySignal,
-    DataUnions,
 }

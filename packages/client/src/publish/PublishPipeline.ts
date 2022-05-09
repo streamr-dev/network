@@ -84,27 +84,27 @@ export class PublishPipeline implements Context, Stoppable {
         this.debug = context.debug.extend(this.id)
         this.streamMessageQueue = new PushPipeline<PublishQueueIn>()
             .pipe(this.toStreamMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
 
         this.publishQueue = new Pipeline<PublishQueueOut>(this.streamMessageQueue)
             .forEach(this.encryptMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.signMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.validateMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.consumeQueue.bind(this))
 
         destroySignal.onDestroy(this.stop.bind(this))
     }
 
-    private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
-        if (this.isStopped && !defer.isResolved()) {
+    private filterNonSettled = ([_streamMessage, defer]: PublishQueueOut): boolean => {
+        if (this.isStopped && !defer.isSettled()) {
             defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
             return false
         }
 
-        return !defer.isResolved()
+        return !defer.isSettled()
     }
 
     private async* toStreamMessage(src: AsyncGenerator<PublishQueueIn>): AsyncGenerator<PublishQueueOut> {
@@ -134,7 +134,7 @@ export class PublishPipeline implements Context, Stoppable {
     }
 
     private async signMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
         const onError = (err: Error) => {
             defer.reject(err)
         }
@@ -143,7 +143,7 @@ export class PublishPipeline implements Context, Stoppable {
     }
 
     private async validateMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
         const onError = (err: Error) => {
             defer.reject(err)
         }
@@ -152,7 +152,7 @@ export class PublishPipeline implements Context, Stoppable {
     }
 
     private async consumeQueue([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
 
         try {
             this.check()

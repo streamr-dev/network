@@ -7,7 +7,7 @@ import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpo
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {
@@ -32,8 +32,8 @@ describe('WebRTC multisignaller test', () => {
             }
         })
 
-        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'), new MetricsContext(''))
-        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'), new MetricsContext(''))
+        const ep1 = new NodeClientWsEndpoint(PeerInfo.newNode('node-1'))
+        const ep2 = new NodeClientWsEndpoint(PeerInfo.newNode('node-2'))
 
         nodeToTracker1 = new NodeToTracker(ep1)
         nodeToTracker2 = new NodeToTracker(ep2)
@@ -64,17 +64,17 @@ describe('WebRTC multisignaller test', () => {
             peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext(''),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
         endpoint2 = new WebRtcEndpoint(
             peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext(''),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
     })
 

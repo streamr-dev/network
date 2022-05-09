@@ -1,10 +1,9 @@
 import {
-    Msg,
-    describeRepeats,
-    fetchPrivateKeyWithGas,
-    getWaitForStorage,
-    getPublishTestStreamMessages,
     createTestStream,
+    fetchPrivateKeyWithGas,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    Msg,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -17,7 +16,7 @@ const ITERATIONS = 4
 
 jest.setTimeout(30000)
 
-describeRepeats('sequential resend subscribe', () => {
+describe('sequential resend subscribe', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
@@ -45,6 +44,7 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         stream = await createTestStream(publisher, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)

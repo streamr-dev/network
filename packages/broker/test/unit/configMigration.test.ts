@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash'
 import { validateConfig as validateClientConfig } from 'streamr-client'
-import { createMigratedConfig, formSchemaUrl, needsMigration } from '../../src/config/migration'
+import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import WEBSOCKER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/websocket/config.schema.json'
 import MQTT_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/mqtt/config.schema.json'
@@ -8,7 +8,6 @@ import BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/brubeckMiner/c
 import METRICS_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/metrics/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
 
-const TARGET_CONFIG_VERSION = 1
 const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111111111111111'
 const MOCK_API_KEY = 'mock-api-key'
 
@@ -118,6 +117,7 @@ const configWizardMinimal = {
 const configWizardFull = {
     ...cloneDeep(configWizardMinimal),
     plugins: {
+        ...configWizardMinimal.plugins,
         'websocket': {
             'port': 1111
         },
@@ -152,7 +152,10 @@ const validateTargetConfig = (config: any): void | never => {
 
 const testMigration = (source: any, assertTarget: (target: any) => void | never) => {
     expect(needsMigration(source)).toBe(true)
-    const target = createMigratedConfig(source)
+    let target = source
+    do {
+        target = createMigratedConfig(target)
+    } while (needsMigration(target))
     assertTarget(target)
     validateTargetConfig(target)
 }
@@ -162,7 +165,7 @@ describe('Config migration', () => {
         const source = configWizardMinimal
         testMigration(source, (target) => {
             expect(target).toStrictEqual({
-                $schema: formSchemaUrl(TARGET_CONFIG_VERSION),
+                $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
                     auth: {
                         privateKey: MOCK_PRIVATE_KEY
@@ -183,13 +186,15 @@ describe('Config migration', () => {
         const source = configWizardFull
         testMigration(source, (target) => {
             expect(target).toStrictEqual({
-                $schema: formSchemaUrl(TARGET_CONFIG_VERSION),
+                $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
                     auth: {
                         privateKey: MOCK_PRIVATE_KEY
                     }
                 },
                 plugins: {
+                    brubeckMiner: {},
+                    metrics: {},
                     websocket: {
                         port: 1111
                     },
@@ -237,13 +242,13 @@ describe('Config migration', () => {
         }
         source.plugins.metrics.consoleAndPM2IntervalInSeconds = 123
         testMigration(source, (target: any) => {
-            expect(target.client.network.name).toBe('mock-name')
+            expect(target.client.network.name).toBeUndefined()
             expect(target.client.network.location).toStrictEqual({
                 latitude: 12.34,
                 longitude: 56.78,
                 country: 'mock-country'
             })
-            expect(target.plugins.metrics.consoleIntervalInSeconds).toBe(123)
+            expect(target.plugins.consoleMetrics.interval).toBe(123)
         })
     })
 
@@ -263,7 +268,7 @@ describe('Config migration', () => {
 
     it('no migration', () => {
         const source = {
-            $schema: formSchemaUrl(TARGET_CONFIG_VERSION)
+            $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION)
         }
         expect(needsMigration(source)).toBe(false)
     })
@@ -271,5 +276,78 @@ describe('Config migration', () => {
     it('corrupted config', () => {
         const source = {}
         expect(() => createMigratedConfig(source)).toThrow('Unable to migrate the config')
+    })
+
+    describe('from v1 to v2', () => {
+
+        let source: any
+
+        beforeEach(() => {
+            source = {
+                $schema: 'https://schema.streamr.network/config-v1.schema.json',
+                client: {
+                    auth: {
+                        privateKey: MOCK_PRIVATE_KEY
+                    }
+                },
+                plugins: {}
+            }
+        })
+        
+        it('minimal', () => {
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            })
+        })
+
+        it('metrics: default', () => {
+            source.plugins = {
+                metrics: {}
+            }
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            })
+        })
+
+        it('metrics: custom stream', () => {
+            source.plugins = {
+                metrics: {
+                    nodeMetrics: {
+                        streamIdPrefix: 'mock-prefix'
+                    }
+                }
+            }
+            const target = createMigratedConfig(source)
+            expect(target).toEqual({
+                ...source,
+                $schema: 'https://schema.streamr.network/config-v2.schema.json',
+                plugins: {
+                    metrics: {
+                        periods: [
+                            {
+                                duration: 5000,
+                                streamId: 'mock-prefix/sec'
+                            },
+                            {
+                                duration: 60000,
+                                streamId: 'mock-prefix/min'
+                            },
+                            {
+                                duration: 3600000,
+                                streamId: 'mock-prefix/hour'
+                            },
+                            {
+                                duration: 86400000,
+                                streamId: 'mock-prefix/day'
+                            }
+                        ]        
+                    }
+                }
+            })
+        })
     })
 })

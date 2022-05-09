@@ -198,8 +198,7 @@ export class GroupKeyStore implements Context {
         return this.store.close()
     }
 
-    async rekey() {
-        const newKey = GroupKey.generate()
+    async rekey(newKey = GroupKey.generate()) {
         await this.storeKey(newKey)
         this.currentGroupKeyId = newKey.id
         this.nextGroupKeys.length = 0

@@ -48,7 +48,7 @@ describe('DataQueryEndpoints', () => {
     beforeEach(() => {
         app = express()
         storage = {} as Storage
-        app.use(restEndpointRouter(storage, new MetricsContext(null as any)))
+        app.use(restEndpointRouter(storage, new MetricsContext()))
     })
 
     describe('Getting last events', () => {

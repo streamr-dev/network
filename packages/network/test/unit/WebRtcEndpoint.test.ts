@@ -7,7 +7,7 @@ import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpo
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRtcEndpoint', () => {
@@ -18,7 +18,7 @@ describe('WebRtcEndpoint', () => {
     let endpoint2: WebRtcEndpoint
 
     describe.each([
-        NodeWebRtcConnectionFactory // TODO: add web-version when done
+        webRtcConnectionFactory // TODO: add web-version when done
     ])('when configured with %s', (factory) => {
 
         beforeEach(async () => {
@@ -48,7 +48,7 @@ describe('WebRtcEndpoint', () => {
                 peerInfo1,
                 ["stun:stun.l.google.com:19302"],
                 new RtcSignaller(peerInfo1, nodeToTracker1),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo1),
                 factory
             )
@@ -56,7 +56,7 @@ describe('WebRtcEndpoint', () => {
                 peerInfo2,
                 ["stun:stun.l.google.com:19302"],
                 new RtcSignaller(peerInfo2, nodeToTracker2),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo2),
                 factory
             )
@@ -453,9 +453,9 @@ describe('WebRtcEndpoint', () => {
                 peerInfo,
                 [],
                 new RtcSignaller(peerInfo, nodeToTracker),
-                new MetricsContext(''),
+                new MetricsContext(),
                 new NegotiatedProtocolVersions(peerInfo),
-                NodeWebRtcConnectionFactory,
+                webRtcConnectionFactory,
                 15000,    // newConnectionTimeout
                 5 * 1000, // pingInternval
                 2 ** 15,  // webrtcDatachannelBufferThresholdLow

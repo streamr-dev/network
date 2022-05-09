@@ -19,7 +19,6 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { UserDetails } from './LoginEndpoints'
 export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
@@ -28,7 +27,6 @@ export {
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    DataUnionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
     DebugConfig,
@@ -47,16 +45,15 @@ export {
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig,
-    SessionTokenAuthConfig,
     XOR,
     Without
 } from './Ethereum'
-export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeStream'
-export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/GroupKey'
+export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
+export { GroupKey as EncryptionKey } from './encryption/GroupKey'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export * from './dataunion/DataUnion'
 export { NotFoundError, ErrorCode } from './authFetch'
 export { SignalListener } from './utils/Signal'
 export * from './types'

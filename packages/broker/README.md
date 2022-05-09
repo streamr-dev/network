@@ -123,15 +123,3 @@ https://semver.org/. Files package.json and package-lock.json will be automatica
 3. `git push --follow-tags`
 4. Wait for GitHub Actions to run tests
 5. If tests passed, GitHub Actions will publish the new version to NPM
-
-## Misc
-
-
-### Special considerations for using MQTT plugin
-- For authentication put private key in the password connection field
-- MQTT clients can send plain text, but their payload will be transformed to a JSON object accordingly:
-`{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`
-
-#### Error handling
-- If private key is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
-- If stream is not found, client will receive "Connection refused, not authorized" (returnCode: 5)

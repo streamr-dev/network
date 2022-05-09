@@ -58,7 +58,6 @@ export const createMessagingPluginTest = <T>(
             brokerUser = new Wallet(await fetchPrivateKeyWithGas())
             tracker = await startTestTracker(ports.tracker)
             broker = await startBroker({
-                name: 'broker',
                 privateKey: brokerUser.privateKey,
                 trackerPort: ports.tracker,
                 apiAuthentication: {

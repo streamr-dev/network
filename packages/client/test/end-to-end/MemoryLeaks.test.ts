@@ -142,15 +142,13 @@ describe('MemoryLeaks', () => {
 
             test('create', async () => {
                 await client.createStream({
-                    id: `/${counterId('stream')}-${Date.now()}`,
-                    requireSignedData: true,
+                    id: `/${counterId('stream')}-${Date.now()}`
                 })
             })
 
             test('publish', async () => {
                 const stream = await client.createStream({
-                    id: `/${counterId('stream')}-${Date.now()}`,
-                    requireSignedData: true,
+                    id: `/${counterId('stream')}-${Date.now()}`
                 })
                 const publishTestMessages = getPublishTestMessages(client, stream, {
                     retainMessages: false,
@@ -165,8 +163,7 @@ describe('MemoryLeaks', () => {
             describe('publish + subscribe', () => {
                 it('does not leak subscription', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`,
-                        requireSignedData: true,
+                        id: `/${counterId('stream')}-${Date.now()}`
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
@@ -179,8 +176,7 @@ describe('MemoryLeaks', () => {
 
                 test('subscribe using async iterator', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`,
-                        requireSignedData: true,
+                        id: `/${counterId('stream')}-${Date.now()}`
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
@@ -201,8 +197,7 @@ describe('MemoryLeaks', () => {
 
                 test('subscribe using onMessage callback', async () => {
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`,
-                        requireSignedData: true,
+                        id: `/${counterId('stream')}-${Date.now()}`
                     })
 
                     const publishTestMessages = getPublishTestMessages(client, stream, {
@@ -227,8 +222,7 @@ describe('MemoryLeaks', () => {
                 test('subscriptions can be collected before all subscriptions removed', async () => {
                     // leaksDetector = new LeaksDetector()
                     const stream = await client.createStream({
-                        id: `/${counterId('stream')}-${Date.now()}`,
-                        requireSignedData: true,
+                        id: `/${counterId('stream')}-${Date.now()}`
                     })
 
                     const publishTestMessages = getPublishTestMessages(client, stream, {

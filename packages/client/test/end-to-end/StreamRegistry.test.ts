@@ -10,6 +10,7 @@ import { collect } from '../../src/utils/GeneratorUtils'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
+const PARTITION_COUNT = 3
 
 /**
  * These tests should be run in sequential order!
@@ -32,7 +33,7 @@ describe('StreamRegistry', () => {
 
     beforeAll(async () => {
         createdStream = await createTestStream(client, module, {
-            requireSignedData: true
+            partitions: PARTITION_COUNT
         })
     })
 
@@ -40,11 +41,9 @@ describe('StreamRegistry', () => {
         it('creates a stream with correct values', async () => {
             const path = await createRelativeTestStreamId(module)
             const stream = await client.createStream({
-                id: path,
-                requireSignedData: true
+                id: path
             })
             expect(stream.id).toBe(toStreamID(path, await client.getAddress()))
-            expect(stream.requireSignedData).toBe(true)
         })
 
         it('valid id', async () => {
@@ -224,7 +223,7 @@ describe('StreamRegistry', () => {
             }, 100000, 1000)
             // check that other fields not overwritten
             const updatedStream = await client.getStream(createdStream.id)
-            expect(updatedStream.requireSignedData).toBe(true)
+            expect(updatedStream.partitions).toBe(PARTITION_COUNT)
         })
     })
 

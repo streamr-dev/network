@@ -1,6 +1,7 @@
 import {
     EthereumAddress,
     MessageID,
+    SigningUtil,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -11,6 +12,8 @@ import { ActiveNodes } from './ActiveNodes'
 import { Multimap } from '../utils'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
+
+const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
@@ -25,13 +28,13 @@ export class FakeStorageNode extends FakeBrubeckNode {
     async addAssignment(streamId: StreamID): Promise<void> {
         const stream = await this.streamRegistry.getStream(streamId)
         const networkNode = await this.getNode()
-        stream.getStreamParts().forEach((streamPartId, idx) => {
+        stream.getStreamParts().forEach(async (streamPartId, idx) => {
             if (!networkNode.subscriptions.has(streamPartId)) {
                 networkNode.addMessageListener((msg: StreamMessage) => {
                     this.storeMessage(msg)
                 })
                 networkNode.subscribe(streamPartId)
-                this.publishToNode(new StreamMessage({
+                const assignmentMessage = new StreamMessage({
                     messageId: new MessageID(
                         toStreamID(formStorageNodeAssignmentStreamId(this.id)),
                         0,
@@ -43,7 +46,9 @@ export class FakeStorageNode extends FakeBrubeckNode {
                     content: {
                         streamPart: streamPartId,
                     }
-                }))
+                })
+                assignmentMessage.signature = await SigningUtil.sign(assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), PRIVATE_KEY)
+                this.publishToNode(assignmentMessage)
             }
         })
     }

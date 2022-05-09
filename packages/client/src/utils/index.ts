@@ -273,12 +273,13 @@ export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
-    let isResolved = false
+    let isSettled = false
     const resolve: PromiseResolve = (value) => {
         if (resolveFn) {
             const r = resolveFn
             resolveFn = undefined
             rejectFn = undefined
+            isSettled = true
             r(value)
         }
     }
@@ -287,6 +288,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
             const r = rejectFn
             resolveFn = undefined
             rejectFn = undefined
+            isSettled = true
             r(error)
         }
     }
@@ -307,7 +309,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
                 reject(err)
                 throw err
             } finally {
-                isResolved = true
+                isSettled = true
             }
         }
     }
@@ -337,8 +339,8 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         wrap,
         wrapError,
         handleErrBack,
-        isResolved() {
-            return isResolved
+        isSettled() {
+            return isSettled
         },
     })
 }

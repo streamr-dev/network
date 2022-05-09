@@ -59,7 +59,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta_success
-        uses: docker/metadata-action@v3.6.2
+        uses: docker/metadata-action@v3.7.0
         if: ${{inputs.push_image}}
         with:
           images: ${{inputs.image_name}}

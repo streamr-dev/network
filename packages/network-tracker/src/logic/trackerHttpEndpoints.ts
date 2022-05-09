@@ -8,7 +8,7 @@ import {
     getStreamPartSizes,
     getNodesWithLocationData
 } from './trackerSummaryUtils'
-import { Logger, MetricsContext } from 'streamr-network'
+import { Logger } from 'streamr-network'
 import { Tracker } from './Tracker'
 import http from 'http'
 import https from 'https'
@@ -69,8 +69,7 @@ const cachedJsonGet = (
 
 export function trackerHttpEndpoints(
     httpServer: http.Server | https.Server,
-    tracker: Tracker,
-    metricsContext: MetricsContext
+    tracker: Tracker
 ): void {
     const app = express()
     app.use(cors())
@@ -131,11 +130,6 @@ export function trackerHttpEndpoints(
     app.get('/metadata/', (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /metadata/')
         res.json(tracker.getAllExtraMetadatas())
-    })
-    app.get('/metrics/', async (req: express.Request, res: express.Response) => {
-        const metrics = await metricsContext.report()
-        staticLogger.debug('request to /metrics/')
-        res.json(metrics)
     })
     app.get('/topology-size/', async (req: express.Request, res: express.Response) => {
         staticLogger.debug('request to /topology-size/')

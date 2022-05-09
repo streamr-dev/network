@@ -7,7 +7,7 @@ import {
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { AverageMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -27,6 +27,7 @@ export enum Event {
     NODE_DISCONNECTED = 'streamr:node:node-disconnected',
     MESSAGE_RECEIVED = 'streamr:node:message-received',
     UNSEEN_MESSAGE_RECEIVED = 'streamr:node:unseen-message-received',
+    DUPLICATE_MESSAGE_RECEIVED = 'streamr:node:duplicate-message-received',
     NODE_SUBSCRIBED = 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED = 'streamr:node:node-unsubscribed',
     PROXY_CONNECTION_ACCEPTED = 'streamr:node:proxy-connection-accepted',
@@ -50,11 +51,18 @@ export interface NodeOptions extends TrackerManagerOptions {
     acceptProxyConnections?: boolean
 }
 
+interface Metrics extends MetricsDefinition {
+    publishMessagesPerSecond: Metric
+    publishBytesPerSecond: Metric
+    latencyAverageMs: Metric
+}
+
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
     on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.DUPLICATE_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PROXY_CONNECTION_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection) => void): this
@@ -79,7 +87,6 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly publishMetrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
@@ -94,18 +101,13 @@ export class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
         this.acceptProxyConnections = opts.acceptProxyConnections || false
 
-        this.metricsContext = opts.metricsContext || new MetricsContext('')
-        this.metrics = this.metricsContext.create('node')
-            .addRecordedMetric('onDataReceived')
-            .addRecordedMetric('onDataReceived:invalidNumbering')
-            .addRecordedMetric('onDataReceived:gapMismatch')
-            .addRecordedMetric('onDataReceived:ignoredDuplicate')
-            .addRecordedMetric('propagateMessage')
-            .addRecordedMetric('onNodeDisconnect')
-            .addFixedMetric('latency')
-        this.publishMetrics = this.metricsContext.create('node/publish')
-            .addRecordedMetric('bytes')
-            .addRecordedMetric('count')
+        this.metricsContext = opts.metricsContext || new MetricsContext()
+        this.metrics = {
+            publishMessagesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric(),
+            latencyAverageMs: new AverageMetric(),
+        }
+        this.metricsContext.addMetrics('node', this.metrics)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
@@ -158,7 +160,6 @@ export class Node extends EventEmitter {
             opts.protocols.nodeToTracker,
             opts,
             this.streamPartManager,
-            this.metrics,
             (includeRtt) => ({
                 started: this.started,
                 location: this.peerInfo.location,
@@ -197,19 +198,10 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
         })
-        let avgLatency = -1
-
         this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
             const now = new Date().getTime()
             const currentLatency = now - message.messageId.timestamp
-
-            if (avgLatency < 0) {
-                avgLatency = currentLatency
-            } else {
-                avgLatency = 0.8 * avgLatency + 0.2 * currentLatency
-            }
-
-            this.metrics.set('latency', avgLatency)
+            this.metrics.latencyAverageMs.record(currentLatency)
         })
     }
 
@@ -289,7 +281,6 @@ export class Node extends EventEmitter {
 
     // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
-        this.metrics.record('onDataReceived', 1)
         const streamPartId = streamMessage.getStreamPartID()
         // Check if the stream is set as one-directional and has inbound connection
         if (source
@@ -315,13 +306,11 @@ export class Node extends EventEmitter {
         } catch (e) {
             if (e instanceof InvalidNumberingError) {
                 logger.trace('received from %s data %j with invalid numbering', source, streamMessage.messageId)
-                this.metrics.record('onDataReceived:invalidNumber', 1)
                 return
             }
             if (e instanceof GapMisMatchError) {
                 logger.warn('received from %s data %j with gap mismatch detected: %j',
                     source, streamMessage.messageId, e)
-                this.metrics.record('onDataReceived:gapMismatch', 1)
                 return
             }
             throw e
@@ -332,12 +321,12 @@ export class Node extends EventEmitter {
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, source)
             if (source === null) {
-                this.publishMetrics.record('count', 1)
-                this.publishMetrics.record('bytes', streamMessage.getSerializedContent().length)
+                this.metrics.publishMessagesPerSecond.record(1)
+                this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
             }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
-            this.metrics.record('onDataReceived:ignoredDuplicate', 1)
+            this.emit(Event.DUPLICATE_MESSAGE_RECEIVED, streamMessage, source)
         }
     }
 
@@ -369,7 +358,6 @@ export class Node extends EventEmitter {
     }
 
     private onNodeDisconnected(node: NodeId): void {
-        this.metrics.record('onNodeDisconnect', 1)
         const [streams, proxiedStreams] = this.streamPartManager.removeNodeFromAllStreamParts(node)
         logger.trace('removed all subscriptions of node %s', node)
         streams.forEach((s) => {
