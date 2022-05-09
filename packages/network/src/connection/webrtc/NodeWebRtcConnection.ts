@@ -79,7 +79,7 @@ export const webRtcConnectionFactory = new class implements WebRtcConnectionFact
     unregisterWebRtcEndpoint(): void {
         this.activeWebRtcEndpointCount--
         if (this.activeWebRtcEndpointCount === 0) {
-            this.logger.info('Clean up nodeDataChannel')
+            this.logger.debug('Clean up nodeDataChannel library')
             nodeDataChannel.cleanup()
         }
     }
