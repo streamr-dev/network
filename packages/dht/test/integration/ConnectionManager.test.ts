@@ -147,7 +147,7 @@ describe('ConnectionManager', () => {
         await promise
         await Promise.all([
             waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
-            connectionManager.disconnect(peerDescriptor2)
+            connectionManager.disconnect(peerDescriptor2, undefined, 100)
         ])
         await connectionManager.stop()
         await connectionManager2.stop()

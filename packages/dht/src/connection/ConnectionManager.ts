@@ -15,12 +15,15 @@ export interface ConnectionManagerConfig {
     entryPoints?: PeerDescriptor[]
 }
 
+const DEFAULT_DISCONNECTION_TIMEOUT = 5000
+
 export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
 
     private ownPeerDescriptor: PeerDescriptor | null = null
     private connections: { [peerId: string]: Connection } = {}
 
+    private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
     private webSocketConnector: WebSocketConnector = new WebSocketConnector()
     private webSocketServer: WebSocketServer = new WebSocketServer()
 
@@ -221,6 +224,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     async stop(): Promise<void> {
         await this.webSocketServer.stop()
+        Object.values(this.disconnectionTimeouts).map(async (timeout) => {
+            clearTimeout(timeout)
+        })
+        this.disconnectionTimeouts = {}
     }
 
     // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
@@ -240,8 +247,14 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
     }
 
-    disconnect(peerDescriptor: PeerDescriptor, reason?: string): void {
+    disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        this.disconnectionTimeouts[stringId] = setTimeout(() => {
+            this.closeConnection(stringId, reason)
+        }, timeout)
+    }
+
+    private closeConnection(stringId: string, reason?: string): void {
         if (this.connections.hasOwnProperty(stringId)) {
             console.log(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
             this.connections[stringId].close()
