@@ -15,7 +15,7 @@ export interface ConnectionManagerConfig {
     entryPoints?: PeerDescriptor[]
 }
 
-const DEFAULT_DISCONNECTION_TIMEOUT = 5000
+const DEFAULT_DISCONNECTION_TIMEOUT = 10000
 
 export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
