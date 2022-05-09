@@ -159,7 +159,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private requestTimeoutFn(deferredPromises: DeferredPromises): void {
-        const error = new Err.RpcTimeout('Rpc request timed out')
+        const error = new Err.RpcTimeout('Rpc request timed out', new Error())
         this.rejectDeferredPromises(deferredPromises, error, 'DEADLINE_EXCEEDED')
     }
 

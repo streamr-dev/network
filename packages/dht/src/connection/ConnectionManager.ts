@@ -223,6 +223,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async stop(): Promise<void> {
+        this.removeAllListeners()
         await this.webSocketServer.stop()
         Object.values(this.disconnectionTimeouts).map(async (timeout) => {
             clearTimeout(timeout)
