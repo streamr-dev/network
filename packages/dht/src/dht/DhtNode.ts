@@ -287,6 +287,10 @@ export class DhtNode extends EventEmitter implements ITransport {
         return this.K
     }
 
+    public getKBucketPeers(): PeerDescriptor[] {
+        return this.bucket.toArray().map((dhtPeer) => dhtPeer.getPeerDscriptor())
+    }
+
     public stop(): void {
         this.rpcCommunicator.stop()
         this.dhtTransportServer.stop()
