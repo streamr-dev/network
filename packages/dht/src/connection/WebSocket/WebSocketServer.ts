@@ -4,7 +4,7 @@ import * as http from 'http'
 import { EventEmitter } from 'events'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
-import { ConnectionSource, Event as ConnectionSourceEvent } from './ConnectionSource'
+import { ConnectionSource, Event as ConnectionSourceEvent } from '../ConnectionSource'
 
 export class WebSocketServer extends EventEmitter implements ConnectionSource {
 
