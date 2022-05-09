@@ -1,4 +1,4 @@
-import BrowserWebRtcConnectionFactory from "../../src/connection/webrtc/BrowserWebRtcConnection"
+import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { MessageQueue} from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
@@ -24,8 +24,8 @@ const connectionOpts2: ConstructorOptions = {
 
 describe('BrowserWebRtcConnection', () => {
 
-    const conn1 = BrowserWebRtcConnectionFactory.createConnection(connectionOpts1)
-    const conn2 = BrowserWebRtcConnectionFactory.createConnection(connectionOpts2)
+    const conn1 = webRtcConnectionFactory.createConnection(connectionOpts1)
+    const conn2 = webRtcConnectionFactory.createConnection(connectionOpts2)
 
     conn1.on('localCandidate', (candidate, mid) => {
         conn2.addRemoteCandidate(candidate, mid)
