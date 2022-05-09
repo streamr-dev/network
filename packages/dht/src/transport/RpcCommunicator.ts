@@ -10,6 +10,7 @@ import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } fr
 import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
 import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
+import { ConnectionManager } from '../connection/ConnectionManager'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -34,6 +35,8 @@ interface OngoingRequest {
     timeoutRef: NodeJS.Timeout
 }
 
+const DEFAULT_APP_ID = 'layer0'
+
 export class RpcCommunicator extends EventEmitter {
     private static objectCounter = 0
     private objectId = 0
@@ -50,7 +53,7 @@ export class RpcCommunicator extends EventEmitter {
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
 
-        this.appId = params.appId || 'layer0'
+        this.appId = params.appId || DEFAULT_APP_ID
         this.dhtTransportClient = params.dhtTransportClient
         this.dhtTransportServer = params.dhtTransportServer
         this.connectionLayer = params.connectionLayer
@@ -190,6 +193,13 @@ export class RpcCommunicator extends EventEmitter {
             sourceDescriptor: request.targetDescriptor,
             responseError
         }
+    }
+
+    public getConnectionManager(): ConnectionManager | never {
+        if (this.appId === DEFAULT_APP_ID) {
+            return this.connectionLayer as ConnectionManager
+        }
+        throw new Err.LayerViolation('RpcCommunicator can only access ConnectionManager on layer 0')
     }
 
     stop(): void {

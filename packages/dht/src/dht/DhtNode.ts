@@ -76,6 +76,16 @@ export class DhtNode extends EventEmitter implements ITransport {
                 }
             }
         })
+        this.bucket.on('removed', (_contact: DhtPeer) => {
+            const connectionManager = this.rpcCommunicator.getConnectionManager()
+            if (connectionManager) {
+                this.rpcCommunicator.getConnectionManager().disconnect()
+            }
+        })
+        this.bucket.on('added', (_contact: DhtPeer) => {})
+        this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
+
+        })
         this.dhtRpcClient = dhtRpcClient
         this.neighborList = new SortedContactList(this.selfId)
         this.dhtTransportServer = dhtTransportServer
