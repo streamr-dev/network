@@ -1,7 +1,7 @@
 import { Connection } from './Connection'
 
 export enum Event {
-    CONNECTED = 'streamr:dht:connectionsource:connected',
+    CONNECTED = 'streamr:dht:connectionsource:connected'
 }
 
 export interface ConnectionSource {
