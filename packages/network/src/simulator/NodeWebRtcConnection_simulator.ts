@@ -6,13 +6,15 @@ import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"
 import { DescriptionType } from 'node-datachannel'
 
-const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
     }
-})
-
-export default NodeWebRtcConnectionFactory
+    registerWebRtcEndpoint(): void {
+    }
+    unregisterWebRtcEndpoint(): void {
+    }
+}
 
 export class NodeWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger
