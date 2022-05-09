@@ -8,7 +8,7 @@ import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { wait } from 'streamr-test-utils'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('WebRtcEndpoint: back pressure handling', () => {
     let tracker: Tracker
@@ -43,7 +43,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
@@ -51,7 +51,7 @@ describe('WebRtcEndpoint: back pressure handling', () => {
             new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
         await Promise.all([
             ep1.connect('ep2', tracker.getTrackerId()),
