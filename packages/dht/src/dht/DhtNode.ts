@@ -189,12 +189,16 @@ export class DhtNode extends EventEmitter implements ITransport {
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
             await queue.add(
                 (async () => {
-                    const success = await closest.shift()!.routeMessage({
-                        ...params,
-                        previousPeer: this.getPeerDescriptor()
-                    })
-                    if (success) {
-                        successAcks += 1
+                    try {
+                        const success = await closest.shift()!.routeMessage({
+                            ...params,
+                            previousPeer: this.getPeerDescriptor()
+                        })
+                        if (success) {
+                            successAcks += 1
+                        }
+                    } catch (err) {
+                        // TODO: Add error handling?
                     }
                 })
             )
@@ -226,16 +230,20 @@ export class DhtNode extends EventEmitter implements ITransport {
     private async getClosestPeersFromContact(contact: DhtPeer) {
         this.neighborList.setContacted(contact.peerId)
         this.neighborList.setActive(contact.peerId)
-        const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
-        const dhtPeers = returnedContacts.map((peer) => {
-            return new DhtPeer(peer, this.dhtRpcClient)
-        })
-        this.neighborList.addContacts(dhtPeers)
-        dhtPeers.forEach( (returnedContact) => {
-            if (!this.bucket.get(returnedContact.id)) {
-                this.bucket.add(returnedContact)
-            }
-        })
+        try {
+            const returnedContacts = await contact.getClosestPeers(this.peerDescriptor)
+            const dhtPeers = returnedContacts.map((peer) => {
+                return new DhtPeer(peer, this.dhtRpcClient)
+            })
+            this.neighborList.addContacts(dhtPeers)
+            dhtPeers.forEach( (returnedContact) => {
+                if (!this.bucket.get(returnedContact.id)) {
+                    this.bucket.add(returnedContact)
+                }
+            })
+        } catch (err) {
+            // TODO: Add error handling
+        }
     }
 
     private async contactEntrypoints(): Promise<void> {
@@ -245,7 +253,6 @@ export class DhtNode extends EventEmitter implements ITransport {
             if (uncontacted.length < 1) {
                 return
             }
-
             await this.getClosestPeersFromContact(uncontacted[0])
             if (oldClosestContactId.equals(this.neighborList.getClosestContactId())) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
