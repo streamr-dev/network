@@ -62,4 +62,8 @@ export class ServerWebSocket extends EventEmitter implements Connection {
     public get remoteAddress(): string {
         return this.socket.remoteAddress
     }
+
+    stop(): void {
+        this.removeAllListeners()
+    }
 }

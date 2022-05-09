@@ -20,6 +20,9 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration",
+    "test-end-to-end": "jest test/end-to-end",
     "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.json generatedhtids.ts",
     "run-dht-simulation": "ts-node $NODE_DEBUG_OPTION src/simulation/DhtSimulation.ts"
   },

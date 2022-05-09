@@ -76,7 +76,8 @@ describe('Layer0-Layer1', () => {
             connectionManager1.stop(),
             connectionManager2.stop(),
             node1.stop(),
-            node2.stop()
+            node2.stop(),
+            epDhtNode.stop()
         ])
     })
 

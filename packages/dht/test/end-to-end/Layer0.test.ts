@@ -90,6 +90,7 @@ describe('Layer0', () => {
             connectionManager2.stop(),
             connectionManager3.stop(),
             connectionManager4.stop(),
+            epDhtNode.stop(),
             node1.stop(),
             node2.stop(),
             node3.stop(),
