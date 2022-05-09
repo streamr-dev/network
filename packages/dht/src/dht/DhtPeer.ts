@@ -58,10 +58,14 @@ export class DhtPeer {
             sourceDescriptor: sourceDescriptor as PeerDescriptor,
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
-        const response = await this.dhtClient.ping(request, options)
-        const pong = await response.response
-        if (pong.nonce === request.nonce) {
-            return true
+        try {
+            const response = await this.dhtClient.ping(request, options)
+            const pong = await response.response
+            if (pong.nonce === request.nonce) {
+                return true
+            }
+        } catch (err) {
+            // TODO: Error handling
         }
         return false
     }

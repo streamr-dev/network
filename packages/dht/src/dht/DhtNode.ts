@@ -91,12 +91,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
-            try {
-                // await contact.ping(this.peerDescriptor)
-                this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
-            } catch (err) {
-                // TODO: Remove contact, replace with first peer in SortedContactList NET-816
-            }
+            await contact.ping(this.peerDescriptor)
+            this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
         })
         this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
             // TODO: Update contact info to the connection manager and reconnect
