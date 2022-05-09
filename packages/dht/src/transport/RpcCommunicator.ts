@@ -11,6 +11,7 @@ import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTrans
 import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
+import { DEFAULT_APP_ID } from '../dht/DhtNode'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -34,8 +35,6 @@ interface OngoingRequest {
     deferredPromises: DeferredPromises,
     timeoutRef: NodeJS.Timeout
 }
-
-const DEFAULT_APP_ID = 'layer0'
 
 export class RpcCommunicator extends EventEmitter {
     private static objectCounter = 0

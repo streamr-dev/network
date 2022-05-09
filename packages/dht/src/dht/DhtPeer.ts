@@ -87,7 +87,7 @@ export class DhtPeer {
         return true
     }
 
-    getPeerDscriptor(): PeerDescriptor {
+    getPeerDescriptor(): PeerDescriptor {
         return this.peerDescriptor
     }
 
