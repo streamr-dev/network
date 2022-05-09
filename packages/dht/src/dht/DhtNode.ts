@@ -85,7 +85,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
             if (this.appId === DEFAULT_APP_ID) {
-                const connectionManager = this.rpcCommunicator.getConnectionManager()
+                // const connectionManager = this.rpcCommunicator.getConnectionManager()
                 // connectionManager.disconnect(contact.getPeerDescriptor())
             }
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
