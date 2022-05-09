@@ -85,14 +85,14 @@ export class DhtNode extends EventEmitter implements ITransport {
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
             if (this.appId === DEFAULT_APP_ID) {
-                // const connectionManager = this.rpcCommunicator.getConnectionManager()
-                // connectionManager.disconnect(contact.getPeerDescriptor())
+                const connectionManager = this.rpcCommunicator.getConnectionManager()
+                connectionManager.disconnect(contact.getPeerDescriptor())
             }
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
             try {
-                await contact.ping(this.peerDescriptor)
+                // await contact.ping(this.peerDescriptor)
                 this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
             } catch (err) {
                 // TODO: Remove contact, replace with first peer in SortedContactList NET-816
