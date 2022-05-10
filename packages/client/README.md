@@ -129,7 +129,7 @@ You can also create an anonymous client instance that can interact with public s
 const streamr = new StreamrClient()
 ```
 
-By default, the `StreamrClient` publishes metrics to the network at regular intervals. See [Metrics publishing](#metrics-publishing).
+By default, the `StreamrClient` publishes telemetry metrics to the network at regular intervals. See [Metrics publishing](#metrics-publishing).
 
 ### Creating a stream
 ```js
