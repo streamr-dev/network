@@ -63,7 +63,7 @@ export type DebugConfig = {
 }
 
 export interface MetricsPeriodConfig {
-    streamId: string,
+    streamId: string
     duration: number
 }
 
