@@ -143,15 +143,19 @@ const convertV1ToV2 = (source: any): Config => {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createMigratedConfig = (source: any): Config | never => {
-    const version = getVersion(source)
-    const isTestnetConfig = (version === undefined) && (isValidConfig(source, TEST_CONFIG_SCHEMA))
-    if (isTestnetConfig) {
-        return convertTestnet3ToV1(source)
-    } else if (version === 1) {
-        return convertV1ToV2(source)
-    } else {
-        throw new Error('Unable to migrate the config')
-    }
+    let config = source
+    do {
+        const version = getVersion(config)
+        const isTestnetConfig = (version === undefined) && (isValidConfig(config, TEST_CONFIG_SCHEMA))
+        if (isTestnetConfig) {
+            config = convertTestnet3ToV1(config)
+        } else if (version === 1) {
+            config = convertV1ToV2(config)
+        } else {
+            throw new Error(`Unable to migrate the config: version=${version}`)
+        }
+    } while (needsMigration(config))
+    return config
 }
 
 /* 

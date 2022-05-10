@@ -152,10 +152,7 @@ const validateTargetConfig = (config: any): void | never => {
 
 const testMigration = (source: any, assertTarget: (target: any) => void | never) => {
     expect(needsMigration(source)).toBe(true)
-    let target = source
-    do {
-        target = createMigratedConfig(target)
-    } while (needsMigration(target))
+    const target = createMigratedConfig(source)
     assertTarget(target)
     validateTargetConfig(target)
 }
