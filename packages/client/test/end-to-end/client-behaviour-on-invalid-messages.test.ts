@@ -76,7 +76,7 @@ describe('client behaviour on invalid message', () => {
             throw new Error('should not get here')
         })
         networkNode = await createNetworkNode({
-            ...ConfigTest.network,
+            ...ConfigTest.network as any,
             id: 'networkNode',
         })
         const publisherWallet = Wallet.createRandom()
