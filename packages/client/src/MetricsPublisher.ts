@@ -58,9 +58,6 @@ export class MetricsPublisher {
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
         this.periodConfigs = getPeriodConfig(rootConfig)
-    }
-
-    init() {
         if (this.periodConfigs.length > 0) {
             this.eventEmitter.on('publish', () => this.ensureStarted())
             this.eventEmitter.on('subscribe', () => this.ensureStarted())

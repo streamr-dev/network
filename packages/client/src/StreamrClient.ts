@@ -79,7 +79,7 @@ class StreamrClientBase implements Context {
         private storageNodeRegistry: StorageNodeRegistry,
         private streamIdBuilder: StreamIDBuilder,
         private eventEmitter: StreamrClientEventEmitter,
-        metricsPublisher: MetricsPublisher
+        _metricsPublisher: MetricsPublisher // side effect: activates metrics publisher
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
@@ -96,8 +96,6 @@ class StreamrClientBase implements Context {
 
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
-
-        metricsPublisher.init()
     }
 
     /**
