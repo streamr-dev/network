@@ -48,9 +48,7 @@ export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {}
     },
-    plugins: {
-        metrics: {}
-    },
+    plugins: {},
     apiAuthentication: {
         keys: [generateApiKey()]
     }
