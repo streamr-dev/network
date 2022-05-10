@@ -13,4 +13,6 @@ export class MockConnectionManager extends EventEmitter implements ITransport {
         console.info(peerDescriptor, msg)
     }
 
+    disconnect(_peerDescriptor: PeerDescriptor): void {}
+
 }

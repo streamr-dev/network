@@ -104,9 +104,13 @@ describe('DhtClientRpcTransport', () => {
     })
 
     it('Server side timeout', async () => {
-        serverTransport1.registerMethod('getClosestPeers', async () => {
-            await wait(3000)
-            return new Uint8Array()
+        let timeout: NodeJS.Timeout
+        serverTransport1.registerMethod('getClosestPeers', () => {
+            return new Promise(async (resolve, _reject) => {
+                timeout = setTimeout(() => {
+                    resolve(new Uint8Array())
+                }, 5000)
+            })
         })
         const response = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
@@ -115,6 +119,7 @@ describe('DhtClientRpcTransport', () => {
         await expect(response.response).rejects.toEqual(
             new Err.RpcTimeout('Server error on request')
         )
+        clearTimeout(timeout!)
     })
     
     it('Server responds with error on unknown method', async () => {
