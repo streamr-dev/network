@@ -36,9 +36,7 @@ export class Publisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    /**
-     * @category Important
-     */
+    /** @internal */
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,

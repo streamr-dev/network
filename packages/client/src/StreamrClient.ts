@@ -26,6 +26,8 @@ import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { MetricsPublisher } from './MetricsPublisher'
+import { StreamMessage } from 'streamr-client-protocol'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -76,7 +78,8 @@ class StreamrClientBase implements Context {
         private streamRegistry: StreamRegistry,
         private storageNodeRegistry: StorageNodeRegistry,
         private streamIdBuilder: StreamIDBuilder,
-        private eventEmitter: StreamrClientEventEmitter
+        private eventEmitter: StreamrClientEventEmitter,
+        metricsPublisher: MetricsPublisher
     ) { // eslint-disable-line function-paren-newline
         this.id = context.id
         this.debug = context.debug
@@ -93,6 +96,22 @@ class StreamrClientBase implements Context {
 
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
         this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
+
+        metricsPublisher.init()
+    }
+
+    /**
+     * @category Important
+     */
+    async publish<T>(
+        streamDefinition: StreamDefinition,
+        content: T,
+        timestamp: string | number | Date = Date.now(),
+        partitionKey?: string | number
+    ): Promise<StreamMessage<T>> {
+        const result = await this.publisher.publish(streamDefinition, content, timestamp, partitionKey)
+        this.eventEmitter.emit('publish', undefined)
+        return result
     }
 
     /**
@@ -106,15 +125,18 @@ class StreamrClientBase implements Context {
         options: StreamDefinition,
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<Subscription<T>>
-    subscribe<T>(
+    async subscribe<T>(
         options: StreamDefinition & { resend?: ResendOptions },
         onMessage?: SubscriptionOnMessage<T>
     ): Promise<Subscription<T> | ResendSubscription<T>> {
+        let result
         if (options.resend !== undefined) {
-            return this.resendSubscribe(options, options.resend, onMessage)
+            result = await this.resendSubscribe(options, options.resend, onMessage)
+        } else {
+            result = await this.subscriber.subscribe(options, onMessage)
         }
-
-        return this.subscriber.subscribe(options, onMessage)
+        this.eventEmitter.emit('subscribe', undefined)
+        return result
     }
 
     private async resendSubscribe<T>(
@@ -275,7 +297,8 @@ export class StreamrClient extends StreamrClientBase {
             c.resolve<StreamRegistry>(StreamRegistry),
             c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
             c.resolve<StreamIDBuilder>(StreamIDBuilder),
-            c.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
+            c.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter),
+            c.resolve<MetricsPublisher>(MetricsPublisher)
         )
     }
 }
