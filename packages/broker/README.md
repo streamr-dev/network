@@ -5,8 +5,11 @@
 </p>
 
 # streamr-broker
+Broker nodes are Streamr nodes that run externally to your application. You start up a node on a server, and interface with it remotely using one of the supported protocols.
 
-The Broker node is your application's access point to data streams in the Streamr Network. The Broker node is also used for mining and staking.
+The Broker node ships with plugins for HTTP, Websocket, and MQTT protocols. Libraries for these protocols exist in practically every programming language, meaning that you can conveniently publish and subscribe to data from the Streamr Network using any programming language.
+
+Broker nodes have a plugin architecture that allows them to perform other tasks in addition to (or instead of) serving applications, such as mining.
 
 ## Table of Contents
 - [Install](#install)
@@ -23,9 +26,13 @@ To install streamr-broker:
 npm install -g streamr-broker
 ```
 
+For more information on the different ways to install a Broker node, see [setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).
+
 ## Plugins
 
-The Broker node ships with a number of plugins for configuring your Broker node to match your specific needs. For easy data integration from any environment, plugins for HTTP, Websocket, and MQTT are provided. Read more about available [plugins](plugins.md).
+The Broker node ships with a number of plugins for configuring your Broker node to match your specific needs. For easy data integration from any environment, plugins for HTTP, Websocket, and MQTT are provided. 
+
+Read more about available [plugins](plugins.md).
 
 ## Run
 
