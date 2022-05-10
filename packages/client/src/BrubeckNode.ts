@@ -31,6 +31,11 @@ export interface NetworkNodeStub {
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
 }
 
+export const getEthereumAddressFromNodeId = (nodeId: string): string => {
+    const ETHERUM_ADDRESS_LENGTH = 42
+    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
+}
+
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().

@@ -92,6 +92,9 @@ const convertTestnet3ToV1 = (source: any): Config => {
             if (sourceConfig.consoleAndPM2IntervalInSeconds !== 0) {
                 targetConfig.consoleAndPM2IntervalInSeconds = sourceConfig.consoleAndPM2IntervalInSeconds
             }
+            if (sourceConfig.nodeMetrics === null) {
+                targetConfig.nodeMetrics = null
+            }
             target.plugins.metrics = targetConfig
         } else if (['legacyWebsocket', 'legacyMqtt'].includes(name)) {
             // no-op
@@ -113,28 +116,35 @@ const convertV1ToV2 = (source: any): Config => {
         }
         delete target.plugins.metrics.consoleAndPM2IntervalInSeconds
     }
-    const metricsPluginStreamIdPrefix = source.plugins.metrics?.nodeMetrics?.streamIdPrefix
-    if (metricsPluginStreamIdPrefix !== undefined) {
-        target.plugins.metrics.periods = [
-            {
-                duration: 5000,
-                streamId: `${metricsPluginStreamIdPrefix}/sec`
-            },
-            {
-                duration: 60000,
-                streamId: `${metricsPluginStreamIdPrefix}/min`
-            },
-            {
-                duration: 3600000,
-                streamId: `${metricsPluginStreamIdPrefix}/hour`
-            },
-            {
-                duration: 86400000,
-                streamId: `${metricsPluginStreamIdPrefix}/day`
+    const isMetricsPluginEnabled = (source.plugins.metrics !== undefined) && (source.plugins.metrics.nodeMetrics !== null)
+    if (isMetricsPluginEnabled) {
+        const streamIdPrefix = source.plugins.metrics.nodeMetrics?.streamIdPrefix
+        if (streamIdPrefix !== undefined) {
+            target.client.metrics = {
+                periods: [
+                    {
+                        duration: 5000,
+                        streamId: `${streamIdPrefix}/sec`
+                    },
+                    {
+                        duration: 60000,
+                        streamId: `${streamIdPrefix}/min`
+                    },
+                    {
+                        duration: 3600000,
+                        streamId: `${streamIdPrefix}/hour`
+                    },
+                    {
+                        duration: 86400000,
+                        streamId: `${streamIdPrefix}/day`
+                    }
+                ]
             }
-        ]
-        delete target.plugins.metrics.nodeMetrics
+        }
+    } else {
+        target.client.metrics = false
     }
+    delete target.plugins.metrics
     if (target.client?.network?.name !== undefined) {
         delete target.client.network.name 
     }

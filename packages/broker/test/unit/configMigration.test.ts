@@ -1,11 +1,10 @@
-import { cloneDeep } from 'lodash'
+import { cloneDeep, merge } from 'lodash'
 import { validateConfig as validateClientConfig } from 'streamr-client'
 import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
 import WEBSOCKER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/websocket/config.schema.json'
 import MQTT_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/mqtt/config.schema.json'
 import BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/brubeckMiner/config.schema.json'
-import METRICS_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/metrics/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
 
 const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111111111111111'
@@ -135,7 +134,6 @@ const pluginSchemas: Record<string,any> = {
     websocket: WEBSOCKER_PLUGIN_CONFIG_SCHEMA,
     mqtt: MQTT_PLUGIN_CONFIG_SCHEMA,
     brubeckMiner: BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA,
-    metrics: METRICS_PLUGIN_CONFIG_SCHEMA
 }
 
 const validateTargetConfig = (config: any): void | never => {
@@ -172,8 +170,7 @@ describe('Config migration', () => {
                     keys: [MOCK_API_KEY]
                 },
                 plugins: {
-                    brubeckMiner: {},
-                    metrics: {}
+                    brubeckMiner: {}
                 },
             })
         })
@@ -191,7 +188,6 @@ describe('Config migration', () => {
                 },
                 plugins: {
                     brubeckMiner: {},
-                    metrics: {},
                     websocket: {
                         port: 1111
                     },
@@ -277,11 +273,9 @@ describe('Config migration', () => {
 
     describe('from v1 to v2', () => {
 
-        let source: any
-
-        beforeEach(() => {
-            source = {
-                $schema: 'https://schema.streamr.network/config-v1.schema.json',
+        const createConfig = (version: number, customConfig: any) => {
+            const minimalConfig = {
+                $schema: `https://schema.streamr.network/config-v${version}.schema.json`,
                 client: {
                     auth: {
                         privateKey: MOCK_PRIVATE_KEY
@@ -289,40 +283,59 @@ describe('Config migration', () => {
                 },
                 plugins: {}
             }
-        })
-        
+            const result = {}
+            merge(result, minimalConfig, customConfig)
+            return result
+        }
+
         it('minimal', () => {
-            const target = createMigratedConfig(source)
-            expect(target).toEqual({
-                ...source,
-                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            const v1 = createConfig(1, {})
+            const v2 = createConfig(2, {
+                client: {
+                    metrics: false
+                }
             })
+            expect(createMigratedConfig(v1)).toEqual(v2)
         })
 
         it('metrics: default', () => {
-            source.plugins = {
-                metrics: {}
-            }
-            const target = createMigratedConfig(source)
-            expect(target).toEqual({
-                ...source,
-                $schema: 'https://schema.streamr.network/config-v2.schema.json'
+            const v1 = createConfig(1, {
+                plugins: {
+                    metrics: {}
+                }
             })
+            const v2 = createConfig(2, {})
+            expect(createMigratedConfig(v1)).toEqual(v2)
+        })
+
+        it('metrics: disabled', () => {
+            const v1 = createConfig(1, {
+                plugins: {
+                    metrics: {
+                        nodeMetrics: null
+                    }
+                }
+            })
+            const v2 = createConfig(2, {
+                client: {
+                    metrics: false
+                }
+            })
+            expect(createMigratedConfig(v1)).toEqual(v2)
         })
 
         it('metrics: custom stream', () => {
-            source.plugins = {
-                metrics: {
-                    nodeMetrics: {
-                        streamIdPrefix: 'mock-prefix'
+            const v1 = createConfig(1, {
+                plugins: {
+                    metrics: {
+                        nodeMetrics: {
+                            streamIdPrefix: 'mock-prefix'
+                        }
                     }
                 }
-            }
-            const target = createMigratedConfig(source)
-            expect(target).toEqual({
-                ...source,
-                $schema: 'https://schema.streamr.network/config-v2.schema.json',
-                plugins: {
+            })
+            const v2 = createConfig(2, {
+                client: {
                     metrics: {
                         periods: [
                             {
@@ -345,6 +358,7 @@ describe('Config migration', () => {
                     }
                 }
             })
+            expect(createMigratedConfig(v1)).toEqual(v2)
         })
     })
 })

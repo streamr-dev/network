@@ -62,8 +62,9 @@ export const createClientFactory = (): ClientFactory => {
                 }
             }
             const config = {
-                ...opts,
-                ...authOpts
+                metrics: false,
+                ...authOpts,
+                ...opts
             }
             return new StreamrClient(config, mockContainer)
         }

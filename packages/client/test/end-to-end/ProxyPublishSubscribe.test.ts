@@ -40,7 +40,7 @@ describe('PubSub with proxy connections', () => {
             },
             network: {
                 acceptProxyConnections: true,
-                trackers: ConfigTest.network.trackers
+                trackers: ConfigTest.network!.trackers
             }
         })
         proxyClient2 = await createClient({
@@ -50,7 +50,7 @@ describe('PubSub with proxy connections', () => {
             },
             network: {
                 acceptProxyConnections: true,
-                trackers: ConfigTest.network.trackers
+                trackers: ConfigTest.network!.trackers
             }
         })
     }, 10000)
