@@ -198,11 +198,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    streamExistsOnChain(_streamIdOrPath: string): Promise<boolean> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     getStreamFromGraph(_streamIdOrPath: string): Promise<Stream> {
         throw new Error('not implemented')
     }

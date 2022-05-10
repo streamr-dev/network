@@ -240,7 +240,6 @@ describe('StreamRegistry', () => {
                     return err.errorCode === 'NOT_FOUND'
                 }
             }, 100000, 1000)
-            expect(await client.streamExistsOnChain(stream.id)).toEqual(false)
             return expect(client.getStream(stream.id)).rejects.toThrow()
         })
     })
