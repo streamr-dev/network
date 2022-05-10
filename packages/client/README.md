@@ -37,6 +37,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Enabling storage](#enabling-storage)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
+    - [Metrics publishing](#metrics-publishing)
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
     - [Encryption keys](#encryption-keys)
@@ -127,6 +128,8 @@ You can also create an anonymous client instance that can interact with public s
 ```js
 const streamr = new StreamrClient()
 ```
+
+By default, the `StreamrClient` publishes metrics to the network at regular intervals. See [Metrics publishing](#metrics-publishing).
 
 ### Creating a stream
 ```js
@@ -454,6 +457,55 @@ const address = await streamr.getAddress()
 ```
 
 ## Advanced usage
+
+### Metrics publishing
+
+By default, the `StreamrClient` publishes metrics to the network at regular intervals. The metrics include, for example, information about data volumes passing through the node, and are attributed to your node id. Here's the content of the metrics messages:
+
+```
+{
+    node: {
+        publishMessagesPerSecond: number
+        publishBytesPerSecond: number
+        latencyAverageMs: number
+        sendMessagesPerSecond: number
+        sendBytesPerSecond: number
+        receiveMessagesPerSecond: number
+        receiveBytesPerSecond: number
+        connectionAverageCount: number
+        connectionTotalFailureCount: number
+    },
+    period: {
+        start: number
+        end: number
+    }
+}
+```
+
+If you don't want to publish metrics, you can turn it off in the client configuration:
+
+```
+const streamr = new StreamrClient({
+    ...
+    metrics: false
+})
+```
+
+If you want to use custom stream and/or reporting periods, you can specify the details like this:
+```
+const streamr = new StreamrClient({
+    ...
+    metrics: {
+        periods: [{
+            duration: 3600000, // in milliseconds
+            streamId: "my-metrics-stream.eth/hour"
+        }]
+    }
+})
+```
+
+        
+
 ### Stream partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
