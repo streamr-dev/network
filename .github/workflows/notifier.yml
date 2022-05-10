@@ -3,6 +3,7 @@ on:
   workflow_run:
     workflows: ["*"]
     types: [completed]
+    branches: [main]
 
 jobs:
   on-failure:
