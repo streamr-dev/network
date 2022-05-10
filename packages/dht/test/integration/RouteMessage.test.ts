@@ -169,13 +169,13 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toString()] >= routers.length - 1, 10000)
+        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toString()] >= routers.length - 1, 30000)
         await Promise.allSettled(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 await waitForCondition(() => {
                     return count >= routers.length - 1
-                }, 10000)
+                }, 30000)
             )
         )
-    }, 20000)
+    }, 60000)
 })

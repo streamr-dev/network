@@ -12,6 +12,7 @@ import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DEFAULT_APP_ID } from '../dht/DhtNode'
+import { DeferredState } from '@protobuf-ts/runtime-rpc'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -37,6 +38,7 @@ interface OngoingRequest {
 }
 
 export class RpcCommunicator extends EventEmitter {
+    private stopped = false
     private static objectCounter = 0
     private objectId = 0
     private readonly dhtTransportClient: DhtTransportClient
@@ -164,18 +166,22 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private rejectDeferredPromises(deferredPromises: DeferredPromises, error: Error, code: string): void {
-        deferredPromises.message.reject(error)
-        deferredPromises.header.reject(error)
-        deferredPromises.status.reject({code, detail: error.message})
-        deferredPromises.trailer.reject(error)
+        if (!this.stopped && deferredPromises.message.state === DeferredState.PENDING) {
+            deferredPromises.message.reject(error)
+            deferredPromises.header.reject(error)
+            deferredPromises.status.reject({code, detail: error.message})
+            deferredPromises.trailer.reject(error)
+        }
     }
 
     private resolveDeferredPromises(deferredPromises: DeferredPromises, response: RpcMessage): void {
-        const parsedResponse = deferredPromises.messageParser(response.body)
-        deferredPromises.message.resolve(parsedResponse)
-        deferredPromises.header.resolve({})
-        deferredPromises.status.resolve({ code: 'OK', detail: '' })
-        deferredPromises.trailer.resolve({})
+        if (!this.stopped && deferredPromises.message.state === DeferredState.PENDING) {
+            const parsedResponse = deferredPromises.messageParser(response.body)
+            deferredPromises.message.resolve(parsedResponse)
+            deferredPromises.header.resolve({})
+            deferredPromises.status.resolve({ code: 'OK', detail: '' })
+            deferredPromises.trailer.resolve({})
+        }
     }
 
     private createResponseRpcMessage(
@@ -202,11 +208,13 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     stop(): void {
-        this.removeAllListeners()
-        this.send = () => {}
+        this.stopped = true
         this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
             clearTimeout(ongoingRequest.timeoutRef)
+            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), 'STOPPED')
         })
+        this.removeAllListeners()
+        this.send = () => {}
         this.ongoingRequests.clear()
     }
 }

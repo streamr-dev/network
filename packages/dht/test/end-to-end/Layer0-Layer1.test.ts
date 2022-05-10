@@ -70,11 +70,11 @@ describe('Layer0-Layer1', () => {
         stream2Node2 = createLayer1Peer(peerDescriptor2, node2, STREAM_ID2)
     })
 
-    afterEach(async() => {
+    afterEach(async () => {
+        await epConnectionManager.stop()
+        await connectionManager1.stop()
+        await connectionManager2.stop()
         await Promise.all([
-            epConnectionManager.stop(),
-            connectionManager1.stop(),
-            connectionManager2.stop(),
             node1.stop(),
             node2.stop(),
             epDhtNode.stop()

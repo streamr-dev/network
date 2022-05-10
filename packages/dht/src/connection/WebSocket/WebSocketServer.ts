@@ -69,7 +69,7 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
         })
     }
 
-    async stop(): Promise<void> {
+    stop(): Promise<void> {
         this.removeAllListeners()
         return new Promise((resolve, reject) => {
             this.wsServer?.shutDown()
