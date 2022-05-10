@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createEthereumAddress, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -48,8 +48,8 @@ describe('StorageNodeRegistry2', () => {
         await storageNodeClient.setStorageNodeMetadata({
             http: url
         })
-        const createdNodeUrl = await storageNodeClient.getStorageNodeUrl(storageNodeAddress)
-        expect(createdNodeUrl).toEqual(url)
+        const metadata = await storageNodeClient.getStorageNodeMetadata(storageNodeAddress)
+        expect(metadata.http).toEqual(url)
     })
 
     it('add stream to storage node', async () => {
@@ -89,6 +89,12 @@ describe('StorageNodeRegistry2', () => {
 
     it('delete a node', async () => {
         await storageNodeClient.setStorageNodeMetadata(undefined)
-        return expect(storageNodeClient.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
+        return expect(storageNodeClient.getStorageNodeMetadata(storageNodeAddress)).rejects.toThrow()
+    })
+
+    it('metadata from non-existing node', async () => {
+        return expect(async () => {
+            await storageNodeClient.getStorageNodeMetadata(createEthereumAddress(Date.now()))
+        }).rejects.toThrow('Node not found')
     })
 })
