@@ -65,7 +65,7 @@ export class MetricsPublisher {
         }
     }
 
-    async ensureStarted(): Promise<void> {
+    private async ensureStarted(): Promise<void> {
         if (this.producers.length === 0) {
             const node = await this.brubeckNode.getNode()
             const metricsContext = node.getMetricsContext()
