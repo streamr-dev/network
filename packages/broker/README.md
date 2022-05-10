@@ -35,11 +35,11 @@ npm install -g streamr-broker
 ```
 Create a configuration file with interactive tool:
 ```
-broker-init 
+streamr-broker-init 
 ```
 Then run the command broker with the desired configuration file
 ```
-broker <configFile>
+streamr-broker <configFile>
 ```
 
 ## Develop
