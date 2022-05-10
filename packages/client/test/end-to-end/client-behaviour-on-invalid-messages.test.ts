@@ -76,6 +76,7 @@ describe('client behaviour on invalid message', () => {
             throw new Error('should not get here')
         })
         networkNode = await createNetworkNode({
+            // TODO better typing for ConfigTest.network.trackers?
             ...ConfigTest.network as any,
             id: 'networkNode',
         })
