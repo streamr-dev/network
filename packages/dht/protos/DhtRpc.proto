@@ -8,6 +8,10 @@ service DhtRpc {
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
+service WebSocketConnector {
+  rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
+}
+
 // Used inside RpcMessage
 
 message ClosestPeersRequest {
@@ -118,10 +122,29 @@ enum MessageType {
   CONNECTIVITY_RESPONSE = 1;
   HANDSHAKE = 2;
   RPC = 3;
+  WEBSOCKET_CONNECTOR = 4;
+  WEBRTC_CONNECTOR = 5;
 }
 
 message Message {
   string messageId = 1;
   MessageType messageType = 2;
   bytes body = 3;
+}
+
+// Connector Messages
+
+message WebSocketConnectionRequest {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string ip = 3;
+  uint32 port = 4;
+}
+
+
+message WebSocketConnectionResponse {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  bool accepted = 3;
+  optional string reason = 4;
 }
