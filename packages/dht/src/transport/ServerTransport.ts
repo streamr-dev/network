@@ -10,14 +10,14 @@ export enum Event {
     RPC_REQUEST = 'streamr:dht-transport:server:request-new',
 }
 
-export interface DhtTransportServer {
+export interface ServerTransport {
     on(event: Event.RPC_RESPONSE, listener: (rpcMessage: RpcMessage) => void): this
     on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
 
 export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
 
-export class DhtTransportServer extends EventEmitter {
+export class ServerTransport extends EventEmitter {
     methods: Map<string, RegisteredMethod>
     constructor() {
         super()

@@ -1,6 +1,6 @@
 import { ClosestPeersResponse, Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
-import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
+import { ClientTransport } from '../../src/transport/ClientTransport'
+import { ServerTransport } from '../../src/transport/ServerTransport'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
@@ -15,8 +15,8 @@ describe('DhtClientRpcTransport', () => {
     })
 
     it('Happy Path getClosestNeighbors', async () => {
-        const clientTransport = new DhtTransportClient()
-        const serverTransport = new DhtTransportServer()
+        const clientTransport = new ClientTransport()
+        const serverTransport = new ServerTransport()
         const mockConnectionManager = new MockConnectionManager()
         const rpcCommunicator = new RpcCommunicator({
             connectionLayer: mockConnectionManager,

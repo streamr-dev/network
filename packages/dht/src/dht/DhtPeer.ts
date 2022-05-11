@@ -3,7 +3,7 @@ import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper }
 import { v4 } from 'uuid'
 import { PeerID } from '../PeerID'
 import { nodeFormatPeerDescriptor } from './helpers'
-import { DhtRpcOptions } from '../transport/DhtTransportClient'
+import { DhtRpcOptions } from '../transport/ClientTransport'
 import { RouteMessageParams } from './DhtNode'
 
 export class DhtPeer {

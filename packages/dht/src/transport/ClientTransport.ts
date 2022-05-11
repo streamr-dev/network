@@ -21,7 +21,7 @@ export enum Event {
     RPC_REQUEST = 'streamr:dht-transport:request-new'
 }
 
-export interface DhtTransportClient {
+export interface ClientTransport {
     on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => void): this
 }
 
@@ -38,15 +38,15 @@ export interface DhtRpcOptions extends RpcOptions {
     sourceDescriptor: PeerDescriptor
 }
 
-export class DhtTransportClient extends EventEmitter implements RpcTransport {
+export class ClientTransport extends EventEmitter implements RpcTransport {
     static objectCount = 0
     private objectId = 1    
     protected readonly defaultOptions: TODO
 
     constructor(defaultTimeout?: number) {
         super()
-        this.objectId = DhtTransportClient.objectCount
-        DhtTransportClient.objectCount++
+        this.objectId = ClientTransport.objectCount
+        ClientTransport.objectCount++
         
         this.defaultOptions = {
             timeout: defaultTimeout || 5000
