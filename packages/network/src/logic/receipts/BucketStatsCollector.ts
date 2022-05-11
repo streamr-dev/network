@@ -14,6 +14,7 @@ export class BucketStats {
     private readonly bucketNumber: number
     private messageCount = 0
     private totalPayloadSize = 0
+    private lastUpdate = Date.now()
 
     constructor(includedMessage: StreamMessage) {
         this.streamPartId = includedMessage.getStreamPartID()
@@ -32,10 +33,7 @@ export class BucketStats {
     record(payloadSize: number): void {
         this.messageCount += 1
         this.totalPayloadSize += payloadSize
-    }
-
-    getMessageCount(): number {
-        return this.messageCount
+        this.lastUpdate = Date.now()
     }
 }
 
