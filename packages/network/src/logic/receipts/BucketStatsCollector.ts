@@ -7,6 +7,10 @@ export function getWindowNumber(timestamp: number): number {
     return Math.floor(timestamp / WINDOW_LENGTH)
 }
 
+export function getWindowStartTime(windowNumber: number): number {
+    return windowNumber * WINDOW_LENGTH
+}
+
 export class BucketStats {
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
@@ -21,6 +25,14 @@ export class BucketStats {
         this.publisherId = includedMessage.getPublisherId()
         this.msgChainId = includedMessage.getMsgChainId()
         this.windowNumber = getWindowNumber(includedMessage.getTimestamp())
+    }
+
+    getLastUpdate(): number {
+        return this.lastUpdate
+    }
+
+    getWindowNumber(): number {
+        return this.windowNumber
     }
 
     includes(message: StreamMessage): boolean {
@@ -56,5 +68,12 @@ export class BucketStatsCollector {
 
     getBuckets(nodeId: NodeId): ReadonlyArray<BucketStats> {
         return this.bucketsByNode.get(nodeId) || []
+    }
+
+    // TODO: test, performance
+    removeBuckets(nodeId: NodeId, bucketsToRemove: ReadonlyArray<BucketStats>): void {
+        if (this.bucketsByNode.has(nodeId)) {
+            this.bucketsByNode.set(nodeId, this.bucketsByNode.get(nodeId)!.filter((b) => !bucketsToRemove.includes(b)))
+        }
     }
 }
