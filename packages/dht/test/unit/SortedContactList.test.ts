@@ -53,7 +53,7 @@ describe('SortedContactList', () => {
         expect(list.compareIds(id2, id3)).toBe(-1)
         expect(list.compareIds(id1, id4)).toBe(-3)
     })
-
+    
     it('orders itself correctly', async () => {
 
         const list = new SortedContactList(id0, 10)
@@ -68,7 +68,7 @@ describe('SortedContactList', () => {
         expect(contacts[1]).toEqual(peer2)
         expect(contacts[2]).toEqual(peer3)
     })
-
+    
     it('handles contacted nodes correctly', async () => {
         const list = new SortedContactList(id0, 10)
 

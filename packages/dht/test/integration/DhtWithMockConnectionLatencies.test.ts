@@ -1,47 +1,30 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { wait } from 'streamr-test-utils'
-import { PeerID } from '../../src/PeerID'
+import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
 
     let entrypointDescriptor: PeerDescriptor
+    
+    Simulator.instance().enableLatencies()
 
-    let rpcCommunicators: Map<string, RpcCommunicator>
-
-    beforeEach(() => {
-        rpcCommunicators = new Map()
-        const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, message: Message) => {
-                if (!targetDescriptor) {
-                    throw new Error('peer descriptor not set')
-                }
-                // Mock latency
-                await wait(Math.random() * (250 - 5) + 5)
-                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
-            }
-        }
+    beforeEach(async () => {
         nodes = []
 
         const entryPointId = '0'
-        entryPoint = createMockConnectionDhtNode(entryPointId)
-        entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
-        rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
-
+        entryPoint = await createMockConnectionDhtNode(entryPointId)
+       
         entrypointDescriptor = {
-            peerId: entryPoint.getSelfId().value,
+            peerId: entryPoint.getNodeId().value,
             type: 0
         }
         
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
-            const node = createMockConnectionDhtNode(nodeId)
-            node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
-            rpcCommunicators.set(PeerID.fromString(nodeId).toString(), node.getRpcCommunicator())
+            const node = await createMockConnectionDhtNode(nodeId)
             nodes.push(node)
         }
     })
