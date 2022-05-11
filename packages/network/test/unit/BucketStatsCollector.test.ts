@@ -81,16 +81,19 @@ describe(BucketStatsCollector, () => {
     })
 
     it('recording some data spanning multiple buckets and getting the buckets', () => {
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME, 40))
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + (BUCKET_LENGTH / 2), 60))
+        const makeFixedMsg = (timestamp: number, payloadSize: number) => {
+            return makeMsg(SP1, 'publisherId', 'msgChainId', timestamp, payloadSize)
+        }
+        collector.record('nodeId', makeFixedMsg(START_TIME, 40))
+        collector.record('nodeId', makeFixedMsg(START_TIME + (BUCKET_LENGTH / 2), 60))
 
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + BUCKET_LENGTH, 100))
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + BUCKET_LENGTH + 1000, 20))
+        collector.record('nodeId', makeFixedMsg(START_TIME + BUCKET_LENGTH, 100))
+        collector.record('nodeId', makeFixedMsg(START_TIME + BUCKET_LENGTH + 1000, 20))
 
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + 2 * BUCKET_LENGTH + 2000, 15))
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + 2 * BUCKET_LENGTH + BUCKET_LENGTH*(3/4), 20))
+        collector.record('nodeId', makeFixedMsg(START_TIME + 2 * BUCKET_LENGTH + 2000, 15))
+        collector.record('nodeId', makeFixedMsg(START_TIME + 2 * BUCKET_LENGTH + BUCKET_LENGTH*(3/4), 20))
 
-        collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', START_TIME + 6 * BUCKET_LENGTH, 150))
+        collector.record('nodeId', makeFixedMsg(START_TIME + 6 * BUCKET_LENGTH, 150))
 
         const firstBucketNumber = getBucketNumber(START_TIME)
         expect(collector.getBucketsFor('nodeId')).toEqual([
