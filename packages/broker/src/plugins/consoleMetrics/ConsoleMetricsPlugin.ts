@@ -2,6 +2,7 @@ import { Schema } from 'ajv'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Logger, MetricsReport } from 'streamr-network'
+import { omit } from 'lodash'
 
 const logger = new Logger(module)
 
@@ -24,70 +25,16 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
         this.producer = metricsContext.createReportProducer((report: MetricsReport) => {
-            this.printReport(report)
+            // omit timestamp info as that is printed by the logger
+            const data = omit(report, 'period')
+            // remove quote chars to improve readability
+            const output = JSON.stringify(data, undefined, 4).replace(/"/g, '')
+            logger.info(`Report\n${output}`)
         }, this.pluginConfig.interval * 1000, formatNumber)
     }
     
     async stop(): Promise<void> {
         this.producer?.stop()
-    }
-        
-    printReport(report: MetricsReport): void {
-        let storageReadCountPerSecond = 0
-        let storageWriteCountPerSecond = 0
-        let storageReadKbPerSecond = 0
-        let storageWriteKbPerSecond = 0
-        let resendRate = {
-            last: 0,
-            from: 0,
-            range: 0
-        }
-        if (report['broker/cassandra'] !== undefined) {
-            storageReadCountPerSecond = report['broker/cassandra'].readCount
-            storageWriteCountPerSecond = report['broker/cassandra'].writeCount
-            storageReadKbPerSecond = report['broker/cassandra'].readBytes / 1000
-            storageWriteKbPerSecond = report['broker/cassandra'].writeBytes / 1000
-        }
-
-        const networkConnectionCount = report.WebRtcEndpoint.connections
-        const networkInPerSecond = report.WebRtcEndpoint.msgInSpeed
-        const networkOutPerSecond = report.WebRtcEndpoint.msgOutSpeed
-        const networkKbInPerSecond = report.WebRtcEndpoint.inSpeed / 1000
-        const networkKbOutPerSecond = report.WebRtcEndpoint.outSpeed / 1000
-
-        const storageQueryMetrics = report['broker/storage/query']
-        if (storageQueryMetrics !== undefined) {
-            resendRate = {
-                last: storageQueryMetrics.lastRequests,
-                from: storageQueryMetrics.fromRequests,
-                range: storageQueryMetrics.rangeRequests
-            }
-        }
-
-        logger.info(
-            'Report\n'
-            + '\tNetwork connections: %s\n'
-            + '\tNetwork in: %s events/s, %s kb/s\n'
-            + '\tNetwork out: %s events/s, %s kb/s\n'
-            + '\tStorage read: %s events/s, %s kb/s\n'
-            + '\tStorage write: %s events/s, %s kb/s\n'
-            + '\tResends:\n'
-            + '\t- last: %s requests/s\n'
-            + '\t- from: %s requests/s\n'
-            + '\t- range: %s requests/s\n',
-            networkConnectionCount,
-            networkInPerSecond,
-            networkKbInPerSecond,
-            networkOutPerSecond,
-            networkKbOutPerSecond,
-            storageReadCountPerSecond,
-            storageReadKbPerSecond,
-            storageWriteCountPerSecond,
-            storageWriteKbPerSecond,
-            resendRate.last,
-            resendRate.from,
-            resendRate.range,
-        )
     }
 
     getConfigSchema(): Schema {

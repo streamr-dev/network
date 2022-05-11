@@ -7,7 +7,7 @@ import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpo
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 
 describe('WebRTC multisignaller test', () => {
@@ -66,7 +66,7 @@ describe('WebRTC multisignaller test', () => {
             new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
         endpoint2 = new WebRtcEndpoint(
             peerInfo2,
@@ -74,7 +74,7 @@ describe('WebRTC multisignaller test', () => {
             new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory
+            webRtcConnectionFactory
         )
     })
 

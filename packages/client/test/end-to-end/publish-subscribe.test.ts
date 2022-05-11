@@ -13,7 +13,8 @@ const ENCRYPTED_MESSSAGE_FORMAT = /^[0-9A-Fa-f]+$/
 
 async function startNetworkNodeAndListenForAtLeastOneMessage(streamId: StreamID): Promise<unknown[]> {
     const networkNode = await createNetworkNode({
-        ...ConfigTest.network,
+        // TODO better typing for ConfigTest.network.trackers?
+        ...ConfigTest.network as any,
         id: 'networkNode',
     })
     try {

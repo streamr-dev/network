@@ -81,13 +81,6 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async getStorageNodeUrl(_nodeAddress: EthereumAddress): Promise<string> {
-        // return some dummy value: the receiving component passes the info to FakeRest,
-        // and it is ignored there
-        return ''
-    }
-
-    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
         // no-op
     }
@@ -95,6 +88,15 @@ export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
     // eslint-disable-next-line class-methods-use-this
     async setStorageNodeMetadata(_metadata: StorageNodeMetadata | undefined): Promise<void> {
         throw new Error('not implemented')
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    async getStorageNodeMetadata(_nodeAddress: string): Promise<StorageNodeMetadata> {
+        // return some dummy value: the receiving component passes the info to FakeRest,
+        // and it is ignored there
+        return {
+            http: ''
+        }
     }
 
     // eslint-disable-next-line class-methods-use-this

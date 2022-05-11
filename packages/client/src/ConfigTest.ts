@@ -1,3 +1,5 @@
+import { StreamrClientConfig } from './Config'
+
 function toNumber(value: any): number | undefined {
     return (value !== undefined) ? Number(value) : undefined
 }
@@ -14,9 +16,8 @@ const sideChainConfig = {
 /**
  * Streamr client constructor options that work in the test environment
  */
-export const ConfigTest = {
+export const ConfigTest: StreamrClientConfig = {
     theGraphUrl: `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8000/subgraphs/name/streamr-dev/network-contracts`,
-    streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamRegistryChainAddress: '0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222',
     streamStorageRegistryChainAddress: '0xd04af489677001444280366Dd0885B03dAaDe71D',
     storageNodeRegistryChainAddress: '0x231b810D98702782963472e1D60a25496999E75D',
@@ -63,7 +64,8 @@ export const ConfigTest = {
             retryInterval: 500
         },
         httpFetchTimeout: 30 * 1000
-    }
+    },
+    metrics: false
 }
 
 export const DOCKER_DEV_STORAGE_NODE = '0xde1112f631486CfC759A50196853011528bC5FA0'

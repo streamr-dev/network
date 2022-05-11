@@ -232,19 +232,19 @@ export class Storage extends EventEmitter {
 
     enableMetrics(metricsContext: MetricsContext): void {
         const metrics = {
-            readCount: new RateMetric(),
-            readBytes: new RateMetric(),
-            writeCount: new RateMetric(),
-            writeBytes: new RateMetric()
+            readMessagesPerSecond: new RateMetric(),
+            readBytesPerSecond: new RateMetric(),
+            writeMessagesPerSecond: new RateMetric(),
+            writeBytesPerSecond: new RateMetric()
         }
-        metricsContext.addMetrics('broker/cassandra', metrics)
+        metricsContext.addMetrics('broker.plugin.storage', metrics)
         this.on('read', (streamMessage: StreamMessage) => {
-            metrics.readCount.record(1)
-            metrics.readBytes.record(streamMessage.getContent(false).length)
+            metrics.readMessagesPerSecond.record(1)
+            metrics.readBytesPerSecond.record(streamMessage.getContent(false).length)
         })
         this.on('write', (streamMessage: StreamMessage) => {
-            metrics.writeCount.record(1)
-            metrics.writeBytes.record(streamMessage.getContent(false).length)
+            metrics.writeMessagesPerSecond.record(1)
+            metrics.writeBytesPerSecond.record(streamMessage.getContent(false).length)
         })
     }
 

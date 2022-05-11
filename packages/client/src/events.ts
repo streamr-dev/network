@@ -9,6 +9,12 @@ export interface StreamrClientEvents {
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
 }
 
+// events for internal communication between StreamrClient components
+export interface InternalEvents {
+    publish: () => void
+    subscribe: () => void
+}
+
 interface ObserverEvents<E extends Events<E>> {
     addEventListener: (eventName: keyof E) => void
     removeEventListener: (eventName: keyof E) => void
@@ -95,5 +101,5 @@ export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents> {
+export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents & InternalEvents> {
 }

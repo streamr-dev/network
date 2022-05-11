@@ -131,11 +131,11 @@ type RangeRequest = BaseRequest<{
 export const router = (storage: Storage, metricsContext: MetricsContext): Router => {
     const router = express.Router()
     const metrics = {
-        lastRequests: new RateMetric(),
-        fromRequests: new RateMetric(),
-        rangeRequests: new RateMetric()
+        resendLastQueriesPerSecond: new RateMetric(),
+        resendFromQueriesPerSecond: new RateMetric(),
+        resendRangeQueriesPerSecond: new RateMetric()
     }
-    metricsContext.addMetrics('broker/storage/query', metrics)
+    metricsContext.addMetrics('broker.plugin.storage', metrics)
 
     router.use(
         `/streams/:id/data/partitions/:partition`,
@@ -154,7 +154,7 @@ export const router = (storage: Storage, metricsContext: MetricsContext): Router
     )
 
     // eslint-disable-next-line max-len
-    createEndpointRoute('last', router, metrics.lastRequests, (req: LastRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+    createEndpointRoute('last', router, metrics.resendLastQueriesPerSecond, (req: LastRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const count = req.query.count === undefined ? 1 : parseIntIfExists(req.query.count)
         if (Number.isNaN(count)) {
             onError(`Query parameter "count" not a number: ${req.query.count}`)
@@ -168,7 +168,7 @@ export const router = (storage: Storage, metricsContext: MetricsContext): Router
     })
 
     // eslint-disable-next-line max-len
-    createEndpointRoute('from', router, metrics.fromRequests, (req: FromRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+    createEndpointRoute('from', router, metrics.resendFromQueriesPerSecond, (req: FromRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
         const { publisherId } = req.query
@@ -188,7 +188,7 @@ export const router = (storage: Storage, metricsContext: MetricsContext): Router
     })
 
     // eslint-disable-next-line max-len
-    createEndpointRoute('range', router, metrics.rangeRequests, (req: RangeRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
+    createEndpointRoute('range', router, metrics.resendRangeQueriesPerSecond, (req: RangeRequest, streamId: string, partition: number, onSuccess: (data: Readable) => void, onError: (msg: string) => void) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE

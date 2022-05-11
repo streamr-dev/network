@@ -7,7 +7,7 @@ describe('Layer0', () => {
     const epPeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10001 }
+        websocket: { ip: 'localhost', port: 10011 }
     }
     let epConnectionManager: ConnectionManager
     let epDhtNode: DhtNode
@@ -38,25 +38,25 @@ describe('Layer0', () => {
         await epDhtNode.joinDht(epPeerDescriptor)
 
         connectionManager1 = new ConnectionManager({
-            webSocketPort: 10002,
+            webSocketPort: 10012,
             entryPoints: [
                 epPeerDescriptor
             ]
         })
         connectionManager2 = new ConnectionManager({
-            webSocketPort: 10003,
+            webSocketPort: 10013,
             entryPoints: [
                 epPeerDescriptor
             ]
         })
         connectionManager3 = new ConnectionManager({
-            webSocketPort: 10004,
+            webSocketPort: 10014,
             entryPoints: [
                 epPeerDescriptor
             ]
         })
         connectionManager4 = new ConnectionManager({
-            webSocketPort: 10005,
+            webSocketPort: 10015,
             entryPoints: [
                 epPeerDescriptor
             ]
