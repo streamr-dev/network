@@ -3,16 +3,15 @@ import { Logger } from "../../helpers/Logger"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
-const BrowserWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-
     }
-})
-
-export default BrowserWebRtcConnectionFactory
+    registerWebRtcEndpoint(): void {
+    }
+    unregisterWebRtcEndpoint(): void {
+    }
+}
 
 export class BrowserWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger

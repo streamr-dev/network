@@ -19,6 +19,7 @@ import { Signal } from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { StreamPermission } from '../../src/permission'
+import { padEnd } from 'lodash'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -587,6 +588,10 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     } finally {
         clearTimeout(t)
     }
+}
+
+export const createEthereumAddress = (id: number): string => {
+    return '0x' + padEnd(String(id), 40, '0')
 }
 
 export const createEthereumAddressCache = (): { getAddress: (privateKey: string) => EthereumAddress } => {

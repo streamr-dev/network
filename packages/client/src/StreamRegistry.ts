@@ -195,8 +195,7 @@ export class StreamRegistry implements Context {
         ))
     }
 
-    /** @internal */
-    async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
+    private async streamExistsOnChain(streamIdOrPath: string): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Checking if stream exists on chain %s', streamId)
         return Promise.any([
