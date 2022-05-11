@@ -29,6 +29,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     constructor(private config: ConnectionManagerConfig) {
         super()
+
     }
 
     private async handleIncomingConnectivityRequest(connection: Connection, connectivityRequest: ConnectivityRequestMessage) {

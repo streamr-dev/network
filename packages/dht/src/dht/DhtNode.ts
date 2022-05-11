@@ -348,8 +348,6 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public stop(): void {
         this.rpcCommunicator.stop()
-        this.dhtTransportServer.stop()
-        this.dhtTransportClient.stop()
         this.bucket.removeAllListeners()
         this.removeAllListeners()
     }

@@ -1,8 +1,6 @@
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
-    PeerDescriptor,
-    NodeType,
     PingRequest,
     PingResponse,
     RouteMessageWrapper,
@@ -11,7 +9,7 @@ import {
 import { IDhtRpc } from '../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../transport/ServerTransport'
-import { nodeFormatPeerDescriptor, generateId } from '../dht/helpers'
+import { nodeFormatPeerDescriptor } from '../dht/helpers'
 import { DhtPeer } from '../dht/DhtPeer'
 import { TODO } from '../types'
 

@@ -6,7 +6,14 @@ import {
     ClientTransport,
     Event as DhtTransportClientEvent
 } from './ClientTransport'
-import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } from '../proto/DhtRpc'
+import {
+    Message,
+    MessageType,
+    NotificationResponse,
+    PeerDescriptor,
+    RpcMessage,
+    RpcResponseError
+} from '../proto/DhtRpc'
 import { ServerTransport, Event as DhtTransportServerEvent } from './ServerTransport'
 import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
@@ -76,7 +83,9 @@ export class RpcCommunicator extends EventEmitter {
 
     onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
         const requestOptions = this.dhtTransportClient.mergeOptions(options)
-        if (deferredPromises) {
+        if (deferredPromises && rpcMessage.header.notification) {
+            this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
+        } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
         const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage)}
@@ -207,6 +216,18 @@ export class RpcCommunicator extends EventEmitter {
         throw new Err.LayerViolation('RpcCommunicator can only access ConnectionManager on layer 0')
     }
 
+    private notificationResponse(requestId: string): RpcMessage {
+        const notificationResponse: NotificationResponse = {
+            sent: true
+        }
+        const wrapper: RpcMessage = {
+            body: NotificationResponse.toBinary(notificationResponse),
+            header: {},
+            requestId,
+        }
+        return wrapper
+    }
+
     stop(): void {
         this.stopped = true
         this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
@@ -216,5 +237,7 @@ export class RpcCommunicator extends EventEmitter {
         this.removeAllListeners()
         this.send = () => {}
         this.ongoingRequests.clear()
+        this.dhtTransportClient.stop()
+        this.dhtTransportServer.stop()
     }
 }

@@ -36,6 +36,7 @@ export interface DeferredPromises {
 export interface DhtRpcOptions extends RpcOptions {
     targetDescriptor: PeerDescriptor,
     sourceDescriptor: PeerDescriptor
+    notification?: boolean
 }
 
 export class ClientTransport extends EventEmitter implements RpcTransport {
@@ -57,10 +58,11 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
-    createRequestHeaders(method: MethodInfo): any {
+    createRequestHeaders(method: MethodInfo, notification?: boolean): any {
         return {
             method: method.localName,
             request: 'request',
+            notification: notification ? 'notification' : undefined
         }
     }
 
@@ -73,7 +75,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
             defTrailer = new Deferred<RpcMetadata>()
 
         const request: RpcMessage = {
-            header: this.createRequestHeaders(method),
+            header: this.createRequestHeaders(method, options.notification),
             body: requestBody,
             requestId: v4(),
             sourceDescriptor: options.sourceDescriptor as PeerDescriptor,
