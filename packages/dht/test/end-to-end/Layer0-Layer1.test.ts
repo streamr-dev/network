@@ -8,7 +8,7 @@ describe('Layer0-Layer1', () => {
     const epPeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 10011 }
+        websocket: { ip: 'localhost', port: 10016 }
     }
     const STREAM_ID1 = 'stream1'
     const STREAM_ID2 = 'stream2'
@@ -40,13 +40,13 @@ describe('Layer0-Layer1', () => {
         await epDhtNode.joinDht(epPeerDescriptor)
 
         connectionManager1 = new ConnectionManager({
-            webSocketPort: 10012,
+            webSocketPort: 10017,
             entryPoints: [
                 epPeerDescriptor
             ]
         })
         connectionManager2 = new ConnectionManager({
-            webSocketPort: 10013,
+            webSocketPort: 10018,
             entryPoints: [
                 epPeerDescriptor
             ]
