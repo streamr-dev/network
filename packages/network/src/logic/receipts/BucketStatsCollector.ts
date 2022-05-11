@@ -27,14 +27,6 @@ export class BucketStats {
         this.windowNumber = getWindowNumber(includedMessage.getTimestamp())
     }
 
-    getLastUpdate(): number {
-        return this.lastUpdate
-    }
-
-    getWindowNumber(): number {
-        return this.windowNumber
-    }
-
     includes(message: StreamMessage): boolean {
         return this.streamPartId === message.getStreamPartID()
             && this.publisherId.toLowerCase() === message.getPublisherId().toLowerCase()
@@ -46,6 +38,34 @@ export class BucketStats {
         this.messageCount += 1
         this.totalPayloadSize += payloadSize
         this.lastUpdate = Date.now()
+    }
+
+    getStreamPartId(): StreamPartID {
+        return this.streamPartId
+    }
+
+    getPublisherId(): string {
+        return this.publisherId
+    }
+
+    getMsgChainId(): string {
+        return this.msgChainId
+    }
+
+    getWindowNumber(): number {
+        return this.windowNumber
+    }
+
+    getMessageCount(): number {
+        return this.messageCount
+    }
+
+    getTotalPayloadSize(): number {
+        return this.totalPayloadSize
+    }
+
+    getLastUpdate(): number {
+        return this.lastUpdate
     }
 }
 

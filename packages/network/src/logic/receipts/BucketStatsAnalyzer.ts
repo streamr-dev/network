@@ -2,8 +2,7 @@ import { BucketStats, BucketStatsCollector, getWindowStartTime, WINDOW_LENGTH } 
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
-
-export type GetCurrentNodesFn = () => ReadonlyArray<NodeId>
+import { ReceiptRequest } from 'streamr-client-protocol'
 
 const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
 const UPDATE_TIMEOUT = WINDOW_LENGTH * 2
@@ -17,10 +16,14 @@ function isClosed(bucket: BucketStats, now: number): boolean {
 
 const logger = new Logger(module)
 
+export type GetCurrentNodesFn = () => ReadonlyArray<NodeId>
+export type OnBucketClosedFn = (nodeId: NodeId, bucket: BucketStats) => void
+
 export class BucketStatsAnalyzer {
     private readonly getCurrentNodes: GetCurrentNodesFn
     private readonly bucketStatsCollector: BucketStatsCollector
     private readonly analyzeIntervalInMs: number
+    private readonly onBucketClosed: OnBucketClosedFn
     private readonly timeProvider: () => number
     private scheduledAnalyzeTask: { stop: () => void } | undefined
 
@@ -28,11 +31,13 @@ export class BucketStatsAnalyzer {
         getCurrentNeighbors: GetCurrentNodesFn,
         bucketStatsCollector: BucketStatsCollector,
         analyzeIntervalInMs: number,
+        onBucketClosed: OnBucketClosedFn,
         timeProvider: () => number = Date.now
     ) {
         this.getCurrentNodes = getCurrentNeighbors
         this.bucketStatsCollector = bucketStatsCollector
         this.analyzeIntervalInMs = analyzeIntervalInMs
+        this.onBucketClosed = onBucketClosed
         this.timeProvider = timeProvider
     }
 
@@ -51,13 +56,11 @@ export class BucketStatsAnalyzer {
     private analyze(): void {
         const now = this.timeProvider()
         const nodes = this.getCurrentNodes()
-        logger.debug('analyzing buckets of %d nodes', nodes.length)
         for (const node of nodes) {
             const buckets = this.bucketStatsCollector.getBuckets(node)
             const closedBuckets = buckets.filter((b) => isClosed(b, now))
-            closedBuckets.forEach((b) => {
-                logger.info('CLOSED BUCKET of node %s: %j', node, b)
-            })
+            logger.info('node %s: closing %d buckets out of %d', node, closedBuckets.length, buckets.length)
+            closedBuckets.forEach((b) => this.onBucketClosed(node, b)) // TODO: // async generator instead of callback fn?
             this.bucketStatsCollector.removeBuckets(node, closedBuckets)
         }
     }

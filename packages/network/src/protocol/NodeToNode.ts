@@ -14,6 +14,7 @@ export enum Event {
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
     PROXY_CONNECTION_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
     PROXY_CONNECTION_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
+    RECEIPT_REQUEST_RECEIVED = 'node-node:receipt-request-received',
     LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
 }
 
@@ -22,6 +23,7 @@ eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RE
 eventPerType[ControlLayer.ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTION_REQUEST_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.ReceiptRequest] = Event.RECEIPT_REQUEST_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -33,6 +35,7 @@ export interface NodeToNode {
        listener: (message: ControlLayer.ProxyConnectionRequest, nodeId: NodeId) => void): this
     on(event: Event.PROXY_CONNECTION_RESPONSE_RECEIVED,
        listener: (message: ControlLayer.ProxyConnectionResponse, nodeId: NodeId) => void): this
+    on(event: Event.RECEIPT_REQUEST_RECEIVED, listener: (message: ControlLayer.ReceiptRequest, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED,
        listener: (message: ControlLayer.UnsubscribeRequest, nodeId: NodeId) => void): this
 }

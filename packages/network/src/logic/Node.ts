@@ -3,7 +3,9 @@ import {
     MessageLayer,
     StreamPartID,
     StreamMessage,
-    ProxyDirection
+    ProxyDirection,
+    ReceiptRequest,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
@@ -21,6 +23,7 @@ import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 import { BucketStatsCollector } from './receipts/BucketStatsCollector'
 import { BucketStatsAnalyzer } from './receipts/BucketStatsAnalyzer'
+import { v4 as uuidv4 } from 'uuid'
 
 const logger = new Logger(module)
 
@@ -193,7 +196,29 @@ export class Node extends EventEmitter {
         this.bucketStatsAnalyzer = new BucketStatsAnalyzer(
             this.streamPartManager.getAllNodes.bind(this.streamPartManager),
             this.bucketStatsCollector,
-            15 * 1000
+            15 * 1000,
+            async (nodeId, bucket) => {
+                const requestId = uuidv4()
+                try {
+                    await this.nodeToNode.send(nodeId, new ReceiptRequest({
+                        requestId,
+                        claim: {
+                            streamId: StreamPartIDUtils.getStreamID(bucket.getStreamPartId()),
+                            streamPartition: StreamPartIDUtils.getStreamPartition(bucket.getStreamPartId()),
+                            publisherId: bucket.getPublisherId(),
+                            msgChainId: bucket.getMsgChainId(),
+                            windowNumber: bucket.getWindowNumber(),
+                            messageCount: bucket.getMessageCount(),
+                            totalPayloadSize: bucket.getTotalPayloadSize(),
+                            sender: this.peerInfo.peerId, // TODO: without sessionId
+                            receiver: nodeId
+                        },
+                        signature: 'nönönö'
+                    }))
+                } catch (e) {
+                    logger.error('failed to send ReceiptRequest to %s, reason: %s', nodeId, e)
+                }
+            }
         )
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
             this.bucketStatsCollector.record(nodeId, broadcastMessage.streamMessage)
