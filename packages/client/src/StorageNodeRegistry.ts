@@ -42,9 +42,6 @@ type StoredStreamQueryResult = {
 type AllNodesQueryResult = {
     nodes: NodeQueryResult[],
 }
-type SingleNodeQueryResult = {
-    node: NodeQueryResult,
-}
 
 type StorageNodeQueryResult = {
     node: {
@@ -68,9 +65,10 @@ export interface StorageNodeMetadata {
 export class StorageNodeRegistry {
 
     private clientConfig: StrictStreamrClientConfig
-    private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
     private nodeRegistryContract?: NodeRegistryContract
+    private nodeRegistryContractReadonly: NodeRegistryContract
     private streamStorageRegistryContract?: StreamStorageRegistryContract
+    private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
@@ -82,6 +80,10 @@ export class StorageNodeRegistry {
     ) {
         this.clientConfig = clientConfig
         const chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
+            new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
+            'storageNodeRegistry'
+        ) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
             'streamStorageRegistry'
@@ -147,6 +149,16 @@ export class StorageNodeRegistry {
         }
     }
 
+    async getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
+        const [ resultNodeAddress, metadata ] = await this.nodeRegistryContractReadonly.getNode(nodeAddress)
+        const NODE_NOT_FOUND = '0x0000000000000000000000000000000000000000'
+        if (resultNodeAddress !== NODE_NOT_FOUND) {
+            return JSON.parse(metadata)
+        } else {
+            throw new NotFoundError('Node not found, id: ' + nodeAddress)
+        }
+    }
+
     async addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
@@ -166,17 +178,6 @@ export class StorageNodeRegistry {
     // --------------------------------------------------------------------------------------------
     // GraphQL queries
     // --------------------------------------------------------------------------------------------
-
-    /** @internal */
-    async getStorageNodeUrl(nodeAddress: EthereumAddress): Promise<string> {
-        log('getnode %s ', nodeAddress)
-        const res = await this.graphQLClient.sendQuery(StorageNodeRegistry.buildGetNodeQuery(nodeAddress.toLowerCase())) as SingleNodeQueryResult
-        if (res.node === null) {
-            throw new NotFoundError('Node not found, id: ' + nodeAddress)
-        }
-        const metadata = JSON.parse(res.node.metadata)
-        return metadata.http
-    }
 
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
