@@ -19,6 +19,8 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { BucketStatsCollector } from './receipts/BucketStatsCollector'
+import { BucketStatsAnalyzer } from './receipts/BucketStatsAnalyzer'
 
 const logger = new Logger(module)
 
@@ -90,6 +92,8 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
+    private readonly bucketStatsCollector: BucketStatsCollector
+    private readonly bucketStatsAnalyzer: BucketStatsAnalyzer
 
     constructor(opts: NodeOptions) {
         super()
@@ -185,6 +189,16 @@ export class Node extends EventEmitter {
             nodeConnectTimeout: this.nodeConnectTimeout
         })
 
+        this.bucketStatsCollector = new BucketStatsCollector()
+        this.bucketStatsAnalyzer = new BucketStatsAnalyzer(
+            this.streamPartManager.getAllNodes.bind(this.streamPartManager),
+            this.bucketStatsCollector,
+            15 * 1000
+        )
+        this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
+            this.bucketStatsCollector.record(nodeId, broadcastMessage.streamMessage)
+        })
+
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
@@ -208,6 +222,7 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
+        this.bucketStatsAnalyzer.start().catch((err) => logger.error(err))
     }
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
