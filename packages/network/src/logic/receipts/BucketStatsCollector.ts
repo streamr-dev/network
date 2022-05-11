@@ -37,6 +37,7 @@ export class BucketStats {
     }
 }
 
+// TODO: naive implementation w.rt. cleaning, when to clean?
 export class BucketStatsCollector {
     private readonly bucketsByNode = new Map<NodeId, BucketStats[]>()
 
@@ -53,7 +54,7 @@ export class BucketStatsCollector {
         bucket.record(message.getSerializedContent().length)
     }
 
-    getBucketsFor(neighborId: NodeId): ReadonlyArray<BucketStats> {
+    getBuckets(neighborId: NodeId): ReadonlyArray<BucketStats> {
         return this.bucketsByNode.get(neighborId) || []
     }
 }

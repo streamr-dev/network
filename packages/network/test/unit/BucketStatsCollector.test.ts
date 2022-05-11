@@ -24,15 +24,15 @@ function makeMsg(
         ),
         prevMsgRef: null,
         content: {
-            'key': 'a'.repeat(payloadSize - 10)
+            'key': 'a'.repeat(payloadSize - 10) // 10 is size of structure without 'a's
         }
     })
 }
 
 const TIMESTAMP = 1652252050000
-const SP1 = StreamPartIDUtils.parse('sp1#0')
-const SP1_1 = StreamPartIDUtils.parse('sp1#1')
-const SP2 = StreamPartIDUtils.parse('sp2#0')
+const SP1 = StreamPartIDUtils.parse('stream-1#0')
+const SP2 = StreamPartIDUtils.parse('stream-1#1')
+const SP3 = StreamPartIDUtils.parse('stream-2#0')
 
 describe(getBucketNumber, () => {
     const BASE_BUCKET_NUMBER = getBucketNumber(TIMESTAMP)
@@ -42,9 +42,7 @@ describe(getBucketNumber, () => {
     it('works as expected', () => {
         expect(TIMESTAMP).toBeWithin(LOWER_BOUND, UPPER_BOUND)
         expect(getBucketNumber(LOWER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
-        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (1/4)))).toEqual(BASE_BUCKET_NUMBER)
-        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (2/4)))).toEqual(BASE_BUCKET_NUMBER)
-        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (3/4)))).toEqual(BASE_BUCKET_NUMBER)
+        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (1/2)))).toEqual(BASE_BUCKET_NUMBER)
         expect(getBucketNumber(UPPER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
 
         // previous and next buckets
@@ -63,14 +61,14 @@ describe(BucketStatsCollector, () => {
     })
 
     it('initially node has no buckets', () => {
-        expect(collector.getBucketsFor('nodeId')).toEqual([])
+        expect(collector.getBuckets('nodeId')).toEqual([])
     })
 
     it('recording some data and getting the bucket', () => {
         collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP, 40))
         collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP + 15000, 160))
         collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP + 32000, 100))
-        expect(collector.getBucketsFor('nodeId')).toEqual([
+        expect(collector.getBuckets('nodeId')).toEqual([
             {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
@@ -99,7 +97,7 @@ describe(BucketStatsCollector, () => {
         collector.record('nodeId', makeFixedMsg(TIMESTAMP + 6 * BUCKET_LENGTH, 150))
 
         const firstBucketNumber = getBucketNumber(TIMESTAMP)
-        expect(collector.getBucketsFor('nodeId')).toEqual([
+        expect(collector.getBuckets('nodeId')).toEqual([
             {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
@@ -145,7 +143,7 @@ describe(BucketStatsCollector, () => {
         collector.record('nodeA', msg1)
         collector.record('nodeA', msg2)
         collector.record('nodeB', msg1)
-        expect(collector.getBucketsFor('nodeA')).toEqual([
+        expect(collector.getBuckets('nodeA')).toEqual([
             {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
@@ -156,7 +154,7 @@ describe(BucketStatsCollector, () => {
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
             }
         ])
-        expect(collector.getBucketsFor('nodeB')).toEqual([
+        expect(collector.getBuckets('nodeB')).toEqual([
             {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
@@ -171,24 +169,24 @@ describe(BucketStatsCollector, () => {
 
     it('buckets are streamPart-specific', () => {
         collector.record('nodeId', makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP, 40))
-        collector.record('nodeId', makeMsg(SP1_1, 'publisherId', 'msgChainId', TIMESTAMP + 1, 40))
-        collector.record('nodeId', makeMsg(SP2, 'publisherId', 'msgChainId', TIMESTAMP + 2, 40))
-        expect(collector.getBucketsFor('nodeId')).toHaveLength(3)
+        collector.record('nodeId', makeMsg(SP2, 'publisherId', 'msgChainId', TIMESTAMP + 1, 40))
+        collector.record('nodeId', makeMsg(SP3, 'publisherId', 'msgChainId', TIMESTAMP + 2, 40))
+        expect(collector.getBuckets('nodeId')).toHaveLength(3)
     })
 
     it('buckets for a fixed streamPart are publisherId-specific', () => {
         const msgChainId = 'msgChainId'
         collector.record('nodeId', makeMsg(SP1, 'publisherOne', msgChainId, TIMESTAMP, 40))
         collector.record('nodeId', makeMsg(SP1, 'publisherTwo', msgChainId, TIMESTAMP + 1, 40))
-        collector.record('nodeId', makeMsg(SP2, 'publisherThree', msgChainId, TIMESTAMP + 2, 40))
-        expect(collector.getBucketsFor('nodeId')).toHaveLength(3)
+        collector.record('nodeId', makeMsg(SP1, 'publisherThree', msgChainId, TIMESTAMP + 2, 40))
+        expect(collector.getBuckets('nodeId')).toHaveLength(3)
     })
 
     it('buckets for a fixed (streamPart, publisherId)-pair are msgChain-specific', () => {
         const publisherId = 'publisherId'
         collector.record('nodeId', makeMsg(SP1, publisherId, 'msgChainOne', TIMESTAMP, 40))
         collector.record('nodeId', makeMsg(SP1, publisherId, 'msgChainTwo', TIMESTAMP + 1, 40))
-        collector.record('nodeId', makeMsg(SP2, publisherId, 'msgChainThree', TIMESTAMP + 2, 40))
-        expect(collector.getBucketsFor('nodeId')).toHaveLength(3)
+        collector.record('nodeId', makeMsg(SP3, publisherId, 'msgChainThree', TIMESTAMP + 2, 40))
+        expect(collector.getBuckets('nodeId')).toHaveLength(3)
     })
 })
