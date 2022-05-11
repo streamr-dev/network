@@ -10,12 +10,10 @@ class ContactWrapper {
 }
 
 export class SortedContactList {
-    private ownId: PeerID
     private contactsById: { [id: string]: ContactWrapper } = {}
     private contactIds: PeerID[] = []
 
-    constructor(ownId: PeerID) {
-
+    constructor(private ownId: PeerID, private maxSize: number) {
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
     }
@@ -33,9 +31,17 @@ export class SortedContactList {
             return
         }
         if (!this.contactsById.hasOwnProperty(contact.peerId.toString())) {
-            this.contactsById[contact.peerId.toString()] = new ContactWrapper(contact)
-            this.contactIds.push(contact.peerId)
-            this.contactIds.sort(this.compareIds)
+            if (this.contactIds.length < this.maxSize) {
+                this.contactsById[contact.peerId.toString()] = new ContactWrapper(contact)
+                this.contactIds.push(contact.peerId)
+                this.contactIds.sort(this.compareIds)
+            } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
+                const removed = this.contactIds.pop()
+                delete this.contactsById[removed!.toString()]
+                this.contactsById[contact.peerId.toString()] = new ContactWrapper(contact)
+                this.contactIds.push(contact.peerId)
+                this.contactIds.sort(this.compareIds)
+            }
         }  
     }
 
@@ -91,5 +97,27 @@ export class SortedContactList {
 
     public getSize(): number {
         return this.contactIds.length
+    }
+
+    public getContact(stringId: string): ContactWrapper {
+        return this.contactsById[stringId]
+    }
+
+    public removeContact(id: PeerID): boolean {
+        if (this.contactsById[id.toString()]) {
+            const index = this.contactIds.indexOf(id)
+            this.contactIds.splice(index, 1)
+            delete this.contactsById[id.toString()]
+            return true
+        }
+        return false
+    }
+
+    public isContact(id: PeerID): boolean {
+        return !!this.contactsById[id.toString()]
+    }
+
+    public isActive(id: PeerID): boolean {
+        return this.contactsById[id.toString()] ? this.contactsById[id.toString()].active : false
     }
 }

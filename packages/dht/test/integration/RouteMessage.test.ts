@@ -1,7 +1,7 @@
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerDescriptor, RpcMessage, RouteMessageType } from '../../src/proto/DhtRpc'
-import { waitForEvent, waitForCondition } from 'streamr-test-utils'
+import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/rpc-protocol/IMessageRouter'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/PeerID'
@@ -16,22 +16,23 @@ describe('Route Message With Mock Connections', () => {
 
     let rpcCommunicators: Map<string, RpcCommunicator>
 
+    const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
+    const APP_ID = 'layer0'
 
     beforeEach(async () => {
         routerNodes = []
         rpcCommunicators = new Map()
         const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, bytes: Uint8Array) => {
+            return async (targetDescriptor: PeerDescriptor, message: Message) => {
                 if (!targetDescriptor) {
                     throw new Error('peer descriptor not set')
                 }
-                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, bytes)
+                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
             }
         }
 
-        const entryPointId = '0'
         entryPoint = createMockConnectionDhtNode(entryPointId)
         entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
         rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
@@ -76,12 +77,17 @@ describe('Route Message With Mock Connections', () => {
         )
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const message: Message = {
+            messageId: 'tsatsa',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
         await Promise.all([
             waitForEvent(destinationNode, MessageRouterEvent.DATA),
             sourceNode.routeMessage({
-                message: RpcMessage.toBinary(rpcWrapper),
-                messageType: RouteMessageType.RPC_WRAPPER,
+                message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
+                appId: APP_ID,
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         ])
@@ -91,10 +97,15 @@ describe('Route Message With Mock Connections', () => {
         await sourceNode.joinDht(entryPointDescriptor)
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const message: Message = {
+            messageId: 'tsutsu',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
         await expect(sourceNode.routeMessage({
-            message: RpcMessage.toBinary(rpcWrapper),
-            messageType: RouteMessageType.RPC_WRAPPER,
+            message: Message.toBinary(message),
             destinationPeer: destinationNode.getPeerDescriptor(),
+            appId: APP_ID,
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toThrow()
     })
@@ -109,11 +120,16 @@ describe('Route Message With Mock Connections', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+        const message: Message = {
+            messageId: 'tsutsu',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
         for (let i = 0; i < numOfMessages; i++ ) {
             sourceNode.routeMessage({
-                message: RpcMessage.toBinary(rpcWrapper),
-                messageType: RouteMessageType.RPC_WRAPPER,
+                message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
+                appId: APP_ID,
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         }
@@ -138,23 +154,28 @@ describe('Route Message With Mock Connections', () => {
                 await Promise.all(routers.map(async (receiver) => {
                     if (!node.getSelfId().equals(receiver.getSelfId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
+                        const message: Message = {
+                            messageId: 'tsutsu',
+                            messageType: MessageType.RPC,
+                            body: RpcMessage.toBinary(rpcWrapper)
+                        }
                         await node.routeMessage({
-                            message: RpcMessage.toBinary(rpcWrapper),
-                            messageType: RouteMessageType.RPC_WRAPPER,
+                            message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
+                            appId: APP_ID,
                             sourcePeer: node.getPeerDescriptor()
                         })
                     }
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toString()] >= routers.length - 1, 10000)
+        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toString()] >= routers.length - 1, 30000)
         await Promise.allSettled(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 await waitForCondition(() => {
                     return count >= routers.length - 1
-                }, 10000)
+                }, 30000)
             )
         )
-    }, 20000)
+    }, 60000)
 })

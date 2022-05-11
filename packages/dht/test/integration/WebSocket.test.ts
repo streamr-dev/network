@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import { WebSocketConnector } from "../../src/connection/WebSocketConnector"
-import { WebSocketServer } from "../../src/connection/WebSocketServer"
+import { WebSocketConnector } from "../../src/connection/WebSocket/WebSocketConnector"
+import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/ConnectionSource'
 import { Connection, Event as ConnectionEvent } from "../../src/connection/Connection"
 
@@ -16,7 +16,7 @@ describe('WebSocket', () => {
 
     it('Happy path', (done) => {
             
-        webSocketServer.on(ConnectionSourceEvent.NEW_CONNECTION, (serverConnection: Connection) => {
+        webSocketServer.on(ConnectionSourceEvent.CONNECTED, (serverConnection: Connection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1,2,3,4]))
@@ -36,7 +36,7 @@ describe('WebSocket', () => {
             })
         })
         
-        webSocketConnector.on(ConnectionSourceEvent.NEW_CONNECTION, (clientConnection: Connection) => {
+        webSocketConnector.on(ConnectionSourceEvent.CONNECTED, (clientConnection: Connection) => {
             const time = Date.now()
             console.log('client side setting listeners at ' + time)
             

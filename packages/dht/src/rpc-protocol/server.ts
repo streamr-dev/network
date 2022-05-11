@@ -20,7 +20,7 @@ export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, ca
         async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const peerDescriptor = nodeFormatPeerDescriptor(request.peerDescriptor!)
             const closestPeers = getClosestPeersFn(peerDescriptor)
-            const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDscriptor())
+            const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
             const response = {
                 peers: peerDescriptors,
                 nonce: 'aaaaaa'

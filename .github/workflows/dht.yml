@@ -32,5 +32,11 @@ jobs:
         working-directory: './'
         run: |
           npm run bootstrap-pkg @streamr/dht
-      - run: npm run eslint
-      - run: npm run test
+      - name: Eslint
+        run: npm run eslint
+      - name: Unit Tests
+        run: npm run test-unit
+      - name: Integration Tests
+        run: npm run test-integration
+      - name: End-to-End Tests
+        run: npm run test-end-to-end

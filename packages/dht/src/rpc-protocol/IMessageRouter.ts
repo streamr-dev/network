@@ -1,10 +1,11 @@
-import { PeerDescriptor, RouteMessageType } from '../proto/DhtRpc'
+import { Message, PeerDescriptor, MessageType } from '../proto/DhtRpc'
 
 export interface RouteMessageParams {
     message: Uint8Array
     destinationPeer: PeerDescriptor
     sourcePeer: PeerDescriptor
-    messageType: RouteMessageType
+    messageType: MessageType
+    appId: string
     previousPeer?: PeerDescriptor
     messageId?: string
 }
@@ -14,6 +15,6 @@ export enum Event {
 }
 
 export interface IMessageRouter {
-    on(event: Event.DATA, listener: (peerDescriptor: PeerDescriptor, messageType: RouteMessageType, bytes: Uint8Array) => void): this
+    on(event: Event.DATA, listener: (peerDescriptor: PeerDescriptor, messageType: MessageType, message: Message) => void): this
     routeMessage(params: RouteMessageParams): void
 }

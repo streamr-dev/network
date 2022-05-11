@@ -43,13 +43,13 @@ export class DhtTransportClient extends EventEmitter implements RpcTransport {
     private objectId = 1    
     protected readonly defaultOptions: TODO
 
-    constructor() {
+    constructor(defaultTimeout?: number) {
         super()
         this.objectId = DhtTransportClient.objectCount
         DhtTransportClient.objectCount++
         
         this.defaultOptions = {
-            timeout: 2000
+            timeout: defaultTimeout || 5000
         }
     }
 

@@ -1,14 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { PeerID } from "../../src/PeerID"
-import { NodeType } from "../../src/proto/DhtRpc"
+import { Event as ITransportEvent } from "../../src/transport/ITransport"
+import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
+import { createPeerDescriptor } from '../utils'
+import { waitForEvent } from 'streamr-test-utils'
+import { Event as ConnectionEvent } from '../../src/connection/Connection'
+import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 
 describe('ConnectionManager', () => {
     beforeAll(async () => {
     })
-
     it('Can start alone', async () => {
-        const connectionManager = new ConnectionManager( { webSocketHost:'localhost', webSocketPort: 9991 } )
-       
+        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9991 })
+
         const result = await connectionManager.start()
 
         expect(result.ip).toEqual('localhost')
@@ -18,33 +23,37 @@ describe('ConnectionManager', () => {
     })
 
     it('Throws an async exception if fails to connect to entrypoints', async () => {
-    
-        const connectionManager = new ConnectionManager( { webSocketPort: 9992, entryPoints: [
-            {peerId: Uint8Array.from([1,2,3]), type: NodeType.NODEJS, websocket: {ip:'localhost', port: 123} }
-        ]  } )
-       
+
+        const connectionManager = new ConnectionManager({
+            webSocketPort: 9992, entryPoints: [
+                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 123 } }
+            ]
+        })
+
         await expect(connectionManager.start())
             .rejects
             .toThrow('Failed to connect to the entrypoints')
-        
+
         await connectionManager.stop()
     })
-    
+
     it('Can probe connectivity in open internet', async () => {
-        const connectionManager = new ConnectionManager( { webSocketHost:'localhost', webSocketPort: 9993 } )
-       
+        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9993 })
+
         const result = await connectionManager.start()
-        connectionManager.enableConnectivity(PeerID.fromIp(result.ip))
+        connectionManager.enableConnectivity(createPeerDescriptor(result))
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
 
-        const connectionManager2 = new ConnectionManager( { webSocketPort: 9994, entryPoints: [
-            {peerId: Uint8Array.from([1,2,3]), type: NodeType.NODEJS, websocket: {ip:'localhost', port: 9993} }
-        ]  } )
+        const connectionManager2 = new ConnectionManager({
+            webSocketPort: 9994, entryPoints: [
+                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 9993 } }
+            ]
+        })
 
         const result2 = await connectionManager2.start()
-        connectionManager2.enableConnectivity(PeerID.fromIp(result2.ip))
+        connectionManager2.enableConnectivity(createPeerDescriptor(result2))
 
         expect(result2.ip).toEqual('127.0.0.1')
         expect(result2.openInternet).toEqual(true)
@@ -53,6 +62,97 @@ describe('ConnectionManager', () => {
         await connectionManager2.stop()
     })
 
-    afterAll(async () => { 
+    it('Can send data to other connectionmanager over websocket', async () => {
+        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9995 })
+
+        const result = await connectionManager.start()
+        const peerDescriptor = createPeerDescriptor(result)
+        connectionManager.enableConnectivity(peerDescriptor)
+
+        expect(result.ip).toEqual('localhost')
+        expect(result.openInternet).toEqual(true)
+
+        const connectionManager2 = new ConnectionManager({
+            webSocketPort: 9996, entryPoints: [
+                peerDescriptor 
+            ]
+        })
+
+        const result2 = await connectionManager2.start()
+        const peerDescriptor2 = createPeerDescriptor(result2)
+        connectionManager2.enableConnectivity(peerDescriptor2)
+
+        expect(result2.ip).toEqual('127.0.0.1')
+        expect(result2.openInternet).toEqual(true)
+
+        const arr = new Uint8Array(10)
+        const msg: Message = {
+            messageType: MessageType.RPC, 
+            messageId: '1',
+            body: arr
+        }
+
+        const promise = new Promise<void>((resolve, reject) => {
+            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+                expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+        connectionManager.send(peerDescriptor2, msg)
+        
+        await promise
+        
+        await connectionManager.stop()
+        await connectionManager2.stop()
+    })
+
+    it('Can disconnect', async () => {
+        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9997 })
+
+        const result = await connectionManager.start()
+        const peerDescriptor = createPeerDescriptor(result)
+        connectionManager.enableConnectivity(peerDescriptor)
+
+        expect(result.ip).toEqual('localhost')
+        expect(result.openInternet).toEqual(true)
+
+        const connectionManager2 = new ConnectionManager({
+            webSocketPort: 9999, entryPoints: [
+                peerDescriptor
+            ]
+        })
+
+        const result2 = await connectionManager2.start()
+        const peerDescriptor2 = createPeerDescriptor(result2)
+        connectionManager2.enableConnectivity(peerDescriptor2)
+
+        expect(result2.ip).toEqual('127.0.0.1')
+        expect(result2.openInternet).toEqual(true)
+
+        const arr = new Uint8Array(10)
+        const msg: Message = {
+            messageType: MessageType.RPC,
+            messageId: '1',
+            body: arr
+        }
+
+        const promise = new Promise<void>((resolve, reject) => {
+            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+                expect(message.messageType).toBe(MessageType.RPC)
+                resolve()
+            })
+        })
+        connectionManager.send(peerDescriptor2, msg)
+
+        await promise
+        await Promise.all([
+            waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
+            connectionManager.disconnect(peerDescriptor2, undefined, 100)
+        ])
+        await connectionManager.stop()
+        await connectionManager2.stop()
+    })
+
+    afterAll(async () => {
     })
 })

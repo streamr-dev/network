@@ -4,7 +4,7 @@ import * as http from 'http'
 import { EventEmitter } from 'events'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
-import { ConnectionSource, Event as ConnectionSourceEvent } from './ConnectionSource'
+import { ConnectionSource, Event as ConnectionSourceEvent } from '../ConnectionSource'
 
 export class WebSocketServer extends EventEmitter implements ConnectionSource {
 
@@ -64,12 +64,13 @@ export class WebSocketServer extends EventEmitter implements ConnectionSource {
 
                 console.log((new Date()) + ' Connection accepted.')
 
-                this.emit(ConnectionSourceEvent.NEW_CONNECTION, new ServerWebSocket(connection))
+                this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })
         })
     }
 
-    async stop(): Promise<void> {
+    stop(): Promise<void> {
+        this.removeAllListeners()
         return new Promise((resolve, reject) => {
             this.wsServer?.shutDown()
             this.httpServer?.close(() => {

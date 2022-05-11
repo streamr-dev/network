@@ -1,10 +1,10 @@
 import { Connection } from './Connection'
 
 export enum Event {
-    NEW_CONNECTION = 'streamr:dht:connectionsource:new_connection',
+    CONNECTED = 'streamr:dht:connectionsource:connected'
 }
 
 export interface ConnectionSource {
-    on(event: Event.NEW_CONNECTION, listener: (connection: Connection) => void): this
-    once(event: Event.NEW_CONNECTION, listener: (connection: Connection) => void): this
+    on(event: Event.CONNECTED, listener: (connection: Connection) => void): this
+    once(event: Event.CONNECTED, listener: (connection: Connection) => void): this
 }

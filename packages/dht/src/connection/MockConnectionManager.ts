@@ -1,16 +1,18 @@
 /* eslint-disable no-console */
 
-import { PeerDescriptor } from '../proto/DhtRpc'
+import { Message, PeerDescriptor } from '../proto/DhtRpc'
 import { EventEmitter } from 'events'
-import { IConnectionManager } from './IConnectionManager'
+import { ITransport } from '../transport/ITransport'
 
-export class MockConnectionManager extends EventEmitter implements IConnectionManager {
+export class MockConnectionManager extends EventEmitter implements ITransport {
     constructor() {
         super()
     }
 
-    send(peerDescriptor: PeerDescriptor, bytes: Uint8Array): void {
-        console.info(peerDescriptor, bytes)
+    send(peerDescriptor: PeerDescriptor, msg: Message): void {
+        console.info(peerDescriptor, msg)
     }
+
+    disconnect(_peerDescriptor: PeerDescriptor): void {}
 
 }

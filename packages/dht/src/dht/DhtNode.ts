@@ -8,13 +8,33 @@ import { DhtTransportServer } from '../transport/DhtTransportServer'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
-import { PeerDescriptor, RouteMessageType, RouteMessageWrapper } from '../proto/DhtRpc'
-import { IMessageRouter, RouteMessageParams, Event as MessageRouterEvent } from '../rpc-protocol/IMessageRouter'
+import {
+    Message,
+    PeerDescriptor,
+    RouteMessageWrapper
+} from '../proto/DhtRpc'
 import { DhtTransportClient } from '../transport/DhtTransportClient'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
+import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 
-export class DhtNode extends EventEmitter implements IMessageRouter {
+export interface RouteMessageParams {
+    message: Uint8Array
+    destinationPeer: PeerDescriptor
+    sourcePeer: PeerDescriptor
+    appId: string
+    previousPeer?: PeerDescriptor
+    messageId?: string
+}
+
+export enum Event {
+    NEW_CONTACT = 'streamr:dht:dht-node:new-peer',
+    CONTACT_REMOVED = 'streamr:dht:dht-node:peer-removed'
+}
+
+export const DEFAULT_APP_ID = 'layer0'
+
+export class DhtNode extends EventEmitter implements ITransport {
     static objectCounter = 0
     private objectId = 1
     private readonly ALPHA = 3
@@ -30,23 +50,23 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     private readonly rpcCommunicator: RpcCommunicator
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private peerDescriptor: PeerDescriptor
+    private readonly appId: string
     
     constructor(
-        selfId: PeerID,
+        peerDescriptor: PeerDescriptor,
         dhtRpcClient: DhtRpcClient,
         dhtTransportClient: DhtTransportClient,
         dhtTransportServer: DhtTransportServer,
-        rpcCommunicator: RpcCommunicator
+        rpcCommunicator: RpcCommunicator,
+        appId = DEFAULT_APP_ID
     ) {
         super()
-        this.selfId = selfId
         this.objectId = DhtNode.objectCounter
         DhtNode.objectCounter++
-        this.peerDescriptor = {
-            peerId: selfId.value,
-            type: 0
-        }
+        this.peerDescriptor = peerDescriptor
+        this.selfId = PeerID.fromValue(this.peerDescriptor.peerId)
         this.peers = new Map()
+        this.appId = appId
         this.bucket = new KBucket({
             localNodeId: this.selfId.value,
             numberOfNodesPerKBucket: this.numberOfNodesPerKBucket
@@ -59,12 +79,33 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
                 if (!alive) {
                     this.bucket.remove(contact.id)
                     this.bucket.add(newContact)
+                    this.neighborList.removeContact(contact.peerId)
                     break
                 }
             }
         })
+        this.bucket.on('removed', (contact: DhtPeer) => {
+            if (this.appId === DEFAULT_APP_ID) {
+                const connectionManager = this.rpcCommunicator.getConnectionManager()
+                connectionManager.disconnect(contact.getPeerDescriptor())
+            }
+            this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
+        })
+        this.bucket.on('added', async (contact: DhtPeer) => {
+            if (await contact.ping(this.peerDescriptor)) {
+                this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
+            } else {
+                this.bucket.remove(contact.peerId.value)
+                this.neighborList.removeContact(contact.peerId)
+                this.addClosestContactToBucket()
+            }
+        })
+        this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
+            // TODO: Update contact info to the connection manager and reconnect
+        })
+
         this.dhtRpcClient = dhtRpcClient
-        this.neighborList = new SortedContactList(this.selfId)
+        this.neighborList = new SortedContactList(this.selfId, this.K * 4)
         this.dhtTransportServer = dhtTransportServer
         this.dhtTransportClient = dhtTransportClient
         this.rpcCommunicator = rpcCommunicator
@@ -96,19 +137,31 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
     }
 
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
+        this.updateBucketAndNeighborList(routedMessage.sourcePeer!)
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.selfId.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            this.emit(MessageRouterEvent.DATA, routedMessage.sourcePeer, routedMessage.messageType, routedMessage.message)
+            const message = Message.fromBinary(routedMessage.message)
+            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message, routedMessage.appId)
         } else {
             await this.routeMessage({
-                messageType: routedMessage.messageType as RouteMessageType,
                 message: routedMessage.message,
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
                 sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
+                appId: routedMessage.appId,
                 messageId: routedMessage.nonce
             })
         }
+    }
+
+    public send(targetPeerDescriptor: PeerDescriptor, msg: Message, appId?: string): void {
+        const params: RouteMessageParams = {
+            message: Message.toBinary(msg),
+            destinationPeer: targetPeerDescriptor,
+            appId: appId? appId : 'layer0',
+            sourcePeer: this.peerDescriptor
+        }
+        this.routeMessage(params)
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {
@@ -191,7 +244,6 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         while (true) {
             const oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-            //console.log(JSON.stringify(uncontacted))
             if (uncontacted.length < 1) {
                 return
             }
@@ -218,7 +270,6 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         this.bucket.add(entryPoint)
         const closest = this.bucket.closest(this.selfId.value, this.ALPHA)
         this.neighborList.addContacts(closest)
-        
         await this.contactEntrypoints()
 
         while (true) {
@@ -242,6 +293,16 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
         return this.bucket.count()
     }
 
+    private updateBucketAndNeighborList(contact: PeerDescriptor): void {
+        const dhtPeer = new DhtPeer(contact, this.dhtRpcClient)
+        const peerId = PeerID.fromValue(contact.peerId)
+        if (!this.neighborList.isContact(peerId)) {
+            this.neighborList.addContact(dhtPeer)
+        }
+        this.neighborList.setActive(peerId)
+        this.bucket.add(dhtPeer)
+    }
+
     private bindDefaultServerMethods() {
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
         this.dhtTransportServer.registerMethod('getClosestPeers', methods.getClosestPeers)
@@ -263,6 +324,26 @@ export class DhtNode extends EventEmitter implements IMessageRouter {
 
     public getK(): number {
         return this.K
+    }
+
+    public getKBucketPeers(): PeerDescriptor[] {
+        return this.bucket.toArray().map((dhtPeer) => dhtPeer.getPeerDescriptor())
+    }
+
+    private addClosestContactToBucket(): void {
+        const closest = this.getClosestActiveContactNotInBucket()
+        if (closest) {
+            this.bucket.add(closest)
+        }
+    }
+
+    private getClosestActiveContactNotInBucket(): DhtPeer | null {
+        for (const contactId of this.neighborList.getContactIds()) {
+            if (!this.bucket.get(contactId.value) && this.neighborList.isActive(contactId)) {
+                return this.neighborList.getContact(contactId.toString()).contact
+            }
+        }
+        return null
     }
 
     public stop(): void {
