@@ -7,7 +7,7 @@ export function getBucketNumber(timestamp: number): number {
     return Math.floor(timestamp / BUCKET_LENGTH)
 }
 
-export class Bucket {
+export class BucketStats {
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
     private readonly msgChainId: string
@@ -39,8 +39,8 @@ export class Bucket {
     }
 }
 
-export class BucketStatistics {
-    private readonly bucketsByNode = new Map<NodeId, Bucket[]>()
+export class BucketStatsCollector {
+    private readonly bucketsByNode = new Map<NodeId, BucketStats[]>()
 
     record(neighborId: NodeId, message: StreamMessage): void {
         if (!this.bucketsByNode.has(neighborId)) {
@@ -49,13 +49,13 @@ export class BucketStatistics {
         const buckets = this.bucketsByNode.get(neighborId)!
         let bucket = buckets.find((b) => b.includes(message))
         if (bucket === undefined) { // TODO: do not accept if too old?
-            bucket = new Bucket(message)
+            bucket = new BucketStats(message)
             buckets.push(bucket)
         }
         bucket.record(message.getSerializedContent().length)
     }
 
-    getBucketsFor(neighborId: NodeId): ReadonlyArray<Bucket> {
+    getBucketsFor(neighborId: NodeId): ReadonlyArray<BucketStats> {
         return this.bucketsByNode.get(neighborId) || []
     }
 }
