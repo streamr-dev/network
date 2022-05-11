@@ -1,4 +1,4 @@
-import { BUCKET_LENGTH, BucketStatsCollector, getBucketNumber } from '../../src/logic/receipts/BucketStatsCollector'
+import { WINDOW_LENGTH, BucketStatsCollector, getWindowNumber } from '../../src/logic/receipts/BucketStatsCollector'
 import {
     MessageID,
     StreamMessage,
@@ -34,20 +34,20 @@ const SP1 = StreamPartIDUtils.parse('stream-1#0')
 const SP2 = StreamPartIDUtils.parse('stream-1#1')
 const SP3 = StreamPartIDUtils.parse('stream-2#0')
 
-describe(getBucketNumber, () => {
-    const BASE_BUCKET_NUMBER = getBucketNumber(TIMESTAMP)
-    const LOWER_BOUND = BASE_BUCKET_NUMBER * BUCKET_LENGTH
-    const UPPER_BOUND = (BASE_BUCKET_NUMBER + 1) * BUCKET_LENGTH - 1
+describe(getWindowNumber, () => {
+    const BASE_WINDOW_NUMBER = getWindowNumber(TIMESTAMP)
+    const LOWER_BOUND = BASE_WINDOW_NUMBER * WINDOW_LENGTH
+    const UPPER_BOUND = (BASE_WINDOW_NUMBER + 1) * WINDOW_LENGTH - 1
 
     it('works as expected', () => {
         expect(TIMESTAMP).toBeWithin(LOWER_BOUND, UPPER_BOUND)
-        expect(getBucketNumber(LOWER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
-        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (1/2)))).toEqual(BASE_BUCKET_NUMBER)
-        expect(getBucketNumber(UPPER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
+        expect(getWindowNumber(LOWER_BOUND)).toEqual(BASE_WINDOW_NUMBER)
+        expect(getWindowNumber(LOWER_BOUND + Math.floor(WINDOW_LENGTH * (1/2)))).toEqual(BASE_WINDOW_NUMBER)
+        expect(getWindowNumber(UPPER_BOUND)).toEqual(BASE_WINDOW_NUMBER)
 
         // previous and next buckets
-        expect(getBucketNumber(LOWER_BOUND - 1)).toEqual(BASE_BUCKET_NUMBER - 1)
-        expect(getBucketNumber(UPPER_BOUND + 1)).toEqual(BASE_BUCKET_NUMBER + 1)
+        expect(getWindowNumber(LOWER_BOUND - 1)).toEqual(BASE_WINDOW_NUMBER - 1)
+        expect(getWindowNumber(UPPER_BOUND + 1)).toEqual(BASE_WINDOW_NUMBER + 1)
     })
 })
 
@@ -73,7 +73,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: getBucketNumber(TIMESTAMP),
+                windowNumber: getWindowNumber(TIMESTAMP),
                 messageCount: 3,
                 totalPayloadSize: 40 + 160 + 100,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -86,23 +86,23 @@ describe(BucketStatsCollector, () => {
             return makeMsg(SP1, 'publisherId', 'msgChainId', timestamp, payloadSize)
         }
         collector.record('nodeId', makeFixedMsg(TIMESTAMP, 40))
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + (BUCKET_LENGTH / 2), 60))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + (WINDOW_LENGTH / 2), 60))
 
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + BUCKET_LENGTH, 100))
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + BUCKET_LENGTH + 1000, 20))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + WINDOW_LENGTH, 100))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + WINDOW_LENGTH + 1000, 20))
 
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 2 * BUCKET_LENGTH + 2000, 15))
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 2 * BUCKET_LENGTH + BUCKET_LENGTH*(3/4), 20))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 2 * WINDOW_LENGTH + 2000, 15))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 2 * WINDOW_LENGTH + WINDOW_LENGTH*(3/4), 20))
 
-        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 6 * BUCKET_LENGTH, 150))
+        collector.record('nodeId', makeFixedMsg(TIMESTAMP + 6 * WINDOW_LENGTH, 150))
 
-        const firstBucketNumber = getBucketNumber(TIMESTAMP)
+        const firstWindowNumber = getWindowNumber(TIMESTAMP)
         expect(collector.getBuckets('nodeId')).toEqual([
             {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: firstBucketNumber,
+                windowNumber: firstWindowNumber,
                 messageCount: 2,
                 totalPayloadSize: 40 + 60,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -111,7 +111,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: firstBucketNumber + 1,
+                windowNumber: firstWindowNumber + 1,
                 messageCount: 2,
                 totalPayloadSize: 100 + 20,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -120,7 +120,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: firstBucketNumber + 2,
+                windowNumber: firstWindowNumber + 2,
                 messageCount: 2,
                 totalPayloadSize: 15 + 20,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -129,7 +129,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: firstBucketNumber + 6,
+                windowNumber: firstWindowNumber + 6,
                 messageCount: 1,
                 totalPayloadSize: 150,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -148,7 +148,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: getBucketNumber(TIMESTAMP),
+                windowNumber: getWindowNumber(TIMESTAMP),
                 messageCount: 2,
                 totalPayloadSize: 80 + 120,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
@@ -159,7 +159,7 @@ describe(BucketStatsCollector, () => {
                 streamPartId: SP1,
                 publisherId: 'publisherId',
                 msgChainId: 'msgChainId',
-                bucketNumber: getBucketNumber(TIMESTAMP),
+                windowNumber: getWindowNumber(TIMESTAMP),
                 messageCount: 1,
                 totalPayloadSize: 80,
                 lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)

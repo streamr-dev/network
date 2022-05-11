@@ -1,17 +1,17 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { NodeId } from '../../composition'
 
-export const BUCKET_LENGTH = 60 * 1000
+export const WINDOW_LENGTH = 60 * 1000
 
-export function getBucketNumber(timestamp: number): number {
-    return Math.floor(timestamp / BUCKET_LENGTH)
+export function getWindowNumber(timestamp: number): number {
+    return Math.floor(timestamp / WINDOW_LENGTH)
 }
 
 export class BucketStats {
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
     private readonly msgChainId: string
-    private readonly bucketNumber: number
+    private readonly windowNumber: number
     private messageCount = 0
     private totalPayloadSize = 0
     private lastUpdate = Date.now()
@@ -20,14 +20,14 @@ export class BucketStats {
         this.streamPartId = includedMessage.getStreamPartID()
         this.publisherId = includedMessage.getPublisherId()
         this.msgChainId = includedMessage.getMsgChainId()
-        this.bucketNumber = getBucketNumber(includedMessage.getTimestamp())
+        this.windowNumber = getWindowNumber(includedMessage.getTimestamp())
     }
 
     includes(message: StreamMessage): boolean {
         return this.streamPartId === message.getStreamPartID()
             && this.publisherId.toLowerCase() === message.getPublisherId().toLowerCase()
             && this.msgChainId === message.getMsgChainId()
-            && this.bucketNumber === getBucketNumber(message.getTimestamp())
+            && this.windowNumber === getWindowNumber(message.getTimestamp())
     }
 
     record(payloadSize: number): void {
