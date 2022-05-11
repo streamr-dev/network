@@ -34,6 +34,25 @@ const SP1 = StreamPartIDUtils.parse('sp1#0')
 const SP1_1 = StreamPartIDUtils.parse('sp1#1')
 const SP2 = StreamPartIDUtils.parse('sp2#0')
 
+describe(getBucketNumber, () => {
+    const BASE_BUCKET_NUMBER = getBucketNumber(START_TIME)
+    const LOWER_BOUND = BASE_BUCKET_NUMBER * BUCKET_LENGTH
+    const UPPER_BOUND = (BASE_BUCKET_NUMBER + 1) * BUCKET_LENGTH - 1
+
+    it('works as expected', () => {
+        expect(START_TIME).toBeWithin(LOWER_BOUND, UPPER_BOUND)
+        expect(getBucketNumber(LOWER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
+        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (1/4)))).toEqual(BASE_BUCKET_NUMBER)
+        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (2/4)))).toEqual(BASE_BUCKET_NUMBER)
+        expect(getBucketNumber(LOWER_BOUND + Math.floor(BUCKET_LENGTH * (3/4)))).toEqual(BASE_BUCKET_NUMBER)
+        expect(getBucketNumber(UPPER_BOUND)).toEqual(BASE_BUCKET_NUMBER)
+
+        // previous and next buckets
+        expect(getBucketNumber(LOWER_BOUND - 1)).toEqual(BASE_BUCKET_NUMBER - 1)
+        expect(getBucketNumber(UPPER_BOUND + 1)).toEqual(BASE_BUCKET_NUMBER + 1)
+    })
+})
+
 describe(BucketStatsCollector, () => {
     let collector: BucketStatsCollector
 
