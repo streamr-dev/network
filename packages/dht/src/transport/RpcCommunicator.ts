@@ -3,11 +3,11 @@ import { Err, ErrorCode } from '../errors'
 import {
     DeferredPromises,
     DhtRpcOptions,
-    DhtTransportClient,
+    ClientTransport,
     Event as DhtTransportClientEvent
-} from './DhtTransportClient'
+} from './ClientTransport'
 import { Message, MessageType, PeerDescriptor, RpcMessage, RpcResponseError } from '../proto/DhtRpc'
-import { DhtTransportServer, Event as DhtTransportServerEvent } from './DhtTransportServer'
+import { ServerTransport, Event as DhtTransportServerEvent } from './ServerTransport'
 import EventEmitter = require('events')
 import { ITransport, Event as ITransportEvent  } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
@@ -21,8 +21,8 @@ export enum Event {
 
 export interface RpcCommunicatorConstructor {
     connectionLayer: ITransport,
-    dhtTransportClient: DhtTransportClient,
-    dhtTransportServer: DhtTransportServer,
+    dhtTransportClient: ClientTransport,
+    dhtTransportServer: ServerTransport,
     rpcRequestTimeout?: number,
     appId?: string
 }
@@ -41,8 +41,8 @@ export class RpcCommunicator extends EventEmitter {
     private stopped = false
     private static objectCounter = 0
     private objectId = 0
-    private readonly dhtTransportClient: DhtTransportClient
-    private readonly dhtTransportServer: DhtTransportServer
+    private readonly dhtTransportClient: ClientTransport
+    private readonly dhtTransportServer: ServerTransport
     private readonly connectionLayer: ITransport
     private readonly ongoingRequests: Map<string, OngoingRequest>
     public send: (peerDescriptor: PeerDescriptor, message: Message) => void

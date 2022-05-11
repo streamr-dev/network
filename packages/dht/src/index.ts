@@ -1,8 +1,8 @@
-import { DhtTransportClient } from './transport/DhtTransportClient'
+import { ClientTransport } from './transport/ClientTransport'
 import { DhtRpcClient } from './proto/DhtRpc.client'
 import { RpcCommunicator } from './transport/RpcCommunicator'
 import { MockConnectionManager } from './connection/MockConnectionManager'
-import { DhtTransportServer } from './transport/DhtTransportServer'
+import { ServerTransport } from './transport/ServerTransport'
 import { DhtNode } from './dht/DhtNode'
 import { PeerID } from './PeerID'
 import { NodeType, PeerDescriptor } from './proto/DhtRpc'
@@ -13,8 +13,8 @@ const main = async () => {
         peerId: id.value,
         type: NodeType.NODEJS
     }
-    const clientTransport = new DhtTransportClient()
-    const serverTransport = new DhtTransportServer()
+    const clientTransport = new ClientTransport()
+    const serverTransport = new ServerTransport()
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator({
         connectionLayer: mockConnectionLayer,

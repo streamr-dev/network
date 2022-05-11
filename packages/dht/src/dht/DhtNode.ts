@@ -4,7 +4,7 @@ import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { DhtTransportServer } from '../transport/DhtTransportServer'
+import { ServerTransport } from '../transport/ServerTransport'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
@@ -13,7 +13,7 @@ import {
     PeerDescriptor,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
-import { DhtTransportClient } from '../transport/DhtTransportClient'
+import { ClientTransport } from '../transport/ClientTransport'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
@@ -45,8 +45,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     private readonly bucket: KBucket<DhtPeer>
     private readonly neighborList: SortedContactList
     private readonly dhtRpcClient: DhtRpcClient
-    private readonly dhtTransportClient: DhtTransportClient
-    private readonly dhtTransportServer: DhtTransportServer
+    private readonly dhtTransportClient: ClientTransport
+    private readonly dhtTransportServer: ServerTransport
     private readonly rpcCommunicator: RpcCommunicator
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private peerDescriptor: PeerDescriptor
@@ -55,8 +55,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     constructor(
         peerDescriptor: PeerDescriptor,
         dhtRpcClient: DhtRpcClient,
-        dhtTransportClient: DhtTransportClient,
-        dhtTransportServer: DhtTransportServer,
+        dhtTransportClient: ClientTransport,
+        dhtTransportServer: ServerTransport,
         rpcCommunicator: RpcCommunicator,
         appId = DEFAULT_APP_ID
     ) {

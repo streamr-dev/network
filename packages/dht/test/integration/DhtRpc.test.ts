@@ -1,5 +1,5 @@
-import { DhtTransportClient } from '../../src/transport/DhtTransportClient'
-import { DhtTransportServer } from '../../src/transport/DhtTransportServer'
+import { ClientTransport } from '../../src/transport/ClientTransport'
+import { ServerTransport } from '../../src/transport/ServerTransport'
 import { ITransport } from '../../src/transport/ITransport'
 import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
@@ -11,10 +11,10 @@ import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
 
 describe('DhtClientRpcTransport', () => {
-    let clientTransport1: DhtTransportClient,
-        clientTransport2: DhtTransportClient,
-        serverTransport1: DhtTransportServer,
-        serverTransport2: DhtTransportServer,
+    let clientTransport1: ClientTransport,
+        clientTransport2: ClientTransport,
+        serverTransport1: ServerTransport,
+        serverTransport2: ServerTransport,
         mockConnectionLayer1: ITransport,
         mockConnectionLayer2: ITransport,
         rpcCommunicator1: RpcCommunicator,
@@ -33,8 +33,8 @@ describe('DhtClientRpcTransport', () => {
     }
 
     beforeEach(() => {
-        clientTransport1 = new DhtTransportClient()
-        serverTransport1 = new DhtTransportServer()
+        clientTransport1 = new ClientTransport()
+        serverTransport1 = new ServerTransport()
         serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
         mockConnectionLayer1 = new MockConnectionManager()
         rpcCommunicator1 = new RpcCommunicator({
@@ -43,8 +43,8 @@ describe('DhtClientRpcTransport', () => {
             dhtTransportServer: serverTransport1
         })
 
-        clientTransport2 = new DhtTransportClient()
-        serverTransport2 = new DhtTransportServer()
+        clientTransport2 = new ClientTransport()
+        serverTransport2 = new ServerTransport()
         serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
         mockConnectionLayer2 = new MockConnectionManager()
         rpcCommunicator2 = new RpcCommunicator({

@@ -1,6 +1,6 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { DhtTransportClient } from '../src/transport/DhtTransportClient'
-import { DhtTransportServer } from '../src/transport/DhtTransportServer'
+import { ClientTransport } from '../src/transport/ClientTransport'
+import { ServerTransport } from '../src/transport/ServerTransport'
 import { MockConnectionManager } from '../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../src/proto/DhtRpc.client'
@@ -22,8 +22,8 @@ export const createMockConnectionDhtNode = (stringId: string): DhtNode => {
         peerId: id.value,
         type: NodeType.NODEJS
     }
-    const clientTransport = new DhtTransportClient(2000)
-    const serverTransport = new DhtTransportServer()
+    const clientTransport = new ClientTransport(2000)
+    const serverTransport = new ServerTransport()
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator({
         connectionLayer: mockConnectionLayer,
@@ -40,8 +40,8 @@ export const createMockConnectionLayer1Node = (stringId: string, layer0Node: Dht
         peerId: id.value,
         type: 0
     }
-    const clientTransport = new DhtTransportClient(5000)
-    const serverTransport = new DhtTransportServer()
+    const clientTransport = new ClientTransport(5000)
+    const serverTransport = new ServerTransport()
     const mockConnectionLayer = new MockConnectionManager()
     const rpcCommunicator = new RpcCommunicator({
         connectionLayer: mockConnectionLayer,
@@ -96,8 +96,8 @@ export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdStr
 }
 
 export const createLayer0Peer = (peerDescriptor: PeerDescriptor, connectionManager: ConnectionManager): DhtNode => {
-    const clientTransport = new DhtTransportClient()
-    const serverTransport = new DhtTransportServer()
+    const clientTransport = new ClientTransport()
+    const serverTransport = new ServerTransport()
     const rpcCommunicator = new RpcCommunicator({
         connectionLayer: connectionManager,
         dhtTransportClient: clientTransport,
@@ -111,8 +111,8 @@ export const createLayer0Peer = (peerDescriptor: PeerDescriptor, connectionManag
 }
 
 export const createLayer1Peer = (peerDescriptor: PeerDescriptor, layer0Node: DhtNode, streamId: string): DhtNode => {
-    const clientTransport = new DhtTransportClient(10000)
-    const serverTransport = new DhtTransportServer()
+    const clientTransport = new ClientTransport(10000)
+    const serverTransport = new ServerTransport()
     const rpcCommunicator = new RpcCommunicator({
         connectionLayer: layer0Node,
         dhtTransportServer: serverTransport,
