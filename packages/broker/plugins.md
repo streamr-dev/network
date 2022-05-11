@@ -4,6 +4,7 @@ The Broker ships with a number of plugins that add functionality or APIs.
 
 ## Table of Contents
 - [Authentication](#authentication)
+- [Ports](#ports)
 - [Websocket](#websocket)
 - [MQTT](#mqtt)
 - [HTTP](#http)
@@ -23,6 +24,12 @@ The integration APIs exposed by plugins can be secured via API keys. In your Bro
 ```
 
 How to pass the API key depends on the protocol in question and is described in the sections below.
+
+## Ports
+
+The integration plugins open TCP server ports to allow applications to connect to them. The ports need to be reachable by those applications, meaning that you may need to allow the port in your firewall and potentially set up appropriate port forwarding in your router. The port number is configurable for each plugin (see below for details).
+
+Note that the Streamr protocol itself (used for communication between nodes) does not require any ports to be opened.
 
 ## Websocket
 
