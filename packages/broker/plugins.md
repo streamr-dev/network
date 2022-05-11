@@ -6,7 +6,7 @@ The Broker ships with a number of plugins that add functionality or APIs.
 - [Authentication](#authentication)
 - [Websocket](#websocket)
 - [MQTT](#mqtt)
-- [PublishHttp](#publishhttp)
+- [HTTP](#http)
 
 ## Authentication
 
@@ -115,7 +115,7 @@ If you want to publish or subscribe to a specific partition of a stream, you can
 - `/streams/:streamId/publish?partitionKey=foo`: use the given key to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams))
 - `/streams/:streamId/publish?partitionKeyField=customerId`: use the given field in a JSON to choose the `paritionKey` (e.g. `{ "customerId": "foo", ...  }` -> `paritionKey` is `foo`)
 
-**TODO**: define which partition is used if partition is not specified for publish/subscribe.
+By default, a random partition is selected.
 
 #### Secure connections
 
@@ -181,14 +181,15 @@ Some MQTT clients expect the username and password to be passed in the connectio
 mqtt://any-username:my-secret-api-key@localhost:1883
 ```
 
-
 ### Advanced usage
+
+#### Port
 
 The default port is `1883`. You can change it with `port` config option. 
 
-Explicit metadata can be provided the same way it is provided to the `websocket` plugin ([see above](#explicit-metadata)).
+#### Explicit metadata
 
-**TODO**: define partition support for publish/subscribe.
+Explicit metadata can be provided the same way it is provided to the `websocket` plugin ([see above](#explicit-metadata)).
 
 #### Topic domains
 
@@ -209,32 +210,15 @@ This way you can publish and subscribe to a stream by using only the path part o
 await client.publish('path-part', ...)  // publishes to a stream "0x1234567890123456789012345678901234567890/path-part"
 ```
 
-## PublishHttp
+## HTTP
 
-If you want to publish stream data with HTTP POST calls, use the `publishHttp` plugin:
+At the moment, only publishing is supported over HTTP. To subscribe, use one of the other protocol plugins as they allow a continuous streaming connection.
+
+To publish over HTTP, enable the `publishHttp` plugin:
 
 ```
 plugins: {
     "publishHttp": {}
-}
-```
-
-The default HTTP server port is `7171`. You can change it by specifying a `port` value for the root level `httpServer` option:
-
-```
-"network": ...
-"plugins": ...
-"httpServer": {
-    "port": 1234
-}
-```
-
-If you provide a SSL certificate it will support use SSL/TLS connections:
-```
-"httpServer": {
-    ...
-    "certFileName": "path/cert.pem",
-    "privateKeyFileName": "path/key.pem"
 }
 ```
 
@@ -252,6 +236,7 @@ http://localhost:7171/streams/foo.eth%2fbar
 ```
 
 The endpoint returns HTTP 200 status if the message was published successfully. 
+
 
 ### Passing the API key
 
@@ -273,7 +258,32 @@ http://localhost:7171/streams/foo.eth%2fbar
 
 ### Advanced usage
 
+#### Explicit metadata
+
 The endpoint supports the following optional query parameters:
 
 - `timestamp` can be used to set the message timestamp explicitly. The timestamp should be passed in ISO-8601 string (e.g. `2001-02-03T04:05:06Z`), or as milliseconds since epoch, e.g. `1234567890000`
 - `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams)). The default (in case neither is provided) is to select a random partition for each message.
+
+#### Port
+
+The default HTTP server port is `7171`. You can change it by specifying a `port` value for the root level `httpServer` option:
+
+```
+"network": ...
+"plugins": ...
+"httpServer": {
+    "port": 1234
+}
+```
+
+#### Secure connections
+
+If you provide a SSL certificate it will support use SSL/TLS connections:
+```
+"httpServer": {
+    ...
+    "certFileName": "path/cert.pem",
+    "privateKeyFileName": "path/key.pem"
+}
+```
