@@ -1,7 +1,7 @@
 import { ClientTransport } from '../../src/transport/ClientTransport'
 import { ServerTransport } from '../../src/transport/ServerTransport'
 import { ITransport } from '../../src/transport/ITransport'
-import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
+import { getMockPeers, MockRegisterDhtRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'

@@ -4,7 +4,7 @@ import { ServerTransport } from '../../src/transport/ServerTransport'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { getMockPeers } from '../../src/rpc-protocol/server'
+import { getMockPeers } from '../utils'
 import { generateId } from '../../src/dht/helpers'
 import { v4 } from 'uuid'
 
