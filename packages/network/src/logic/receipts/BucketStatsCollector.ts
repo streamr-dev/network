@@ -41,11 +41,11 @@ export class BucketStats {
 export class BucketStatsCollector {
     private readonly bucketsByNode = new Map<NodeId, BucketStats[]>()
 
-    record(neighborId: NodeId, message: StreamMessage): void {
-        if (!this.bucketsByNode.has(neighborId)) {
-            this.bucketsByNode.set(neighborId, [])
+    record(nodeId: NodeId, message: StreamMessage): void {
+        if (!this.bucketsByNode.has(nodeId)) {
+            this.bucketsByNode.set(nodeId, [])
         }
-        const buckets = this.bucketsByNode.get(neighborId)!
+        const buckets = this.bucketsByNode.get(nodeId)!
         let bucket = buckets.find((b) => b.includes(message))
         if (bucket === undefined) { // TODO: do not accept if too old?
             bucket = new BucketStats(message)
@@ -54,7 +54,7 @@ export class BucketStatsCollector {
         bucket.record(message.getSerializedContent().length)
     }
 
-    getBuckets(neighborId: NodeId): ReadonlyArray<BucketStats> {
-        return this.bucketsByNode.get(neighborId) || []
+    getBuckets(nodeId: NodeId): ReadonlyArray<BucketStats> {
+        return this.bucketsByNode.get(nodeId) || []
     }
 }
