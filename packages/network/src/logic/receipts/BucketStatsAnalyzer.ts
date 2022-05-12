@@ -2,7 +2,6 @@ import { BucketStats, BucketStatsCollector, getWindowStartTime, WINDOW_LENGTH } 
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
-import { ReceiptRequest } from 'streamr-client-protocol'
 
 const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
 const UPDATE_TIMEOUT = WINDOW_LENGTH * 2
@@ -59,9 +58,9 @@ export class BucketStatsAnalyzer {
         for (const node of nodes) {
             const buckets = this.bucketStatsCollector.getBuckets(node)
             const closedBuckets = buckets.filter((b) => isClosed(b, now))
-            logger.info('node %s: closing %d buckets out of %d', node, closedBuckets.length, buckets.length)
             closedBuckets.forEach((b) => this.onBucketClosed(node, b)) // TODO: // async generator instead of callback fn?
             this.bucketStatsCollector.removeBuckets(node, closedBuckets)
+            logger.debug('closed %d out of % buckets for %s', closedBuckets.length, buckets.length, node)
         }
     }
 }

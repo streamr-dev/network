@@ -3,9 +3,7 @@ import {
     MessageLayer,
     StreamPartID,
     StreamMessage,
-    ProxyDirection,
-    ReceiptRequest,
-    StreamPartIDUtils
+    ProxyDirection
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
@@ -21,9 +19,7 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
-import { BucketStatsCollector } from './receipts/BucketStatsCollector'
-import { BucketStatsAnalyzer } from './receipts/BucketStatsAnalyzer'
-import { v4 as uuidv4 } from 'uuid'
+import { ReceiptHandler } from './receipts/ReceiptHandler'
 
 const logger = new Logger(module)
 
@@ -95,8 +91,7 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
-    private readonly bucketStatsCollector: BucketStatsCollector
-    private readonly bucketStatsAnalyzer: BucketStatsAnalyzer
+    private readonly receiptHandler: ReceiptHandler
 
     constructor(opts: NodeOptions) {
         super()
@@ -129,6 +124,7 @@ export class Node extends EventEmitter {
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
+                    this.receiptHandler.recordMessageSent(neighborId, streamMessage)
                     this.consecutiveDeliveryFailures[neighborId] = 0
                 } catch (e) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()
@@ -192,37 +188,7 @@ export class Node extends EventEmitter {
             nodeConnectTimeout: this.nodeConnectTimeout
         })
 
-        this.bucketStatsCollector = new BucketStatsCollector()
-        this.bucketStatsAnalyzer = new BucketStatsAnalyzer(
-            this.streamPartManager.getAllNodes.bind(this.streamPartManager),
-            this.bucketStatsCollector,
-            15 * 1000,
-            async (nodeId, bucket) => {
-                const requestId = uuidv4()
-                try {
-                    await this.nodeToNode.send(nodeId, new ReceiptRequest({
-                        requestId,
-                        claim: {
-                            streamId: StreamPartIDUtils.getStreamID(bucket.getStreamPartId()),
-                            streamPartition: StreamPartIDUtils.getStreamPartition(bucket.getStreamPartId()),
-                            publisherId: bucket.getPublisherId(),
-                            msgChainId: bucket.getMsgChainId(),
-                            windowNumber: bucket.getWindowNumber(),
-                            messageCount: bucket.getMessageCount(),
-                            totalPayloadSize: bucket.getTotalPayloadSize(),
-                            sender: this.peerInfo.peerId, // TODO: without sessionId
-                            receiver: nodeId
-                        },
-                        signature: 'nönönö'
-                    }))
-                } catch (e) {
-                    logger.error('failed to send ReceiptRequest to %s, reason: %s', nodeId, e)
-                }
-            }
-        )
-        this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
-            this.bucketStatsCollector.record(nodeId, broadcastMessage.streamMessage)
-        })
+        this.receiptHandler = new ReceiptHandler(this.peerInfo, this.nodeToNode, this.streamPartManager)
 
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
@@ -247,7 +213,7 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
-        this.bucketStatsAnalyzer.start().catch((err) => logger.error(err))
+        this.receiptHandler.start().catch((err) => logger.error(err)) // TODO: handle error
     }
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
@@ -373,6 +339,7 @@ export class Node extends EventEmitter {
     stop(): Promise<unknown> {
         this.proxyStreamConnectionManager.stop()
         this.disconnectionManager.stop()
+        this.receiptHandler.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
     }
