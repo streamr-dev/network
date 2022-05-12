@@ -19,7 +19,8 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
-import { ReceiptHandler } from './receipts/ReceiptHandler'
+import { ClaimReceiver } from './receipts/ClaimReceiver'
+import { ClaimSender } from './receipts/ClaimSender'
 
 const logger = new Logger(module)
 
@@ -91,7 +92,8 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
-    private readonly receiptHandler: ReceiptHandler
+    private readonly claimSender: ClaimSender
+    private readonly claimReceiver: ClaimReceiver
 
     constructor(opts: NodeOptions) {
         super()
@@ -111,6 +113,9 @@ export class Node extends EventEmitter {
         }
         this.metricsContext.addMetrics('node', this.metrics)
 
+        this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode)
+        this.claimReceiver = new ClaimReceiver(this.peerInfo, this.nodeToNode)
+
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
             getAllNodes: this.nodeToNode.getAllConnectionNodeIds,
@@ -124,7 +129,7 @@ export class Node extends EventEmitter {
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
-                    this.receiptHandler.recordMessageSent(neighborId, streamMessage)
+                    this.claimSender.recordMessageSent(neighborId, streamMessage)
                     this.consecutiveDeliveryFailures[neighborId] = 0
                 } catch (e) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()
@@ -188,8 +193,6 @@ export class Node extends EventEmitter {
             nodeConnectTimeout: this.nodeConnectTimeout
         })
 
-        this.receiptHandler = new ReceiptHandler(this.peerInfo, this.nodeToNode, this.streamPartManager)
-
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
@@ -213,7 +216,6 @@ export class Node extends EventEmitter {
     start(): void {
         logger.trace('started')
         this.trackerManager.start()
-        this.receiptHandler.start().catch((err) => logger.error(err)) // TODO: handle error
     }
 
     subscribeToStreamIfHaveNotYet(streamPartId: StreamPartID, sendStatus = true): void {
@@ -339,7 +341,7 @@ export class Node extends EventEmitter {
     stop(): Promise<unknown> {
         this.proxyStreamConnectionManager.stop()
         this.disconnectionManager.stop()
-        this.receiptHandler.stop()
+        this.claimSender.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
     }

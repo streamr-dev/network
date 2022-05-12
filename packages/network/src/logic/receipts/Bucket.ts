@@ -1,4 +1,5 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { NodeId } from '../../identifiers'
 
 export const WINDOW_LENGTH = 60 * 1000
 
@@ -10,7 +11,10 @@ export function getWindowStartTime(windowNumber: number): number {
     return windowNumber * WINDOW_LENGTH
 }
 
+export type BucketID = string & { readonly __brand: 'BucketID' }
+
 export class Bucket {
+    private readonly nodeId: NodeId
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
     private readonly msgChainId: string
@@ -19,11 +23,12 @@ export class Bucket {
     private totalPayloadSize = 0
     private lastUpdate = Date.now()
 
-    constructor(includedMessage: StreamMessage) {
+    constructor(includedMessage: StreamMessage, nodeId: NodeId) {
         this.streamPartId = includedMessage.getStreamPartID()
         this.publisherId = includedMessage.getPublisherId()
         this.msgChainId = includedMessage.getMsgChainId()
         this.windowNumber = getWindowNumber(includedMessage.getTimestamp())
+        this.nodeId = nodeId
     }
 
     includes(message: StreamMessage): boolean {
@@ -37,6 +42,20 @@ export class Bucket {
         this.messageCount += 1
         this.totalPayloadSize += payloadSize
         this.lastUpdate = Date.now()
+    }
+
+    getId(): BucketID {
+        return (
+            this.nodeId
+            + ';' + this.streamPartId
+            + ';' + this.publisherId
+            + ';' + this.msgChainId
+            + ';' + this.windowNumber
+        ) as BucketID
+    }
+
+    getNodeId(): NodeId {
+        return this.nodeId
     }
 
     getStreamPartId(): StreamPartID {
