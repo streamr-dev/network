@@ -16,6 +16,7 @@ import {
 } from '../../src/config/ConfigWizard'
 import { readFileSync } from 'fs'
 import { createBroker } from '../../src/broker'
+import { needsMigration } from '../../src/config/migration'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
 
@@ -236,6 +237,7 @@ describe('ConfigWizard', () => {
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
             assertPluginConfig(config)
+            expect(needsMigration(config)).toBe(false)
             return expect(createBroker(config)).resolves.toBeDefined()
         }
 
