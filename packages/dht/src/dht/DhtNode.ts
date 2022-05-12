@@ -123,6 +123,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
             this.cleanUpHandleForCnnectionManager = connectionManager
             this.transportLayer = connectionManager
+            connectionManager.createConnectorRpcs(this)
         }
 
         this.rpcCommunicator = new RpcCommunicator({
@@ -130,7 +131,6 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: this.appId
         })
         this.bindDefaultServerMethods()
-
         this.initKBucket(this.ownPeerId!)
     }
 

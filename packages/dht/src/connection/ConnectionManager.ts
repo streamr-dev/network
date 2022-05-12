@@ -8,6 +8,8 @@ import { Event as ConnectionEvents } from './Connection'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
 import { ITransport, Event } from '../transport/ITransport'
+import { RpcCommunicator } from '../transport/RpcCommunicator'
+import { createRemoteWebSocketConnectorServer } from './WebSocket/RemoteWebSocketConnector'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -26,10 +28,11 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
     private webSocketConnector: WebSocketConnector = new WebSocketConnector()
     private webSocketServer: WebSocketServer = new WebSocketServer()
+    private wsRpcCommunicator: RpcCommunicator | null
 
     constructor(private config: ConnectionManagerConfig) {
         super()
-
+        this.wsRpcCommunicator = null
     }
 
     private async handleIncomingConnectivityRequest(connection: Connection, connectivityRequest: ConnectivityRequestMessage) {
@@ -270,5 +273,23 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     getPeerDescriptor(): PeerDescriptor {
         return this.ownPeerDescriptor!
+    }
+
+    hasConnection(peerDescriptor: PeerDescriptor): boolean {
+        return !!this.connections[peerDescriptor.peerId.toString()]
+    }
+
+    canConnect(peerDescriptor: PeerDescriptor, _ip: string, port: number): boolean {
+        // Perhaps the connection's state should be checked here
+        return !this.hasConnection(peerDescriptor) && this.webSocketConnector.withinPortRange(port)
+    }
+
+    createConnectorRpcs(transport: ITransport): void {
+        this.wsRpcCommunicator = new RpcCommunicator({
+            appId: "websocket",
+            connectionLayer: transport
+        })
+        const methods = createRemoteWebSocketConnectorServer(this.webSocketConnector.connectAsync, this.canConnect.bind(this))
+        this.wsRpcCommunicator.registerServerMethod('requestConnection', methods.requestConnection)
     }
 }

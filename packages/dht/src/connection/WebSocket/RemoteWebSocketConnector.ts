@@ -1,7 +1,16 @@
-import { PeerDescriptor, WebSocketConnectionRequest } from '../../proto/DhtRpc'
+import {
+    PeerDescriptor,
+    WebSocketConnectionRequest,
+    WebSocketConnectionResponse,
+    WebSocketConnector
+} from '../../proto/DhtRpc'
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
+import { DummyServerCallContext, RegisteredMethod } from '../../rpc-protocol/ServerTransport'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { TODO } from '../../types'
+import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 
 export class RemoteWebSocketConnector {
     private peerId: PeerID
@@ -27,4 +36,30 @@ export class RemoteWebSocketConnector {
         }
         return res.accepted
     }
+}
+
+export const createRemoteWebSocketConnectorServer = (connectFn: TODO, canConnect: TODO): any => {
+    const rpc: IWebSocketConnector = {
+        async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse>  {
+            if (canConnect(request.requester, request.ip, request.port)) {
+                setImmediate(connectFn(request.requester))
+                const res: WebSocketConnectionResponse = {
+                    accepted: true
+                }
+                return res
+            }
+            const res: WebSocketConnectionResponse = {
+                accepted: false
+            }
+            return res
+        }
+    }
+    const registerRpc = {
+        async requestConnection(bytes: Uint8Array): Promise<Uint8Array> {
+            const request = WebSocketConnectionRequest.fromBinary(bytes)
+            const response = await rpc.requestConnection(request, new DummyServerCallContext())
+            return WebSocketConnectionResponse.toBinary(response)
+        },
+    }
+    return registerRpc
 }

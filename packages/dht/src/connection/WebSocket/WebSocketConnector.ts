@@ -62,4 +62,11 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             socket.connect(address)
         })
     }
+
+    // Security check
+    withinPortRange(port: number): boolean {
+        // Check that requested connections is withing acceted range
+        return !!port
+    }
+
 }
