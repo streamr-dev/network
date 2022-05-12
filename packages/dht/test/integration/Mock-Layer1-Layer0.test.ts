@@ -1,8 +1,6 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode, createMockConnectionLayer1Node } from '../utils'
-import { PeerID } from '../../src/PeerID'
 
 describe('Layer 1 on Layer 0 with mocked connections', () => {
     const layer0EntryPointId = '00000'
@@ -26,55 +24,34 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     let entryPoint0Descriptor: PeerDescriptor
     let entryPoint1Descriptor: PeerDescriptor
 
-    let layer0RpcCommunicators: Map<string, RpcCommunicator>
-
     beforeEach(async () => {
-        layer0RpcCommunicators = new Map()
-        const layer0RpcSend = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, message: Message) => {
-                if (!targetDescriptor) {
-                    throw new Error('peer descriptor not set')
-                }
-                layer0RpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
-            }
-        }
-
-        layer0EntryPoint = createMockConnectionDhtNode(layer0EntryPointId)
-        layer0EntryPoint.getRpcCommunicator().setSendFn(layer0RpcSend(layer0EntryPoint.getPeerDescriptor()))
-        layer0RpcCommunicators.set(PeerID.fromString(layer0EntryPointId).toString(), layer0EntryPoint.getRpcCommunicator())
-
-        layer0Node1 = createMockConnectionDhtNode(layer1EntryPointId)
-        layer0Node1.getRpcCommunicator().setSendFn(layer0RpcSend(layer0Node1.getPeerDescriptor()))
-        layer0RpcCommunicators.set(PeerID.fromString(layer1EntryPointId).toString(), layer0Node1.getRpcCommunicator())
-
+        
+        layer0EntryPoint = await createMockConnectionDhtNode(layer0EntryPointId)
+        layer0Node1 = await createMockConnectionDhtNode(layer1EntryPointId)
+       
         const layer0Node2Id = 'layer0Node2'
-        layer0Node2 = createMockConnectionDhtNode(layer0Node2Id)
-        layer0Node2.getRpcCommunicator().setSendFn(layer0RpcSend(layer0Node2.getPeerDescriptor()))
-        layer0RpcCommunicators.set(PeerID.fromString(layer0Node2Id).toString(), layer0Node2.getRpcCommunicator())
-
+        layer0Node2 = await createMockConnectionDhtNode(layer0Node2Id)
+    
         const layer0Node3Id = 'layer0Node3'
-        layer0Node3 = createMockConnectionDhtNode(layer0Node3Id)
-        layer0Node3.getRpcCommunicator().setSendFn(layer0RpcSend(layer0Node3.getPeerDescriptor()))
-        layer0RpcCommunicators.set(PeerID.fromString(layer0Node3Id).toString(), layer0Node3.getRpcCommunicator())
-
+        layer0Node3 = await createMockConnectionDhtNode(layer0Node3Id)
+       
         const layer0Node4Id = 'layer0Node4'
-        layer0Node4 = createMockConnectionDhtNode(layer0Node4Id)
-        layer0Node4.getRpcCommunicator().setSendFn(layer0RpcSend(layer0Node4.getPeerDescriptor()))
-        layer0RpcCommunicators.set(PeerID.fromString(layer0Node4Id).toString(), layer0Node4.getRpcCommunicator())
-
-        layer1EntryPoint = createMockConnectionLayer1Node(layer1EntryPointId, layer0Node1)
-        layer1Node1 = createMockConnectionLayer1Node(layer0EntryPointId, layer0EntryPoint)
-        layer1Node2 = createMockConnectionLayer1Node(layer0Node2Id, layer0Node2)
-        layer1Node3 = createMockConnectionLayer1Node(layer0Node3Id, layer0Node3)
-        layer1Node4 = createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
-
+        layer0Node4 = await createMockConnectionDhtNode(layer0Node4Id)
+        
+        layer1EntryPoint = await createMockConnectionLayer1Node(layer1EntryPointId, layer0Node1)
+       
+        layer1Node1 = await createMockConnectionLayer1Node(layer0EntryPointId, layer0EntryPoint)
+        layer1Node2 = await createMockConnectionLayer1Node(layer0Node2Id, layer0Node2)
+        layer1Node3 = await createMockConnectionLayer1Node(layer0Node3Id, layer0Node3)
+        layer1Node4 = await createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
+       
         entryPoint0Descriptor = {
-            peerId: layer0EntryPoint.getSelfId().value,
+            peerId: layer0EntryPoint.getNodeId().value,
             type: 0
         }
 
         entryPoint1Descriptor = {
-            peerId: layer1EntryPoint.getSelfId().value,
+            peerId: layer1EntryPoint.getNodeId().value,
             type: 0
         }
 

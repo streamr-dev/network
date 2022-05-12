@@ -36,7 +36,7 @@ describe('DhtClientRpcTransport', () => {
         clientTransport1 = new ClientTransport()
         serverTransport1 = new ServerTransport()
         serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer1 = new MockConnectionManager()
+        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1,
             dhtTransportClient: clientTransport1,
@@ -46,7 +46,7 @@ describe('DhtClientRpcTransport', () => {
         clientTransport2 = new ClientTransport()
         serverTransport2 = new ServerTransport()
         serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        mockConnectionLayer2 = new MockConnectionManager()
+        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
             dhtTransportClient: clientTransport2,
@@ -60,7 +60,7 @@ describe('DhtClientRpcTransport', () => {
         rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
         })
-
+        
         client1 = new DhtRpcClient(clientTransport1)
         client2 = new DhtRpcClient(clientTransport2)
     })

@@ -1,18 +1,20 @@
-/* eslint-disable no-console */
-
 import { Message, PeerDescriptor } from '../proto/DhtRpc'
 import { EventEmitter } from 'events'
 import { ITransport } from '../transport/ITransport'
+import { Simulator } from './Simulator'
 
 export class MockConnectionManager extends EventEmitter implements ITransport {
-    constructor() {
+    constructor(private ownPeerDescriptor: PeerDescriptor) {
         super()
     }
 
     send(peerDescriptor: PeerDescriptor, msg: Message): void {
-        console.info(peerDescriptor, msg)
+        Simulator.instance().send(this.ownPeerDescriptor, peerDescriptor, msg)
     }
 
-    disconnect(_peerDescriptor: PeerDescriptor): void {}
+    disconnect(_peerDescriptor: PeerDescriptor): void { }
 
+    getPeerDescriptor(): PeerDescriptor {
+        return this.ownPeerDescriptor
+    }
 }
