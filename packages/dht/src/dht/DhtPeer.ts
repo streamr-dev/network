@@ -94,8 +94,4 @@ export class DhtPeer {
     getPeerDescriptor(): PeerDescriptor {
         return this.peerDescriptor
     }
-
-    // connect(): Promise<void> {
-    //
-    // }
 }
