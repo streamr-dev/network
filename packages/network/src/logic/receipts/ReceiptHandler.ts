@@ -1,22 +1,24 @@
-import { BucketStats, BucketStatsCollector } from './BucketStatsCollector'
+import { BucketStatsCollector } from './BucketStatsCollector'
 import { BucketStatsAnalyzer } from './BucketStatsAnalyzer'
 import { v4 as uuidv4 } from 'uuid'
-import { ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { ReceiptRequest, StreamMessage, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { Logger } from '../../helpers/Logger'
 import { StreamPartManager } from '../StreamPartManager'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { Claim } from 'streamr-client-protocol/dist/src/protocol/control_layer/receipt_request/ReceiptRequest'
 import { NodeId } from '../../identifiers'
+import { BucketStats } from './BucketStats'
 
 const logger = new Logger(module)
 
 const ANALYZE_INTERVAL_IN_MS = 30 * 1000
 
 export function createClaim(bucket: BucketStats, sender: NodeId, receiver: NodeId): Claim {
+    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
     return {
-        streamId: StreamPartIDUtils.getStreamID(bucket.getStreamPartId()),
-        streamPartition: StreamPartIDUtils.getStreamPartition(bucket.getStreamPartId()),
+        streamId,
+        streamPartition,
         publisherId: bucket.getPublisherId(),
         msgChainId: bucket.getMsgChainId(),
         windowNumber: bucket.getWindowNumber(),
@@ -46,9 +48,7 @@ export class ReceiptHandler {
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
             this.receivedCollector.record(nodeId, broadcastMessage.streamMessage)
         })
-        nodeToNode.on(NodeToNodeEvent.RECEIPT_REQUEST_RECEIVED, (receiptRequest, nodeId) => {
-            this.receivedCollector.getBuckets(nodeId)
-        })
+        nodeToNode.on(NodeToNodeEvent.RECEIPT_REQUEST_RECEIVED, this.onReceiptRequest.bind(this))
     }
 
     async start(): Promise<void> {
@@ -72,6 +72,36 @@ export class ReceiptHandler {
             }))
         } catch (e) {
             logger.error('failed to send ReceiptRequest to %s, reason: %s', nodeId, e)
+        }
+    }
+
+    private onReceiptRequest(receiptRequest: ReceiptRequest, nodeId: NodeId): void {
+        const claim = receiptRequest.claim
+        if (nodeId !== claim.sender) {
+            logger.warn('received ReceiptRequest where claim.sender does not match sender identity')
+            return
+        }
+        // TODO: validate signature
+        const claimStreamPartId = toStreamPartID(claim.streamId, claim.streamPartition) // TODO: handle catch
+        const bucket = this.receivedCollector.getBuckets(nodeId).find((b) => {
+            return b.getStreamPartId() === claimStreamPartId
+                && b.getPublisherId() === claim.publisherId
+                && b.getMsgChainId() === claim.msgChainId
+                && b.getWindowNumber() === claim.windowNumber
+        })
+        if (bucket === undefined) {
+            logger.warn('bucket not found for %j', claim)
+            return
+        }
+        // TODO: inequality instead?
+        if (bucket.getMessageCount() === claim.messageCount && bucket.getTotalPayloadSize() === claim.totalPayloadSize) {
+            logger.info("I agree with %j", claim)
+        } else {
+            logger.info("I disagree with %j (msgCount=%d, totalPayloadSize=%d)",
+                claim,
+                bucket.getMessageCount(),
+                bucket.getTotalPayloadSize()
+            )
         }
     }
 

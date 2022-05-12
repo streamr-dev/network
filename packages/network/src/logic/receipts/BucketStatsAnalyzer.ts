@@ -1,7 +1,8 @@
-import { BucketStats, BucketStatsCollector, getWindowStartTime, WINDOW_LENGTH } from './BucketStatsCollector'
+import { BucketStatsCollector } from './BucketStatsCollector'
 import { scheduleAtInterval } from '../../helpers/scheduler'
 import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
+import { BucketStats, getWindowStartTime, WINDOW_LENGTH } from './BucketStats'
 
 const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
 const UPDATE_TIMEOUT = WINDOW_LENGTH * 2

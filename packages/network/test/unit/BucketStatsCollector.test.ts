@@ -1,10 +1,11 @@
-import { WINDOW_LENGTH, BucketStatsCollector, getWindowNumber } from '../../src/logic/receipts/BucketStatsCollector'
+import { BucketStatsCollector} from '../../src/logic/receipts/BucketStatsCollector'
 import {
     MessageID,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
+import { getWindowNumber, WINDOW_LENGTH } from '../../src/logic/receipts/BucketStats'
 
 function makeMsg(
     streamPartId: StreamPartID,
