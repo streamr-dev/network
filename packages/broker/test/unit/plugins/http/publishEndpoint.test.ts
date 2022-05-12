@@ -1,6 +1,6 @@
 import express from 'express'
 import request from 'supertest'
-import { createEndpoint } from '../../../../src/plugins/publishHttp/publishEndpoint'
+import { createEndpoint } from '../../../../src/plugins/http/publishEndpoint'
 
 const MOCK_STREAM_ID = 'mock-stream-id'
 
