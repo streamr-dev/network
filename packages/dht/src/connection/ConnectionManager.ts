@@ -3,7 +3,7 @@ import { ConnectivityRequestMessage, ConnectivityResponseMessage, HandshakeMessa
 import { Connection } from './Connection'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
-import { Event as ConnectionSourceEvents } from './ConnectionSource'
+import { Event as ConnectionSourceEvents } from './IConnectionSource'
 import { Event as ConnectionEvents } from './Connection'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
