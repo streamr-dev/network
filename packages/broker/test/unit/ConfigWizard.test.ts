@@ -204,18 +204,12 @@ describe('ConfigWizard', () => {
     })
 
     describe('user flow', () => {
-        it ('should exercise the happy path', async () => {
+
+        const assertValidFlow = async (pluginAnswers: PluginAnswers, assertPluginConfig: (config: any) => void) => {
             const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
             const privateKeyAnswers: PrivateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
                 importPrivateKey: '0x1234567890123456789012345678901234567890123456789012345678901234'
-            }
-            const pluginAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: '3170',
-                mqttPort: '3171',
-                publishHttpPort: '3172',
-                enableMinerPlugin: true
             }
             const storageAnswers: StorageAnswers = {
                 storagePath: tmpDataDir + 'test-config.json'
@@ -238,15 +232,41 @@ describe('ConfigWizard', () => {
             const fileContent = readFileSync(storageAnswers.storagePath).toString()
             const config = JSON.parse(fileContent)
             expect(config.client.auth.privateKey).toBe(privateKeyAnswers.importPrivateKey)
-            expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
-            expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
-            expect(config.plugins.brubeckMiner).toEqual({})
-            expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
-            expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
+            assertPluginConfig(config)
             return expect(createBroker(config)).resolves.toBeDefined()
+        }
+
+        it('no plugins', async () => {
+            await assertValidFlow({
+                enabledApiPlugins: [],
+                enableMinerPlugin: false
+            },
+            (config: any) => {
+                expect(config.plugins).toEqual({})
+                expect(config.httpServer).toBe(undefined)
+            })
+        })
+
+        it('all plugins', async () => {
+            const pluginAnswers: PluginAnswers = {
+                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                websocketPort: '3170',
+                mqttPort: '3171',
+                publishHttpPort: '3172',
+                enableMinerPlugin: true
+            }
+            await assertValidFlow(pluginAnswers,
+            (config: any) => {
+                expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'publishHttp'])
+                expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
+                expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
+                expect(config.plugins.brubeckMiner).toEqual({})
+                expect(config.plugins.publishHttp).toMatchObject({})
+                expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
+            })
         })
     })
 })
