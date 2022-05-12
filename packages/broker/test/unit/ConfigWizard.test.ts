@@ -9,9 +9,13 @@ import {
     getConfig,
     getPrivateKey,
     getNodeIdentity,
-    start
+    start,
+    PluginAnswers,
+    PrivateKeyAnswers,
+    StorageAnswers
 } from '../../src/config/ConfigWizard'
 import { readFileSync } from 'fs'
+import { createBroker } from '../../src/broker'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
 
@@ -109,14 +113,16 @@ describe('ConfigWizard', () => {
 
     describe('getPrivateKey', () => {
         it ('should exercise the `generate` path', () => {
-            const privateKey = getPrivateKey({})
+            const privateKey = getPrivateKey({
+                generateOrImportPrivateKey: 'Generate'
+            })
             expect(privateKey).toBeDefined()
             expect(privateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
 
         it ('should exercise the `import` path', () => {
             const importPrivateKey = Wallet.createRandom().privateKey
-            const answers = {
+            const answers: PrivateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
                 importPrivateKey
             }
@@ -129,9 +135,9 @@ describe('ConfigWizard', () => {
     describe('getConfig', () => {
         const assertValidPort = (port: number | string, pluginName = 'websocket') => {
             const numericPort = (typeof port === 'string') ? parseInt(port) : port
-            const pluginsAnswers = {
+            const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [pluginName],
-                websocketPort: port,
+                websocketPort: String(port),
                 enableMinerPlugin: true
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
@@ -147,11 +153,11 @@ describe('ConfigWizard', () => {
         })
 
         it ('should exercise the happy path with default answers', () => {
-            const pluginsAnswers = {
+            const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                websocketPort: DEFAULT_CONFIG_PORTS.WS,
-                mqttPort: DEFAULT_CONFIG_PORTS.MQTT,
-                publishHttpPort: DEFAULT_CONFIG_PORTS.HTTP,
+                websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
+                mqttPort: String(DEFAULT_CONFIG_PORTS.MQTT),
+                publishHttpPort: String(DEFAULT_CONFIG_PORTS.HTTP),
                 enableMinerPlugin: true,
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
@@ -163,7 +169,7 @@ describe('ConfigWizard', () => {
         })
 
         it('should exercise the happy path with user-provided data', () => {
-            const pluginsAnswers = {
+            const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
@@ -171,15 +177,15 @@ describe('ConfigWizard', () => {
                 enableMinerPlugin: true
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
-            expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort))
-            expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort))
-            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort))
+            expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort!))
+            expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort!))
+            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort!))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.plugins.brubeckMiner).toEqual({})
         })
 
         it('disable miner plugin', () => {
-            const pluginsAnswers = {
+            const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [],
                 enableMinerPlugin: false,
             }
@@ -200,27 +206,25 @@ describe('ConfigWizard', () => {
     describe('user flow', () => {
         it ('should exercise the happy path', async () => {
             const tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
-            const configPath = tmpDataDir + 'test-config.json'
-            const privateKey = '0x1234567890123456789012345678901234567890123456789012345678901234'
-            const websocketPort = '3170'
-            const mqttPort = '3171'
-            const publishHttpPort = '3172'
+            const privateKeyAnswers: PrivateKeyAnswers = {
+                generateOrImportPrivateKey: 'Import',
+                importPrivateKey: '0x1234567890123456789012345678901234567890123456789012345678901234'
+            }
+            const pluginAnswers: PluginAnswers = {
+                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                websocketPort: '3170',
+                mqttPort: '3171',
+                publishHttpPort: '3172',
+                enableMinerPlugin: true
+            }
+            const storageAnswers: StorageAnswers = {
+                storagePath: tmpDataDir + 'test-config.json'
+            }
             const logger = createMockLogger()
             await start(
-                jest.fn().mockResolvedValue({
-                    generateOrImportPrivateKey: 'Import',
-                    importPrivateKey: privateKey
-                }),
-                jest.fn().mockResolvedValue({
-                    enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
-                    websocketPort,
-                    mqttPort,
-                    publishHttpPort,
-                    enableMinerPlugin: true
-                }),
-                jest.fn().mockResolvedValue({
-                    storagePath: configPath
-                }),
+                jest.fn().mockResolvedValue(privateKeyAnswers),
+                jest.fn().mockResolvedValue(pluginAnswers),
+                jest.fn().mockResolvedValue(storageAnswers),
                 logger
             )
             expect(logger.messages).toEqual([
@@ -229,19 +233,20 @@ describe('ConfigWizard', () => {
                 'View your node in the Network Explorer:',
                 'https://streamr.network/network-explorer/nodes/0x2e988A386a799F506693793c6A5AF6B54dfAaBfB',
                 'You can start the broker now with',
-                `streamr-broker ${configPath}`,
+                `streamr-broker ${storageAnswers.storagePath}`,
             ])
-            const fileContent = readFileSync(configPath).toString()
+            const fileContent = readFileSync(storageAnswers.storagePath).toString()
             const config = JSON.parse(fileContent)
-            expect(config.client.auth.privateKey).toBe(privateKey)
-            expect(config.plugins.websocket.port).toBe(parseInt(websocketPort))
-            expect(config.plugins.mqtt.port).toBe(parseInt(mqttPort))
+            expect(config.client.auth.privateKey).toBe(privateKeyAnswers.importPrivateKey)
+            expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
+            expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
             expect(config.plugins.brubeckMiner).toEqual({})
-            expect(config.httpServer.port).toBe(parseInt(publishHttpPort))
+            expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
             expect(config.plugins.publishHttp).toMatchObject({})
             expect(config.apiAuthentication).toBeDefined()
             expect(config.apiAuthentication.keys).toBeDefined()
             expect(config.apiAuthentication.keys.length).toBe(1)
+            return expect(createBroker(config)).resolves.toBeDefined()
         })
     })
 })
