@@ -1,6 +1,4 @@
 import { ClosestPeersResponse, Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { ClientTransport } from '../../src/transport/ClientTransport'
-import { ServerTransport } from '../../src/transport/ServerTransport'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
@@ -15,8 +13,6 @@ describe('DhtClientRpcTransport', () => {
     })
 
     it('Happy Path getClosestNeighbors', async () => {
-        const clientTransport = new ClientTransport()
-        const serverTransport = new ServerTransport()
         const mockDescriptor = {
             peerId: PeerID.fromString('jee').value,
             type: 0
@@ -24,8 +20,6 @@ describe('DhtClientRpcTransport', () => {
         const mockConnectionManager = new MockConnectionManager(mockDescriptor)
         const rpcCommunicator = new RpcCommunicator({
             connectionLayer: mockConnectionManager,
-            dhtTransportClient: clientTransport,
-            dhtTransportServer: serverTransport
         })
         rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             const request = RpcMessage.fromBinary(message.body)
@@ -45,7 +39,7 @@ describe('DhtClientRpcTransport', () => {
             rpcCommunicator.onIncomingMessage(peerDescriptor, msg)
         })
 
-        const client = new DhtRpcClient(clientTransport)
+        const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
             peerId: PeerID.fromString('peer').value,

@@ -1,7 +1,7 @@
 import { PeerDescriptor, WebSocketConnectionRequest } from '../../proto/DhtRpc'
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../PeerID'
-import { DhtRpcOptions } from '../../transport/ClientTransport'
+import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
 
 export class RemoteWebSocketConnector {
     private peerId: PeerID

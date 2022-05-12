@@ -1,6 +1,5 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { ClientTransport } from '../src/transport/ClientTransport'
-import { DummyServerCallContext, ServerTransport } from '../src/transport/ServerTransport'
+import { DummyServerCallContext } from '../src/rpc-protocol/ServerTransport'
 import { MockConnectionManager } from '../src/connection/MockConnectionManager'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
@@ -10,7 +9,6 @@ import {
     RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
 } from '../src/proto/DhtRpc'
 import { PeerID } from '../src/PeerID'
-import { ConnectionManager } from '../src/connection/ConnectionManager'
 import { IDhtRpc, IWebSocketConnector } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { generateId } from '../src/dht/helpers'

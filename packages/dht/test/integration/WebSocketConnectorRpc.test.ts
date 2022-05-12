@@ -1,5 +1,3 @@
-import { ClientTransport } from '../../src/transport/ClientTransport'
-import { ServerTransport } from '../../src/transport/ServerTransport'
 import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
@@ -9,11 +7,7 @@ import { MockRegisterWebSocketConnectorRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 
 describe('WebSocketConnectorRpc', () => {
-    let clientTransport1: ClientTransport,
-        clientTransport2: ClientTransport,
-        serverTransport1: ServerTransport,
-        serverTransport2: ServerTransport,
-        mockConnectionLayer1: ITransport,
+    let mockConnectionLayer1: ITransport,
         mockConnectionLayer2: ITransport,
         rpcCommunicator1: RpcCommunicator,
         rpcCommunicator2: RpcCommunicator,
@@ -31,27 +25,19 @@ describe('WebSocketConnectorRpc', () => {
     }
 
     beforeEach(() => {
-        clientTransport1 = new ClientTransport()
-        serverTransport1 = new ServerTransport()
-        serverTransport1.registerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
         mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1,
-            dhtTransportClient: clientTransport1,
-            dhtTransportServer: serverTransport1,
             appId: "websocket"
         })
+        rpcCommunicator1.registerServerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
 
-        clientTransport2 = new ClientTransport()
-        serverTransport2 = new ServerTransport()
-        serverTransport2.registerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
-            dhtTransportClient: clientTransport2,
-            dhtTransportServer: serverTransport2,
             appId: "websocket"
         })
+        rpcCommunicator2.registerServerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
@@ -61,17 +47,13 @@ describe('WebSocketConnectorRpc', () => {
             rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
         })
 
-        client1 = new WebSocketConnectorClient(clientTransport1)
-        client2 = new WebSocketConnectorClient(clientTransport2)
+        client1 = new WebSocketConnectorClient(rpcCommunicator1.getRpcClientTransport())
+        client2 = new WebSocketConnectorClient(rpcCommunicator2.getRpcClientTransport())
     })
 
     afterEach(async () => {
         await rpcCommunicator1.stop()
         await rpcCommunicator2.stop()
-        await serverTransport1.stop()
-        await serverTransport2.stop()
-        await clientTransport1.stop()
-        await clientTransport2.stop()
     })
 
     it('Happy path', async () => {

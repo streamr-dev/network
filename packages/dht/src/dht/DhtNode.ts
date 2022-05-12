@@ -4,7 +4,7 @@ import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { ServerTransport } from '../transport/ServerTransport'
+import { ServerTransport } from '../rpc-protocol/ServerTransport'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
@@ -15,7 +15,7 @@ import {
     PeerDescriptor,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
-import { ClientTransport } from '../transport/ClientTransport'
+import { ClientTransport } from '../rpc-protocol/ClientTransport'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
@@ -130,18 +130,12 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.transportLayer = connectionManager
         }
 
-        this.clientTransport = new ClientTransport()
-        this.serverTransport = new ServerTransport()
-        this.bindDefaultServerMethods()
-
-        this.dhtRpcClient = new DhtRpcClient(this.clientTransport)
-
         this.rpcCommunicator = new RpcCommunicator({
             connectionLayer: this.transportLayer,
-            dhtTransportClient: this.clientTransport,
-            dhtTransportServer: this.serverTransport,
             appId: this.appId
         })
+        this.bindDefaultServerMethods()
+        this.dhtRpcClient = new DhtRpcClient(this.rpcCommunicator.getRpcClientTransport())
 
         this.initKBucket(this.ownPeerId!)
     }
@@ -398,9 +392,9 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private bindDefaultServerMethods() {
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
-        this.serverTransport!.registerMethod('getClosestPeers', methods.getClosestPeers)
-        this.serverTransport!.registerMethod('ping', methods.ping)
-        this.serverTransport!.registerMethod('routeMessage', methods.routeMessage)
+        this.rpcCommunicator!.registerServerMethod('getClosestPeers', methods.getClosestPeers)
+        this.rpcCommunicator!.registerServerMethod('ping', methods.ping)
+        this.rpcCommunicator!.registerServerMethod('routeMessage', methods.routeMessage)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
