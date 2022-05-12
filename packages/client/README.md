@@ -467,7 +467,6 @@ By default, the `StreamrClient` publishes metrics to the network at regular inte
     node: {
         publishMessagesPerSecond: number
         publishBytesPerSecond: number
-        latencyAverageMs: number
         sendMessagesPerSecond: number
         sendBytesPerSecond: number
         receiveMessagesPerSecond: number
