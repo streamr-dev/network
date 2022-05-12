@@ -4,7 +4,7 @@
 - [Dependencies](#dependencies)
 - [Websocket](#websocket)
 - [MQTT](#mqtt)
-- [PublishHttp](#publishhttp)
+- [Http](#http)
 
 ## Websocket
 
@@ -197,13 +197,13 @@ This way you can publish and subscribe to a stream by using only the path part o
 await client.publish('foobar', ...)  // publishes to a stream "0x1234567890123456789012345678901234567890/foobar"
 ```
 
-## PublishHttp
+## Http
 
-If you want to publish stream data with HTTP POST calls, use the `publishHttp` plugin:
+If you want to publish stream data with HTTP POST calls, use the `http` plugin:
 
 ```
 plugins: {
-    "publishHttp": {}
+    "http": {}
 }
 ```
 
