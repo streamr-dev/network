@@ -1,9 +1,11 @@
+import { TextDecoder, TextEncoder } from "util"
 import { UUID } from "./UUID"
 
+const enc = new TextEncoder() 
+const dec = new TextDecoder()
+
 export class PeerID {
-
     private data: Uint8Array = new Uint8Array(20)
-
     protected constructor({ ip, value, stringValue }: { ip?: string; value?: Uint8Array; stringValue?: string } = {}) {
         if (ip) {
             const ipNum = this.ip2Int(ip)
@@ -16,7 +18,8 @@ export class PeerID {
             this.data = new Uint8Array(value.slice(0))
         }
         else if (stringValue) {
-            this.data.set(Uint8Array.from(Buffer.from(stringValue)))
+            //this.data.set(Uint8Array.from(Buffer.from(stringValue)))
+            this.data.set(enc.encode(stringValue))
         }
     }
 
@@ -54,7 +57,14 @@ export class PeerID {
     }
 
     toString(): string {
-        return Buffer.from(this.data).toString()
+        /*
+        const arr = []
+        for (let i=0; i<this.data.length && this.data[i]!=0; i++) {
+            arr.push(this.data[i])
+        }
+        */
+        return dec.decode(this.data)
+        //return Buffer.from(this.data).toString().trim()
     }
 
     get value(): Uint8Array {

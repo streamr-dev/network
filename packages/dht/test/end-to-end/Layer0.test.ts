@@ -1,95 +1,41 @@
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { createLayer0Peer, createPeerDescriptor } from '../utils'
 
 describe('Layer0', () => {
-    const epPeerDescriptor = {
+
+    const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
         websocket: { ip: 'localhost', port: 10011 }
     }
-    let epConnectionManager: ConnectionManager
+    
     let epDhtNode: DhtNode
-
-    let connectionManager1: ConnectionManager
-    let connectionManager2: ConnectionManager
-    let connectionManager3: ConnectionManager
-    let connectionManager4: ConnectionManager
-    let peerDescriptor1: PeerDescriptor
-    let peerDescriptor2: PeerDescriptor
-    let peerDescriptor3: PeerDescriptor
-    let peerDescriptor4: PeerDescriptor
     let node1: DhtNode
     let node2: DhtNode
     let node3: DhtNode
     let node4: DhtNode
 
     beforeEach(async () => {
-        epConnectionManager = new ConnectionManager({
-            webSocketHost: 'localhost',
-            webSocketPort: epPeerDescriptor.websocket.port
-        })
-        await epConnectionManager.start()
-        epConnectionManager.enableConnectivity(epPeerDescriptor)
-
-        epDhtNode = createLayer0Peer(epPeerDescriptor, epConnectionManager)
-
+        
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        await epDhtNode.start()
+        
         await epDhtNode.joinDht(epPeerDescriptor)
 
-        connectionManager1 = new ConnectionManager({
-            webSocketPort: 10012,
-            entryPoints: [
-                epPeerDescriptor
-            ]
-        })
-        connectionManager2 = new ConnectionManager({
-            webSocketPort: 10013,
-            entryPoints: [
-                epPeerDescriptor
-            ]
-        })
-        connectionManager3 = new ConnectionManager({
-            webSocketPort: 10014,
-            entryPoints: [
-                epPeerDescriptor
-            ]
-        })
-        connectionManager4 = new ConnectionManager({
-            webSocketPort: 10015,
-            entryPoints: [
-                epPeerDescriptor
-            ]
-        })
-        const [ res1, res2, res3, res4 ] = await Promise.all([
-            connectionManager1.start(),
-            connectionManager2.start(),
-            connectionManager3.start(),
-            connectionManager4.start(),
-        ])
-        peerDescriptor1 = createPeerDescriptor(res1, '1')
-        peerDescriptor2 = createPeerDescriptor(res2, '2')
-        peerDescriptor3 = createPeerDescriptor(res3, '3')
-        peerDescriptor4 = createPeerDescriptor(res4, '4')
+        node1 = new DhtNode({peerIdString: '1', webSocketPort: 10012, entryPoints: [epPeerDescriptor]})
+        node2 = new DhtNode({peerIdString: '2', webSocketPort: 10013, entryPoints: [epPeerDescriptor]})
+        node3 = new DhtNode({peerIdString: '3', webSocketPort: 10014, entryPoints: [epPeerDescriptor]})
+        node4 = new DhtNode({peerIdString: '4', webSocketPort: 10015, entryPoints: [epPeerDescriptor]})
+        
+        await node1.start()
+        await node2.start()
+        await node3.start()
+        await node4.start()
 
-        connectionManager1.enableConnectivity(peerDescriptor1)
-        connectionManager2.enableConnectivity(peerDescriptor2)
-        connectionManager3.enableConnectivity(peerDescriptor3)
-        connectionManager4.enableConnectivity(peerDescriptor4)
-
-        node1 = createLayer0Peer(peerDescriptor1, connectionManager1)
-        node2 = createLayer0Peer(peerDescriptor2, connectionManager2)
-        node3 = createLayer0Peer(peerDescriptor3, connectionManager3)
-        node4 = createLayer0Peer(peerDescriptor4, connectionManager4)
     })
 
     afterEach(async() => {
         await Promise.all([
-            epConnectionManager.stop(),
-            connectionManager1.stop(),
-            connectionManager2.stop(),
-            connectionManager3.stop(),
-            connectionManager4.stop(),
             epDhtNode.stop(),
             node1.stop(),
             node2.stop(),
@@ -109,6 +55,5 @@ describe('Layer0', () => {
         expect(node2.getBucketSize()).toBeGreaterThanOrEqual(4)
         expect(node3.getBucketSize()).toBeGreaterThanOrEqual(4)
         expect(node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-
     })
 })

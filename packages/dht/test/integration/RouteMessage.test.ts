@@ -1,4 +1,3 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
@@ -14,8 +13,6 @@ describe('Route Message With Mock Connections', () => {
 
     let entryPointDescriptor: PeerDescriptor
 
-    let rpcCommunicators: Map<string, RpcCommunicator>
-
     const entryPointId = '0'
     const sourceId = 'eeeeeeeee'
     const destinationId = '000000000'
@@ -23,38 +20,20 @@ describe('Route Message With Mock Connections', () => {
 
     beforeEach(async () => {
         routerNodes = []
-        rpcCommunicators = new Map()
-        const rpcFuntion = (senderDescriptor: PeerDescriptor) => {
-            return async (targetDescriptor: PeerDescriptor, message: Message) => {
-                if (!targetDescriptor) {
-                    throw new Error('peer descriptor not set')
-                }
-                rpcCommunicators.get(PeerID.fromValue(targetDescriptor.peerId).toString())!.onIncomingMessage(senderDescriptor, message)
-            }
-        }
 
-        entryPoint = createMockConnectionDhtNode(entryPointId)
-        entryPoint.getRpcCommunicator().setSendFn(rpcFuntion(entryPoint.getPeerDescriptor()))
-        rpcCommunicators.set(PeerID.fromString(entryPointId).toString(), entryPoint.getRpcCommunicator())
+        entryPoint = await createMockConnectionDhtNode(entryPointId)
 
         entryPointDescriptor = {
-            peerId: entryPoint.getSelfId().value,
+            peerId: entryPoint.getNodeId().value,
             type: 0
         }
 
-        sourceNode = createMockConnectionDhtNode(sourceId)
-        sourceNode.getRpcCommunicator().setSendFn(rpcFuntion(sourceNode.getPeerDescriptor()))
-        rpcCommunicators.set(PeerID.fromString(sourceId).toString(), sourceNode.getRpcCommunicator())
-
-        destinationNode = createMockConnectionDhtNode(destinationId)
-        destinationNode.getRpcCommunicator().setSendFn(rpcFuntion(destinationNode.getPeerDescriptor()))
-        rpcCommunicators.set(PeerID.fromString(destinationId).toString(), destinationNode.getRpcCommunicator())
-
+        sourceNode = await createMockConnectionDhtNode(sourceId)
+        destinationNode = await createMockConnectionDhtNode(destinationId)
+        
         for (let i = 1; i < 50; i++) {
             const nodeId = `${i}`
-            const node = createMockConnectionDhtNode(nodeId)
-            node.getRpcCommunicator().setSendFn(rpcFuntion(node.getPeerDescriptor()))
-            rpcCommunicators.set(PeerID.fromString(nodeId).toString(), node.getRpcCommunicator())
+            const node = await createMockConnectionDhtNode(nodeId)
             routerNodes.push(node)
         }
         await entryPoint.joinDht(entryPointDescriptor)
@@ -143,16 +122,16 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routers.map((node) => {
                 node.joinDht(entryPointDescriptor)
-                numsOfReceivedMessages[node.getSelfId().toString()] = 0
+                numsOfReceivedMessages[node.getNodeId().toString()] = 0
                 node.on(MessageRouterEvent.DATA, () => {
-                    numsOfReceivedMessages[node.getSelfId().toString()] = numsOfReceivedMessages[node.getSelfId().toString()] + 1
+                    numsOfReceivedMessages[node.getNodeId().toString()] = numsOfReceivedMessages[node.getNodeId().toString()] + 1
                 })
             })
         )
         await Promise.allSettled(
             routers.map(async (node) =>
                 await Promise.all(routers.map(async (receiver) => {
-                    if (!node.getSelfId().equals(receiver.getSelfId())) {
+                    if (!node.getNodeId().equals(receiver.getNodeId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
                         const message: Message = {
                             messageId: 'tsutsu',

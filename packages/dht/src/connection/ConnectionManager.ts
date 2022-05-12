@@ -266,4 +266,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
         return this.connections[stringId] || null
     }
+
+    getPeerDescriptor(): PeerDescriptor {
+        return this.ownPeerDescriptor!
+    }
 }
