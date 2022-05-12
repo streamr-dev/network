@@ -1,11 +1,11 @@
-import { BucketStatsCollector} from '../../src/logic/receipts/BucketStatsCollector'
+import { BucketCollector} from '../../src/logic/receipts/BucketCollector'
 import {
     MessageID,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { getWindowNumber, WINDOW_LENGTH } from '../../src/logic/receipts/BucketStats'
+import { getWindowNumber, WINDOW_LENGTH } from '../../src/logic/receipts/Bucket'
 
 function makeMsg(
     streamPartId: StreamPartID,
@@ -35,29 +35,12 @@ const SP1 = StreamPartIDUtils.parse('stream-1#0')
 const SP2 = StreamPartIDUtils.parse('stream-1#1')
 const SP3 = StreamPartIDUtils.parse('stream-2#0')
 
-describe(getWindowNumber, () => {
-    const BASE_WINDOW_NUMBER = getWindowNumber(TIMESTAMP)
-    const LOWER_BOUND = BASE_WINDOW_NUMBER * WINDOW_LENGTH
-    const UPPER_BOUND = (BASE_WINDOW_NUMBER + 1) * WINDOW_LENGTH - 1
-
-    it('works as expected', () => {
-        expect(TIMESTAMP).toBeWithin(LOWER_BOUND, UPPER_BOUND)
-        expect(getWindowNumber(LOWER_BOUND)).toEqual(BASE_WINDOW_NUMBER)
-        expect(getWindowNumber(LOWER_BOUND + Math.floor(WINDOW_LENGTH * (1/2)))).toEqual(BASE_WINDOW_NUMBER)
-        expect(getWindowNumber(UPPER_BOUND)).toEqual(BASE_WINDOW_NUMBER)
-
-        // previous and next buckets
-        expect(getWindowNumber(LOWER_BOUND - 1)).toEqual(BASE_WINDOW_NUMBER - 1)
-        expect(getWindowNumber(UPPER_BOUND + 1)).toEqual(BASE_WINDOW_NUMBER + 1)
-    })
-})
-
-describe(BucketStatsCollector, () => {
-    let collector: BucketStatsCollector
+describe(BucketCollector, () => {
+    let collector: BucketCollector
     let testCaseStartTime: number
 
     beforeEach(() => {
-        collector = new BucketStatsCollector()
+        collector = new BucketCollector()
         testCaseStartTime = Date.now()
     })
 

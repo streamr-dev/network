@@ -10,7 +10,7 @@ export function getWindowStartTime(windowNumber: number): number {
     return windowNumber * WINDOW_LENGTH
 }
 
-export class BucketStats {
+export class Bucket {
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
     private readonly msgChainId: string

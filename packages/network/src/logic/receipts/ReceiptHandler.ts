@@ -1,5 +1,5 @@
-import { BucketStatsCollector } from './BucketStatsCollector'
-import { BucketStatsAnalyzer } from './BucketStatsAnalyzer'
+import { BucketCollector } from './BucketCollector'
+import { BucketAnalyzer } from './BucketAnalyzer'
 import { v4 as uuidv4 } from 'uuid'
 import { ReceiptRequest, StreamMessage, StreamPartIDUtils, toStreamPartID } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
@@ -8,13 +8,13 @@ import { StreamPartManager } from '../StreamPartManager'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { Claim } from 'streamr-client-protocol/dist/src/protocol/control_layer/receipt_request/ReceiptRequest'
 import { NodeId } from '../../identifiers'
-import { BucketStats } from './BucketStats'
+import { Bucket } from './Bucket'
 
 const logger = new Logger(module)
 
 const ANALYZE_INTERVAL_IN_MS = 30 * 1000
 
-export function createClaim(bucket: BucketStats, sender: NodeId, receiver: NodeId): Claim {
+export function createClaim(bucket: Bucket, sender: NodeId, receiver: NodeId): Claim {
     const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
     return {
         streamId,
@@ -30,16 +30,16 @@ export function createClaim(bucket: BucketStats, sender: NodeId, receiver: NodeI
 }
 
 export class ReceiptHandler {
-    private readonly receivedCollector = new BucketStatsCollector()    // collect messages I receive
-    private readonly sentCollector = new BucketStatsCollector()        // collect message I send
+    private readonly receivedCollector = new BucketCollector()    // collect messages I receive
+    private readonly sentCollector = new BucketCollector()        // collect message I send
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
-    private readonly analyzer: BucketStatsAnalyzer
+    private readonly analyzer: BucketAnalyzer
 
     constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, streamPartManager: StreamPartManager) {
         this.myNodeId = myPeerInfo.peerId
         this.nodeToNode = nodeToNode
-        this.analyzer = new BucketStatsAnalyzer(
+        this.analyzer = new BucketAnalyzer(
             streamPartManager.getAllNodes.bind(streamPartManager),
             this.sentCollector,
             ANALYZE_INTERVAL_IN_MS,
@@ -63,7 +63,7 @@ export class ReceiptHandler {
         this.sentCollector.record(recipient, streamMessage)
     }
 
-    private async sendReceiptRequest(nodeId: NodeId, bucket: BucketStats): Promise<void> {
+    private async sendReceiptRequest(nodeId: NodeId, bucket: Bucket): Promise<void> {
         try {
             await this.nodeToNode.send(nodeId, new ReceiptRequest({
                 requestId: uuidv4(),
