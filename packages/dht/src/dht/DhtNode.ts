@@ -3,8 +3,6 @@ import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
-import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { ServerTransport } from '../transport/ServerTransport'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../PeerID'
@@ -15,11 +13,11 @@ import {
     PeerDescriptor,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
-import { ClientTransport } from '../transport/ClientTransport'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
 import { Err } from '../errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
+import { DhtRpcClient } from '../proto/DhtRpc.client'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -66,9 +64,6 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private bucket?: KBucket<DhtPeer>
     private neighborList?: SortedContactList
-    private dhtRpcClient?: DhtRpcClient
-    private clientTransport?: ClientTransport
-    private serverTransport?: ServerTransport
     private rpcCommunicator?: RpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -130,18 +125,11 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.transportLayer = connectionManager
         }
 
-        this.clientTransport = new ClientTransport()
-        this.serverTransport = new ServerTransport()
-        this.bindDefaultServerMethods()
-
-        this.dhtRpcClient = new DhtRpcClient(this.clientTransport)
-
         this.rpcCommunicator = new RpcCommunicator({
             connectionLayer: this.transportLayer,
-            dhtTransportClient: this.clientTransport,
-            dhtTransportServer: this.serverTransport,
             appId: this.appId
         })
+        this.bindDefaultServerMethods()
 
         this.initKBucket(this.ownPeerId!)
     }
@@ -215,14 +203,10 @@ export class DhtNode extends EventEmitter implements ITransport {
         return this.ownPeerId!
     }
 
-    public getDhtRpcClient(): DhtRpcClient {
-        return this.dhtRpcClient!
-    }
-
     public onGetClosestPeers(caller: PeerDescriptor): DhtPeer[] {
         const ret = this.bucket!.closest(caller.peerId, this.K)
         if (!this.bucket!.get(caller.peerId)) {
-            const contact = new DhtPeer(caller, this.dhtRpcClient!)
+            const contact = new DhtPeer(caller, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             this.bucket!.add(contact)
             this.neighborList!.addContact(contact)
         }
@@ -323,7 +307,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.neighborList!.setActive(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.ownPeerDescriptor!)
         const dhtPeers = returnedContacts.map((peer) => {
-            return new DhtPeer(peer, this.dhtRpcClient!)
+            return new DhtPeer(peer, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         })
         this.neighborList!.addContacts(dhtPeers)
         dhtPeers.forEach((returnedContact) => {
@@ -353,7 +337,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
 
-        const entryPoint = new DhtPeer(entryPointDescriptor, this.dhtRpcClient!)
+        const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
@@ -387,7 +371,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private updateBucketAndNeighborList(contact: PeerDescriptor): void {
-        const dhtPeer = new DhtPeer(contact, this.dhtRpcClient!)
+        const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         const peerId = PeerID.fromValue(contact.peerId)
         if (!this.neighborList!.isContact(peerId)) {
             this.neighborList!.addContact(dhtPeer)
@@ -398,9 +382,9 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private bindDefaultServerMethods() {
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
-        this.serverTransport!.registerMethod('getClosestPeers', methods.getClosestPeers)
-        this.serverTransport!.registerMethod('ping', methods.ping)
-        this.serverTransport!.registerMethod('routeMessage', methods.routeMessage)
+        this.rpcCommunicator!.registerServerMethod('getClosestPeers', methods.getClosestPeers)
+        this.rpcCommunicator!.registerServerMethod('ping', methods.ping)
+        this.rpcCommunicator!.registerServerMethod('routeMessage', methods.routeMessage)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
@@ -416,7 +400,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     public getKBucketPeers(): PeerDescriptor[] {
-        return this.bucket!.toArray().map((dhtPeer) => dhtPeer.getPeerDescriptor())
+        return this.bucket!.toArray().map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
     }
 
     private addClosestContactToBucket(): void {
@@ -437,8 +421,6 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public async stop(): Promise<void> {
         this.rpcCommunicator?.stop()
-        this.serverTransport?.stop()
-        this.clientTransport?.stop()
         this.bucket!.removeAllListeners()
         this.removeAllListeners()
 

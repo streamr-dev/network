@@ -1,7 +1,5 @@
-import { ClientTransport } from '../../src/transport/ClientTransport'
-import { ServerTransport } from '../../src/transport/ServerTransport'
 import { ITransport } from '../../src/transport/ITransport'
-import { getMockPeers, MockRegisterDhtRpc } from '../../src/rpc-protocol/server'
+import { getMockPeers, MockRegisterDhtRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
@@ -11,11 +9,7 @@ import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
 
 describe('DhtClientRpcTransport', () => {
-    let clientTransport1: ClientTransport,
-        clientTransport2: ClientTransport,
-        serverTransport1: ServerTransport,
-        serverTransport2: ServerTransport,
-        mockConnectionLayer1: ITransport,
+    let mockConnectionLayer1: ITransport,
         mockConnectionLayer2: ITransport,
         rpcCommunicator1: RpcCommunicator,
         rpcCommunicator2: RpcCommunicator,
@@ -33,45 +27,33 @@ describe('DhtClientRpcTransport', () => {
     }
 
     beforeEach(() => {
-        clientTransport1 = new ClientTransport()
-        serverTransport1 = new ServerTransport()
-        serverTransport1.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
         mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1,
-            dhtTransportClient: clientTransport1,
-            dhtTransportServer: serverTransport1
         })
+        rpcCommunicator1.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
 
-        clientTransport2 = new ClientTransport()
-        serverTransport2 = new ServerTransport()
-        serverTransport2.registerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
-            dhtTransportClient: clientTransport2,
-            dhtTransportServer: serverTransport2
         })
+        rpcCommunicator2.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
         })
-        
+
         rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
         })
         
-        client1 = new DhtRpcClient(clientTransport1)
-        client2 = new DhtRpcClient(clientTransport2)
+        client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
+        client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
     })
 
     afterEach(async () => {
         await rpcCommunicator1.stop()
         await rpcCommunicator2.stop()
-        await serverTransport1.stop()
-        await serverTransport2.stop()
-        await clientTransport1.stop()
-        await clientTransport2.stop()
     })
     
     it('Happy path', async () => {
@@ -105,7 +87,7 @@ describe('DhtClientRpcTransport', () => {
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
-        serverTransport1.registerMethod('getClosestPeers', () => {
+        rpcCommunicator2.registerServerMethod('getClosestPeers', () => {
             return new Promise(async (resolve, _reject) => {
                 timeout = setTimeout(() => {
                     resolve(new Uint8Array())

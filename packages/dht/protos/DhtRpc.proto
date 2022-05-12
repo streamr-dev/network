@@ -134,13 +134,16 @@ message Message {
 
 // Connector Messages
 
+message NotificationResponse {
+  bool sent = 1;
+}
+
 message WebSocketConnectionRequest {
   PeerDescriptor requester = 1;
   PeerDescriptor target = 2;
   string ip = 3;
   uint32 port = 4;
 }
-
 
 message WebSocketConnectionResponse {
   PeerDescriptor requester = 1;
