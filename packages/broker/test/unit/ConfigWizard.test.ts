@@ -260,15 +260,17 @@ describe('ConfigWizard', () => {
                 publishHttpPort: '3172',
                 enableMinerPlugin: true
             }
-            await assertValidFlow(pluginAnswers,
-            (config: any) => {
-                expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'publishHttp'])
-                expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
-                expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
-                expect(config.plugins.brubeckMiner).toEqual({})
-                expect(config.plugins.publishHttp).toMatchObject({})
-                expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
-            })
+            await assertValidFlow(
+                pluginAnswers,
+                (config: any) => {
+                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'publishHttp'])
+                    expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
+                    expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
+                    expect(config.plugins.brubeckMiner).toEqual({})
+                    expect(config.plugins.publishHttp).toMatchObject({})
+                    expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
+                }
+            )
         })
     })
 })
