@@ -193,7 +193,7 @@ describe('Config migration', () => {
                     mqtt: {
                         port: 2222
                     },
-                    publishHttp: {}
+                    http: {}
                 },
                 httpServer: {
                     port: 3333
