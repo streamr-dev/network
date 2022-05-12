@@ -1,9 +1,10 @@
 import { BucketCollector } from './BucketCollector'
-import { ReceiptRequest, toStreamPartID } from 'streamr-client-protocol'
+import { ReceiptRequest } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
+import { getBucketID } from './Bucket'
 
 const logger = new Logger(module)
 
@@ -17,7 +18,7 @@ export class ClaimReceiver {
         this.nodeToNode = nodeToNode
         this.collector = new BucketCollector()
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
-            this.collector.record(nodeId, broadcastMessage.streamMessage)
+            this.collector.record(broadcastMessage.streamMessage, nodeId)
         })
         nodeToNode.on(NodeToNodeEvent.RECEIPT_REQUEST_RECEIVED, this.onReceiptRequest.bind(this))
     }
@@ -29,13 +30,7 @@ export class ClaimReceiver {
             return
         }
         // TODO: validate signature
-        const claimStreamPartId = toStreamPartID(claim.streamId, claim.streamPartition) // TODO: handle catch
-        const bucket = this.collector.getBuckets(nodeId).find((b) => {
-            return b.getStreamPartId() === claimStreamPartId
-                && b.getPublisherId() === claim.publisherId
-                && b.getMsgChainId() === claim.msgChainId
-                && b.getWindowNumber() === claim.windowNumber
-        })
+        const bucket = this.collector.getBucket(getBucketID(claim, nodeId))
         if (bucket === undefined) {
             logger.warn('bucket not found for %j', claim)
             return

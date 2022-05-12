@@ -51,7 +51,7 @@ export class ClaimSender {
             }
             const timeoutRef = setTimeout(() => {
                 this.sendReceiptRequest(bucket)
-                this.collector.removeBucket(bucket)
+                this.collector.removeBucket(bucket.getId())
                 logger.info('closed bucket %s', bucket.getId())
             }, getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
@@ -59,7 +59,7 @@ export class ClaimSender {
     }
 
     recordMessageSent(recipient: NodeId, streamMessage: StreamMessage): void {
-        this.collector.record(recipient, streamMessage)
+        this.collector.record(streamMessage, recipient)
     }
 
     stop(): void {

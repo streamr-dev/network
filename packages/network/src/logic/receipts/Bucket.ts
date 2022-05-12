@@ -1,5 +1,6 @@
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
+import { Claim } from 'streamr-client-protocol/dist/src/protocol/control_layer/receipt_request/ReceiptRequest'
 
 export const WINDOW_LENGTH = 60 * 1000
 
@@ -13,7 +14,28 @@ export function getWindowStartTime(windowNumber: number): number {
 
 export type BucketID = string & { readonly __brand: 'BucketID' }
 
+export function getBucketID(obj: StreamMessage | Claim, nodeId: NodeId): BucketID {
+    if (obj instanceof StreamMessage) {
+        return (
+            nodeId
+            + ';' + obj.getStreamPartID()
+            + ';' + obj.getPublisherId()
+            + ';' + obj.getMsgChainId()
+            + ';' + getWindowNumber(obj.getTimestamp())
+        ) as BucketID
+    } else {
+        return (
+            nodeId
+            + ';' + toStreamPartID(obj.streamId, obj.streamPartition)
+            + ';' + obj.publisherId
+            + ';' + obj.msgChainId
+            + ';' + obj.windowNumber
+        ) as BucketID
+    }
+}
+
 export class Bucket {
+    private readonly id: BucketID
     private readonly nodeId: NodeId
     private readonly streamPartId: StreamPartID
     private readonly publisherId: string
@@ -24,6 +46,7 @@ export class Bucket {
     private lastUpdate = Date.now()
 
     constructor(includedMessage: StreamMessage, nodeId: NodeId) {
+        this.id = getBucketID(includedMessage, nodeId)
         this.streamPartId = includedMessage.getStreamPartID()
         this.publisherId = includedMessage.getPublisherId()
         this.msgChainId = includedMessage.getMsgChainId()
@@ -45,13 +68,7 @@ export class Bucket {
     }
 
     getId(): BucketID {
-        return (
-            this.nodeId
-            + ';' + this.streamPartId
-            + ';' + this.publisherId
-            + ';' + this.msgChainId
-            + ';' + this.windowNumber
-        ) as BucketID
+        return this.id
     }
 
     getNodeId(): NodeId {
