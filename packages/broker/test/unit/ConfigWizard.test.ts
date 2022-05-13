@@ -155,33 +155,33 @@ describe('ConfigWizard', () => {
 
         it ('should exercise the happy path with default answers', () => {
             const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
                 mqttPort: String(DEFAULT_CONFIG_PORTS.MQTT),
-                publishHttpPort: String(DEFAULT_CONFIG_PORTS.HTTP),
+                httpPort: String(DEFAULT_CONFIG_PORTS.HTTP),
                 enableMinerPlugin: true,
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket).toMatchObject({})
             expect(config.plugins.mqtt).toMatchObject({})
-            expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.plugins.http).toMatchObject({})
             expect(config.httpServer).toBe(undefined)
             expect(config.plugins.brubeckMiner).toEqual({})
         })
 
         it('should exercise the happy path with user-provided data', () => {
             const pluginsAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                publishHttpPort: '3172',
+                httpPort: '3172',
                 enableMinerPlugin: true
             }
             const config = getConfig(MOCK_PRIVATE_KEY, pluginsAnswers)
             expect(config.plugins.websocket.port).toBe(parseInt(pluginsAnswers.websocketPort!))
             expect(config.plugins.mqtt.port).toBe(parseInt(pluginsAnswers.mqttPort!))
-            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.publishHttpPort!))
-            expect(config.plugins.publishHttp).toMatchObject({})
+            expect(config.httpServer.port).toBe(parseInt(pluginsAnswers.httpPort!))
+            expect(config.plugins.http).toMatchObject({})
             expect(config.plugins.brubeckMiner).toEqual({})
         })
 
@@ -254,21 +254,21 @@ describe('ConfigWizard', () => {
 
         it('all plugins', async () => {
             const pluginAnswers: PluginAnswers = {
-                enabledApiPlugins: [ 'websocket', 'mqtt', 'publishHttp' ],
+                enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: '3170',
                 mqttPort: '3171',
-                publishHttpPort: '3172',
+                httpPort: '3172',
                 enableMinerPlugin: true
             }
             await assertValidFlow(
                 pluginAnswers,
                 (config: any) => {
-                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'publishHttp'])
+                    expect(Object.keys(config.plugins)).toIncludeSameMembers(['brubeckMiner', 'websocket', 'mqtt', 'http'])
                     expect(config.plugins.websocket.port).toBe(parseInt(pluginAnswers.websocketPort!))
                     expect(config.plugins.mqtt.port).toBe(parseInt(pluginAnswers.mqttPort!))
                     expect(config.plugins.brubeckMiner).toEqual({})
-                    expect(config.plugins.publishHttp).toMatchObject({})
-                    expect(config.httpServer.port).toBe(parseInt(pluginAnswers.publishHttpPort!))
+                    expect(config.plugins.http).toMatchObject({})
+                    expect(config.httpServer.port).toBe(parseInt(pluginAnswers.httpPort!))
                 }
             )
         })

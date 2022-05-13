@@ -21,7 +21,7 @@ export interface PluginAnswers extends Answers  {
     enabledApiPlugins: string[],
     websocketPort?: string
     mqttPort?: string
-    publishHttpPort?: string
+    httpPort?: string
     enableMinerPlugin: boolean
 }
 
@@ -54,7 +54,7 @@ export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
 const PLUGIN_NAMES: {[pluginName: string]: string} = {
     WS: 'websocket',
     MQTT: 'mqtt',
-    HTTP: 'publishHttp'
+    HTTP: 'http'
 }
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
@@ -188,7 +188,7 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
             if (portNumber !== defaultPort){
                 const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.HTTP) {
-                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                    // the http plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = portObject
                 } else {
                     // user provided a custom value, fill in

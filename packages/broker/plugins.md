@@ -221,11 +221,11 @@ await client.publish('path-part', ...)  // publishes to a stream "0x123456789012
 
 At the moment, only publishing is supported over HTTP. To subscribe, use one of the other protocol plugins as they allow a continuous streaming connection.
 
-To publish over HTTP, enable the `publishHttp` plugin:
+To publish over HTTP, enable the `http` plugin:
 
 ```
 plugins: {
-    "publishHttp": {}
+    "http": {}
 }
 ```
 
