@@ -2,7 +2,6 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../composition'
 import { Bucket, BucketID, getBucketID } from './Bucket'
 
-// TODO: naive implementation w.rt. cleaning, when to clean?
 export class BucketCollector {
     private readonly buckets = new Map<BucketID, Bucket>()
     private readonly onCreateOrUpdate?: (bucket: Bucket) => void
@@ -12,9 +11,9 @@ export class BucketCollector {
     }
 
     record(message: StreamMessage, nodeId: NodeId): void {
-        const bucketId = getBucketID(message, nodeId)
+        const bucketId = getBucketID(message.messageId, nodeId)
         if (!this.buckets.has(bucketId)) {
-            this.buckets.set(bucketId, new Bucket(message, nodeId))
+            this.buckets.set(bucketId, new Bucket(message.messageId, nodeId))
         }
         const bucket = this.buckets.get(bucketId)!
         bucket.record(message.getSerializedContent().length)

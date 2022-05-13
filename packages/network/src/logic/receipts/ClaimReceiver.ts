@@ -1,10 +1,10 @@
 import { BucketCollector } from './BucketCollector'
-import { ReceiptRequest } from 'streamr-client-protocol'
+import { ReceiptRequest, toStreamPartID } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
-import { getBucketID } from './Bucket'
+import { formBucketID } from './Bucket'
 
 const logger = new Logger(module)
 
@@ -30,7 +30,13 @@ export class ClaimReceiver {
             return
         }
         // TODO: validate signature
-        const bucket = this.collector.getBucket(getBucketID(claim, nodeId))
+        const bucket = this.collector.getBucket(formBucketID({
+            nodeId,
+            streamPartId: toStreamPartID(claim.streamId, claim.streamPartition),
+            publisherId: claim.publisherId,
+            msgChainId: claim.msgChainId,
+            windowNumber: claim.windowNumber
+        }))
         if (bucket === undefined) {
             logger.warn('bucket not found for %j', claim)
             return

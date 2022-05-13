@@ -1,6 +1,5 @@
-import { StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { MessageID, StreamPartID } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
-import { Claim } from 'streamr-client-protocol/dist/src/protocol/control_layer/receipt_request/ReceiptRequest'
 
 export const WINDOW_LENGTH = 60 * 1000
 
@@ -14,24 +13,24 @@ export function getWindowStartTime(windowNumber: number): number {
 
 export type BucketID = string & { readonly __brand: 'BucketID' }
 
-export function getBucketID(obj: StreamMessage | Claim, nodeId: NodeId): BucketID {
-    if (obj instanceof StreamMessage) {
-        return (
-            nodeId
-            + ';' + obj.getStreamPartID()
-            + ';' + obj.getPublisherId()
-            + ';' + obj.getMsgChainId()
-            + ';' + getWindowNumber(obj.getTimestamp())
-        ) as BucketID
-    } else {
-        return (
-            nodeId
-            + ';' + toStreamPartID(obj.streamId, obj.streamPartition)
-            + ';' + obj.publisherId
-            + ';' + obj.msgChainId
-            + ';' + obj.windowNumber
-        ) as BucketID
-    }
+export function formBucketID(v: {
+    nodeId: NodeId,
+    streamPartId: StreamPartID,
+    publisherId: string,
+    msgChainId: string,
+    windowNumber: number
+}): BucketID {
+    return `${v.nodeId}_${v.streamPartId}_${v.publisherId}_${v.msgChainId}_${v.windowNumber}` as BucketID
+}
+
+export function getBucketID(messageId: MessageID, nodeId: NodeId): BucketID {
+    return formBucketID({
+        nodeId,
+        streamPartId: messageId.getStreamPartID(),
+        publisherId: messageId.publisherId,
+        msgChainId: messageId.msgChainId,
+        windowNumber: getWindowNumber(messageId.timestamp)
+    })
 }
 
 export class Bucket {
@@ -45,20 +44,13 @@ export class Bucket {
     private totalPayloadSize = 0
     private lastUpdate = Date.now()
 
-    constructor(includedMessage: StreamMessage, nodeId: NodeId) {
-        this.id = getBucketID(includedMessage, nodeId)
-        this.streamPartId = includedMessage.getStreamPartID()
-        this.publisherId = includedMessage.getPublisherId()
-        this.msgChainId = includedMessage.getMsgChainId()
-        this.windowNumber = getWindowNumber(includedMessage.getTimestamp())
+    constructor(messageId: MessageID, nodeId: NodeId) {
+        this.id = getBucketID(messageId, nodeId)
         this.nodeId = nodeId
-    }
-
-    includes(message: StreamMessage): boolean {
-        return this.streamPartId === message.getStreamPartID()
-            && this.publisherId.toLowerCase() === message.getPublisherId().toLowerCase()
-            && this.msgChainId === message.getMsgChainId()
-            && this.windowNumber === getWindowNumber(message.getTimestamp())
+        this.streamPartId = messageId.getStreamPartID()
+        this.publisherId = messageId.publisherId
+        this.msgChainId = messageId.msgChainId
+        this.windowNumber = getWindowNumber(messageId.timestamp)
     }
 
     record(payloadSize: number): void {

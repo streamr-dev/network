@@ -6,12 +6,9 @@ import { NodeToNode } from '../../protocol/NodeToNode'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
-import { Claim } from 'streamr-client-protocol/dist/src/protocol/control_layer/receipt_request/ReceiptRequest' // TODO: fix import
+import { Claim } from 'streamr-client-protocol'
 
-const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
-const UPDATE_TIMEOUT = WINDOW_LENGTH * 2
-
-function createClaim(bucket: Bucket, sender: NodeId, receiver: NodeId): Claim {
+function createClaim(bucket: Bucket, sender: NodeId): Claim {
     const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
     return {
         streamId,
@@ -21,10 +18,13 @@ function createClaim(bucket: Bucket, sender: NodeId, receiver: NodeId): Claim {
         windowNumber: bucket.getWindowNumber(),
         messageCount: bucket.getMessageCount(),
         totalPayloadSize: bucket.getTotalPayloadSize(),
+        receiver: bucket.getPublisherId(),
         sender, // TODO: without sessionId
-        receiver
     }
 }
+
+const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
+const UPDATE_TIMEOUT = WINDOW_LENGTH * 2
 
 function getCloseTime(bucket: Bucket): number {
     return Math.max(
@@ -38,7 +38,7 @@ const logger = new Logger(module)
 export class ClaimSender {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
-    private readonly collector: BucketCollector        // collect message I send
+    private readonly collector: BucketCollector
     private readonly closeTimeouts = new Map<BucketID, NodeJS.Timeout>() // TODO: browser setTimeout?
 
     constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode) {
@@ -72,7 +72,7 @@ export class ClaimSender {
     private sendReceiptRequest(bucket: Bucket): void {
         this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
             requestId: uuidv4(),
-            claim: createClaim(bucket, this.myNodeId, bucket.getNodeId()),
+            claim: createClaim(bucket, this.myNodeId),
             signature: 'nönönö' // TODO: signing
         })).catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
