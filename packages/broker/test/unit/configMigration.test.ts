@@ -2,10 +2,8 @@ import { cloneDeep, merge } from 'lodash'
 import { validateConfig as validateClientConfig } from 'streamr-client'
 import { createMigratedConfig, CURRENT_CONFIGURATION_VERSION, formSchemaUrl, needsMigration } from '../../src/config/migration'
 import BROKER_CONFIG_SCHEMA from '../../src/config/config.schema.json'
-import WEBSOCKER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/websocket/config.schema.json'
-import MQTT_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/mqtt/config.schema.json'
-import BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA from '../../src/plugins/brubeckMiner/config.schema.json'
 import { validateConfig } from '../../src/config/validateConfig'
+import { createPlugin } from '../../src/pluginRegistry'
 
 const MOCK_PRIVATE_KEY = '0x1111111111111111111111111111111111111111111111111111111111111111'
 const MOCK_API_KEY = 'mock-api-key'
@@ -130,35 +128,33 @@ const configWizardFull = {
     }
 }
 
-const pluginSchemas: Record<string,any> = {
-    websocket: WEBSOCKER_PLUGIN_CONFIG_SCHEMA,
-    mqtt: MQTT_PLUGIN_CONFIG_SCHEMA,
-    brubeckMiner: BRUBECK_MINER_PLUGIN_CONFIG_SCHEMA,
-}
-
-const validateTargetConfig = (config: any): void | never => {
+const validateTargetConfig = async (config: any): Promise<void> | never => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
-    Object.keys(config.plugins).forEach((name) => {
-        const pluginConfig = config.plugins[name]
-        const schema = pluginSchemas[name]
-        if (schema !== undefined) {
-            validateConfig(pluginConfig, schema, name)
-        }
-    })
+    for (const pluginName of Object.keys(config.plugins)) {
+        const pluginConfig = config.plugins[pluginName]
+        // validates the config against the schema
+        await createPlugin(pluginName, {
+            ...pluginConfig,
+            name: pluginName,
+            streamrClient: undefined,
+            apiAuthenticator: undefined,
+            brokerConfig: config
+        })
+    }
 }
 
-const testMigration = (source: any, assertTarget: (target: any) => void | never) => {
+const testMigration = async (source: any, assertTarget: (target: any) => void | never) => {
     expect(needsMigration(source)).toBe(true)
     const target = createMigratedConfig(source)
     assertTarget(target)
-    validateTargetConfig(target)
+    await validateTargetConfig(target)
 }
 
 describe('Config migration', () => {
-    it('config wizard minimal', () => {
+    it('config wizard minimal', async () => {
         const source = configWizardMinimal
-        testMigration(source, (target) => {
+        await testMigration(source, (target) => {
             expect(target).toStrictEqual({
                 $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
@@ -176,9 +172,9 @@ describe('Config migration', () => {
         })
     })
 
-    it('config wizard full', () => {
+    it('config wizard full', async () => {
         const source = configWizardFull
-        testMigration(source, (target) => {
+        await testMigration(source, (target) => {
             expect(target).toStrictEqual({
                 $schema: formSchemaUrl(CURRENT_CONFIGURATION_VERSION),
                 client: {
@@ -206,25 +202,25 @@ describe('Config migration', () => {
         })
     })
 
-    it('optional fields removed', () => {
+    it('optional fields removed', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         delete source.apiAuthentication
         delete source.httpServer
-        testMigration(source, (target: any) => {
+        await testMigration(source, (target: any) => {
             expect(target.apiAuthentication).toBeUndefined()
             expect(target.httpServer).toBeUndefined()
         })    
     })
 
-    it('plugin port not defined', () => {
+    it('plugin port not defined', async () => {
         const source = cloneDeep(configWizardFull) as any
         delete source.plugins.websocket.port
-        testMigration(source, (target: any) => {
+        await testMigration(source, (target: any) => {
             expect(target.plugins.websocket.port).toBeUndefined()
         })  
     })
 
-    it('manually configured values', () => {
+    it('manually configured values', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.network.name = 'mock-name'
         source.network.location = {
@@ -234,7 +230,7 @@ describe('Config migration', () => {
             city: null
         }
         source.plugins.metrics.consoleAndPM2IntervalInSeconds = 123
-        testMigration(source, (target: any) => {
+        await testMigration(source, (target: any) => {
             expect(target.client.network.name).toBeUndefined()
             expect(target.client.network.location).toStrictEqual({
                 latitude: 12.34,
@@ -245,18 +241,18 @@ describe('Config migration', () => {
         })
     })
 
-    it('legacy plugin', () => {
+    it('legacy plugin', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.plugins.legacyMqtt = {}
-        testMigration(source, (target: any) => {
+        await testMigration(source, (target: any) => {
             expect(target.plugins.legacyMqtt).toBeUndefined()
         })  
     })
 
-    it('storage plugin', () => {
+    it('storage plugin', async () => {
         const source = cloneDeep(configWizardMinimal) as any
         source.plugins.storage = {}
-        expect(() => testMigration(source, () => {})).toThrow('Migration not supported for plugin: storage')
+        return expect(async () => testMigration(source, () => {})).rejects.toThrow('Migration not supported for plugin: storage')
     })
 
     it('no migration', () => {
@@ -359,6 +355,26 @@ describe('Config migration', () => {
                 }
             })
             expect(createMigratedConfig(v1)).toEqual(v2)
+        })
+
+        it('unknown plugin', async () => {
+            const v1 = createConfig(1, {
+                plugins: {
+                    foobar: {}
+                }
+            })
+            return expect(async () => testMigration(v1, () => {})).rejects.toThrow('Unknown plugin: foobar')
+        })
+
+        it('invalid plugin config', async () => {
+            const v1 = createConfig(1, {
+                plugins: {
+                    websocket: {
+                        foobar: true
+                    }
+                }
+            })
+            return expect(async () => testMigration(v1, () => {})).rejects.toThrow('websocket plugin: must NOT have additional properties (foobar)')
         })
     })
 })
