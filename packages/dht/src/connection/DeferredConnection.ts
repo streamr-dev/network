@@ -30,6 +30,10 @@ export class DeferredConnection extends EventEmitter implements IConnection {
     sendBufferedMessages(): void {
     }
 
+    getBufferedMessages(): Uint8Array[] {
+        return this.buffer
+    }
+
     setPeerDescriptor(_peerDescriptor: PeerDescriptor): void {
     }
 }

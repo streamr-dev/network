@@ -33,6 +33,6 @@ export interface IConnection {
 
     send(data: Uint8Array): void
     sendBufferedMessages(): void
-
+    getBufferedMessages(): Uint8Array[]
     close(): void
 }

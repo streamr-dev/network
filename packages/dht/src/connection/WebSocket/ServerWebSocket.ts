@@ -67,4 +67,8 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
     stop(): void {
         this.removeAllListeners()
     }
+
+    getBufferedMessages(): Uint8Array[] {
+        return []
+    }
 }

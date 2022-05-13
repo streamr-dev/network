@@ -65,6 +65,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
 
     close(): void {
         this.socket?.close()
+        this.buffer = []
     }
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
@@ -81,5 +82,9 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
 
     private addToBuffer(msg: Uint8Array): void {
         this.buffer.push(msg)
+    }
+
+    getBufferedMessages(): Uint8Array[] {
+        return this.buffer
     }
 }

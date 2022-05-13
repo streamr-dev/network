@@ -223,6 +223,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             if (!this.connections.hasOwnProperty(stringId)
                 || (this.connections[stringId] && this.connections[stringId].connectionType === ConnectionType.DEFERRED)) {
+                let oldConnection
+                if ((this.connections[stringId] && this.connections[stringId].connectionType === ConnectionType.DEFERRED)) {
+                    oldConnection = this.connections[stringId]
+                }
                 this.connections[stringId] = connection
 
                 const outgoingHandshake: HandshakeMessage = {
@@ -236,6 +240,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     body: HandshakeMessage.toBinary(outgoingHandshake)
                 }
                 connection.send(Message.toBinary(msg))
+                if (oldConnection) {
+                    oldConnection.getBufferedMessages().forEach((msg) => {
+                        connection.send(msg)
+                    })
+                    oldConnection.close()
+                }
             }
         }
         else {
