@@ -44,9 +44,7 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
 export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
@@ -178,15 +176,10 @@ export class BrubeckNode implements Context {
         }
     })
 
-    /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    /**
-     * Get started network node.
-     */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    /** @internal */
     async getNodeId() {
         const node = await this.getNode()
         return node.getNodeId()
@@ -197,7 +190,6 @@ export class BrubeckNode implements Context {
      * Basically a wrapper around: (await getNode()).publish(…)
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
-     * @internal
      */
     publishToNode(streamMessage: StreamMessage): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
@@ -221,7 +213,6 @@ export class BrubeckNode implements Context {
         }
     }
 
-    /** @internal */
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
@@ -233,7 +224,6 @@ export class BrubeckNode implements Context {
         }
     }
 
-    /** @internal */
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {

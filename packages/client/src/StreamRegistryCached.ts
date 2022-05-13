@@ -1,6 +1,3 @@
-/**
- * Cached Subset of StreamEndpoints.
- */
 import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from './utils'
@@ -12,7 +9,7 @@ import { StreamPermission } from './permission'
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamEndpointsCached implements Context {
+export class StreamRegistryCached implements Context {
     readonly id = instanceId(this)
     readonly debug
 

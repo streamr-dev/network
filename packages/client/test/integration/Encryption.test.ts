@@ -574,9 +574,10 @@ describe('decryption', () => {
                         // @ts-expect-error
                         groupKeys: keys,
                     })
-                    const subSession = subscriber.getSubscriptionSession(sub.streamPartId)
+                    // @ts-expect-error private
+                    const subSession = subscriber.subscriber.getSubscriptionSession(sub.streamPartId)
                     if (!subSession) { throw new Error('no subsession?') }
-                    subSession.pipeline.forEachBefore((streamMessage, index) => {
+                    subSession.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                         if (index === BAD_INDEX) {
                             // eslint-disable-next-line no-param-reassign
                             streamMessage.groupKeyId = 'badgroupkey'

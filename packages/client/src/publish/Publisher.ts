@@ -36,7 +36,6 @@ export class Publisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    /** @internal */
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
@@ -64,7 +63,6 @@ export class Publisher implements Context, Stoppable {
         })
     }
 
-    /** @internal */
     async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -81,7 +79,6 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    /** @internal */
     async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
@@ -98,7 +95,6 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    /** @internal */
     async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
@@ -111,7 +107,6 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    /** @internal */
     async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>) {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
@@ -124,23 +119,19 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    /** @internal */
     startKeyExchange() {
         return this.keyExchange.start()
     }
 
-    /** @internal */
     stopKeyExchange() {
         return this.keyExchange.stop()
     }
 
-    /** @internal */
     async start() {
         this.isStopped = false
         this.pipeline.start()
     }
 
-    /** @internal */
     async stop() {
         this.isStopped = true
         await Promise.allSettled([

@@ -23,13 +23,10 @@ export interface UpdateEncryptionKeyOptions {
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStoreFactory implements Context {
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
     initialGroupKeys
-    /** @internal */
     getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
     constructor(
         context: Context,
@@ -72,25 +69,21 @@ export class GroupKeyStoreFactory implements Context {
         return store
     }
 
-    /** @internal */
     async useGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.useGroupKey()
     }
 
-    /** @internal */
     async rotateGroupKey(streamId: StreamID) {
         const store = await this.getStore(streamId)
         return store.rotateGroupKey()
     }
 
-    /** @internal */
     async setNextGroupKey(streamId: StreamID, newKey: GroupKey) {
         const store = await this.getStore(streamId)
         return store.setNextGroupKey(newKey)
     }
 
-    /** @internal */
     async rekey(streamId: StreamID, newKey?: GroupKey) {
         const store = await this.getStore(streamId)
         return store.rekey(newKey)

@@ -18,7 +18,7 @@ import { GroupKey } from './GroupKey'
 import { EncryptionUtil, StreamMessageProcessingError } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 
 class InvalidGroupKeyRequestError extends ValidationError {
     constructor(msg: string) {
@@ -36,7 +36,7 @@ export class PublisherKeyExchange implements Context {
     constructor(
         @inject(delay(() => Publisher)) private publisher: Publisher,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
-        private streamEndpoints: StreamEndpointsCached,
+        private streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => KeyExchangeStream)) private keyExchangeStream: KeyExchangeStream,
     ) {
         this.id = instanceId(this)
@@ -85,7 +85,7 @@ export class PublisherKeyExchange implements Context {
 
             const subscriberId = streamMessage.getPublisherId()
 
-            const isSubscriber = await this.streamEndpoints.isStreamSubscriber(streamId, subscriberId)
+            const isSubscriber = await this.streamRegistryCached.isStreamSubscriber(streamId, subscriberId)
             const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
             const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
                 const groupKey = await groupKeyStore.get(id)
@@ -156,7 +156,7 @@ export class PublisherKeyExchange implements Context {
             const groupKeyStore = await this.getGroupKeyStore(streamId)
             await groupKeyStore.rotateGroupKey()
         } finally {
-            this.streamEndpoints.clearStream(streamId)
+            this.streamRegistryCached.clearStream(streamId)
         }
     }
 
@@ -168,7 +168,7 @@ export class PublisherKeyExchange implements Context {
 
             await groupKeyStore.setNextGroupKey(groupKey)
         } finally {
-            this.streamEndpoints.clearStream(streamId)
+            this.streamRegistryCached.clearStream(streamId)
         }
     }
 
@@ -195,7 +195,7 @@ export class PublisherKeyExchange implements Context {
             if (!this.enabled) { return }
             await this.getSubscription()
         } finally {
-            this.streamEndpoints.clearStream(streamId)
+            this.streamRegistryCached.clearStream(streamId)
         }
     }
 

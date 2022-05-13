@@ -14,7 +14,7 @@ import {
 import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 
 export class SignatureRequiredError extends StreamMessageError {
@@ -36,19 +36,19 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
     private doValidation: StreamMessageValidator['validate']
     constructor(
         context: Context,
-        @inject(delay(() => StreamEndpointsCached)) streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(ConfigInjectionToken.Subscribe) private options: SubscribeConfig,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
         super({
             getStream: (streamId: StreamID) => {
-                return streamEndpoints.getStream(streamId)
+                return streamRegistryCached.getStream(streamId)
             },
             isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
-                return streamEndpoints.isStreamPublisher(streamId, publisherId)
+                return streamRegistryCached.isStreamPublisher(streamId, publisherId)
             },
             isSubscriber: (ethAddress: EthereumAddress, streamId: StreamID) => {
-                return streamEndpoints.isStreamSubscriber(streamId, ethAddress)
+                return streamRegistryCached.isStreamSubscriber(streamId, ethAddress)
             },
             verify: (address: EthereumAddress, payload: string, signature: string) => {
                 return this.cachedVerify(address, payload, signature)

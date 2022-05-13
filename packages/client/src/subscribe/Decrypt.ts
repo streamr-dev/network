@@ -5,7 +5,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 
 import { EncryptionUtil, UnableToDecryptError } from '../encryption/EncryptionUtil'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 import { Stoppable } from '../utils/Stoppable'
@@ -22,7 +22,7 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
 
     constructor(
         context: Context,
-        private streamEndpoints: StreamEndpointsCached,
+        private streamRegistryCached: StreamRegistryCached,
         private keyExchange: SubscriberKeyExchange,
         private destroySignal: DestroySignal,
     ) {
@@ -74,7 +74,7 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
             }
             this.debug('Decrypt Error', err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
-            this.streamEndpoints.clearStream(streamMessage.getStreamId())
+            this.streamRegistryCached.clearStream(streamMessage.getStreamId())
             throw err
         }
     }

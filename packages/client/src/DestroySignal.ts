@@ -16,9 +16,7 @@ import { Signal } from './utils/Signal'
 export class DestroySignal implements Context {
     onDestroy = Signal.once()
     trigger = this.destroy
-    /** @internal */
     readonly id = instanceId(this)
-    /** @internal */
     readonly debug
 
     constructor(context: Context) {

@@ -110,7 +110,6 @@ export async function authRequest(
     throw new ErrorClass(`Request ${debug.namespace} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
 }
 
-/** @internal */
 export async function authFetch<T extends object>(
     url: string,
     opts?: any,

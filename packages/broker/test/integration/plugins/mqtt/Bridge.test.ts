@@ -56,7 +56,6 @@ describe('MQTT Bridge', () => {
     })
 
     afterEach(async () => {
-        streamrClient?.debug('destroy after test')
         await streamrClient?.destroy()
     })
 
