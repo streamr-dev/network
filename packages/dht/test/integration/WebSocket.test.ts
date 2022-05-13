@@ -4,11 +4,20 @@ import { WebSocketConnector } from "../../src/connection/WebSocket/WebSocketConn
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { createPeerDescriptor } from '../utils'
+import { PeerID } from '../../src/PeerID'
+import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 
 describe('WebSocket', () => {
-    
+
+    const id = PeerID.fromString("test")
+    const peerDescriptor: PeerDescriptor = {
+        peerId: id.value,
+        type: NodeType.NODEJS
+    }
     const webSocketServer = new WebSocketServer()
-    const webSocketConnector = new WebSocketConnector()
+    const webSocketConnector = new WebSocketConnector(new MockConnectionManager(peerDescriptor), () => true)
 
     beforeAll(async () => {
         await webSocketServer.start({port: 9999})

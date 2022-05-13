@@ -7,14 +7,28 @@ import { createPeerDescriptor } from '../utils'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { PeerID } from '../../src/PeerID'
 
 describe('ConnectionManager', () => {
+    const mockPeerDescriptor1: PeerDescriptor = {
+        peerId: PeerID.fromString("tester1").value,
+        type: NodeType.NODEJS
+    }
+    const mockPeerDescriptor2: PeerDescriptor = {
+        peerId: PeerID.fromString("tester2").value,
+        type: NodeType.NODEJS
+    }
+    let mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1)
+    let mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2)
+
     beforeAll(async () => {
+
     })
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9991 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager.start(mockConnectorTransport1)
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -30,7 +44,7 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        await expect(connectionManager.start())
+        await expect(connectionManager.start(mockConnectorTransport1))
             .rejects
             .toThrow('Failed to connect to the entrypoints')
 
@@ -40,7 +54,7 @@ describe('ConnectionManager', () => {
     it('Can probe connectivity in open internet', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9993 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager.start(mockConnectorTransport1)
         connectionManager.enableConnectivity(createPeerDescriptor(result))
 
         expect(result.ip).toEqual('localhost')
@@ -52,7 +66,7 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        const result2 = await connectionManager2.start()
+        const result2 = await connectionManager2.start(mockConnectorTransport1)
         connectionManager2.enableConnectivity(createPeerDescriptor(result2))
 
         expect(result2.ip).toEqual('127.0.0.1')
@@ -65,7 +79,7 @@ describe('ConnectionManager', () => {
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9995 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager.start(mockConnectorTransport1)
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
 
@@ -78,7 +92,7 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        const result2 = await connectionManager2.start()
+        const result2 = await connectionManager2.start(mockConnectorTransport2)
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
 
@@ -109,7 +123,7 @@ describe('ConnectionManager', () => {
     it('Can disconnect', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9997 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager.start(mockConnectorTransport1)
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
 
@@ -122,7 +136,7 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        const result2 = await connectionManager2.start()
+        const result2 = await connectionManager2.start(mockConnectorTransport2)
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
 
