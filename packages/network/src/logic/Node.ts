@@ -23,13 +23,9 @@ import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 import { ClaimReceiver } from './receipts/ClaimReceiver'
 import { ClaimSender } from './receipts/ClaimSender'
 
-const logger = new Logger(module)
+export type ValidateContentFn = (payload: string, signature: string) => boolean
 
 export type SignContentFn = (payload: string) => string
-
-const DEFAULT_DUMMY_SIGN_CONTENT = (content: string): string => {
-    return crypto.createHash('md5').update(content).digest('hex')
-}
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -53,6 +49,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     }
     peerInfo: PeerInfo
     signContent?: SignContentFn
+    validateContent?: ValidateContentFn
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
@@ -82,6 +79,16 @@ export interface Node {
     on(event: Event.JOIN_COMPLETED, listener: (streamPartId: StreamPartID, numOfNeighbors: number) => void): this
     on(event: Event.JOIN_FAILED, listener: (streamPartId: StreamPartID, error: string) => void): this
 }
+
+const DEFAULT_DUMMY_SIGN_CONTENT = (content: string): string => {
+    return crypto.createHash('md5').update(content).digest('hex')
+}
+
+const DEFAULT_DUMMY_VALIDATE_CONTENT = (content: string, signature: string): boolean => {
+    return DEFAULT_DUMMY_SIGN_CONTENT(content) === signature
+}
+
+const logger = new Logger(module)
 
 export class Node extends EventEmitter {
     /** @internal */
@@ -122,10 +129,13 @@ export class Node extends EventEmitter {
         this.metricsContext.addMetrics('node', this.metrics)
 
         const signContent = opts.signContent ?? DEFAULT_DUMMY_SIGN_CONTENT
+        const validateContent = opts.validateContent ?? DEFAULT_DUMMY_VALIDATE_CONTENT
         this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode, (claim) => {
             return signContent(JSON.stringify(claim))
         })
-        this.claimReceiver = new ClaimReceiver(this.peerInfo, this.nodeToNode)
+        this.claimReceiver = new ClaimReceiver(this.peerInfo, this.nodeToNode, (claim, signature) => {
+            return validateContent(JSON.stringify(claim), signature)
+        })
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
