@@ -36,6 +36,7 @@ export {
     COUNTER_UNSUBSCRIBE,
     DEFAULT_MAX_NEIGHBOR_COUNT
 } from './constants'
+export { SignatureFunctions } from './logic/receipts/SignatureFunctions'
 export { NetworkNode } from './logic/NetworkNode'
 export { Event as NodeEvent } from './logic/Node'
 export { Logger } from './helpers/Logger'

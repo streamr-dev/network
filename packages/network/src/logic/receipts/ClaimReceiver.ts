@@ -1,14 +1,14 @@
 import { BucketCollector } from './BucketCollector'
-import { Claim, ReceiptRequest, toStreamPartID } from 'streamr-client-protocol'
+import { Claim, ReceiptRequest, ReceiptResponse, toStreamPartID } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
+import { v4 as uuidv4 } from 'uuid'
+import { SignatureFunctions } from './SignatureFunctions'
 
 const logger = new Logger(module)
-
-export type ValidateSignatureFn = (claim: Claim, signature: string) => boolean
 
 function getBucketIdFromClaim(claim: Claim): BucketID {
     return formBucketID({
@@ -23,13 +23,13 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
 export class ClaimReceiver {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
-    private readonly validatedSignature: ValidateSignatureFn
+    private readonly signatureFunctions: SignatureFunctions
     private readonly collector: BucketCollector
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, validatedSignature: ValidateSignatureFn) {
+    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, signatureFunctions: SignatureFunctions) {
         this.myNodeId = myPeerInfo.peerId
         this.nodeToNode = nodeToNode
-        this.validatedSignature = validatedSignature
+        this.signatureFunctions = signatureFunctions
         this.collector = new BucketCollector()
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
             this.collector.record(broadcastMessage.streamMessage, nodeId)
@@ -42,7 +42,7 @@ export class ClaimReceiver {
             logger.warn('identity mismatch: source of message !== claim.sender')
             return
         }
-        if (!this.validatedSignature(claim, signature)) {
+        if (!this.signatureFunctions.validateClaim(claim, signature)) {
             logger.warn('signature validation failed for %j', claim)
             return
         }
@@ -54,6 +54,7 @@ export class ClaimReceiver {
         // TODO: inequality instead?
         if (bucket.getMessageCount() === claim.messageCount && bucket.getTotalPayloadSize() === claim.totalPayloadSize) {
             logger.info("I agree with %j", claim)
+            this.sendReceiptResponse(claim, signature)
         } else {
             logger.info("I disagree with %j (msgCount=%d, totalPayloadSize=%d)",
                 claim,
@@ -63,4 +64,13 @@ export class ClaimReceiver {
         }
     }
 
+    private sendReceiptResponse(claim: Claim, senderSignature: string): void {
+        this.nodeToNode.send(claim.sender, new ReceiptResponse({
+            requestId: uuidv4(),
+            claim,
+            signature: this.signatureFunctions.signSignedClaim(claim, senderSignature)
+        })).catch((e) => {
+            logger.warn('failed to send ReceiptResponse to %s, reason: %s', claim.sender, e)
+        })
+    }
 }
