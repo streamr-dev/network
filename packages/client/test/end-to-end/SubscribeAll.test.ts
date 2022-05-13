@@ -66,7 +66,7 @@ describe('SubscribeAll', () => {
             expect(subMsgs).toContainEqual(msg)
         }
         await client.unsubscribe()
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('works with single partition', async () => {
@@ -90,7 +90,7 @@ describe('SubscribeAll', () => {
             expect(subMsgs).toContainEqual(msg)
         }
         await client.unsubscribe()
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('can stop prematurely', async () => {
@@ -111,7 +111,7 @@ describe('SubscribeAll', () => {
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
         // unsubscribed from everything
-        expect(await client.count(stream.id)).toBe(0)
+        expect((await client.getSubscriptions(stream.id)).length).toBe(0)
     })
 
     it('stops with unsubscribeAll', async () => {
@@ -131,7 +131,7 @@ describe('SubscribeAll', () => {
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
         // unsubscribed from everything
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('stops only when all subs are unsubbed', async () => {
@@ -166,6 +166,6 @@ describe('SubscribeAll', () => {
         // got the messages
         expect(subMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         // unsubscribed from everything
-        expect(await client.count(stream.id)).toBe(0)
+        expect((await client.getSubscriptions(stream.id)).length).toBe(0)
     })
 })
