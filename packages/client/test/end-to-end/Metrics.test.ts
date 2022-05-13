@@ -67,7 +67,6 @@ describe('NodeMetrics', () => {
             node: {
                 publishMessagesPerSecond: expect.any(Number),
                 publishBytesPerSecond: expect.any(Number),
-                latencyAverageMs: expect.any(Number),
                 sendMessagesPerSecond: expect.any(Number),
                 sendBytesPerSecond: expect.any(Number),
                 receiveMessagesPerSecond: expect.any(Number),
