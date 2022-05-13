@@ -11,7 +11,7 @@ import { StreamRegistry } from './StreamRegistry'
 import { Ethereum } from './Ethereum'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 import {
     EthereumAddress,
     StreamID,
@@ -84,8 +84,8 @@ class StreamrStream implements StreamMetadata {
     protected _resends: Resends
     protected _publisher: Publisher
     protected _subscriber: Subscriber
-    protected _streamEndpointsCached: StreamEndpointsCached
     protected _streamRegistry: StreamRegistry
+    protected _streamRegistryCached: StreamRegistryCached
     protected _nodeRegistry: StorageNodeRegistry
     protected _ethereuem: Ethereum
     private readonly _httpFetcher: HttpFetcher
@@ -102,7 +102,7 @@ class StreamrStream implements StreamMetadata {
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
         this._subscriber = _container.resolve<Subscriber>(Subscriber)
-        this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
+        this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
@@ -121,7 +121,7 @@ class StreamrStream implements StreamMetadata {
                 id: this.id
             })
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
         for (const key of Object.keys(props)) {
             // @ts-expect-error
@@ -147,7 +147,7 @@ class StreamrStream implements StreamMetadata {
         try {
             await this._streamRegistry.deleteStream(this.id)
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
     }
 
@@ -198,7 +198,7 @@ class StreamrStream implements StreamMetadata {
                 'timed out waiting for storage nodes to respond'
             )
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
@@ -210,7 +210,7 @@ class StreamrStream implements StreamMetadata {
         try {
             return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
     }
 

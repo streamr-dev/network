@@ -15,7 +15,7 @@ import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -25,7 +25,7 @@ export function SubscribePipeline<T = unknown>(
 ): MessageStream<T> {
     const validate = new Validator(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(ConfigInjectionToken.Subscribe),
         container.resolve(ConfigInjectionToken.Cache)
     )
@@ -63,7 +63,7 @@ export function SubscribePipeline<T = unknown>(
 
     const decrypt = new Decrypt<T>(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(SubscriberKeyExchange),
         container.resolve(DestroySignal),
     )

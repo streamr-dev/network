@@ -16,7 +16,7 @@ import { BrubeckContainer } from '../Container'
 import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
@@ -78,7 +78,7 @@ export class Resends implements Context {
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
@@ -104,7 +104,7 @@ export class Resends implements Context {
     }
 
     async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        const { partitions } = await this.streamRegistryCached.getStream(streamId)
         if (partitions === 1) {
             // nothing interesting to do, treat as regular subscription
             return this.resend<T>(streamId, options, onMessage)

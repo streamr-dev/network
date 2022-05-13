@@ -36,7 +36,7 @@ import {
     streamPermissionToSolidityType,
     ChainPermissions
 } from './permission'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 
 /** @internal */
 export type StreamQueryResult = {
@@ -77,7 +77,7 @@ export class StreamRegistry implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamEndpointsCached)) private streamEndpointsCached: StreamEndpointsCached
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -410,7 +410,7 @@ export class StreamRegistry implements Context {
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+        this.streamRegistryCached.clearStream(streamId)
         await this.connectToStreamRegistryContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -433,7 +433,7 @@ export class StreamRegistry implements Context {
         for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.streamEndpointsCached.clearStream(streamId)
+            this.streamRegistryCached.clearStream(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user

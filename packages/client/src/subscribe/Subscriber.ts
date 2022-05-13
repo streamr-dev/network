@@ -6,7 +6,7 @@ import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamID, StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { StreamDefinition } from '../types'
 import { MessageStream, pullManyToOne } from './MessageStream'
 import { range } from 'lodash'
@@ -25,7 +25,7 @@ export class Subscriber implements Context {
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(delay(() => StreamEndpointsCached))private streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -40,7 +40,7 @@ export class Subscriber implements Context {
     }
 
     async subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        const { partitions } = await this.streamRegistryCached.getStream(streamId)
         if (partitions === 1) {
             // nothing interesting to do, treat as regular subscription
             return this.subscribe<T>(streamId, onMessage)

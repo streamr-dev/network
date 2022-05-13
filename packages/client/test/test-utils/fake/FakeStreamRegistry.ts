@@ -15,7 +15,7 @@ import { NotFoundError } from '../../../src/authFetch'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
-import { StreamEndpointsCached } from '../../../src/StreamEndpointsCached'
+import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
 
@@ -37,18 +37,18 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly ethereum: Ethereum
     private readonly container: DependencyContainer
-    private readonly streamEndpointsCached: StreamEndpointsCached
+    private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         @inject(Ethereum) ethereum: Ethereum,
         @inject(BrubeckContainer) container: DependencyContainer,
-        @inject(StreamEndpointsCached) streamEndpointsCached: StreamEndpointsCached
+        @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.ethereum = ethereum
         this.container = container
-        this.streamEndpointsCached = streamEndpointsCached
+        this.streamRegistryCached = streamRegistryCached
         const storageNodeAssignmentStreamPermissions = new Multimap<string,StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(DOCKER_DEV_STORAGE_NODE.toLowerCase(), StreamPermission.PUBLISH)
         this.registryItems.set(formStorageNodeAssignmentStreamId(DOCKER_DEV_STORAGE_NODE), {
@@ -162,7 +162,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         modifyRegistryItem: (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+        this.streamRegistryCached.clearStream(streamId)
         const registryItem = this.registryItems.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')

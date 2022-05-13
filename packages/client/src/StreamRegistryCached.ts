@@ -9,7 +9,7 @@ import { StreamPermission } from './permission'
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamEndpointsCached implements Context {
+export class StreamRegistryCached implements Context {
     readonly id = instanceId(this)
     readonly debug
 
