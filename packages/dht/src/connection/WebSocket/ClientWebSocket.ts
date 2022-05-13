@@ -1,16 +1,17 @@
 /* eslint-disable no-console */
 
-import { Connection, Event as ConnectionEvent } from '../Connection'
+import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
 import { EventEmitter } from 'events'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 
-export class ClientWebSocket extends EventEmitter implements Connection {
+export class ClientWebSocket extends EventEmitter implements IConnection {
     public connectionId: ConnectionID
     private remotePeerDescriptor: PeerDescriptor|null = null
     private buffer: Uint8Array[] = []
     private socket: WebSocket | null = null
+    public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     constructor() {
         super()
@@ -70,7 +71,7 @@ export class ClientWebSocket extends EventEmitter implements Connection {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    get peerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | null {
         return this.remotePeerDescriptor
     }
 

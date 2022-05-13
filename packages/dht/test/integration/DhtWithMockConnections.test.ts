@@ -2,7 +2,7 @@ import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
 
-describe('Mock Connection DHT Joining', () => {
+describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor

@@ -7,10 +7,16 @@ export enum Event {
     DISCONNECTED = 'streamr:dht:connection:disconnected',
     ERROR = 'streamr:dht:connection:error'
 }
+export enum ConnectionType {
+    WEBSOCKET_SERVER = 'websocket-server',
+    WEBSOCKET_CLIENT = 'websocket-client',
+    DEFERRED = 'deferred'
+}
 
-export interface Connection {
+export interface IConnection {
     
     connectionId: ConnectionID
+    connectionType: ConnectionType
 
     on(event: Event.DATA, listener: (bytes: Uint8Array) => void): this
     on(event: Event.ERROR, listener: (name: string) => void): this
@@ -23,9 +29,10 @@ export interface Connection {
     once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void
-    get peerDescriptor(): PeerDescriptor | null
+    getPeerDescriptor(): PeerDescriptor | null
 
     send(data: Uint8Array): void
     sendBufferedMessages(): void
+
     close(): void
 }

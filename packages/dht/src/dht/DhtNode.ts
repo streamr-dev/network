@@ -106,12 +106,12 @@ export class DhtNode extends EventEmitter implements ITransport {
                     entryPoints: this.config.entryPoints
                 })
                 this.ownPeerDescriptor = this.config.peerDescriptor
-                await connectionManager.start()
+                await connectionManager.start(this)
             } else if (!this.config.webSocketPort) {
                 connectionManager = new ConnectionManager({
                     entryPoints: this.config.entryPoints
                 })
-                await connectionManager.start()
+                await connectionManager.start(this)
                 this.ownPeerDescriptor = this.createPeerDescriptor(undefined, this.config.peerIdString)
             } else {
                 connectionManager = new ConnectionManager({
@@ -119,7 +119,7 @@ export class DhtNode extends EventEmitter implements ITransport {
                     webSocketPort: this.config.webSocketPort!,
                     entryPoints: this.config.entryPoints
                 })
-                const result = await connectionManager.start()
+                const result = await connectionManager.start(this)
                 this.ownPeerDescriptor = this.createPeerDescriptor(result, this.config.peerIdString)
             }
 
@@ -128,7 +128,6 @@ export class DhtNode extends EventEmitter implements ITransport {
 
             this.cleanUpHandleForConnectionManager = connectionManager
             this.transportLayer = connectionManager
-            connectionManager.createConnectorRpcs(this)
         }
 
         this.rpcCommunicator = new RpcCommunicator({

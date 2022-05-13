@@ -1,7 +1,7 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 
-describe('WebSocket Connection Requests', () => {
+describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
         type: NodeType.NODEJS,
