@@ -29,7 +29,7 @@ describe('DhtClientRpcTransport', () => {
     beforeEach(() => {
         mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
         rpcCommunicator1 = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer1,
+            connectionLayer: mockConnectionLayer1
         })
         rpcCommunicator1.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
 

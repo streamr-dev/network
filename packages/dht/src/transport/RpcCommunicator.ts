@@ -59,8 +59,9 @@ export class RpcCommunicator extends EventEmitter {
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
 
+        this.defaultRpcRequestTimeout = params.rpcRequestTimeout || 5000
         this.appId = params.appId || DEFAULT_APP_ID
-        this.rpcClientTransport = new ClientTransport(params.rpcRequestTimeout)
+        this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
         this.rpcServerTransport = new ServerTransport()
         this.connectionLayer = params.connectionLayer
         this.ongoingRequests = new Map()
@@ -76,7 +77,6 @@ export class RpcCommunicator extends EventEmitter {
                 await this.onIncomingMessage(peerDescriptor, message)
             }
         })
-        this.defaultRpcRequestTimeout = params.rpcRequestTimeout || 5000
     }
 
     public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {

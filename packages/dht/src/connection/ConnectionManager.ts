@@ -1,20 +1,34 @@
 import EventEmitter from 'events'
-import { ConnectivityRequestMessage, ConnectivityResponseMessage, HandshakeMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
-import { Connection } from './Connection'
+import {
+    ConnectivityRequestMessage,
+    ConnectivityResponseMessage,
+    HandshakeMessage,
+    Message,
+    MessageType,
+    PeerDescriptor
+} from '../proto/DhtRpc'
+import { Connection, Event as ConnectionEvents } from './Connection'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { Event as ConnectionSourceEvents } from './IConnectionSource'
-import { Event as ConnectionEvents } from './Connection'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
-import { ITransport, Event } from '../transport/ITransport'
+import { Event, ITransport } from '../transport/ITransport'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
-import { createRemoteWebSocketConnectorServer } from './WebSocket/RemoteWebSocketConnector'
+import { createRemoteWebSocketConnectorServer, RemoteWebSocketConnector } from './WebSocket/RemoteWebSocketConnector'
+import { WebSocketConnectorClient } from '../proto/DhtRpc.client'
+import { Deferred, DeferredState } from '@protobuf-ts/runtime-rpc'
+import { Err } from '../errors'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
-    webSocketPort: number,
+    webSocketPort?: number,
     entryPoints?: PeerDescriptor[]
+}
+
+interface DeferredConnection {
+    deferred: Deferred<Connection>,
+    peerDescriptor: PeerDescriptor
 }
 
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
@@ -25,14 +39,21 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private ownPeerDescriptor: PeerDescriptor | null = null
     private connections: { [peerId: string]: Connection } = {}
 
+    private deferredConnections: { [peerId: string]: DeferredConnection } = {}
     private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
     private webSocketConnector: WebSocketConnector = new WebSocketConnector()
-    private webSocketServer: WebSocketServer = new WebSocketServer()
+    private webSocketServer: WebSocketServer | null
     private wsRpcCommunicator: RpcCommunicator | null
+    private dhtlistener: any = null
 
     constructor(private config: ConnectionManagerConfig) {
         super()
         this.wsRpcCommunicator = null
+        if (config.webSocketPort) {
+            this.webSocketServer = new WebSocketServer()
+        } else {
+            this.webSocketServer = null
+        }
     }
 
     private async handleIncomingConnectivityRequest(connection: Connection, connectivityRequest: ConnectivityRequestMessage) {
@@ -58,7 +79,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (outgoingConnection) {
             outgoingConnection.close()
 
-            console.log("Connectivity test produced positive result, communicating reply to the requester")
+            // console.log("Connectivity test produced positive result, communicating reply to the requester")
 
             connectivityResponseMessage = {
                 openInternet: true,
@@ -103,7 +124,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 })
 
                 // send connectivity request
-                const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort }
+                const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort! }
                 const msg: Message = {
                     messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
                     body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
@@ -113,9 +134,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     console.log('clientsocket error')
                 })
 
-                console.log('trying to send connectivity request')
+                // console.log('trying to send connectivity request')
                 outgoingConnection.send(Message.toBinary(msg))
-                console.log('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
+                // console.log('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
             }
         })
     }
@@ -124,46 +145,55 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
         // Set up and start websocket server
 
-        this.webSocketServer.on(ConnectionSourceEvents.CONNECTED, (connection: Connection) => {
+        if (this.webSocketServer) {
+            this.webSocketServer.on(ConnectionSourceEvents.CONNECTED, (connection: Connection) => {
+                //this.newConnections[connection.connectionId.toString()] = connection
+                // console.log('server received new connection')
 
-            //this.newConnections[connection.connectionId.toString()] = connection
-            console.log('server received new connection')
+                connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
+                    // console.log('server received data')
+                    const message = Message.fromBinary(data)
 
-            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                console.log('server received data')
-                const message = Message.fromBinary(data)
+                    if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
+                        // console.log('received connectivity request')
+                        this.handleIncomingConnectivityRequest(connection, ConnectivityRequestMessage.fromBinary(message.body))
+                    }
 
-                if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
-                    console.log('received connectivity request')
-                    this.handleIncomingConnectivityRequest(connection, ConnectivityRequestMessage.fromBinary(message.body))
+                    else if (this.ownPeerDescriptor) {
+                        this.onIncomingMessage(connection, message)
+                    }
+                })
+            })
+
+            await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
+
+            return new Promise(async (resolve, reject) => {
+                // Open webscoket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
+
+                if (this.config.entryPoints && this.config.entryPoints.length > 0) {
+                    this.sendConnectivityRequest().then((response) => { resolve(response) }).catch((err) => reject(err))
                 }
 
-                else if (this.ownPeerDescriptor) {
-                    this.onIncomingMessage(connection, message)
+                else {
+                    // return connectivity info given in config to be used for id generation
+
+                    const connectivityResponseMessage: ConnectivityResponseMessage = {
+                        openInternet: true,
+                        ip: this.config.webSocketHost!,
+                        natType: 'open_internet',
+                        websocket: { ip: this.config.webSocketHost!, port: this.config.webSocketPort! }
+                    }
+                    resolve(connectivityResponseMessage)
                 }
             })
-        })
-
-        await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
-
-        return new Promise(async (resolve, reject) => {
-            // Open webscoket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
-
-            if (this.config.entryPoints && this.config.entryPoints.length > 0) {
-                this.sendConnectivityRequest().then((response) => { resolve(response) }).catch((err) => reject(err))
-            }
-
-            else {
-                // return connectivity info given in config to be used for id generation
-
-                const connectivityResponseMessage: ConnectivityResponseMessage = {
-                    openInternet: true,
-                    ip: this.config.webSocketHost!,
-                    natType: 'open_internet',
-                    websocket: { ip: this.config.webSocketHost!, port: this.config.webSocketPort }
-                }
-                resolve(connectivityResponseMessage)
-            }
+        }
+        const connectivityResponseMessage: ConnectivityResponseMessage = {
+            openInternet: false,
+            ip: 'localhost',
+            natType: 'unknown'
+        }
+        return new Promise((resolve, _reject) => {
+            resolve(connectivityResponseMessage)
         })
     }
 
@@ -172,7 +202,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
         // set up normal listeners that send a handshake for new connections from webSocketConnector
         this.webSocketConnector.on(ConnectionSourceEvents.CONNECTED, (connection: Connection) => {
-
             connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
                 const message = Message.fromBinary(data)
                 if (this.ownPeerDescriptor) {
@@ -201,12 +230,16 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     onIncomingMessage = (connection: Connection, message: Message): void => {
         if (message.messageType === MessageType.HANDSHAKE && this.ownPeerDescriptor) {
             const handshake = HandshakeMessage.fromBinary(message.body)
-
+            const stringId = PeerID.fromValue(handshake.sourceId).toString()
             connection.setPeerDescriptor(handshake.peerDescriptor as PeerDescriptor)
 
-            if (!this.connections.hasOwnProperty(PeerID.fromValue(handshake.sourceId).toString())) {
+            if (this.deferredConnections[stringId] && this.deferredConnections[stringId].deferred.state === DeferredState.PENDING) {
+                this.deferredConnections[stringId].deferred.resolve(connection)
+                this.connections[stringId] = connection
+            }
+            if (!this.connections.hasOwnProperty(stringId)) {
                 
-                this.connections[PeerID.fromValue(handshake.sourceId).toString()] = connection
+                this.connections[stringId] = connection
 
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
@@ -228,19 +261,29 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     async stop(): Promise<void> {
         this.removeAllListeners()
-        await this.webSocketServer.stop()
+        if (this.webSocketServer) {
+            await this.webSocketServer.stop()
+        }
         Object.values(this.disconnectionTimeouts).map(async (timeout) => {
             clearTimeout(timeout)
         })
         this.disconnectionTimeouts = {}
+        if (this.wsRpcCommunicator) {
+            this.wsRpcCommunicator.stop()
+        }
     }
 
     // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
     // or it might fail completely! Where should we buffer the outgoing data?
 
-    send(peerDescriptor: PeerDescriptor, message: Message): void {
+    async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
-        if (this.connections.hasOwnProperty(stringId)) {
+        if (this.deferredConnections.hasOwnProperty(stringId)) {
+            // this.deferredConnections[stringId].promise.then((connection) => {
+            //     connection.send(Message.toBinary(message))
+            // }).catch(() => {})
+        }
+        else if (this.connections.hasOwnProperty(stringId)) {
             this.connections[stringId].send(Message.toBinary(message))
         }
 
@@ -249,6 +292,32 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             connection.setPeerDescriptor(peerDescriptor)
             this.connections[stringId] = connection
             connection.send(Message.toBinary(message))
+        }
+
+        else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket && this.wsRpcCommunicator) {
+            const remoteConnector = new RemoteWebSocketConnector(
+                peerDescriptor,
+                new WebSocketConnectorClient(this.wsRpcCommunicator.getRpcClientTransport())
+            )
+            this.deferredConnections[stringId] = {
+                deferred: new Deferred<Connection>(),
+                peerDescriptor
+            }
+            const res = await remoteConnector.requestConnection(
+                this.ownPeerDescriptor!,
+                this.ownPeerDescriptor!.websocket.ip,
+                this.ownPeerDescriptor!.websocket.port
+            )
+
+            if (res) {
+                const connection = await this.deferredConnections[stringId].deferred.promise
+                // connection.setPeerDescriptor(peerDescriptor)
+                // this.connections[stringId] = connection
+                connection.send(Message.toBinary(message))
+            } else {
+                this.deferredConnections[stringId].deferred.reject(new Err.WebSocketConnectionRequestRejected())
+            }
+            delete this.deferredConnections[stringId]
         }
     }
 
@@ -276,7 +345,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        return !!this.connections[peerDescriptor.peerId.toString()]
+        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        return !!this.connections[stringId]
     }
 
     canConnect(peerDescriptor: PeerDescriptor, _ip: string, port: number): boolean {
@@ -286,10 +356,19 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     createConnectorRpcs(transport: ITransport): void {
         this.wsRpcCommunicator = new RpcCommunicator({
+            rpcRequestTimeout: 10000,
             appId: "websocket",
             connectionLayer: transport
         })
-        const methods = createRemoteWebSocketConnectorServer(this.webSocketConnector.connectAsync, this.canConnect.bind(this))
+        this.dhtlistener = transport.on(Event.DATA, (peerDescriptor, message, appId) => {
+            if (appId === 'websocket' && this.wsRpcCommunicator) {
+                this.wsRpcCommunicator!.onIncomingMessage(peerDescriptor, message)
+            }
+        })
+        const methods = createRemoteWebSocketConnectorServer(
+            this.webSocketConnector.connect.bind(this.webSocketConnector),
+            this.canConnect.bind(this)
+        )
         this.wsRpcCommunicator.registerServerMethod('requestConnection', methods.requestConnection)
     }
 }

@@ -62,7 +62,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
                 const connection = request.accept(undefined, request.origin)
 
-                console.log((new Date()) + ' Connection accepted.')
+                // console.log((new Date()) + ' Connection accepted.')
 
                 this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })

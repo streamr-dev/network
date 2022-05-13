@@ -19,7 +19,7 @@ describe('DhtClientRpcTransport', () => {
         }
         const mockConnectionManager = new MockConnectionManager(mockDescriptor)
         const rpcCommunicator = new RpcCommunicator({
-            connectionLayer: mockConnectionManager,
+            connectionLayer: mockConnectionManager
         })
         rpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             const request = RpcMessage.fromBinary(message.body)

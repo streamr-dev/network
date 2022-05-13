@@ -26,7 +26,7 @@ export class ClientWebSocket extends EventEmitter implements Connection {
         }
         
         this.socket.onopen = () => {
-            console.log('WebSocket Client Connected')
+            // console.log('WebSocket Client Connected')
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 this.emit(ConnectionEvent.CONNECTED)
             }  
