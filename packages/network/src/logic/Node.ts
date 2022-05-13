@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events'
+import crypto from 'crypto'
 import {
     MessageLayer,
     StreamPartID,
@@ -24,6 +25,12 @@ import { ClaimSender } from './receipts/ClaimSender'
 
 const logger = new Logger(module)
 
+export type SignContentFn = (payload: string) => string
+
+const DEFAULT_DUMMY_SIGN_CONTENT = (content: string): string => {
+    return crypto.createHash('md5').update(content).digest('hex')
+}
+
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
     NODE_DISCONNECTED = 'streamr:node:node-disconnected',
@@ -45,6 +52,7 @@ export interface NodeOptions extends TrackerManagerOptions {
         nodeToTracker: NodeToTracker
     }
     peerInfo: PeerInfo
+    signContent?: SignContentFn
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
@@ -113,7 +121,10 @@ export class Node extends EventEmitter {
         }
         this.metricsContext.addMetrics('node', this.metrics)
 
-        this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode)
+        const signContent = opts.signContent ?? DEFAULT_DUMMY_SIGN_CONTENT
+        this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode, (claim) => {
+            return signContent(JSON.stringify(claim))
+        })
         this.claimReceiver = new ClaimReceiver(this.peerInfo, this.nodeToNode)
 
         this.streamPartManager = new StreamPartManager()

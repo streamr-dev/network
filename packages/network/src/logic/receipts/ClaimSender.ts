@@ -33,17 +33,21 @@ function getCloseTime(bucket: Bucket): number {
     )
 }
 
+export type SignFn = (claim: Claim) => string
+
 const logger = new Logger(module)
 
 export class ClaimSender {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
+    private readonly sign: SignFn
     private readonly collector: BucketCollector
     private readonly closeTimeouts = new Map<BucketID, NodeJS.Timeout>() // TODO: browser setTimeout?
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode) {
+    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, sign: SignFn) {
         this.myNodeId = myPeerInfo.peerId
         this.nodeToNode = nodeToNode
+        this.sign = sign
         this.collector = new BucketCollector((bucket) => { // TODO: debounce?
             const existingTimeout = this.closeTimeouts.get(bucket.getId())
             if (existingTimeout !== undefined) {
@@ -70,10 +74,11 @@ export class ClaimSender {
     }
 
     private sendReceiptRequest(bucket: Bucket): void {
+        const claim = createClaim(bucket, this.myNodeId)
         this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
             requestId: uuidv4(),
-            claim: createClaim(bucket, this.myNodeId),
-            signature: 'nönönö' // TODO: signing
+            claim,
+            signature: this.sign(claim)
         })).catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
         })
