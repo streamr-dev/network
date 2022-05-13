@@ -28,7 +28,8 @@ describe('ConnectionManager', () => {
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9991 })
 
-        const result = await connectionManager.start(mockConnectorTransport1)
+        connectionManager.createWsConnector(mockConnectorTransport1)
+        const result = await connectionManager.start()
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -43,8 +44,8 @@ describe('ConnectionManager', () => {
                 { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 123 } }
             ]
         })
-
-        await expect(connectionManager.start(mockConnectorTransport1))
+        connectionManager.createWsConnector(mockConnectorTransport1)
+        await expect(connectionManager.start())
             .rejects
             .toThrow('Failed to connect to the entrypoints')
 
@@ -54,7 +55,8 @@ describe('ConnectionManager', () => {
     it('Can probe connectivity in open internet', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9993 })
 
-        const result = await connectionManager.start(mockConnectorTransport1)
+        connectionManager.createWsConnector(mockConnectorTransport1)
+        const result = await connectionManager.start()
         connectionManager.enableConnectivity(createPeerDescriptor(result))
 
         expect(result.ip).toEqual('localhost')
@@ -65,8 +67,8 @@ describe('ConnectionManager', () => {
                 { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 9993 } }
             ]
         })
-
-        const result2 = await connectionManager2.start(mockConnectorTransport1)
+        connectionManager2.createWsConnector(mockConnectorTransport2)
+        const result2 = await connectionManager2.start()
         connectionManager2.enableConnectivity(createPeerDescriptor(result2))
 
         expect(result2.ip).toEqual('127.0.0.1')
@@ -79,7 +81,8 @@ describe('ConnectionManager', () => {
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9995 })
 
-        const result = await connectionManager.start(mockConnectorTransport1)
+        connectionManager.createWsConnector(mockConnectorTransport1)
+        const result = await connectionManager.start()
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
 
@@ -92,7 +95,8 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        const result2 = await connectionManager2.start(mockConnectorTransport2)
+        connectionManager2.createWsConnector(mockConnectorTransport2)
+        const result2 = await connectionManager2.start()
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
 
@@ -123,7 +127,8 @@ describe('ConnectionManager', () => {
     it('Can disconnect', async () => {
         const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9997 })
 
-        const result = await connectionManager.start(mockConnectorTransport1)
+        connectionManager.createWsConnector(mockConnectorTransport1)
+        const result = await connectionManager.start()
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
 
@@ -136,7 +141,8 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        const result2 = await connectionManager2.start(mockConnectorTransport2)
+        connectionManager2.createWsConnector(mockConnectorTransport2)
+        const result2 = await connectionManager2.start()
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
 

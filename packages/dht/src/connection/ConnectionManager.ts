@@ -128,9 +128,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         })
     }
 
-    async start(rpcTransport: ITransport): Promise<ConnectivityResponseMessage> {
-
-        this.createWsConnector(rpcTransport)
+    async start(): Promise<ConnectivityResponseMessage> {
 
         // Set up and start websocket server
         if (this.webSocketServer) {
