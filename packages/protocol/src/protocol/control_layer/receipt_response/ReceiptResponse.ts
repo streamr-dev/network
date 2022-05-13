@@ -13,11 +13,10 @@ export interface Options extends ControlMessageOptions {
 }
 
 export enum RefusalCode {
-    SENDER_IDENTITY_MISMATCH = 'SENDER_IDENTITY_MISMATCH',
+    SENDER_IDENTITY_MISMATCH = 'SENDER_IDENTITY_MISMATCH', // TODO: should even send?
     INVALID_SIGNATURE = 'INVALID_SIGNATURE',
-    BUCKET_NOT_FOUND = 'BUCKET_NOT_FOUND',
-    MESSAGE_COUNT_DISAGREEMENT = 'MESSAGE_COUNT_DISAGREEMENT',
-    PAYLOAD_SIZE_DISAGREEMENT = 'PAYLOAD_SIZE_DISAGREEMENT'
+    BUCKET_NOT_FOUND = 'BUCKET_NOT_FOUND', // TODO: this is sort of like the below?
+    DISAGREEMENT = 'DISAGREEMENT',
 }
 
 export default class ReceiptResponse extends ControlMessage {

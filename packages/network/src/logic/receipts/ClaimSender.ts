@@ -18,8 +18,8 @@ function createClaim(bucket: Bucket, sender: NodeId): Claim {
         windowNumber: bucket.getWindowNumber(),
         messageCount: bucket.getMessageCount(),
         totalPayloadSize: bucket.getTotalPayloadSize(),
-        receiver: bucket.getPublisherId(),
-        sender, // TODO: without sessionId
+        receiver: bucket.getNodeId(),
+        sender
     }
 }
 
@@ -47,6 +47,8 @@ export class ClaimSender {
         this.nodeToNode = nodeToNode
         this.signatureFunctions = signatureFunctions
         this.collector = new BucketCollector((bucket) => { // TODO: debounce?
+            // TODO: we could use the fact that timeouts can only go later and later, therefore we don't have to
+            //  clear them all the time here...
             const existingTimeout = this.closeTimeouts.get(bucket.getId())
             if (existingTimeout !== undefined) {
                 clearTimeout(existingTimeout)
@@ -58,8 +60,24 @@ export class ClaimSender {
             }, getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
         })
-        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, (receiptResponse, source) => {
-            logger.info('received ReceiptResponse from %s', source)
+        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ claim, signature: receiverSignature, refusalCode }, source) => {
+            if (claim.receiver !== source) {
+                logger.warn('unexpected claim from %s (trying to respond on behalf of %s)', source, claim.receiver)
+                // TODO: cut connection?
+                return
+            }
+            if (refusalCode !== null) {
+                logger.warn('receiver %s refused claim due to %s', source, refusalCode)
+                // TODO: cut connection?
+                return
+            }
+            const senderSignature = this.signatureFunctions.signClaim(claim)
+            if (!this.signatureFunctions.validatedSignedClaim(claim, senderSignature, receiverSignature!)) {
+                logger.warn('claim receipt response from %s has invalid signature', source)
+                // TODO: cut connection?
+                return
+            }
+            logger.info("Accepted fully signed claim %j", claim)
         })
     }
 

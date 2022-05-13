@@ -14,7 +14,7 @@ export default class ReceiptResponseSerializerV2 extends Serializer<ReceiptRespo
             receiptResponse.requestId,
             receiptResponse.claim,
             receiptResponse.signature,
-            receiptResponse.errorMessage
+            receiptResponse.refusalCode
         ]
     }
 
@@ -25,7 +25,7 @@ export default class ReceiptResponseSerializerV2 extends Serializer<ReceiptRespo
             requestId,
             claim,
             signature,
-            errorMessage
+            refusalCode
         ] = arr
 
         return new ReceiptResponse({
@@ -33,7 +33,7 @@ export default class ReceiptResponseSerializerV2 extends Serializer<ReceiptRespo
             requestId,
             claim,
             signature,
-            errorMessage
+            refusalCode
         })
     }
 }

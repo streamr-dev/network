@@ -13,14 +13,14 @@ export function getWindowStartTime(windowNumber: number): number {
 
 export type BucketID = string & { readonly __brand: 'BucketID' }
 
-export function formBucketID(v: {
+export function formBucketID({ nodeId, streamPartId, publisherId, msgChainId, windowNumber }: {
     nodeId: NodeId,
     streamPartId: StreamPartID,
     publisherId: string,
     msgChainId: string,
     windowNumber: number
 }): BucketID {
-    return `${v.nodeId}_${v.streamPartId}_${v.publisherId}_${v.msgChainId}_${v.windowNumber}` as BucketID
+    return `${nodeId}_${streamPartId}_${publisherId}_${msgChainId}_${windowNumber}` as BucketID
 }
 
 export function getBucketID(messageId: MessageID, nodeId: NodeId): BucketID {
