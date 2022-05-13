@@ -181,9 +181,6 @@ export class BrubeckNode implements Context {
     /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    /**
-     * Get started network node.
-     */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
     /** @internal */

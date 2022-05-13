@@ -39,9 +39,6 @@ export class Subscriber implements Context {
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    /**
-     * Subscribe to all partitions for stream.
-     */
     async subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
         const { partitions } = await this.streamEndpoints.getStream(streamId)
         if (partitions === 1) {
@@ -117,9 +114,6 @@ export class Subscriber implements Context {
         await subSession.remove(sub)
     }
 
-    /**
-     * @category Important
-     */
     async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
         if (streamDefinitionOrSubscription instanceof Subscription) {
             return this.remove(streamDefinitionOrSubscription)
@@ -189,10 +183,6 @@ export class Subscriber implements Context {
         return this.subSessions.size
     }
 
-    /**
-     * Get subscriptions matching streamId or streamId + streamPartition
-     * @category Important
-     */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {
             return this.getAllSubscriptions()

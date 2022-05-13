@@ -87,10 +87,6 @@ export class Resends implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    /**
-     * Call last/from/range as appropriate based on arguments
-     * @category Important
-     */
     async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
@@ -107,9 +103,6 @@ export class Resends implements Context {
         return sub
     }
 
-    /**
-     * Resend for all partitions of a stream.
-     */
     async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
         const { partitions } = await this.streamEndpoints.getStream(streamId)
         if (partitions === 1) {

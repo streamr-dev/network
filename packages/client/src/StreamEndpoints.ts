@@ -32,9 +32,6 @@ export class StreamEndpoints implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    /**
-     * @category Important
-     */
     async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
         this.debug('getOrCreateStream %o', {
             props,
