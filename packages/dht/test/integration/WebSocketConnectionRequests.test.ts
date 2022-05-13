@@ -1,5 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/PeerID'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 

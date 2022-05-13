@@ -19,8 +19,8 @@ describe('ConnectionManager', () => {
         peerId: PeerID.fromString("tester2").value,
         type: NodeType.NODEJS
     }
-    let mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1)
-    let mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2)
+    const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1)
+    const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2)
 
     beforeAll(async () => {
 
