@@ -129,12 +129,10 @@ export class Ethereum {
         }
     }
 
-    /** @internal */
     isAuthenticated() {
         return (this._getAddress !== undefined)
     }
 
-    /** @internal */
     canEncrypt() {
         return !!(this._getAddress && this._getSigner)
     }
@@ -148,7 +146,6 @@ export class Ethereum {
         return (await this._getAddress()).toLowerCase()
     }
 
-    /** @internal */
     getSigner(): Signer {
         if (!this._getSigner) {
             // _getSigner is assigned in constructor
@@ -158,7 +155,6 @@ export class Ethereum {
         return this._getSigner()
     }
 
-    /** @internal */
     async getStreamRegistryChainSigner(): Promise<Signer> {
         if (!this._getStreamRegistryChainSigner) {
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
@@ -168,7 +164,6 @@ export class Ethereum {
 
     /**
      * @returns Ethers.js Provider, a connection to the Ethereum network (mainnet)
-     * @internal
      */
     getMainnetProvider(): Provider {
         return this.getAllMainnetProviders()[0]
@@ -176,7 +171,6 @@ export class Ethereum {
 
     /**
      * @returns Array of Ethers.js Providers, connections to the Ethereum network (mainnet)
-     * @internal
      */
     getAllMainnetProviders(): Provider[] {
         if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.rpcs.length) {
@@ -190,7 +184,6 @@ export class Ethereum {
 
     /**
      * @returns Ethers.js Provider, a connection to the Stream Registry Chain
-     * @internal
      */
     getStreamRegistryChainProvider(): Provider {
         return this.getAllStreamRegistryChainProviders()[0]
@@ -198,7 +191,6 @@ export class Ethereum {
 
     /**
      * @returns Array of Ethers.js Providers, connections to the Stream Registry Chain
-     * @internal
      */
     getAllStreamRegistryChainProviders(): Provider[] {
         if (!this.ethereumConfig.streamRegistryChainRPCs || !this.ethereumConfig.streamRegistryChainRPCs.rpcs.length) {
@@ -210,12 +202,10 @@ export class Ethereum {
         })
     }
 
-    /** @internal */
     getMainnetOverrides(): Overrides {
         return this.getOverrides('ethereum', this.getMainnetProvider())
     }
 
-    /** @internal */
     getStreamRegistryOverrides(): Overrides {
         return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs?.name ?? 'polygon', this.getStreamRegistryChainProvider())
     }

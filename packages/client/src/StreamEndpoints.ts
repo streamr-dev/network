@@ -18,12 +18,9 @@ export interface StreamValidationInfo {
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamEndpoints implements Context {
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
 
-    /** @internal */
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistry)) private readonly streamRegistry: StreamRegistry,
