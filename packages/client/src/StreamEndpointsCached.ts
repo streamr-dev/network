@@ -1,6 +1,3 @@
-/**
- * Cached Subset of StreamEndpoints.
- */
 import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { CacheAsyncFn, instanceId } from './utils'

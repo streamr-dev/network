@@ -11,7 +11,6 @@ import { ethers } from 'ethers'
 import { Context } from '../../src/utils/Context'
 import { BrubeckNode } from '../../src/BrubeckNode'
 import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
-import { StreamEndpoints } from '../../src/StreamEndpoints'
 import { StreamEndpointsCached } from '../../src/StreamEndpointsCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
@@ -23,7 +22,6 @@ const Dependencies = {
     Context,
     BrubeckNode,
     StorageNodeRegistry,
-    StreamEndpoints,
     StreamEndpointsCached,
     Resends,
     Publisher,

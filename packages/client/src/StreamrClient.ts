@@ -16,7 +16,6 @@ import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { BrubeckNode } from './BrubeckNode'
 import { DestroySignal } from './DestroySignal'
-import { StreamEndpoints } from './StreamEndpoints'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeMetadata, StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
@@ -56,7 +55,6 @@ export class StreamrClient implements Context {
     private container: DependencyContainer
     private node: BrubeckNode
     private ethereum: Ethereum
-    private streamEndpoints: StreamEndpoints
     private resends: Resends
     private publisher: Publisher
     private subscriber: Subscriber
@@ -75,7 +73,6 @@ export class StreamrClient implements Context {
         this.container = container
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.ethereum = container.resolve<Ethereum>(Ethereum)
-        this.streamEndpoints = container.resolve<StreamEndpoints>(StreamEndpoints)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -252,7 +249,7 @@ export class StreamrClient implements Context {
      * @category Important
      */
     getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
-        return this.streamEndpoints.getOrCreateStream(props)
+        return this.streamRegistry.getOrCreateStream(props)
     }
 
     updateStream(props: StreamProperties): Promise<Stream> {

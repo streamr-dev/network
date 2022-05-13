@@ -10,7 +10,7 @@ import { instanceId, until } from './utils'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
-import { NotFoundError } from './authFetch'
+import { ErrorCode, NotFoundError } from './authFetch'
 import {
     StreamID,
     EthereumAddress,
@@ -110,6 +110,23 @@ export class StreamRegistry implements Context {
                 'streamRegistry',
                 this.graphQLClient
             )
+        }
+    }
+
+    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+        this.debug('getOrCreateStream %o', {
+            props,
+        })
+        try {
+            return await this.getStream(props.id)
+        } catch (err: any) {
+            // If stream does not exist, attempt to create it
+            if (err.errorCode === ErrorCode.NOT_FOUND) {
+                const stream = await this.createStream(props)
+                this.debug('created stream: %s %o', props.id, stream.toObject())
+                return stream
+            }
+            throw err
         }
     }
 
