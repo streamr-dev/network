@@ -49,8 +49,6 @@ export class StreamrClient implements Context {
     readonly debug
     /** @internal */
     onDestroy
-    /** @internal */
-    isDestroyed
 
     private container: DependencyContainer
     private node: BrubeckNode
@@ -90,7 +88,6 @@ export class StreamrClient implements Context {
         this.debug = context.debug
 
         this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
-        this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
     }
 
     // --------------------------------------------------------------------------------------------
