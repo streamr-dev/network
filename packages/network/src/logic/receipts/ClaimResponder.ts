@@ -20,7 +20,7 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
     })
 }
 
-export class ClaimReceiver {
+export class ClaimResponder {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
     private readonly signatureFunctions: SignatureFunctions

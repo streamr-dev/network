@@ -19,7 +19,7 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
-import { ClaimReceiver } from './receipts/ClaimReceiver'
+import { ClaimResponder } from './receipts/ClaimResponder'
 import { ClaimSender } from './receipts/ClaimSender'
 import { DUMMY_SIGNATURE_FUNCTIONS, SignatureFunctions } from './receipts/SignatureFunctions'
 
@@ -95,7 +95,7 @@ export class Node extends EventEmitter {
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
     private readonly claimSender: ClaimSender
-    private readonly claimReceiver: ClaimReceiver
+    private readonly claimResponder: ClaimResponder
 
     constructor(opts: NodeOptions) {
         super()
@@ -117,7 +117,7 @@ export class Node extends EventEmitter {
 
         const signatureFunctions = opts.signatureFunctions || DUMMY_SIGNATURE_FUNCTIONS
         this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode, signatureFunctions)
-        this.claimReceiver = new ClaimReceiver(this.peerInfo, this.nodeToNode, signatureFunctions)
+        this.claimResponder = new ClaimResponder(this.peerInfo, this.nodeToNode, signatureFunctions)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
