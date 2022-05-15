@@ -1,4 +1,4 @@
-import { BucketCollector} from '../../src/logic/receipts/BucketCollector'
+import { BucketCollector } from '../../src/logic/receipts/BucketCollector'
 import {
     MessageID,
     StreamMessage,
@@ -61,7 +61,7 @@ describe(BucketCollector, () => {
     })
 
     it('getting non-existing bucket', () => {
-        expect(collector.getBucket('non-existing-bucket' as BucketID)).toEqual(undefined)
+        expect(collector.getBucket('non-existing-bucket' as BucketID)).toBeUndefined()
     })
 
     it('recording some data and getting the bucket', () => {
@@ -147,5 +147,13 @@ describe(BucketCollector, () => {
             totalPayloadSize: 150,
             lastUpdate: expect.toBeWithin(testCaseStartTime, Date.now() + 1)
         })
+    })
+
+    it('removing a bucket', () => {
+        collector.record(makeMsg(SP1, 'publisherId', 'msgChainId', TIMESTAMP, 40), 'nodeId')
+        const id = makeBucketId('nodeId', SP1, 'publisherId', 'msgChainId', WINDOW_NUMBER)
+        expect(collector.getBucket(id)).toBeDefined()
+        collector.removeBucket(id)
+        expect(collector.getBucket(id)).toBeUndefined()
     })
 })
