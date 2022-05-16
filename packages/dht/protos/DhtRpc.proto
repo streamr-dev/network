@@ -12,6 +12,13 @@ service WebSocketConnector {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
 }
 
+service WebRtcConnector {
+  rpc requestConnection (WebRtcConnectionRequest) returns (NotificationResponse);
+  rpc rtcOffer (RtcOffer) returns (NotificationResponse);
+  rpc rtcAnswer (RtcAnswer) returns (NotificationResponse);
+  rpc iceCandidate (IceCandidate) returns (NotificationResponse);
+}
+
 // Used inside RpcMessage
 
 message ClosestPeersRequest {
@@ -138,6 +145,7 @@ message NotificationResponse {
   bool sent = 1;
 }
 
+// WebSocket
 message WebSocketConnectionRequest {
   PeerDescriptor requester = 1;
   PeerDescriptor target = 2;
@@ -150,4 +158,33 @@ message WebSocketConnectionResponse {
   PeerDescriptor target = 2;
   bool accepted = 3;
   optional string reason = 4;
+}
+
+// WebRTC
+message WebRtcConnectionRequest {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string connectionId = 3;
+}
+
+message RtcOffer {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string description = 3;
+  string connectionId = 4;
+}
+
+message RtcAnswer {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string description = 3;
+  string connectionId = 4;
+}
+
+message IceCandidate {
+  string candidate = 1;
+  string mid = 2;
+  string connectionId = 3;
+  PeerDescriptor requester = 4;
+  PeerDescriptor target = 5;
 }
