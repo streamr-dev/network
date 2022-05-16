@@ -17,9 +17,9 @@ const externals = (env) => {
             'http': 'HTTP',
             'https': 'HTTPS',
             'express': 'Express',
-            'websocket': 'websocket',
-            //'websocket.server': 'WsServer',
-            'Buffer': 'Buffer'
+            //'websocket': 'websocket',
+            //'NodeJsWsServer': 'NodeJsWsServer',
+            //'Buffer': 'Buffer'
         //})
     }
     return externals

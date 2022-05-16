@@ -6,6 +6,8 @@ import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
 import { IConnectionSource, Event as ConnectionSourceEvent } from '../IConnectionSource'
 
+declare class NodeJsWsServer extends WsServer {}
+
 export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     private httpServer: http.Server | null = null
@@ -37,15 +39,23 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 reject('Listen port for WebSocket server not given')
             }
 
-            this.wsServer = new WsServer({
-                httpServer: this.httpServer,
-                // You should not use autoAcceptConnections for production
-                // applications, as it defeats all standard cross-origin protection
-                // facilities built into the protocol and the browser.  You should
-                // *always* verify the connection's origin and decide whether or not
-                // to accept it.
-                autoAcceptConnections: false
-            })
+            if (typeof NodeJsWsServer !== 'undefined') {
+                this.wsServer = new NodeJsWsServer({
+                    httpServer: this.httpServer,
+                    autoAcceptConnections: false
+                })
+            }
+            else {
+                this.wsServer = new WsServer({
+                    httpServer: this.httpServer,
+                    // You should not use autoAcceptConnections for production
+                    // applications, as it defeats all standard cross-origin protection
+                    // facilities built into the protocol and the browser.  You should
+                    // *always* verify the connection's origin and decide whether or not
+                    // to accept it.
+                    autoAcceptConnections: false
+                })
+            }
 
             function originIsAllowed(_uorigin: string) {
                 // put logic here to detect whether the specified origin is allowed.

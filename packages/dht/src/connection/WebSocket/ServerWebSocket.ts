@@ -20,12 +20,12 @@ export class ServerWebSocket extends EventEmitter implements Connection {
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
-            console.log('ServerWebSocket::onMessage')
+            //console.log('ServerWebSocket::onMessage')
             if (message.type === 'utf8') {
-                console.log('Received Message: ' + message.utf8Data)
+                console.log('Received string Message: ' + message.utf8Data)
             }
             else if (message.type === 'binary') {
-                console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
+                //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
                 this.emit(ConnectionEvent.DATA,
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
                         message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
@@ -45,6 +45,7 @@ export class ServerWebSocket extends EventEmitter implements Connection {
 
     send(data: Uint8Array): void {
         if (typeof NodeJsBuffer !== 'undefined') {
+            //console.log('serverwebsocket trying to send '+ JSON.stringify(data))
             this.socket.sendBytes(NodeJsBuffer.from(data))
         }
         else {

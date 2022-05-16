@@ -17,6 +17,7 @@ module.exports = function (config) {
             './test/end-to-end/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
             './test/integration/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
             './test/unit/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
+            
             {
                 pattern: '**/*.js.map',
                 included: false
@@ -37,7 +38,7 @@ module.exports = function (config) {
                         preload: __dirname + '/preload.js',
                         webSecurity: false,
                     },
-                    //show: true
+                    show: false
                 }
             }
         },
