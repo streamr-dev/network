@@ -14,18 +14,18 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { generateId } from '../src/dht/helpers'
 import { Simulator } from '../src/connection/Simulator'
 
-export const createMockConnectionDhtNode = async (stringId: string): Promise<DhtNode> => {
+export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator): Promise<DhtNode> => {
     const id = PeerID.fromString(stringId)
     const peerDescriptor: PeerDescriptor = {
         peerId: id.value,
         type: NodeType.NODEJS
     }
    
-    const mockConnectionLayer = new MockConnectionManager(peerDescriptor)
+    const mockConnectionLayer = new MockConnectionManager(peerDescriptor, simulator)
     
     const node = new DhtNode({peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer})
     await node.start()
-    Simulator.instance().addNode(node)
+    simulator.addNode(node)
     return node
 }
 

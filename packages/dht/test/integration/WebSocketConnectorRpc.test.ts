@@ -5,6 +5,7 @@ import { generateId } from '../../src/dht/helpers'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { MockRegisterWebSocketConnectorRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('WebSocketConnectorRpc', () => {
     let mockConnectionLayer1: ITransport,
@@ -13,6 +14,8 @@ describe('WebSocketConnectorRpc', () => {
         rpcCommunicator2: RpcCommunicator,
         client1: WebSocketConnectorClient,
         client2: WebSocketConnectorClient
+
+    const simulator = new Simulator()
 
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
@@ -25,14 +28,14 @@ describe('WebSocketConnectorRpc', () => {
     }
 
     beforeEach(() => {
-        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
+        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1, simulator)
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1,
             appId: "websocket"
         })
         rpcCommunicator1.registerServerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
 
-        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2)
+        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
             appId: "websocket"

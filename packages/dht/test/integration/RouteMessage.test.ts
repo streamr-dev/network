@@ -4,13 +4,14 @@ import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/transport/ITransport'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/PeerID'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
     let sourceNode: DhtNode
     let destinationNode: DhtNode
     let routerNodes: DhtNode[]
-
+    const simulator = new Simulator()
     let entryPointDescriptor: PeerDescriptor
 
     const entryPointId = '0'
@@ -21,19 +22,19 @@ describe('Route Message With Mock Connections', () => {
     beforeEach(async () => {
         routerNodes = []
 
-        entryPoint = await createMockConnectionDhtNode(entryPointId)
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
 
         entryPointDescriptor = {
             peerId: entryPoint.getNodeId().value,
             type: 0
         }
 
-        sourceNode = await createMockConnectionDhtNode(sourceId)
-        destinationNode = await createMockConnectionDhtNode(destinationId)
+        sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
+        destinationNode = await createMockConnectionDhtNode(destinationId, simulator)
         
         for (let i = 1; i < 50; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator)
             routerNodes.push(node)
         }
         await entryPoint.joinDht(entryPointDescriptor)

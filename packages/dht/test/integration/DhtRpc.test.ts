@@ -7,8 +7,9 @@ import { generateId } from '../../src/dht/helpers'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
+import { Simulator } from '../../src/connection/Simulator'
 
-describe('DhtClientRpcTransport', () => {
+describe('DhtRpc', () => {
     let mockConnectionLayer1: ITransport,
         mockConnectionLayer2: ITransport,
         rpcCommunicator1: RpcCommunicator,
@@ -16,6 +17,7 @@ describe('DhtClientRpcTransport', () => {
         client1: DhtRpcClient,
         client2: DhtRpcClient
 
+    const simulator = new Simulator()
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
         type: 0
@@ -27,13 +29,13 @@ describe('DhtClientRpcTransport', () => {
     }
 
     beforeEach(() => {
-        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1)
+        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1, simulator)
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1,
         })
         rpcCommunicator1.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
 
-        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2)
+        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
         })

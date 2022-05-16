@@ -1,7 +1,8 @@
+import { PeerID } from '../PeerID'
 import { PeerDescriptor } from '../proto/DhtRpc'
 
 export const generateId = (stringId: string): Uint8Array => {
-    return Uint8Array.from(Buffer.from(stringId))
+    return PeerID.fromString(stringId).value
 }
 
 export const nodeFormatPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerDescriptor => {

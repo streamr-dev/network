@@ -6,16 +6,16 @@ import { Simulator } from '../../src/connection/Simulator'
 describe('Mock connection Dht joining with latencies', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
-
+    const simulator = new Simulator()
     let entrypointDescriptor: PeerDescriptor
     
-    Simulator.instance().enableLatencies()
+    simulator.enableLatencies()
 
     beforeEach(async () => {
         nodes = []
 
         const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId)
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
        
         entrypointDescriptor = {
             peerId: entryPoint.getNodeId().value,
@@ -24,7 +24,7 @@ describe('Mock connection Dht joining with latencies', () => {
         
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator)
             nodes.push(node)
         }
     })

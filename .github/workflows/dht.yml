@@ -32,6 +32,7 @@ jobs:
         working-directory: './'
         run: |
           npm run bootstrap-pkg @streamr/dht
+          sudo apt-get install xvfb
       - name: Eslint
         run: npm run eslint
       - name: Unit Tests
@@ -40,3 +41,5 @@ jobs:
         run: npm run test-integration
       - name: End-to-End Tests
         run: npm run test-end-to-end
+      - name: Browser Tests
+        run: xvfb-run --auto-servernum npm run test-browser

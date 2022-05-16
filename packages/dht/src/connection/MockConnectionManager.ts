@@ -4,12 +4,12 @@ import { ITransport } from '../transport/ITransport'
 import { Simulator } from './Simulator'
 
 export class MockConnectionManager extends EventEmitter implements ITransport {
-    constructor(private ownPeerDescriptor: PeerDescriptor) {
+    constructor(private ownPeerDescriptor: PeerDescriptor, private simulator: Simulator) {
         super()
     }
 
     send(peerDescriptor: PeerDescriptor, msg: Message): void {
-        Simulator.instance().send(this.ownPeerDescriptor, peerDescriptor, msg)
+        this.simulator.send(this.ownPeerDescriptor, peerDescriptor, msg)
     }
 
     disconnect(_peerDescriptor: PeerDescriptor): void { }

@@ -4,10 +4,11 @@ import { Message, PeerDescriptor } from "../proto/DhtRpc"
 
 export class Simulator {
 
-    private static singleton: Simulator
+    //private static singleton: Simulator
     private nodes: { [id: string]: DhtNode } = {}
     private latenciesEnabled = false
 
+    /*
     private constructor() { }
 
     public static instance(): Simulator {
@@ -16,6 +17,7 @@ export class Simulator {
         }
         return Simulator.singleton
     }
+    */
 
     addNode(node: DhtNode): void {
         this.nodes[node.getNodeId().toString()] = node
