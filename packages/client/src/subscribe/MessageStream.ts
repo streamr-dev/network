@@ -127,29 +127,16 @@ export async function pullManyToOne<T>(
         outputStream.useLegacyOnMessageHandler(onMessage)
     }
 
-    // Should end if output ended or all inputStreams done.
-    function shouldEnd(): boolean {
-        if (outputStream.isDone()) {
-            return true
-        }
-
-        return inputStreams.every((s) => s.isDone())
-    }
-
-    // End output stream and all inputStreams if should end.
-    function maybeEnd(): void {
-        if (!shouldEnd()) { return }
-        inputStreams.forEach((sub) => {
-            if (!sub.isCleaningUp) {
-                sub.end()
+    // pull inputStreams into output stream
+    let onFinallyCount = 0
+    for (const sub of inputStreams) {
+        sub.onFinally(() => {
+            // eslint-disable-next-line no-plusplus
+            onFinallyCount++
+            if (onFinallyCount === inputStreams.length) {
+                outputStream.endWrite()
             }
         })
-        outputStream.endWrite()
-    }
-
-    // pull inputStreams into output stream
-    for (const sub of inputStreams) {
-        sub.onFinally(() => maybeEnd())
         sub.onError((err) => outputStream.handleError(err))
         outputStream.pull(sub, { endDest: false })
     }
