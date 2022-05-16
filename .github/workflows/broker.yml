@@ -45,7 +45,7 @@ jobs:
 
   docker-push:
     name: Build + Push Docker images
-    needs: [test-unit, test-integration, test-docker]
+    needs: [test-unit]
     runs-on: self-hosted
     # only push for nightly runs and manual triggers
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
