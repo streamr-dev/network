@@ -1,3 +1,4 @@
+import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
 import { createMockConnectionDhtNode } from '../utils'
@@ -6,12 +7,13 @@ describe('Mock IConnection DHT Joining', () => {
     let entryPoint: DhtNode
     let nodes: DhtNode[]
     let entrypointDescriptor: PeerDescriptor
+    const simulator = new Simulator()
 
     beforeEach(async () => {
        
         nodes = []
         const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId)
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
         
         entrypointDescriptor = {
             peerId: entryPoint.getNodeId().value,
@@ -20,7 +22,7 @@ describe('Mock IConnection DHT Joining', () => {
        
         for (let i = 1; i < 100; i++) {
             const nodeId = `${i}`
-            const node = await createMockConnectionDhtNode(nodeId)
+            const node = await createMockConnectionDhtNode(nodeId, simulator)
             nodes.push(node)
         }
     })

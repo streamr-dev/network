@@ -9,6 +9,7 @@ import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { PeerID } from '../../src/PeerID'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('ConnectionManager', () => {
     const mockPeerDescriptor1: PeerDescriptor = {
@@ -19,8 +20,9 @@ describe('ConnectionManager', () => {
         peerId: PeerID.fromString("tester2").value,
         type: NodeType.NODEJS
     }
-    const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1)
-    const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2)
+    const simulator = new Simulator()
+    const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1, simulator)
+    const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2, simulator)
 
     beforeAll(async () => {
 
@@ -175,4 +177,5 @@ describe('ConnectionManager', () => {
 
     afterAll(async () => {
     })
+    
 })

@@ -6,7 +6,10 @@ import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 
+declare let NodeJsBuffer: BufferConstructor
+
 export class ServerWebSocket extends EventEmitter implements IConnection {
+   
     public connectionId: ConnectionID
     private socket: WsConnection
     private remotePeerDescriptor: PeerDescriptor|null = null
@@ -18,12 +21,12 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
-            // console.log('ServerWebSocket::onMessage')
+            //console.log('ServerWebSocket::onMessage')
             if (message.type === 'utf8') {
-                // console.log('Received Message: ' + message.utf8Data)
+                console.log('Received string Message: ' + message.utf8Data)
             }
             else if (message.type === 'binary') {
-                // console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
+                //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
                 this.emit(ConnectionEvent.DATA,
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
                         message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
@@ -42,7 +45,13 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
     }
 
     send(data: Uint8Array): void {
-        this.socket.sendBytes(Buffer.from(data))
+        if (typeof NodeJsBuffer !== 'undefined') {
+            //console.log('serverwebsocket trying to send '+ JSON.stringify(data))
+            this.socket.sendBytes(NodeJsBuffer.from(data))
+        }
+        else {
+            this.socket.sendBytes(Buffer.from(data))
+        }
     }
 
     sendBufferedMessages(): void {

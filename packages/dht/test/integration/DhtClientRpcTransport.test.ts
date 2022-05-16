@@ -5,9 +5,11 @@ import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { getMockPeers } from '../utils'
 import { v4 } from 'uuid'
 import { PeerID } from '../../src/PeerID'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('DhtClientRpcTransport', () => {
 
+    const simulator = new Simulator()
     beforeAll(() => {
 
     })
@@ -17,7 +19,7 @@ describe('DhtClientRpcTransport', () => {
             peerId: PeerID.fromString('jee').value,
             type: 0
         }
-        const mockConnectionManager = new MockConnectionManager(mockDescriptor)
+        const mockConnectionManager = new MockConnectionManager(mockDescriptor, simulator)
         const rpcCommunicator = new RpcCommunicator({
             connectionLayer: mockConnectionManager
         })

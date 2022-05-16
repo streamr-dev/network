@@ -20,7 +20,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
 
     connect(address: string): void {
         this.socket = new WebSocket(address)
-    
+        this.socket.binaryType = 'arraybuffer'
         this.socket.onerror = (error: Error) => {
             //console.log('Error', error)
             this.emit(ConnectionEvent.ERROR, error.name)
