@@ -6,7 +6,10 @@ import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 
+declare let NodeJsBuffer: BufferConstructor
+
 export class ServerWebSocket extends EventEmitter implements Connection {
+   
     public connectionId: ConnectionID
     private socket: WsConnection
     private remotePeerDescriptor: PeerDescriptor|null = null
@@ -41,7 +44,12 @@ export class ServerWebSocket extends EventEmitter implements Connection {
     }
 
     send(data: Uint8Array): void {
-        this.socket.sendBytes(Buffer.from(data))
+        if (typeof NodeJsBuffer !== 'undefined') {
+            this.socket.sendBytes(NodeJsBuffer.from(data))
+        }
+        else {
+            this.socket.sendBytes(Buffer.from(data))
+        }
     }
 
     sendBufferedMessages(): void {

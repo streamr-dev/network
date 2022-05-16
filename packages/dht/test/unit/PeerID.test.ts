@@ -11,7 +11,6 @@ describe('PeerID', () => {
 
         expect(id1.equals(id2)).toBeTruthy()
         expect(id1.toString()).toEqual(id2.toString())
-        
-        //expect(stringId).toEqual(id2.toString())
+        expect(stringId).toEqual(id2.toString())
     })
 })
