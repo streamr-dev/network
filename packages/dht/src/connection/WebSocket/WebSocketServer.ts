@@ -66,13 +66,13 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 if (!originIsAllowed(request.origin)) {
                     // Make sure we only accept requests from an allowed origin
                     request.reject()
-                    console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.')
+                    console.log((new Date()) + ' IConnection from origin ' + request.origin + ' rejected.')
                     return
                 }
 
                 const connection = request.accept(undefined, request.origin)
 
-                console.log((new Date()) + ' Connection accepted.')
+                // console.log((new Date()) + ' IConnection accepted.')
 
                 this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })

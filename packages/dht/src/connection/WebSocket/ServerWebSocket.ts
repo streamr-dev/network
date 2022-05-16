@@ -1,18 +1,19 @@
 /* eslint-disable no-console */
 
 import { EventEmitter } from 'events'
-import { Connection, Event as ConnectionEvent } from '../Connection'
+import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 
 declare let NodeJsBuffer: BufferConstructor
 
-export class ServerWebSocket extends EventEmitter implements Connection {
+export class ServerWebSocket extends EventEmitter implements IConnection {
    
     public connectionId: ConnectionID
     private socket: WsConnection
     private remotePeerDescriptor: PeerDescriptor|null = null
+    connectionType = ConnectionType.WEBSOCKET_SERVER
 
     constructor(socket: WsConnection) {
         super()
@@ -64,7 +65,7 @@ export class ServerWebSocket extends EventEmitter implements Connection {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    get peerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | null {
         return this.remotePeerDescriptor
     }
 
@@ -74,5 +75,9 @@ export class ServerWebSocket extends EventEmitter implements Connection {
 
     stop(): void {
         this.removeAllListeners()
+    }
+
+    getBufferedMessages(): Uint8Array[] {
+        return []
     }
 }

@@ -69,7 +69,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
 
-    private cleanUpHandleForCnnectionManager?: ConnectionManager
+    private cleanUpHandleForConnectionManager?: ConnectionManager
 
     constructor(private config: DhtNodeConfig) {
         super()
@@ -99,21 +99,29 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
         else {
             let connectionManager: ConnectionManager
-
-            if (this.config.peerDescriptor) {
+            if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
                 connectionManager = new ConnectionManager({
-                    webSocketHost: this.config.peerDescriptor.websocket!.ip,
-                    webSocketPort: this.config.peerDescriptor.websocket!.port,
+                    webSocketHost: this.config.peerDescriptor.websocket.ip,
+                    webSocketPort: this.config.peerDescriptor.websocket.port,
                     entryPoints: this.config.entryPoints
                 })
                 this.ownPeerDescriptor = this.config.peerDescriptor
+                connectionManager.createWsConnector(this)
                 await connectionManager.start()
-            }
-            else {
+            } else if (!this.config.webSocketPort) {
+                connectionManager = new ConnectionManager({
+                    entryPoints: this.config.entryPoints
+                })
+                connectionManager.createWsConnector(this)
+                await connectionManager.start()
+                this.ownPeerDescriptor = this.createPeerDescriptor(undefined, this.config.peerIdString)
+            } else {
                 connectionManager = new ConnectionManager({
                     webSocketHost: this.config.webSocketHost!,
-                    webSocketPort: this.config.webSocketPort!, entryPoints: this.config.entryPoints
+                    webSocketPort: this.config.webSocketPort!,
+                    entryPoints: this.config.entryPoints
                 })
+                connectionManager.createWsConnector(this)
                 const result = await connectionManager.start()
                 this.ownPeerDescriptor = this.createPeerDescriptor(result, this.config.peerIdString)
             }
@@ -121,7 +129,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.peerId)
             connectionManager.enableConnectivity(this.ownPeerDescriptor)
 
-            this.cleanUpHandleForCnnectionManager = connectionManager
+            this.cleanUpHandleForConnectionManager = connectionManager
             this.transportLayer = connectionManager
         }
 
@@ -130,7 +138,6 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: this.appId
         })
         this.bindDefaultServerMethods()
-
         this.initKBucket(this.ownPeerId!)
     }
 
@@ -238,25 +245,10 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: appId ? appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
-        this.routeMessage(params)
+        this.routeMessage(params).catch((err) => { console.error(err) })
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {
-        // If destination is in bucket
-        if (this.bucket!.get(params.destinationPeer.peerId)) {
-            const destination = this.bucket!.get(params.destinationPeer.peerId)
-            try {
-                const success = await destination!.routeMessage({
-                    ...params,
-                    previousPeer: this.ownPeerDescriptor!
-                })
-                if (success) {
-                    return
-                }
-            } catch (err) {
-                console.error(err)
-            }
-        }
         let successAcks = 0
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
         const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K)
@@ -424,8 +416,8 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.bucket!.removeAllListeners()
         this.removeAllListeners()
 
-        if (this.cleanUpHandleForCnnectionManager) {
-            await this.cleanUpHandleForCnnectionManager.stop()
+        if (this.cleanUpHandleForConnectionManager) {
+            await this.cleanUpHandleForConnectionManager.stop()
         }
     }
 }

@@ -3,12 +3,22 @@
 import { WebSocketConnector } from "../../src/connection/WebSocket/WebSocketConnector"
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
-import { Connection, Event as ConnectionEvent } from "../../src/connection/Connection"
+import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
+import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { PeerID } from '../../src/PeerID'
+import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { Simulator } from '../../src/connection/Simulator'
 
 describe('WebSocket', () => {
-    
+
+    const id = PeerID.fromString("test")
+    const peerDescriptor: PeerDescriptor = {
+        peerId: id.value,
+        type: NodeType.NODEJS
+    }
     const webSocketServer = new WebSocketServer()
-    const webSocketConnector = new WebSocketConnector()
+    const simulator = new Simulator()
+    const webSocketConnector = new WebSocketConnector(new MockConnectionManager(peerDescriptor, simulator), () => true)
 
     beforeAll(async () => {
         await webSocketServer.start({port: 9999})
@@ -16,7 +26,7 @@ describe('WebSocket', () => {
 
     it('Happy path', (done) => {
             
-        webSocketServer.on(ConnectionSourceEvent.CONNECTED, (serverConnection: Connection) => {
+        webSocketServer.on(ConnectionSourceEvent.CONNECTED, (serverConnection: IConnection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1,2,3,4]))
@@ -36,7 +46,7 @@ describe('WebSocket', () => {
             })
         })
         
-        webSocketConnector.on(ConnectionSourceEvent.CONNECTED, (clientConnection: Connection) => {
+        webSocketConnector.on(ConnectionSourceEvent.CONNECTED, (clientConnection: IConnection) => {
             const time = Date.now()
             console.log('client side setting listeners at ' + time)
             

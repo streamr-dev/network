@@ -7,20 +7,10 @@ const libraryName = pkg.name
 
 const externals = (env) => {
     const externals = {
-        'geoip-lite': 'commonjs geoip-lite',
         'node-datachannel': 'commonjs node-datachannel',
-    //}
-    //if (env === 'test') {
-        // Imported modules to run in the NodeJS sandbox of Electron
-        // Assigned in preload.js
-      //  return Object.assign(externals, {
-            'http': 'HTTP',
-            'https': 'HTTPS',
-            'express': 'Express',
-            //'websocket': 'websocket',
-            //'NodeJsWsServer': 'NodeJsWsServer',
-            //'Buffer': 'Buffer'
-        //})
+        'http': 'HTTP',
+        'https': 'HTTPS',
+        'express': 'Express',
     }
     return externals
 }
@@ -45,14 +35,6 @@ const fallbacks = (env) => {
 const aliases = (env) => {
     const aliases = {
         'process': 'process/browser',
-        /*
-        [path.resolve(__dirname, 'src/connection/webrtc/NodeWebRtcConnection.ts')]:
-            path.resolve(__dirname, 'src/connection/webrtc/BrowserWebRtcConnection.ts'),
-        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsEndpoint.ts')]:
-            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsEndpoint.ts'),
-        [path.resolve(__dirname, 'src/connection/ws/NodeClientWsConnection.ts')]:
-            path.resolve(__dirname, 'src/connection/ws/BrowserClientWsConnection.ts'),
-            */
     }
     return aliases
 }

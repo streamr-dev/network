@@ -40,14 +40,19 @@ export class DhtPeer {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
 
-        const response = await this.dhtClient.getClosestPeers(request, options)
-        const status = await response.status
-        const peers = await response.response
-        if (status.code !== 'OK') {
+        try {
+            const response = await this.dhtClient.getClosestPeers(request, options)
+            const status = await response.status
+            const peers = await response.response
+            if (status.code !== 'OK') {
+                return []
+            }
+            const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
+            return formatted
+        } catch (err) {
             return []
         }
-        const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
-        return formatted
+
     }
 
     async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
@@ -83,9 +88,13 @@ export class DhtPeer {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
-        const response = await this.dhtClient.routeMessage(message, options)
-        const ack = await response.response
-        if (ack.error!.length > 0) {
+        try {
+            const response = await this.dhtClient.routeMessage(message, options)
+            const ack = await response.response
+            if (ack.error!.length > 0) {
+                return false
+            }
+        } catch (err) {
             return false
         }
         return true
