@@ -3,7 +3,6 @@ import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
-import { PeerInfo } from '../../connection/PeerInfo'
 import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { SignatureFunctions } from './SignatureFunctions'
@@ -23,29 +22,40 @@ function createClaim(bucket: Bucket, sender: NodeId): Claim {
     }
 }
 
-const WINDOW_TIMEOUT = WINDOW_LENGTH * 2
-const UPDATE_TIMEOUT = WINDOW_LENGTH * 2
-
-function getCloseTime(bucket: Bucket): number {
-    return Math.max(
-        getWindowStartTime(bucket.getWindowNumber() + 1) + WINDOW_TIMEOUT,
-        bucket.getLastUpdate() + UPDATE_TIMEOUT
-    )
-}
+const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
+const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
 
 const logger = new Logger(module)
+
+export interface ConstructorOptions {
+    myNodeId: NodeId
+    nodeToNode: NodeToNode
+    signatureFunctions: SignatureFunctions
+    windowTimeoutMargin?: number
+    bucketUpdateTimeoutMargin?: number
+}
 
 export class ClaimSender {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
     private readonly signatureFunctions: SignatureFunctions
+    private readonly windowTimeoutMargin: number
+    private readonly bucketUpdateTimeoutMargin: number
     private readonly collector: BucketCollector
     private readonly closeTimeouts = new Map<BucketID, NodeJS.Timeout>() // TODO: browser setTimeout?
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, signatureFunctions: SignatureFunctions) {
-        this.myNodeId = myPeerInfo.peerId
+    constructor({
+        myNodeId,
+        nodeToNode,
+        signatureFunctions,
+        windowTimeoutMargin,
+        bucketUpdateTimeoutMargin
+    }: ConstructorOptions) {
+        this.myNodeId = myNodeId
         this.nodeToNode = nodeToNode
         this.signatureFunctions = signatureFunctions
+        this.windowTimeoutMargin = windowTimeoutMargin || DEFAULT_WINDOW_TIMEOUT_MARGIN
+        this.bucketUpdateTimeoutMargin = bucketUpdateTimeoutMargin || DEFAULT_UPDATE_TIMEOUT_MARGIN
         this.collector = new BucketCollector((bucket) => { // TODO: debounce?
             // TODO: we could use the fact that timeouts can only go later and later, therefore we don't have to
             //  clear them all the time here...
@@ -57,7 +67,7 @@ export class ClaimSender {
                 this.sendReceiptRequest(bucket)
                 this.collector.removeBucket(bucket.getId())
                 logger.info('closed bucket %s', bucket.getId())
-            }, getCloseTime(bucket) - Date.now())
+            }, this.getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
         })
         nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ claim, signature: receiverSignature, refusalCode }, source) => {
@@ -101,5 +111,12 @@ export class ClaimSender {
         })).catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
         })
+    }
+
+    private getCloseTime(bucket: Bucket): number {
+        return Math.max(
+            getWindowStartTime(bucket.getWindowNumber() + 1) + this.windowTimeoutMargin,
+            bucket.getLastUpdate() + this.bucketUpdateTimeoutMargin
+        )
     }
 }

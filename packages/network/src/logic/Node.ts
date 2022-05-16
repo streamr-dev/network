@@ -114,9 +114,12 @@ export class Node extends EventEmitter {
             latencyAverageMs: new AverageMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
-
         const signatureFunctions = opts.signatureFunctions || DUMMY_SIGNATURE_FUNCTIONS
-        this.claimSender = new ClaimSender(this.peerInfo, this.nodeToNode, signatureFunctions)
+        this.claimSender = new ClaimSender({
+            myNodeId: this.peerInfo.peerId,
+            nodeToNode: this.nodeToNode,
+            signatureFunctions
+        })
         this.claimResponder = new ClaimResponder(this.peerInfo, this.nodeToNode, signatureFunctions)
 
         this.streamPartManager = new StreamPartManager()
