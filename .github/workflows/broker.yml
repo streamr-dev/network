@@ -7,6 +7,7 @@ on:
       - "*"
     branches:
       - main
+      - client/v6
   pull_request:
     branches:
       - '*'
