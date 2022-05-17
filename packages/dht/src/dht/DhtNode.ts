@@ -64,6 +64,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private bucket?: KBucket<DhtPeer>
     private neighborList?: SortedContactList
+    private openInternetPeers?: SortedContactList
     private rpcCommunicator?: RpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -156,6 +157,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
         if (msg && msg.websocket) {
             ret.websocket = { ip: msg.websocket!.ip, port: msg.websocket!.port }
+            ret.openInternet = true
         }
 
         return ret
@@ -173,9 +175,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             for (const contact of oldContacts) {
                 const alive = await contact.ping(this.ownPeerDescriptor!)
                 if (!alive) {
-                    this.bucket!.remove(contact.id)
-                    this.bucket!.add(newContact)
-                    this.neighborList!.removeContact(contact.peerId)
+                    this.removeContact(contact.getPeerDescriptor(), true)
+                    this.addNewContact(newContact.getPeerDescriptor())
                     break
                 }
             }
@@ -191,8 +192,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             if (await contact.ping(this.ownPeerDescriptor!)) {
                 this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
             } else {
-                this.bucket!.remove(contact.peerId.value)
-                this.neighborList!.removeContact(contact.peerId)
+                this.removeContact(contact.getPeerDescriptor())
                 this.addClosestContactToBucket()
             }
         })
@@ -200,6 +200,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.K * 4)
+        this.openInternetPeers = new SortedContactList(selfId, this.K * 2)
     }
 
     public getNeighborList(): SortedContactList {
@@ -212,16 +213,12 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public onGetClosestPeers(caller: PeerDescriptor): DhtPeer[] {
         const ret = this.bucket!.closest(caller.peerId, this.K)
-        if (!this.bucket!.get(caller.peerId)) {
-            const contact = new DhtPeer(caller, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-            this.bucket!.add(contact)
-            this.neighborList!.addContact(contact)
-        }
+        this.addNewContact(caller, true)
         return ret
     }
 
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
-        this.updateBucketAndNeighborList(routedMessage.sourcePeer!)
+        this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             const message = Message.fromBinary(routedMessage.message)
@@ -303,9 +300,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         })
         this.neighborList!.addContacts(dhtPeers)
         dhtPeers.forEach((returnedContact) => {
-            if (!this.bucket!.get(returnedContact.id)) {
-                this.bucket!.add(returnedContact)
-            }
+            this.addNewContact(returnedContact.getPeerDescriptor(), true)
         })
     }
 
@@ -331,15 +326,18 @@ export class DhtNode extends EventEmitter implements ITransport {
 
         const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
-
+        const entryPointId = PeerID.fromValue(entryPointDescriptor.peerId)
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return
         }
 
-        this.bucket!.add(entryPoint)
+        this.addNewContact(entryPointDescriptor)
         const closest = this.bucket!.closest(this.ownPeerId!.value, this.ALPHA)
         this.neighborList!.addContacts(closest)
         await this.contactEntrypoints()
+
+        this.neighborList!.setActive(entryPointId)
+        this.openInternetPeers!.setActive(entryPointId)
 
         while (true) {
             let uncontacted = this.neighborList!.getUncontactedContacts(this.ALPHA)
@@ -362,14 +360,31 @@ export class DhtNode extends EventEmitter implements ITransport {
         return this.bucket!.count()
     }
 
-    private updateBucketAndNeighborList(contact: PeerDescriptor): void {
-        const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-        const peerId = PeerID.fromValue(contact.peerId)
-        if (!this.neighborList!.isContact(peerId)) {
-            this.neighborList!.addContact(dhtPeer)
+    private addNewContact(contact: PeerDescriptor, setActive = false): void {
+        if (!this.bucket!.get(contact.peerId)) {
+            const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            const peerId = PeerID.fromValue(contact.peerId)
+            if (!this.neighborList!.isContact(peerId)) {
+                this.neighborList!.addContact(dhtPeer)
+            }
+            if (contact.openInternet && !this.openInternetPeers!.isContact(peerId)) {
+                this.openInternetPeers!.addContact(dhtPeer)
+            }
+            if (setActive) {
+                this.neighborList!.setActive(peerId)
+                this.openInternetPeers!.isActive(peerId)
+            }
+            this.bucket!.add(dhtPeer)
         }
-        this.neighborList!.setActive(peerId)
-        this.bucket!.add(dhtPeer)
+    }
+
+    private removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+        const peerId = PeerID.fromValue(contact.peerId)
+        this.bucket!.remove(peerId.value)
+        this.neighborList!.removeContact(peerId)
+        if (removeFromOpenInternetPeers) {
+            this.openInternetPeers!.removeContact(peerId)
+        }
     }
 
     private bindDefaultServerMethods() {
@@ -395,10 +410,14 @@ export class DhtNode extends EventEmitter implements ITransport {
         return this.bucket!.toArray().map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
     }
 
+    public getOpenInternetPeerDescriptors(): PeerDescriptor[] {
+        return this.openInternetPeers!.getActiveContacts().map((contact) => contact.getPeerDescriptor())
+    }
+
     private addClosestContactToBucket(): void {
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
-            this.bucket!.add(closest)
+            this.addNewContact(closest.getPeerDescriptor())
         }
     }
 
