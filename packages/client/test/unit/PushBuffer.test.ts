@@ -17,8 +17,7 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
-// TODO: fix flaky test in NET-664 / 621
-describe.skip('PushBuffer', () => {
+describe('PushBuffer', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(async () => {
@@ -68,8 +67,7 @@ describe.skip('PushBuffer', () => {
             expect(await pushBuffer.push(expected[1])).toBe(false)
         })
 
-        // TODO: fix flaky test in NET-664
-        it.skip('push resolves false if errored', async () => {
+        it('push resolves false if errored', async () => {
             const err = new Error(counterId('expected error'))
             const pushBuffer = new PushBuffer(3)
             leaksDetector.add('PushBuffer', pushBuffer)
