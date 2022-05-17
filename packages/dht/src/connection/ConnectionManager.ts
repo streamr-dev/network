@@ -10,7 +10,6 @@ import {
 import { IConnection, Event as ConnectionEvents, ConnectionType } from './IConnection'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
-import { Event as ConnectionSourceEvents } from './IConnectionSource'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
 import { Event, ITransport } from '../transport/ITransport'
@@ -102,7 +101,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             if (outgoingConnection) {
 
-                // prepare for receiving a ronnectivity reply
+                // prepare for receiving a connectivity reply
                 outgoingConnection.once(ConnectionEvents.DATA, (bytes) => {
                     const message: Message = Message.fromBinary(bytes)
                     const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
@@ -132,24 +131,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
         // Set up and start websocket server
         if (this.webSocketServer) {
-            this.webSocketServer.on(ConnectionSourceEvents.CONNECTED, (connection: IConnection) => {
-                //this.newConnections[connection.connectionId.toString()] = connection
-                // console.log('server received new connection')
-
-                connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                    // console.log('server received data')
-                    const message = Message.fromBinary(data)
-
-                    if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
-                        // console.log('received connectivity request')
-                        this.handleIncomingConnectivityRequest(connection, ConnectivityRequestMessage.fromBinary(message.body))
-                    }
-
-                    else if (this.ownPeerDescriptor) {
-                        this.onIncomingMessage(connection, message)
-                    }
-                })
-            })
+            this.webSocketServer.bindListeners(
+                this.handleIncomingConnectivityRequest.bind(this),
+                this.onIncomingMessage.bind(this)
+            )
 
             await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
 
@@ -185,32 +170,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     enableConnectivity(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
+        this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
+        if (this.webSocketServer) {
+            this.webSocketServer.setOwnPeerDescriptor(ownPeerDescriptor)
+        }
 
-        // set up normal listeners that send a handshake for new connections from webSocketConnector
-        this.webSocketConnector!.on(ConnectionSourceEvents.CONNECTED, (connection: IConnection) => {
-            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                const message = Message.fromBinary(data)
-                if (this.ownPeerDescriptor) {
-                    this.onIncomingMessage(connection, message)
-                }
-            })
-
-            if (this.ownPeerDescriptor) {
-                const outgoingHandshake: HandshakeMessage = {
-                    sourceId: this.ownPeerDescriptor.peerId,
-                    protocolVersion: this.PROTOCOL_VERSION,
-                    peerDescriptor: this.ownPeerDescriptor
-                }
-
-                const msg: Message = {
-                    messageType: MessageType.HANDSHAKE, messageId: 'xyz',
-                    body: HandshakeMessage.toBinary(outgoingHandshake)
-                }
-
-                connection.send(Message.toBinary(msg))
-                connection.sendBufferedMessages()
-            }
-        })
+        this.webSocketConnector!.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
     }
 
     onIncomingMessage = (connection: IConnection, message: Message): void => {

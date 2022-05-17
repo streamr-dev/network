@@ -1,17 +1,24 @@
 import { EventEmitter } from 'events'
-import { IConnectionSource, Event as ConnectionSourceEvent } from '../IConnectionSource'
+import {
+    IConnectionSource,
+    Event as ConnectionSourceEvent,
+    Event as ConnectionSourceEvents
+} from '../IConnectionSource'
 import { ClientWebSocket } from './ClientWebSocket'
-import { Event as ConnectionEvent, IConnection } from '../IConnection'
+import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
 import { Event as RpcTransportEvent, ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { createRemoteWebSocketConnectorServer, RemoteWebSocketConnector } from './RemoteWebSocketConnector'
-import { PeerDescriptor } from '../../proto/DhtRpc'
+import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
 import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { DeferredConnection } from '../DeferredConnection'
+import { TODO } from '../../types'
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource {
     private rpcCommunicator: RpcCommunicator
     private transportListener: any = null
+    private ownPeerDescriptor: PeerDescriptor | null = null
+
     constructor(private rpcTransport: ITransport, fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean) {
         super()
         this.rpcCommunicator = new RpcCommunicator({
@@ -115,6 +122,38 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
         return new DeferredConnection(targetPeerDescriptor)
+    }
+
+    setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.ownPeerDescriptor = peerDescriptor
+    }
+
+    bindListeners(incomingMessageHandler: TODO, protocolVersion: string): void {
+        // set up normal listeners that send a handshake for new connections from webSocketConnector
+        this.on(ConnectionSourceEvents.CONNECTED, (connection: IConnection) => {
+            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
+                const message = Message.fromBinary(data)
+                if (this.ownPeerDescriptor) {
+                    incomingMessageHandler(connection, message)
+                }
+            })
+
+            if (this.ownPeerDescriptor) {
+                const outgoingHandshake: HandshakeMessage = {
+                    sourceId: this.ownPeerDescriptor.peerId,
+                    protocolVersion: protocolVersion,
+                    peerDescriptor: this.ownPeerDescriptor
+                }
+
+                const msg: Message = {
+                    messageType: MessageType.HANDSHAKE, messageId: 'xyz',
+                    body: HandshakeMessage.toBinary(outgoingHandshake)
+                }
+
+                connection.send(Message.toBinary(msg))
+                connection.sendBufferedMessages()
+            }
+        })
     }
 
     stop(): void {
