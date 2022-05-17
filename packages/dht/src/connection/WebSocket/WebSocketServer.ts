@@ -4,7 +4,13 @@ import * as http from 'http'
 import { EventEmitter } from 'events'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
-import { IConnectionSource, Event as ConnectionSourceEvent } from '../IConnectionSource'
+import {
+    IConnectionSource,
+    Event as ConnectionSourceEvent,
+} from '../IConnectionSource'
+import { TODO } from '../../types'
+import { Event as ConnectionEvents, IConnection } from '../IConnection'
+import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
 
 declare class NodeJsWsServer extends WsServer {}
 
@@ -12,6 +18,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     private httpServer: http.Server | null = null
     private wsServer: WsServer | null = null
+    private ownPeerDescriptor: PeerDescriptor | null = null
 
     start({ host, port }: { host?: string; port?: number } = {}): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -77,6 +84,31 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })
         })
+    }
+
+    bindListeners(connectivityRequestHandler: TODO, incomingMessageHandler: TODO): void {
+        this.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
+            //this.newConnections[connection.connectionId.toString()] = connection
+            // console.log('server received new connection')
+
+            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
+                // console.log('server received data')
+                const message = Message.fromBinary(data)
+
+                if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
+                    // console.log('received connectivity request')
+                    connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
+                }
+
+                else if (this.ownPeerDescriptor) {
+                    incomingMessageHandler(connection, message)
+                }
+            })
+        })
+    }
+
+    setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.ownPeerDescriptor = peerDescriptor
     }
 
     stop(): Promise<void> {
