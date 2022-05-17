@@ -5,7 +5,7 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
-import { SignatureFunctions } from './SignatureFunctions'
+import { Signers } from './SignatureFunctions'
 
 const logger = new Logger(module)
 
@@ -22,13 +22,13 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
 export class ReceiptResponder {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
-    private readonly signatureFunctions: SignatureFunctions
+    private readonly signers: Signers
     private readonly collector: BucketCollector
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, signatureFunctions: SignatureFunctions) {
+    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, signers: Signers) {
         this.myNodeId = myPeerInfo.peerId
         this.nodeToNode = nodeToNode
-        this.signatureFunctions = signatureFunctions
+        this.signers = signers
         this.collector = new BucketCollector()
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
             this.collector.record(broadcastMessage.streamMessage, nodeId)
@@ -42,7 +42,7 @@ export class ReceiptResponder {
             this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.SENDER_IDENTITY_MISMATCH)
             return
         }
-        if (!this.signatureFunctions.validateClaim(claim)) {
+        if (!this.signers.claim.validate(claim)) {
             logger.warn('signature validation failed for claim %j', claim)
             this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.INVALID_SIGNATURE)
             return
@@ -73,7 +73,7 @@ export class ReceiptResponder {
             requestId,
             receipt: {
                 claim,
-                signature: this.signatureFunctions.responderSign(claim)
+                signature: this.signers.claim.sign(claim)
             }
         })).catch((e) => {
             logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', claim.sender, e)

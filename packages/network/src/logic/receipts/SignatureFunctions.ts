@@ -1,31 +1,38 @@
 import crypto from 'crypto'
-import { BaseClaim, Claim, Receipt } from 'streamr-client-protocol'
+import { Claim, Receipt } from 'streamr-client-protocol'
 
 // Simplistic placeholder (dummy) functions for "cryptographically" "signing" messages
-export const DUMMY_SIGNATURE_FUNCTIONS: SignatureFunctions = Object.freeze({
-    requesterSign(baseClaim: BaseClaim): string {
-        return crypto
-            .createHash('md5')
-            .update(JSON.stringify(baseClaim))
-            .digest('hex')
+export const DUMMY_SIGNATURE_FUNCTIONS: Signers = Object.freeze({
+    claim: {
+        sign(claim: Omit<Claim, 'signature'>) {
+            return crypto
+                .createHash('md5')
+                .update(JSON.stringify(claim))
+                .digest('hex')
+        },
+        validate({ signature, ...rest }: Claim)  {
+            return DUMMY_SIGNATURE_FUNCTIONS.claim.sign(rest) === signature
+        }
     },
-    validateClaim({ signature, ...baseClaim }: Claim): boolean {
-        return DUMMY_SIGNATURE_FUNCTIONS.requesterSign(baseClaim) === signature
-    },
-    responderSign(claim: Claim): string {
-        return crypto
-            .createHash('md5')
-            .update(JSON.stringify(claim))
-            .digest('hex')
-    },
-    validateReceipt(receipt: Receipt): boolean {
-        return DUMMY_SIGNATURE_FUNCTIONS.responderSign(receipt.claim) === receipt.claim.receiver
+    receipt: {
+        sign(receipt: Omit<Receipt, 'signature'>) {
+            return crypto
+                .createHash('md5')
+                .update(JSON.stringify(receipt))
+                .digest('hex')
+        },
+        validate({ signature, ...rest }: Receipt) {
+            return DUMMY_SIGNATURE_FUNCTIONS.receipt.sign(rest) === signature
+        }
     }
 })
 
-export interface SignatureFunctions {
-    requesterSign(claim: BaseClaim): string
-    validateClaim(claim: Claim): boolean
-    responderSign(claim: Claim): string
-    validateReceipt(receipt: Receipt): boolean
+export interface SignatureFunctions<T extends { signature: string }> {
+    sign(item: Omit<T, 'signature'>): string
+    validate(item: T): boolean
+}
+
+export interface Signers {
+    claim: SignatureFunctions<Claim>,
+    receipt: SignatureFunctions<Receipt>
 }

@@ -21,7 +21,7 @@ import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 import { ReceiptResponder } from './receipts/ReceiptResponder'
 import { ReceiptRequester } from './receipts/ReceiptRequester'
-import { DUMMY_SIGNATURE_FUNCTIONS, SignatureFunctions } from './receipts/SignatureFunctions'
+import { DUMMY_SIGNATURE_FUNCTIONS, SignatureFunctions, Signers } from './receipts/SignatureFunctions'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -44,7 +44,7 @@ export interface NodeOptions extends TrackerManagerOptions {
         nodeToTracker: NodeToTracker
     }
     peerInfo: PeerInfo
-    signatureFunctions?: SignatureFunctions
+    signers?: Signers
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
@@ -114,13 +114,13 @@ export class Node extends EventEmitter {
             latencyAverageMs: new AverageMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
-        const signatureFunctions = opts.signatureFunctions || DUMMY_SIGNATURE_FUNCTIONS
+        const signers = opts.signers || DUMMY_SIGNATURE_FUNCTIONS
         this.receiptRequester = new ReceiptRequester({
             myNodeId: this.peerInfo.peerId,
             nodeToNode: this.nodeToNode,
-            signatureFunctions
+            signers
         })
-        this.receiptResponder = new ReceiptResponder(this.peerInfo, this.nodeToNode, signatureFunctions)
+        this.receiptResponder = new ReceiptResponder(this.peerInfo, this.nodeToNode, signers)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({

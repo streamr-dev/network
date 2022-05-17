@@ -3,9 +3,9 @@ import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
-import { BaseClaim, Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
-import { SignatureFunctions } from './SignatureFunctions'
+import { Signers } from './SignatureFunctions'
 
 const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
 const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
@@ -15,7 +15,7 @@ const logger = new Logger(module)
 export interface ConstructorOptions {
     myNodeId: NodeId
     nodeToNode: NodeToNode
-    signatureFunctions: SignatureFunctions
+    signers: Signers
     windowTimeoutMargin?: number
     bucketUpdateTimeoutMargin?: number
 }
@@ -23,7 +23,7 @@ export interface ConstructorOptions {
 export class ReceiptRequester {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
-    private readonly signatureFunctions: SignatureFunctions
+    private readonly signers: Signers
     private readonly windowTimeoutMargin: number
     private readonly bucketUpdateTimeoutMargin: number
     private readonly collector: BucketCollector
@@ -32,13 +32,13 @@ export class ReceiptRequester {
     constructor({
         myNodeId,
         nodeToNode,
-        signatureFunctions,
+        signers,
         windowTimeoutMargin,
         bucketUpdateTimeoutMargin
     }: ConstructorOptions) {
         this.myNodeId = myNodeId
         this.nodeToNode = nodeToNode
-        this.signatureFunctions = signatureFunctions
+        this.signers = signers
         this.windowTimeoutMargin = windowTimeoutMargin || DEFAULT_WINDOW_TIMEOUT_MARGIN
         this.bucketUpdateTimeoutMargin = bucketUpdateTimeoutMargin || DEFAULT_UPDATE_TIMEOUT_MARGIN
         this.collector = new BucketCollector((bucket) => { // TODO: debounce?
@@ -67,7 +67,7 @@ export class ReceiptRequester {
                 // TODO: cut connection?
                 return
             }
-            if (!this.signatureFunctions.validateReceipt(receipt!)) {
+            if (!this.signers.receipt.validate(receipt!)) {
                 logger.warn('receipt from %s has invalid signature', source)
                 // TODO: cut connection?
                 return
@@ -105,7 +105,7 @@ export class ReceiptRequester {
 
     private createClaim(bucket: Bucket): Claim {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
-        const baseClaim: BaseClaim = {
+        const claim: Omit<Claim, 'signature'> = {
             streamId,
             streamPartition,
             publisherId: bucket.getPublisherId(),
@@ -117,8 +117,8 @@ export class ReceiptRequester {
             sender: this.myNodeId
         }
         return {
-            ...baseClaim,
-            signature: this.signatureFunctions.requesterSign(baseClaim)
+            ...claim,
+            signature: this.signers.claim.sign(claim)
         }
     }
 }

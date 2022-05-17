@@ -18,8 +18,6 @@ export interface Claim {
     signature: string
 }
 
-export type BaseClaim = Omit<Claim, 'signature'>
-
 export interface Options extends ControlMessageOptions {
     claim: Claim
 }
