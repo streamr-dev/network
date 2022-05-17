@@ -11,7 +11,7 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 
-import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
+import { pOrderedResolve, instanceId, CacheFn } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { StreamEndpointsCached } from './StreamEndpointsCached'
@@ -60,14 +60,13 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
         this.doValidation = super.validate.bind(this)
     }
 
-    private cachedVerify = CacheAsyncFn(async (address: EthereumAddress, payload: string, signature: string) => {
+    private cachedVerify = CacheFn( (address: EthereumAddress, payload: string, signature: string) => {
         if (this.isStopped) { return true }
         return SigningUtil.verify(address, payload, signature)
     }, {
         // forcibly use small cache otherwise keeps n serialized messages in memory
         ...this.cacheOptions,
         maxSize: 100,
-        cachePromiseRejection: true,
         cacheKey: (args) => args.join('|'),
     })
 

@@ -25,7 +25,7 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
 }
 
 export default class SigningUtil {
-    static async sign(payload: string, privateKey: string): Promise<string> {
+    static sign(payload: string, privateKey: string): string {
         const payloadBuffer = Buffer.from(payload, 'utf-8')
         const privateKeyBuffer = Buffer.from(privateKey, 'hex')
 
@@ -36,11 +36,11 @@ export default class SigningUtil {
         return '0x' + result.toString('hex')
     }
 
-    static async recover(
+    static recover(
         signature: string,
         payload: string,
         publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
-    ): Promise<string> {
+    ): string {
         const signatureBuffer = Buffer.from(signature.startsWith('0x') ? signature.substring(2) : signature, 'hex') // remove '0x' prefix
         const payloadBuffer = Buffer.from(payload, 'utf-8')
 
@@ -55,9 +55,9 @@ export default class SigningUtil {
         return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
     }
 
-    static async verify(address: EthereumAddress, payload: string, signature: string): Promise<boolean> {
+    static verify(address: EthereumAddress, payload: string, signature: string): boolean {
         try {
-            const recoveredAddress = await SigningUtil.recover(signature, payload)
+            const recoveredAddress = SigningUtil.recover(signature, payload)
             return recoveredAddress.toLowerCase() === address.toLowerCase()
         } catch (err) {
             return false
