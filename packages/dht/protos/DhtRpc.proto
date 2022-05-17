@@ -45,6 +45,7 @@ message PeerDescriptor {
   ConnectivityMethod udp = 3;
   ConnectivityMethod tcp = 4;
   ConnectivityMethod websocket = 5;
+  optional bool openInternet = 6;
 }
 
 message ConnectivityMethod {
