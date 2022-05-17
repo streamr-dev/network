@@ -27,7 +27,7 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
 export default class SigningUtil {
     static sign(payload: string, privateKey: string): string {
         const payloadBuffer = Buffer.from(payload, 'utf-8')
-        const privateKeyBuffer = Buffer.from(privateKey, 'hex')
+        const privateKeyBuffer = Buffer.from(SigningUtil.normalize(privateKey), 'hex')
 
         const msgHash = hash(payloadBuffer)
         const sigObj = secp256k1.ecdsaSign(msgHash, privateKeyBuffer)
@@ -41,7 +41,7 @@ export default class SigningUtil {
         payload: string,
         publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
     ): string {
-        const signatureBuffer = Buffer.from(signature.startsWith('0x') ? signature.substring(2) : signature, 'hex') // remove '0x' prefix
+        const signatureBuffer = Buffer.from(SigningUtil.normalize(signature)) // remove '0x' prefix
         const payloadBuffer = Buffer.from(payload, 'utf-8')
 
         if (!publicKeyBuffer) {
@@ -62,5 +62,9 @@ export default class SigningUtil {
         } catch (err) {
             return false
         }
+    }
+
+    private static normalize(privateKeyOrAddress: string): string {
+        return privateKeyOrAddress.startsWith('0x') ? privateKeyOrAddress.substring(2) : privateKeyOrAddress
     }
 }
