@@ -16,7 +16,7 @@ export interface Options {
     getStream: (streamId: StreamID) => Promise<StreamMetadata>
     isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
-    verify?: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
+    verify?: (address: EthereumAddress, payload: string, signature: string) => boolean
 }
 
 /**
@@ -35,14 +35,14 @@ export default class StreamMessageValidator {
     readonly getStream: (streamId: StreamID) => Promise<StreamMetadata>
     readonly isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
     readonly isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>
-    readonly verify: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
+    readonly verify: (address: EthereumAddress, payload: string, signature: string) => boolean
 
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
      *        The included fields should be at least: { partitions }
      * @param isPublisher async function(address, streamId): returns true if address is a permitted publisher on streamId
      * @param isSubscriber async function(address, streamId): returns true if address is a permitted subscriber on streamId
-     * @param verify async function(address, payload, signature): returns true if the address and payload match the signature.
+     * @param verify function(address, payload, signature): returns true if the address and payload match the signature.
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
     constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify }: Options) {
@@ -57,7 +57,7 @@ export default class StreamMessageValidator {
         getStream: (streamId: StreamID) => Promise<StreamMetadata>,
         isPublisher: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
         isSubscriber: (address: EthereumAddress, streamId: StreamID) => Promise<boolean>,
-        verify: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
+        verify: (address: EthereumAddress, payload: string, signature: string) => boolean
     ): void | never {
         if (typeof getStream !== 'function') {
             throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
@@ -112,7 +112,7 @@ export default class StreamMessageValidator {
      */
     static async assertSignatureIsValid(
         streamMessage: StreamMessage,
-        verifyFn: (address: EthereumAddress, payload: string, signature: string) => Promise<boolean>
+        verifyFn: (address: EthereumAddress, payload: string, signature: string) => boolean
     ): Promise<void> {
         const payload = streamMessage.getPayloadToSign()
 
@@ -120,7 +120,7 @@ export default class StreamMessageValidator {
             || streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
             let success
             try {
-                success = await verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
+                success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
             } catch (err) {
                 throw new StreamMessageError(`An error occurred during address recovery from signature: ${err}`, streamMessage)
             }
