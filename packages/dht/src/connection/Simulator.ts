@@ -31,6 +31,7 @@ export class Simulator {
             , Math.random() * (250 - 5) + 5)
         }
         else {
+            console.log(PeerID.fromValue(targetDescriptor.peerId).toString())
             this.nodes[PeerID.fromValue(targetDescriptor.peerId).toString()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
         }
     }
