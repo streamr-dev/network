@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { wait } from 'streamr-test-utils'
 import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { counterId } from '../../src/utils'
@@ -17,7 +18,9 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
-describe('PushBuffer', () => {
+for (let k = 0; k < 100; k++) {
+
+describe(`PushBuffer test${k}`, () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(async () => {
@@ -390,3 +393,5 @@ describe('PushBuffer', () => {
         })
     })
 })
+
+}
