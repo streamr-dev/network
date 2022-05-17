@@ -41,7 +41,7 @@ export default class SigningUtil {
         payload: string,
         publicKeyBuffer: Buffer | Uint8Array | undefined = undefined
     ): string {
-        const signatureBuffer = Buffer.from(SigningUtil.normalize(signature)) // remove '0x' prefix
+        const signatureBuffer = Buffer.from(SigningUtil.normalize(signature), 'hex') // remove '0x' prefix
         const payloadBuffer = Buffer.from(payload, 'utf-8')
 
         if (!publicKeyBuffer) {
