@@ -19,8 +19,8 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
-import { ClaimResponder } from './receipts/ClaimResponder'
-import { ClaimSender } from './receipts/ClaimSender'
+import { ReceiptResponder } from './receipts/ReceiptResponder'
+import { ReceiptRequester } from './receipts/ReceiptRequester'
 import { DUMMY_SIGNATURE_FUNCTIONS, SignatureFunctions } from './receipts/SignatureFunctions'
 
 export enum Event {
@@ -94,8 +94,8 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
-    private readonly claimSender: ClaimSender
-    private readonly claimResponder: ClaimResponder
+    private readonly receiptRequester: ReceiptRequester
+    private readonly receiptResponder: ReceiptResponder
 
     constructor(opts: NodeOptions) {
         super()
@@ -115,12 +115,12 @@ export class Node extends EventEmitter {
         }
         this.metricsContext.addMetrics('node', this.metrics)
         const signatureFunctions = opts.signatureFunctions || DUMMY_SIGNATURE_FUNCTIONS
-        this.claimSender = new ClaimSender({
+        this.receiptRequester = new ReceiptRequester({
             myNodeId: this.peerInfo.peerId,
             nodeToNode: this.nodeToNode,
             signatureFunctions
         })
-        this.claimResponder = new ClaimResponder(this.peerInfo, this.nodeToNode, signatureFunctions)
+        this.receiptResponder = new ReceiptResponder(this.peerInfo, this.nodeToNode, signatureFunctions)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
@@ -135,7 +135,7 @@ export class Node extends EventEmitter {
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
-                    this.claimSender.recordMessageSent(neighborId, streamMessage)
+                    this.receiptRequester.recordMessageSent(neighborId, streamMessage)
                     this.consecutiveDeliveryFailures[neighborId] = 0
                 } catch (e) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()
@@ -347,7 +347,7 @@ export class Node extends EventEmitter {
     stop(): Promise<unknown> {
         this.proxyStreamConnectionManager.stop()
         this.disconnectionManager.stop()
-        this.claimSender.stop()
+        this.receiptRequester.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
     }

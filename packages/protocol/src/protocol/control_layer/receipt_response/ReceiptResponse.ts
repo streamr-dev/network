@@ -1,14 +1,12 @@
 import {
     validateIsNotEmptyString,
-    validateIsNotNullOrUndefined,
     validateIsOneOf
 } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { Claim } from '../receipt_request/ReceiptRequest'
 
 export interface Options extends ControlMessageOptions {
-    claim: Claim
-    signature?: string | null
+    receipt?: Receipt | null
     refusalCode?: RefusalCode | null
 }
 
@@ -19,27 +17,26 @@ export enum RefusalCode {
     DISAGREEMENT = 'DISAGREEMENT',
 }
 
+export interface Receipt {
+    claim: Claim
+    signature: string
+}
+
 export default class ReceiptResponse extends ControlMessage {
-    readonly claim: Claim
-    readonly signature: string | null
+    readonly receipt: Receipt | null
     readonly refusalCode: RefusalCode | null
 
     constructor({
         version = ControlMessage.LATEST_VERSION,
         requestId,
-        claim,
-        signature = null,
+        receipt = null,
         refusalCode = null
     }: Options) {
         super(version, ControlMessage.TYPES.ReceiptResponse, requestId)
-
-        validateIsNotNullOrUndefined('claim', claim)
-        validateIsNotEmptyString('signature', signature, true)
         validateIsNotEmptyString('refusalCode', refusalCode, true)
         validateIsOneOf('refusalCode', refusalCode, Object.values(RefusalCode), true)
 
-        this.claim = claim
-        this.signature = signature
+        this.receipt = receipt
         this.refusalCode = refusalCode
     }
 }

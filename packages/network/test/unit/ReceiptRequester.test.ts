@@ -1,18 +1,18 @@
-import { ClaimSender } from '../../src/logic/receipts/ClaimSender'
+import { ReceiptRequester } from '../../src/logic/receipts/ReceiptRequester'
 import { DUMMY_SIGNATURE_FUNCTIONS } from '../../src/logic/receipts/SignatureFunctions'
 import EventEmitter from 'eventemitter3'
 import { NodeId } from '../../src/identifiers'
 import { ControlMessage } from 'streamr-client-protocol'
 import { NodeToNode } from '../../src/protocol/NodeToNode'
 
-describe(ClaimSender, () => {
+describe(ReceiptRequester, () => {
     let nodeToNode: EventEmitter & { send: jest.Mock<any, [NodeId, ControlMessage]> }
-    let sender: ClaimSender
+    let requester: ReceiptRequester
 
     beforeEach(() => {
         nodeToNode = new class extends EventEmitter {} as any
         nodeToNode.send = jest.fn()
-        sender = new ClaimSender({
+        requester = new ReceiptRequester({
             myNodeId: 'nodeId',
             nodeToNode: nodeToNode as unknown as NodeToNode,
             signatureFunctions: DUMMY_SIGNATURE_FUNCTIONS,
@@ -20,6 +20,4 @@ describe(ClaimSender, () => {
             bucketUpdateTimeoutMargin: 10
         })
     })
-
-    it('')
 })

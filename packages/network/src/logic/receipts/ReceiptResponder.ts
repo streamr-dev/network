@@ -5,7 +5,6 @@ import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
-import { v4 as uuidv4 } from 'uuid'
 import { SignatureFunctions } from './SignatureFunctions'
 
 const logger = new Logger(module)
@@ -20,7 +19,7 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
     })
 }
 
-export class ClaimResponder {
+export class ReceiptResponder {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
     private readonly signatureFunctions: SignatureFunctions
@@ -37,52 +36,53 @@ export class ClaimResponder {
         nodeToNode.on(NodeToNodeEvent.RECEIPT_REQUEST_RECEIVED, this.onReceiptRequest.bind(this))
     }
 
-    private onReceiptRequest({ claim, signature: senderSignature }: ReceiptRequest, source: NodeId): void {
+    private onReceiptRequest({ requestId, claim }: ReceiptRequest, source: NodeId): void {
         if (source !== claim.sender) {
             logger.warn('identity mismatch: source of message !== claim.sender')
-            this.sendRefusalReceiptResponse(claim, RefusalCode.SENDER_IDENTITY_MISMATCH)
+            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.SENDER_IDENTITY_MISMATCH)
             return
         }
-        if (!this.signatureFunctions.validateClaim(claim, senderSignature)) {
-            logger.warn('signature validation failed for %j', claim)
-            this.sendRefusalReceiptResponse(claim, RefusalCode.INVALID_SIGNATURE)
+        if (!this.signatureFunctions.validateClaim(claim)) {
+            logger.warn('signature validation failed for claim %j', claim)
+            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.INVALID_SIGNATURE)
             return
         }
         const bucket = this.collector.getBucket(getBucketIdFromClaim(claim))
         if (bucket === undefined) {
-            logger.warn('bucket not found for %j', claim)
-            this.sendRefusalReceiptResponse(claim, RefusalCode.BUCKET_NOT_FOUND)
+            logger.warn('bucket not found for claim %j', claim)
+            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.BUCKET_NOT_FOUND)
             return
         }
         // TODO: inequality instead?
         if (bucket.getMessageCount() !== claim.messageCount || bucket.getTotalPayloadSize() !== claim.totalPayloadSize) {
-            logger.warn("I disagree with %j (msgCount=%d, totalPayloadSize=%d)",
+            logger.warn("I disagree with claim %j (msgCount=%d, totalPayloadSize=%d)",
                 claim,
                 bucket.getMessageCount(),
                 bucket.getTotalPayloadSize()
             )
-            this.sendRefusalReceiptResponse(claim, RefusalCode.DISAGREEMENT)
+            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.DISAGREEMENT)
             return
         }
 
-        logger.info("I agree with %j", claim)
-        this.sendAgreementReceiptResponse(claim, senderSignature)
+        logger.info("I agree with claim %j", claim)
+        this.sendAgreementReceiptResponse(claim, requestId)
     }
 
-    private sendAgreementReceiptResponse(claim: Claim, senderSignature: string): void {
+    private sendAgreementReceiptResponse(claim: Claim, requestId: string): void {
         this.nodeToNode.send(claim.sender, new ReceiptResponse({
-            requestId: uuidv4(),
-            claim,
-            signature: this.signatureFunctions.signSignedClaim(claim, senderSignature)
+            requestId,
+            receipt: {
+                claim,
+                signature: this.signatureFunctions.responderSign(claim)
+            }
         })).catch((e) => {
             logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', claim.sender, e)
         })
     }
 
-    private sendRefusalReceiptResponse(claim: Claim, refusalCode: RefusalCode): void {
+    private sendRefusalReceiptResponse(claim: Claim, requestId: string, refusalCode: RefusalCode): void {
         this.nodeToNode.send(claim.sender, new ReceiptResponse({
-            requestId: uuidv4(),
-            claim,
+            requestId,
             refusalCode
         })).catch((e) => {
             logger.warn('failed to send ReceiptResponse(refusal) to %s, reason: %s', claim.sender, e)

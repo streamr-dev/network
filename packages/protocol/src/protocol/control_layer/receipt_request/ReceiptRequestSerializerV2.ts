@@ -12,8 +12,7 @@ export default class ReceiptRequestSerializerV2 extends Serializer<ReceiptReques
             VERSION,
             ControlMessage.TYPES.ReceiptRequest,
             receiptRequest.requestId,
-            receiptRequest.claim,
-            receiptRequest.signature,
+            receiptRequest.claim
         ]
     }
 
@@ -22,15 +21,13 @@ export default class ReceiptRequestSerializerV2 extends Serializer<ReceiptReques
             version,
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
             requestId,
-            claim,
-            signature,
+            claim
         ] = arr
 
         return new ReceiptRequest({
             version,
             requestId,
-            claim,
-            signature
+            claim
         })
     }
 }

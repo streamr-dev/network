@@ -3,8 +3,8 @@ import ErrorResponse from "./error_response/ErrorResponse"
 import { ErrorCode } from "./error_response/ErrorResponse"
 import ProxyConnectionRequest from "./proxy_connection_request/ProxyConnectionRequest"
 import ProxyConnectionResponse from "./proxy_connection_response/ProxyConnectionResponse"
-import ReceiptRequest, { Claim } from "./receipt_request/ReceiptRequest"
-import ReceiptResponse, { RefusalCode } from "./receipt_response/ReceiptResponse"
+import ReceiptRequest, { BaseClaim, Claim } from "./receipt_request/ReceiptRequest"
+import ReceiptResponse, { Receipt, RefusalCode } from "./receipt_response/ReceiptResponse"
 import UnsubscribeRequest from "./unsubscribe_request/UnsubscribeRequest"
 import ControlMessage from "./ControlMessage"
 import { ControlMessageType } from "./ControlMessage"
@@ -29,6 +29,8 @@ export {
     ProxyConnectionResponse,
     ReceiptRequest,
     ReceiptResponse,
+    Receipt,
+    BaseClaim,
     Claim,
     RefusalCode
 }

@@ -1,31 +1,31 @@
 import crypto from 'crypto'
-import { Claim } from 'streamr-client-protocol'
+import { BaseClaim, Claim, Receipt } from 'streamr-client-protocol'
 
 // Simplistic placeholder (dummy) functions for "cryptographically" "signing" messages
 export const DUMMY_SIGNATURE_FUNCTIONS: SignatureFunctions = Object.freeze({
-    signClaim(claim: Claim): string {
+    requesterSign(baseClaim: BaseClaim): string {
+        return crypto
+            .createHash('md5')
+            .update(JSON.stringify(baseClaim))
+            .digest('hex')
+    },
+    validateClaim({ signature, ...baseClaim }: Claim): boolean {
+        return DUMMY_SIGNATURE_FUNCTIONS.requesterSign(baseClaim) === signature
+    },
+    responderSign(claim: Claim): string {
         return crypto
             .createHash('md5')
             .update(JSON.stringify(claim))
             .digest('hex')
     },
-    validateClaim(claim: Claim, senderSignature: string): boolean {
-        return DUMMY_SIGNATURE_FUNCTIONS.signClaim(claim) === senderSignature
-    },
-    signSignedClaim(claim: Claim, senderSignature: string): string {
-        return crypto
-            .createHash('md5')
-            .update(JSON.stringify([claim, senderSignature]))
-            .digest('hex')
-    },
-    validatedSignedClaim(claim: Claim, senderSignature: string, receiverSignature: string): boolean {
-        return DUMMY_SIGNATURE_FUNCTIONS.signSignedClaim(claim, senderSignature) === receiverSignature
+    validateReceipt(receipt: Receipt): boolean {
+        return DUMMY_SIGNATURE_FUNCTIONS.responderSign(receipt.claim) === receipt.claim.receiver
     }
 })
 
 export interface SignatureFunctions {
-    signClaim(claim: Claim): string
-    validateClaim(claim: Claim, senderSignature: string): boolean
-    signSignedClaim(claim: Claim, senderSignature: string): string
-    validatedSignedClaim(claim: Claim, senderSignature: string, receiverSignature: string): boolean
+    requesterSign(claim: BaseClaim): string
+    validateClaim(claim: Claim): boolean
+    responderSign(claim: Claim): string
+    validateReceipt(receipt: Receipt): boolean
 }

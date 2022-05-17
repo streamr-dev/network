@@ -1,5 +1,4 @@
 import {
-    validateIsNotEmptyString,
     validateIsNotNullOrUndefined
 } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
@@ -16,24 +15,23 @@ export interface Claim {
     totalPayloadSize: number
     sender: EthereumAddress
     receiver: EthereumAddress
+    signature: string
 }
+
+export type BaseClaim = Omit<Claim, 'signature'>
 
 export interface Options extends ControlMessageOptions {
     claim: Claim
-    signature: string
 }
 
 export default class ReceiptRequest extends ControlMessage {
     readonly claim: Claim
-    readonly signature: string
 
-    constructor({ version = ControlMessage.LATEST_VERSION, requestId, claim, signature }: Options) {
+    constructor({ version = ControlMessage.LATEST_VERSION, requestId, claim }: Options) {
         super(version, ControlMessage.TYPES.ReceiptRequest, requestId)
 
         validateIsNotNullOrUndefined('claim', claim)
-        validateIsNotEmptyString('signature', signature)
 
         this.claim = claim
-        this.signature = signature
     }
 }

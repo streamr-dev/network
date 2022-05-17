@@ -3,24 +3,9 @@ import { NodeId } from '../../identifiers'
 import { Logger } from '../../helpers/Logger'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
-import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { BaseClaim, Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { SignatureFunctions } from './SignatureFunctions'
-
-function createClaim(bucket: Bucket, sender: NodeId): Claim {
-    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
-    return {
-        streamId,
-        streamPartition,
-        publisherId: bucket.getPublisherId(),
-        msgChainId: bucket.getMsgChainId(),
-        windowNumber: bucket.getWindowNumber(),
-        messageCount: bucket.getMessageCount(),
-        totalPayloadSize: bucket.getTotalPayloadSize(),
-        receiver: bucket.getNodeId(),
-        sender
-    }
-}
 
 const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
 const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
@@ -35,7 +20,7 @@ export interface ConstructorOptions {
     bucketUpdateTimeoutMargin?: number
 }
 
-export class ClaimSender {
+export class ReceiptRequester {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
     private readonly signatureFunctions: SignatureFunctions
@@ -70,24 +55,24 @@ export class ClaimSender {
             }, this.getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
         })
-        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ claim, signature: receiverSignature, refusalCode }, source) => {
-            if (claim.receiver !== source) {
-                logger.warn('unexpected claim from %s (trying to respond on behalf of %s)', source, claim.receiver)
-                // TODO: cut connection?
-                return
-            }
+        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ receipt, refusalCode }, source) => {
             if (refusalCode !== null) {
-                logger.warn('receiver %s refused claim due to %s', source, refusalCode)
+                logger.warn('receiver %s refused to provide receipt due to %s', source, refusalCode)
                 // TODO: cut connection?
                 return
             }
-            const senderSignature = this.signatureFunctions.signClaim(claim)
-            if (!this.signatureFunctions.validatedSignedClaim(claim, senderSignature, receiverSignature!)) {
-                logger.warn('claim receipt response from %s has invalid signature', source)
+            const receiver = receipt!.claim.receiver
+            if (receiver !== source) {
+                logger.warn('unexpected receipt from %s (trying to respond on behalf of %s)', source, receiver)
                 // TODO: cut connection?
                 return
             }
-            logger.info("Accepted fully signed claim %j", claim)
+            if (!this.signatureFunctions.validateReceipt(receipt!)) {
+                logger.warn('receipt from %s has invalid signature', source)
+                // TODO: cut connection?
+                return
+            }
+            logger.info("Accepted receipt %j", receipt)
         })
     }
 
@@ -103,11 +88,9 @@ export class ClaimSender {
     }
 
     private sendReceiptRequest(bucket: Bucket): void {
-        const claim = createClaim(bucket, this.myNodeId)
         this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
             requestId: uuidv4(),
-            claim,
-            signature: this.signatureFunctions.signClaim(claim)
+            claim: this.createClaim(bucket)
         })).catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
         })
@@ -118,5 +101,24 @@ export class ClaimSender {
             getWindowStartTime(bucket.getWindowNumber() + 1) + this.windowTimeoutMargin,
             bucket.getLastUpdate() + this.bucketUpdateTimeoutMargin
         )
+    }
+
+    private createClaim(bucket: Bucket): Claim {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
+        const baseClaim: BaseClaim = {
+            streamId,
+            streamPartition,
+            publisherId: bucket.getPublisherId(),
+            msgChainId: bucket.getMsgChainId(),
+            windowNumber: bucket.getWindowNumber(),
+            messageCount: bucket.getMessageCount(),
+            totalPayloadSize: bucket.getTotalPayloadSize(),
+            receiver: bucket.getNodeId(),
+            sender: this.myNodeId
+        }
+        return {
+            ...baseClaim,
+            signature: this.signatureFunctions.requesterSign(baseClaim)
+        }
     }
 }
