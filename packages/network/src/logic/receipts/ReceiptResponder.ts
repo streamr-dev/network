@@ -73,7 +73,7 @@ export class ReceiptResponder {
             requestId,
             receipt: {
                 claim,
-                signature: this.signers.claim.sign(claim)
+                signature: this.signers.receipt.sign({ claim })
             }
         })).catch((e) => {
             logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', claim.sender, e)
