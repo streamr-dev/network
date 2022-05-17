@@ -112,7 +112,11 @@ export class BrubeckNode implements Context {
                         return SigningUtil.sign(JSON.stringify(claim), privateKey)
                     },
                     validate({ signature, ...claim }: Claim): boolean {
-                        return SigningUtil.verify(claim.sender, JSON.stringify(claim), signature)
+                        return SigningUtil.verify(
+                            getEthereumAddressFromNodeId(claim.sender),
+                            JSON.stringify(claim),
+                            signature
+                        )
                     }
                 },
                 receipt: {
@@ -120,7 +124,11 @@ export class BrubeckNode implements Context {
                         return SigningUtil.sign(JSON.stringify(receipt), privateKey)
                     },
                     validate({ signature, ...receipt }: Receipt): boolean {
-                        return SigningUtil.verify(receipt.claim.receiver, JSON.stringify(receipt), signature)
+                        return SigningUtil.verify(
+                            getEthereumAddressFromNodeId(receipt.claim.receiver),
+                            JSON.stringify(receipt),
+                            signature
+                        )
                     }
                 }
             }
