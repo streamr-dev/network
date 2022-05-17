@@ -2,13 +2,13 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext, Signers } from 'streamr-network'
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt, SigningUtil } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import { Ethereum } from './Ethereum'
+import { AuthConfig, Ethereum } from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
@@ -55,7 +55,8 @@ export class BrubeckNode implements Context {
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
-        @inject(ConfigInjectionToken.Network) options: NetworkConfig
+        @inject(ConfigInjectionToken.Network) options: NetworkConfig,
+        @inject(ConfigInjectionToken.Auth) private authConfig: AuthConfig,
     ) {
         this.options = options
         this.id = instanceId(this)
@@ -102,11 +103,34 @@ export class BrubeckNode implements Context {
 
         this.debug('initNode', id)
         const networkOptions = await this.getNormalizedNetworkOptions()
+        const privateKey = this.authConfig.privateKey
+        let signers: Signers | undefined
+        if (privateKey !== undefined) {
+            signers = {
+                claim: {
+                    sign(claim: Omit<Claim, 'signature'>): string {
+                        return SigningUtil.sign(JSON.stringify(claim), privateKey)
+                    },
+                    validate({ signature, ...claim }: Claim): boolean {
+                        return SigningUtil.verify(claim.sender, JSON.stringify(claim), signature)
+                    }
+                },
+                receipt: {
+                    sign(receipt: Omit<Receipt, 'signature'>): string {
+                        return SigningUtil.sign(JSON.stringify(receipt), privateKey)
+                    },
+                    validate({ signature, ...receipt }: Receipt): boolean {
+                        return SigningUtil.verify(receipt.claim.receiver, JSON.stringify(receipt), signature)
+                    }
+                }
+            }
+        }
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             ...networkOptions,
             id,
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            signers
         })
 
         if (!this.destroySignal.isDestroyed()) {
