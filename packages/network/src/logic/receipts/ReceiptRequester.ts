@@ -101,7 +101,7 @@ export class ReceiptRequester {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
         })
         this.nodeToNode.registerErrorHandler(requestId, (errorResponse, source) => {
-            logger.warn('receiver %s refused to provide receipt due to %', source, errorResponse.errorCode)
+            logger.warn('receiver %s refused to provide receipt due to %s', source, errorResponse.errorCode)
             // TODO: cut connection?
         })
     }
