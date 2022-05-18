@@ -7,9 +7,10 @@ import { ConnectionType, IConnection } from '../IConnection'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { createRemoteWebRtcConnectorServer, RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorClient } from '../../proto/DhtRpc.client'
-import { Event as IWebRtcEvent, isOffering } from './IWebRtcConnection'
+import { Event as IWebRtcEvent } from './IWebRtcConnection'
 import { PeerID } from '../../PeerID'
 import { DescriptionType } from 'node-datachannel'
+import crypto from "crypto"
 
 export interface WebRtcConnectorParams {
     rpcTransport: ITransport,
@@ -143,7 +144,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
     }
 
     bindListenersAndStartConnection(targetPeerDescriptor: PeerDescriptor, connection: NodeWebRtcConnection, sendRequest = true): void {
-        const offering = isOffering(
+        const offering = this.isOffering(
             PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(),
             PeerID.fromValue(targetPeerDescriptor.peerId).toString()
         )
@@ -168,5 +169,14 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
                 .catch(() => {})
         }
+    }
+
+    public isOffering(myId: string, theirId: string): boolean {
+        return this.offeringHash(myId + theirId) < this.offeringHash(theirId + myId)
+    }
+
+    private offeringHash(idPair: string): number {
+        const buffer = crypto.createHash('md5').update(idPair).digest()
+        return buffer.readInt32LE(0)
     }
 }

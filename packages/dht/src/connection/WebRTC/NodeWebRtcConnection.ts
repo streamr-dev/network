@@ -50,10 +50,10 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         }
     }
 
-    setRemoteDescription(description: string, type: DescriptionType): void {
+    async setRemoteDescription(description: string, type: string): Promise<void> {
         if (this.connection) {
             try {
-                this.connection!.setRemoteDescription(description, type)
+                this.connection!.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
                 console.error(err)

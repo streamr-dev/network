@@ -14,14 +14,14 @@ module.exports = function (config) {
         reporters: ['spec'],
         files: [
             './karma-setup.js',
-            './test/end-to-end/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
-            './test/integration/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
-            './test/unit/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/',
+            './test/end-to-end/!(NodeWebRtcConnection*).ts/',
+            './test/integration/!(NodeWebRtcConnection*|WebRtcConnectionManagement*).ts/',
+            './test/unit/!(NodeWebRtcConnection*).ts/',
             
             {
                 pattern: '**/*.js.map',
                 included: false
-              }
+            }
            
         ],
         preprocessors: {
