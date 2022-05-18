@@ -91,7 +91,28 @@ describe('WebSocket Connection Management', () => {
         }
         await wsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage)
         await waitForCondition(
-            () => wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER
+            () => {
+                return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
+                    && wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
+            }
+        )
+        await waitForCondition(
+            () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
+        )
+    })
+
+    it('Can open connections to peer with server', async () => {
+        const dummyMessage: Message = {
+            body: new Uint8Array(),
+            messageType: MessageType.RPC,
+            messageId: 'mockerer'
+        }
+        await noWsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage)
+        await waitForCondition(
+            () => {
+                return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
+                    && wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
+            }
         )
         await waitForCondition(
             () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
