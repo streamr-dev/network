@@ -14,6 +14,7 @@ import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
 import { Event, ITransport } from '../transport/ITransport'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
+import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -31,6 +32,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
     private webSocketConnector: WebSocketConnector | null
+    private webrtcConnector: WebRtcConnector | null
+
     private webSocketServer: WebSocketServer | null
 
     constructor(private config: ConnectionManagerConfig) {
@@ -41,6 +44,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             this.webSocketServer = null
         }
         this.webSocketConnector = null
+        this.webrtcConnector = null
     }
 
     private async handleIncomingConnectivityRequest(connection: IConnection, connectivityRequest: ConnectivityRequestMessage) {
@@ -296,5 +300,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
         this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this), rpcCommunicator)
+    }
+
+    createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+        this.webrtcConnector = new WebRtcConnector(transport, () => true, rpcCommunicator)
     }
 }
