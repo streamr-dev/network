@@ -55,5 +55,5 @@ jobs:
         run: |
           npm run bootstrap-pkg @streamr/dht
           sudo apt-get install xvfb
-    - name: Browser Tests
-      run: xvfb-run --auto-servernum npm run test-browser
+      - name: Browser Tests
+        run: xvfb-run --auto-servernum npm run test-browser
