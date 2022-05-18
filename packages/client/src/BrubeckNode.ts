@@ -36,6 +36,38 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
     return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
 }
 
+const createSigners = (privateKey: string | undefined): Signers | undefined => {
+    if (privateKey === undefined) {
+        return undefined
+    }
+    return {
+        claim: {
+            sign(claim: Omit<Claim, 'signature'>): string {
+                return SigningUtil.sign(JSON.stringify(claim), privateKey)
+            },
+            validate({ signature, ...claim }: Claim): boolean {
+                return SigningUtil.verify(
+                    getEthereumAddressFromNodeId(claim.sender),
+                    JSON.stringify(claim),
+                    signature
+                )
+            }
+        },
+        receipt: {
+            sign(receipt: Omit<Receipt, 'signature'>): string {
+                return SigningUtil.sign(JSON.stringify(receipt), privateKey)
+            },
+            validate({ signature, ...receipt }: Receipt): boolean {
+                return SigningUtil.verify(
+                    getEthereumAddressFromNodeId(receipt.claim.receiver),
+                    JSON.stringify(receipt),
+                    signature
+                )
+            }
+        }
+    }
+}
+
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
@@ -103,42 +135,12 @@ export class BrubeckNode implements Context {
 
         this.debug('initNode', id)
         const networkOptions = await this.getNormalizedNetworkOptions()
-        const privateKey = this.authConfig.privateKey
-        let signers: Signers | undefined
-        if (privateKey !== undefined) {
-            signers = {
-                claim: {
-                    sign(claim: Omit<Claim, 'signature'>): string {
-                        return SigningUtil.sign(JSON.stringify(claim), privateKey)
-                    },
-                    validate({ signature, ...claim }: Claim): boolean {
-                        return SigningUtil.verify(
-                            getEthereumAddressFromNodeId(claim.sender),
-                            JSON.stringify(claim),
-                            signature
-                        )
-                    }
-                },
-                receipt: {
-                    sign(receipt: Omit<Receipt, 'signature'>): string {
-                        return SigningUtil.sign(JSON.stringify(receipt), privateKey)
-                    },
-                    validate({ signature, ...receipt }: Receipt): boolean {
-                        return SigningUtil.verify(
-                            getEthereumAddressFromNodeId(receipt.claim.receiver),
-                            JSON.stringify(receipt),
-                            signature
-                        )
-                    }
-                }
-            }
-        }
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
             ...networkOptions,
             id,
             metricsContext: new MetricsContext(),
-            signers
+            signers: createSigners(this.authConfig.privateKey)
         })
 
         if (!this.destroySignal.isDestroyed()) {
