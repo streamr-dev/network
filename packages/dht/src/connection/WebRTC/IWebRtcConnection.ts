@@ -1,6 +1,18 @@
+import { PeerId } from 'streamr-network'
+import crypto from "crypto"
+
 export enum Event {
     LOCAL_DESCRIPTION = 'streamr:dht:webrtcconnection:localdescription',
     LOCAL_CANDIDATE = 'streamr:dht:webrtcconnection:localcandidate',
+}
+
+export function isOffering(myId: PeerId, theirId: PeerId): boolean {
+    return offeringHash(myId + theirId) < offeringHash(theirId + myId)
+}
+
+function offeringHash(idPair: string): number {
+    const buffer = crypto.createHash('md5').update(idPair).digest()
+    return buffer.readInt32LE(0)
 }
 
 export interface IWebRtcConnection {

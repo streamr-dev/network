@@ -179,6 +179,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (this.webSocketServer) {
             this.webSocketServer.setOwnPeerDescriptor(ownPeerDescriptor)
         }
+        if (this.webrtcConnector) {
+            this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
+        }
 
         this.webSocketConnector!.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
     }
@@ -222,6 +225,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async stop(): Promise<void> {
+        Object.values(this.connections).map((connection) => {
+            connection.close()
+        })
         this.removeAllListeners()
         if (this.webSocketServer) {
             await this.webSocketServer.stop()
@@ -230,6 +236,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             clearTimeout(timeout)
         })
         this.disconnectionTimeouts = {}
+        if (this.webSocketConnector) {
+            this.webSocketConnector!.stop()
+        }
         if (this.webSocketConnector) {
             this.webSocketConnector!.stop()
         }
@@ -260,6 +269,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 ownPeerDescriptor: this.ownPeerDescriptor!,
                 targetPeerDescriptor: peerDescriptor
             })
+            this.connections[stringId] = connection
+            connection.send(Message.toBinary(message))
+        }
+
+        else if (this.webrtcConnector) {
+            const connection = this.webrtcConnector!.connect(peerDescriptor)
             this.connections[stringId] = connection
             connection.send(Message.toBinary(message))
         }
@@ -298,11 +313,23 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return !this.hasConnection(peerDescriptor) && this.webSocketConnector!.withinPortRange(port)
     }
 
+    addConnection(peerDescriptor: PeerDescriptor, connection: IConnection): void {
+        if (!this.hasConnection(peerDescriptor)) {
+            this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()] = connection
+        }
+    }
+
     createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
         this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this), rpcCommunicator)
     }
 
     createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
-        this.webrtcConnector = new WebRtcConnector(transport, () => true, rpcCommunicator)
+        this.webrtcConnector = new WebRtcConnector({
+            rpcTransport: transport,
+            rpcCommunicator,
+            fnCanConnect: () => true,
+            fnGetConnection: this.getConnection.bind(this),
+            fnAddConnection: this.addConnection.bind(this)
+        })
     }
 }
