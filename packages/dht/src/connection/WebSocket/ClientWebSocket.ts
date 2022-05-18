@@ -57,7 +57,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         }
     }
 
-    public sendBufferedMessages(): void {
+    sendBufferedMessages(): void {
         while (this.buffer.length > 0) {
             this.send(this.buffer.shift() as Uint8Array)
         }
