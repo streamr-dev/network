@@ -7,7 +7,7 @@ import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 
 export class ClientWebSocket extends EventEmitter implements IConnection {
-    public connectionId: ConnectionID
+    public readonly connectionId: ConnectionID
     private remotePeerDescriptor: PeerDescriptor|null = null
     private buffer: Uint8Array[] = []
     private socket: WebSocket | null = null
