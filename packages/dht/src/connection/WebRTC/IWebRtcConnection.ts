@@ -23,6 +23,6 @@ export interface IWebRtcConnection {
     once(event: Event.LOCAL_CANDIDATE, listener: (candidate: string, mid: string) => void): this
     once(event: Event.LOCAL_DESCRIPTION, listener: (description: string, type: string) => void): this
 
-    setRemoteDescription(description: string, type: string): void
+    setRemoteDescription(description: string, type: string): Promise<void>
     addRemoteCandidate(candidate: string, mid: string): void
 }

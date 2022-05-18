@@ -11,7 +11,7 @@ export enum ConnectionType {
     WEBSOCKET_SERVER = 'websocket-server',
     WEBSOCKET_CLIENT = 'websocket-client',
     DEFERRED = 'deferred',
-    WEBRTC = 'webrtc'
+    WEBRTC = 'webrtc',
 }
 
 export interface IConnection {
