@@ -13,6 +13,7 @@ import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../PeerID'
 import { Event, ITransport } from '../transport/ITransport'
+import { RpcCommunicator } from '../transport/RpcCommunicator'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -293,7 +294,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return !this.hasConnection(peerDescriptor) && this.webSocketConnector!.withinPortRange(port)
     }
 
-    createWsConnector(transport: ITransport): void {
-        this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this))
+    createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+        this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this), rpcCommunicator)
     }
 }

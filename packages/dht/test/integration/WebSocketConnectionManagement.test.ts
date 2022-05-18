@@ -1,30 +1,20 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { createMockConnectionDhtNode, createPeerDescriptor } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import { DhtNode } from '../../src/dht/DhtNode'
+import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 
 describe('WebSocket Connection Management', () => {
-    let epManager: ConnectionManager
 
     let wsServerManager: ConnectionManager
     let noWsServerManager: ConnectionManager
 
     const simulator = new Simulator()
 
-    const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString("entrypoint").value,
-        type: NodeType.NODEJS,
-        websocket: {
-            ip: 'localhost',
-            port: 12222
-        }
-    }
     const wsServerConnectorPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString("peerWithServer").value,
         type: NodeType.NODEJS,
@@ -39,51 +29,58 @@ describe('WebSocket Connection Management', () => {
         type: NodeType.NODEJS,
     }
 
-    let epMockTransport: ITransport
-    let connectorTransport1: DhtNode
-    let connectorTransport2: DhtNode
+    let connectorTransport1: ITransport
+    let connectorTransport2: ITransport
+
+    let connectorRpc1: RpcCommunicator
+    let connectorRpc2: RpcCommunicator
 
     beforeEach(async () => {
 
-        epMockTransport = new MockConnectionManager(epPeerDescriptor, simulator)
-        epManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: epPeerDescriptor.websocket!.port })
+        connectorTransport1 = new MockConnectionManager(wsServerConnectorPeerDescriptor , simulator)
+        connectorTransport2 = new MockConnectionManager(noWsServerConnectorPeerDescriptor, simulator)
 
-        epManager.createWsConnector(epMockTransport)
-        await epManager.start()
-        epManager.enableConnectivity(epPeerDescriptor)
+        connectorRpc1 = new RpcCommunicator({
+            rpcRequestTimeout: 10000,
+            appId: "websocket",
+            connectionLayer: connectorTransport1
+        })
 
-        connectorTransport1 = await createMockConnectionDhtNode(PeerID.fromValue(wsServerConnectorPeerDescriptor.peerId).toString(), simulator)
-        connectorTransport2 = await createMockConnectionDhtNode(PeerID.fromValue(noWsServerConnectorPeerDescriptor.peerId).toString(), simulator)
-
-        await connectorTransport1.start()
-        await connectorTransport2.start()
-
-        await connectorTransport1.joinDht(epPeerDescriptor)
-        await connectorTransport2.joinDht(epPeerDescriptor)
+        connectorRpc2 = new RpcCommunicator({
+            rpcRequestTimeout: 10000,
+            appId: "websocket",
+            connectionLayer: connectorTransport2
+        })
+        connectorRpc1.setSendFn((_targetPeer, message) => {
+            connectorRpc2.onIncomingMessage(wsServerConnectorPeerDescriptor, message)
+        })
+        connectorRpc2.setSendFn((_targetPeer, message) => {
+            connectorRpc1.onIncomingMessage(noWsServerConnectorPeerDescriptor, message)
+        })
 
         const config1 = {
-            entryPoints: [epPeerDescriptor],
             webSocketHost: 'localhost',
             webSocketPort: 12223,
         }
         const config2 = {
-            entryPoints: [epPeerDescriptor]
         }
 
         wsServerManager = new ConnectionManager(config1)
         noWsServerManager = new ConnectionManager(config2)
 
-        wsServerManager.createWsConnector(connectorTransport1)
-        noWsServerManager.createWsConnector(connectorTransport2)
+        wsServerManager.createWsConnector(connectorTransport1, connectorRpc1)
+        noWsServerManager.createWsConnector(connectorTransport2, connectorRpc2)
 
         await wsServerManager.start()
         await noWsServerManager.start()
+
         wsServerManager.enableConnectivity(wsServerConnectorPeerDescriptor)
         noWsServerManager.enableConnectivity(noWsServerConnectorPeerDescriptor)
     })
 
-    afterEach(() => {
-
+    afterEach(async () => {
+        await wsServerManager.stop()
+        await noWsServerManager.stop()
     })
 
     it('Can open connections to serverless peer', async () => {
@@ -93,6 +90,11 @@ describe('WebSocket Connection Management', () => {
             messageId: 'mockerer'
         }
         await wsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage)
-        await waitForCondition(() => wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
+        await waitForCondition(
+            () => wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER
+        )
+        await waitForCondition(
+            () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
+        )
     })
 })

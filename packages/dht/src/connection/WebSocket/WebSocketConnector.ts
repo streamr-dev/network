@@ -19,13 +19,21 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     private transportListener: any = null
     private ownPeerDescriptor: PeerDescriptor | null = null
 
-    constructor(private rpcTransport: ITransport, fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean) {
+    constructor(
+        private rpcTransport: ITransport,
+        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
+        rpcCommunicator?: RpcCommunicator
+    ) {
         super()
-        this.rpcCommunicator = new RpcCommunicator({
-            rpcRequestTimeout: 10000,
-            appId: "websocket",
-            connectionLayer: rpcTransport
-        })
+        if (rpcCommunicator) {
+            this.rpcCommunicator = rpcCommunicator
+        } else {
+            this.rpcCommunicator = new RpcCommunicator({
+                rpcRequestTimeout: 10000,
+                appId: "websocket",
+                connectionLayer: rpcTransport
+            })
+        }
         this.transportListener = rpcTransport.on(RpcTransportEvent.DATA, (peerDescriptor, message, appId) => {
             if (appId === 'websocket' && this.rpcCommunicator) {
                 this.rpcCommunicator!.onIncomingMessage(peerDescriptor, message)
