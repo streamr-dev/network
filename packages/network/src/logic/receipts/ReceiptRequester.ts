@@ -55,20 +55,25 @@ export class ReceiptRequester {
             }, this.getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
         })
-        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ receipt, refusalCode }, source) => {
-            if (refusalCode !== null) {
-                logger.warn('receiver %s refused to provide receipt due to %s', source, refusalCode)
+        nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ receipt }, source) => {
+            const { receiver, sender } = receipt.claim
+            if (receiver !== source) { // TODO: This is not entirely wrong, however why would these get relayed thru a 3rd party?
+                logger.warn('unexpected receipt from %s (trying to respond on behalf of %s)', source, receiver)
                 // TODO: cut connection?
                 return
             }
-            const receiver = receipt!.claim.receiver
-            if (receiver !== source) {
-                logger.warn('unexpected receipt from %s (trying to respond on behalf of %s)', source, receiver)
+            if (sender !== this.myNodeId) {
+                logger.warn('unexpected receipt from %s (the claim does not concern me)', source, sender)
                 // TODO: cut connection?
                 return
             }
             if (!this.signers.receipt.validate(receipt!)) {
                 logger.warn('receipt from %s has invalid signature', source)
+                // TODO: cut connection?
+                return
+            }
+            if (!this.signers.claim.validate(receipt.claim)) {
+                logger.warn('receipt.claim from %s has invalid signature', source)
                 // TODO: cut connection?
                 return
             }
@@ -88,11 +93,16 @@ export class ReceiptRequester {
     }
 
     private sendReceiptRequest(bucket: Bucket): void {
+        const requestId = uuidv4()
         this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
-            requestId: uuidv4(),
+            requestId,
             claim: this.createClaim(bucket)
         })).catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
+        })
+        this.nodeToNode.registerErrorHandler(requestId, (errorResponse, source) => {
+            logger.warn('receiver %s refused to provide receipt due to %', source, errorResponse.errorCode)
+            // TODO: cut connection?
         })
     }
 

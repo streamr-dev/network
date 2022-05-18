@@ -1,5 +1,12 @@
 import { BucketCollector } from './BucketCollector'
-import { Claim, ReceiptRequest, ReceiptResponse, RefusalCode, toStreamPartID } from 'streamr-client-protocol'
+import {
+    Claim,
+    ErrorCode,
+    ErrorResponse,
+    ReceiptRequest,
+    ReceiptResponse,
+    toStreamPartID
+} from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
 import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
@@ -39,20 +46,21 @@ export class ReceiptResponder {
     private onReceiptRequest({ requestId, claim }: ReceiptRequest, source: NodeId): void {
         if (source !== claim.sender) {
             logger.warn('identity mismatch: source of message !== claim.sender')
-            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.SENDER_IDENTITY_MISMATCH)
+            this.sendErrorResponse(claim, requestId, ErrorCode.SENDER_IDENTITY_MISMATCH)
             return
         }
         if (!this.signers.claim.validate(claim)) {
             logger.warn('signature validation failed for claim %j', claim)
-            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.INVALID_SIGNATURE)
+            this.sendErrorResponse(claim, requestId, ErrorCode.INVALID_SIGNATURE)
             return
         }
         const bucket = this.collector.getBucket(getBucketIdFromClaim(claim))
         if (bucket === undefined) {
             logger.warn('bucket not found for claim %j', claim)
-            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.BUCKET_NOT_FOUND)
+            this.sendErrorResponse(claim, requestId, ErrorCode.CLAIM_DISAGREEMENT)
             return
         }
+
         // TODO: inequality instead?
         if (bucket.getMessageCount() !== claim.messageCount || bucket.getTotalPayloadSize() !== claim.totalPayloadSize) {
             logger.warn("I disagree with claim %j (msgCount=%d, totalPayloadSize=%d)",
@@ -60,15 +68,15 @@ export class ReceiptResponder {
                 bucket.getMessageCount(),
                 bucket.getTotalPayloadSize()
             )
-            this.sendRefusalReceiptResponse(claim, requestId, RefusalCode.DISAGREEMENT)
+            this.sendErrorResponse(claim, requestId, ErrorCode.CLAIM_DISAGREEMENT)
             return
         }
 
         logger.info("I agree with claim %j", claim)
-        this.sendAgreementReceiptResponse(claim, requestId)
+        this.sendReceiptResponse(claim, requestId)
     }
 
-    private sendAgreementReceiptResponse(claim: Claim, requestId: string): void {
+    private sendReceiptResponse(claim: Claim, requestId: string): void {
         this.nodeToNode.send(claim.sender, new ReceiptResponse({
             requestId,
             receipt: {
@@ -80,10 +88,11 @@ export class ReceiptResponder {
         })
     }
 
-    private sendRefusalReceiptResponse(claim: Claim, requestId: string, refusalCode: RefusalCode): void {
-        this.nodeToNode.send(claim.sender, new ReceiptResponse({
+    private sendErrorResponse(claim: Claim, requestId: string, errorCode: ErrorCode): void {
+        this.nodeToNode.send(claim.sender, new ErrorResponse({
             requestId,
-            refusalCode
+            errorMessage: errorCode, // TODO: write something more human readable?
+            errorCode
         })).catch((e) => {
             logger.warn('failed to send ReceiptResponse(refusal) to %s, reason: %s', claim.sender, e)
         })

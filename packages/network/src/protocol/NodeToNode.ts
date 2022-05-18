@@ -5,6 +5,7 @@ import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts, NodeId } from "../identifiers"
+import { ErrorHandlerFn, ErrorResponseHandler } from './ErrorResponseHandler'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
@@ -16,6 +17,7 @@ export enum Event {
     PROXY_CONNECTION_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
     RECEIPT_REQUEST_RECEIVED = 'node-node:receipt-request-received',
     RECEIPT_RESPONSE_RECEIVED = 'node-node:receipt-response-received',
+    ERROR_RESPONSE_RECEIVED = 'node-node:error-response-received',
     LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
 }
 
@@ -26,6 +28,7 @@ eventPerType[ControlLayer.ControlMessage.TYPES.ProxyConnectionResponse] = Event.
 eventPerType[ControlLayer.ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.ReceiptRequest] = Event.RECEIPT_REQUEST_RECEIVED
 eventPerType[ControlLayer.ControlMessage.TYPES.ReceiptResponse] = Event.RECEIPT_RESPONSE_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.ErrorResponse] = Event.ERROR_RESPONSE_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -41,23 +44,27 @@ export interface NodeToNode {
        listener: (message: ControlLayer.ReceiptRequest, nodeId: NodeId) => void): this
     on(event: Event.RECEIPT_RESPONSE_RECEIVED,
        listener: (message: ControlLayer.ReceiptResponse, nodeId: NodeId) => void): this
+    on(event: Event.ERROR_RESPONSE_RECEIVED,
+       listener: (message: ControlLayer.ErrorResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED,
        listener: (message: ControlLayer.UnsubscribeRequest, nodeId: NodeId) => void): this
 }
 
 export class NodeToNode extends EventEmitter {
     private readonly endpoint: IWebRtcEndpoint
+    private readonly errorResponseHandler: ErrorResponseHandler
     private readonly logger: Logger
 
     constructor(endpoint: IWebRtcEndpoint) {
         super()
         this.endpoint = endpoint
+        this.errorResponseHandler = new ErrorResponseHandler(this)
+        this.logger = new Logger(module)
         endpoint.on(WebRtcEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WebRtcEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(WebRtcEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
         endpoint.on(WebRtcEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
         endpoint.on(WebRtcEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
-        this.logger = new Logger(module)
     }
 
     connectToNode(
@@ -73,6 +80,10 @@ export class NodeToNode extends EventEmitter {
             requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
             streamMessage,
         }))
+    }
+
+    registerErrorHandler(requestId: string, errorHandler: ErrorHandlerFn): void {
+        this.errorResponseHandler.register(requestId, errorHandler)
     }
 
     send<T>(receiverNodeId: NodeId, message: T & ControlLayer.ControlMessage): Promise<T> {
