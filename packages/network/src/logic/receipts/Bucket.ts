@@ -1,7 +1,7 @@
 import { MessageID, StreamPartID } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
 
-export const WINDOW_LENGTH = 60 * 1000
+export const WINDOW_LENGTH = 15 * 1000 // TODO: define production value
 
 export function getWindowNumber(timestamp: number): number {
     return Math.floor(timestamp / WINDOW_LENGTH)

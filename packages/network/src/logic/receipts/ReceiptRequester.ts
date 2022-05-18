@@ -7,8 +7,8 @@ import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr
 import { v4 as uuidv4 } from 'uuid'
 import { Signers } from './SignatureFunctions'
 
-const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
-const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH * 2
+const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH  // TODO: define production value
+const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH  // TODO: define production value
 
 const logger = new Logger(module)
 
