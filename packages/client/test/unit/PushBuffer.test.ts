@@ -18,9 +18,7 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
-for (let k = 0; k < 50; k++) {
-
-describe(`PushBuffer test${k}`, () => {
+describe('PushBuffer', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(async () => {
@@ -393,5 +391,3 @@ describe(`PushBuffer test${k}`, () => {
         })
     })
 })
-
-}
