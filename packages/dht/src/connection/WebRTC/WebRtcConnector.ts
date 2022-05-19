@@ -65,7 +65,6 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         if (existingConnection) {
             return existingConnection as unknown as IConnection
         }
-        // This may cause a slight chance for a race condition on RtcAnswers
         setImmediate(() => {
             const newConnection = this.createConnection(targetPeerDescriptor)
             this.addManagerConnection(targetPeerDescriptor, newConnection)
