@@ -219,7 +219,6 @@ export class Resends implements Context {
         })
     }
 
-    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
