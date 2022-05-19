@@ -5,6 +5,7 @@ import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { StreamPermission } from '../../src'
+import { StreamMessage } from 'streamr-client-protocol'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)
@@ -66,7 +67,7 @@ describe('Validation', () => {
             sub.onError(onSubError)
 
             const BAD_INDEX = 2
-            sub.context.pipeline.forEachBefore((streamMessage, index) => {
+            sub.context.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     // eslint-disable-next-line no-param-reassign
                     streamMessage.signature = 'badsignature'
@@ -134,7 +135,7 @@ describe('Validation', () => {
             sub.onError(onSubError)
 
             const BAD_INDEX = 2
-            sub.context.pipeline.mapBefore(async (streamMessage, index) => {
+            sub.context.pipeline.mapBefore(async (streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     const msg = streamMessage.clone()
                     // eslint-disable-next-line no-param-reassign
