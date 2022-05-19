@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 import { Event as ConnectionSourceEvents, IConnectionSource } from '../IConnectionSource'
 import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
-import { Event as RpcTransportEvent, ITransport } from '../../transport/ITransport'
+import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { ConnectionType, Event as ConnectionEvents, IConnection } from '../IConnection'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
@@ -25,7 +25,6 @@ export interface WebRtcConnectorParams {
 export class WebRtcConnector extends EventEmitter implements IConnectionSource {
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RpcCommunicator
-    private transportListener: any = null
     private rpcTransport: ITransport
     private getManagerConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
@@ -38,14 +37,9 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
             this.rpcCommunicator = new RpcCommunicator({
                 rpcRequestTimeout: 10000,
                 appId: "webrtc",
-                connectionLayer: params.rpcTransport
+                connectionLayer: this.rpcTransport
             })
         }
-        this.transportListener = params.rpcTransport.on(RpcTransportEvent.DATA, (peerDescriptor, message, appId) => {
-            if (appId === 'webrtc' && this.rpcCommunicator) {
-                this.rpcCommunicator!.onIncomingMessage(peerDescriptor, message)
-            }
-        })
         this.getManagerConnection = params.fnGetConnection
         this.addManagerConnection = params.fnAddConnection
         const methods = createRemoteWebRtcConnectorServer(
@@ -99,6 +93,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         description: string,
         _connectionId: string
     ): void {
+        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), PeerID.fromValue(remotePeerDescriptor!.peerId).toString(),"ON OFFER")
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
@@ -120,6 +115,8 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         description: string,
         _connectionId: string
     ): void {
+        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() , "RTC ANSWER")
+
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
@@ -182,6 +179,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         })
         connection.start(offering)
         if (!offering && sendRequest) {
+            console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), "REQUESTING CONNECTION")
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
                 .catch(() => {})
         }

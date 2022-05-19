@@ -249,6 +249,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
 
         if (this.connections.hasOwnProperty(stringId)) {
+            console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), PeerID.fromValue(peerDescriptor!.peerId).toString(), "SENDING")
             this.connections[stringId].send(Message.toBinary(message))
         }
 

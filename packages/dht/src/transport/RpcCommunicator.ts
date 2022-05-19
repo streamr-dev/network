@@ -66,8 +66,12 @@ export class RpcCommunicator extends EventEmitter {
         this.connectionLayer = params.connectionLayer
         this.ongoingRequests = new Map()
         this.send = this.connectionLayer.send.bind(this.connectionLayer)    // ((_peerDescriptor, _bytes) => { throw new Error('send not defined') })
-        this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => {
-            this.onOutgoingMessage(rpcMessage, deferredPromises)
+        this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
+            deferredPromises: DeferredPromises,
+            rpcMessage: RpcMessage,
+            options: DhtRpcOptions
+        ) => {
+            this.onOutgoingMessage(rpcMessage, deferredPromises, options)
         })
         this.rpcServerTransport.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
@@ -82,6 +86,7 @@ export class RpcCommunicator extends EventEmitter {
     public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
         const requestOptions = this.rpcClientTransport.mergeOptions(options)
         if (deferredPromises && rpcMessage.header.notification) {
+            console.log("notification", rpcMessage.header.method)
             this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
         } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
@@ -103,6 +108,7 @@ export class RpcCommunicator extends EventEmitter {
             }
         } else if (rpcCall.header.request && rpcCall.header.method) {
             if (rpcCall.header.notification) {
+                if (this.appId === 'webrtc') {console.log("onNotification", rpcCall.header.method)}
                 await this.handleNotification(senderDescriptor, rpcCall)
             } else {
                 await this.handleRequest(senderDescriptor, rpcCall)

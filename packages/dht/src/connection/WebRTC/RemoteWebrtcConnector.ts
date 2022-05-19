@@ -32,9 +32,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const response = await this.client.requestConnection(request, options)
-            const res = await response.response
-            return res.sent
+            const response = await this.client.requestConnection(request, options).response
+            return response.sent
         } catch (err) {
             console.error(err)
             return false
@@ -54,9 +53,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const response = await this.client.rtcOffer(request, options)
-            const res = await response.response
-            return res.sent
+            const response = await this.client.rtcOffer(request, options).response
+            return response.sent
         } catch (err) {
             console.error(err)
             return false
@@ -76,9 +74,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const response = await this.client.rtcAnswer(request, options)
-            const res = await response.response
-            return res.sent
+            const response = await this.client.rtcAnswer(request, options).response
+            return response.sent
         } catch (err) {
             console.error(err)
             return false
@@ -99,9 +96,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const response = await this.client.iceCandidate(request, options)
-            const res = await response.response
-            return res.sent
+            const response = await this.client.iceCandidate(request, options).response
+            return response.sent
         } catch (err) {
             console.error(err)
             return false

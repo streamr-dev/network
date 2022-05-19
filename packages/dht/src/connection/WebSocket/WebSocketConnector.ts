@@ -6,7 +6,7 @@ import {
 } from '../IConnectionSource'
 import { ClientWebSocket } from './ClientWebSocket'
 import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
-import { Event as RpcTransportEvent, ITransport } from '../../transport/ITransport'
+import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { createRemoteWebSocketConnectorServer, RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
@@ -16,7 +16,6 @@ import { TODO } from '../../types'
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource {
     private rpcCommunicator: RpcCommunicator
-    private transportListener: any = null
     private ownPeerDescriptor: PeerDescriptor | null = null
 
     constructor(
@@ -34,11 +33,6 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 connectionLayer: rpcTransport
             })
         }
-        this.transportListener = rpcTransport.on(RpcTransportEvent.DATA, (peerDescriptor, message, appId) => {
-            if (appId === 'websocket' && this.rpcCommunicator) {
-                this.rpcCommunicator!.onIncomingMessage(peerDescriptor, message)
-            }
-        })
         const methods = createRemoteWebSocketConnectorServer(
             this.connect.bind(this),
             fnCanConnect

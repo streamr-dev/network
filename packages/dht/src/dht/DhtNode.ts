@@ -220,6 +220,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return []
         }
+        console.log(this.ownPeerId!.toString(), "onGetClosestPeers")
         const ret = this.bucket!.closest(caller.peerId, this.K)
         this.addNewContact(caller, true)
         return ret
@@ -266,7 +267,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             return
         }
         let successAcks = 0
-        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
+        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
         const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K)
             .filter((peer: DhtPeer) =>
                 !(peer.peerId.equals(PeerID.fromValue(params.sourcePeer!.peerId))
@@ -277,14 +278,18 @@ export class DhtNode extends EventEmitter implements ITransport {
             if (this.stopped) {
                 break
             }
-            await queue.add(
+            const next = closest.shift()
+            console.log(this.ownPeerId!.toString(), next!.peerId.toString())
+            queue.add(
                 (async () => {
-                    const success = await closest.shift()!.routeMessage({
+                    const success = await next!.routeMessage({
                         ...params,
                         previousPeer: this.getPeerDescriptor()
                     })
                     if (success) {
                         successAcks += 1
+                    } else{
+                        console.log("COULD NOT ROUTE")
                     }
                 })
             )
@@ -302,7 +307,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public canRoute(routedMessage: RouteMessageWrapper): boolean {
         if (!this.started || this.stopped) {
-            false
+            return false
         }
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             return true
@@ -311,6 +316,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             return false
         }
         const closestPeers = this.bucket!.closest(routedMessage.destinationPeer!.peerId, this.K)
+        console.log(this.bucket!.toArray().length)
+        closestPeers.forEach((p) => {console.log(p.peerId.toString())})
         const notRoutableCount = closestPeers.reduce((acc: number, curr: DhtPeer) => {
             if (curr.peerId.equals(PeerID.fromValue(routedMessage.sourcePeer!.peerId)
                 || curr.peerId.equals(PeerID.fromValue(routedMessage.previousPeer?.peerId || new Uint8Array())))) {
@@ -318,6 +325,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             }
             return acc
         }, 0)
+        console.log(closestPeers.length, notRoutableCount)
         return (closestPeers.length - notRoutableCount) > 0
     }
 
@@ -363,7 +371,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             return
         }
         const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
-        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 3000 })
+        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
         const entryPointId = PeerID.fromValue(entryPointDescriptor.peerId)
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return
@@ -383,9 +391,9 @@ export class DhtNode extends EventEmitter implements ITransport {
             }
             let uncontacted = this.neighborList!.getUncontactedContacts(this.ALPHA)
             const oldClosestContactId = this.neighborList!.getClosestContactId()
-            await Promise.allSettled(uncontacted.map((contact) => queue.add(
+            uncontacted.map((contact) => queue.add(
                 (async () => await this.getClosestPeersFromContact(contact))
-            )))
+            ))
             if (this.neighborList!.getActiveContacts().length >= this.K ||
                 oldClosestContactId.equals(this.neighborList!.getClosestContactId())) {
                 break
@@ -394,9 +402,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             if (uncontacted.length < 1) {
                 break
             }
+            await queue.onEmpty()
         }
-        await queue.onIdle()
-        queue.removeAllListeners()
     }
 
     public getBucketSize(): number {
