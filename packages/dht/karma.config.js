@@ -14,10 +14,10 @@ module.exports = function (config) {
         reporters: ['spec'],
         files: [
             './karma-setup.js',
-            './test/end-to-end/!(NodeWebRtcConnection*).ts/',
-            './test/integration/!(NodeWebRtcConnection*|WebRtcConnectionManagement*).ts/',
-            './test/unit/!(NodeWebRtcConnection*).ts/',
-            
+            './test/end-to-end/**',
+            './test/integration/**',
+            './test/unit/**',
+
             {
                 pattern: '**/*.js.map',
                 included: false

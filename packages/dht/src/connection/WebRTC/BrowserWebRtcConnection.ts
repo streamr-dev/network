@@ -4,15 +4,15 @@ import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConne
 import { PeerDescriptor } from "../../proto/DhtRpc"
 import { ConnectionID } from "../../types"
 
-enum ConnectionState {CONNECTING = 'connecting', OPEN='open', CLOSED = 'closed'}
+enum ConnectionState { CONNECTING = 'connecting', OPEN = 'open', CLOSED = 'closed' }
 
-export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
+export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
 
     public readonly connectionId: ConnectionID = new ConnectionID()
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
     private lastState: ConnectionState = ConnectionState.CONNECTING
-    private stunUrls = []
+    private stunUrls = ['stun:stun.l.google.com:19302']
     private peerConnection: RTCPeerConnection | null = null
     private dataChannel: RTCDataChannel | null = null
     private makingOffer = false
@@ -23,7 +23,7 @@ export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConn
 
     start(isOffering: boolean): void {
         this.isOffering = isOffering
-        const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url]} } )
+        const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url] } })
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
@@ -51,7 +51,7 @@ export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConn
                             this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error(err)
                 } finally {
                     this.makingOffer = false
@@ -70,38 +70,46 @@ export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConn
     }
 
     async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type == "offer") && (this.makingOffer || !this.peerConnection || this.peerConnection.signalingState != "stable")
+        const offerCollision = (type.toLowerCase() == "offer") && (this.makingOffer || !this.peerConnection || 
+            this.peerConnection.signalingState != "stable")
 
         const ignoreOffer = this.isOffering && offerCollision
         if (ignoreOffer) {
             return
         }
         try {
-            await this.peerConnection?.setRemoteDescription({ sdp:description, type: type as RTCSdpType })
+            await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
         } catch (err) {
             console.warn(err)
         }
 
-        if (type == "offer" && this.peerConnection) {
+        if (type == "Offer" && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
                 console.warn(err)
             }
-            if (this.peerConnection.localDescription)  {
-                this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type )
+            if (this.peerConnection.localDescription) {  
+                this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
             }
         }
     }
 
     addRemoteCandidate(candidate: string, mid: string): void {
         try {
-            this.peerConnection?.addIceCandidate( { candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
-                console.warn(err)    
+            this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
+                console.warn(err)
             })
         } catch (e) {
             console.warn(e)
-        }   
+        }
+    }
+
+    isOpen(): boolean {
+        if (this.lastState == ConnectionState.OPEN) {
+            return true
+        }
+        return false
     }
 
     // IConnection implementation
@@ -163,7 +171,7 @@ export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConn
     getBufferedMessages(): Uint8Array[] {
         return this.buffer
     }
-    
+
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         dataChannel.onopen = () => {
             console.trace('dc.onOpen')
