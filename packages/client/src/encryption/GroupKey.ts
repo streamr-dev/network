@@ -4,6 +4,7 @@ import { uuid } from '../utils'
 import { inspect } from '../utils/log'
 
 class InvalidGroupKeyError extends ValidationError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, public groupKey?: any) {
         super(message)
     }

@@ -266,6 +266,7 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any): string {
         return inspect(this.toObject(), {
             ...options,

@@ -62,6 +62,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
 
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function describeRepeats(msg: any, fn: any, describeFn = describe): void {
     for (let k = 0; k < TEST_REPEATS; k++) {
         // eslint-disable-next-line no-loop-func
@@ -79,7 +80,7 @@ describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void> = async () => {}): Promise<any[]> {
+export async function collect(iterator: AsyncIterable<any>, fn: MaybeAsync<(item: any) => void> = async () => {}): Promise<any[]> {
     const received: any[] = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
@@ -233,6 +234,7 @@ export class LeaksDetector {
 
     private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     add(name: string, obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
 
@@ -263,11 +265,13 @@ export class LeaksDetector {
         this.didGC = false
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     ignore(obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
         this.ignoredValues.add(obj)
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     ignoreAll(obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
         const seen = new Set()
@@ -282,6 +286,7 @@ export class LeaksDetector {
     idToPaths = new Map<string, Set<string>>() // ids to paths
     objectToId = new WeakMap<object, string>() // single id for value
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     getID(path: string[], value: any): any {
         if (this.objectToId.has(value)) {
             return this.objectToId.get(value)

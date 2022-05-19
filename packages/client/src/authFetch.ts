@@ -23,6 +23,7 @@ export class AuthFetchError extends Error {
     code: ErrorCode
     errorCode: ErrorCode
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
@@ -40,12 +41,14 @@ export class AuthFetchError extends Error {
 }
 
 export class ValidationError extends AuthFetchError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.VALIDATION_ERROR)
     }
 }
 
 export class NotFoundError extends AuthFetchError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.NOT_FOUND)
     }
@@ -70,7 +73,7 @@ const parseErrorCode = (body: string) => {
 
 export async function authRequest(
     url: string,
-    opts?: any,
+    opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     debug?: Debugger,
     fetchFn: typeof fetch = fetch
 ): Promise<Response> {
@@ -112,7 +115,7 @@ export async function authRequest(
 
 export async function authFetch<T extends object>(
     url: string,
-    opts?: any,
+    opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     debug?: Debugger,
     fetchFn?: typeof fetch
 ): Promise<T> {
