@@ -34,17 +34,6 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async getStreamValidationInfoPreloaded(streamId: StreamID): Promise<Stream> {
-        return this.streamRegistry.getStream(streamId)
-    }
-
-    getStreamValidationInfo = CacheAsyncFn(this.getStreamValidationInfoPreloaded.bind(this), {
-        ...this.cacheOptions,
-        cacheKey: ([streamId]: any) => {
-            return `${streamId}${SEPARATOR}`
-        }
-    })
-
     async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
@@ -91,7 +80,6 @@ export class StreamRegistryCached implements Context {
         const target = `${streamId}${SEPARATOR}`
         const matchTarget = (s: string) => s.startsWith(target)
         this.getStream.clearMatching(matchTarget)
-        this.getStreamValidationInfo.clearMatching(matchTarget)
         this.isStreamPublisher.clearMatching(matchTarget)
         this.isStreamSubscriber.clearMatching(matchTarget)
     }
@@ -102,7 +90,6 @@ export class StreamRegistryCached implements Context {
     clear(): void {
         this.debug('clear')
         this.getStream.clear()
-        this.getStreamValidationInfo.clear()
         this.isStreamPublisher.clear()
         this.isStreamSubscriber.clear()
     }
