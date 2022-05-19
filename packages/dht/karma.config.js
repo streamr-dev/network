@@ -14,10 +14,9 @@ module.exports = function (config) {
         reporters: ['spec'],
         files: [
             './karma-setup.js',
-            // './test/end-to-end/**',
-            // './test/integration/**',
-            // './test/unit/**',
-            './test/integration/WebRtcConnectionManagement.test.ts',
+            './test/end-to-end/**',
+            './test/integration/**',
+            './test/unit/**',
 
             {
                 pattern: '**/*.js.map',

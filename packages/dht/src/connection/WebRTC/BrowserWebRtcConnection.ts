@@ -193,7 +193,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
 
         dataChannel.onmessage = (msg) => {
             console.trace('dc.onmessage')
-            this.emit(ConnectionEvent.DATA, msg.data.toString())
+            this.emit(ConnectionEvent.DATA, new Uint8Array(msg.data))
         }
     }
 
