@@ -35,7 +35,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     }
 
     /** @internal */
-    waitForNeighbours(numNeighbours?: number, timeout?: number) {
+    waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
         return this.context.waitForNeighbours(numNeighbours, timeout)
     }
 }

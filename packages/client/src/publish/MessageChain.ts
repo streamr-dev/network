@@ -17,7 +17,7 @@ export type MessageChainOptions = {
     msgChainId?: string
 }
 
-export function getCachedMessageChain(cacheConfig: CacheConfig) {
+export function getCachedMessageChain(cacheConfig: CacheConfig): any {
     // one chainer per streamId + streamPartition + publisherId + msgChainId
     return CacheFn((...args: ConstructorParameters<typeof MessageChain>) => new MessageChain(...args), {
         cacheKey: ([streamPartId, { publisherId, msgChainId }]) => (

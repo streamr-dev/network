@@ -20,6 +20,7 @@ import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
+import { Context } from '../../src/utils/Context'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -28,12 +29,12 @@ export {
     testDebug as Debug
 }
 
-export function mockContext() {
+export function mockContext(): Context {
     const id = counterId('mockContext')
     return { id, debug: testDebugRoot.extend(id) }
 }
 
-export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
+export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
 export async function fetchPrivateKeyWithGas(): Promise<string> {
     let response
@@ -61,7 +62,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
 
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
-export function describeRepeats(msg: any, fn: any, describeFn = describe) {
+export function describeRepeats(msg: any, fn: any, describeFn = describe): void {
     for (let k = 0; k < TEST_REPEATS; k++) {
         // eslint-disable-next-line no-loop-func
         describe(msg, () => {
@@ -78,7 +79,7 @@ describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void> = async () => {}) {
+export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void> = async () => {}): Promise<any[]> {
     const received: any[] = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
@@ -90,7 +91,7 @@ export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void>
     return received
 }
 
-export function getTestSetTimeout() {
+export function getTestSetTimeout(): (callback: () => void, ms?: number | undefined) => NodeJS.Timeout {
     const addAfter = addAfterFn()
     return (callback: () => void, ms?: number) => {
         const t = setTimeout(callback, ms)
@@ -101,7 +102,7 @@ export function getTestSetTimeout() {
     }
 }
 
-export function addAfterFn() {
+export function addAfterFn(): (fn: any) => void {
     const afterFns: any[] = []
     afterEach(async () => {
         const fns = afterFns.slice()
@@ -115,7 +116,7 @@ export function addAfterFn() {
     }
 }
 
-export function Msg<T extends object = object>(opts?: T) {
+export function Msg<T extends object = object>(opts?: T): any {
     return {
         value: uid('msg'),
         ...opts,
@@ -133,9 +134,9 @@ export type CreateMessageOpts = {
     total: number
 }
 
-export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
+export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
 
-export function getRandomClient() {
+export function getRandomClient(): StreamrClient {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
     return new StreamrClient({
         ...ConfigTest,
@@ -145,12 +146,8 @@ export function getRandomClient() {
     })
 }
 
-export const expectInvalidAddress = (operation: () => Promise<any>) => {
-    return expect(() => operation()).rejects.toThrow()
-}
-
 // eslint-disable-next-line no-undef
-const getTestName = (module: NodeModule) => {
+const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')
     const groups = module.filename.match(fileNamePattern)
     return (groups !== null) ? groups[1] : module.filename
@@ -159,12 +156,12 @@ const getTestName = (module: NodeModule) => {
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
 
 // eslint-disable-next-line no-undef
-export const createRelativeTestStreamId = (module: NodeModule, suffix?: string) => {
+export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): any => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
 // eslint-disable-next-line no-undef
-export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>) => {
+export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
         ...props
@@ -172,7 +169,7 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
     return stream
 }
 
-export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: DependencyContainer) => {
+export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: DependencyContainer): (opts?: any, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
     const addAfter = addAfterFn()
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
@@ -206,7 +203,7 @@ export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: Depen
 /**
  * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
  */
-export function snapshot() {
+export function snapshot(): string {
     if (!process.env.WRITE_SNAPSHOTS) { return '' }
     testDebugRoot('heap snapshot >>')
     const value = writeHeapSnapshot()
@@ -233,7 +230,7 @@ export class LeaksDetector {
 
     private counter = CounterId(this.id, { maxPrefixes: 1024 })
 
-    add(name: string, obj: any) {
+    add(name: string, obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
 
         if (this.ignoredValues.has(obj)) { return }
@@ -259,16 +256,16 @@ export class LeaksDetector {
         }
     }
 
-    resetGC() {
+    resetGC(): void {
         this.didGC = false
     }
 
-    ignore(obj: any) {
+    ignore(obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
         this.ignoredValues.add(obj)
     }
 
-    ignoreAll(obj: any) {
+    ignoreAll(obj: any): void {
         if (!obj || typeof obj !== 'object') { return }
         const seen = new Set()
         this.walk([], obj, (_path, value) => {
@@ -282,7 +279,7 @@ export class LeaksDetector {
     idToPaths = new Map<string, Set<string>>() // ids to paths
     objectToId = new WeakMap<object, string>() // single id for value
 
-    getID(path: string[], value: any) {
+    getID(path: string[], value: any): any {
         if (this.objectToId.has(value)) {
             return this.objectToId.get(value)
         }
@@ -305,7 +302,7 @@ export class LeaksDetector {
         obj: object,
         fn: (path: string[], obj: object, depth: number) => false | void,
         depth = 0
-    ) {
+    ): void {
         if (!obj || typeof obj !== 'object') { return }
 
         if (depth > 10) { return }
@@ -328,7 +325,7 @@ export class LeaksDetector {
         }
     }
 
-    addAll(rootId: string, obj: object) {
+    addAll(rootId: string, obj: object): void {
         this.walk([rootId], obj, (path, value) => {
             if (this.ignoredValues.has(value)) { return false }
             const pathString = path.join('/')
@@ -371,7 +368,7 @@ export class LeaksDetector {
         return leaks
     }
 
-    async checkNoLeaks() {
+    async checkNoLeaks(): Promise<void> {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (numLeaks) {
@@ -381,7 +378,7 @@ export class LeaksDetector {
         }
     }
 
-    async checkNoLeaksFor(id: string) {
+    async checkNoLeaksFor(id: string): Promise<void> {
         const leaks = await this.getLeaks()
         const numLeaks = Object.keys(leaks).length
         if (Object.keys(leaks).includes(id)) {
@@ -391,7 +388,7 @@ export class LeaksDetector {
         }
     }
 
-    clear() {
+    clear(): void {
         this.seen = new WeakSet()
         this.ignoredValues = new WeakSet()
         this.leakDetectors.clear()
@@ -448,7 +445,7 @@ export function publishTestMessagesGenerator(
     streamDefinition: StreamDefinition,
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
-) {
+): Pipeline<StreamMessage<unknown>, StreamMessage<unknown>> {
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
@@ -465,7 +462,7 @@ export function getPublishTestStreamMessages(
     client: StreamrClient,
     streamDefinition: StreamDefinition,
     defaultOpts: PublishTestMessageOptions = {}
-) {
+): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<StreamMessage<unknown>[]> {
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const {
             waitForLast,
@@ -525,7 +522,7 @@ export function getPublishTestMessages(
     client: StreamrClient,
     streamDefinition: StreamDefinition,
     defaultOpts: PublishTestMessageOptions = {}
-) {
+): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<unknown[]> {
     const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
@@ -533,19 +530,13 @@ export function getPublishTestMessages(
     }
 }
 
-export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: StreamMessage, opts?: any) => Promise<void> {
     return async (lastPublished: StreamMessage, opts = {}) => {
         return client.waitForStorage(lastPublished, {
             ...defaultOpts,
             ...opts,
         })
     }
-}
-
-export async function sleep(ms: number = 0) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms)
-    })
 }
 
 /**
@@ -556,7 +547,7 @@ export async function sleep(ms: number = 0) {
  * @param failedMsgFn - append the string return value of this getter function to the error message, if given
  * @return the (last) truthy value returned by the condition function
  */
-export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string): Promise<boolean> {
     // condition could as well return any instead of boolean, could be convenient
     // sometimes if waiting until a value is returned. Maybe change if such use
     // case emerges.
@@ -573,7 +564,7 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
             wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
             if (!wasDone && !isTimedOut) {
-                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+                await wait(pollingIntervalMs) // eslint-disable-line no-await-in-loop
             }
         }
 
@@ -625,7 +616,7 @@ export class Multimap<K, V> {
         return this.values.get(key) ?? []
     }
 
-    has(key: K, value: V) {
+    has(key: K, value: V): boolean {
         const items = this.values.get(key)
         if (items !== undefined) {
             return items.includes(value)

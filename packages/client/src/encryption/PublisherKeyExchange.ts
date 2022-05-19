@@ -19,6 +19,8 @@ import { EncryptionUtil, StreamMessageProcessingError } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
 import { StreamRegistryCached } from '../StreamRegistryCached'
+import { Subscription } from '../subscribe/Subscription'
+import { GroupKeyStore } from './GroupKeyStore'
 
 class InvalidGroupKeyRequestError extends ValidationError {
     constructor(msg: string) {
@@ -46,7 +48,9 @@ export class PublisherKeyExchange implements Context {
         this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
     }
 
-    getWrapError(streamMessage: StreamMessage) {
+    getWrapError(
+        streamMessage: StreamMessage
+    ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
         return async (error: ValidationError) => {
             try {
                 const subscriberId = streamMessage.getPublisherId()
@@ -72,7 +76,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    private async onKeyExchangeMessage(streamMessage?: StreamMessage) {
+    private async onKeyExchangeMessage(streamMessage?: StreamMessage): Promise<void> {
         if (!streamMessage) { return }
         const wrapError = this.getWrapError(streamMessage)
         try {
@@ -119,7 +123,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    private async subscribe() {
+    private async subscribe(): Promise<Subscription<unknown> | undefined> {
         if (!this.enabled) { return undefined }
         const sub = await this.keyExchangeStream.subscribe()
         if (!sub) { return undefined }
@@ -146,11 +150,11 @@ export class PublisherKeyExchange implements Context {
         return sub
     }
 
-    async getGroupKeyStore(streamId: StreamID) {
+    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
-    async rotateGroupKey(streamId: StreamID) {
+    async rotateGroupKey(streamId: StreamID): Promise<void> {
         if (!this.enabled) { return }
         try {
             const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -160,7 +164,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    async setNextGroupKey(streamId: StreamID, groupKey: GroupKey) {
+    async setNextGroupKey(streamId: StreamID, groupKey: GroupKey): Promise<void> {
         if (!this.enabled) { return }
         try {
             const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -172,7 +176,7 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    async useGroupKey(streamId: StreamID) {
+    async useGroupKey(streamId: StreamID): Promise<never[] | [GroupKey | undefined, GroupKey | undefined]> {
         await this.getSubscription()
         if (!this.enabled) { return [] }
         const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -180,13 +184,13 @@ export class PublisherKeyExchange implements Context {
         return groupKeyStore.useGroupKey()
     }
 
-    async hasAnyGroupKey(streamId: StreamID) {
+    async hasAnyGroupKey(streamId: StreamID): Promise<boolean> {
         const groupKeyStore = await this.getGroupKeyStore(streamId)
         if (!this.enabled) { return false }
         return !(await groupKeyStore.isEmpty())
     }
 
-    async rekey(streamId: StreamID) {
+    async rekey(streamId: StreamID): Promise<void> {
         try {
             if (!this.enabled) { return }
             const groupKeyStore = await this.getGroupKeyStore(streamId)
@@ -199,12 +203,12 @@ export class PublisherKeyExchange implements Context {
         }
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.enabled = true
         await this.subscribe()
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.enabled = false
         this.getSubscription.reset()
         await this.subscribe()

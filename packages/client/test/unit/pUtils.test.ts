@@ -55,7 +55,6 @@ describe('pOrderedResolve', () => {
         // @ts-expect-error wrong argument type
         await orderedFn(3)
 
-        // @ts-expect-error wrong return type
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await orderedFn('abc')
         expect(c).toEqual(3)

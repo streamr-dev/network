@@ -17,7 +17,7 @@ export class Signer {
         this.signData = Signer.getSigningFunction(authOptions)
     }
 
-    static getSigningFunction(options: AuthenticatedConfig) {
+    static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
         if ('privateKey' in options && options.privateKey) {
             const { privateKey } = options
             const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))

@@ -63,7 +63,7 @@ export class GraphQLClient {
         } while (lastResultSet.length === pageSize)
     }
 
-    async getIndexBlockNumber() {
+    async getIndexBlockNumber(): Promise<number> {
         const gqlQuery = JSON.stringify({
             query: '{ _meta { block { number } } }'
         })

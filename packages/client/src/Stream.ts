@@ -15,6 +15,7 @@ import { StreamRegistryCached } from './StreamRegistryCached'
 import {
     EthereumAddress,
     StreamID,
+    StreamMessage,
     StreamMetadata,
     StreamPartID,
     toStreamPartID
@@ -113,7 +114,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * Persist stream metadata updates.
      */
-    async update(props: Omit<StreamProperties, 'id'>) {
+    async update(props: Omit<StreamProperties, 'id'>): Promise<void> {
         try {
             await this._streamRegistry.updateStream({
                 ...this.toObject(),
@@ -143,7 +144,7 @@ class StreamrStream implements StreamMetadata {
         return result as StreamProperties
     }
 
-    async delete() {
+    async delete(): Promise<void> {
         try {
             await this._streamRegistry.deleteStream(this.id)
         } finally {
@@ -151,7 +152,7 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async detectFields() {
+    async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
         const sub = await this._resends.resend(
             this.id,
@@ -185,7 +186,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}) {
+    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
         try {
             assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
@@ -206,7 +207,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async removeFromStorageNode(nodeAddress: EthereumAddress) {
+    async removeFromStorageNode(nodeAddress: EthereumAddress): Promise<void> {
         try {
             return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
         } finally {
@@ -214,14 +215,14 @@ class StreamrStream implements StreamMetadata {
         }
     }
 
-    async getStorageNodes() {
+    async getStorageNodes(): Promise<string[]> {
         return this._nodeRegistry.getStorageNodes(this.id)
     }
 
     /**
      * @category Important
      */
-    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
+    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string): Promise<StreamMessage<T>> {
         return this._publisher.publish(this.id, content, timestamp, partitionKey)
     }
 
@@ -265,7 +266,7 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any): string {
         return inspect(this.toObject(), {
             ...options,
             customInspect: false,

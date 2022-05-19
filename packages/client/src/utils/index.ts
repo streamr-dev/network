@@ -20,7 +20,7 @@ export const debug = Debug('utils')
 export { uuid } from './uuid'
 export { AggregatedError, Scaffold }
 
-export function randomString(length = 20) {
+export function randomString(length = 20): string {
     // eslint-disable-next-line no-bitwise
     return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('')
 }
@@ -38,7 +38,9 @@ export function randomString(length = 20) {
  * counterId('test') => test.1
  */
 
-export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}) => {
+// TODO convert to a class?
+type  CounterIdType = ((prefix: string, separator?: string) => string) & { clear: (...args: [string] | []) => void }
+export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}): CounterIdType => {
     let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
@@ -87,7 +89,7 @@ export type AnyInstance = {
     }
 }
 
-export function instanceId(instance: AnyInstance, suffix = '') {
+export function instanceId(instance: AnyInstance, suffix = ''): string {
     return counterId(instance.constructor.name) + suffix
 }
 
@@ -101,7 +103,7 @@ function getVersion() {
 // hardcode this at module exec time as can't change
 const versionString = getVersion()
 
-export function getVersionString() {
+export function getVersionString(): string {
     return versionString
 }
 
@@ -110,7 +112,7 @@ export function getVersionString() {
  * Rejects if an 'error' event is received before resolving.
  */
 
-export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['on']>[0]) {
+export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['on']>[0]): Promise<unknown> {
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line prefer-const
         let onError: (error: Error) => void
@@ -128,7 +130,7 @@ export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['o
     })
 }
 
-export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]) => {
+export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string => {
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
@@ -137,7 +139,7 @@ type Collection<K, V> = {
     delete: Map<K, V>['delete']
 }
 
-function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => boolean) {
+function clearMatching<K>(cache: Collection<K, unknown>, matchFn: (key: K) => boolean): void {
     for (const key of cache.keys()) {
         if (matchFn(key)) {
             cache.delete(key)
@@ -221,7 +223,7 @@ export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0
     maxAge?: number
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
-} = {}) {
+} = {}): ((...args: ArgsType) => ReturnType) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
@@ -270,6 +272,7 @@ class DeferredWrapper<T> {
 
 export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
@@ -357,7 +360,8 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
  */
 type LimitFn = ReturnType<typeof pLimit>
 
-export function LimitAsyncFnByKey<KeyType>(limit = 1) {
+// TODO better return type?
+export function LimitAsyncFnByKey<KeyType>(limit = 1): any {
     const pending = new Map<KeyType, LimitFn>()
     const f = async (id: KeyType, fn: () => Promise<any>) => {
         const limitFn: LimitFn = (pending.get(id) || pending.set(id, pLimit(limit)).get(id)) as LimitFn
@@ -396,10 +400,9 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
 /**
  * Execute functions in parallel, but ensure they resolve in the order they were executed
  */
-
 export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType
-) {
+): ((...args: ArgsType) => Promise<any>) & { clear(): void } {
     const queue = pLimit(1)
     return Object.assign(async (...args: ArgsType) => {
         const d = Defer<ReturnType>()
@@ -417,7 +420,6 @@ export function pOrderedResolve<ArgsType extends unknown[], ReturnType>(
 /**
  * Returns a function that executes with limited concurrency.
  */
-
 export function pLimitFn<ArgsType extends unknown[], ReturnType>(
     fn: (...args: ArgsType) => ReturnType | Promise<ReturnType>,
     limit = 1
@@ -595,7 +597,7 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = '') {
+export async function allSettledValues(items: Parameters<(typeof Promise)['allSettled']>[0], errorMessage = ''): Promise<unknown[]> {
     const result = await Promise.allSettled(items)
     const errs = result
         .filter(({ status }) => status === 'rejected')
@@ -608,7 +610,7 @@ export async function allSettledValues(items: Parameters<(typeof Promise)['allSe
         .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
-export async function sleep(ms: number = 0) {
+export async function sleep(ms: number = 0): Promise<unknown> {
     return new Promise((resolve) => {
         setTimeout(resolve, ms)
     })
@@ -622,7 +624,7 @@ export async function sleep(ms: number = 0) {
  * @param failedMsgFn - append the string return value of this getter function to the error message, if given
  * @return the (last) truthy value returned by the condition function
  */
-export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string): Promise<boolean> {
     // condition could as well return any instead of boolean, could be convenient
     // sometimes if waiting until a value is returned. Maybe change if such use
     // case emerges.
@@ -657,7 +659,7 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
 }
 
 // TODO import this from a library (e.g. streamr-test-utils if that is no longer a test-only dependency)
-export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+export const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 
 export const withTimeout = async <T>(
     task: Promise<T>,

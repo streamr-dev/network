@@ -5,6 +5,7 @@ import { Context } from './utils/Context'
 import { CacheConfig, ConfigInjectionToken } from './Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from './permission'
+import { Stream } from './Stream'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -21,7 +22,7 @@ export class StreamRegistryCached implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async getStreamPreloaded(streamId: StreamID) {
+    async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
         return this.streamRegistry.getStream(streamId)
     }
 
@@ -33,7 +34,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async getStreamValidationInfoPreloaded(streamId: StreamID) {
+    async getStreamValidationInfoPreloaded(streamId: StreamID): Promise<Stream> {
         return this.streamRegistry.getStream(streamId)
     }
 
@@ -44,29 +45,29 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
+    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
     isStreamPublisher = CacheAsyncFn(this.isStreamPublisherPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any) {
+        cacheKey([streamId, ethAddress]: any): string {
             return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress) {
+    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
     isStreamSubscriber = CacheAsyncFn(this.isStreamSubscriberPreloaded.bind(this), {
         ...this.cacheOptions,
-        cacheKey([streamId, ethAddress]: any) {
+        cacheKey([streamId, ethAddress]: any): string {
             return [streamId, ethAddress.toLowerCase()].join(SEPARATOR)
         }
     })
 
-    async isPublicSubscriptionStream(streamId: StreamID) {
+    async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
         return this.streamRegistry.hasPermission({
             streamId,
             public: true,
@@ -84,7 +85,7 @@ export class StreamRegistryCached implements Context {
     /**
      * Clear cache for streamId
      */
-    clearStream(streamId: StreamID) {
+    clearStream(streamId: StreamID): void {
         this.debug('clearStream', streamId)
         // include separator so startsWith(streamid) doesn't match streamid-something
         const target = `${streamId}${SEPARATOR}`
@@ -98,7 +99,7 @@ export class StreamRegistryCached implements Context {
     /**
      * Clear all cached data
      */
-    clear() {
+    clear(): void {
         this.debug('clear')
         this.getStream.clear()
         this.getStreamValidationInfo.clear()

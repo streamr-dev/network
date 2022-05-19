@@ -30,7 +30,7 @@ export function Scaffold(
     sequence: Step[] = [],
     _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
-) {
+): any {
     let error: Error | undefined
     // ignore error if check fails
 

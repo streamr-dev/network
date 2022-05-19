@@ -259,7 +259,7 @@ export class Resends implements Context {
         timeout?: number
         count?: number
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
-    } = {}) {
+    } = {}): Promise<void> {
         if (!streamMessage) {
             throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
         }

@@ -57,16 +57,16 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
-    once<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]) {
+    once<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    off<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]) {
+    off<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
         this.eventEmitter.off(eventName, listener as any)
     }
 
     /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
+    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
         try {
             yield* await this.getResent()
         } catch (err) {

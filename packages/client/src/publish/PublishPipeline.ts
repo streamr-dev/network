@@ -33,7 +33,7 @@ export class FailedToPublishError extends Error {
         }
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any): string {
         return inspect(this, {
             ...options,
             customInspect: false,
