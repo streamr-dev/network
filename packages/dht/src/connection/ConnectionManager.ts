@@ -200,6 +200,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 }
                 this.connections[stringId] = connection
 
+                console.log("SHOOK")
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
                     protocolVersion: this.PROTOCOL_VERSION,
@@ -250,7 +251,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
 
+        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), stringId, this.connections.hasOwnProperty(stringId))
         if (this.connections.hasOwnProperty(stringId)) {
+            console.log(this.connections[stringId].connectionType)
             this.connections[stringId].send(Message.toBinary(message))
         }
 

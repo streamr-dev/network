@@ -108,12 +108,14 @@ export class DhtNode extends EventEmitter implements ITransport {
                 })
                 this.ownPeerDescriptor = this.config.peerDescriptor
                 connectionManager.createWsConnector(this)
+                connectionManager.createWebRtcConnector(this)
                 await connectionManager.start()
             } else if (!this.config.webSocketPort) {
                 connectionManager = new ConnectionManager({
                     entryPoints: this.config.entryPoints
                 })
                 connectionManager.createWsConnector(this)
+                connectionManager.createWebRtcConnector(this)
                 await connectionManager.start()
                 this.ownPeerDescriptor = this.createPeerDescriptor(undefined, this.config.peerIdString)
             } else {
@@ -123,6 +125,7 @@ export class DhtNode extends EventEmitter implements ITransport {
                     entryPoints: this.config.entryPoints
                 })
                 connectionManager.createWsConnector(this)
+                connectionManager.createWebRtcConnector(this)
                 const result = await connectionManager.start()
                 this.ownPeerDescriptor = this.createPeerDescriptor(result, this.config.peerIdString)
             }
@@ -269,7 +272,10 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
         // Only throw if originator
         if (successAcks === 0 && this.ownPeerId!.equals(PeerID.fromValue(params.sourcePeer!.peerId))) {
-            throw new Err.CouldNotRoute(`Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toString()} failed.`)
+            throw new Err.CouldNotRoute(
+                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toString()}`
+                + ` from ${this.ownPeerId!.toString()} failed.`
+            )
         }
     }
 
