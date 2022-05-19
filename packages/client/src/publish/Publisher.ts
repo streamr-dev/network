@@ -107,7 +107,10 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    async* publishFromMetadata<T>(
+        streamDefinition: StreamDefinition, 
+        seq: AsyncIterable<PublishMetadata<T>>
+    ): AsyncGenerator<StreamMessage<T>, void, unknown> {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {

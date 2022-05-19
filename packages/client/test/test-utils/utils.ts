@@ -169,7 +169,10 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
     return stream
 }
 
-export const getCreateClient = (defaultOpts = {}, defaultParentContainer?: DependencyContainer): (opts?: any, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
+export const getCreateClient = (
+    defaultOpts = {}, 
+    defaultParentContainer?: DependencyContainer
+): (opts?: any, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
     const addAfter = addAfterFn()
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {

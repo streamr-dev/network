@@ -92,7 +92,11 @@ export class StorageNodeRegistry {
         this.initStreamAssignmentEventListener('removeFromStorageNode', 'Removed', eventEmitter)
     }
 
-    private initStreamAssignmentEventListener(clientEvent: keyof StreamrClientEvents, contractEvent: string, eventEmitter: StreamrClientEventEmitter) {
+    private initStreamAssignmentEventListener(
+        clientEvent: keyof StreamrClientEvents,
+        contractEvent: string,
+        eventEmitter: StreamrClientEventEmitter
+    ) {
         type Listener = (streamId: string, nodeAddress: string, extra: any) => void
         initEventGateway(
             clientEvent,

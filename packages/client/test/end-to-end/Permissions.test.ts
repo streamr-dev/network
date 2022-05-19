@@ -219,7 +219,8 @@ describe('Stream permissions', () => {
         const message = {
             foo: Date.now()
         }
-        await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(`${otherUser.address.toLowerCase()} is not a publisher on stream ${stream.id}`)
+        const errorSnippet = `${otherUser.address.toLowerCase()} is not a publisher on stream ${stream.id}`
+        await expect(() => otherUserClient.publish(stream.id, message)).rejects.toThrow(errorSnippet)
         await client.grantPermissions(stream.id, {
             user: otherUser.address,
             permissions: [StreamPermission.PUBLISH]

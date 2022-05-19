@@ -424,7 +424,10 @@ export class StreamrClient implements Context {
 /**
  * @internal
  */
-export function initContainer(config: StrictStreamrClientConfig, parentContainer = rootContainer): { childContainer: DependencyContainer; rootContext: Context } {
+export function initContainer(
+    config: StrictStreamrClientConfig, 
+    parentContainer = rootContainer
+): { childContainer: DependencyContainer; rootContext: Context } {
     const c = parentContainer.createChildContainer()
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
