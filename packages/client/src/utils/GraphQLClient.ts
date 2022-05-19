@@ -56,6 +56,7 @@ export class GraphQLClient {
             const query = createQuery(lastId, pageSize)
             // eslint-disable-next-line no-await-in-loop
             const response = await this.sendQuery(query)
+            // eslint-disable-next-line prefer-destructuring
             const rootKey = Object.keys(response)[0] // there is a always a one root level property, e.g. "streams" or "permissions"
             const items: T[] = (response as any)[rootKey] as T[]
             yield* items

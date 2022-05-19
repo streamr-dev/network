@@ -549,7 +549,7 @@ export const createEthereumAddressCache = (): { getAddress: (privateKey: string)
         getAddress: (privateKey: string): EthereumAddress => {
             let address = cache.get(privateKey)
             if (address === undefined) {
-                address = new Wallet(privateKey).address
+                address = new Wallet(privateKey).address // eslint-disable-line prefer-destructuring
                 cache.set(privateKey, address)
             }
             return address

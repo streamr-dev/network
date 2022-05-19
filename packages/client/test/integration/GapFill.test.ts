@@ -50,7 +50,7 @@ describe('GapFill', () => {
             ...opts
         })
         // @ts-expect-error
-        subscriber = client.subscriber
+        subscriber = client.subscriber // eslint-disable-line prefer-destructuring
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })

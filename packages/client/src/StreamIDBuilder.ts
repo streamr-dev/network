@@ -49,6 +49,7 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
  * */
 export const formStreamDefinitionDescription = (definition: StreamDefinition): string => {
     const raw = parseRawDefinition(definition)
+    // eslint-disable-next-line prefer-destructuring
     let str = raw[0]
     if (raw[1] !== undefined) {
         str += '#' + raw[1] // TODO '#' from a constant?
