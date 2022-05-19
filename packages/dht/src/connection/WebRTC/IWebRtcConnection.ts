@@ -13,4 +13,5 @@ export interface IWebRtcConnection {
 
     setRemoteDescription(description: string, type: string): Promise<void>
     addRemoteCandidate(candidate: string, mid: string): void
+    isOpen(): boolean
 }
