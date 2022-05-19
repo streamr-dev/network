@@ -7,7 +7,7 @@ import {
     MessageType,
     PeerDescriptor
 } from '../proto/DhtRpc'
-import { IConnection, Event as ConnectionEvents, ConnectionType } from './IConnection'
+import { ConnectionType, Event as ConnectionEvents, IConnection } from './IConnection'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
@@ -181,6 +181,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
         if (this.webrtcConnector) {
             this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
+            this.webrtcConnector.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
         }
 
         this.webSocketConnector!.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
@@ -191,7 +192,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             const handshake = HandshakeMessage.fromBinary(message.body)
             const stringId = PeerID.fromValue(handshake.sourceId).toString()
             connection.setPeerDescriptor(handshake.peerDescriptor as PeerDescriptor)
-
             if (!this.connections.hasOwnProperty(stringId)
                 || (this.connections[stringId] && this.connections[stringId].connectionType === ConnectionType.DEFERRED)) {
                 let oldConnection
@@ -200,7 +200,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 }
                 this.connections[stringId] = connection
 
-                console.log("SHOOK")
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
                     protocolVersion: this.PROTOCOL_VERSION,
@@ -251,9 +250,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
 
-        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), stringId, this.connections.hasOwnProperty(stringId))
         if (this.connections.hasOwnProperty(stringId)) {
-            console.log(this.connections[stringId].connectionType)
             this.connections[stringId].send(Message.toBinary(message))
         }
 
@@ -277,7 +274,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
 
         else if (this.webrtcConnector) {
-            const connection = this.webrtcConnector!.connect(peerDescriptor)
+            const connection = this.webrtcConnector.connect(peerDescriptor)
             this.connections[stringId] = connection
             connection.send(Message.toBinary(message))
         }
@@ -316,8 +313,13 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return !this.hasConnection(peerDescriptor) && this.webSocketConnector!.withinPortRange(port)
     }
 
-    addConnection(peerDescriptor: PeerDescriptor, connection: IConnection): void {
-        if (!this.hasConnection(peerDescriptor)) {
+    addConnection(peerDescriptor: PeerDescriptor, connection: IConnection, replaceDeferred = true): void {
+        if (!this.hasConnection(peerDescriptor)
+            || (replaceDeferred
+                && this.hasConnection(peerDescriptor)
+                && this.getConnection(peerDescriptor)!.connectionType === ConnectionType.DEFERRED)
+        ) {
+
             this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()] = connection
         }
     }

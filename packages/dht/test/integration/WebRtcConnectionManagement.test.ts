@@ -9,7 +9,7 @@ import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { NodeWebRtcConnection } from '../../src/connection/WebRTC/NodeWebRtcConnection'
 
-describe('WebSocket Connection Management', () => {
+describe('WebRTC Connection Management', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager

@@ -161,7 +161,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     private doSend(data: Uint8Array): void {
-        this.dataChannel?.send(data.buffer)
+        this.dataChannel?.send(data as Buffer)
     }
 
     private addToBuffer(msg: Uint8Array): void {

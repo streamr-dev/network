@@ -82,10 +82,10 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     send(data: Uint8Array): void {
-        if (this.lastState === 'open') {
+        if (this.isOpen()) {
             this.doSend(data)
         }
-        else if (this.lastState === 'connecting') {
+        else {
             this.addToBuffer(data)
         }
     }
@@ -109,6 +109,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     close(): void {
+        this.emit(ConnectionEvent.DISCONNECTED)
         if (this.dataChannel) {
             this.dataChannel.close()
         }
@@ -145,6 +146,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private openDataChannel(dataChannel: DataChannel): void {
         this.dataChannel = dataChannel
         this.sendBufferedMessages()
+        this.emit(ConnectionEvent.CONNECTED)
 
     }
 

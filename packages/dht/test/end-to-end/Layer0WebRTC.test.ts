@@ -1,6 +1,7 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/PeerID'
+import { ConnectionType } from '../../src/connection/IConnection'
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -28,8 +29,8 @@ describe('Layer0 with WebRTC connections', () => {
 
         await node1.start()
         await node2.start()
-        // await node3.start()
-        // await node4.start()
+        await node3.start()
+        await node4.start()
 
         await epDhtNode.joinDht(epPeerDescriptor)
     })
@@ -42,14 +43,33 @@ describe('Layer0 with WebRTC connections', () => {
         await node4.stop()
     })
 
-    it('Happy Path', async () => {
+    it('Happy path one by one', async () => {
         await node1.joinDht(epPeerDescriptor)
         await node2.joinDht(epPeerDescriptor)
-        // await node3.joinDht(epPeerDescriptor)
-        // await node4.joinDht(epPeerDescriptor)
+        await node3.joinDht(epPeerDescriptor)
+        await node4.joinDht(epPeerDescriptor)
 
         expect(node1.getRpcCommunicator().getConnectionManager().hasConnection(node2.getPeerDescriptor())).toEqual(true)
         expect(node2.getRpcCommunicator().getConnectionManager().hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect(node1.getRpcCommunicator().getConnectionManager().getConnection(node2.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+        expect(node2.getRpcCommunicator().getConnectionManager().getConnection(node1.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+    }, 25000)
 
-    }, 10000)
+    it('Happy path simultaneous', async () => {
+        await Promise.all([
+            node1.joinDht(epPeerDescriptor),
+            node2.joinDht(epPeerDescriptor),
+            node3.joinDht(epPeerDescriptor),
+            node4.joinDht(epPeerDescriptor)
+        ])
+
+        expect(node1.getRpcCommunicator().getConnectionManager().hasConnection(node2.getPeerDescriptor())).toEqual(true)
+        expect(node2.getRpcCommunicator().getConnectionManager().hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect(node1.getRpcCommunicator().getConnectionManager().getConnection(node2.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+        expect(node2.getRpcCommunicator().getConnectionManager().getConnection(node1.getPeerDescriptor())!.connectionType)
+            .toEqual(ConnectionType.WEBRTC)
+    })
 })

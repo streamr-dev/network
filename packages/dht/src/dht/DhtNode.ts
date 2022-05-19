@@ -245,7 +245,9 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: appId ? appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
-        this.routeMessage(params).catch((err) => { console.error(err) })
+        this.routeMessage(params).catch((_err) => {
+            // console.error(err)
+        })
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {
