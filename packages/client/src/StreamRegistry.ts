@@ -38,7 +38,6 @@ import {
 } from './permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 
-/** @internal */
 export type StreamQueryResult = {
     id: string,
     metadata: string
@@ -63,9 +62,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
@@ -310,12 +307,10 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    /** @internal */
     static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    /** @internal */
     static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {

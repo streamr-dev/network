@@ -65,7 +65,6 @@ export class Subscriber implements Context {
         return sub
     }
 
-    /** @internal */
     getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID) {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession<T>(streamPartId)!
@@ -79,7 +78,6 @@ export class Subscriber implements Context {
         return subSession
     }
 
-    /** @internal */
     async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
         const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
 
@@ -135,7 +133,6 @@ export class Subscriber implements Context {
 
     /**
      * Count all subscriptions.
-    * @internal
      */
     countAll() {
         let count = 0
@@ -147,7 +144,6 @@ export class Subscriber implements Context {
 
     /**
      * Count all matching subscriptions.
-     * @internal
      */
     // TODO rename this to something more specific?
     async count(streamDefinition?: StreamDefinition): Promise<number> {
@@ -167,7 +163,6 @@ export class Subscriber implements Context {
 
     /**
      * Get subscription session for matching sub options.
-     * @internal
      */
     getSubscriptionSession<T = unknown>(streamPartId: StreamPartID): SubscriptionSession<T> | undefined {
         const subSession = this.subSessions.get(streamPartId)
@@ -178,7 +173,6 @@ export class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
-    /** @internal */
     countSubscriptionSessions() {
         return this.subSessions.size
     }
@@ -201,7 +195,6 @@ export class Subscriber implements Context {
         ]))
     }
 
-    /** @internal */
     async stop() {
         await this.removeAll()
     }
