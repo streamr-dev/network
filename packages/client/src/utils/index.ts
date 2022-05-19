@@ -610,12 +610,6 @@ export async function allSettledValues(items: Parameters<(typeof Promise)['allSe
         .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
-export async function sleep(ms: number = 0): Promise<unknown> {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms)
-    })
-}
-
 /**
  * Wait until a condition is true
  * @param condition - wait until this callback function returns true
@@ -641,7 +635,7 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         while (!wasDone && !isTimedOut) { // eslint-disable-line no-await-in-loop
             wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
             if (!wasDone && !isTimedOut) {
-                await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+                await wait(pollingIntervalMs) // eslint-disable-line no-await-in-loop
             }
         }
 
