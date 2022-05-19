@@ -9,7 +9,7 @@ enum ConnectionState {CONNECTING = 'connecting', OPEN='open', CLOSED = 'closed'}
 export class BrowserWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
 
     public readonly connectionId: ConnectionID = new ConnectionID()
-    public readonly connectionType: ConnectionType = ConnectionType.WEBRTC_BROWSER
+    public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
     private lastState: ConnectionState = ConnectionState.CONNECTING
     private stunUrls = []

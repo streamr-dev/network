@@ -18,8 +18,30 @@ defaults:
   run:
     working-directory: packages/dht
 jobs:
-  test:
-    name: Lint & Test
+  test-nodejs:
+    name: Lint & Test NodeJS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: npm run bootstrap-pkg @streamr/dht
+      - name: Eslint
+        run: npm run eslint
+      - name: Unit Tests
+        run: npm run test-unit
+      - name: Integration Tests
+        run: npm run test-integration
+      - name: End-to-End Tests
+        run: npm run test-end-to-end
+
+  test-browser:
+    name: Test Browser
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,13 +55,5 @@ jobs:
         run: |
           npm run bootstrap-pkg @streamr/dht
           sudo apt-get install xvfb
-      - name: Eslint
-        run: npm run eslint
-      - name: Unit Tests
-        run: npm run test-unit
-      - name: Integration Tests
-        run: npm run test-integration
-      - name: End-to-End Tests
-        run: npm run test-end-to-end
       - name: Browser Tests
         run: xvfb-run --auto-servernum npm run test-browser

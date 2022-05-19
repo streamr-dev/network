@@ -10,8 +10,8 @@ export enum Event {
 export enum ConnectionType {
     WEBSOCKET_SERVER = 'websocket-server',
     WEBSOCKET_CLIENT = 'websocket-client',
-    WEBRTC_BROWSER = 'webrtc-browser',
-    DEFERRED = 'deferred'
+    DEFERRED = 'deferred',
+    WEBRTC = 'webrtc',
 }
 
 export interface IConnection {
