@@ -30,8 +30,8 @@ export class UnableToDecryptError extends StreamMessageProcessingError {
 }
 
 function ab2str(...args: any[]): string {
-    // @ts-ignore
-    return String.fromCharCode.apply(null, new Uint8Array(...args))
+    // @ts-expect-error Uint8Array parameters
+    return String.fromCharCode.apply(null, new Uint8Array(...args) as unknown as number[])
 }
 
 // shim browser btoa for node
@@ -119,7 +119,7 @@ class EncryptionUtilBase {
 
         if (nextGroupKey) {
             GroupKey.validate(nextGroupKey)
-            // @ts-expect-error
+            // @ts-expect-error expecting EncryptedGroupKey
             streamMessage.newGroupKey = nextGroupKey
         }
 
@@ -165,7 +165,7 @@ class EncryptionUtilBase {
             const { newGroupKey } = streamMessage
             if (newGroupKey) {
                 // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
-                // @ts-expect-error
+                // @ts-expect-error expecting EncryptedGroupKey
                 streamMessage.newGroupKey = GroupKey.from([
                     newGroupKey.groupKeyId,
                     this.decrypt(newGroupKey.encryptedGroupKeyHex, groupKey)

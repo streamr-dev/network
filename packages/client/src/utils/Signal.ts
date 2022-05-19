@@ -323,7 +323,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
             try {
                 await prev
             } catch (err) {
-                // @ts-expect-error
+                // @ts-expect-error type mismatch in err parameter
                 await task(err)
                 return
             }

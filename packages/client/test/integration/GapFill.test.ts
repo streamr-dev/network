@@ -49,7 +49,7 @@ describe('GapFill', () => {
             retryResendAfter: 1000,
             ...opts
         })
-        // @ts-expect-error
+        // @ts-expect-error private
         subscriber = client.subscriber // eslint-disable-line prefer-destructuring
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
@@ -101,7 +101,7 @@ describe('GapFill', () => {
 
         describe('realtime (uses resend)', () => {
             it('can fill single gap', async () => {
-                // @ts-expect-error
+                // @ts-expect-error private
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
@@ -269,7 +269,7 @@ describe('GapFill', () => {
                 maxGapRequests: 99 // would time out test if doesn't give up
             })
 
-            // @ts-expect-error
+            // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')
 
             const node = await client.getNode()
@@ -311,7 +311,7 @@ describe('GapFill', () => {
 
             await client.connect()
 
-            // @ts-expect-error
+            // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')
             const node = await client.getNode()
             let publishCount = 0

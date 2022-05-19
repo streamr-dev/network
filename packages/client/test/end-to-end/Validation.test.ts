@@ -21,7 +21,7 @@ describe('Validation', () => {
     async function setupClient(opts: any) {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient(opts)
-        // @ts-expect-error
+        // @ts-expect-error private
         subscriber = client.subscriber // eslint-disable-line prefer-destructuring
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)

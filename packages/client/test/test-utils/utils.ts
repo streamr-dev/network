@@ -108,7 +108,7 @@ export function addAfterFn(): (fn: any) => void {
     afterEach(async () => {
         const fns = afterFns.slice()
         afterFns.length = 0
-        // @ts-expect-error
+        // @ts-expect-error invalid parameter
         AggregatedError.throwAllSettled(await Promise.allSettled(fns.map((fn) => fn())))
     })
 
@@ -458,7 +458,7 @@ export function publishTestMessagesGenerator(
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
-    // @ts-expect-error
+    // @ts-expect-error private
     const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
@@ -484,7 +484,7 @@ export function getPublishTestStreamMessages(
         }
 
         const contents = new WeakMap()
-        // @ts-expect-error
+        // @ts-expect-error private
         client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })

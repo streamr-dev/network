@@ -100,7 +100,7 @@ describe('Group Key Persistence', () => {
             it('works', async () => {
                 // TODO: this should probably happen automatically if there are keys
                 // also probably needs to create a connection handle
-                // @ts-expect-error
+                // @ts-expect-error private
                 await publisher2.publisher.startKeyExchange()
 
                 const received = []
@@ -245,8 +245,7 @@ describe('Group Key Persistence', () => {
             for await (const m of sub) {
                 const content = m.getParsedContent()
                 // 'n of MAX_MESSAGES' messages belong to publisher2
-                // @ts-expect-error
-                if (content.value.endsWith(`of ${MAX_MESSAGES}`)) {
+                if ((content as any).value.endsWith(`of ${MAX_MESSAGES}`)) {
                     received2.push(m)
                 } else {
                     received1.push(m)

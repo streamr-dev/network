@@ -86,8 +86,7 @@ describe('Signer', () => {
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
         it('signing should throw when constructed with no auth', async () => {
-            // @ts-expect-error
-            signer = new Signer({})
+            signer = new Signer({} as any)
             const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),

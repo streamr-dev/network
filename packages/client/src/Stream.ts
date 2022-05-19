@@ -125,8 +125,7 @@ class StreamrStream implements StreamMetadata {
             this._streamRegistryCached.clearStream(this.id)
         }
         for (const key of Object.keys(props)) {
-            // @ts-expect-error
-            this[key] = props[key]
+            (this as any)[key] = (props as any)[key]
         }
     }
 
@@ -135,11 +134,10 @@ class StreamrStream implements StreamMetadata {
     }
 
     toObject(): StreamProperties {
-        const result = {}
+        const result: any = {}
         Object.keys(this).forEach((key) => {
             if (key.startsWith('_') || typeof key === 'function') { return }
-            // @ts-expect-error
-            result[key] = this[key]
+            result[key] = (this as any)[key]
         })
         return result as StreamProperties
     }
