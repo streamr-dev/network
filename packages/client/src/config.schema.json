@@ -278,7 +278,7 @@
                             "type": "array",
                             "items": {
                                 "type": "object",
-                                 "required": [
+                                "required": [
                                     "streamId",
                                     "duration"
                                 ],
