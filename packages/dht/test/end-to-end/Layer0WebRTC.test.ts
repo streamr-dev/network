@@ -1,3 +1,5 @@
+// const log = require('why-is-node-running')
+
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/PeerID'
@@ -36,11 +38,12 @@ describe('Layer0 with WebRTC connections', () => {
     })
 
     afterEach(async () => {
-        await epDhtNode.stop()
         await node1.stop()
         await node2.stop()
         await node3.stop()
         await node4.stop()
+        await epDhtNode.stop()
+        // setTimeout(() => log(), 10000)
     })
 
     it('Happy path one by one', async () => {

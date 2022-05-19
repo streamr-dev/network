@@ -102,7 +102,11 @@ export class RpcCommunicator extends EventEmitter {
                 this.resolveOngoingRequest(rpcCall)
             }
         } else if (rpcCall.header.request && rpcCall.header.method) {
-            await this.handleRequest(senderDescriptor, rpcCall)
+            if (rpcCall.header.notification) {
+                await this.handleNotification(senderDescriptor, rpcCall)
+            } else {
+                await this.handleRequest(senderDescriptor, rpcCall)
+            }
         }
     }
 
@@ -136,6 +140,12 @@ export class RpcCommunicator extends EventEmitter {
             })
         }
         this.onOutgoingMessage(response)
+    }
+
+    private async handleNotification(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        try {
+            await this.rpcServerTransport.onNotification(senderDescriptor, rpcMessage)
+        } catch (err) {}
     }
 
     private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {

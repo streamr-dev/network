@@ -19,7 +19,7 @@ export interface WebRtcConnectorParams {
     rpcCommunicator?: RpcCommunicator
     fnCanConnect: (peerDescriptor: PeerDescriptor) => boolean,
     fnGetConnection: (peerDescriptor: PeerDescriptor) => IConnection | null,
-    fnAddConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
+    fnAddConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
 }
 
 export class WebRtcConnector extends EventEmitter implements IConnectionSource {
@@ -28,7 +28,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
     private transportListener: any = null
     private rpcTransport: ITransport
     private getManagerConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
-    private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => void
+    private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
     constructor(params: WebRtcConnectorParams) {
         super()
         this.rpcTransport = params.rpcTransport
@@ -67,7 +67,10 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         }
         setImmediate(() => {
             const newConnection = this.createConnection(targetPeerDescriptor)
-            this.addManagerConnection(targetPeerDescriptor, newConnection)
+            const added = this.addManagerConnection(targetPeerDescriptor, newConnection)
+            if (!added) {
+                newConnection.close()
+            }
         })
         return new DeferredConnection(targetPeerDescriptor)
     }
@@ -103,6 +106,10 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         if (!connection) {
             this.addManagerConnection(remotePeerDescriptor, new DeferredConnection(remotePeerDescriptor))
             connection = this.createConnection(remotePeerDescriptor, false)
+            const added = this.addManagerConnection(remotePeerDescriptor, connection)
+            if (!added) {
+                connection.close()
+            }
         }
         connection.setRemoteDescription(description, DescriptionType.Offer)
     }
@@ -146,6 +153,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
 
     stop(): void {
         this.rpcCommunicator.stop()
+        this.removeAllListeners()
     }
 
     bindListenersAndStartConnection(targetPeerDescriptor: PeerDescriptor, connection: NodeWebRtcConnection, sendRequest = true): void {

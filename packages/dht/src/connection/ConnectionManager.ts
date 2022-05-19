@@ -225,9 +225,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async stop(): Promise<void> {
-        Object.values(this.connections).map((connection) => {
-            connection.close()
-        })
         this.removeAllListeners()
         if (this.webSocketServer) {
             await this.webSocketServer.stop()
@@ -242,6 +239,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (this.webSocketConnector) {
             this.webSocketConnector!.stop()
         }
+        Object.values(this.connections).forEach((connection) => connection.close())
     }
 
     // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
@@ -313,7 +311,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return !this.hasConnection(peerDescriptor) && this.webSocketConnector!.withinPortRange(port)
     }
 
-    addConnection(peerDescriptor: PeerDescriptor, connection: IConnection, replaceDeferred = true): void {
+    addConnection(peerDescriptor: PeerDescriptor, connection: IConnection, replaceDeferred = true): boolean {
         if (!this.hasConnection(peerDescriptor)
             || (replaceDeferred
                 && this.hasConnection(peerDescriptor)
@@ -321,7 +319,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         ) {
 
             this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()] = connection
+            return true
         }
+        return false
     }
 
     createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {

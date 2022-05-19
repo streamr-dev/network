@@ -17,6 +17,7 @@ export class DeferredConnection extends EventEmitter implements IConnection {
 
     close(): void {
         this.buffer = []
+        this.removeAllListeners()
     }
 
     getPeerDescriptor(): PeerDescriptor | null {

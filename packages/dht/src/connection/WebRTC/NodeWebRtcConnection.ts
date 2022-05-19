@@ -20,7 +20,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private lastState = ''
     private buffer: Uint8Array[] = []
     private remoteDescriptionSet = false
-
+    private connectingTimeoutRef: NodeJS.Timeout | null = null
+    private connectingTimeout = 10000
     constructor(private remotePeerDescriptor: PeerDescriptor) {
         super()
         this.connectionId = new ConnectionID()
@@ -33,6 +34,10 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
             iceServers: [...this.stunUrls],
             maxMessageSize: this.maxMessageSize
         })
+
+        this.connectingTimeoutRef = setTimeout(() => {
+            this.close()
+        }, this.connectingTimeout)
 
         this.connection.onStateChange((state) => this.onStateChange(state))
         this.connection.onGatheringStateChange((_state) => {})
@@ -58,6 +63,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
             } catch (err) {
                 console.error(err)
             }
+        } else {
+            this.close()
         }
     }
 
@@ -69,7 +76,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
                 } catch (err) {
                     console.error(err)
                 }
+            } else {
+                this.close()
             }
+        } else {
+            this.close()
         }
     }
 
@@ -109,6 +120,9 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     close(): void {
+        if (this.connectingTimeoutRef) {
+            clearTimeout(this.connectingTimeoutRef)
+        }
         this.emit(ConnectionEvent.DISCONNECTED)
         if (this.dataChannel) {
             this.dataChannel.close()
@@ -144,6 +158,9 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     private openDataChannel(dataChannel: DataChannel): void {
+        if (this.connectingTimeoutRef) {
+            clearTimeout(this.connectingTimeoutRef)
+        }
         this.dataChannel = dataChannel
         this.sendBufferedMessages()
         this.emit(ConnectionEvent.CONNECTED)
