@@ -15,10 +15,6 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     /** @internal */
     context: SubscriptionSession<T>
     readonly streamPartId: StreamPartID
-    /**
-     * prevent buffered data from yielding
-     * @internal */
-    isUnsubscribed = false
 
     /** @internal */
     constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
@@ -35,7 +31,7 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     }
 
     /** @internal */
-    waitForNeighbours(numNeighbours?: number, timeout?: number) {
+    waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
         return this.context.waitForNeighbours(numNeighbours, timeout)
     }
 }

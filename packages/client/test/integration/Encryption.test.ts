@@ -36,7 +36,7 @@ describe('decryption', () => {
 
     function checkEncryptionMessages(testClient: StreamrClient) {
         const onSendTest = Defer()
-        // @ts-expect-error
+        // @ts-expect-error private
         testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
             // check encryption is as expected
             if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
@@ -146,7 +146,7 @@ describe('decryption', () => {
                 const done = Defer()
                 await subscriber.subscribe({
                     stream: stream.id,
-                    // @ts-expect-error
+                    // @ts-expect-error private
                     groupKeys: keys,
                 }, done.wrap((parsedContent, streamMessage) => {
                     expect(parsedContent).toEqual(msg)
@@ -279,7 +279,7 @@ describe('decryption', () => {
 
                 function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                     const onSendTest = Defer()
-                    // @ts-expect-error
+                    // @ts-expect-error private
                     testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                         // check encryption is as expected
                         if (streamMessage.getStreamId() === stream2.id) {
@@ -317,7 +317,7 @@ describe('decryption', () => {
                     })
 
                     const published: any[] = []
-                    // @ts-expect-error
+                    // @ts-expect-error private
                     publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                         if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
@@ -358,7 +358,7 @@ describe('decryption', () => {
                 })
 
                 const published: any[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -388,7 +388,7 @@ describe('decryption', () => {
                     distributionMethod: 'rotate'
                 })
                 const publishedStreamMessages: any[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
@@ -435,12 +435,12 @@ describe('decryption', () => {
 
                 const contentClear: any[] = []
                 const streamMessagesPublished: StreamMessage<any>[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.publishQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     streamMessagesPublished.push(streamMessage)
@@ -472,7 +472,7 @@ describe('decryption', () => {
                     streamId: stream.id,
                     distributionMethod: 'rotate'
                 })
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.forEach(async () => {
                     await publisher.updateEncryptionKey({
                         streamId: stream.id,
@@ -480,7 +480,7 @@ describe('decryption', () => {
                     })
                 })
                 const published: any[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -509,7 +509,7 @@ describe('decryption', () => {
                     streamId: stream.id,
                     distributionMethod: 'rotate'
                 })
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.publishQueue.forEach(async () => {
                     await publisher.updateEncryptionKey({
                         streamId: stream.id,
@@ -555,13 +555,13 @@ describe('decryption', () => {
                     })
                     contentClear = []
 
-                    // @ts-expect-error
+                    // @ts-expect-error private
                     publisher.publisher.streamMessageQueue.forEach(([streamMessage]) => {
                         if (streamMessage.getStreamId() !== stream.id) { return }
                         contentClear.push(streamMessage.getParsedContent())
                     })
 
-                    // @ts-expect-error
+                    // @ts-expect-error private
                     publisher.publisher.publishQueue.forEach(async () => {
                         await publisher.updateEncryptionKey({
                             streamId: stream.id,
@@ -571,12 +571,13 @@ describe('decryption', () => {
 
                     sub = await subscriber.subscribe({
                         stream: stream.id,
-                        // @ts-expect-error
+                        // @ts-expect-error TODO invalid parameter
                         groupKeys: keys,
                     })
-                    const subSession = subscriber.getSubscriptionSession(sub.streamPartId)
+                    // @ts-expect-error private
+                    const subSession = subscriber.subscriber.getSubscriptionSession(sub.streamPartId)
                     if (!subSession) { throw new Error('no subsession?') }
-                    subSession.pipeline.forEachBefore((streamMessage, index) => {
+                    subSession.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                         if (index === BAD_INDEX) {
                             // eslint-disable-next-line no-param-reassign
                             streamMessage.groupKeyId = 'badgroupkey'
@@ -642,7 +643,7 @@ describe('decryption', () => {
 
         it('errors if rotating group key for no stream', async () => {
             await expect(async () => (
-                // @ts-expect-error
+                // @ts-expect-error invalid argument
                 publisher.updateEncryptionKey()
             )).rejects.toThrow('streamId')
         })
@@ -650,7 +651,7 @@ describe('decryption', () => {
         it('errors if setting group key for no stream', async () => {
             await expect(async () => {
                 await publisher.updateEncryptionKey({
-                    // @ts-expect-error
+                    // @ts-expect-error invalid argument
                     streamId: undefined,
                     key: GroupKey.generate(),
                     distributionMethod: 'rotate'
@@ -679,7 +680,7 @@ describe('decryption', () => {
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
-                // @ts-expect-error
+                // @ts-expect-error private
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() === stream2.id) {
                         didFindStream2 = true
@@ -711,7 +712,7 @@ describe('decryption', () => {
                     distributionMethod: 'rotate'
                 })
                 const published: any[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
@@ -749,7 +750,7 @@ describe('decryption', () => {
 
             function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
                 const onSendTest = Defer()
-                // @ts-expect-error
+                // @ts-expect-error private
                 testClient.publisher.publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
                     testClient.debug({ streamMessage })
 
@@ -789,7 +790,7 @@ describe('decryption', () => {
                 })
 
                 const contentClear: any[] = []
-                // @ts-expect-error
+                // @ts-expect-error private
                 publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())

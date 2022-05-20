@@ -1,4 +1,4 @@
-import inquirer from 'inquirer'
+import inquirer, { Answers } from 'inquirer'
 import { Wallet } from 'ethers'
 import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
@@ -11,6 +11,23 @@ import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
 import { getDefaultFile } from './config'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
+
+export interface PrivateKeyAnswers extends Answers {
+    generateOrImportPrivateKey: 'Import' | 'Generate',
+    importPrivateKey?: string
+}
+
+export interface PluginAnswers extends Answers  {
+    enabledApiPlugins: string[],
+    websocketPort?: string
+    mqttPort?: string
+    httpPort?: string
+    enableMinerPlugin: boolean
+}
+
+export interface StorageAnswers extends Answers  {
+    storagePath: string
+}
 
 const createLogger = () => {
     return {
@@ -37,7 +54,7 @@ export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
 const PLUGIN_NAMES: {[pluginName: string]: string} = {
     WS: 'websocket',
     MQTT: 'mqtt',
-    HTTP: 'publishHttp'
+    HTTP: 'http'
 }
 
 const PRIVATE_KEY_SOURCE_GENERATE = 'Generate'
@@ -48,9 +65,7 @@ export const CONFIG_TEMPLATE: any = {
     client: {
         auth: {}
     },
-    plugins: {
-        metrics: {}
-    },
+    plugins: {},
     apiAuthentication: {
         keys: [generateApiKey()]
     }
@@ -159,7 +174,7 @@ export const storagePathPrompts = [{
     when: (answers: inquirer.Answers): boolean => existsSync(answers.storagePath)
 }]
 
-export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers): any => {
+export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): any => {
     const config = { ... CONFIG_TEMPLATE, plugins: { ... CONFIG_TEMPLATE.plugins } }
     config.client.auth.privateKey = privateKey
 
@@ -173,7 +188,7 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
             if (portNumber !== defaultPort){
                 const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.HTTP) {
-                    // the publishHttp plugin is special, it needs to be added to the config after the other plugins
+                    // the http plugin is special, it needs to be added to the config after the other plugins
                     config.httpServer = portObject
                 } else {
                     // user provided a custom value, fill in
@@ -191,16 +206,16 @@ export const getConfig = (privateKey: string, pluginsAnswers: inquirer.Answers):
     return config
 }
 
-const selectStoragePath = async (): Promise<inquirer.Answers> => {
+const selectStoragePath = async (): Promise<StorageAnswers> => {
     let answers
     do {
         answers = await inquirer.prompt(storagePathPrompts)
     } while (answers.overwrite === false)
-    return answers
+    return answers as any
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const createStorageFile = async (config: any, answers: inquirer.Answers): Promise<string> => {
+export const createStorageFile = async (config: any, answers: StorageAnswers): Promise<string> => {
     const dirPath = path.dirname(answers.storagePath)
     const dirExists = existsSync(dirPath)
     if (!dirExists) {
@@ -213,8 +228,8 @@ export const createStorageFile = async (config: any, answers: inquirer.Answers):
     return answers.storagePath
 }
 
-export const getPrivateKey = (answers: inquirer.Answers): string => {
-    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey : Wallet.createRandom().privateKey
+export const getPrivateKey = (answers: PrivateKeyAnswers): string => {
+    return (answers.generateOrImportPrivateKey === PRIVATE_KEY_SOURCE_IMPORT) ? answers.importPrivateKey! : Wallet.createRandom().privateKey
 }
 
 export const getNodeIdentity = (privateKey: string): {
@@ -231,8 +246,8 @@ export const getNodeIdentity = (privateKey: string): {
 }
 
 export const start = async (
-    getPrivateKeyAnswers = () => inquirer.prompt(PRIVATE_KEY_PROMPTS),
-    getPluginAnswers = () => inquirer.prompt(createPluginPrompts()),
+    getPrivateKeyAnswers = (): Promise<PrivateKeyAnswers> => inquirer.prompt(PRIVATE_KEY_PROMPTS) as any,
+    getPluginAnswers = (): Promise<PluginAnswers> => inquirer.prompt(createPluginPrompts()) as any,
     getStorageAnswers = selectStoragePath,
     logger = createLogger()
 ): Promise<void> => {

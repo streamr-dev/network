@@ -62,6 +62,15 @@ export type DebugConfig = {
     inspectOpts: InspectOptions
 }
 
+export interface MetricsPeriodConfig {
+    streamId: string
+    duration: number
+}
+
+export type MetricsConfig = {
+    periods: MetricsPeriodConfig[]
+} | boolean
+
 /**
  * @category Important
  */
@@ -84,6 +93,7 @@ export type StrictStreamrClientConfig = {
     _timeouts: TimeoutsConfig
     /** @internal */
     debug: DebugConfig
+    metrics: MetricsConfig
 } & (
     EthereumConfig
     & ConnectionConfig
@@ -178,6 +188,26 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             depth: 5,
             maxStringLength: 512
         }
+    },
+    metrics: {
+        periods: [
+            {
+                duration: 5000,
+                streamId: 'streamr.eth/metrics/nodes/firehose/sec'
+            },
+            {
+                duration: 60000,
+                streamId: 'streamr.eth/metrics/nodes/firehose/min'
+            },
+            {
+                duration: 3600000,
+                streamId: 'streamr.eth/metrics/nodes/firehose/hour'
+            },
+            {
+                duration: 86400000,
+                streamId: 'streamr.eth/metrics/nodes/firehose/day'
+            }
+        ]
     }
 }
 

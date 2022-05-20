@@ -95,7 +95,7 @@ describe('Config', () => {
             const clientDefaults = createStrictConfig()
             const clientOverrides = createStrictConfig(ConfigTest)
             expect(clientOverrides.network.trackers).not.toEqual(clientDefaults.network.trackers)
-            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network.trackers)
+            expect(clientOverrides.network.trackers).toEqual(ConfigTest.network!.trackers)
         })
 
         it('network can be empty', () => {

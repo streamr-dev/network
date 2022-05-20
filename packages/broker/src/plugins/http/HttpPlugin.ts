@@ -1,7 +1,7 @@
 import { createEndpoint } from './publishEndpoint'
 import { Plugin, PluginOptions } from '../../Plugin'
 
-export class PublishHttpPlugin extends Plugin<void> {
+export class HttpPlugin extends Plugin<void> {
 
     constructor(options: PluginOptions) {
         super(options)

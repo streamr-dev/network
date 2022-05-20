@@ -19,7 +19,6 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {

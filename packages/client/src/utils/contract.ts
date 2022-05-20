@@ -62,7 +62,7 @@ const withErrorHandling = async <T>(
         return await execute()
     } catch (e: any) {
         const wrappedError = new Error(`Error in contract call "${methodName}"`)
-        // @ts-expect-error
+        // @ts-expect-error unknown property
         wrappedError.reason = e
         throw wrappedError
     }

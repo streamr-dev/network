@@ -36,9 +36,6 @@ export class Publisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    /**
-     * @category Important
-     */
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
@@ -66,8 +63,7 @@ export class Publisher implements Context, Stoppable {
         })
     }
 
-    /** @internal */
-    async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number): Promise<T[]> { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -83,8 +79,7 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    /** @internal */
-    async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collectMessages<T>(target: AsyncIterable<T>, n?: number): Promise<Awaited<T>[]> { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -100,8 +95,7 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    /** @internal */
-    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>): AsyncGenerator<StreamMessage<T>, void, unknown> {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -113,8 +107,10 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    /** @internal */
-    async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>) {
+    async* publishFromMetadata<T>(
+        streamDefinition: StreamDefinition, 
+        seq: AsyncIterable<PublishMetadata<T>>
+    ): AsyncGenerator<StreamMessage<T>, void, unknown> {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -126,24 +122,20 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    /** @internal */
-    startKeyExchange() {
+    startKeyExchange(): Promise<void> {
         return this.keyExchange.start()
     }
 
-    /** @internal */
-    stopKeyExchange() {
+    stopKeyExchange(): Promise<void> {
         return this.keyExchange.stop()
     }
 
-    /** @internal */
-    async start() {
+    async start(): Promise<void> {
         this.isStopped = false
         this.pipeline.start()
     }
 
-    /** @internal */
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
         await Promise.allSettled([
             this.pipeline.stop(),

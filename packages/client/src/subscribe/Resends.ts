@@ -15,7 +15,7 @@ import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { fetchStream } from '../fetchStream'
@@ -83,7 +83,7 @@ export class Resends implements Context {
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
     ) {
@@ -91,10 +91,6 @@ export class Resends implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    /**
-     * Call last/from/range as appropriate based on arguments
-     * @category Important
-     */
     async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
@@ -111,11 +107,8 @@ export class Resends implements Context {
         return sub
     }
 
-    /**
-     * Resend for all partitions of a stream.
-     */
     async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        const { partitions } = await this.streamRegistryCached.getStream(streamId)
         if (partitions === 1) {
             // nothing interesting to do, treat as regular subscription
             return this.resend<T>(streamId, options, onMessage)
@@ -176,7 +169,7 @@ export class Resends implements Context {
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
-        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAddress)
+        const nodeUrl = await (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
         const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
@@ -230,7 +223,6 @@ export class Resends implements Context {
         })
     }
 
-    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
@@ -270,7 +262,7 @@ export class Resends implements Context {
         timeout?: number
         count?: number
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
-    } = {}) {
+    } = {}): Promise<void> {
         if (!streamMessage) {
             throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
         }

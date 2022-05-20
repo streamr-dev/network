@@ -111,14 +111,14 @@ describeRepeats('StreamrClient', () => {
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
-                // @ts-expect-error
+                // @ts-expect-error private
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                // @ts-expect-error
+                // @ts-expect-error private
                 expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
@@ -246,7 +246,7 @@ describeRepeats('StreamrClient', () => {
             const onMessage = jest.fn()
             const gotMessages = Defer()
             const published: any[] = []
-            // @ts-expect-error
+            // @ts-expect-error private
             client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
                 const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
                 if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }

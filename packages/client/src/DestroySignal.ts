@@ -16,9 +16,7 @@ import { Signal } from './utils/Signal'
 export class DestroySignal implements Context {
     onDestroy = Signal.once()
     trigger = this.destroy
-    /** @internal */
     readonly id = instanceId(this)
-    /** @internal */
     readonly debug
 
     constructor(context: Context) {
@@ -28,17 +26,17 @@ export class DestroySignal implements Context {
         })
     }
 
-    destroy() {
+    destroy(): Promise<void> {
         return this.onDestroy.trigger()
     }
 
-    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance') {
+    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance'): void {
         if (this.isDestroyed()) {
             throw new ContextError(context, msg)
         }
     }
 
-    isDestroyed() {
+    isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
     }
 }

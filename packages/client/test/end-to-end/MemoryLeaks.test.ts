@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
-import { StreamrClient, initContainer, Dependencies } from '../../src/StreamrClient'
+import { StreamrClient, initContainer } from '../../src/StreamrClient'
 import { container, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
@@ -8,6 +8,27 @@ import { counterId, Defer } from '../../src/utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
+import { Context } from '../../src/utils/Context'
+import { BrubeckNode } from '../../src/BrubeckNode'
+import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
+import { StreamRegistryCached } from '../../src/StreamRegistryCached'
+import { Resends } from '../../src/subscribe/Resends'
+import { Publisher } from '../../src/publish/Publisher'
+import { Subscriber } from '../../src/subscribe/Subscriber'
+import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
+import { DestroySignal } from '../../src/DestroySignal'
+
+const Dependencies = {
+    Context,
+    BrubeckNode,
+    StorageNodeRegistry,
+    StreamRegistryCached,
+    Resends,
+    Publisher,
+    Subscriber,
+    GroupKeyStoreFactory,
+    DestroySignal
+}
 
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000

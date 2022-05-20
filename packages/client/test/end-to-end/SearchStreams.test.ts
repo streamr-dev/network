@@ -42,7 +42,7 @@ describe('SearchStreams', () => {
         return ids
     }
 
-    /* eslint-disable prefer-destructuring, object-property-newline */
+    /* eslint-disable object-property-newline */
     beforeAll(async () => {
         client = new StreamrClient({
             ...ConfigTest,

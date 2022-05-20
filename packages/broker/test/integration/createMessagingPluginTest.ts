@@ -90,7 +90,6 @@ export const createMessagingPluginTest = <T>(
             if (pluginClient !== undefined) {
                 await api.closeClient(pluginClient)
             }
-            streamrClient?.debug('destroy after test')
             await streamrClient?.destroy()
         })
 

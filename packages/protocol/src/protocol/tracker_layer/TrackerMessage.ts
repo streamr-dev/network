@@ -93,10 +93,8 @@ export default class TrackerMessage {
     static deserialize(msg: any[] | string, ...typeSpecificDeserializeArgs: any[]): TrackerMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
-        /* eslint-disable prefer-destructuring */
         const messageVersion = messageArray[0]
         const messageType = messageArray[1]
-        /* eslint-enable prefer-destructuring */
 
         const C = TrackerMessage.getSerializer(messageVersion, messageType)
         return C.fromArray(messageArray, ...typeSpecificDeserializeArgs)

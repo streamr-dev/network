@@ -11,7 +11,7 @@ function joinMessages(msgs: (string | undefined)[]): string {
     return msgs.filter(Boolean).join('\n')
 }
 
-function getStacks(err: Error | AggregatedError) {
+function getStacks(err: Error | AggregatedError): (string | undefined)[] {
     if (err instanceof AggregatedError) {
         return [
             err.ownStack,
@@ -52,7 +52,7 @@ export class AggregatedError extends Error {
     /**
      * Combine any errors from Promise.allSettled into AggregatedError.
      */
-    static fromAllSettled(results = [], errorMessage = '') {
+    static fromAllSettled(results = [], errorMessage = ''): AggregatedError | undefined {
         const errs = results.map(({ reason }) => reason).filter(Boolean)
         if (!errs.length) {
             return undefined
@@ -64,7 +64,7 @@ export class AggregatedError extends Error {
     /**
      * Combine any errors from Promise.allSettled into AggregatedError and throw it.
      */
-    static throwAllSettled(results = [], errorMessage = '') {
+    static throwAllSettled(results = [], errorMessage = ''): void | never {
         const err = this.fromAllSettled(results, errorMessage)
         if (err) {
             throw err
@@ -74,7 +74,7 @@ export class AggregatedError extends Error {
     /**
      * Handles 'upgrading' an existing error to an AggregatedError when necesary.
      */
-    static from(oldErr?: Error | AggregatedError, newErr?: Error, msg?: string) {
+    static from(oldErr?: Error | AggregatedError, newErr?: Error, msg?: string): Error | undefined {
         if (!newErr) {
             if (oldErr && msg) {
                 // copy message

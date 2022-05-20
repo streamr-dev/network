@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // horrible, hacky workaround to prevent tsyringe from replacing useful,
 // specific errors produced by constructors with tsyringe-specific errors that
 // look like "Cannot inject the dependency".  These errors lose the original

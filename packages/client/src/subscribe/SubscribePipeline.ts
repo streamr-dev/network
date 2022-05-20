@@ -15,7 +15,7 @@ import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -25,7 +25,7 @@ export function SubscribePipeline<T = unknown>(
 ): MessageStream<T> {
     const validate = new Validator(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(ConfigInjectionToken.Subscribe),
         container.resolve(ConfigInjectionToken.Cache)
     )
@@ -63,7 +63,7 @@ export function SubscribePipeline<T = unknown>(
 
     const decrypt = new Decrypt<T>(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(SubscriberKeyExchange),
         container.resolve(DestroySignal),
     )
@@ -78,7 +78,7 @@ export function SubscribePipeline<T = unknown>(
         .pipe(gapFillMessages.transform())
         // convert group key error responses into errors
         // (only for subscribe pipeline, not publish pipeline)
-        .forEach((streamMessage) => {
+        .forEach((streamMessage: StreamMessage) => {
             if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
                 const errMsg = streamMessage as StreamMessage<any>
                 const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
@@ -87,19 +87,19 @@ export function SubscribePipeline<T = unknown>(
             }
         })
         // validate
-        .forEach(async (streamMessage) => {
+        .forEach(async (streamMessage: StreamMessage) => {
             await validate.validate(streamMessage)
         })
         // decrypt
         .map(decrypt.decrypt)
         // parse content
-        .forEach(async (streamMessage) => {
+        .forEach(async (streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
         })
         // re-order messages (ignore gaps)
         .pipe(orderMessages.transform())
         // ignore any failed messages
-        .filter(async (streamMessage) => {
+        .filter(async (streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally(async () => {
