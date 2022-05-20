@@ -34,4 +34,8 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
         return this.context.waitForNeighbours(numNeighbours, timeout)
     }
+
+    on(_eventName: 'error', cb: (err: Error) => void): void {
+        this.onError.listen(cb)
+    }
 }
