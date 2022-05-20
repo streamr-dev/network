@@ -62,7 +62,7 @@ describe('client behaviour on invalid message', () => {
         const onMessage = jest.fn()
         const onError = jest.fn()
         const subscription = await subscriberClient.subscribe(streamId, onMessage)
-        subscription.onError(onError)
+        subscription.onError.listen(onError)
         await expect(publisherClient.publish(streamId, { not: 'allowed' }))
             .rejects
             .toThrow(/is not a publisher on stream/)
