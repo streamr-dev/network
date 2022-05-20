@@ -86,7 +86,6 @@ export class RpcCommunicator extends EventEmitter {
     public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
         const requestOptions = this.rpcClientTransport.mergeOptions(options)
         if (deferredPromises && rpcMessage.header.notification) {
-            console.log("notification", rpcMessage.header.method)
             this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
         } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
@@ -108,7 +107,6 @@ export class RpcCommunicator extends EventEmitter {
             }
         } else if (rpcCall.header.request && rpcCall.header.method) {
             if (rpcCall.header.notification) {
-                if (this.appId === 'webrtc') {console.log("onNotification", rpcCall.header.method)}
                 await this.handleNotification(senderDescriptor, rpcCall)
             } else {
                 await this.handleRequest(senderDescriptor, rpcCall)

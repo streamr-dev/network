@@ -120,4 +120,8 @@ export class SortedContactList {
     public isActive(id: PeerID): boolean {
         return this.contactsById[id.toString()] ? this.contactsById[id.toString()].active : false
     }
+
+    public getAllContacts(): DhtPeer[] {
+        return Object.values(this.contactsById).map((contact) => contact.contact)
+    }
 }

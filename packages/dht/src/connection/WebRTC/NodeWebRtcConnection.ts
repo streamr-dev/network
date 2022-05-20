@@ -60,7 +60,6 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
             try {
                 this.connection!.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
-                console.log("SETTING DESCRIPTION")
             } catch (err) {
                 console.error(err)
             }

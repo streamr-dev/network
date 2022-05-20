@@ -4,6 +4,8 @@ import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
+import { waitForEvent } from 'streamr-test-utils'
+import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -19,7 +21,7 @@ describe('Layer0 with WebRTC connections', () => {
 
     beforeEach(async () => {
 
-        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
+        epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
         await epDhtNode.start()
 
         await epDhtNode.joinDht(epPeerDescriptor)
@@ -38,7 +40,7 @@ describe('Layer0 with WebRTC connections', () => {
     })
 
     afterEach(async () => {
-        await Promise.all([
+        await Promise.allSettled([
             node1.stop(),
             node2.stop(),
             node3.stop(),
@@ -46,14 +48,17 @@ describe('Layer0 with WebRTC connections', () => {
             epDhtNode.stop()
         ])
 
-        // setTimeout(() => log(), 10000)
+        // setTimeout(() => log(), 200)
     })
 
-    it.only('Happy path one by one', async () => {
+    it('Happy path two peers', async () => {
         await node1.joinDht(epPeerDescriptor)
-        await node2.joinDht(epPeerDescriptor)
-        // await node3.joinDht(epPeerDescriptor)
-        // await node4.joinDht(epPeerDescriptor)
+
+        await Promise.all([
+            // @ts-expect-error private
+            waitForEvent(node1.getRpcCommunicator().getConnectionManager().webrtcConnector, ConnectionSourceEvent.CONNECTED),
+            node2.joinDht(epPeerDescriptor)
+        ])
 
         expect(node1.getRpcCommunicator().getConnectionManager().hasConnection(node2.getPeerDescriptor())).toEqual(true)
         expect(node2.getRpcCommunicator().getConnectionManager().hasConnection(node1.getPeerDescriptor())).toEqual(true)
@@ -61,9 +66,9 @@ describe('Layer0 with WebRTC connections', () => {
             .toEqual(ConnectionType.WEBRTC)
         expect(node2.getRpcCommunicator().getConnectionManager().getConnection(node1.getPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-    }, 25000)
+    }, 10000)
 
-    it('Happy path simultaneous', async () => {
+    it('Happy path simultaneous joins', async () => {
         await Promise.all([
             node1.joinDht(epPeerDescriptor),
             node2.joinDht(epPeerDescriptor),
@@ -77,5 +82,5 @@ describe('Layer0 with WebRTC connections', () => {
             .toEqual(ConnectionType.WEBRTC)
         expect(node2.getRpcCommunicator().getConnectionManager().getConnection(node1.getPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-    })
+    }, 15000)
 })

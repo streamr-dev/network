@@ -247,9 +247,11 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
+            return
+        }
 
         if (this.connections.hasOwnProperty(stringId)) {
-            console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), PeerID.fromValue(peerDescriptor!.peerId).toString(), "SENDING")
             this.connections[stringId].send(Message.toBinary(message))
         }
 
@@ -271,7 +273,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             this.connections[stringId] = connection
             connection.send(Message.toBinary(message))
         }
-
         else if (this.webrtcConnector) {
             const connection = this.webrtcConnector.connect(peerDescriptor)
             this.connections[stringId] = connection

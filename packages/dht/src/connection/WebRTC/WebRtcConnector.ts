@@ -55,18 +55,21 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): IConnection {
-        const existingConnection = this.getWebRtcConnection(targetPeerDescriptor)
-        if (existingConnection) {
-            return existingConnection as unknown as IConnection
-        }
-        setImmediate(() => {
-            const newConnection = this.createConnection(targetPeerDescriptor)
-            const added = this.addManagerConnection(targetPeerDescriptor, newConnection)
-            if (!added) {
-                newConnection.close()
+        if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
+            const existingConnection = this.getWebRtcConnection(targetPeerDescriptor)
+            if (existingConnection) {
+                return existingConnection as unknown as IConnection
             }
-        })
-        return new DeferredConnection(targetPeerDescriptor)
+            setImmediate(() => {
+                const newConnection = this.createConnection(targetPeerDescriptor)
+                const added = this.addManagerConnection(targetPeerDescriptor, newConnection)
+                if (!added) {
+                    newConnection.close()
+                }
+            })
+            return new DeferredConnection(targetPeerDescriptor)
+        }
+        throw new Error()
     }
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
@@ -93,7 +96,6 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         description: string,
         _connectionId: string
     ): void {
-        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), PeerID.fromValue(remotePeerDescriptor!.peerId).toString(),"ON OFFER")
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
@@ -115,8 +117,6 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         description: string,
         _connectionId: string
     ): void {
-        console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() , "RTC ANSWER")
-
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
@@ -154,6 +154,9 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
     }
 
     bindListenersAndStartConnection(targetPeerDescriptor: PeerDescriptor, connection: NodeWebRtcConnection, sendRequest = true): void {
+        if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+            return
+        }
         const offering = this.isOffering(
             PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(),
             PeerID.fromValue(targetPeerDescriptor.peerId).toString()
@@ -178,8 +181,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
             this.emit(ConnectionSourceEvents.CONNECTED, connection)
         })
         connection.start(offering)
-        if (!offering && sendRequest) {
-            console.log(PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString(), "REQUESTING CONNECTION")
+        if (offering === false && sendRequest) {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())
                 .catch(() => {})
         }

@@ -36,19 +36,14 @@ export enum Event {
 export const DEFAULT_APP_ID = 'layer0'
 
 export interface DhtNodeConfig {
-    /*peerDescriptor?: PeerDescriptor
-    dhtRpcClient?: DhtRpcClient
-    clientTransport?: ClientTransport
-    serverTransport?: ServerTransport
-    rpcCommunicator?: RpcCommunicator*/
-
-    transportLayer?: ITransport,
-    peerDescriptor?: PeerDescriptor,
-    entryPoints?: PeerDescriptor[],
-    webSocketHost?: string,
-    webSocketPort?: number,
+    transportLayer?: ITransport
+    peerDescriptor?: PeerDescriptor
+    entryPoints?: PeerDescriptor[]
+    webSocketHost?: string
+    webSocketPort?: number
     peerIdString?: string
     appId?: string
+    numberOfNodesPerKBucket?: number
 }
 
 export class DhtNode extends EventEmitter implements ITransport {
@@ -58,7 +53,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     private readonly ALPHA = 3
     private readonly K = 4
     private readonly peers: Map<string, DhtPeer>
-    private readonly numberOfNodesPerKBucket = 1
+    private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private readonly appId: string
 
@@ -88,7 +83,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         else {
             this.appId = DEFAULT_APP_ID
         }
-
+        this.numberOfNodesPerKBucket = config.numberOfNodesPerKBucket || 1
         // False positives at 0.05% at maximum capacity
         this.routerDuplicateDetector = new RouterDuplicateDetector(2 ** 15, 16, 1050, 2100)
     }
@@ -194,11 +189,13 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
-            if (await contact.ping(this.ownPeerDescriptor!)) {
-                this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
-            } else {
-                this.removeContact(contact.getPeerDescriptor())
-                this.addClosestContactToBucket()
+            if (contact.peerId.toString() !== this.ownPeerId!.toString()) {
+                if (await contact.ping(this.ownPeerDescriptor!)) {
+                    this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
+                } else {
+                    this.removeContact(contact.getPeerDescriptor())
+                    this.addClosestContactToBucket()
+                }
             }
         })
         this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
@@ -220,14 +217,13 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return []
         }
-        console.log(this.ownPeerId!.toString(), "onGetClosestPeers")
         const ret = this.bucket!.closest(caller.peerId, this.K)
         this.addNewContact(caller, true)
         return ret
     }
 
     public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
-        if (!this.started || this.stopped) {
+        if (!this.started || this.stopped || this.routerDuplicateDetector.test(routedMessage.nonce)) {
             return
         }
         this.addNewContact(routedMessage.sourcePeer!, true)
@@ -263,23 +259,24 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     public async routeMessage(params: RouteMessageParams): Promise<void> {
-        if (!this.started || this.stopped) {
+        if (!this.started
+            || this.stopped
+            || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer!.peerId))) {
             return
         }
         let successAcks = 0
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
-        const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K)
-            .filter((peer: DhtPeer) =>
-                !(peer.peerId.equals(PeerID.fromValue(params.sourcePeer!.peerId))
-                    || (peer.peerId.equals(PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array()))))
-            )
+        const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K).filter((peer: DhtPeer) =>
+            !peer.peerId.equals(this.ownPeerId!)
+                || !(peer.peerId.equals(PeerID.fromValue(params.sourcePeer!.peerId))
+                || (peer.peerId.equals(PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array()))))
+        )
         const initialLength = closest.length
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
             if (this.stopped) {
                 break
             }
             const next = closest.shift()
-            console.log(this.ownPeerId!.toString(), next!.peerId.toString())
             queue.add(
                 (async () => {
                     const success = await next!.routeMessage({
@@ -288,8 +285,6 @@ export class DhtNode extends EventEmitter implements ITransport {
                     })
                     if (success) {
                         successAcks += 1
-                    } else{
-                        console.log("COULD NOT ROUTE")
                     }
                 })
             )
@@ -316,17 +311,19 @@ export class DhtNode extends EventEmitter implements ITransport {
             return false
         }
         const closestPeers = this.bucket!.closest(routedMessage.destinationPeer!.peerId, this.K)
-        console.log(this.bucket!.toArray().length)
-        closestPeers.forEach((p) => {console.log(p.peerId.toString())})
-        const notRoutableCount = closestPeers.reduce((acc: number, curr: DhtPeer) => {
-            if (curr.peerId.equals(PeerID.fromValue(routedMessage.sourcePeer!.peerId)
-                || curr.peerId.equals(PeerID.fromValue(routedMessage.previousPeer?.peerId || new Uint8Array())))) {
+        const notRoutableCount = this.notRoutableCount(closestPeers, routedMessage.sourcePeer!, routedMessage.previousPeer)
+        return (closestPeers.length - notRoutableCount) > 0
+    }
+
+    private notRoutableCount(peers: DhtPeer[], sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): number {
+        return peers.reduce((acc: number, curr: DhtPeer) => {
+            if (curr.peerId.equals(this.ownPeerId!)
+                || (curr.peerId.equals(PeerID.fromValue(sourcePeer!.peerId))
+                || curr.peerId.equals(PeerID.fromValue(previousPeer?.peerId || new Uint8Array())))) {
                 return acc + 1
             }
             return acc
         }, 0)
-        console.log(closestPeers.length, notRoutableCount)
-        return (closestPeers.length - notRoutableCount) > 0
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer) {
