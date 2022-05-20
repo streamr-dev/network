@@ -383,9 +383,7 @@ export default class StreamMessage<T = unknown> {
     static deserialize(msg: any[] | string): StreamMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
-        /* eslint-disable prefer-destructuring */
         const messageVersion = messageArray[0]
-        /* eslint-enable prefer-destructuring */
 
         const C = StreamMessage.getSerializer(messageVersion)
         return C.fromArray(messageArray)

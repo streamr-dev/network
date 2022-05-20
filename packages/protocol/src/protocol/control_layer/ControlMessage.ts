@@ -95,10 +95,8 @@ export default class ControlMessage {
     static deserialize(msg: any, ...typeSpecificDeserializeArgs: any[]): ControlMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
-        /* eslint-disable prefer-destructuring */
         const messageVersion = messageArray[0]
         const messageType = messageArray[1]
-        /* eslint-enable prefer-destructuring */
 
         const C = ControlMessage.getSerializer(messageVersion, messageType)
         return C.fromArray(messageArray, ...typeSpecificDeserializeArgs)
