@@ -46,7 +46,7 @@ describe('decryption', () => {
             } else {
                 expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
             }
-        })).onFinally(() => {
+        })).onFinally.listen(() => {
             onSendTest.resolve(undefined)
         })
 
@@ -296,7 +296,7 @@ describe('decryption', () => {
                         } else {
                             expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
                         }
-                    })).onFinally(() => {
+                    })).onFinally.listen(() => {
                         onSendTest.resolve(undefined)
                     })
 
@@ -587,7 +587,7 @@ describe('decryption', () => {
 
                 it('ignores message if onError does not rethrow', async () => {
                     const onSubError = jest.fn()
-                    sub.onError(onSubError)
+                    sub.onError.listen(onSubError)
                     // Publish after subscribed
                     await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
@@ -615,7 +615,7 @@ describe('decryption', () => {
                         sub.debug('ON SUB ERROR', err)
                         throw err
                     })
-                    sub.onError(onSubError)
+                    sub.onError.listen(onSubError)
                     // Publish after subscribed
                     await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
@@ -687,7 +687,7 @@ describe('decryption', () => {
                         testClient.debug('streamMessage.encryptionType', streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.AES)
                         expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
                     }
-                })).onFinally(() => {
+                })).onFinally.listen(() => {
                     onSendTest.resolve(undefined)
                 })
 
@@ -769,7 +769,7 @@ describe('decryption', () => {
                     } else {
                         expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
                     }
-                })).onFinally(() => {
+                })).onFinally.listen(() => {
                     onSendTest.resolve(undefined)
                 })
 
@@ -866,7 +866,7 @@ describe('decryption', () => {
                 throw err // this should trigger unsub
             })
 
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const received: any[] = []
             // Publish after subscribed

@@ -64,7 +64,7 @@ describe('Validation', () => {
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
             sub.context.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
@@ -132,7 +132,7 @@ describe('Validation', () => {
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
             sub.context.pipeline.mapBefore(async (streamMessage: StreamMessage, index: number) => {
