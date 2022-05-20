@@ -15,6 +15,7 @@ import { PeerID } from '../PeerID'
 import { Event, ITransport } from '../transport/ITransport'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
+import { Logger } from '../helpers/Logger'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -23,6 +24,8 @@ export interface ConnectionManagerConfig {
 }
 
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
+
+const logger = new Logger(module)
 
 export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
@@ -57,8 +60,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             })
         }
         catch (e) {
-            console.log("Connectivity test produced negative result, communicating reply to the requester")
-            console.log(e)
+            logger.trace("Connectivity test produced negative result, communicating reply to the requester")
+            logger.debug(e)
 
             connectivityResponseMessage = {
                 openInternet: false,
@@ -70,7 +73,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (outgoingConnection) {
             outgoingConnection.close()
 
-            // console.log("Connectivity test produced positive result, communicating reply to the requester")
+            logger.trace("Connectivity test produced positive result, communicating reply to the requester")
 
             connectivityResponseMessage = {
                 openInternet: true,
@@ -99,7 +102,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 })
             }
             catch (e) {
-                //console.log("Failed to connect to the entrypoints")
+                logger.error("Failed to connect to the entrypoints")
 
                 reject(new Error('Failed to connect to the entrypoints'))
             }
@@ -122,18 +125,18 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 }
 
                 outgoingConnection.once(ConnectionEvents.ERROR, () => {
-                    console.log('clientsocket error')
+                    logger.trace('clientsocket error')
                 })
 
-                // console.log('trying to send connectivity request')
+                logger.trace('trying to send connectivity request')
                 outgoingConnection.send(Message.toBinary(msg))
-                // console.log('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
+                logger.trace('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
             }
         })
     }
 
     async start(): Promise<ConnectivityResponseMessage> {
-
+        logger.info(`Starting ConnectionManager...`)
         // Set up and start websocket server
         if (this.webSocketServer) {
             this.webSocketServer.bindListeners(
@@ -144,10 +147,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
 
             return new Promise(async (resolve, reject) => {
-                // Open webscoket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
+                // Open websocket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
 
                 if (this.config.entryPoints && this.config.entryPoints.length > 0) {
-                    this.sendConnectivityRequest().then((response) => { resolve(response) }).catch((err) => reject(err))
+                    this.sendConnectivityRequest().then((response) => resolve(response)).catch((err) => reject(err))
                 }
 
                 else {
@@ -225,6 +228,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async stop(): Promise<void> {
+        logger.trace(`Stopping ConnectionManager`)
         this.removeAllListeners()
         if (this.webSocketServer) {
             await this.webSocketServer.stop()
@@ -250,6 +254,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             return
         }
+        logger.trace(`Sending message to: ${peerDescriptor.peerId.toString()}`)
 
         if (this.connections.hasOwnProperty(stringId)) {
             this.connections[stringId].send(Message.toBinary(message))
@@ -289,7 +294,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     private closeConnection(stringId: string, reason?: string): void {
         if (this.connections.hasOwnProperty(stringId)) {
-            console.log(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
+            logger.trace(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
             this.connections[stringId].close()
         }
     }
@@ -327,10 +332,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+        logger.trace(`Creating WebSocket Connector`)
         this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this), rpcCommunicator)
     }
 
     createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+        logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: transport,
             rpcCommunicator,

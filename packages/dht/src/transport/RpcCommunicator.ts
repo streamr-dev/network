@@ -20,6 +20,7 @@ import { ITransport, Event as ITransportEvent  } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DEFAULT_APP_ID } from '../dht/DhtNode'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
+import { Logger } from '../helpers/Logger'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
@@ -41,6 +42,8 @@ interface OngoingRequest {
     deferredPromises: DeferredPromises,
     timeoutRef: NodeJS.Timeout
 }
+
+const logger = new Logger(module)
 
 export class RpcCommunicator extends EventEmitter {
     private stopped = false
@@ -91,6 +94,8 @@ export class RpcCommunicator extends EventEmitter {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
         const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage)}
+
+        logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
         this.send(rpcMessage.targetDescriptor!, msg, this.appId)
     }
 
@@ -98,6 +103,7 @@ export class RpcCommunicator extends EventEmitter {
         if (message.messageType !== MessageType.RPC) {
             return
         }
+        logger.trace(`onIncomingMessage on ${this.appId} rpc, messageId: ${message.messageId}`)
         const rpcCall = RpcMessage.fromBinary(message.body)
         if (rpcCall.header.response && this.ongoingRequests.has(rpcCall.requestId)) {
             if (rpcCall.responseError) {

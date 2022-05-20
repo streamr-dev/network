@@ -13,6 +13,9 @@ import { TODO } from '../../types'
 import { IWebRtcConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../../rpc-protocol/ServerTransport'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class RemoteWebrtcConnector {
     private peerId: PeerID
@@ -35,7 +38,7 @@ export class RemoteWebrtcConnector {
             const response = await this.client.requestConnection(request, options).response
             return response.sent
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return false
         }
     }
@@ -56,7 +59,7 @@ export class RemoteWebrtcConnector {
             const response = await this.client.rtcOffer(request, options).response
             return response.sent
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return false
         }
     }
@@ -77,7 +80,7 @@ export class RemoteWebrtcConnector {
             const response = await this.client.rtcAnswer(request, options).response
             return response.sent
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return false
         }
     }

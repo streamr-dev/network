@@ -5,6 +5,9 @@ import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConne
 import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 declare let NodeJsBuffer: BufferConstructor
 
@@ -21,19 +24,19 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         this.connectionId = new ConnectionID()
 
         socket.on('message', (message) => {
-            //console.log('ServerWebSocket::onMessage')
+            logger.trace('ServerWebSocket::onMessage')
             if (message.type === 'utf8') {
                 console.log('Received string Message: ' + message.utf8Data)
             }
             else if (message.type === 'binary') {
-                //console.log('Received Binary Message of ' + message.binaryData.length + ' bytes')
+                logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
                 this.emit(ConnectionEvent.DATA,
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
                         message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
             }
         })
         socket.on('close', (reasonCode, description) => {
-            //console.log((new Date()) + ' Peer ' + socket.remoteAddress + ' disconnected.')
+            logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
             this.emit(ConnectionEvent.DISCONNECTED, reasonCode, description)
         })
 
@@ -46,7 +49,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
 
     send(data: Uint8Array): void {
         if (typeof NodeJsBuffer !== 'undefined') {
-            //console.log('serverwebsocket trying to send '+ JSON.stringify(data))
+            logger.trace('serverwebsocket trying to send '+ JSON.stringify(data))
             this.socket.sendBytes(NodeJsBuffer.from(data))
         }
         else {

@@ -13,6 +13,9 @@ import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { TODO } from '../../types'
 import { DeferredConnection } from '../DeferredConnection'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export interface WebRtcConnectorParams {
     rpcTransport: ITransport,
@@ -56,6 +59,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
 
     connect(targetPeerDescriptor: PeerDescriptor): IConnection {
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
+            logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.peerId.toString()}`)
             const existingConnection = this.getWebRtcConnection(targetPeerDescriptor)
             if (existingConnection) {
                 return existingConnection as unknown as IConnection
@@ -206,6 +210,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
                 }
             })
             if (this.ownPeerDescriptor) {
+                logger.trace(`Initiating handshake with ${connection.getPeerDescriptor()?.peerId.toString()}`)
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
                     protocolVersion: protocolVersion,

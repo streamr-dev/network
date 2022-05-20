@@ -84,7 +84,7 @@ module.exports = (env, argv) => {
             sourceMapFilename: `[name].[contenthash].js.map`,
             chunkFilename: '[id].[contenthash].js',
             path: path.resolve(__dirname, 'dist'),
-            library: 'StreamrNetwork',
+            library: 'StreamrDht',
             libraryTarget: 'umd2',
             umdNamedDefine: true,
         },

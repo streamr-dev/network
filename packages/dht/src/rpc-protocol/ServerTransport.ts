@@ -4,6 +4,7 @@ import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf
 import { promiseTimeout } from '../dht/helpers'
 import { Err } from '../errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
+import { Logger } from '../helpers/Logger'
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
@@ -17,6 +18,8 @@ export interface ServerTransport {
 
 export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
 
+const logger = new Logger(module)
+
 export class ServerTransport extends EventEmitter {
     methods: Map<string, RegisteredMethod>
     constructor() {
@@ -25,6 +28,7 @@ export class ServerTransport extends EventEmitter {
     }
 
     async onRequest(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<Uint8Array> {
+        logger.trace(`Server processing request ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
         const fn = this.methods.get(methodName)
         if (!fn) {
@@ -34,6 +38,7 @@ export class ServerTransport extends EventEmitter {
     }
 
     async onNotification(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        logger.trace(`Server processing notification ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
         const fn = this.methods.get(methodName)
         if (!fn) {

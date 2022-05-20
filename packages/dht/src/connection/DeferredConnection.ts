@@ -2,6 +2,9 @@ import { ConnectionType, IConnection } from './IConnection'
 import { EventEmitter } from 'events'
 import { ConnectionID } from '../types'
 import { PeerDescriptor } from '../proto/DhtRpc'
+import { Logger } from '../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class DeferredConnection extends EventEmitter implements IConnection {
     connectionId: ConnectionID
@@ -16,6 +19,7 @@ export class DeferredConnection extends EventEmitter implements IConnection {
     }
 
     close(): void {
+        logger.trace(`Closing deferred connection ${this.connectionId.toString()}`)
         this.buffer = []
         this.removeAllListeners()
     }

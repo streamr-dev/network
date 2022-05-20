@@ -78,5 +78,5 @@ describe('Layer0 with WebRTC connections', () => {
             .toEqual(ConnectionType.WEBRTC)
         expect(node2.getRpcCommunicator().getConnectionManager().getConnection(node1.getPeerDescriptor())!.connectionType)
             .toEqual(ConnectionType.WEBRTC)
-    }, 15000)
+    }, 20000)
 })
