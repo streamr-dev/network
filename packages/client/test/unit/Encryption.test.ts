@@ -99,8 +99,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 signature: null,
             })
             EncryptionUtil.encryptStreamMessage(streamMessage, key)
-            const newKey = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-            expect(newKey).toBe(null)
+            EncryptionUtil.decryptStreamMessage(streamMessage, key)
             expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
             expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
         })

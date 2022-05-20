@@ -132,16 +132,9 @@ class EncryptionUtilBase {
         /* eslint-enable no-param-reassign */
     }
 
-    /*
-     * Decrypts the serialized content of 'streamMessage' with 'groupKey'. If the resulting plaintext is the concatenation
-     * of a new group key and a message content, sets the content of 'streamMessage' with that message content and returns
-     * the key. If the resulting plaintext is only a message content, sets the content of 'streamMessage' with that
-     * message content and returns null.
-     */
-
-    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): any {
+    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
-            return null
+            return
         }
 
         try {
@@ -175,7 +168,6 @@ class EncryptionUtilBase {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
         }
-        return null
         /* eslint-enable no-param-reassign */
     }
 }
