@@ -27,6 +27,7 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
+import { InspectOptions } from 'util'
 
 export interface StreamProperties {
     id: string
@@ -264,8 +265,7 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any): string {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
         return inspect(this.toObject(), {
             ...options,
             customInspect: false,

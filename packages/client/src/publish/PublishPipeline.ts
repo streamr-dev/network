@@ -19,6 +19,7 @@ import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
 import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
     publishMetadata
@@ -33,8 +34,7 @@ export class FailedToPublishError extends Error {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any): string {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
         return inspect(this, {
             ...options,
             customInspect: false,
