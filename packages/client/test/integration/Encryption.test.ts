@@ -318,7 +318,7 @@ describe('decryption', () => {
 
                     const published: any[] = []
                     // @ts-expect-error private
-                    publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                    publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                         if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
                     })
@@ -359,7 +359,7 @@ describe('decryption', () => {
 
                 const published: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
@@ -389,7 +389,7 @@ describe('decryption', () => {
                 })
                 const publishedStreamMessages: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
                     await publisher.updateEncryptionKey({
@@ -713,7 +713,7 @@ describe('decryption', () => {
                 })
                 const published: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
                     await publisher.updateEncryptionKey({
@@ -791,7 +791,7 @@ describe('decryption', () => {
 
                 const contentClear: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
