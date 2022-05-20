@@ -21,6 +21,7 @@ import { Pipeline } from '../../src/utils/Pipeline'
 import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
+import { StreamrClientConfig } from '../../src/Config'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -63,7 +64,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function describeRepeats(msg: any, fn: any, describeFn = describe): void {
+export function describeRepeats(msg: string, fn: any, describeFn = describe): void {
     for (let k = 0; k < TEST_REPEATS; k++) {
         // eslint-disable-next-line no-loop-func
         describe(msg, () => {
@@ -80,15 +81,21 @@ describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator: AsyncIterable<any>, fn: MaybeAsync<(item: any) => void> = async () => {}): Promise<any[]> {
-    const received: any[] = []
+export async function collect<T>(
+    iterator: AsyncIterable<StreamMessage<T>>,
+    fn: MaybeAsync<(item: {
+        msg: StreamMessage<T>,
+        iterator: AsyncIterable<StreamMessage<T>>,
+        received: T[]
+    }) => void> = async () => {}
+): Promise<T[]> {
+    const received: T[] = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
         await fn({
             msg, iterator, received,
         })
     }
-
     return received
 }
 
@@ -157,7 +164,7 @@ const getTestName = (module: NodeModule): string => {
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
 
 // eslint-disable-next-line no-undef
-export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): any => {
+export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
@@ -173,7 +180,7 @@ export const createTestStream = async (streamrClient: StreamrClient, module: Nod
 export const getCreateClient = (
     defaultOpts = {}, 
     defaultParentContainer?: DependencyContainer
-): (opts?: any, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
+): (opts?: StreamrClientConfig, parentContainer?: DependencyContainer) => Promise<StreamrClient> => {
     const addAfter = addAfterFn()
 
     return async function createClient(opts: any = {}, parentContainer?: DependencyContainer) {
@@ -538,7 +545,12 @@ export function getPublishTestMessages(
     }
 }
 
-export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: StreamMessage, opts?: any) => Promise<void> {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: StreamMessage, opts?: {
+    interval?: number
+    timeout?: number
+    count?: number
+    messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+}) => Promise<void> {
     return async (lastPublished: StreamMessage, opts = {}) => {
         return client.waitForStorage(lastPublished, {
             ...defaultOpts,
