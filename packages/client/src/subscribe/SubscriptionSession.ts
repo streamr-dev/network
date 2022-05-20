@@ -184,7 +184,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.subscriptions.delete(sub)
 
         try {
-            if (!sub.isUnsubscribed && !sub.isDone()) {
+            if (!sub.isDone()) {
                 await sub.unsubscribe()
             }
         } finally {

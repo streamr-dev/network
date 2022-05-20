@@ -15,10 +15,6 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     /** @internal */
     context: SubscriptionSession<T>
     readonly streamPartId: StreamPartID
-    /**
-     * prevent buffered data from yielding
-     * @internal */
-    isUnsubscribed = false
 
     /** @internal */
     constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
