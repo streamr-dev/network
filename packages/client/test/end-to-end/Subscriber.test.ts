@@ -508,12 +508,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 })
             ])
@@ -534,12 +534,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 })
             ])
@@ -736,7 +736,7 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received }) => {
@@ -756,12 +756,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === MAX_ITEMS - 1) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === MAX_ITEMS) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
             ])

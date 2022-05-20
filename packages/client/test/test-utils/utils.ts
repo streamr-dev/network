@@ -82,10 +82,10 @@ describeRepeats.only = (msg: any, fn: any) => {
 }
 
 export async function collect<T>(
-    iterator: AsyncIterable<StreamMessage<T>>,
+    iterator: AsyncGenerator<StreamMessage<T>>,
     fn: MaybeAsync<(item: {
         msg: StreamMessage<T>,
-        iterator: AsyncIterable<StreamMessage<T>>,
+        iterator: AsyncGenerator<StreamMessage<T>>,
         received: T[]
     }) => void> = async () => {}
 ): Promise<T[]> {
