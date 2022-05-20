@@ -5,6 +5,9 @@ import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
 import { EventEmitter } from 'events'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class ClientWebSocket extends EventEmitter implements IConnection {
     public readonly connectionId: ConnectionID
@@ -22,34 +25,36 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         this.socket = new WebSocket(address)
         this.socket.binaryType = 'arraybuffer'
         this.socket.onerror = (error: Error) => {
-            //console.log('Error', error)
+            logger.trace('WebSocket Client error: ' + error)
             this.emit(ConnectionEvent.ERROR, error.name)
         }
         
         this.socket.onopen = () => {
-            // console.log('WebSocket Client Connected')
+            logger.trace('WebSocket Client Connected')
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
                 this.emit(ConnectionEvent.CONNECTED)
             }  
         }
         
         this.socket.onclose = (event: ICloseEvent ) => {
-            //console.log('Websocket Closed')
+            logger.trace('Websocket Closed')
             this.emit(ConnectionEvent.DISCONNECTED, event.code, event.reason)
         }
         
         this.socket.onmessage = (message: IMessageEvent) => {
             if (typeof message.data === 'string') {
-                console.log("Received string: '" + message.data + "'")
+                logger.debug("Received string: '" + message.data + "'")
             }
             else {
                 this.emit(ConnectionEvent.DATA, new Uint8Array(message.data))
+                logger.trace("Received data: '" + message.data + "'")
             }
         }
     }
 
     send(data: Uint8Array): void {
         if (this.socket && this.socket.readyState === this.socket.OPEN) {
+            logger.trace(`Sending data with size ${data.byteLength}`)
             this.doSend(data)
         }
         else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
@@ -64,6 +69,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
     }
 
     close(): void {
+        logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
         this.socket?.close()
         this.buffer = []
     }

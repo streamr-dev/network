@@ -1,5 +1,3 @@
-/* eslint-disable no-console, @typescript-eslint/no-unused-vars */
-
 import * as http from 'http'
 import { EventEmitter } from 'events'
 import { server as WsServer } from 'websocket'
@@ -11,6 +9,9 @@ import {
 import { TODO } from '../../types'
 import { Event as ConnectionEvents, IConnection } from '../IConnection'
 import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 declare class NodeJsWsServer extends WsServer {}
 
@@ -23,21 +24,21 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
     start({ host, port }: { host?: string; port?: number } = {}): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
-                console.log((new Date()) + ' Received request for ' + request.url)
+                logger.trace((new Date()) + ' Received request for ' + request.url)
                 response.writeHead(404)
                 response.end()
             })
 
             if (host) {
                 this.httpServer.listen(port, host, () => {
-                    console.log((new Date()) + ' Server is listening on port ' + port)
+                    logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
             }
 
             else if (port) {
                 this.httpServer.listen(port, () => {
-                    console.log((new Date()) + ' Server is listening on port ' + port)
+                    logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
             }
@@ -73,13 +74,13 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 if (!originIsAllowed(request.origin)) {
                     // Make sure we only accept requests from an allowed origin
                     request.reject()
-                    console.log((new Date()) + ' IConnection from origin ' + request.origin + ' rejected.')
+                    logger.trace((new Date()) + ' IConnection from origin ' + request.origin + ' rejected.')
                     return
                 }
 
                 const connection = request.accept(undefined, request.origin)
 
-                // console.log((new Date()) + ' IConnection accepted.')
+                logger.trace((new Date()) + ' IConnection accepted.')
 
                 this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })
@@ -89,14 +90,14 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
     bindListeners(connectivityRequestHandler: TODO, incomingMessageHandler: TODO): void {
         this.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
             //this.newConnections[connection.connectionId.toString()] = connection
-            // console.log('server received new connection')
+            logger.trace('server received new connection')
 
             connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                // console.log('server received data')
+                logger.trace('server received data')
                 const message = Message.fromBinary(data)
 
                 if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
-                    // console.log('received connectivity request')
+                    logger.trace('received connectivity request')
                     connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
                 }
 
@@ -113,7 +114,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     stop(): Promise<void> {
         this.removeAllListeners()
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()
             this.httpServer?.close(() => {
                 resolve()

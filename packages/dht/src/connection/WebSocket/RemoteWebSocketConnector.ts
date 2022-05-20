@@ -10,6 +10,9 @@ import { DummyServerCallContext } from '../../rpc-protocol/ServerTransport'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { TODO } from '../../types'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class RemoteWebSocketConnector {
     private peerId: PeerID
@@ -18,6 +21,7 @@ export class RemoteWebSocketConnector {
     }
 
     async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {
+        logger.trace(`Requesting WebSocket connection from ${this.peerDescriptor.peerId.toString()}`)
         const request: WebSocketConnectionRequest = {
             target: this.peerDescriptor,
             requester: sourceDescriptor,
@@ -36,7 +40,7 @@ export class RemoteWebSocketConnector {
             }
             return res.accepted
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return false
         }
     }

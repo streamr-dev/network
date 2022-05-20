@@ -5,6 +5,9 @@ import { PeerID } from '../PeerID'
 import { nodeFormatPeerDescriptor } from './helpers'
 import { DhtRpcOptions } from '../rpc-protocol/ClientTransport'
 import { RouteMessageParams } from './DhtNode'
+import { Logger } from '../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class DhtPeer {
     private static counter = 0
@@ -50,6 +53,7 @@ export class DhtPeer {
             const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
             return formatted
         } catch (err) {
+            logger.debug(err)
             return []
         }
 
@@ -70,7 +74,7 @@ export class DhtPeer {
                 return true
             }
         } catch (err) {
-            // TODO: Error handling
+            logger.debug(err)
         }
         return false
     }
@@ -95,6 +99,7 @@ export class DhtPeer {
                 return false
             }
         } catch (err) {
+            // logger.debug(err)
             return false
         }
         return true

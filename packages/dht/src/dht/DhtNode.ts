@@ -18,6 +18,7 @@ import { Err } from '../errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
+import { Logger } from '../helpers/Logger'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -45,6 +46,8 @@ export interface DhtNodeConfig {
     appId?: string
     numberOfNodesPerKBucket?: number
 }
+
+const logger = new Logger(module)
 
 export class DhtNode extends EventEmitter implements ITransport {
     static objectCounter = 0
@@ -89,6 +92,10 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     public async start(): Promise<void> {
+        if (this.started || this.stopped) {
+            return
+        }
+        logger.info(`Starting new Streamr Network DHT Node on ${this.appId === DEFAULT_APP_ID ? 'Layer 0' : 'Layer 1 (stream)'}`)
         this.started = true
         if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
@@ -175,6 +182,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             for (const contact of oldContacts) {
                 const alive = await contact.ping(this.ownPeerDescriptor!)
                 if (!alive) {
+                    logger.trace(`Removing ${contact.peerId.value.toString()} due to being inactive, `
+                        + `replacing old contact with ${newContact.peerId.value.toString()}`)
                     this.removeContact(contact.getPeerDescriptor(), true)
                     this.addNewContact(newContact.getPeerDescriptor())
                     break
@@ -186,11 +195,13 @@ export class DhtNode extends EventEmitter implements ITransport {
                 const connectionManager = this.rpcCommunicator!.getConnectionManager()
                 connectionManager.disconnect(contact.getPeerDescriptor())
             }
+            logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
             if (contact.peerId.toString() !== this.ownPeerId!.toString()) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
+                    logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
                     this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
                 } else {
                     this.removeContact(contact.getPeerDescriptor())
@@ -217,6 +228,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return []
         }
+        logger.trace(`processing getClosestPeersRequest`)
         const ret = this.bucket!.closest(caller.peerId, this.K)
         this.addNewContact(caller, true)
         return ret
@@ -226,9 +238,11 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped || this.routerDuplicateDetector.test(routedMessage.nonce)) {
             return
         }
+        logger.trace(`Processing received routeMessage ${routedMessage.nonce}`)
         this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.nonce)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
+            logger.trace(`RouteMessage ${routedMessage.nonce} successfully arrived to destination`)
             const message = Message.fromBinary(routedMessage.message)
             this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message, routedMessage.appId)
         } else {
@@ -253,8 +267,8 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: appId ? appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
-        this.routeMessage(params).catch((_err) => {
-            // console.error(err)
+        this.routeMessage(params).catch((err) => {
+            logger.warn(`Failed to send (routeMessage) to ${targetPeerDescriptor.peerId.toString()}: ${err}`)
         })
     }
 
@@ -264,6 +278,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer!.peerId))) {
             return
         }
+        logger.trace(`Routing message ${params.messageId}`)
         let successAcks = 0
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
         const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K).filter((peer: DhtPeer) =>
@@ -308,6 +323,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             return true
         }
         if (this.routerDuplicateDetector.test(routedMessage.nonce)) {
+            logger.trace(`Message ${routedMessage.nonce} is not routable due to being a duplicate`)
             return false
         }
         const closestPeers = this.bucket!.closest(routedMessage.destinationPeer!.peerId, this.K)
@@ -327,6 +343,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer) {
+        logger.trace(`Getting closest peers from contact: ${contact.peerId.toString()}`)
         if (!this.started || this.stopped) {
             return
         }
@@ -346,6 +363,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
+        logger.trace(`Contacting known entrypoints`)
         while (true) {
             const oldClosestContactId = this.neighborList!.getClosestContactId()
             let uncontacted = this.neighborList!.getUncontactedContacts(this.ALPHA)
@@ -364,6 +382,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
+        logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
         if (!this.started || this.stopped) {
             return
         }
@@ -409,6 +428,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private addNewContact(contact: PeerDescriptor, setActive = false): void {
         if (!this.bucket!.get(contact.peerId)) {
+            logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             const peerId = PeerID.fromValue(contact.peerId)
             if (!this.neighborList!.isContact(peerId)) {
@@ -426,6 +446,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+        logger.trace(`Removing contact ${contact.peerId.toString()}`)
         const peerId = PeerID.fromValue(contact.peerId)
         this.bucket!.remove(peerId.value)
         this.neighborList!.removeContact(peerId)
@@ -435,6 +456,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private bindDefaultServerMethods() {
+        logger.trace(`Binding default DHT RPC methods`)
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
         this.rpcCommunicator!.registerServerMethod('getClosestPeers', methods.getClosestPeers)
         this.rpcCommunicator!.registerServerMethod('ping', methods.ping)

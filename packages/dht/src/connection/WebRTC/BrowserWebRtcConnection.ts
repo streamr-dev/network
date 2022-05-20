@@ -3,8 +3,11 @@ import { Event, IWebRtcConnection } from "./IWebRtcConnection"
 import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConnection"
 import { PeerDescriptor } from "../../proto/DhtRpc"
 import { ConnectionID } from "../../types"
+import { Logger } from '../../helpers/Logger'
 
 enum ConnectionState { CONNECTING = 'connecting', OPEN = 'open', CLOSED = 'closed' }
+
+const logger = new Logger(module)
 
 export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
 
@@ -45,14 +48,14 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
                         try {
                             await this.peerConnection.setLocalDescription()
                         } catch (err) {
-                            console.warn(err)
+                            logger.warn(err)
                         }
                         if (this.peerConnection.localDescription) {
                             this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
                 } catch (err) {
-                    console.error(err)
+                    logger.error(err)
                 } finally {
                     this.makingOffer = false
                 }
@@ -63,7 +66,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         } else {
             this.peerConnection.ondatachannel = (event) => {
                 this.setupDataChannel(event.channel)
-                console.trace('connection.onDataChannel')
+                logger.trace('connection.onDataChannel')
                 this.openDataChannel(event.channel)
             }
         }
@@ -80,14 +83,14 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         try {
             await this.peerConnection?.setRemoteDescription({ sdp: description, type: type.toLowerCase() as RTCSdpType })
         } catch (err) {
-            console.warn(err)
+            logger.warn(err)
         }
 
         if (type == "Offer" && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
-                console.warn(err)
+                logger.warn(err)
             }
             if (this.peerConnection.localDescription) {  
                 this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
@@ -98,10 +101,10 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     addRemoteCandidate(candidate: string, mid: string): void {
         try {
             this.peerConnection?.addIceCandidate({ candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
-                console.warn(err)
+                logger.warn(err)
             })
         } catch (e) {
-            console.warn(e)
+            logger.warn(e)
         }
     }
 
@@ -120,7 +123,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             try {
                 this.dataChannel.close()
             } catch (e) {
-                console.warn('dc.close() errored: %s', e)
+                logger.warn('dc.close() errored: %s', e)
             }
         }
 
@@ -130,7 +133,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             try {
                 this.peerConnection.close()
             } catch (e) {
-                console.warn('conn.close() errored: %s', e)
+                logger.warn('conn.close() errored: %s', e)
             }
         }
 
@@ -174,17 +177,17 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {
         dataChannel.onopen = () => {
-            console.trace('dc.onOpen')
+            logger.trace('dc.onOpen')
             this.openDataChannel(dataChannel)
         }
 
         dataChannel.onclose = () => {
-            console.trace('dc.onClosed')
+            logger.trace('dc.onClosed')
             this.close()
         }
 
         dataChannel.onerror = (err) => {
-            console.warn('dc.onError: %o', err)
+            logger.warn('dc.onError: %o', err)
         }
 
         dataChannel.onbufferedamountlow = () => {
@@ -192,7 +195,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         }
 
         dataChannel.onmessage = (msg) => {
-            console.trace('dc.onmessage')
+            logger.trace('dc.onmessage')
             this.emit(ConnectionEvent.DATA, new Uint8Array(msg.data))
         }
     }

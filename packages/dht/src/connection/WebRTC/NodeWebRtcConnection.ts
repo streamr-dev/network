@@ -5,6 +5,9 @@ import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter = require('events')
 import { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../PeerID'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
 
@@ -28,6 +31,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     start(isOffering: boolean): void {
+        logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
         const stringId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toString()
         this.isOffering = isOffering
         this.connection = new PeerConnection(stringId, {
@@ -58,6 +62,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     async setRemoteDescription(description: string, type: string): Promise<void> {
         if (this.connection) {
             try {
+                logger.trace(`Setting remote descriptor for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
                 this.connection!.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
@@ -72,6 +77,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         if (this.connection) {
             if (this.remoteDescriptionSet) {
                 try {
+                    logger.trace(`Setting remote candidate for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     console.error(err)
@@ -120,6 +126,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     close(): void {
+        logger.trace(`Closing Node WebRTC Connection`)
         if (this.connectingTimeoutRef) {
             clearTimeout(this.connectingTimeoutRef)
         }
@@ -141,18 +148,23 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private setupDataChannel(dataChannel: DataChannel): void {
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         dataChannel.onOpen(() => {
+            logger.trace(`dc.onOpened`)
             this.openDataChannel(dataChannel)
         })
 
         dataChannel.onClosed(() => {
+            logger.trace(`dc.closed`)
             this.close()
         })
 
-        dataChannel.onError((err) => console.error(err))
+        dataChannel.onError((err) => logger.error(err))
 
-        dataChannel.onBufferedAmountLow( () => {})
+        dataChannel.onBufferedAmountLow( () => {
+            logger.trace(`dc.onBufferedAmountLow`)
+        })
 
         dataChannel.onMessage((msg) => {
+            logger.trace(`dc.onMessage`)
             this.emit(ConnectionEvent.DATA, msg as Buffer)
         })
     }
@@ -163,6 +175,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         }
         this.dataChannel = dataChannel
         this.sendBufferedMessages()
+        logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.peerId.toString()}`)
         this.emit(ConnectionEvent.CONNECTED)
 
     }
@@ -172,7 +185,6 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     isOpen(): boolean {
-        // console.log(this.lastState)
         return this.lastState === 'connected' && !!this.dataChannel
     }
 }

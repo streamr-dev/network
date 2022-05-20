@@ -16,6 +16,7 @@ import { v4 } from 'uuid'
 import { TODO } from '../types'
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
+import { Logger } from '../helpers/Logger'
 
 export enum Event {
     RPC_REQUEST = 'streamr:dht-transport:request-new'
@@ -39,6 +40,8 @@ export interface DhtRpcOptions extends RpcOptions {
     notification?: boolean
     clientId?: number
 }
+
+const logger = new Logger(module)
 
 export class ClientTransport extends EventEmitter implements RpcTransport {
     static objectCount = 0
@@ -101,6 +104,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
             status: defStatus,
             messageParser: deferredParser
         }
+        logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
         this.emit(Event.RPC_REQUEST, deferred, request, options)
         return unary
     }

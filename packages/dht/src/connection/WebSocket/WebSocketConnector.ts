@@ -13,6 +13,9 @@ import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../pr
 import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { DeferredConnection } from '../DeferredConnection'
 import { TODO } from '../../types'
+import { Logger } from '../../helpers/Logger'
+
+const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource {
     private rpcCommunicator: RpcCommunicator
@@ -72,6 +75,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
 
     connectAsync({ host, port, url, timeoutMs }:
         { host?: string; port?: number; url?: string; timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
+
         return new Promise((resolve, reject) => {
             const socket = new ClientWebSocket()
 
@@ -141,6 +145,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             })
 
             if (this.ownPeerDescriptor) {
+                logger.trace(`Initiating handshake with ${connection.getPeerDescriptor()?.peerId.toString()}`)
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
                     protocolVersion: protocolVersion,
