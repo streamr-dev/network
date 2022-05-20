@@ -247,7 +247,7 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             // @ts-expect-error private
-            client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
+            client.publisher.publishQueue.onMessage.listen(async ([streamMessage]) => {
                 const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
                 if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }
                 onMessage()

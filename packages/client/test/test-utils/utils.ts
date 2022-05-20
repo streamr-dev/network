@@ -490,7 +490,7 @@ export function getPublishTestStreamMessages(
 
         const contents = new WeakMap()
         // @ts-expect-error private
-        client.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
+        client.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
