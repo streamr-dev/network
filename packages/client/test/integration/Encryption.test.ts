@@ -135,40 +135,6 @@ describe('decryption', () => {
                 await grantSubscriberPermissions()
             })
 
-            it('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
-                const groupKey = GroupKey.generate()
-                const keys = {
-                    [stream.id]: {
-                        [groupKey.id]: groupKey,
-                    }
-                }
-                const msg = Msg()
-                const done = Defer()
-                await subscriber.subscribe({
-                    stream: stream.id,
-                    // @ts-expect-error private
-                    groupKeys: keys,
-                }, done.wrap((parsedContent, streamMessage) => {
-                    expect(parsedContent).toEqual(msg)
-                    // Check signature stuff
-                    expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                    expect(streamMessage.getPublisherId())
-                    expect(streamMessage.signature)
-                }))
-
-                // publisher.once('error', done.reject)
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    key: groupKey,
-                    distributionMethod: 'rotate'
-                })
-                // Publish after subscribed
-                await Promise.all([
-                    publisher.publish(stream.id, msg),
-                    done,
-                ])
-            })
-
             it('client.subscribe can get the group key and decrypt encrypted message using an RSA key pair', async () => {
                 const msg = Msg()
                 const groupKey = GroupKey.generate()
@@ -542,11 +508,6 @@ describe('decryption', () => {
 
                 beforeEach(async () => {
                     const groupKey = GroupKey.generate()
-                    const keys = {
-                        [stream.id]: {
-                            [groupKey.id]: groupKey,
-                        }
-                    }
 
                     await publisher.updateEncryptionKey({
                         streamId: stream.id,
@@ -570,9 +531,7 @@ describe('decryption', () => {
                     })
 
                     sub = await subscriber.subscribe({
-                        stream: stream.id,
-                        // @ts-expect-error TODO invalid parameter
-                        groupKeys: keys,
+                        stream: stream.id
                     })
                     // @ts-expect-error private
                     const subSession = subscriber.subscriber.getSubscriptionSession(sub.streamPartId)
