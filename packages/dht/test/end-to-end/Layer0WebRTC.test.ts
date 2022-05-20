@@ -1,5 +1,3 @@
-// const log = require('why-is-node-running')
-
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/PeerID'
@@ -47,8 +45,6 @@ describe('Layer0 with WebRTC connections', () => {
             node4.stop(),
             epDhtNode.stop()
         ])
-
-        // setTimeout(() => log(), 200)
     })
 
     it('Happy path two peers', async () => {
