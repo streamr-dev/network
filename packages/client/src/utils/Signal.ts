@@ -333,7 +333,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
     }
 
     async trigger(...args: ArgsType): Promise<void> {
-        const err = args[0] // eslint-disable-line prefer-destructuring
+        const err = args[0]
         // don't double-handle errors
         if (this.ignoredErrors.has(err)) {
             return

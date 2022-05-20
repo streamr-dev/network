@@ -66,7 +66,7 @@ describe('Publisher', () => {
         }, TIMESTAMP)
         await publisher.stop()
         expect(brubeckNode.publishToNode).toBeCalledTimes(1)
-        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0] // eslint-disable-line prefer-destructuring
+        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
         expect(actual).toMatchObject({
             contentType: 0,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,

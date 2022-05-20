@@ -22,7 +22,7 @@ describe('Validation', () => {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient(opts)
         // @ts-expect-error private
-        subscriber = client.subscriber // eslint-disable-line prefer-destructuring
+        subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
