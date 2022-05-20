@@ -163,12 +163,10 @@ const getTestName = (module: NodeModule): string => {
 
 const randomTestRunId = process.pid != null ? process.pid : crypto.randomBytes(4).toString('hex')
 
-// eslint-disable-next-line no-undef
 export const createRelativeTestStreamId = (module: NodeModule, suffix?: string): string => {
     return counterId(`/test/${randomTestRunId}/${getTestName(module)}${(suffix !== undefined) ? '-' + suffix : ''}`, '-')
 }
 
-// eslint-disable-next-line no-undef
 export const createTestStream = async (streamrClient: StreamrClient, module: NodeModule, props?: Partial<StreamProperties>): Promise<Stream> => {
     const stream = await streamrClient.createStream({
         id: createRelativeTestStreamId(module),
