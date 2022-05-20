@@ -21,10 +21,10 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         super(subSession, options)
         this.context = subSession
         this.streamPartId = subSession.streamPartId
-        this.onMessage((msg) => {
+        this.onMessage.listen((msg) => {
             this.debug('<< %o', msg)
         })
-        this.onError((err) => {
+        this.onError.listen((err) => {
             this.debug('<< onError: %o', err)
         })
         // this.debug('create', this.key, new Error('Subscription').stack)

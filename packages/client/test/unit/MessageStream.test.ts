@@ -86,7 +86,7 @@ describe('MessageStream', () => {
         const s = new MessageStream<typeof testMessage>(context)
         leaksDetector.add(s.id, s)
         const received: StreamMessage<typeof testMessage>[] = []
-        s.onError((error) => {
+        s.onError.listen((error) => {
             throw error
         })
         // eslint-disable-next-line require-yield

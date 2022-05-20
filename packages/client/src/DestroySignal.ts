@@ -21,7 +21,7 @@ export class DestroySignal implements Context {
 
     constructor(context: Context) {
         this.debug = context.debug.extend(this.id)
-        this.onDestroy(() => {
+        this.onDestroy.listen(() => {
             this.debug('triggered')
         })
     }

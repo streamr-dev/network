@@ -494,9 +494,6 @@ export function getPublishTestStreamMessages(
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
-        client.onDestroy(() => {
-            publishStream.return()
-        })
         if (opts.onPublishPipeline) {
             opts.onPublishPipeline.trigger(publishStream)
         }

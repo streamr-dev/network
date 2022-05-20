@@ -58,7 +58,7 @@ export class BrubeckNode implements Context {
         this.options = options
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        destroySignal.onDestroy(this.destroy)
+        destroySignal.onDestroy.listen(this.destroy)
     }
 
     private assertNotDestroyed(): void {

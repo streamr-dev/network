@@ -29,7 +29,7 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
-        this.destroySignal.onDestroy(async () => {
+        this.destroySignal.onDestroy.listen(async () => {
             if (!this.isStopped) {
                 await this.stop()
             }
