@@ -73,8 +73,7 @@ export class Rest implements Context {
         )
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    post<T extends object>(urlParts: UrlParts, body: any, options: FetchOptions): Promise<T> {
+    post<T extends object>(urlParts: UrlParts, body: object, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -99,8 +98,7 @@ export class Rest implements Context {
         })
     }
 
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    put<T extends object>(urlParts: UrlParts, body: any, options: FetchOptions): Promise<T> {
+    put<T extends object>(urlParts: UrlParts, body: object, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
