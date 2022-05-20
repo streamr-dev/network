@@ -4,7 +4,8 @@ import { uuid } from '../utils'
 import { inspect } from '../utils/log'
 
 class InvalidGroupKeyError extends ValidationError {
-    constructor(message: string, public groupKey?: any) {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, public groupKey?: GroupKeyish) {
         super(message)
     }
 }
@@ -21,7 +22,7 @@ type GroupKeyProps = {
     groupKeyData: Uint8Array,
 }
 
-function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject) {
+function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {
     if ('groupKeyId' in data) {
         return {
             id: data.groupKeyId,
@@ -40,7 +41,7 @@ export class GroupKey {
     /** @internal */
     static InvalidGroupKeyError = InvalidGroupKeyError
 
-    static validate(maybeGroupKey: GroupKey) {
+    static validate(maybeGroupKey: GroupKey): void | never {
         if (!maybeGroupKey) {
             throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
@@ -99,7 +100,7 @@ export class GroupKey {
         (this.constructor as typeof GroupKey).validate(this)
     }
 
-    equals(other: GroupKey) {
+    equals(other: GroupKey): boolean {
         if (!(other instanceof GroupKey)) {
             return false
         }
@@ -107,24 +108,24 @@ export class GroupKey {
         return this === other || (this.hex === other.hex && this.id === other.id)
     }
 
-    toString() {
+    toString(): string {
         return this.id
     }
 
-    toArray() {
+    toArray(): string[] {
         return [this.id, this.hex]
     }
 
-    serialize() {
+    serialize(): string {
         return JSON.stringify(this.toArray())
     }
 
-    static generate(id = uuid('GroupKey')) {
+    static generate(id = uuid('GroupKey')): GroupKey {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)
     }
 
-    static from(maybeGroupKey: GroupKeyish) {
+    static from(maybeGroupKey: GroupKeyish): GroupKey {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
             throw new InvalidGroupKeyError('Group key must be object', maybeGroupKey)
         }

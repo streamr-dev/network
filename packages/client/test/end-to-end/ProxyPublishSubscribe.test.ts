@@ -56,9 +56,9 @@ describe('PubSub with proxy connections', () => {
     }, 10000)
 
     beforeEach(async () => {
-        // @ts-expect-error
+        // @ts-expect-error private
         proxyNodeId1 = await proxyClient1.node.getNodeId()
-        // @ts-expect-error
+        // @ts-expect-error private
         proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(onewayClient, module)
         const proxyUser1 = await proxyClient1.getAddress()

@@ -16,7 +16,7 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 
 export interface ClientFactory {
-    createClient: (opts?: any) => StreamrClient
+    createClient: (opts?: StreamrClientConfig) => StreamrClient
 }
 
 export const createClientFactory = (): ClientFactory => {

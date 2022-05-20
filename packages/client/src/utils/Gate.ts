@@ -50,7 +50,7 @@ export class Gate implements Context {
      * Pending check calls will resolve true.
      * Future check calls will resolve true, until close or lock called.
      */
-    open() {
+    open(): void {
         if (this.isLocked) {
             // do nothing
             return
@@ -62,7 +62,7 @@ export class Gate implements Context {
     /**
      * Stops gate opening or closing. Pending and future calls will resolve false.
      */
-    lock() {
+    lock(): void {
         if (this.isLocked) {
             // do nothing
             return
@@ -76,7 +76,7 @@ export class Gate implements Context {
      * Opens gate but resolves pending with an error.
      * TODO: remove? might not be needed.
      */
-    error(err: Error) {
+    error(err: Error): void {
         if (this.isLocked) {
             // do nothing
             return
@@ -91,7 +91,7 @@ export class Gate implements Context {
      * Noop if already closed.
      * Future check calls will block, until open or lock called.
      */
-    close() {
+    close(): void {
         if (this.isLocked) {
             // do nothing
             return
@@ -107,7 +107,7 @@ export class Gate implements Context {
      * Calls open/close based on shouldBeOpen parameter.
      * Convenience.
      */
-    setOpenState(shouldBeOpen: boolean) {
+    setOpenState(shouldBeOpen: boolean): void {
         if (shouldBeOpen) {
             this.open()
         } else {
@@ -122,7 +122,7 @@ export class Gate implements Context {
         return !this.isLocked && !this.pending
     }
 
-    private clearPending(err?: Error) {
+    private clearPending(err?: Error): void {
         const { pending } = this
         if (!pending) { return }
         this.pending = undefined

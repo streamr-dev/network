@@ -79,7 +79,7 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
         }
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.debug('stop')
         this.isStopped = true
     }

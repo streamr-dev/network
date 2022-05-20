@@ -97,7 +97,7 @@ export class StreamRegistry implements Context {
     // Send transactions to the StreamRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    private async connectToStreamRegistryContract() {
+    private async connectToStreamRegistryContract(): Promise<void> {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
@@ -195,7 +195,7 @@ export class StreamRegistry implements Context {
         }, this.container)
     }
 
-    async deleteStream(streamIdOrPath: string) {
+    async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Deleting stream %s', streamId)
         await this.connectToStreamRegistryContract()
@@ -474,7 +474,7 @@ export class StreamRegistry implements Context {
     // Helpers
     // --------------------------------------------------------------------------------------------
 
-    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>) {
+    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
         return Promise.any([
             ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
                 return call(contract)

@@ -14,7 +14,7 @@ import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
-import { BrubeckNode } from './BrubeckNode'
+import { BrubeckNode, NetworkNodeStub } from './BrubeckNode'
 import { DestroySignal } from './DestroySignal'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeMetadata, StorageNodeRegistry } from './StorageNodeRegistry'
@@ -220,7 +220,7 @@ export class StreamrClient implements Context {
         timeout?: number
         count?: number
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
-    }) {
+    }): Promise<void> {
         return this.resends.waitForStorage(streamMessage, options)
     }
 
@@ -253,7 +253,7 @@ export class StreamrClient implements Context {
         return this.streamRegistry.updateStream(props)
     }
 
-    deleteStream(streamIdOrPath: string) {
+    deleteStream(streamIdOrPath: string): Promise<void> {
         return this.streamRegistry.deleteStream(streamIdOrPath)
     }
 
@@ -351,7 +351,7 @@ export class StreamrClient implements Context {
     /**
      * Get started network node
      */
-    getNode() {
+    getNode(): Promise<NetworkNodeStub> {
         return this.node.getNode()
     }
 
@@ -395,12 +395,12 @@ export class StreamrClient implements Context {
     // --------------------------------------------------------------------------------------------
 
     /** @internal */
-    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+    enableDebugLogging(prefix = 'Streamr*'): void { // eslint-disable-line class-methods-use-this
         Debug.enable(prefix)
     }
 
     /** @internal */
-    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+    disableDebugLogging(): void { // eslint-disable-line class-methods-use-this
         Debug.disable()
     }
 
@@ -408,15 +408,15 @@ export class StreamrClient implements Context {
     // Events
     // --------------------------------------------------------------------------------------------
 
-    on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.on(eventName, listener as any)
     }
 
-    once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.off(eventName, listener as any)
     }
 }
@@ -424,7 +424,10 @@ export class StreamrClient implements Context {
 /**
  * @internal
  */
-export function initContainer(config: StrictStreamrClientConfig, parentContainer = rootContainer) {
+export function initContainer(
+    config: StrictStreamrClientConfig, 
+    parentContainer = rootContainer
+): { childContainer: DependencyContainer; rootContext: Context } {
     const c = parentContainer.createChildContainer()
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)

@@ -61,7 +61,7 @@ export class BrubeckNode implements Context {
         destroySignal.onDestroy(this.destroy)
     }
 
-    private assertNotDestroyed() {
+    private assertNotDestroyed(): void {
         this.destroySignal.assertNotDestroyed(this)
     }
 
@@ -79,7 +79,7 @@ export class BrubeckNode implements Context {
         return this.options as NetworkNodeOptions
     }
 
-    private async initNode() {
+    private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
@@ -114,7 +114,7 @@ export class BrubeckNode implements Context {
         return node
     }
 
-    private async generateId() {
+    private async generateId(): Promise<string> {
         if (this.ethereum.isAuthenticated()) {
             const address = await this.ethereum.getAddress()
             return `${address}#${uuid()}`
@@ -180,7 +180,7 @@ export class BrubeckNode implements Context {
 
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    async getNodeId() {
+    async getNodeId(): Promise<string> {
         const node = await this.getNode()
         return node.getNodeId()
     }

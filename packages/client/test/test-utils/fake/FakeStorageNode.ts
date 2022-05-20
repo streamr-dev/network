@@ -47,7 +47,8 @@ export class FakeStorageNode extends FakeBrubeckNode {
                         streamPart: streamPartId,
                     }
                 })
-                assignmentMessage.signature = await SigningUtil.sign(assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), PRIVATE_KEY)
+                const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
+                assignmentMessage.signature = await SigningUtil.sign(payload, PRIVATE_KEY)
                 this.publishToNode(assignmentMessage)
             }
         })

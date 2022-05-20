@@ -63,7 +63,7 @@ export class Publisher implements Context, Stoppable {
         })
     }
 
-    async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collect<T>(target: AsyncIterable<StreamMessage<T>>, n?: number): Promise<T[]> { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -79,7 +79,7 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    async collectMessages<T>(target: AsyncIterable<T>, n?: number) { // eslint-disable-line class-methods-use-this
+    async collectMessages<T>(target: AsyncIterable<T>, n?: number): Promise<Awaited<T>[]> { // eslint-disable-line class-methods-use-this
         const msgs = []
         for await (const msg of target) {
             if (n === 0) {
@@ -95,7 +95,7 @@ export class Publisher implements Context, Stoppable {
         return msgs
     }
 
-    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>) {
+    async* publishFrom<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<T>): AsyncGenerator<StreamMessage<T>, void, unknown> {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -107,7 +107,10 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    async* publishFromMetadata<T>(streamDefinition: StreamDefinition, seq: AsyncIterable<PublishMetadata<T>>) {
+    async* publishFromMetadata<T>(
+        streamDefinition: StreamDefinition, 
+        seq: AsyncIterable<PublishMetadata<T>>
+    ): AsyncGenerator<StreamMessage<T>, void, unknown> {
         const items = CancelableGenerator(seq)
         this.inProgress.add(items)
         try {
@@ -119,20 +122,20 @@ export class Publisher implements Context, Stoppable {
         }
     }
 
-    startKeyExchange() {
+    startKeyExchange(): Promise<void> {
         return this.keyExchange.start()
     }
 
-    stopKeyExchange() {
+    stopKeyExchange(): Promise<void> {
         return this.keyExchange.stop()
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.isStopped = false
         this.pipeline.start()
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
         await Promise.allSettled([
             this.pipeline.stop(),

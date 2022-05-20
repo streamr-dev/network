@@ -21,7 +21,7 @@ export class StreamPartitioner {
         // to the same partition
     }
 
-    public async compute(streamId: StreamID, partitionKey: PartitionKey) {
+    public async compute(streamId: StreamID, partitionKey: PartitionKey): Promise<number> {
         // no need to fetch stream partition info if partition key is 0
         // partition 0 should always exist
         if (partitionKey === 0) {
@@ -32,7 +32,7 @@ export class StreamPartitioner {
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 
-    public clear() {
+    public clear(): void {
         this.computeStreamPartition.clear()
     }
 

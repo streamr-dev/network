@@ -78,7 +78,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         this.subscribe = pOnce(this.createSubscription.bind(this))
     }
 
-    private async createSubscription() {
+    private async createSubscription(): Promise<Subscription<unknown>> {
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
         const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
@@ -94,11 +94,11 @@ export class KeyExchangeStream implements Context, Stoppable {
         return sub
     }
 
-    stop() {
+    stop(): void {
         this.isStopped = true
     }
 
-    async request(publisherId: EthereumAddress, request: GroupKeyRequest) {
+    async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
         if (this.isStopped) { return undefined }
 
         const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
@@ -149,7 +149,10 @@ export class KeyExchangeStream implements Context, Stoppable {
         }
     }
 
-    async response(subscriberId: EthereumAddress, response: GroupKeyResponse | GroupKeyErrorResponse) {
+    async response(
+        subscriberId: EthereumAddress, 
+        response: GroupKeyResponse | GroupKeyErrorResponse
+    ): Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
         if (this.isStopped) { return undefined }
 
         // hack overriding toStreamMessage method to set correct encryption type

@@ -62,7 +62,7 @@ export type EthereumConfig = {
 
 @scoped(Lifecycle.ContainerScoped)
 export class Ethereum {
-    static generateEthereumAccount() {
+    static generateEthereumAccount(): { address: string; privateKey: string } {
         const wallet = Wallet.createRandom()
         return {
             address: wallet.address,
@@ -129,11 +129,11 @@ export class Ethereum {
         }
     }
 
-    isAuthenticated() {
+    isAuthenticated(): boolean {
         return (this._getAddress !== undefined)
     }
 
-    canEncrypt() {
+    canEncrypt(): boolean {
         return !!(this._getAddress && this._getSigner)
     }
 

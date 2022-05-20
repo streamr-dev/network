@@ -96,12 +96,12 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
         })
     })
 
-    async validate(msg: StreamMessage) {
+    async validate(msg: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
         await this.orderedValidate(msg)
     }
 
-    stop() {
+    stop(): void {
         this.isStopped = true
         this.cachedVerify.clear()
         this.orderedValidate.clear()

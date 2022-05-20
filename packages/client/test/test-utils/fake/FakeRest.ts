@@ -67,7 +67,7 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
     getUrl(_urlParts: UrlParts, _query?: any, _restUrl?: string): URL {
         throw new Error('not implemented')
     }
@@ -87,12 +87,12 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
     post<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
     put<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
         throw new Error('not implemented')
     }

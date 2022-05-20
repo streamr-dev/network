@@ -28,10 +28,9 @@ export function Plugin<
             return target // do nothing if already has property
         }
 
-        // @ts-expect-error ??
         // eslint-disable-next-line no-param-reassign
-        target[key] = (...args: any) => {
-            // @ts-expect-error ??
+        (target as any)[key] = (...args: any) => {
+            // @ts-expect-error maybe no key in srcInstance
             return srcInstance[key].call(srcInstance, ...args)
         }
         return target

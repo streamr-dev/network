@@ -20,7 +20,7 @@ export class Encrypt implements Stoppable {
     ) {
     }
 
-    async encrypt(streamMessage: StreamMessage) {
+    async encrypt(streamMessage: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
 
         if (StreamMessage.isEncrypted(streamMessage)) {
@@ -65,11 +65,11 @@ export class Encrypt implements Stoppable {
         EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.isStopped = false
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
     }
 }

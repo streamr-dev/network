@@ -1,11 +1,12 @@
+import { wait } from 'streamr-test-utils'
+
 export const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 
 export const MAX_ITEMS = 3
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const WAIT = 20
 
-export function IteratorTest(name, fn) {
+export function IteratorTest(name: string, fn: (...args: any[]) => any): void {
     describe(`${name} IteratorTest`, () => {
         it('runs to completion', async () => {
             const received = []
@@ -55,7 +56,7 @@ export function IteratorTest(name, fn) {
         })
 
         it('can throw mid-iteration', async () => {
-            const received = []
+            const received: any[] = []
             const err = new Error('expected err')
             await expect(async () => {
                 for await (const msg of fn({
@@ -71,7 +72,7 @@ export function IteratorTest(name, fn) {
         })
 
         it('can throw() mid-iteration', async () => {
-            const received = []
+            const received: any[] = []
             const err = new Error('expected err 2')
             await expect(async () => {
                 const it = fn({
@@ -90,7 +91,7 @@ export function IteratorTest(name, fn) {
         })
 
         it('throws parent mid-iteration', async () => {
-            const received = []
+            const received: any[] = []
             const err = new Error('expected err')
             async function* parentGen() {
                 const s = fn({

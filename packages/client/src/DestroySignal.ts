@@ -26,17 +26,17 @@ export class DestroySignal implements Context {
         })
     }
 
-    destroy() {
+    destroy(): Promise<void> {
         return this.onDestroy.trigger()
     }
 
-    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance') {
+    assertNotDestroyed(context: Context, msg = 'Client is destroyed. Create a new instance'): void {
         if (this.isDestroyed()) {
             throw new ContextError(context, msg)
         }
     }
 
-    isDestroyed() {
+    isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
     }
 }

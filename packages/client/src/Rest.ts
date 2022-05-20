@@ -6,6 +6,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { Readable } from 'stream'
 import { StreamMessage } from 'streamr-client-protocol'
 import split2 from 'split2'
+import { Response } from 'node-fetch'
 
 import { Debugger } from './utils/log'
 import { instanceId } from './utils'
@@ -27,7 +28,7 @@ function serialize(body: any): string | undefined {
     return typeof body === 'string' ? body : JSON.stringify(body)
 }
 
-export const createQueryString = (query: Record<string, any>) => {
+export const createQueryString = (query: Record<string, any>): string => {
     const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
     return new URLSearchParams(withoutEmpty).toString()
 }
@@ -44,7 +45,7 @@ export class Rest implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    getUrl(urlParts: UrlParts, query = {}, restUrl: string) {
+    getUrl(urlParts: UrlParts, query = {}, restUrl: string): URL {
         const url = new URL(urlParts.map((s) => encodeURIComponent(s)).join('/'), restUrl + '/')
         url.search = createQueryString(query)
         return url
@@ -52,7 +53,7 @@ export class Rest implements Context {
 
     fetch<T extends object>(urlParts: UrlParts, {
         query, options, debug = this.debug, restUrl
-    }: FetchOptions) {
+    }: FetchOptions): Promise<T> {
         const url = this.getUrl(urlParts, query, restUrl)
         return authFetch<T>(
             url.toString(),
@@ -63,7 +64,7 @@ export class Rest implements Context {
 
     request(urlParts: UrlParts, {
         query, options, debug = this.debug, restUrl
-    }: FetchOptions) {
+    }: FetchOptions): Promise<Response> {
         const url = this.getUrl(urlParts, query, restUrl)
         return authRequest(
             url.toString(),
@@ -72,7 +73,7 @@ export class Rest implements Context {
         )
     }
 
-    post<T extends object>(urlParts: UrlParts, body: any, options: FetchOptions) {
+    post<T extends object>(urlParts: UrlParts, body: object, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -87,7 +88,7 @@ export class Rest implements Context {
         })
     }
 
-    get<T extends object>(urlParts: UrlParts, options: FetchOptions) {
+    get<T extends object>(urlParts: UrlParts, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -97,7 +98,7 @@ export class Rest implements Context {
         })
     }
 
-    put<T extends object>(urlParts: UrlParts, body: any, options: FetchOptions) {
+    put<T extends object>(urlParts: UrlParts, body: object, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
@@ -112,7 +113,7 @@ export class Rest implements Context {
         })
     }
 
-    del<T extends object>(urlParts: UrlParts, options: FetchOptions) {
+    del<T extends object>(urlParts: UrlParts, options: FetchOptions): Promise<T> {
         return this.fetch<T>(urlParts, {
             ...options,
             options: {
