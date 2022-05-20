@@ -20,7 +20,7 @@ export default class BrowserPersistentStore implements PersistentStore<string, s
         return val == null
     }
 
-    async get(key: string): Promise<any> {
+    async get(key: string): Promise<string | undefined> {
         return get(key, this.store)
     }
 
