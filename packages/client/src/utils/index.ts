@@ -272,8 +272,18 @@ class DeferredWrapper<T> {
 
 export type Deferred<T> = ReturnType<DeferredWrapper<T>['wrap']>
 
+export type DeferReturnType<T> = Promise<T> & 
+{ 
+    resolve: (value: any) => unknown
+    reject: (reason: any) => unknown
+    wrap: <ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) => (...args: ArgsType) => Promise<unknown>
+    wrapError: <ArgsType extends any[], ReturnType>(fn: (...args: ArgsType) => ReturnType) => (...args: ArgsType) => Promise<ReturnType>
+    handleErrBack: (err?: Error | undefined) => void
+    isSettled(): boolean
+} 
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
+export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop): DeferReturnType<T> {
     let resolveFn: PromiseResolve | undefined
     let rejectFn: PromiseResolve | undefined
     let isSettled = false
