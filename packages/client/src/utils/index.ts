@@ -370,14 +370,14 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
  */
 type LimitFn = ReturnType<typeof pLimit>
 
-export type LimitAsyncFnByKeyReturnType = {
+export type LimitAsyncFnByKeyReturnType<KeyType> = {
     (id: KeyType, fn: () => Promise<any>): Promise<any> 
     getActiveCount(id: KeyType): number
     getPendingCount(id: KeyType): number
     clear(): void 
 }
 
-export function LimitAsyncFnByKey<KeyType>(limit = 1): LimitAsyncFnByKeyReturnType {
+export function LimitAsyncFnByKey<KeyType>(limit = 1): LimitAsyncFnByKeyReturnType<KeyType> {
     const pending = new Map<KeyType, LimitFn>()
     const f = async (id: KeyType, fn: () => Promise<any>) => {
         const limitFn: LimitFn = (pending.get(id) || pending.set(id, pLimit(limit)).get(id)) as LimitFn
