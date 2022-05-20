@@ -65,7 +65,7 @@ export class SortedContactList {
         const ret: DhtPeer[] = []
         for (let i = 0; i < this.contactIds.length; i++) {
             const contactId = this.contactIds[i]
-            if (!this.contactsById[contactId.toString()].contacted) {
+            if (this.contactsById[contactId.toString()] && !this.contactsById[contactId.toString()].contacted) {
                 ret.push(this.contactsById[contactId.toString()].contact)
                 if (ret.length >= num) {
                     return ret
@@ -78,7 +78,7 @@ export class SortedContactList {
     public getActiveContacts(): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
-            if (!this.contactsById[contactId.toString()].active) {
+            if (this.contactsById[contactId.toString()] && !this.contactsById[contactId.toString()].active) {
                 ret.push(this.contactsById[contactId.toString()].contact)
             }
         })
@@ -119,5 +119,9 @@ export class SortedContactList {
 
     public isActive(id: PeerID): boolean {
         return this.contactsById[id.toString()] ? this.contactsById[id.toString()].active : false
+    }
+
+    public getAllContacts(): DhtPeer[] {
+        return Object.values(this.contactsById).map((contact) => contact.contact)
     }
 }

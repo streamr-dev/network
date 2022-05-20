@@ -66,8 +66,12 @@ export class RpcCommunicator extends EventEmitter {
         this.connectionLayer = params.connectionLayer
         this.ongoingRequests = new Map()
         this.send = this.connectionLayer.send.bind(this.connectionLayer)    // ((_peerDescriptor, _bytes) => { throw new Error('send not defined') })
-        this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => {
-            this.onOutgoingMessage(rpcMessage, deferredPromises)
+        this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
+            deferredPromises: DeferredPromises,
+            rpcMessage: RpcMessage,
+            options: DhtRpcOptions
+        ) => {
+            this.onOutgoingMessage(rpcMessage, deferredPromises, options)
         })
         this.rpcServerTransport.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
@@ -102,7 +106,11 @@ export class RpcCommunicator extends EventEmitter {
                 this.resolveOngoingRequest(rpcCall)
             }
         } else if (rpcCall.header.request && rpcCall.header.method) {
-            await this.handleRequest(senderDescriptor, rpcCall)
+            if (rpcCall.header.notification) {
+                await this.handleNotification(senderDescriptor, rpcCall)
+            } else {
+                await this.handleRequest(senderDescriptor, rpcCall)
+            }
         }
     }
 
@@ -136,6 +144,12 @@ export class RpcCommunicator extends EventEmitter {
             })
         }
         this.onOutgoingMessage(response)
+    }
+
+    private async handleNotification(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        try {
+            await this.rpcServerTransport.onNotification(senderDescriptor, rpcMessage)
+        } catch (err) {}
     }
 
     private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {

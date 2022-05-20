@@ -22,7 +22,7 @@ export enum Event {
 }
 
 export interface ClientTransport {
-    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage) => void): this
+    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage, options: DhtRpcOptions) => void): this
 }
 
 export interface DeferredPromises {
@@ -34,9 +34,10 @@ export interface DeferredPromises {
 }
 
 export interface DhtRpcOptions extends RpcOptions {
-    targetDescriptor: PeerDescriptor,
+    targetDescriptor: PeerDescriptor
     sourceDescriptor: PeerDescriptor
     notification?: boolean
+    clientId?: number
 }
 
 export class ClientTransport extends EventEmitter implements RpcTransport {
@@ -50,7 +51,8 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         ClientTransport.objectCount++
         
         this.defaultOptions = {
-            timeout: defaultTimeout || 5000
+            timeout: defaultTimeout || 5000,
+            clientId: this.objectId
         }
     }
 

@@ -36,7 +36,8 @@
     "node-datachannel": "^0.3.2",
     "p-queue": "6.3.0",
     "uuid": "^8.3.2",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",

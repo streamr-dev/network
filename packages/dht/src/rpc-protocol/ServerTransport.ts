@@ -33,6 +33,15 @@ export class ServerTransport extends EventEmitter {
         return await promiseTimeout(1000, fn!(rpcMessage.body))
     }
 
+    async onNotification(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        const methodName = rpcMessage.header.method
+        const fn = this.methods.get(methodName)
+        if (!fn) {
+            throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
+        }
+        await promiseTimeout(1000, fn!(rpcMessage.body))
+    }
+
     registerMethod(name: string, fn: RegisteredMethod): void {
         this.methods.set(name, fn)
     }
