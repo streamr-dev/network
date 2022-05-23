@@ -18,7 +18,7 @@ import { StreamDefinition } from '../types'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { fetchStream } from '../fetchStream'
+import { HttpUtil } from '../HttpUtil'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -85,7 +85,8 @@ export class Resends implements Context {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
+        @inject(HttpUtil) private httpUtil: HttpUtil
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -183,7 +184,7 @@ export class Resends implements Context {
             count += 1
         })
 
-        const dataStream = await fetchStream(url)
+        const dataStream = await this.httpUtil.fetchHttpStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream

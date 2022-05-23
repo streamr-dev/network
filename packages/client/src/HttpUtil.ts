@@ -1,11 +1,13 @@
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
-import { getVersionString, counterId } from './utils'
+import { getVersionString, counterId, instanceId } from './utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
 import { StreamMessage } from 'streamr-client-protocol'
+import { Lifecycle, scoped } from 'tsyringe'
+import { Context } from './utils/Context'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -71,38 +73,49 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-export async function fetchStream(
-    url: string,
-    opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
-    abortController = new AbortController()
-): Promise<Readable> {
-    const startTime = Date.now()
-    const response = await authRequest(url, {
-        signal: abortController.signal,
-        ...opts,
-    })
-    if (!response.body) {
-        throw new Error('No Response Body')
+@scoped(Lifecycle.ContainerScoped)
+export class HttpUtil implements Context {
+    readonly id: string
+    readonly debug: Debugger
+
+    constructor(context: Context,) {
+        this.id = instanceId(this)
+        this.debug = context.debug.extend(this.id)
     }
 
-    try {
-        // in the browser, response.body will be a web stream. Convert this into a node stream.
-        const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+    async fetchHttpStream(
+        url: string,
+        opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
+        abortController = new AbortController()
+    ): Promise<Readable> {
+        const startTime = Date.now()
+        const response = await authRequest(url, {
+            signal: abortController.signal,
+            ...opts,
+        })
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
 
-        const stream = source.pipe(split2((message: string) => {
-            return StreamMessage.deserialize(message)
-        }))
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
 
-        stream.once('close', () => {
+            const stream = source.pipe(split2((message: string) => {
+                return StreamMessage.deserialize(message)
+            }))
+
+            stream.once('close', () => {
+                abortController.abort()
+            })
+
+            return Object.assign(stream, {
+                startTime,
+            })
+        } catch (err) {
             abortController.abort()
-        })
-
-        return Object.assign(stream, {
-            startTime,
-        })
-    } catch (err) {
-        abortController.abort()
-        throw err
+            throw err
+        }
     }
 }
 

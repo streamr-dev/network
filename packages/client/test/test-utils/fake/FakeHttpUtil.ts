@@ -1,18 +1,15 @@
 import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
-import { Response } from 'node-fetch'
 import { URLSearchParams } from 'url'
 
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { FetchOptions, Rest, UrlParts } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
-
+export class FakeHttpUtil {
     private readonly storageNodeRegistry: FakeStorageNodeRegistry
 
     constructor(
@@ -21,8 +18,8 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         this.storageNodeRegistry = storageNodeRegistry as unknown as FakeStorageNodeRegistry
     }
 
-    async fetchStream(url: string): Promise<Readable> {
-        const request = FakeRest.getResendRequest(url)
+    async fetchHttpStream(url: string): Promise<Readable> {
+        const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
             const format = request.query!.get('format')
             if (format === 'raw') {
@@ -65,45 +62,5 @@ export class FakeRest implements Omit<Rest, 'id' | 'debug'> {
         } else {
             return undefined
         }
-    }
-
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
-    getUrl(_urlParts: UrlParts, _query?: any, _restUrl?: string): URL {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    fetch<T extends object>(_urlParts: UrlParts, _opts: FetchOptions): Promise<T> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    request(_urlParts: UrlParts, _opts: FetchOptions): Promise<Response> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    get<T extends object>(_urlParts: UrlParts, _options: FetchOptions): Promise<T> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
-    post<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/explicit-module-boundary-types
-    put<T extends object>(_urlParts: UrlParts, _body?: any, _options?: FetchOptions): Promise<T> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    del<T extends object>(_urlParts: UrlParts, _options?: FetchOptions): Promise<T> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    stream(_urlParts: UrlParts, _options?: FetchOptions, _abortController?: AbortController): Promise<Readable> {
-        throw new Error('not implemented')
     }
 }
