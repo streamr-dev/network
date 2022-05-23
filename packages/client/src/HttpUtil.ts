@@ -78,7 +78,7 @@ export class HttpUtil implements Context {
     readonly id: string
     readonly debug: Debugger
 
-    constructor(context: Context,) {
+    constructor(context: Context) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
