@@ -106,7 +106,7 @@ describe('SubscribeAll', () => {
         }))
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
-        await sub.onFinally()
+        await sub.onFinally.listen()
         await wait(500) // TODO: why is this wait needed? wasn't needed before encryption was enabled.
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
@@ -127,7 +127,7 @@ describe('SubscribeAll', () => {
         }))
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
-        await sub.onFinally()
+        await sub.onFinally.listen()
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
         // unsubscribed from everything
@@ -140,7 +140,7 @@ describe('SubscribeAll', () => {
             subMsgs.push(msg)
         })
         const onFinallyCalled = jest.fn()
-        sub.onFinally(onFinallyCalled)
+        sub.onFinally.listen(onFinallyCalled)
 
         const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })

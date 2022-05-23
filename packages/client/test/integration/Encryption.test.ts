@@ -46,7 +46,7 @@ describe('decryption', () => {
             } else {
                 expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
             }
-        })).onFinally(() => {
+        })).onFinally.listen(() => {
             onSendTest.resolve(undefined)
         })
 
@@ -262,7 +262,7 @@ describe('decryption', () => {
                         } else {
                             expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
                         }
-                    })).onFinally(() => {
+                    })).onFinally.listen(() => {
                         onSendTest.resolve(undefined)
                     })
 
@@ -284,7 +284,7 @@ describe('decryption', () => {
 
                     const published: any[] = []
                     // @ts-expect-error private
-                    publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                    publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                         if (streamMessage.getStreamId() !== testStream.id) { return }
                         published.push(streamMessage.getParsedContent())
                     })
@@ -325,7 +325,7 @@ describe('decryption', () => {
 
                 const published: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     published.push(streamMessage.getParsedContent())
                 })
@@ -355,7 +355,7 @@ describe('decryption', () => {
                 })
                 const publishedStreamMessages: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== stream.id) { return }
                     publishedStreamMessages.push(streamMessage.clone())
                     await publisher.updateEncryptionKey({
@@ -546,7 +546,7 @@ describe('decryption', () => {
 
                 it('ignores message if onError does not rethrow', async () => {
                     const onSubError = jest.fn()
-                    sub.onError(onSubError)
+                    sub.onError.listen(onSubError)
                     // Publish after subscribed
                     await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
@@ -574,7 +574,7 @@ describe('decryption', () => {
                         sub.debug('ON SUB ERROR', err)
                         throw err
                     })
-                    sub.onError(onSubError)
+                    sub.onError.listen(onSubError)
                     // Publish after subscribed
                     await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
@@ -646,7 +646,7 @@ describe('decryption', () => {
                         testClient.debug('streamMessage.encryptionType', streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.AES)
                         expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
                     }
-                })).onFinally(() => {
+                })).onFinally.listen(() => {
                     onSendTest.resolve(undefined)
                 })
 
@@ -672,7 +672,7 @@ describe('decryption', () => {
                 })
                 const published: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(async ([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     published.push(streamMessage.getParsedContent())
                     await publisher.updateEncryptionKey({
@@ -728,7 +728,7 @@ describe('decryption', () => {
                     } else {
                         expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
                     }
-                })).onFinally(() => {
+                })).onFinally.listen(() => {
                     onSendTest.resolve(undefined)
                 })
 
@@ -750,7 +750,7 @@ describe('decryption', () => {
 
                 const contentClear: any[] = []
                 // @ts-expect-error private
-                publisher.publisher.streamMessageQueue.onMessage(([streamMessage]) => {
+                publisher.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
                     if (streamMessage.getStreamId() !== testStream.id) { return }
                     contentClear.push(streamMessage.getParsedContent())
                 })
@@ -825,7 +825,7 @@ describe('decryption', () => {
                 throw err // this should trigger unsub
             })
 
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const received: any[] = []
             // Publish after subscribed

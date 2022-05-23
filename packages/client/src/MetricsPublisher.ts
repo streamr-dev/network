@@ -61,7 +61,7 @@ export class MetricsPublisher {
         if (this.periodConfigs.length > 0) {
             this.eventEmitter.on('publish', () => this.ensureStarted())
             this.eventEmitter.on('subscribe', () => this.ensureStarted())
-            this.destroySignal.onDestroy(() => this.stop())
+            this.destroySignal.onDestroy.listen(() => this.stop())
         }
     }
 

@@ -102,7 +102,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 this.dummyMessagesReceived += 1
             }
         })
-        subscription.onError((err) => {
+        subscription.on('error', (err) => {
             logger.warn('Failed to claim reward code due to error %s', err?.message)
             logger.debug('', err)
         })

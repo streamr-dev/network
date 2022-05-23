@@ -1,5 +1,4 @@
 import { pOnce, pLimitFn, pOne } from './index'
-import { Plugin, Methods } from './Plugin'
 
 export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
@@ -12,10 +11,6 @@ export enum TRIGGER_TYPE {
     QUEUE = 'QUEUE',
     PARALLEL = 'PARALLEL',
 }
-
-// TODO better type definition
-type ListenFn<T extends any[]> = (cb?: (arg: T[0]) => any) => any
-type SignalAndListen<T extends any[]> = ListenFn<T> & Methods<Signal<T>>
 
 /**
  * Like an event emitter, but for a single event.  Listeners are executed
@@ -43,9 +38,8 @@ export class Signal<ArgsType extends any[] = []> {
      *  Create a Signal's listen function with signal utility methods attached.
      *  See example above.
      */
-    static create<ArgsType extends any[] = []>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL): SignalAndListen<ArgsType> {
-        const signal = new this<ArgsType>(triggerType)
-        return Plugin(signal.getListenAsMethod(), signal)
+    static create<ArgsType extends any[] = []>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL): Signal<ArgsType> {
+        return new this<ArgsType>(triggerType)
     }
 
     /**
@@ -53,7 +47,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listener immediately.  Calling trigger after already triggered is a
      * noop.
      */
-    static once<ArgsType extends any[] = []>(): SignalAndListen<ArgsType> {
+    static once<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.ONCE)
     }
 
@@ -62,7 +56,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listeners are pending will not trigger listeners again, and will resolve
      * when listeners are resolved.
      */
-    static one<ArgsType extends any[] = []>(): SignalAndListen<ArgsType> {
+    static one<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.ONE)
     }
 
@@ -71,7 +65,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listeners are pending will enqueue the trigger until after listeners are
      * resolved.
      */
-    static queue<ArgsType extends any[] = []>(): SignalAndListen<ArgsType> {
+    static queue<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.QUEUE)
     }
 
@@ -80,7 +74,7 @@ export class Signal<ArgsType extends any[] = []> {
      * Listener functions are still executed in async series,
      * but multiple triggers can be active in parallel.
      */
-    static parallel<ArgsType extends any[] = []>(): SignalAndListen<ArgsType> {
+    static parallel<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.PARALLEL)
     }
 

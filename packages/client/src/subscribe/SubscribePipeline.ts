@@ -72,8 +72,8 @@ export function SubscribePipeline<T = unknown>(
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-    return messageStream
-        .onError(onError)
+    messageStream.onError.listen(onError)
+    messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
         // convert group key error responses into errors
@@ -102,7 +102,7 @@ export function SubscribePipeline<T = unknown>(
         .filter(async (streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
-        .onBeforeFinally(async () => {
+        .onBeforeFinally.listen(async () => {
             const tasks = [
                 orderMessages.stop(),
                 gapFillMessages.stop(),
@@ -111,4 +111,5 @@ export function SubscribePipeline<T = unknown>(
             ]
             await Promise.allSettled(tasks)
         })
+    return messageStream
 }

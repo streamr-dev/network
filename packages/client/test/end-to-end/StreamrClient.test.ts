@@ -142,7 +142,7 @@ describeRepeats('StreamrClient', () => {
 
             const sub = await client.subscribe<typeof msg>(streamDefinition)
 
-            sub.onMessage(done.wrap(async (streamMessage) => {
+            sub.onMessage.listen(done.wrap(async (streamMessage) => {
                 sub.unsubscribe()
                 const parsedContent = streamMessage.getParsedContent()
                 expect(parsedContent).toEqual(msg)
@@ -205,10 +205,10 @@ describeRepeats('StreamrClient', () => {
             })
 
             const onSubError = jest.fn()
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const published = await publishTestMessages(MAX_MESSAGES)
-            await sub.onFinally()
+            await sub.onFinally.listen()
             expect(onMessageMsgs).toEqual(published.slice(0, 1))
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(onSubError).toHaveBeenCalledWith(err)
@@ -247,7 +247,7 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             // @ts-expect-error private
-            client.publisher.publishQueue.onMessage(async ([streamMessage]) => {
+            client.publisher.publishQueue.onMessage.listen(async ([streamMessage]) => {
                 const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
                 if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }
                 onMessage()

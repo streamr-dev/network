@@ -17,7 +17,7 @@ describe('StreamMessageValidator', () => {
     let getStream: (streamId: string) => Promise<StreamMetadata>
     let isPublisher: (address: EthereumAddress, streamId: string) => Promise<boolean>
     let isSubscriber: (address: EthereumAddress, streamId: string) => Promise<boolean>
-    let verify: ((address: EthereumAddress, payload: string, signature: string) => Promise<boolean>) | undefined
+    let verify: ((address: EthereumAddress, payload: string, signature: string) => boolean) | undefined
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
 
@@ -46,8 +46,8 @@ describe('StreamMessageValidator', () => {
     }
 
     /* eslint-disable */
-    const sign = async (msgToSign: StreamMessage, privateKey: string) => {
-        msgToSign.signature = await SigningUtil.sign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
+    const sign = (msgToSign: StreamMessage, privateKey: string) => {
+        msgToSign.signature = SigningUtil.sign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
     }
     /* eslint-enable */
 
@@ -67,14 +67,14 @@ describe('StreamMessageValidator', () => {
             content: '{}',
         })
 
-        await sign(msg, publisherPrivateKey)
+        sign(msg, publisherPrivateKey)
 
         msgWithNewGroupKey = new StreamMessage({
             messageId: new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'),
             content: '{}',
             newGroupKey: new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
         })
-        await sign(msgWithNewGroupKey, publisherPrivateKey)
+        sign(msgWithNewGroupKey, publisherPrivateKey)
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
         groupKeyRequest = new GroupKeyRequest({
@@ -85,7 +85,7 @@ describe('StreamMessageValidator', () => {
         }).toStreamMessage(
             new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null,
         )
-        await sign(groupKeyRequest, subscriberPrivateKey)
+        sign(groupKeyRequest, subscriberPrivateKey)
 
         groupKeyResponse = new GroupKeyResponse({
             requestId: 'requestId',
@@ -97,7 +97,7 @@ describe('StreamMessageValidator', () => {
         }).toStreamMessage(
             new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
-        await sign(groupKeyResponse, publisherPrivateKey)
+        sign(groupKeyResponse, publisherPrivateKey)
 
         groupKeyAnnounce = new GroupKeyAnnounce({
             streamId: toStreamID('streamId'),
@@ -108,7 +108,7 @@ describe('StreamMessageValidator', () => {
         }).toStreamMessage(
             new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
-        await sign(groupKeyAnnounce, publisherPrivateKey)
+        sign(groupKeyAnnounce, publisherPrivateKey)
 
         groupKeyErrorResponse = new GroupKeyErrorResponse({
             requestId: 'requestId',
@@ -119,7 +119,7 @@ describe('StreamMessageValidator', () => {
         }).toStreamMessage(
             new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
         )
-        await sign(groupKeyErrorResponse, publisherPrivateKey)
+        sign(groupKeyErrorResponse, publisherPrivateKey)
     })
 
     describe('validate(unknown message type)', () => {

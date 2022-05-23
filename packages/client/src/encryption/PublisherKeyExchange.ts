@@ -134,7 +134,7 @@ export class PublisherKeyExchange implements Context {
         }
 
         sub.consume(this.onKeyExchangeMessage).catch(() => {})
-        sub.onError(async (err: Error | StreamMessageProcessingError) => {
+        sub.onError.listen(async (err: Error | StreamMessageProcessingError) => {
             if (!('streamMessage' in err)) {
                 this.debug('unexpected', err)
                 return // do nothing, supress.
