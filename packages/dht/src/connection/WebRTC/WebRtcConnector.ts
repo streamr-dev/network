@@ -98,7 +98,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         remotePeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
         description: string,
-        _connectionId: string
+        connectionId: string
     ): void {
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
@@ -112,6 +112,8 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
                 connection.close()
             }
         }
+        // Always use offerers connectionId
+        connection.setConnectionId(connectionId)
         connection.setRemoteDescription(description, DescriptionType.Offer)
     }
 
@@ -119,13 +121,16 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         remotePeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
         description: string,
-        _connectionId: string
+        connectionId: string
     ): void {
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
         const connection = this.getWebRtcConnection(remotePeerDescriptor)
         if (!connection) {
+            return
+        } else if (connection.connectionId.toString() !== connectionId) {
+            logger.trace(`Ignoring RTC answer due to connectionId mismatch`)
             return
         }
         connection.setRemoteDescription(description, DescriptionType.Answer)
@@ -140,13 +145,16 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
         targetPeerDescriptor: PeerDescriptor,
         candidate: string,
         mid: string,
-        _connectionId: string
+        connectionId: string
     ): void {
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() !== PeerID.fromValue(targetPeerDescriptor.peerId).toString()) {
             return
         }
         const connection = this.getWebRtcConnection(remotePeerDescriptor)
         if (!connection) {
+            return
+        } else if (connection.connectionId.toString() !== connectionId) {
+            logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return
         }
         connection.addRemoteCandidate(candidate, mid)
