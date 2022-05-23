@@ -187,4 +187,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     isOpen(): boolean {
         return this.lastState === 'connected' && !!this.dataChannel
     }
+
+    public setConnectionId(connectionID: string): void {
+        this.connectionId = new ConnectionID(connectionID)
+    }
 }
