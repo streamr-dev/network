@@ -53,7 +53,7 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export { NotFoundError, ErrorCode } from './authFetch'
+export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/index'
 

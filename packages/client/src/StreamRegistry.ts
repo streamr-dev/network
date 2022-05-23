@@ -10,7 +10,7 @@ import { instanceId, until } from './utils'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
-import { ErrorCode, NotFoundError } from './authFetch'
+import { ErrorCode, NotFoundError } from './HttpUtil'
 import {
     StreamID,
     EthereumAddress,

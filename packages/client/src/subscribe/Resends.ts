@@ -13,26 +13,16 @@ import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
-import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { HttpUtil } from '../HttpUtil'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
-
-const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
-    const queryMap = {
-        ...query,
-        format: 'raw'
-    }
-    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-    const queryString = createQueryString(queryMap)
-    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
-}
 
 export type ResendRef = MessageRef | {
     timestamp: number | Date | string,
@@ -79,9 +69,9 @@ export class Resends implements Context {
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
-        @inject(Rest) private rest: Rest,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
+        @inject(HttpUtil) private httpUtil: HttpUtil
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -165,8 +155,8 @@ export class Resends implements Context {
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
-        const nodeUrl = await (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
+        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             streamPartId,
@@ -179,7 +169,7 @@ export class Resends implements Context {
             count += 1
         })
 
-        const dataStream = await this.rest.fetchStream(url)
+        const dataStream = await this.httpUtil.fetchHttpStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream
@@ -304,5 +294,15 @@ export class Resends implements Context {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
+    }
+
+    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
+        const queryMap = {
+            ...query,
+            format: 'raw'
+        }
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        const queryString = this.httpUtil.createQueryString(queryMap)
+        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }

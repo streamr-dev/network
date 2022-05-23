@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import { createQueryString } from '../../src/Rest'
+import { HttpUtil } from '../../src/HttpUtil'
 
-describe('Rest', () => {
+describe('HttpUtil', () => {
     it('query parameters with null/undefined', () => {
-        const actual = createQueryString({
+        const httpUtil = new HttpUtil()
+        const actual = httpUtil.createQueryString({
             a: 'foo',
             b: undefined,
             c: null,
