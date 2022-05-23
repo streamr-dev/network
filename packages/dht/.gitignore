@@ -8,3 +8,4 @@ oldsrc
 dist
 google
 src/proto
+coverage
