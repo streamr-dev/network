@@ -23,7 +23,7 @@ export const createClientFactory = (): ClientFactory => {
     const mockContainer = container.createChildContainer()
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
-    mockContainer.registerSingleton(HttpUtil, FakeHttpUtil as any)
+    mockContainer.registerSingleton(HttpUtil, FakeHttpUtil)
     mockContainer.registerSingleton(ActiveNodes, ActiveNodes as any)
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {

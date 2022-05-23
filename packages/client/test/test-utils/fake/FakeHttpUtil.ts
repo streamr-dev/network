@@ -5,16 +5,19 @@ import { URLSearchParams } from 'url'
 
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { HttpUtil } from '../../../src/HttpUtil'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeHttpUtil {
+export class FakeHttpUtil implements HttpUtil {
+    private readonly realHttpUtil: HttpUtil
     private readonly storageNodeRegistry: FakeStorageNodeRegistry
 
     constructor(
         @inject(StorageNodeRegistry) storageNodeRegistry: StorageNodeRegistry
     ) {
+        this.realHttpUtil = new HttpUtil()
         this.storageNodeRegistry = storageNodeRegistry as unknown as FakeStorageNodeRegistry
     }
 
@@ -44,6 +47,10 @@ export class FakeHttpUtil {
             }
         }
         throw new Error('not implemented: ' + url)
+    }
+
+    createQueryString(query: Record<string, any>): string {
+        return this.realHttpUtil.createQueryString(query)
     }
 
     private static getResendRequest(url: string): ResendRequest | undefined {

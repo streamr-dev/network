@@ -1,13 +1,12 @@
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
-import { getVersionString, counterId, instanceId } from './utils'
+import { getVersionString, counterId } from './utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
 import { StreamMessage } from 'streamr-client-protocol'
 import { Lifecycle, scoped } from 'tsyringe'
-import { Context } from './utils/Context'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -74,15 +73,7 @@ const parseErrorCode = (body: string) => {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class HttpUtil implements Context {
-    readonly id: string
-    readonly debug: Debugger
-
-    constructor(context: Context) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
-    }
-
+export class HttpUtil {
     async fetchHttpStream(
         url: string,
         opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
@@ -116,6 +107,11 @@ export class HttpUtil implements Context {
             abortController.abort()
             throw err
         }
+    }
+
+    createQueryString(query: Record<string, any>): string {
+        const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+        return new URLSearchParams(withoutEmpty).toString()
     }
 }
 

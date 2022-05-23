@@ -24,21 +24,6 @@ const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
-const createQueryString = (query: Record<string, any>) => {
-    const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
-    return new URLSearchParams(withoutEmpty).toString()
-}
-
-const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
-    const queryMap = {
-        ...query,
-        format: 'raw'
-    }
-    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-    const queryString = createQueryString(queryMap)
-    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
-}
-
 export type ResendRef = MessageRef | {
     timestamp: number | Date | string,
     sequenceNumber?: number,
@@ -170,8 +155,8 @@ export class Resends implements Context {
         }
 
         const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
-        const nodeUrl = await (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
-        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
+        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             streamPartId,
@@ -309,5 +294,15 @@ export class Resends implements Context {
             await wait(interval)
         }
         /* eslint-enable no-await-in-loop */
+    }
+
+    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
+        const queryMap = {
+            ...query,
+            format: 'raw'
+        }
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        const queryString = this.httpUtil.createQueryString(queryMap)
+        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }
