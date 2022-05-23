@@ -96,6 +96,7 @@ export class RpcCommunicator extends EventEmitter {
         const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage)}
 
         logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
+        this.emit(Event.OUTGOING_MESSAGE)
         this.send(rpcMessage.targetDescriptor!, msg, this.appId)
     }
 
@@ -106,7 +107,7 @@ export class RpcCommunicator extends EventEmitter {
         logger.trace(`onIncomingMessage on ${this.appId} rpc, messageId: ${message.messageId}`)
         const rpcCall = RpcMessage.fromBinary(message.body)
         if (rpcCall.header.response && this.ongoingRequests.has(rpcCall.requestId)) {
-            if (rpcCall.responseError) {
+            if (rpcCall.responseError !== undefined) {
                 this.rejectOngoingRequest(rpcCall)
             } else {
                 this.resolveOngoingRequest(rpcCall)
