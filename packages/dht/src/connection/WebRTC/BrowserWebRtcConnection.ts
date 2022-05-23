@@ -11,7 +11,7 @@ const logger = new Logger(module)
 
 export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
 
-    public readonly connectionId: ConnectionID = new ConnectionID()
+    public connectionId: ConnectionID = new ConnectionID()
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
     private lastState: ConnectionState = ConnectionState.CONNECTING
@@ -204,5 +204,9 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         this.dataChannel = dataChannel
         this.lastState = ConnectionState.OPEN
         this.emit(ConnectionEvent.CONNECTED)
+    }
+
+    public setConnectionId(connectionID: string): void {
+        this.connectionId = new ConnectionID(connectionID)
     }
 }
