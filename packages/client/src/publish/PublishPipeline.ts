@@ -96,7 +96,7 @@ export class PublishPipeline implements Context, Stoppable {
             .filter(this.filterNonSettled)
             .forEach(this.consumeQueue.bind(this))
 
-        destroySignal.onDestroy(this.stop.bind(this))
+        destroySignal.onDestroy.listen(this.stop.bind(this))
     }
 
     private filterNonSettled = ([_streamMessage, defer]: PublishQueueOut): boolean => {

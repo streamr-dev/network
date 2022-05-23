@@ -220,7 +220,7 @@ describe('resends', () => {
                 mockFn.mockRejectedValueOnce(err)
                 sub.once('resendComplete', onResent)
                 const onSubError = jest.fn()
-                sub.onError(onSubError) // suppress
+                sub.on('error', onSubError) // suppress
 
                 const published = await publishTestMessagesStream2(3)
                 const receivedMsgs = await sub.collect(3)
@@ -243,7 +243,7 @@ describe('resends', () => {
                     }
                 })
 
-                sub.onError((err: any) => {
+                sub.onError.listen((err: any) => {
                     if (err.code === 'NO_STORAGE_NODES') { return }
 
                     throw err
@@ -410,7 +410,7 @@ describe('resends', () => {
                 receivedMsgs.push(streamMessage)
             })
 
-            await sub.onFinally()
+            await sub.onFinally.listen()
             expect(receivedMsgs).toHaveLength(published.length)
             expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
         })

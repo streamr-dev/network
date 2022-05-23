@@ -54,7 +54,7 @@ function waitForSubMessage(
         await sub.unsubscribe()
     }).catch(() => {}) // important: prevent unchained finally cleanup causing unhandled rejection
     sub.consume(onMessage).catch((err) => task.reject(err))
-    sub.onError(task.reject)
+    sub.onError.listen(task.reject)
     return task
 }
 
@@ -87,7 +87,7 @@ export class KeyExchangeStream implements Context, Stoppable {
             return sub.unsubscribe()
         }
         this.destroySignal.onDestroy.listen(onDestroy)
-        sub.onBeforeFinally(() => {
+        sub.onBeforeFinally.listen(() => {
             this.destroySignal.onDestroy.unlisten(onDestroy)
             this.subscribe.reset()
         })

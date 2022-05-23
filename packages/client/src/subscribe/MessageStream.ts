@@ -36,7 +36,7 @@ export class MessageStream<
      */
     useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
         if (onMessage) {
-            this.onMessage(async (streamMessage) => {
+            this.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {
                     await onMessage(streamMessage.getParsedContent(), streamMessage)
                 }
@@ -150,8 +150,8 @@ export async function pullManyToOne<T>(
 
     // pull inputStreams into output stream
     for (const sub of inputStreams) {
-        sub.onFinally(() => maybeEnd())
-        sub.onError((err) => outputStream.handleError(err))
+        sub.onFinally.listen(() => maybeEnd())
+        sub.onError.listen((err) => outputStream.handleError(err))
         outputStream.pull(sub, { endDest: false })
     }
     return outputStream

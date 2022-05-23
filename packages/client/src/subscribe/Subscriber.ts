@@ -72,7 +72,7 @@ export class Subscriber implements Context {
         this.debug('creating new SubscriptionSession: %s', streamPartId)
         const subSession = new SubscriptionSession<T>(this, streamPartId, this.container)
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
-        subSession.onRetired(() => {
+        subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
         return subSession

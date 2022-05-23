@@ -33,11 +33,11 @@ export class ResendSubscription<T> extends Subscription<T> {
         )
         this.pipe(this.resendThenRealtime)
         this.pipe(this.orderMessages.transform())
-        this.onBeforeFinally(async () => {
+        this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
         })
         const destroySignal = container.resolve(DestroySignal)
-        destroySignal.onDestroy(() => {
+        destroySignal.onDestroy.listen(() => {
             this.eventEmitter.removeAllListeners()
         })
     }
@@ -49,7 +49,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             partition,
         }, this.resendOptions)
 
-        this.onBeforeFinally(async () => {
+        this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()
         })

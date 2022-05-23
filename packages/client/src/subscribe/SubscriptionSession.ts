@@ -43,9 +43,10 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
         this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
-            .onError(this.onError)
+        this.pipeline.onError.listen(this.onError)
+        this.pipeline
             .pipe(this.distributeMessage)
-            .onBeforeFinally(async () => {
+            .onBeforeFinally.listen(async () => {
                 if (!this.isStopped) {
                     await this.stop()
                 }
@@ -162,7 +163,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('add', sub.id)
         this.subscriptions.add(sub)
 
-        sub.onBeforeFinally(() => {
+        sub.onBeforeFinally.listen(() => {
             return this.remove(sub)
         })
 

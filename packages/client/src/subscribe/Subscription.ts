@@ -21,10 +21,10 @@ export class Subscription<T = unknown> extends MessageStream<T> {
         super(subSession, options)
         this.context = subSession
         this.streamPartId = subSession.streamPartId
-        this.onMessage((msg) => {
+        this.onMessage.listen((msg) => {
             this.debug('<< %o', msg)
         })
-        this.onError((err) => {
+        this.onError.listen((err) => {
             this.debug('<< onError: %o', err)
         })
         // this.debug('create', this.key, new Error('Subscription').stack)
@@ -33,5 +33,9 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     /** @internal */
     waitForNeighbours(numNeighbours?: number, timeout?: number): Promise<boolean> {
         return this.context.waitForNeighbours(numNeighbours, timeout)
+    }
+
+    on(_eventName: 'error', cb: (err: Error) => void): void {
+        this.onError.listen(cb)
     }
 }

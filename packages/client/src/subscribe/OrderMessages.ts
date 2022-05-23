@@ -38,7 +38,7 @@ export class OrderMessages<T> implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        this.stopSignal(() => {
+        this.stopSignal.listen(() => {
             this.done = true
         })
         this.onOrdered = this.onOrdered.bind(this)
@@ -78,7 +78,7 @@ export class OrderMessages<T> implements Context {
                 publisherId,
                 msgChainId,
             })
-            resendMessageStream.onFinally(() => {
+            resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })
             this.resendStreams.add(resendMessageStream)
