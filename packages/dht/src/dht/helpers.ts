@@ -1,5 +1,6 @@
 import { PeerID } from '../PeerID'
 import { PeerDescriptor } from '../proto/DhtRpc'
+import { Err } from '../errors'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -16,7 +17,7 @@ export const nodeFormatPeerDescriptor = (peerDescriptor: PeerDescriptor): PeerDe
 export function promiseTimeout<T>(ms: number, givenPromise: Promise<T>): Promise<T> {
     const timeoutPromise = new Promise((resolve, reject) => {
         const timeoutRef = setTimeout(() => {
-            reject(new Error('timed out in ' + ms + 'ms.'))
+            reject(new Err.RpcTimeout('Timed out in ' + ms + 'ms.'))
         }, ms)
 
         // Clear timeout if promise wins race

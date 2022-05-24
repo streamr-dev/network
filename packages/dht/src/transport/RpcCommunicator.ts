@@ -1,9 +1,9 @@
 import { v4 } from 'uuid'
 import { Err, ErrorCode } from '../errors'
 import {
+    ClientTransport,
     DeferredPromises,
     DhtRpcOptions,
-    ClientTransport,
     Event as DhtTransportClientEvent
 } from '../rpc-protocol/ClientTransport'
 import {
@@ -14,9 +14,9 @@ import {
     RpcMessage,
     RpcResponseError
 } from '../proto/DhtRpc'
-import { ServerTransport, Event as DhtTransportServerEvent, RegisteredMethod } from '../rpc-protocol/ServerTransport'
+import { Event as DhtTransportServerEvent, RegisteredMethod, ServerTransport } from '../rpc-protocol/ServerTransport'
 import { EventEmitter } from 'events'
-import { ITransport, Event as ITransportEvent  } from './ITransport'
+import { Event as ITransportEvent, ITransport } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DEFAULT_APP_ID } from '../dht/DhtNode'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
@@ -144,6 +144,8 @@ export class RpcCommunicator extends EventEmitter {
             let responseError = RpcResponseError.SERVER_ERROR
             if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
                 responseError = RpcResponseError.UNKNOWN_RPC_METHOD
+            } else if (err.code === ErrorCode.RPC_TIMEOUT) {
+                responseError = RpcResponseError.SERVER_TIMOUT
             }
             response = this.createResponseRpcMessage({
                 request: rpcMessage,

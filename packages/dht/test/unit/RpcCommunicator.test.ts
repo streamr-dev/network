@@ -1,4 +1,4 @@
-import { RpcCommunicator, Event as RpcCommunicatorEvent } from '../../src/transport/RpcCommunicator'
+import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import {
     Message,
@@ -15,7 +15,8 @@ import { Simulator } from '../../src/connection/Simulator'
 import { DeferredPromises } from '../../src/rpc-protocol/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/errors'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
+import { MockRegisterDhtRpc } from '../utils'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator
@@ -149,15 +150,80 @@ describe('RpcCommunicator', () => {
         expect(res.sent).toEqual(true)
     })
 
-    it('Responds to requests', async () => {
+    it('Success responses to requests', async () => {
+        let successCounter = 0
+        rpcCommunicator.registerServerMethod('ping', MockRegisterDhtRpc.ping)
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (!pongWrapper.responseError) {
+                successCounter += 1
+            }
+        })
         const requestMessage: Message = {
             messageType: MessageType.RPC,
             messageId: 'id',
             body: RpcMessage.toBinary(request)
         }
-        await Promise.all([
-            waitForEvent(rpcCommunicator, RpcCommunicatorEvent.OUTGOING_MESSAGE),
-            rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
-        ])
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => successCounter === 1)
+    })
+
+    it('Error response on unknown method', async () => {
+        let errorCounter = 0
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (pongWrapper.responseError && pongWrapper.responseError === RpcResponseError.UNKNOWN_RPC_METHOD) {
+                errorCounter += 1
+            }
+        })
+        const requestMessage: Message = {
+            messageType: MessageType.RPC,
+            messageId: 'id',
+            body: RpcMessage.toBinary(request)
+        }
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => errorCounter === 1)
+    })
+
+    it('Error response on server timeout', async () => {
+        let errorCounter = 0
+        rpcCommunicator.registerServerMethod('ping', (_any: Uint8Array) => {
+            return new Promise((resolve, _reject) => {
+                setTimeout(() => resolve(new Uint8Array()), 2000)
+            })
+        })
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_TIMOUT as RpcResponseError) {
+                errorCounter += 1
+            }
+        })
+        const requestMessage: Message = {
+            messageType: MessageType.RPC,
+            messageId: 'id',
+            body: RpcMessage.toBinary(request)
+        }
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => errorCounter === 1)
+    })
+
+    it('Error response on server timeout', async () => {
+        let errorCounter = 0
+        rpcCommunicator.registerServerMethod('ping', (_any: Uint8Array) => {
+            return new Promise((_resolve, reject) => reject('error'))
+        })
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_ERROR) {
+                errorCounter += 1
+            }
+        })
+        const requestMessage: Message = {
+            messageType: MessageType.RPC,
+            messageId: 'id',
+            body: RpcMessage.toBinary(request)
+        }
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => errorCounter === 1)
     })
 })
