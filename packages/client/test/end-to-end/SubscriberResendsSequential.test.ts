@@ -98,7 +98,9 @@ describe('sequential resend subscribe', () => {
 
             const message = Msg()
             // eslint-disable-next-line no-await-in-loop
-            const streamMessage = await publisher.publish(stream.id, message, id) // should be realtime
+            const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
+                timestamp: id
+            })
             // keep track of published messages so we can check they are resent in next test(s)
             published.push(streamMessage)
             const msgs = await sub.collect(published.length)

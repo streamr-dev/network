@@ -41,7 +41,10 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
             streamPartition: partition
         }
         try {
-            await streamrClient.publish(streamPartDefinition, content, timestamp, partitionKey)
+            await streamrClient.publish(streamPartDefinition, content, {
+                timestamp,
+                partitionKey
+            })
             return res.sendStatus(200)
         } catch (e) {
             logger.error(`Unable to publish to ${streamId}: ${e.message}`)

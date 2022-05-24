@@ -35,7 +35,10 @@ export class PublishConnection implements Connection {
                 streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
-                }, content, metadata.timestamp, partitionKey)
+                }, content, {
+                    timestamp: metadata.timestamp,
+                    partitionKey
+                })
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws, logger)
             }

@@ -45,7 +45,9 @@ export class Bridge implements MqttServerListener {
             return
         }
         const { content, metadata } = message
-        const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, metadata.timestamp)
+        const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
+            timestamp: metadata.timestamp
+        })
         this.publishMessageChains.add(createMessageChainKey(publishedMessage))
     }
 

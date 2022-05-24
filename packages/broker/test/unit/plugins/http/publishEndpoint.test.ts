@@ -46,7 +46,10 @@ describe('PublishEndpoint', () => {
             streamPartition: expectedPartition
         }, {
             foo: 'bar'
-        }, expectedTimestamp, expectedPartitionKey)
+        }, {
+            timestamp: expectedTimestamp,
+            partitionKey: expectedPartitionKey
+        })
     }
 
     beforeEach(() => {

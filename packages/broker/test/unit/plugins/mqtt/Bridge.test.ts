@@ -44,7 +44,7 @@ describe('MQTT Bridge', () => {
 
         it('onMessageReceived', async () => {
             await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT))
-            expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, undefined)
+            expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, {})
         })
 
         it('onSubscribed', async () => {
