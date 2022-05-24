@@ -22,12 +22,16 @@ const logger = new Logger(module)
 
 export class ServerTransport extends EventEmitter {
     methods: Map<string, RegisteredMethod>
+    private stopped = false
     constructor() {
         super()
         this.methods = new Map()
     }
 
     async onRequest(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<Uint8Array> {
+        if (this.stopped) {
+            return new Uint8Array()
+        }
         logger.trace(`Server processing request ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
         const fn = this.methods.get(methodName)
@@ -38,6 +42,9 @@ export class ServerTransport extends EventEmitter {
     }
 
     async onNotification(peerDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         logger.trace(`Server processing notification ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
         const fn = this.methods.get(methodName)
@@ -48,6 +55,9 @@ export class ServerTransport extends EventEmitter {
     }
 
     registerMethod(name: string, fn: RegisteredMethod): void {
+        if (this.stopped) {
+            return
+        }
         this.methods.set(name, fn)
     }
 
@@ -56,6 +66,7 @@ export class ServerTransport extends EventEmitter {
     }
 
     stop(): void {
+        this.stopped = true
         this.methods.clear()
     }
 }

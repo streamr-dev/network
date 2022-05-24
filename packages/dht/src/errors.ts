@@ -10,7 +10,8 @@ export enum ErrorCode {
     NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
     UNKNOWN_RPC_METHOD = 'UNKNOWN_RPC_METHOD',
     LAYER_VIOLATION = 'LAYER_VIOLATION',
-    WEBSOCKET_CONNECTION_REQUEST_REJECTED = 'WEBSOCKET_CONNECTION_REQUEST_REJECTED'
+    WEBSOCKET_CONNECTION_REQUEST_REJECTED = 'WEBSOCKET_CONNECTION_REQUEST_REJECTED',
+    COULD_NOT_START = 'COULD_NOT_START'
 }
 
 export namespace Err {
@@ -30,5 +31,5 @@ export namespace Err {
     export class UnknownRpcMethod extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.UNKNOWN_RPC_METHOD, message, originalError) } }
     export class LayerViolation extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.LAYER_VIOLATION, message, originalError) } }
     export class WebSocketConnectionRequestRejected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.WEBSOCKET_CONNECTION_REQUEST_REJECTED, message, originalError) } }
-
+    export class CouldNotStart extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_START, message, originalError) } }
 }

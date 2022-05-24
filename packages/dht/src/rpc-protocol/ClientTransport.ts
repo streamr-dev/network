@@ -45,7 +45,8 @@ const logger = new Logger(module)
 
 export class ClientTransport extends EventEmitter implements RpcTransport {
     static objectCount = 0
-    private objectId = 1    
+    private objectId = 1
+    private stopped = false
     protected readonly defaultOptions: TODO
 
     constructor(defaultTimeout?: number) {
@@ -96,6 +97,11 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
             defStatus.promise,
             defTrailer.promise,
         )
+
+        if (this.stopped) {
+            return unary
+        }
+
         const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
         const deferred: DeferredPromises = {
             message: defMessage,
@@ -131,6 +137,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     stop(): void {
+        this.stopped = true
         this.removeAllListeners()
     }
 }

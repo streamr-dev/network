@@ -343,10 +343,10 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer) {
-        logger.trace(`Getting closest peers from contact: ${contact.peerId.toString()}`)
         if (!this.started || this.stopped) {
             return
         }
+        logger.trace(`Getting closest peers from contact: ${contact.peerId.toString()}`)
         this.neighborList!.setContacted(contact.peerId)
         this.neighborList!.setActive(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.ownPeerDescriptor!)
@@ -382,10 +382,10 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
-        logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
         if (!this.started || this.stopped) {
             return
         }
+        logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
         const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
         const entryPointId = PeerID.fromValue(entryPointDescriptor.peerId)
@@ -427,7 +427,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private addNewContact(contact: PeerDescriptor, setActive = false): void {
-        if (!this.bucket!.get(contact.peerId)) {
+        if (!this.started || this.stopped || !this.bucket!.get(contact.peerId)) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             const peerId = PeerID.fromValue(contact.peerId)
@@ -446,6 +446,9 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         logger.trace(`Removing contact ${contact.peerId.toString()}`)
         const peerId = PeerID.fromValue(contact.peerId)
         this.bucket!.remove(peerId.value)
@@ -456,6 +459,9 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private bindDefaultServerMethods() {
+        if (!this.started || this.stopped) {
+            return
+        }
         logger.trace(`Binding default DHT RPC methods`)
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
         this.rpcCommunicator!.registerServerMethod('getClosestPeers', methods.getClosestPeers)
@@ -484,6 +490,9 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private addClosestContactToBucket(): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         const closest = this.getClosestActiveContactNotInBucket()
         if (closest) {
             this.addNewContact(closest.getPeerDescriptor())

@@ -16,6 +16,7 @@ import { Event, ITransport } from '../transport/ITransport'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
+import { Err } from '../errors'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -29,6 +30,8 @@ const logger = new Logger(module)
 
 export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
+    private stopped = false
+    private started = false
 
     private ownPeerDescriptor: PeerDescriptor | null = null
     private connections: { [peerId: string]: IConnection } = {}
@@ -51,6 +54,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     private async handleIncomingConnectivityRequest(connection: IConnection, connectivityRequest: ConnectivityRequestMessage) {
+        if (!this.started || this.stopped) {
+            return
+        }
         let outgoingConnection: IConnection | null = null
         let connectivityResponseMessage: ConnectivityResponseMessage | null = null
         try {
@@ -136,6 +142,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async start(): Promise<ConnectivityResponseMessage> {
+        if (this.started || this.stopped) {
+            throw new Err.CouldNotStart(`Cannot start already ${this.started ? 'started' : 'stopped'} module`)
+        }
+        this.started = true
         logger.info(`Starting ConnectionManager...`)
         // Set up and start websocket server
         if (this.webSocketServer) {
@@ -177,6 +187,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     enableConnectivity(ownPeerDescriptor: PeerDescriptor): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         this.ownPeerDescriptor = ownPeerDescriptor
         this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
         if (this.webSocketServer) {
@@ -191,6 +204,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     onIncomingMessage = (connection: IConnection, message: Message): void => {
+        if (!this.started || this.stopped) {
+            return
+        }
         if (message.messageType === MessageType.HANDSHAKE && this.ownPeerDescriptor) {
             const handshake = HandshakeMessage.fromBinary(message.body)
             const stringId = PeerID.fromValue(handshake.sourceId).toString()
@@ -228,6 +244,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     async stop(): Promise<void> {
+        if (!this.started) {
+            return
+        }
+        this.stopped = true
         logger.trace(`Stopping ConnectionManager`)
         this.removeAllListeners()
         if (this.webSocketServer) {
@@ -250,6 +270,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     // or it might fail completely! Where should we buffer the outgoing data?
 
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
+        if (!this.started || this.stopped) {
+            return
+        }
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             return
@@ -286,6 +309,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
         this.disconnectionTimeouts[stringId] = setTimeout(() => {
             this.closeConnection(stringId, reason)
@@ -293,6 +319,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     private closeConnection(stringId: string, reason?: string): void {
+        if (!this.started || this.stopped) {
+            return
+        }
         if (this.connections.hasOwnProperty(stringId)) {
             logger.trace(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
             this.connections[stringId].close()
@@ -319,6 +348,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     addConnection(peerDescriptor: PeerDescriptor, connection: IConnection, replaceDeferred = true): boolean {
+        if (!this.started || this.stopped) {
+            return false
+        }
         if (!this.hasConnection(peerDescriptor)
             || (replaceDeferred
                 && this.hasConnection(peerDescriptor)

@@ -87,6 +87,9 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
+        if (this.stopped) {
+            return
+        }
         const requestOptions = this.rpcClientTransport.mergeOptions(options)
         if (deferredPromises && rpcMessage.header.notification) {
             this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
@@ -101,7 +104,7 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     public async onIncomingMessage(senderDescriptor: PeerDescriptor, message: Message): Promise<void> {
-        if (message.messageType !== MessageType.RPC) {
+        if (this.stopped || message.messageType !== MessageType.RPC) {
             return
         }
         logger.trace(`onIncomingMessage on ${this.appId} rpc, messageId: ${message.messageId}`)
@@ -133,6 +136,9 @@ export class RpcCommunicator extends EventEmitter {
         this.rpcServerTransport.registerMethod(methodName, fn)
     }
     private async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         let response: RpcMessage
         try {
             const bytes = await this.rpcServerTransport.onRequest(senderDescriptor, rpcMessage)
@@ -154,12 +160,18 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private async handleNotification(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         try {
             await this.rpcServerTransport.onNotification(senderDescriptor, rpcMessage)
         } catch (err) {}
     }
 
     private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {
+        if (this.stopped) {
+            return
+        }
         const ongoingRequest: OngoingRequest = {
             deferredPromises,
             timeoutRef: setTimeout(() => this.requestTimeoutFn(deferredPromises), timeout)
@@ -168,6 +180,9 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private resolveOngoingRequest(response: RpcMessage): void {
+        if (this.stopped) {
+            return
+        }
         const ongoingRequest = this.ongoingRequests.get(response.requestId)!
         if (ongoingRequest.timeoutRef) {
             clearTimeout(ongoingRequest.timeoutRef)
@@ -178,6 +193,9 @@ export class RpcCommunicator extends EventEmitter {
     }
 
     private rejectOngoingRequest(response: RpcMessage): void {
+        if (this.stopped) {
+            return
+        }
         const ongoingRequest = this.ongoingRequests.get(response.requestId)!
         if (ongoingRequest.timeoutRef) {
             clearTimeout(ongoingRequest.timeoutRef)
