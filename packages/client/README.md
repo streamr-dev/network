@@ -189,13 +189,13 @@ const msg = {
 await streamr.publish(streamId, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-await streamr.publish(streamId, msg, new Date(1546300800123))
+await streamr.publish(streamId, msg, { timestamp: new Date(1546300800123) })
 
 // Publish with a specific timestamp in ms
-await streamr.publish(streamId, msg, 1546300800123)
+await streamr.publish(streamId, msg, { timestamp: 1546300800123 })
 
 // Publish with a specific timestamp as a ISO8601 string
-await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
+await streamr.publish(streamId, msg, { timestamp: '2019-01-01T00:00:00.123Z' })
 
 // For convenience, stream.publish(...) equals streamr.publish(stream, ...)
 await stream.publish(msg)
@@ -557,8 +557,9 @@ The partition key can be given as an argument to the `publish` methods, and the 
 ```js
 await stream.publish(
     msg,
-    Date.now(),
-    msg.vehicleId // msg.vehicleId is the partition key here
+    {
+        partitionKey: msg.vehicleId
+    }
 )
 ```
 
