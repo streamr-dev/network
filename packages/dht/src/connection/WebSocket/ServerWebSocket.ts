@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { EventEmitter } from 'events'
 import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
@@ -26,7 +24,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         socket.on('message', (message) => {
             logger.trace('ServerWebSocket::onMessage')
             if (message.type === 'utf8') {
-                console.log('Received string Message: ' + message.utf8Data)
+                logger.debug('Received string Message: ' + message.utf8Data)
             }
             else if (message.type === 'binary') {
                 logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')

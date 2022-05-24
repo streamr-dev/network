@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
 import { EventEmitter } from 'events'
