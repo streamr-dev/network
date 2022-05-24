@@ -8,10 +8,10 @@ import {
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
 } from '../src/proto/DhtRpc'
-import { PeerID } from '../src/PeerID'
+import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpc, IWebSocketConnector } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { generateId } from '../src/dht/helpers'
+import { generateId } from '../src/helpers/common'
 import { Simulator } from '../src/connection/Simulator'
 
 export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator): Promise<DhtNode> => {

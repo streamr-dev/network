@@ -1,5 +1,5 @@
 import KBucket from 'k-bucket'
-import { PeerID } from '../PeerID'
+import { PeerID } from '../helpers/PeerID'
 import { DhtPeer } from './DhtPeer'
 
 class ContactWrapper {

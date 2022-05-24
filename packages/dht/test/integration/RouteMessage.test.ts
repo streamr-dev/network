@@ -3,7 +3,7 @@ import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/prot
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/transport/ITransport'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 
 describe('Route Message With Mock Connections', () => {

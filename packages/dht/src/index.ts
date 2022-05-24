@@ -1,7 +1,7 @@
 import { MockConnectionManager } from './connection/MockConnectionManager'
 import { Simulator } from './connection/Simulator'
 import { DhtNode } from './dht/DhtNode'
-import { PeerID } from './PeerID'
+import { PeerID } from './helpers/PeerID'
 
 const main = async () => {
 

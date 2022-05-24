@@ -1,7 +1,7 @@
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('Route Message With Mock Connections', () => {
     let node: DhtNode

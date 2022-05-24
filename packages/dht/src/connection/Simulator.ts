@@ -1,5 +1,5 @@
 import { DhtNode } from "../dht/DhtNode"
-import { PeerID } from "../PeerID"
+import { PeerID } from "../helpers/PeerID"
 import { Message, PeerDescriptor } from "../proto/DhtRpc"
 
 export class Simulator {

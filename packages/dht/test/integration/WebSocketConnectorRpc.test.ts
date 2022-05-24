@@ -1,7 +1,7 @@
 import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../../src/dht/helpers'
+import { generateId } from '../../src/helpers/common'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { MockRegisterWebSocketConnectorRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'

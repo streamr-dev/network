@@ -3,10 +3,10 @@ import { getMockPeers, MockRegisterDhtRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../../src/dht/helpers'
+import { generateId } from '../../src/helpers/common'
 import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
-import { Err } from '../../src/errors'
+import { Err } from '../../src/helpers/errors'
 import { Simulator } from '../../src/connection/Simulator'
 
 describe('DhtRpc', () => {

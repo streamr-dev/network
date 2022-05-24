@@ -8,7 +8,7 @@ import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { createRemoteWebRtcConnectorServer, RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorClient } from '../../proto/DhtRpc.client'
 import { Event as IWebRtcEvent } from './IWebRtcConnection'
-import { PeerID } from '../../PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { TODO } from '../../types'

@@ -5,7 +5,7 @@ import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
 import { createRpcMethods } from '../rpc-protocol/server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
-import { PeerID } from '../PeerID'
+import { PeerID } from '../helpers/PeerID'
 import {
     ConnectivityResponseMessage,
     Message,
@@ -14,7 +14,7 @@ import {
     RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
-import { Err } from '../errors'
+import { Err } from '../helpers/errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'

@@ -4,7 +4,7 @@ import {
     WebSocketConnectionResponse
 } from '../../proto/DhtRpc'
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
-import { PeerID } from '../../PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
 import { DummyServerCallContext } from '../../rpc-protocol/ServerTransport'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'

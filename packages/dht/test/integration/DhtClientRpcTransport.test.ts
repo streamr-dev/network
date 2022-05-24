@@ -4,7 +4,7 @@ import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { getMockPeers } from '../utils'
 import { v4 } from 'uuid'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 
 describe('DhtClientRpcTransport', () => {

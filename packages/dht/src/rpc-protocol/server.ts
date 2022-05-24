@@ -9,7 +9,7 @@ import {
 import { IDhtRpc } from '../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from './ServerTransport'
-import { nodeFormatPeerDescriptor } from '../dht/helpers'
+import { nodeFormatPeerDescriptor } from '../helpers/common'
 import { DhtPeer } from '../dht/DhtPeer'
 import { TODO } from '../types'
 

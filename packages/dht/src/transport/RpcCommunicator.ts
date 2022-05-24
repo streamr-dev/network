@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { Err, ErrorCode } from '../errors'
+import { Err, ErrorCode } from '../helpers/errors'
 import {
     ClientTransport,
     DeferredPromises,

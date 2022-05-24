@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { SortedContactList } from '../../src/dht/SortedContactList'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { IDhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
 import type { PingResponse } from "../../src/proto//DhtRpc"

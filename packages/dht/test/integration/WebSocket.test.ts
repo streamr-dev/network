@@ -5,7 +5,7 @@ import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { Simulator } from '../../src/connection/Simulator'
 

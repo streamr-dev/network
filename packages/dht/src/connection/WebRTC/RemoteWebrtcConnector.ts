@@ -7,7 +7,7 @@ import {
     WebRtcConnectionRequest
 } from '../../proto/DhtRpc'
 import { IWebRtcConnectorClient } from '../../proto/DhtRpc.client'
-import { PeerID } from '../../PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
 import { TODO } from '../../types'
 import { IWebRtcConnector } from '../../proto/DhtRpc.server'
