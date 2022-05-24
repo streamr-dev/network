@@ -1,6 +1,6 @@
 {
     "name": "streamr-client",
-    "version": "6.0.5",
+    "version": "6.0.6",
     "description": "JavaScript client library for Streamr",
     "private": true,
     "repository": {
