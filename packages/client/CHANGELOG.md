@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Method signatures of `client.publish` and `stream.publish` have changed: optional `metadata` is given an object instead of positional arguments
 - Method `getStorageNodesOf()` renamed to `getStorageNodes()`
 - Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
 - Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
