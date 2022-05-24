@@ -50,6 +50,7 @@ export class Publisher implements Context, Stoppable {
             content,
             timestamp: parseTimestamp(metadata),
             partitionKey: metadata?.partitionKey,
+            msgChainId: metadata?.msgChainId
         })
     }
 

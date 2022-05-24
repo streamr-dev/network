@@ -46,7 +46,8 @@ export class FailedToPublishError extends Error {
 export interface MessageMetadata {
     timestamp?: string | number | Date
     sequenceNumber?: number
-    partitionKey?: string | number
+    partitionKey?: string | number,
+    msgChainId?: string
 }
 
 // TODO better name? 
@@ -195,7 +196,8 @@ export class PublishPipeline implements Context, Stoppable {
         this.debug('publish >> %o', {
             streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
             timestamp: publishMetadata.timestamp,
-            partitionKey: publishMetadata.partitionKey
+            partitionKey: publishMetadata.partitionKey,
+            msgChainId: publishMetadata.msgChainId
         })
         this.startQueue()
 

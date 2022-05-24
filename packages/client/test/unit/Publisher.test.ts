@@ -13,7 +13,6 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 
 const AUTHENTICATED_USER = '0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf'
 const PRIVATE_KEY = '0x0000000000000000000000000000000000000000000000000000000000000001'
-const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 const GROUP_KEY = GroupKey.generate()
 
@@ -63,8 +62,6 @@ describe('Publisher', () => {
     it('happy path', async () => {
         await publisher.publish(STREAM_ID, {
             foo: 'bar'
-        }, {
-            timestamp: TIMESTAMP
         })
         await publisher.stop()
         expect(brubeckNode.publishToNode).toBeCalledTimes(1)
@@ -79,7 +76,7 @@ describe('Publisher', () => {
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: DEFAULT_PARTITION,
-                timestamp: TIMESTAMP
+                timestamp: expect.any(Number)
             },
             messageType: 27,
             newGroupKey: null,
@@ -91,6 +88,22 @@ describe('Publisher', () => {
         })
     })
 
+    it('metadata', async () => {
+        const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
+        const MSG_CHAIN_ID = 'mock-msgChainId'
+        await publisher.publish(STREAM_ID, {
+            foo: 'bar'
+        }, {
+            timestamp: TIMESTAMP,
+            msgChainId: MSG_CHAIN_ID
+        })
+        await publisher.stop()
+        expect(brubeckNode.publishToNode).toBeCalledTimes(1)
+        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
+        expect(actual.messageId.timestamp).toBe(TIMESTAMP)
+        expect(actual.messageId.msgChainId).toBe(MSG_CHAIN_ID)
+    })
+
     it('partition and partitionKey', async () => {
         // eslint-disable-next-line max-len
         return expect(() => {
@@ -100,7 +113,6 @@ describe('Publisher', () => {
             }, {
                 foo: 'bar'
             }, {
-                timestamp: TIMESTAMP, 
                 partitionKey: 'mockPartitionKey'
             })
         }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
