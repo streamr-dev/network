@@ -99,7 +99,9 @@ export class StreamrClient implements Context {
         timestamp: string | number | Date = Date.now(),
         partitionKey?: string | number
     ): Promise<StreamMessage<T>> {
-        const result = await this.publisher.publish(streamDefinition, content, timestamp, partitionKey)
+        const result = await this.publisher.publish(streamDefinition, content, {
+            timestamp, partitionKey
+        })
         this.eventEmitter.emit('publish', undefined)
         return result
     }

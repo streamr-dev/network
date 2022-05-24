@@ -222,7 +222,9 @@ class StreamrStream implements StreamMetadata {
      * @category Important
      */
     async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, timestamp, partitionKey)
+        return this._publisher.publish(this.id, content, {
+            timestamp, partitionKey
+        })
     }
 
     /** @internal */

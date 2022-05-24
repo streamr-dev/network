@@ -8,12 +8,20 @@ import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
-import { PublishMetadata, PublishPipeline } from './PublishPipeline'
+import { MessageMetadata, PublishMetadata, PublishPipeline } from './PublishPipeline'
 import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamDefinition } from '../types'
 
 export type { PublishMetadata }
+
+const parseTimestamp = (metadata?: MessageMetadata): number => {
+    if (metadata?.timestamp === undefined) {
+        return Date.now()
+    } else {
+        return metadata.timestamp instanceof Date ? metadata.timestamp.getTime() : new Date(metadata.timestamp).getTime()
+    }
+}
 
 @scoped(Lifecycle.ContainerScoped)
 export class Publisher implements Context, Stoppable {
@@ -36,30 +44,12 @@ export class Publisher implements Context, Stoppable {
         this.publishQueue = pipeline.publishQueue
     }
 
-    async publish<T>(
-        streamDefinition: StreamDefinition,
-        content: T,
-        timestamp: string | number | Date = Date.now(),
-        partitionKey?: string | number
-    ): Promise<StreamMessage<T>> {
-        return this.publishMessage<T>(streamDefinition, {
-            content,
-            timestamp,
-            partitionKey,
-        })
-    }
-
-    private async publishMessage<T>(streamDefinition: StreamDefinition, {
-        content,
-        timestamp = Date.now(),
-        partitionKey
-    }: PublishMetadata<T>): Promise<StreamMessage<T>> {
-        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+    async publish<T>(streamDefinition: StreamDefinition, content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
         return this.pipeline.publish({
             streamDefinition,
             content,
-            timestamp: timestampAsNumber,
-            partitionKey,
+            timestamp: parseTimestamp(metadata),
+            partitionKey: metadata?.partitionKey,
         })
     }
 
@@ -115,7 +105,10 @@ export class Publisher implements Context, Stoppable {
         this.inProgress.add(items)
         try {
             for await (const msg of items) {
-                yield await this.publishMessage(streamDefinition, msg)
+                yield await this.publish(streamDefinition, msg.content, {
+                    timestamp: msg.timestamp,
+                    partitionKey: msg.partitionKey
+                })
             }
         } finally {
             this.inProgress.delete(items)
