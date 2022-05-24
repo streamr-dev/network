@@ -63,7 +63,9 @@ describe('Publisher', () => {
     it('happy path', async () => {
         await publisher.publish(STREAM_ID, {
             foo: 'bar'
-        }, TIMESTAMP)
+        }, {
+            timestamp: TIMESTAMP
+        })
         await publisher.stop()
         expect(brubeckNode.publishToNode).toBeCalledTimes(1)
         const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
@@ -97,7 +99,10 @@ describe('Publisher', () => {
                 partition: 0
             }, {
                 foo: 'bar'
-            }, TIMESTAMP, 'mockPartitionKey')
+            }, {
+                timestamp: TIMESTAMP, 
+                partitionKey: 'mockPartitionKey'
+            })
         }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
     })
 })

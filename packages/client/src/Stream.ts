@@ -28,6 +28,7 @@ import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { InspectOptions } from 'util'
+import { MessageMetadata } from './index-exports'
 
 export interface StreamProperties {
     id: string
@@ -221,8 +222,8 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string): Promise<StreamMessage<T>> {
-        return this._publisher.publish(this.id, content, timestamp, partitionKey)
+    async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
+        return this._publisher.publish(this.id, content, metadata)
     }
 
     /** @internal */

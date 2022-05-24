@@ -43,11 +43,15 @@ export class FailedToPublishError extends Error {
     }
 }
 
-export type PublishMetadata<T = unknown> = {
-    content: T
+export interface MessageMetadata {
     timestamp?: string | number | Date
     sequenceNumber?: number
     partitionKey?: string | number
+}
+
+// TODO better name? 
+export type PublishMetadata<T = unknown> = MessageMetadata & {
+    content: T
 }
 
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {

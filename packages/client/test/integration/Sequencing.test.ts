@@ -47,11 +47,11 @@ describe('Sequencing', () => {
 
         const requests = await Promise.all([
             // first 2 messages at ts + 0
-            client.publish(stream, nextMsg(), ts),
-            client.publish(stream, nextMsg(), ts),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
             // next two messages at ts + 1
-            client.publish(stream, nextMsg(), ts + 1),
-            client.publish(stream, nextMsg(), ts + 1),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
         ])
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
@@ -96,11 +96,11 @@ describe('Sequencing', () => {
         await client.subscribe(stream.id, (m) => { msgsReceieved.push(m) })
         const requests = await Promise.all([
             // first 2 messages at ts + 0
-            client.publish(stream, nextMsg(), ts),
-            client.publish(stream, nextMsg(), ts),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
             // next two messages at ts + 1
-            client.publish(stream, nextMsg(), ts + 1),
-            client.publish(stream, nextMsg(), ts + 1),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
         ])
         const seq = toSeq(requests, ts)
         expect(seq).toEqual([
@@ -133,17 +133,17 @@ describe('Sequencing', () => {
 
         const requests = await Promise.all([
             // publish at ts + 0
-            client.publish(stream, nextMsg(), ts),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
             // publish at ts + 1
-            client.publish(stream, nextMsg(), ts + 1),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             // backdate at ts + 0
             client.publish(stream, nextMsg({
                 backdated: true,
-            }), ts),
+            }), { timestamp: ts }),
             // resume at ts + 2
-            client.publish(stream, nextMsg(), ts + 2),
-            client.publish(stream, nextMsg(), ts + 2),
-            client.publish(stream, nextMsg(), ts + 3),
+            client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 3 }),
         ])
 
         await waitForCondition(() => (
@@ -197,21 +197,21 @@ describe('Sequencing', () => {
 
         const requests = await Promise.all([
             // first 3 messages at ts + 0
-            client.publish(stream, nextMsg(), ts),
-            client.publish(stream, nextMsg(), ts),
-            client.publish(stream, nextMsg(), ts),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
+            client.publish(stream, nextMsg(), { timestamp: ts }),
             // next two messages at ts + 1
-            client.publish(stream, nextMsg(), ts + 1),
-            client.publish(stream, nextMsg(), ts + 1),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
             // backdate at ts + 0
             client.publish(stream, nextMsg({
                 backdated: true,
-            }), ts),
+            }), { timestamp: ts }),
             // resume publishing at ts + 1
-            client.publish(stream, nextMsg(), ts + 1),
-            client.publish(stream, nextMsg(), ts + 1),
-            client.publish(stream, nextMsg(), ts + 2),
-            client.publish(stream, nextMsg(), ts + 2),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 1 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
+            client.publish(stream, nextMsg(), { timestamp: ts + 2 }),
         ])
 
         await waitForCondition(() => (

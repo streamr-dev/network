@@ -29,6 +29,7 @@ import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
+import { MessageMetadata } from './index-exports'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -96,10 +97,9 @@ export class StreamrClient implements Context {
     async publish<T>(
         streamDefinition: StreamDefinition,
         content: T,
-        timestamp: string | number | Date = Date.now(),
-        partitionKey?: string | number
+        metadata?: MessageMetadata
     ): Promise<StreamMessage<T>> {
-        const result = await this.publisher.publish(streamDefinition, content, timestamp, partitionKey)
+        const result = await this.publisher.publish(streamDefinition, content, metadata)
         this.eventEmitter.emit('publish', undefined)
         return result
     }
