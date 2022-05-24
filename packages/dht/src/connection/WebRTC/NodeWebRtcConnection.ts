@@ -4,7 +4,7 @@ import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter = require('events')
 import { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
-import { PeerID } from '../../PeerID'
+import { PeerID } from '../../helpers/PeerID'
 import { Logger } from '../../helpers/Logger'
 
 const logger = new Logger(module)

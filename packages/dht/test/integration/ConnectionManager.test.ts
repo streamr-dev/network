@@ -8,7 +8,7 @@ import { waitForEvent } from 'streamr-test-utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 
 describe('ConnectionManager', () => {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('PeerID', () => {
 

@@ -1,4 +1,4 @@
-import { UUID } from "./UUID"
+import { UUID } from "./helpers/UUID"
 
 export class ConnectionID extends UUID {}
 

@@ -10,11 +10,11 @@ import {
     RpcMessage,
     RpcResponseError
 } from '../../src/proto/DhtRpc'
-import { generateId } from '../../src/dht/helpers'
+import { generateId } from '../../src/helpers/common'
 import { Simulator } from '../../src/connection/Simulator'
 import { DeferredPromises } from '../../src/rpc-protocol/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
-import { Err } from '../../src/errors'
+import { Err } from '../../src/helpers/errors'
 import { waitForCondition } from 'streamr-test-utils'
 import { MockRegisterDhtRpc } from '../utils'
 

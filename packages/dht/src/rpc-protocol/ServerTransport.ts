@@ -1,8 +1,8 @@
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { promiseTimeout } from '../dht/helpers'
-import { Err } from '../errors'
+import { promiseTimeout } from '../helpers/common'
+import { Err } from '../helpers/errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from '../helpers/Logger'
 

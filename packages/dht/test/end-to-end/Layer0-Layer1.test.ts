@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { PeerID } from '../../src/PeerID'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('Layer0-Layer1', () => {
     const epPeerDescriptor: PeerDescriptor = {

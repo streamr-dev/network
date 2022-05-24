@@ -11,12 +11,12 @@ import { ConnectionType, Event as ConnectionEvents, IConnection } from './IConne
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { PeerID } from '../PeerID'
+import { PeerID } from '../helpers/PeerID'
 import { Event, ITransport } from '../transport/ITransport'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
-import { Err } from '../errors'
+import { Err } from '../helpers/errors'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,

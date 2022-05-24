@@ -1,6 +1,6 @@
-import { PeerID } from '../PeerID'
+import { PeerID } from './PeerID'
 import { PeerDescriptor } from '../proto/DhtRpc'
-import { Err } from '../errors'
+import { Err } from './errors'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
