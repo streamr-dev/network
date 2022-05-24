@@ -101,7 +101,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new Err.RpcTimeout('Server error on request')
+            new Err.RpcTimeout('Server timed out on request')
         )
         clearTimeout(timeout!)
     })
