@@ -357,9 +357,7 @@ export class Node extends EventEmitter {
             this.trackerManager.sendStreamPartStatus(s)
         })
         proxiedStreams.forEach((s) => {
-            if (this.proxyStreamConnectionManager.hasConnection(node, s)) {
-                this.proxyStreamConnectionManager.reconnect(node, s)
-            }
+            this.proxyStreamConnectionManager.reconnect(node, s)
         })
         this.emit(Event.NODE_DISCONNECTED, node)
     }

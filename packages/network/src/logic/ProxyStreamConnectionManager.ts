@@ -84,7 +84,7 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    public hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
+    private hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
         if (!this.connections.has(streamPartId)) {
             return false
         }
@@ -204,7 +204,11 @@ export class ProxyStreamConnectionManager {
     }
 
     async reconnect(targetNodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const connection = this.getConnection(targetNodeId, streamPartId)!
+        const connection = this.getConnection(targetNodeId, streamPartId)
+        if (!connection) {
+            logger.trace(`Cannot reconnect to a non-existing proxy connection on ${targetNodeId} ${streamPartId}`)
+            return
+        }
         if (connection.state !== State.RENEGOTIATING) {
             connection.state = State.RENEGOTIATING
         }
