@@ -37,16 +37,6 @@ export function SubscribePipeline<T = unknown>(
         streamPartId,
     )
 
-    const orderMessages = new OrderMessages<T>(
-        {
-            ...container.resolve(ConfigInjectionToken.Subscribe),
-            gapFill: false,
-        },
-        container.resolve(Context as any),
-        container.resolve(Resends),
-        streamPartId,
-    )
-
     /* eslint-enable object-curly-newline */
 
     const onError = async (error: Error | StreamMessageError, streamMessage?: StreamMessage) => {
@@ -96,15 +86,12 @@ export function SubscribePipeline<T = unknown>(
         .forEach(async (streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
         })
-        // re-order messages (ignore gaps)
-        .pipe(orderMessages.transform())
         // ignore any failed messages
         .filter(async (streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally.listen(async () => {
             const tasks = [
-                orderMessages.stop(),
                 gapFillMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),
