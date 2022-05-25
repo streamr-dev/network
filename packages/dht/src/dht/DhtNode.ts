@@ -282,9 +282,11 @@ export class DhtNode extends EventEmitter implements ITransport {
         let successAcks = 0
         const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
         const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K).filter((peer: DhtPeer) =>
-            !peer.peerId.equals(this.ownPeerId!)
-                || !(peer.peerId.equals(PeerID.fromValue(params.sourcePeer!.peerId))
-                || (peer.peerId.equals(PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array()))))
+            this.routeCheck(
+                peer.peerId,
+                PeerID.fromValue(params.sourcePeer!.peerId),
+                PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array())
+            )
         )
         const initialLength = closest.length
         while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
@@ -333,13 +335,21 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private notRoutableCount(peers: DhtPeer[], sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): number {
         return peers.reduce((acc: number, curr: DhtPeer) => {
-            if (curr.peerId.equals(this.ownPeerId!)
-                || (curr.peerId.equals(PeerID.fromValue(sourcePeer!.peerId))
-                || curr.peerId.equals(PeerID.fromValue(previousPeer?.peerId || new Uint8Array())))) {
+            if (!this.routeCheck(
+                curr.peerId,
+                PeerID.fromValue(sourcePeer!.peerId),
+                PeerID.fromValue(previousPeer?.peerId || new Uint8Array()))
+            ) {
                 return acc + 1
             }
             return acc
         }, 0)
+    }
+
+    private routeCheck(peerIdToRoute: PeerID, originatorPeerId: PeerID, previousPeerId: PeerID): boolean {
+        return !peerIdToRoute.equals(this.ownPeerId!)
+            && !peerIdToRoute.equals(originatorPeerId)
+            && !peerIdToRoute.equals(previousPeerId)
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer) {

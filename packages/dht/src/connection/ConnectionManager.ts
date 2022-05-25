@@ -277,7 +277,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
         const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
-            return
+            throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.peerId.toString()}`)
 
