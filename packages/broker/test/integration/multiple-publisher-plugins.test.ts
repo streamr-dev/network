@@ -5,7 +5,7 @@ import { StreamPermission } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, startTestTracker, Queue } from '../utils'
-import { fastPrivateKey, wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { fastPrivateKey, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { range, sample } from 'lodash'
 
 const MESSAGE_COUNT = 120
@@ -102,7 +102,7 @@ describe('multiple publisher plugins', () => {
         const client = await createClient(tracker, privateKey)
         const stream = await createTestStream(client, module)
         streamId = stream.id
-        stream.grantPermissions({
+        await stream.grantPermissions({
             permissions: [StreamPermission.SUBSCRIBE],
             public: true
         })
@@ -110,7 +110,7 @@ describe('multiple publisher plugins', () => {
     })
 
     afterAll(async () => {
-        await tracker.stop()
+        await tracker?.stop()
     })
 
     beforeEach(async () => {
@@ -141,8 +141,6 @@ describe('multiple publisher plugins', () => {
         await subscriber.subscribe(streamId, (message: object) => {
             receivedMessages.push(message)
         })
-        // TODO: better waiting
-        await wait(3000)
 
         const messages = await publishMessages(streamId)
 
