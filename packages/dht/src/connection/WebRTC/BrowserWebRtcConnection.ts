@@ -4,10 +4,16 @@ import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConne
 import { PeerDescriptor } from "../../proto/DhtRpc"
 import { ConnectionID } from "../../types"
 import { Logger } from '../../helpers/Logger'
+import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 
 enum ConnectionState { CONNECTING = 'connecting', OPEN = 'open', CLOSED = 'closed' }
 
 const logger = new Logger(module)
+
+export const WebRtcCleanUp = new class implements IWebRtcCleanUp {
+    cleanUp(): void {
+    }
+}
 
 export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnection, IConnection {
 
