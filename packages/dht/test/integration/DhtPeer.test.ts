@@ -84,4 +84,40 @@ describe('DhtPeer', () => {
         expect(routable).toEqual(true)
     })
 
+    it('ping error path', async () => {
+        serverRpcCommunicator.registerServerMethod('ping', (_data) => {
+            throw new Error()
+        })
+        const active = await dhtPeer.ping(clientPeerDescriptor)
+        expect(active).toEqual(false)
+    })
+
+    it('getClosestPeers error path', async () => {
+        serverRpcCommunicator.registerServerMethod('getClosestPeers', (_data) => {
+            throw new Error()
+        })
+        const neighborList = await dhtPeer.getClosestPeers(clientPeerDescriptor)
+        expect(neighborList.length).toEqual(0)
+    })
+
+    it('routeMessage error path', async () => {
+        serverRpcCommunicator.registerServerMethod('routeMessage', (_data) => {
+            throw new Error()
+        })
+        const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
+        const routed: Message = {
+            messageId: 'routed',
+            messageType: MessageType.RPC,
+            body: RpcMessage.toBinary(rpcWrapper)
+        }
+        const routable = await dhtPeer.routeMessage({
+            messageId: 'routed',
+            message: Message.toBinary(routed),
+            sourcePeer: clientPeerDescriptor,
+            destinationPeer: serverPeerDescriptor,
+            appId: 'unit-test'
+        })
+        expect(routable).toEqual(false)
+    })
+
 })
