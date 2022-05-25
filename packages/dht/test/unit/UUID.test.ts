@@ -1,4 +1,4 @@
-import { UUID } from '../../dist/src/UUID'
+import { UUID } from '../../src/helpers/UUID'
 import { v4 } from 'uuid'
 
 describe('UUID', () => {
@@ -35,5 +35,11 @@ describe('UUID', () => {
         const uuid1 = new UUID()
         const uuid2 = new UUID(uuid1.value)
         expect(uuid1.toString() === uuid2.toString()).toEqual(true)
+    })
+
+    it('Get value returns correct value', () => {
+        const uuid1 = new UUID()
+        const uuid2 = new UUID(uuid1.value)
+        expect(Buffer.compare(uuid1.value, uuid2.value) === 0)
     })
 })
