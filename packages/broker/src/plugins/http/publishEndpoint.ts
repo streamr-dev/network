@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
+import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
 
@@ -8,6 +9,7 @@ const logger = new Logger(module)
 const PAYLOAD_FORMAT = new PlainPayloadFormat()
 
 export const createEndpoint = (streamrClient: StreamrClient): express.Router => {
+    const msgChainId = uuid()
     const router = express.Router()
     router.use(express.raw({
         limit: '1024kb',
@@ -43,7 +45,8 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         try {
             await streamrClient.publish(streamPartDefinition, content, {
                 timestamp,
-                partitionKey
+                partitionKey,
+                msgChainId
             })
             return res.sendStatus(200)
         } catch (e) {

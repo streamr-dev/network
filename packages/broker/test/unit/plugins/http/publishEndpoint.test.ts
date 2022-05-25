@@ -48,7 +48,8 @@ describe('PublishEndpoint', () => {
             foo: 'bar'
         }, {
             timestamp: expectedTimestamp,
-            partitionKey: expectedPartitionKey
+            partitionKey: expectedPartitionKey,
+            msgChainId: expect.any(String)
         })
     }
 
@@ -88,6 +89,20 @@ describe('PublishEndpoint', () => {
             queryParams: { partitionKey: 'mock-key' },
             expectedPartitionKey: 'mock-key'
         })
+    })
+
+    it('msgChainId constant between publish calls', async () => {
+        await postMessage({
+            foo: 1
+        }, {})
+        await postMessage({
+            foo: 2
+        }, {})
+        expect(streamrClient.publish).toBeCalledTimes(2)
+        const firstMessageMsgChainId = (streamrClient.publish as any).mock.calls[0][2].msgChainId
+        const secondMessageMsgChainId = (streamrClient.publish as any).mock.calls[1][2].msgChainId
+        expect(firstMessageMsgChainId).toBeDefined()
+        expect(firstMessageMsgChainId).toBe(secondMessageMsgChainId)
     })
 
     it('empty', async () => {
