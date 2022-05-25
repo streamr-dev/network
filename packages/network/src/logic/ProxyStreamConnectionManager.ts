@@ -84,7 +84,7 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    private hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
+    public hasConnection(nodeId: NodeId, streamPartId: StreamPartID): boolean {
         if (!this.connections.has(streamPartId)) {
             return false
         }
