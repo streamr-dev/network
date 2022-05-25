@@ -60,6 +60,7 @@ describe('Publisher', () => {
     })
 
     it('happy path', async () => {
+        const testStartTime = Date.now()
         await publisher.publish(STREAM_ID, {
             foo: 'bar'
         })
@@ -76,7 +77,7 @@ describe('Publisher', () => {
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: DEFAULT_PARTITION,
-                timestamp: expect.any(Number)
+                timestamp: expect.toBeWithin(testStartTime, Date.now() + 1)
             },
             messageType: 27,
             newGroupKey: null,
