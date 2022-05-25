@@ -3,11 +3,18 @@ import { ConnectionType, IConnection, Event as ConnectionEvent, } from '../IConn
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter = require('events')
-import { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
+import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
 import { Logger } from '../../helpers/Logger'
+import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 
 const logger = new Logger(module)
+
+export const WebRtcCleanUp = new class implements IWebRtcCleanUp {
+    cleanUp(): void {
+        nodeDatachannel.cleanup()
+    }
+}
 
 export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
 

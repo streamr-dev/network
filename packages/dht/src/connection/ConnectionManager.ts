@@ -17,6 +17,7 @@ import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
 import { Err } from '../helpers/errors'
+import { WebRtcCleanUp } from './WebRTC/NodeWebRtcConnection'
 
 export interface ConnectionManagerConfig {
     webSocketHost?: string,
@@ -264,6 +265,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             this.webSocketConnector!.stop()
         }
         Object.values(this.connections).forEach((connection) => connection.close())
+        WebRtcCleanUp.cleanUp()
     }
 
     // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
