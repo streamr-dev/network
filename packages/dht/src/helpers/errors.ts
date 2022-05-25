@@ -12,6 +12,7 @@ export enum ErrorCode {
     LAYER_VIOLATION = 'LAYER_VIOLATION',
     WEBSOCKET_CONNECTION_REQUEST_REJECTED = 'WEBSOCKET_CONNECTION_REQUEST_REJECTED',
     COULD_NOT_START = 'COULD_NOT_START',
+    COULD_NOT_STOP = 'COULD_NOT_STOP',
     CANNOT_CONNECT_TO_SELF = 'CANNOT_CONNECT_TO_SELF'
 }
 
@@ -33,5 +34,6 @@ export namespace Err {
     export class LayerViolation extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.LAYER_VIOLATION, message, originalError) } }
     export class WebSocketConnectionRequestRejected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.WEBSOCKET_CONNECTION_REQUEST_REJECTED, message, originalError) } }
     export class CouldNotStart extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_START, message, originalError) } }
+    export class CouldNotStop extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_STOP, message, originalError) } }
     export class CannotConnectToSelf extends Err { constructor(message?: string, originalError?: Error |string) {super(ErrorCode.CANNOT_CONNECT_TO_SELF, message, originalError) } }
 }

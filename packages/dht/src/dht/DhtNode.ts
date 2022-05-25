@@ -520,7 +520,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public async stop(): Promise<void> {
         if (!this.started) {
-            return
+            throw new Err.CouldNotStop('Cannot not stop() before start()')
         }
         this.stopped = true
         this.rpcCommunicator?.stop()
