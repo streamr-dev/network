@@ -34,7 +34,7 @@
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "^6.0.6",
+    "streamr-client": "^6.0.7",
     "streamr-client-protocol": "^12.0.0",
     "streamr-test-utils": "^2.0.0"
   },
