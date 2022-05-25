@@ -77,7 +77,9 @@ describe('WebsocketServer', () => {
                     partition: undefined
                 }, 
                 MOCK_MESSAGE,
-                {}
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -89,7 +91,9 @@ describe('WebsocketServer', () => {
                     partition: 123
                 }, 
                 MOCK_MESSAGE,
-                {}
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -102,7 +106,8 @@ describe('WebsocketServer', () => {
                 }, 
                 MOCK_MESSAGE,
                 {
-                    partitionKey: 'mock-key'
+                    partitionKey: 'mock-key',
+                    msgChainId: expect.any(String)
                 }
             )
         })
@@ -116,7 +121,8 @@ describe('WebsocketServer', () => {
                 }, 
                 MOCK_MESSAGE,
                 {
-                    partitionKey: 'bar'
+                    partitionKey: 'bar',
+                    msgChainId: expect.any(String)
                 }
             )
         })
