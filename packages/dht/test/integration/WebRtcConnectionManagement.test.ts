@@ -8,6 +8,7 @@ import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { NodeWebRtcConnection } from '../../src/connection/WebRTC/NodeWebRtcConnection'
+import { Err } from '../../src/helpers/errors'
 
 describe('WebRTC Connection Management', () => {
 
@@ -134,5 +135,16 @@ describe('WebRTC Connection Management', () => {
         )
         await waitForCondition(() => (manager2.getConnection(peerDescriptor1) as NodeWebRtcConnection).isOpen())
         await waitForCondition(() => (manager1.getConnection(peerDescriptor2) as NodeWebRtcConnection).isOpen())
+    })
+
+    it('Connecting to self throws', async () => {
+        const dummyMessage: Message = {
+            body: new Uint8Array(),
+            messageType: MessageType.RPC,
+            messageId: 'mockerer'
+        }
+        await expect(manager1.send(peerDescriptor1, dummyMessage))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
 })

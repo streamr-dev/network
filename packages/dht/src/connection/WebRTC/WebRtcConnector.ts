@@ -14,6 +14,7 @@ import crypto from "crypto"
 import { TODO } from '../../types'
 import { DeferredConnection } from '../DeferredConnection'
 import { Logger } from '../../helpers/Logger'
+import { Err } from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -73,7 +74,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
             })
             return new DeferredConnection(targetPeerDescriptor)
         }
-        throw new Error()
+        throw new Err.CannotConnectToSelf('Cannot open WebRTC Connection to self')
     }
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {

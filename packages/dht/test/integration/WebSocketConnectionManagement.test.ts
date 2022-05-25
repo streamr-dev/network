@@ -7,6 +7,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
+import { Err } from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
@@ -117,5 +118,20 @@ describe('WebSocket Connection Management', () => {
         await waitForCondition(
             () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
         )
+    })
+
+    it('Connecting to self throws', async () => {
+        const dummyMessage: Message = {
+            body: new Uint8Array(),
+            messageType: MessageType.RPC,
+            messageId: 'mockerer'
+        }
+        await expect(noWsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+
+        await expect(wsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
 })
