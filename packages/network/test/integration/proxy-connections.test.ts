@@ -305,7 +305,6 @@ describe('Proxy connection tests', () => {
         let receivedMessages = 0
         contactNode.on(NodeEvent.MESSAGE_RECEIVED, (message) => {
             receivedMessages += 1
-            console.log(message)
         })
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
