@@ -113,4 +113,6 @@ describe(Propagation, () => {
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
     })
+
+    // TODO: write tests for sendFn failures & potential async behavior...
 })
