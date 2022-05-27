@@ -111,7 +111,8 @@ export class MessageStream<
 export async function pullManyToOne<T>(
     context: Context,
     inputStreams: MessageStream<T>[],
-    onMessage?: MessageStreamOnMessage<T>
+    onMessage?: MessageStreamOnMessage<T>,
+    onError?: (err: Error) => void
 ): Promise<MessageStream<T, StreamMessage<T>, StreamMessage<T>>> {
     if (inputStreams.length === 1) {
         if (onMessage) {
@@ -127,14 +128,22 @@ export async function pullManyToOne<T>(
         outputStream.useLegacyOnMessageHandler(onMessage)
     }
 
+    if (onError) {
+        outputStream.onError.listen(onError)
+    }
+
     // pull inputStreams into output stream
     let onFinallyCount = 0
+    let onFinallyError: Error | undefined
     for (const sub of inputStreams) {
-        sub.onFinally.listen(() => {
+        sub.onFinally.listen((err?: Error | void) => {
+            if (err && (onFinallyError === undefined)) {
+                onFinallyError = err
+            }
             // eslint-disable-next-line no-plusplus
             onFinallyCount++
             if (onFinallyCount === inputStreams.length) {
-                outputStream.endWrite()
+                outputStream.endWrite(onFinallyError)
             }
         })
         sub.onError.listen((err) => outputStream.handleError(err))
