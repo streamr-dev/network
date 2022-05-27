@@ -58,7 +58,7 @@ describe('resend', () => {
                     messageNoInPartition: Math.floor(idx / 3),
                     partition,
                     messageNo: idx
-                }, Date.now())
+                })
             }
             await wait(MESSAGE_STORE_TIMEOUT)
         }, TIMEOUT)
