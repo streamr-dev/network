@@ -1,9 +1,8 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger } from 'streamr-network'
+import { Logger, scheduleAtInterval } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
@@ -103,7 +102,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 this.dummyMessagesReceived += 1
             }
         })
-        subscription.onError((err) => {
+        subscription.on('error', (err) => {
             logger.warn('Failed to claim reward code due to error %s', err?.message)
             logger.debug('', err)
         })

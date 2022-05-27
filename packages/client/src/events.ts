@@ -9,6 +9,12 @@ export interface StreamrClientEvents {
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
 }
 
+// events for internal communication between StreamrClient components
+export interface InternalEvents {
+    publish: () => void
+    subscribe: () => void
+}
+
 interface ObserverEvents<E extends Events<E>> {
     addEventListener: (eventName: keyof E) => void
     removeEventListener: (eventName: keyof E) => void
@@ -23,12 +29,12 @@ export class ObservableEventEmitter<E extends Events<E>> {
     private delegate: EventEmitter3<any> = new EventEmitter3()
     private observer: EventEmitter3<ObserverEvents<E>> = new EventEmitter3()
 
-    on<T extends keyof E>(eventName: T, listener: E[T]) {
+    on<T extends keyof E>(eventName: T, listener: E[T]): void {
         this.delegate.on(eventName, listener)
         this.observer.emit('addEventListener', eventName)
     }
 
-    once<T extends keyof E>(eventName: T, listener: E[T]) {
+    once<T extends keyof E>(eventName: T, listener: E[T]): void {
         const wrappedFn = (payload: Parameters<E[T]>[0]) => {
             listener(payload)
             this.observer.emit('removeEventListener', eventName)
@@ -37,12 +43,12 @@ export class ObservableEventEmitter<E extends Events<E>> {
         this.observer.emit('addEventListener', eventName)
     }
 
-    off<T extends keyof E>(eventName: T, listener: E[T]) {
+    off<T extends keyof E>(eventName: T, listener: E[T]): void {
         this.delegate.off(eventName, listener)
         this.observer.emit('removeEventListener', eventName)
     }
 
-    removeAllListeners() {
+    removeAllListeners(): void {
         const eventNames = this.delegate.eventNames()
         this.delegate.removeAllListeners()
         for (const eventName of eventNames) {
@@ -50,15 +56,15 @@ export class ObservableEventEmitter<E extends Events<E>> {
         }
     }
 
-    emit<T extends keyof E>(eventName: T, payload: Parameters<E[T]>[0]) {
+    emit<T extends keyof E>(eventName: T, payload: Parameters<E[T]>[0]): void {
         this.delegate.emit(eventName, payload)
     }
 
-    getListenerCount<T extends keyof E>(eventName: T) {
+    getListenerCount<T extends keyof E>(eventName: T): number {
         return this.delegate.listenerCount(eventName)
     }
 
-    getObserver() {
+    getObserver(): EventEmitter3<ObserverEvents<E>, any> {
         return this.observer
     }
 }
@@ -74,7 +80,7 @@ export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
     start: (emit: (payload: Parameters<E[T]>[0]) => void) => P,
     stop: (listener: P) => void,
     emitter: ObservableEventEmitter<E>
-) => {
+): void => {
     const observer = emitter.getObserver()
     const emit = (payload: Parameters<E[T]>[0]) => emitter.emit(eventName, payload)
     let producer: P | undefined
@@ -95,5 +101,5 @@ export const initEventGateway = <E extends Events<E>, T extends keyof E, P>(
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents> {
+export class StreamrClientEventEmitter extends ObservableEventEmitter<StreamrClientEvents & InternalEvents> {
 }

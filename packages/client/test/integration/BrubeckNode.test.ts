@@ -8,7 +8,11 @@ describe('BrubeckNode', () => {
 
     describe('id assignment/generation', () => {
         it('generates node id from address, if id not supplied', async () => {
-            const client = await createClient()
+            const client = await createClient({
+                auth: {
+                    privateKey: fastPrivateKey()
+                }
+            })
             const node = await client.getNode()
             const expectedPrefix = `${await client.getAddress()}#`
             expect(node.getNodeId().startsWith(expectedPrefix)).toBe(true)
@@ -58,6 +62,9 @@ describe('BrubeckNode', () => {
         it('throws error if supplied network node id not compatible', async () => {
             const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
             const client = await createClient({
+                auth: {
+                    privateKey: fastPrivateKey()
+                },
                 network: {
                     id: nodeId,
                 }
@@ -84,7 +91,11 @@ describe('BrubeckNode', () => {
         let client: StreamrClient
 
         beforeEach(async () => {
-            client = await createClient()
+            client = await createClient({
+                auth: {
+                    privateKey: fastPrivateKey()
+                }
+            })
         })
 
         it('caches node', async () => {

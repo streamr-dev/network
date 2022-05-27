@@ -36,7 +36,7 @@ export class MessageStream<
      */
     useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
         if (onMessage) {
-            this.onMessage(async (streamMessage) => {
+            this.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {
                     await onMessage(streamMessage.getParsedContent(), streamMessage)
                 }
@@ -48,7 +48,7 @@ export class MessageStream<
     }
 
     /** @internal */
-    async collectContent(n?: number) {
+    async collectContent(n?: number): Promise<any[]> {
         const messages = await this.collect(n)
         return messages.map((streamMessage) => {
             if (streamMessage instanceof StreamMessage) {
@@ -130,14 +130,14 @@ export async function pullManyToOne<T>(
     // pull inputStreams into output stream
     let onFinallyCount = 0
     for (const sub of inputStreams) {
-        sub.onFinally(() => {
+        sub.onFinally.listen(() => {
             // eslint-disable-next-line no-plusplus
             onFinallyCount++
             if (onFinallyCount === inputStreams.length) {
                 outputStream.endWrite()
             }
         })
-        sub.onError((err) => outputStream.handleError(err))
+        sub.onError.listen((err) => outputStream.handleError(err))
         outputStream.pull(sub, { endDest: false })
     }
     return outputStream

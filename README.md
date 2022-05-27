@@ -152,6 +152,21 @@ as you expect e.g. `^X.Y.Z` vs `X.Y.Z`
 
 ## Releasing
 
+### Network
+```
+git checkout main
+cd packages/network
+npm version <SEMVER_OPTION>
+# Go thru other packages' package.json and update streamr-network entry (if present) to newly generated version
+git add package.json
+git commit -m "release(network): vX.Y.Z"
+git tag network/vX.Y.Z
+git push origin
+git push origin network/vX.Y.Z
+
+npm publish
+```
+
 ### Client
 - Update & Editorialize CHANGELOG.md as necessary 
 

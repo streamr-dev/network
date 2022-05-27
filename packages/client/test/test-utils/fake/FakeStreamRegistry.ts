@@ -11,11 +11,10 @@ import {
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
 import { Ethereum } from '../../../src/Ethereum'
-import { NotFoundError } from '../../../src/authFetch'
 import { StreamRegistry } from '../../../src/StreamRegistry'
-import { SearchStreamsPermissionFilter } from '../../../src'
+import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
-import { StreamEndpointsCached } from '../../../src/StreamEndpointsCached'
+import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
 
@@ -37,25 +36,27 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly ethereum: Ethereum
     private readonly container: DependencyContainer
-    private readonly streamEndpointsCached: StreamEndpointsCached
+    private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         @inject(Ethereum) ethereum: Ethereum,
         @inject(BrubeckContainer) container: DependencyContainer,
-        @inject(StreamEndpointsCached) streamEndpointsCached: StreamEndpointsCached
+        @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.ethereum = ethereum
         this.container = container
-        this.streamEndpointsCached = streamEndpointsCached
+        this.streamRegistryCached = streamRegistryCached
+        const storageNodeAssignmentStreamPermissions = new Multimap<string,StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(DOCKER_DEV_STORAGE_NODE.toLowerCase(), StreamPermission.PUBLISH)
         this.registryItems.set(formStorageNodeAssignmentStreamId(DOCKER_DEV_STORAGE_NODE), {
             metadata: {},
-            permissions: new Multimap()
+            permissions: storageNodeAssignmentStreamPermissions
         })
     }
 
-    async createStream(propsOrStreamIdOrPath: StreamProperties | string) {
+    async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
         if (!this.ethereum.isAuthenticated()) {
             throw new Error('Not authenticated')
         }
@@ -160,7 +161,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         modifyRegistryItem: (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+        this.streamRegistryCached.clearStream(streamId)
         const registryItem = this.registryItems.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
@@ -191,12 +192,12 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     // eslint-disable-next-line class-methods-use-this
-    deleteStream(_streamIdOrPath: string): Promise<void> {
+    getOrCreateStream(_props: { id: string, partitions?: number }): Promise<Stream> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    streamExistsOnChain(_streamIdOrPath: string): Promise<boolean> {
+    deleteStream(_streamIdOrPath: string): Promise<void> {
         throw new Error('not implemented')
     }
 

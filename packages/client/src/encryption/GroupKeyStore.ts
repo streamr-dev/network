@@ -21,50 +21,50 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
         this.store = new ServerPersistentStore(options)
     }
 
-    async has(groupKeyId: string) {
+    async has(groupKeyId: string): Promise<boolean> {
         return this.store.has(groupKeyId)
     }
 
-    async size() {
+    async size(): Promise<number> {
         return this.store.size()
     }
 
-    async get(groupKeyId: string) {
+    async get(groupKeyId: string): Promise<GroupKey | undefined> {
         const value = await this.store.get(groupKeyId)
         if (!value) { return undefined }
         return GroupKey.from([groupKeyId, value])
     }
 
-    async add(groupKey: GroupKey) {
+    async add(groupKey: GroupKey): Promise<boolean> {
         return this.set(groupKey.id, groupKey)
     }
 
-    async set(groupKeyId: string, value: GroupKey) {
+    async set(groupKeyId: string, value: GroupKey): Promise<boolean> {
         GroupKey.validate(value)
         return this.store.set(groupKeyId, value.hex)
     }
 
-    async delete(groupKeyId: string) {
+    async delete(groupKeyId: string): Promise<boolean> {
         return this.store.delete(groupKeyId)
     }
 
-    async clear() {
+    async clear(): Promise<boolean> {
         return this.store.clear()
     }
 
-    async destroy() {
+    async destroy(): Promise<void> {
         return this.store.destroy()
     }
 
-    async close() {
+    async close(): Promise<void> {
         return this.store.close()
     }
 
-    async exists() {
+    async exists(): Promise<boolean> {
         return this.store.exists()
     }
 
-    get [Symbol.toStringTag]() {
+    get [Symbol.toStringTag](): string {
         return this.constructor.name
     }
 }
@@ -94,7 +94,7 @@ export class GroupKeyStore implements Context {
         })
     }
 
-    private async storeKey(groupKey: GroupKey) {
+    private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
         GroupKey.validate(groupKey)
         const existingKey = await this.store.get(groupKey.id)
         if (existingKey) {
@@ -113,7 +113,7 @@ export class GroupKeyStore implements Context {
         return groupKey
     }
 
-    async has(id: GroupKeyId) {
+    async has(id: GroupKeyId): Promise<boolean> {
         if (this.currentGroupKeyId === id) { return true }
 
         if (this.nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
@@ -121,7 +121,7 @@ export class GroupKeyStore implements Context {
         return this.store.has(id)
     }
 
-    async isEmpty() {
+    async isEmpty(): Promise<boolean> {
         // any pending keys means it's not empty
         if (this.nextGroupKeys.length) { return false }
 
@@ -164,41 +164,41 @@ export class GroupKeyStore implements Context {
         return this.useGroupKey()
     }
 
-    async get(id: GroupKeyId) {
+    async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         return this.store.get(id)
     }
 
-    async exists() {
+    async exists(): Promise<boolean> {
         return this.store.exists()
     }
 
-    async clear() {
+    async clear(): Promise<boolean> {
         this.currentGroupKeyId = undefined
         this.nextGroupKeys.length = 0
 
         return this.store.clear()
     }
 
-    async rotateGroupKey() {
+    async rotateGroupKey(): Promise<void> {
         return this.setNextGroupKey(GroupKey.generate())
     }
 
-    async add(groupKey: GroupKey) {
+    async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
 
-    async setNextGroupKey(newKey: GroupKey) {
+    async setNextGroupKey(newKey: GroupKey): Promise<void> {
         GroupKey.validate(newKey)
         this.nextGroupKeys.unshift(newKey)
         this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
         await this.storeKey(newKey)
     }
 
-    async close() {
+    async close(): Promise<void> {
         return this.store.close()
     }
 
-    async rekey(newKey = GroupKey.generate()) {
+    async rekey(newKey = GroupKey.generate()): Promise<void> {
         await this.storeKey(newKey)
         this.currentGroupKeyId = newKey.id
         this.nextGroupKeys.length = 0

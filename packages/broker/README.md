@@ -5,21 +5,17 @@
 </p>
 
 # streamr-broker
+Broker nodes are Streamr nodes that run externally to your application. You start up a node on a server, and interface with it remotely using one of the supported protocols.
 
-Main executable for running a broker node in Streamr Network.
+The Broker node ships with plugins for HTTP, Websocket, and MQTT protocols. Libraries for these protocols exist in practically every programming language, meaning that you can conveniently publish and subscribe to data from the Streamr Network using any programming language.
 
-The broker node extends the minimal network node provided by the
-[streamr-network](https://github.com/streamr-dev/network) library with
-- client-facing support for foreign protocols (e.g. HTTP, MQTT) via plugins
-- support for long-term persistence of data using Apache Cassandra.
+Broker nodes have a plugin architecture that allows them to perform other tasks in addition to (or instead of) serving applications, such as mining.
 
 ## Table of Contents
 - [Install](#install)
-- [Configure](#configure)
+- [Plugins](#plugins)
 - [Run](#run)
 - [Develop](#develop)
-- [Release](#release)
-- [Misc](#misc)
 
 ## Install
 | NodeJS version `16.13.x` and NPM version `8.x` is required |
@@ -30,108 +26,29 @@ To install streamr-broker:
 npm install -g streamr-broker
 ```
 
-## Configure
+For more information on the different ways to install a Broker node, see [setting up a Broker node](https://streamr.network/docs/streamr-network/installing-broker-node).
 
-To enable the features you want, configure some [plugins](plugins.md).
+## Plugins
+
+The Broker node ships with a number of plugins for configuring your Broker node to match your specific needs. For easy data integration from any environment, plugins for HTTP, Websocket, and MQTT are provided. 
+
+Read more about available [plugins](plugins.md).
 
 ## Run
-When developing the Broker, it is convenient to run it as part of the full Streamr development stack. Check out
-the [streamr-docker-dev](https://github.com/streamr-dev/streamr-docker-dev) tool that can be used to run the full stack.
-
-If instead you want to run a broker node by itself without Docker, follow the steps below.
 
 First install the package
 ```
 npm install -g streamr-broker
 ```
-Optionally, create a configuration file with interactive tool:
+Create a configuration file with interactive tool:
 ```
-broker-init 
+streamr-broker-init 
 ```
 Then run the command broker with the desired configuration file
 ```
-broker <configFile>
-```
-See folder "configs" for example configurations. To run a simple local broker
-```
-broker configs/development-1.env.json
-```
-Then run the command tracker with default values
-```
-tracker
-```
-
-### Deleting expired data from Storage node
-To delete expired data from storage node run
-
-```
-broker <configFile> --deleteExpired
-```
-
-or
-
-```
-node app.js <configFile> --deleteExpired
+streamr-broker <configFile>
 ```
 
 ## Develop
 
-Install dependencies:
-
-    npm ci
-
-Run the tests:
-
-    npm run test
-
-We use [eslint](https://github.com/eslint/eslint) for code formatting:
-
-    npm run eslint
-
-Code coverage:
-
-    npm run coverage
-
-### Debug
-
-To get all debug messages:
-
-    LOG_LEVEL=debug
-
-... or adjust debugging to desired level:
-
-    LOG_LEVEL=[debug|info|warn|error]
-
-To disable all logs
-
-    NOLOG=true
-
-### Regenerate self-signed certificate fixture
-To regenerate self-signed certificate in `./test/fixtures` run:
-
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
-```
-
-## Release
-
-Publishing to NPM is automated via GitHub Actions. Follow the steps below to publish.
-
-1. `git checkout master && git pull`
-2. Update version with either `npm version patch`, `npm version minor`, or `npm version major`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-3. `git push --follow-tags`
-4. Wait for GitHub Actions to run tests
-5. If tests passed, GitHub Actions will publish the new version to NPM
-
-## Misc
-
-
-### Special considerations for using MQTT plugin
-- For authentication put private key in the password connection field
-- MQTT clients can send plain text, but their payload will be transformed to a JSON object accordingly:
-`{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`
-
-#### Error handling
-- If private key is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
-- If stream is not found, client will receive "Connection refused, not authorized" (returnCode: 5)
+Check the [Broker dev notes](develop.md) if you're intending to contribute to the codebase.

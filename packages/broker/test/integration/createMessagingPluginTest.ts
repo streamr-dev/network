@@ -90,7 +90,6 @@ export const createMessagingPluginTest = <T>(
             if (pluginClient !== undefined) {
                 await api.closeClient(pluginClient)
             }
-            streamrClient?.debug('destroy after test')
             await streamrClient?.destroy()
         })
 
@@ -107,7 +106,9 @@ export const createMessagingPluginTest = <T>(
         test('subscribe', async () => {
             pluginClient = await api.createClient('subscribe', stream.id, MOCK_API_KEY)
             await api.subscribe(messageQueue, stream.id, pluginClient)
-            await streamrClient.publish(stream.id, MOCK_MESSAGE.content, MOCK_MESSAGE.metadata.timestamp)
+            await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
+                timestamp: MOCK_MESSAGE.metadata.timestamp
+            })
             const message = await messageQueue.pop()
             assertReceivedMessage(message)
         })

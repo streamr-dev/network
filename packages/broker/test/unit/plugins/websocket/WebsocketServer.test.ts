@@ -76,7 +76,10 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, undefined
+                MOCK_MESSAGE,
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -87,7 +90,10 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: 123
                 }, 
-                MOCK_MESSAGE, undefined, undefined
+                MOCK_MESSAGE,
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -98,7 +104,11 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, 'mock-key'
+                MOCK_MESSAGE,
+                {
+                    partitionKey: 'mock-key',
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -109,7 +119,11 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, 'bar'
+                MOCK_MESSAGE,
+                {
+                    partitionKey: 'bar',
+                    msgChainId: expect.any(String)
+                }
             )
         })
 

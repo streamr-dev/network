@@ -1,6 +1,6 @@
 import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
-import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { MetricsContext } from '../../src/helpers/Metric'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
@@ -10,7 +10,7 @@ import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
@@ -54,7 +54,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             new RtcSignaller(peerInfo1, nodeToTracker1),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         ep2 = new WebRtcEndpoint(
@@ -63,7 +63,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             new RtcSignaller(peerInfo2, nodeToTracker2),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         ep3 = new WebRtcEndpoint(
@@ -72,7 +72,7 @@ describe('Node-to-Node protocol version negotiation', () => {
             new RtcSignaller(peerInfo3, nodeToTracker3),
             new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo3),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         nodeToNode1 = new NodeToNode(ep1)

@@ -10,9 +10,6 @@ const staticLogger = new Logger(module)
 export const BrowserWebSocketConnectionFactory: WebSocketConnectionFactory<BrowserClientWsConnection> = Object.freeze({
     createConnection(socket: w3cwebsocket, peerInfo: PeerInfo): BrowserClientWsConnection {
         return new BrowserClientWsConnection(socket, peerInfo)
-    },
-    cleanUp(): void {
-
     }
 })
 

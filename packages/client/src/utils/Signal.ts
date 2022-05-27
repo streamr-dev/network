@@ -1,5 +1,4 @@
 import { pOnce, pLimitFn, pOne } from './index'
-import { Plugin } from './Plugin'
 
 export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
@@ -39,9 +38,8 @@ export class Signal<ArgsType extends any[] = []> {
      *  Create a Signal's listen function with signal utility methods attached.
      *  See example above.
      */
-    static create<ArgsType extends any[] = []>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL) {
-        const signal = new this<ArgsType>(triggerType)
-        return Plugin(signal.getListenAsMethod(), signal)
+    static create<ArgsType extends any[] = []>(triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL): Signal<ArgsType> {
+        return new this<ArgsType>(triggerType)
     }
 
     /**
@@ -49,7 +47,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listener immediately.  Calling trigger after already triggered is a
      * noop.
      */
-    static once<ArgsType extends any[] = []>() {
+    static once<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.ONCE)
     }
 
@@ -58,7 +56,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listeners are pending will not trigger listeners again, and will resolve
      * when listeners are resolved.
      */
-    static one<ArgsType extends any[] = []>() {
+    static one<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.ONE)
     }
 
@@ -67,7 +65,7 @@ export class Signal<ArgsType extends any[] = []> {
      * listeners are pending will enqueue the trigger until after listeners are
      * resolved.
      */
-    static queue<ArgsType extends any[] = []>() {
+    static queue<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.QUEUE)
     }
 
@@ -76,7 +74,7 @@ export class Signal<ArgsType extends any[] = []> {
      * Listener functions are still executed in async series,
      * but multiple triggers can be active in parallel.
      */
-    static parallel<ArgsType extends any[] = []>() {
+    static parallel<ArgsType extends any[] = []>(): Signal<ArgsType> {
         return this.create<ArgsType>(TRIGGER_TYPE.PARALLEL)
     }
 
@@ -111,7 +109,7 @@ export class Signal<ArgsType extends any[] = []> {
         }
     }
 
-    triggerCount() {
+    triggerCount(): number {
         return this.triggerCountValue
     }
 
@@ -120,7 +118,7 @@ export class Signal<ArgsType extends any[] = []> {
     /**
      * No more events.
      */
-    end = (...args: ArgsType) => {
+    end = (...args: ArgsType): void => {
         this.lastValue = args
         this.isEnded = true
     }
@@ -134,7 +132,7 @@ export class Signal<ArgsType extends any[] = []> {
         })
     }
 
-    async getLastValue() {
+    async getLastValue(): Promise<ArgsType> {
         if (this.currentTask) {
             await this.currentTask
         }
@@ -188,14 +186,14 @@ export class Signal<ArgsType extends any[] = []> {
         return this.listen(wrappedListener)
     }
 
-    countListeners() {
+    countListeners(): number {
         return this.listeners.length
     }
 
     /**
      * Remove a callback listener from this Signal.
      */
-    unlisten(cb: SignalListener<ArgsType>) {
+    unlisten(cb: SignalListener<ArgsType>): this {
         const index = this.listeners.findIndex((listener) => {
             return listener === cb || ('listener' in listener && listener.listener === cb)
         })
@@ -206,11 +204,12 @@ export class Signal<ArgsType extends any[] = []> {
     /**
      * Remove all callback listeners from this Signal.
      */
-    unlistenAll() {
+    unlistenAll(): void {
         this.listeners.length = 0
     }
 
-    getListenAsMethod() {
+    // TODO better return type?
+    getListenAsMethod(): () => any {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const signal = this
         function listenAsMethod(): Promise<ArgsType[0]>
@@ -272,7 +271,7 @@ export class Signal<ArgsType extends any[] = []> {
         }
     }
 
-    async* [Symbol.asyncIterator]() {
+    async* [Symbol.asyncIterator](): AsyncGenerator<Awaited<ArgsType[0]>, void, unknown> {
         while (!this.isEnded) {
             // eslint-disable-next-line no-await-in-loop
             yield await this.listen()
@@ -318,7 +317,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
             try {
                 await prev
             } catch (err) {
-                // @ts-expect-error
+                // @ts-expect-error type mismatch in err parameter
                 await task(err)
                 return
             }
@@ -327,7 +326,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
         }, Promise.resolve())
     }
 
-    async trigger(...args: ArgsType) {
+    async trigger(...args: ArgsType): Promise<void> {
         const err = args[0]
         // don't double-handle errors
         if (this.ignoredErrors.has(err)) {

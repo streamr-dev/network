@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { MetricsContext } from './helpers/MetricsContext'
+import { MetricsContext } from './helpers/Metric'
 
 import { TrackerInfo, AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
@@ -10,7 +10,7 @@ import { NegotiatedProtocolVersions } from './connection/NegotiatedProtocolVersi
 import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from './connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
@@ -55,7 +55,7 @@ export const createNetworkNode = ({
         webRtcSignaller,
         metricsContext,
         negotiatedProtocolVersions,
-        NodeWebRtcConnectionFactory,
+        webRtcConnectionFactory,
         newWebrtcConnectionTimeout,
         peerPingInterval,
         webrtcDatachannelBufferThresholdLow,

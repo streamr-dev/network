@@ -1,17 +1,41 @@
 # Plugins
 
+The Broker ships with a number of plugins that add functionality or APIs.
+
 ## Table of Contents
-- [Dependencies](#dependencies)
+- [Authentication](#authentication)
+- [Ports](#ports)
 - [Websocket](#websocket)
 - [MQTT](#mqtt)
-- [PublishHttp](#publishhttp)
+- [HTTP](#http)
+
+## Authentication
+
+The integration APIs exposed by plugins can be secured via API keys. In your Broker config file, define some API keys under the root level `apiAuthentication` object:
+
+```
+{
+    "network": ...
+    "plugins": ...
+    "apiAuthentication": {
+        "keys": ["my-secret-api-key"]
+    }
+}
+```
+
+How to pass the API key depends on the protocol in question and is described in the sections below.
+
+## Ports
+
+The integration plugins open TCP server ports to allow applications to connect to them. The ports need to be reachable by those applications, meaning that you may need to allow the port in your firewall and potentially set up appropriate port forwarding in your router. The port number is configurable for each plugin (see below for details).
+
+Note that the Streamr protocol itself (used for communication between nodes) does not require any ports to be opened.
 
 ## Websocket
 
 The `websocket` plugin provides a websocket interface for publishing and subscribing. 
 
-To enable the plugin, add the plugin definition to the Broker configuration JSON:
-
+To enable the Websocket plugin, define a `websocket` object in the `plugins` section of the Broker configuration file:
 
 ```
 plugins: {
@@ -35,6 +59,14 @@ const socket = new WebSocket(`ws://localhost:${port}/streams/${encodeURIComponen
 socket.addEventListener('open', () => {
     socket.send(JSON.stringify(message))
 })
+```
+
+### Passing the API key
+
+Pass the [API key](#authentication) by adding an `apiKey` query parameter to the connection URL:
+
+```
+const socket = new WebSocket(`...?apiKey=my-secret-api-key`)
 ```
 
 ### Advanced usage
@@ -81,28 +113,6 @@ socket.send(JSON.stringify(payload))
 
 The configuration option affects also the incoming messages. Those messages will be derived in the same restructured format.
 
-#### Authenticated connections
-
-You can restrict that clients can create connections only if they know a secret API key.
-
-To enable the restriction, define some API keys in the Broker's root level `apiAuthentication` config:
-
-```
-{
-    "network": ...
-    "plugins": ...
-    "apiAuthentication": {
-        "keys": ["foobar"]
-    }
-}
-```
-
-And add the `apiKey` parameter to the connection URL:
-
-```
-const socket = new WebSocket(`...?apiKey=foobar`)
-```
-
 #### Partitions
 
 If you want to publish or subscribe to a specific partition of a stream, you can add query parameters to the URL:
@@ -112,7 +122,7 @@ If you want to publish or subscribe to a specific partition of a stream, you can
 - `/streams/:streamId/publish?partitionKey=foo`: use the given key to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams))
 - `/streams/:streamId/publish?partitionKeyField=customerId`: use the given field in a JSON to choose the `paritionKey` (e.g. `{ "customerId": "foo", ...  }` -> `paritionKey` is `foo`)
 
-**TODO**: define which partition is used if partition is not specified for publish/subscribe.
+By default, a random partition is selected.
 
 #### Secure connections
 
@@ -135,7 +145,7 @@ const socket = new WebSocket(`wss://...`)
 
 ## MQTT
 
-As an alternative to Websockets, it is possible to publish and subscribe to a stream using a [MQTT](https://mqtt.org) connection:
+You can publish and subscribe to a stream using [MQTT](https://mqtt.org), making the Broker appear like a traditional MQTT broker towards connected applications and devices. To enable the MQTT plugin, define an `mqtt` object in the `plugins` section of the Broker configuration file:
 
 ```
 plugins: {
@@ -143,7 +153,7 @@ plugins: {
 }
 ```
 
-You can use any MQTT client to connect to the Broker. E.g subscribe with  [async-mqtt](https://www.npmjs.com/package/async-mqtt) library:
+You can use any MQTT client to connect to the Broker. Here's an example of subscribing to a stream with the [async-mqtt](https://www.npmjs.com/package/async-mqtt) library:
 
 ```
 import mqtt from 'async-mqtt'
@@ -154,7 +164,7 @@ client.on('message', (topic, message) => {
 await client.subscribe(streamId)
 ```
 
-And publish data with the same library:
+Publishing data with the same library:
 
 ```
 import mqtt from 'async-mqtt'
@@ -162,21 +172,31 @@ const client = await mqtt.connectAsync(`mqtt://localhost:${port}`)
 await client.publish(streamId, JSON.stringify(msg))
 ```
 
-### Advanced usage
+### Passing the API key
 
-The default port is `1883`. You can change it with `port` config option. 
-
-Explicit metadata can be provided the same way it is provided to the `websocket` plugin ([see above](#explicit-metadata)).
-
-API authentication is also supported. Define the keys in the Broker config ([see above](#authenticated-connections)) and provide the API key as a password when you create a connection:
+The authentication scheme of the MQTT protocol uses a username and password. When connecting to the MQTT plugin of Streamr Broker, you can provide anything you want as the username and the [API key](#authentication) as the password:
 ```
 mqtt.connectAsync(`mqtt://localhost:${port}`, {
-    username: '',
+    username: 'any-username',
     password: apiKey,
 })
 ```
 
-**TODO**: define partition support for publish/subscribe.
+Some MQTT clients expect the username and password to be passed in the connection URL:
+
+```
+mqtt://any-username:my-secret-api-key@localhost:1883
+```
+
+### Advanced usage
+
+#### Port
+
+The default port is `1883`. You can change it with `port` config option. 
+
+#### Explicit metadata
+
+Explicit metadata can be provided the same way it is provided to the `websocket` plugin ([see above](#explicit-metadata)).
 
 #### Topic domains
 
@@ -194,42 +214,24 @@ plugins: {
 This way you can publish and subscribe to a stream by using only the path part of a `streamId`
 
 ```
-await client.publish('foobar', ...)  // publishes to a stream "0x1234567890123456789012345678901234567890/foobar"
+await client.publish('path-part', ...)  // publishes to a stream "0x1234567890123456789012345678901234567890/path-part"
 ```
 
-## PublishHttp
+## HTTP
 
-If you want to publish stream data with HTTP POST calls, use the `publishHttp` plugin:
+At the moment, only publishing is supported over HTTP. To subscribe, use one of the other protocol plugins as they allow a continuous streaming connection.
+
+To publish over HTTP, enable the `http` plugin:
 
 ```
 plugins: {
-    "publishHttp": {}
+    "http": {}
 }
 ```
 
-The default HTTP server port is `7171`. You can change it by specifying a `port` value for the root level `httpServer` option:
+The plugin provides a single endpoint: `/streams/:streamId`.
 
-```
-"network": ...
-"plugins": ...
-"httpServer": {
-    "port": 1234
-}
-```
-
-If you provide a SSL certificate it will support use SSL/TLS connections:
-```
-"httpServer": {
-    ...
-    "certFileName": "path/cert.pem",
-    "privateKeyFileName": "path/key.pem"
-}
-```
-
-The plugin provides a single endpoint: `/streams/:streamId` with the following optional query parameters:
-
-- `timestamp` in ISO-8601 format e.g. 2001-02-03T04:05:06Z, or as a number 1234567890000
-- `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams)) **TODO**: define which partition is used when neither parameter is given
+Note that the `streamId` is part of the URL and may contain slashes which need to be URL-encoded (`/` becomes `%2f`).
 
 To publish a message to a stream, send the data as a POST payload:
 
@@ -241,3 +243,54 @@ http://localhost:7171/streams/foo.eth%2fbar
 ```
 
 The endpoint returns HTTP 200 status if the message was published successfully. 
+
+
+### Passing the API key
+
+Pass the API key in the `Authorization` header, with content `bearer <key>`, for example
+
+```
+Authorization: bearer my-secret-api-key
+```
+
+A curl example:
+
+```
+curl \
+--header 'Content-Type: application/json' \
+--header 'Authorization: bearer my-secret-api-key' \
+--data '{"foo":"bar"}' \
+http://localhost:7171/streams/foo.eth%2fbar
+```
+
+### Advanced usage
+
+#### Explicit metadata
+
+The endpoint supports the following optional query parameters:
+
+- `timestamp` can be used to set the message timestamp explicitly. The timestamp should be passed in ISO-8601 string (e.g. `2001-02-03T04:05:06Z`), or as milliseconds since epoch, e.g. `1234567890000`
+- `partition` (explicit partition number) or `partitionKey` (a string which used to calculate the partition number, [see JS-client for details](https://github.com/streamr-dev/network-monorepo/blob/main/packages/client/README.md#publishing-to-partitioned-streams)). The default (in case neither is provided) is to select a random partition for each message.
+
+#### Port
+
+The default HTTP server port is `7171`. You can change it by specifying a `port` value for the root level `httpServer` option:
+
+```
+"network": ...
+"plugins": ...
+"httpServer": {
+    "port": 1234
+}
+```
+
+#### Secure connections
+
+If you provide a SSL certificate it will support use SSL/TLS connections:
+```
+"httpServer": {
+    ...
+    "certFileName": "path/cert.pem",
+    "privateKeyFileName": "path/key.pem"
+}
+```

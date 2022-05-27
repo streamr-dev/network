@@ -60,19 +60,19 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     /** @internal */
-    pull(source: AsyncGenerator<InType>, opts?: PullOptions) {
+    pull(source: AsyncGenerator<InType>, opts?: PullOptions): Promise<void> {
         return pull(source, this, opts)
     }
 
     // wrapped PushBuffer methods below here
 
     /** @internal */
-    async push(item: InType | Error) {
+    async push(item: InType | Error): Promise<boolean> {
         return this.source.push(item)
     }
 
     /** @internal */
-    async handleError(err: Error) {
+    async handleError(err: Error): Promise<void> {
         try {
             await this.onError.trigger(err)
         } catch (error) {
@@ -85,32 +85,32 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     /** @internal */
-    end(err?: Error) {
+    end(err?: Error): void {
         return this.source.end(err)
     }
 
     /** @internal */
-    endWrite(err?: Error) {
+    endWrite(err?: Error): void {
         return this.source.endWrite(err)
     }
 
     /** @internal */
-    isDone() {
+    isDone(): boolean {
         return this.source.isDone()
     }
 
     /** @internal */
-    get length() {
+    get length(): number {
         return this.source.length || 0
     }
 
     /** @internal */
-    isFull() {
+    isFull(): boolean {
         return this.source.isFull()
     }
 
     /** @internal */
-    clear() {
+    clear(): void {
         return this.source.clear()
     }
 }

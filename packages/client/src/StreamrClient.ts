@@ -14,21 +14,22 @@ import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
-import { BrubeckNode } from './BrubeckNode'
-import { Session } from './Session'
+import { BrubeckNode, NetworkNodeStub } from './BrubeckNode'
 import { DestroySignal } from './DestroySignal'
-import { StreamEndpoints } from './StreamEndpoints'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
-import { LoginEndpoints } from './LoginEndpoints'
-import DataUnions from './dataunion'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
-import { StorageNodeRegistry } from './StorageNodeRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from './StorageNodeRegistry'
 import { StreamRegistry } from './StreamRegistry'
-import { Methods, Plugin } from './utils/Plugin'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
+import { EthereumAddress, ProxyDirection, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
+import { Stream, StreamProperties } from './Stream'
+import { SearchStreamsPermissionFilter } from './searchStreams'
+import { PermissionAssignment, PermissionQuery } from './permission'
+import { MetricsPublisher } from './MetricsPublisher'
+import { MessageMetadata } from './index-exports'
 
 let uid: string = process.pid != null
     // Use process id in node uid.
@@ -37,111 +38,70 @@ let uid: string = process.pid != null
     // that utilize server-side rendering (no `window` while build's target is `web`).
     : ''
 
-// these are mixed in via Plugin function above
-// use MethodNames to only grab methods
-export interface StreamrClient extends Ethereum,
-    Methods<StreamEndpoints>,
-    Methods<Omit<Subscriber, 'subscribe'>>,
-    Methods<StreamRegistry>,
-    // connect/pOnce in BrubeckNode are pOnce, we override them anyway
-    Methods<Omit<BrubeckNode, 'destroy' | 'connect'>>,
-    Methods<LoginEndpoints>,
-    Methods<Publisher>,
-    Methods<StorageNodeRegistry>,
-    Methods<DataUnions>,
-    Methods<GroupKeyStoreFactory>,
-    Methods<Session>,
-    Methods<Resends>,
-    Methods<ProxyPublishSubscribe>{
-}
-
-class StreamrClientBase implements Context {
+/**
+ * @category Important
+ */
+export class StreamrClient implements Context {
     static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
 
     /** @internal */
     readonly id
     /** @internal */
     readonly debug
-    /** @internal */
-    onDestroy
-    /** @internal */
-    isDestroyed
 
-    constructor(
-        private container: DependencyContainer,
-        context: Context,
-        private node: BrubeckNode,
-        private ethereum: Ethereum,
-        private session: Session,
-        private loginEndpoints: LoginEndpoints,
-        private streamEndpoints: StreamEndpoints,
-        private resends: Resends,
-        private publisher: Publisher,
-        private subscriber: Subscriber,
-        private proxyPublishSubscribe: ProxyPublishSubscribe,
-        private groupKeyStore: GroupKeyStoreFactory,
-        private destroySignal: DestroySignal,
-        private dataunions: DataUnions,
-        private streamRegistry: StreamRegistry,
-        private storageNodeRegistry: StorageNodeRegistry,
-        private streamIdBuilder: StreamIDBuilder,
-        private eventEmitter: StreamrClientEventEmitter
-    ) { // eslint-disable-line function-paren-newline
+    private container: DependencyContainer
+    private node: BrubeckNode
+    private ethereum: Ethereum
+    private resends: Resends
+    private publisher: Publisher
+    private subscriber: Subscriber
+    private proxyPublishSubscribe: ProxyPublishSubscribe
+    private groupKeyStore: GroupKeyStoreFactory
+    private destroySignal: DestroySignal
+    private streamRegistry: StreamRegistry
+    private storageNodeRegistry: StorageNodeRegistry
+    private streamIdBuilder: StreamIDBuilder
+    private eventEmitter: StreamrClientEventEmitter
+
+    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
+        const config = createStrictConfig(options)
+        const { childContainer: container } = initContainer(config, parentContainer)
+
+        this.container = container
+        this.node = container.resolve<BrubeckNode>(BrubeckNode)
+        this.ethereum = container.resolve<Ethereum>(Ethereum)
+        this.resends = container.resolve<Resends>(Resends)
+        this.publisher = container.resolve<Publisher>(Publisher)
+        this.subscriber = container.resolve<Subscriber>(Subscriber)
+        this.proxyPublishSubscribe = container.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe)
+        this.groupKeyStore = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
+        this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
+        this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
+        this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
+        this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
+        container.resolve<MetricsPublisher>(MetricsPublisher) // side effect: activates metrics publisher
+
+        const context = container.resolve<Context>(Context as any)
         this.id = context.id
         this.debug = context.debug
-        Plugin(this, this.loginEndpoints)
-        Plugin(this, this.streamEndpoints)
-        Plugin(this, this.ethereum)
-        Plugin(this, this.publisher)
-        Plugin(this, this.subscriber)
-        Plugin(this, this.proxyPublishSubscribe)
-        Plugin(this, this.resends)
-        Plugin(this, this.session)
-        Plugin(this, this.node)
-        Plugin(this, this.groupKeyStore)
-        Plugin(this, this.dataunions)
-        Plugin(this, this.streamRegistry)
-        Plugin(this, this.storageNodeRegistry)
-
-        this.onDestroy = this.destroySignal.onDestroy.bind(this.destroySignal)
-        this.isDestroyed = this.destroySignal.isDestroyed.bind(this.destroySignal)
     }
+
+    // --------------------------------------------------------------------------------------------
+    // Publish
+    // --------------------------------------------------------------------------------------------
 
     /**
      * @category Important
      */
-    subscribe<T>(
-        options: StreamDefinition & { resend: ResendOptions },
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<ResendSubscription<T>>
-    subscribe<T>(
-        options: StreamDefinition,
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<Subscription<T>>
-    subscribe<T>(
-        options: StreamDefinition & { resend?: ResendOptions },
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<Subscription<T> | ResendSubscription<T>> {
-        if (options.resend !== undefined) {
-            return this.resendSubscribe(options, options.resend, onMessage)
-        }
-
-        return this.subscriber.subscribe(options, onMessage)
-    }
-
-    private async resendSubscribe<T>(
+    async publish<T>(
         streamDefinition: StreamDefinition,
-        resendOptions: ResendOptions,
-        onMessage?: SubscriptionOnMessage<T>
-    ): Promise<ResendSubscription<T>> {
-        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
-        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
-        const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
-        if (onMessage) {
-            sub.useLegacyOnMessageHandler(onMessage)
-        }
-        await this.subscriber.addSubscription<T>(sub)
-        return sub
+        content: T,
+        metadata?: MessageMetadata
+    ): Promise<StreamMessage<T>> {
+        const result = await this.publisher.publish(streamDefinition, content, metadata)
+        this.eventEmitter.emit('publish', undefined)
+        return result
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
@@ -161,6 +121,247 @@ class StreamrClientBase implements Context {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
     }
+
+    // --------------------------------------------------------------------------------------------
+    // Subscribe
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * @category Important
+     */
+    subscribe<T>(
+        options: StreamDefinition & { resend: ResendOptions },
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<ResendSubscription<T>>
+    subscribe<T>(
+        options: StreamDefinition,
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<Subscription<T>>
+    async subscribe<T>(
+        options: StreamDefinition & { resend?: ResendOptions },
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<Subscription<T> | ResendSubscription<T>> {
+        let result
+        if (options.resend !== undefined) {
+            result = await this.resendSubscribe(options, options.resend, onMessage)
+        } else {
+            result = await this.subscriber.subscribe(options, onMessage)
+        }
+        this.eventEmitter.emit('subscribe', undefined)
+        return result
+    }
+
+    private async resendSubscribe<T>(
+        streamDefinition: StreamDefinition,
+        resendOptions: ResendOptions,
+        onMessage?: SubscriptionOnMessage<T>
+    ): Promise<ResendSubscription<T>> {
+        const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
+        const subSession = this.subscriber.getOrCreateSubscriptionSession<T>(streamPartId)
+        const sub = new ResendSubscription<T>(subSession, this.resends, resendOptions, this.container)
+        if (onMessage) {
+            sub.useLegacyOnMessageHandler(onMessage)
+        }
+        await this.subscriber.addSubscription<T>(sub)
+        return sub
+    }
+
+    /**
+     * Subscribe to all partitions for stream.
+     */
+    subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
+        return this.subscriber.subscribeAll(streamId, onMessage)
+    }
+
+    /**
+     * @category Important
+     */
+    unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
+        return this.subscriber.unsubscribe(streamDefinitionOrSubscription)
+    }
+
+    /**
+     * Get subscriptions matching streamId or streamId + streamPartition
+     * @category Important
+     */
+    getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
+        return this.subscriber.getSubscriptions(streamDefinition)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Resend
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Call last/from/range as appropriate based on arguments
+     * @category Important
+     */
+    resend<T>(
+        streamDefinition: StreamDefinition,
+        options: ResendOptions,
+        onMessage?: MessageStreamOnMessage<T>
+    ): Promise<MessageStream<T>> {
+        return this.resends.resend(streamDefinition, options, onMessage)
+    }
+
+    /**
+     * Resend for all partitions of a stream.
+     */
+    resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
+        return this.resends.resendAll(streamId, options, onMessage)
+    }
+
+    waitForStorage(streamMessage: StreamMessage, options?: {
+        interval?: number
+        timeout?: number
+        count?: number
+        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+    }): Promise<void> {
+        return this.resends.waitForStorage(streamMessage, options)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Stream management
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * @category Important
+     */
+    getStream(streamIdOrPath: string): Promise<Stream> {
+        return this.streamRegistry.getStream(streamIdOrPath)
+    }
+
+    /**
+     * @category Important
+     */
+    createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
+        return this.streamRegistry.createStream(propsOrStreamIdOrPath)
+    }
+
+    /**
+     * @category Important
+     */
+    getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+        return this.streamRegistry.getOrCreateStream(props)
+    }
+
+    updateStream(props: StreamProperties): Promise<Stream> {
+        return this.streamRegistry.updateStream(props)
+    }
+
+    deleteStream(streamIdOrPath: string): Promise<void> {
+        return this.streamRegistry.deleteStream(streamIdOrPath)
+    }
+
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        return this.streamRegistry.searchStreams(term, permissionFilter)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Permissions
+    // --------------------------------------------------------------------------------------------
+
+    getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+        return this.streamRegistry.getStreamPublishers(streamIdOrPath)
+    }
+
+    getStreamSubscribers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
+        return this.streamRegistry.getStreamSubscribers(streamIdOrPath)
+    }
+
+    hasPermission(query: PermissionQuery): Promise<boolean> {
+        return this.streamRegistry.hasPermission(query)
+    }
+
+    getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+        return this.streamRegistry.getPermissions(streamIdOrPath)
+    }
+
+    grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        return this.streamRegistry.grantPermissions(streamIdOrPath, ...assignments)
+    }
+
+    revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
+        return this.streamRegistry.revokePermissions(streamIdOrPath, ...assignments)
+    }
+
+    setPermissions(...items: {
+        streamId: string,
+        assignments: PermissionAssignment[]
+    }[]): Promise<void> {
+        return this.streamRegistry.setPermissions(...items)
+    }
+
+    isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
+        return this.streamRegistry.isStreamPublisher(streamIdOrPath, userAddress)
+    }
+    
+    isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
+        return this.streamRegistry.isStreamSubscriber(streamIdOrPath, userAddress)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Storage
+    // --------------------------------------------------------------------------------------------
+
+    setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
+        return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
+    }
+
+    getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
+        return this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)
+    }
+    
+    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.storageNodeRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.storageNodeRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
+        return this.storageNodeRegistry.isStoredStream(streamIdOrPath, nodeAddress)
+    }
+    
+    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+        return this.storageNodeRegistry.getStoredStreams(nodeAddress)
+    }
+    
+    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        return this.storageNodeRegistry.getStorageNodes(streamIdOrPath)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Authentication
+    // --------------------------------------------------------------------------------------------
+
+    getAddress(): Promise<EthereumAddress> {
+        return this.ethereum.getAddress()
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Network node
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Get started network node
+     */
+    getNode(): Promise<NetworkNodeStub> {
+        return this.node.getNode()
+    }
+
+    openProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
+        return this.proxyPublishSubscribe.openProxyConnections(streamDefinition, nodeIds, direction)
+    }
+
+    closeProxyConnections(streamDefinition: StreamDefinition, nodeIds: string[], direction: ProxyDirection): Promise<void> {
+        return this.proxyPublishSubscribe.closeProxyConnections(streamDefinition, nodeIds, direction)
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Lifecycle
+    // --------------------------------------------------------------------------------------------
 
     connect = pOnce(async () => {
         await this.node.startNode()
@@ -185,25 +386,33 @@ class StreamrClientBase implements Context {
         await Promise.all(tasks)
     })
 
+    // --------------------------------------------------------------------------------------------
+    // Logging
+    // --------------------------------------------------------------------------------------------
+
     /** @internal */
-    enableDebugLogging(prefix = 'Streamr*') { // eslint-disable-line class-methods-use-this
+    enableDebugLogging(prefix = 'Streamr*'): void { // eslint-disable-line class-methods-use-this
         Debug.enable(prefix)
     }
 
     /** @internal */
-    disableDebugLogging() { // eslint-disable-line class-methods-use-this
+    disableDebugLogging(): void { // eslint-disable-line class-methods-use-this
         Debug.disable()
     }
 
-    on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    // --------------------------------------------------------------------------------------------
+    // Events
+    // --------------------------------------------------------------------------------------------
+
+    on<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.on(eventName, listener as any)
     }
 
-    once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    once<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.once(eventName, listener as any)
     }
 
-    off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]) {
+    off<T extends keyof StreamrClientEvents>(eventName: T, listener: StreamrClientEvents[T]): void {
         this.eventEmitter.off(eventName, listener as any)
     }
 }
@@ -211,7 +420,10 @@ class StreamrClientBase implements Context {
 /**
  * @internal
  */
-export function initContainer(config: StrictStreamrClientConfig, parentContainer = rootContainer) {
+export function initContainer(
+    config: StrictStreamrClientConfig, 
+    parentContainer = rootContainer
+): { childContainer: DependencyContainer; rootContext: Context } {
     const c = parentContainer.createChildContainer()
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
@@ -263,52 +475,4 @@ export function initContainer(config: StrictStreamrClientConfig, parentContainer
         childContainer: c,
         rootContext
     }
-}
-
-/**
- * @category Important
- */
-export class StreamrClient extends StreamrClientBase {
-    constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
-        const config = createStrictConfig(options)
-        const { childContainer: c } = initContainer(config, parentContainer)
-        super(
-            c,
-            c.resolve<Context>(Context as any),
-            c.resolve<BrubeckNode>(BrubeckNode),
-            c.resolve<Ethereum>(Ethereum),
-            c.resolve<Session>(Session),
-            c.resolve<LoginEndpoints>(LoginEndpoints),
-            c.resolve<StreamEndpoints>(StreamEndpoints),
-            c.resolve<Resends>(Resends),
-            c.resolve<Publisher>(Publisher),
-            c.resolve<Subscriber>(Subscriber),
-            c.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe),
-            c.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory),
-            c.resolve<DestroySignal>(DestroySignal),
-            c.resolve<DataUnions>(DataUnions),
-            c.resolve<StreamRegistry>(StreamRegistry),
-            c.resolve<StorageNodeRegistry>(StorageNodeRegistry),
-            c.resolve<StreamIDBuilder>(StreamIDBuilder),
-            c.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
-        )
-    }
-}
-
-/** @internal */
-export const Dependencies = {
-    Context,
-    BrubeckNode,
-    StorageNodeRegistry,
-    Session,
-    LoginEndpoints,
-    StreamEndpoints,
-    StreamEndpointsCached,
-    Resends,
-    Publisher,
-    Subscriber,
-    ProxyPublishSubscribe,
-    GroupKeyStoreFactory,
-    DestroySignal,
-    DataUnions,
 }

@@ -5,6 +5,7 @@ export * from './StreamrClient'
 export * from './Stream'
 export * from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
+export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
@@ -19,8 +20,6 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { UserDetails } from './LoginEndpoints'
-export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
@@ -28,7 +27,6 @@ export {
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    DataUnionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
     DebugConfig,
@@ -47,7 +45,6 @@ export {
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig,
-    SessionTokenAuthConfig,
     XOR,
     Without
 } from './Ethereum'
@@ -57,9 +54,7 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export * from './dataunion/DataUnion'
-export { NotFoundError, ErrorCode } from './authFetch'
-export { SignalListener } from './utils/Signal'
+export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/index'
 

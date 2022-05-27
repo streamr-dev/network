@@ -67,16 +67,23 @@ function DataChannelEmitter(dataChannel: DataChannel) {
     return emitter
 }
 
-const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
+    activeWebRtcEndpointCount = 0
+    logger = new Logger(module)
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-        nodeDataChannel.cleanup()
     }
-})
-
-export default NodeWebRtcConnectionFactory
+    registerWebRtcEndpoint(): void {
+        this.activeWebRtcEndpointCount++
+    }
+    unregisterWebRtcEndpoint(): void {
+        this.activeWebRtcEndpointCount--
+        if (this.activeWebRtcEndpointCount === 0) {
+            this.logger.debug('Clean up nodeDataChannel library')
+            nodeDataChannel.cleanup()
+        }
+    }
+}
 
 export class NodeWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger

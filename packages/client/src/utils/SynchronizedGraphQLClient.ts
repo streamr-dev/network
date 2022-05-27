@@ -143,7 +143,7 @@ export class SynchronizedGraphQLClient {
         )
     }
 
-    updateRequiredBlockNumber(blockNumber: number) {
+    updateRequiredBlockNumber(blockNumber: number): void {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }
 

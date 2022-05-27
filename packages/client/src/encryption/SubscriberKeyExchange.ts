@@ -15,6 +15,7 @@ import { GroupKey } from './GroupKey'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
+import { GroupKeyStore } from './GroupKeyStore'
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
@@ -70,11 +71,11 @@ export class SubscriberKeyExchange implements Context {
         return response ? getGroupKeysFromStreamMessage(response, this.encryptionUtil) : []
     }
 
-    stop() {
+    stop(): void {
         this.isStopped = true
     }
 
-    async getGroupKeyStore(streamId: StreamID) {
+    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
@@ -122,7 +123,7 @@ export class SubscriberKeyExchange implements Context {
         return this.getKey(streamMessage)
     }
 
-    async addNewKey(streamMessage: StreamMessage) {
+    async addNewKey(streamMessage: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
 
         if (!streamMessage.newGroupKey) { return }

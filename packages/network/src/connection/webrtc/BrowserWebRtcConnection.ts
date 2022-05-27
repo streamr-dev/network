@@ -3,16 +3,15 @@ import { Logger } from "../../helpers/Logger"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 
-const BrowserWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new BrowserWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-
     }
-})
-
-export default BrowserWebRtcConnectionFactory
+    registerWebRtcEndpoint(): void {
+    }
+    unregisterWebRtcEndpoint(): void {
+    }
+}
 
 export class BrowserWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger
@@ -40,20 +39,6 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
         this.peerConnection.onicegatheringstatechange = () => {
             this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, this.peerConnection?.iceGatheringState)
             this.lastGatheringState = this.peerConnection?.iceGatheringState
-        }
-
-        this.peerConnection.onconnectionstatechange = () => {
-            const state = this.peerConnection?.connectionState
-            this.logger.trace('conn.onStateChange: %s -> %s', this.lastState, state)
-            this.lastState = state
-
-            if (state === 'disconnected' || state === 'closed') {
-                this.close()
-            } else if (state === 'failed') {
-                this.close(new Error('connection failed'))
-            } else if (state === 'connecting') {
-                this.restartConnectionTimeout()
-            }
         }
 
         if (this.isOffering()) {
@@ -89,7 +74,9 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     protected doClose(err?: Error): void {
-        this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+        if (err !== undefined) {
+            this.logger.warn('Closing BrowserWebRTCConnection with error: %s', err)
+        }
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
@@ -209,7 +196,13 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
 
     private openDataChannel(dataChannel: RTCDataChannel): void {
+        this.lastState = 'connected'
         this.dataChannel = dataChannel
         this.emitOpen()
+    }
+
+    close(err?: Error): void {
+        this.lastState = 'close'
+        super.close(err)
     }
 }

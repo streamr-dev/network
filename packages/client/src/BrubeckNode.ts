@@ -31,6 +31,11 @@ export interface NetworkNodeStub {
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
 }
 
+export const getEthereumAddressFromNodeId = (nodeId: string): string => {
+    const ETHERUM_ADDRESS_LENGTH = 42
+    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
+}
+
 /**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
@@ -39,9 +44,7 @@ export interface NetworkNodeStub {
 export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
@@ -55,10 +58,10 @@ export class BrubeckNode implements Context {
         this.options = options
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        destroySignal.onDestroy(this.destroy)
+        destroySignal.onDestroy.listen(this.destroy)
     }
 
-    private assertNotDestroyed() {
+    private assertNotDestroyed(): void {
         this.destroySignal.assertNotDestroyed(this)
     }
 
@@ -76,7 +79,7 @@ export class BrubeckNode implements Context {
         return this.options as NetworkNodeOptions
     }
 
-    private async initNode() {
+    private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
@@ -111,7 +114,7 @@ export class BrubeckNode implements Context {
         return node
     }
 
-    private async generateId() {
+    private async generateId(): Promise<string> {
         if (this.ethereum.isAuthenticated()) {
             const address = await this.ethereum.getAddress()
             return `${address}#${uuid()}`
@@ -173,16 +176,11 @@ export class BrubeckNode implements Context {
         }
     })
 
-    /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    /**
-     * Get started network node.
-     */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    /** @internal */
-    async getNodeId() {
+    async getNodeId(): Promise<string> {
         const node = await this.getNode()
         return node.getNodeId()
     }
@@ -192,7 +190,6 @@ export class BrubeckNode implements Context {
      * Basically a wrapper around: (await getNode()).publish(…)
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
-     * @internal
      */
     publishToNode(streamMessage: StreamMessage): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
@@ -216,7 +213,6 @@ export class BrubeckNode implements Context {
         }
     }
 
-    /** @internal */
     async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {
@@ -228,7 +224,6 @@ export class BrubeckNode implements Context {
         }
     }
 
-    /** @internal */
     async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
             if (this.isStarting()) {

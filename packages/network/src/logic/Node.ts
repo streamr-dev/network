@@ -7,7 +7,7 @@ import {
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -51,6 +51,11 @@ export interface NodeOptions extends TrackerManagerOptions {
     acceptProxyConnections?: boolean
 }
 
+interface Metrics extends MetricsDefinition {
+    publishMessagesPerSecond: Metric
+    publishBytesPerSecond: Metric
+}
+
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
@@ -81,7 +86,6 @@ export class Node extends EventEmitter {
     private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
-    private readonly publishMetrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
@@ -97,11 +101,11 @@ export class Node extends EventEmitter {
         this.acceptProxyConnections = opts.acceptProxyConnections || false
 
         this.metricsContext = opts.metricsContext || new MetricsContext()
-        this.metrics = this.metricsContext.create('node')
-            .addFixedMetric('latency')
-        this.publishMetrics = this.metricsContext.create('node/publish')
-            .addRecordedMetric('bytes')
-            .addRecordedMetric('count')
+        this.metrics = {
+            publishMessagesPerSecond: new RateMetric(),
+            publishBytesPerSecond: new RateMetric(),
+        }
+        this.metricsContext.addMetrics('node', this.metrics)
 
         this.streamPartManager = new StreamPartManager()
         this.disconnectionManager = new DisconnectionManager({
@@ -191,20 +195,6 @@ export class Node extends EventEmitter {
 
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
-        })
-        let avgLatency = -1
-
-        this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
-            const now = new Date().getTime()
-            const currentLatency = now - message.messageId.timestamp
-
-            if (avgLatency < 0) {
-                avgLatency = currentLatency
-            } else {
-                avgLatency = 0.8 * avgLatency + 0.2 * currentLatency
-            }
-
-            this.metrics.set('latency', avgLatency)
         })
     }
 
@@ -324,8 +314,8 @@ export class Node extends EventEmitter {
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
             this.propagation.feedUnseenMessage(streamMessage, source)
             if (source === null) {
-                this.publishMetrics.record('count', 1)
-                this.publishMetrics.record('bytes', streamMessage.getSerializedContent().length)
+                this.metrics.publishMessagesPerSecond.record(1)
+                this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
             }
         } else {
             logger.trace('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)

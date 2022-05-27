@@ -15,7 +15,7 @@
 
 This library allows you to easily interact with the [Streamr Network](https://streamr.network) from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). The library wraps a Streamr light node for publishing and subscribing to messages, as well as contains convenience functions for creating and managing streams.
 
-| If you are using the Streamr Client in Node, NodeJS version `16.13.x` and NPM version `8.x` is required |
+| If you are using the Streamr Client in Node, NodeJS version `16.14.x` and NPM version `8.x` is required |
 | --- |
 
 Please see the [Streamr project docs](https://streamr.network/docs) for more detailed documentation.
@@ -35,9 +35,9 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
     - [Enabling storage](#enabling-storage)
-    - [Data Unions](#data-unions)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
+    - [Metrics publishing](#metrics-publishing)
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
     - [Encryption keys](#encryption-keys)
@@ -129,6 +129,8 @@ You can also create an anonymous client instance that can interact with public s
 const streamr = new StreamrClient()
 ```
 
+By default, the `StreamrClient` publishes telemetry metrics to the network at regular intervals. See [Metrics publishing](#metrics-publishing).
+
 ### Creating a stream
 ```js
 // Requires MATIC tokens (Polygon blockchain gas token)
@@ -187,13 +189,13 @@ const msg = {
 await streamr.publish(streamId, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-await streamr.publish(streamId, msg, new Date(1546300800123))
+await streamr.publish(streamId, msg, { timestamp: new Date(1546300800123) })
 
 // Publish with a specific timestamp in ms
-await streamr.publish(streamId, msg, 1546300800123)
+await streamr.publish(streamId, msg, { timestamp: 1546300800123 })
 
 // Publish with a specific timestamp as a ISO8601 string
-await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
+await streamr.publish(streamId, msg, { timestamp: '2019-01-01T00:00:00.123Z' })
 
 // For convenience, stream.publish(...) equals streamr.publish(stream, ...)
 await stream.publish(msg)
@@ -443,184 +445,8 @@ await stream.removeFromStorageNode(STREAMR_STORAGE_NODE_GERMANY)
 const storageNodes = stream.getStorageNodes()
 ```
 
-
-### Data Unions
-> ⚠️ This code examples in this section are not up to date.
-
-The Data Union framework is a data crowdsourcing and crowdselling solution. Working in tandem with the Streamr Network and Ethereum, the framework powers applications that enable people to earn by sharing valuable data. You can [read more about it here](https://streamr.network/docs/data-unions/intro-to-data-unions)
-
-
-To deploy a new DataUnion with default [deployment options](#deployment-options):
-```js
-const dataUnion = await streamr.deployDataUnion()
-```
-
-To get an existing (previously deployed) `DataUnion` instance:
-```js
-const dataUnion = await streamr.getDataUnion('0x12345...')
-```
-
-
-#### Admin Functions
-
-Admin functions require xDai tokens on the xDai network. To get xDai you can either use a [faucet](https://www.xdaichain.com/for-users/get-xdai-tokens/xdai-faucet) or you can reach out on the [Streamr Discord #dev channel](https://discord.gg/gZAm8P7hK8).
-
-Adding members using admin functions is not at feature parity with the member function `join`. The newly added member will not be granted publish permissions to the streams inside the Data Union. This will need to be done manually using, `streamr.grantPermissions()`. Similarly, after removing a member using the admin function `removeMembers`, the publish permissions will need to be removed in a secondary step using `revokePermissions()`.
-
-Adding members:
-```js
-const receipt = await dataUnion.addMembers([
-    '0x11111...',
-    '0x22222...',
-    '0x33333...',
-])
-```
-Removing members:
-```js
-const receipt = await dataUnion.removeMembers([
-    '0x11111...',
-    '0x22222...',
-    '0x33333...',
-])
-```
-
-Checking if an address belongs to the Data Union:
-```js
-const isMember = await dataUnion.isMember('0x12345...')
-```
-
-Send all withdrawable earnings to the member's address:
-```js
-const receipt = await dataUnion.withdrawAllToMember('0x12345...')
-```
-Send all withdrawable earnings to the address signed off by the member:
-```js
-const recipientAddress = '0x22222...'
-
-const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
-const receipt = await dataUnion.withdrawAllToSigned(
-    '0x11111...', // member address
-    recipientAddress,
-    signature
-)
-```
-Send some of the withdrawable earnings to the address signed off by the member
-```js
-const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
-const receipt = await dataUnion.withdrawAllToSigned(
-    '0x12345...', // member address
-    recipientAddress,
-    signature
-)
-
-// Or to authorize a fixed amount:
-const receipt = await dataUnion.withdrawAmountToSigned(
-    '0x12345...', // member address
-    recipientAddress,
-    100, // token amount, in wei
-    signature,
-)
-```
-
-Setting a new admin fee:
-```js
-// Any number between 0 and 1, inclusive
-const receipt = await dataUnion.setAdminFee(0.4)
-```
-#### Query functions
-These are available for everyone and anyone, to query publicly available info from a Data Union.
-
-Get Data Union's statistics:
-```js
-const stats = await dataUnion.getStats()
-```
-Get a member's stats:
-```js
-const memberStats = await dataUnion.getMemberStats('0x12345...')
-```
-Get the withdrawable DATA tokens in the DU for a member:
-```js
-// Returns a BigNumber
-const balance = await dataUnion.getWithdrawableEarnings('0x12345...')
-```
-Getting the set admin fee:
-```js
-const adminFee = await dataUnion.getAdminFee()
-```
-Getting admin's address:
-```js
-const adminAddress = await dataUnion.getAdminAddress()
-```
-
-Getting the Data Union's version:
-```js
-const version = await dataUnion.getVersion()
-// Can be 0, 1 or 2
-// 0 if the contract is not a data union
-```
-
-#### Withdraw options
-
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned`, `withdrawAmountToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters. The provided values are the default ones, used when not specified or when the options parameter is not provided:
-```js
-const receipt = await dataUnion.withdrawAll(
-    ...,
-    {
-        sendToMainnet: true, // Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)
-        payForTransport: true, //Whether to pay for the withdraw transaction signature transport to mainnet over the bridge
-        waitUntilTransportIsComplete: true, // Whether to wait until the withdrawn DATA tokens are visible in mainnet
-        pollingIntervalMs: 1000, // How often requests are sent to find out if the withdraw has completed, in ms
-        retryTimeoutMs: 60000, // When to give up when waiting for the withdraw to complete, in ms
-        gasPrice: /*Network Estimate*/ // Ethereum Mainnet transaction gas price to use when transporting tokens over the bridge
-    }
-)
-```
-
-These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low),
-but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
-
-The return values from the withdraw functions also depend on the options.
-
-If `sendToMainnet: false`, other options don't apply at all, and **sidechain transaction receipt** is returned as soon as the withdraw transaction is done. This should be fairly quick in the sidechain.
-
-The use cases corresponding to the different combinations of the boolean flags:
-
-| `transport` | `wait`  | Returns | Effect |
-| :---------- | :------ | :------ | :----- |
-| `true`      | `true`  | Transaction receipt | *(default)* Self-service bridge to mainnet, client pays for mainnet gas |
-| `true`      | `false` | Transaction receipt | Self-service bridge to mainnet (but **skip** the wait that double-checks the withdraw succeeded and tokens arrived to destination) |
-| `false`     | `true`  | `null`              | Someone else pays for the mainnet gas automatically, e.g. the bridge operator (in this case the transaction receipt can't be returned) |
-| `false`     | `false` | AMB message hash    | Someone else pays for the mainnet gas, but we need to give them the message hash first |
-
-#### Deployment options
-
-`deployDataUnion` can take an options object as the argument. It's an object that can contain the following parameters. All shown values are the defaults for each property:
-```js
-const ownerAddress = await streamr.getAddress()
-
-const dataUnion = await streamr.deployDataUnion({
-    owner: ownerAddress, // Owner / admin of the newly created Data Union
-    joinPartsAgent: [ownerAddress], // Able to add and remove members to/from the Data Union
-    dataUnionName: /* Generated if not provided */, // NOT stored anywhere, only used for address derivation
-    adminFee: 0, // Must be between 0...1
-    sidechainPollingIntervalMs: 1000, //How often requests are sent to find out if the deployment has completed
-    sidechainRetryTimeoutMs: 60000, // When to give up when waiting for the deployment to complete
-    confirmations: 1, // Blocks to wait after Data Union mainnet contract deployment to consider it final
-    gasPrice: /*Network Estimate*/ // Ethereum Mainnet gas price to use when deploying the Data Union mainnet contract
-})
-```
-
-Streamr Core is added as a `joinPartAgent` by default so that joining with secret works using the member function `join`. If you don't plan to use `join` for "self-service joining", you can leave out Streamr Core agent by calling `deployDataUnion` e.g. with your own address as the sole joinPartAgent:
-```js
-const dataUnion = await streamr.deployDataUnion({
-    joinPartAgents: [ownerAddress],
-    adminFee,
-})
-```
-
-`dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed. Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means a Data Union deployed by a particular address with particular "name" will have a predictable address.
-
 ### Utility functions
+
 The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`.
 ```js
 const { address, privateKey } = StreamrClient.generateEthereumAccount()
@@ -631,6 +457,54 @@ const address = await streamr.getAddress()
 ```
 
 ## Advanced usage
+
+### Metrics publishing
+
+By default, the `StreamrClient` publishes metrics to the network at regular intervals. The metrics include, for example, information about data volumes passing through the node, and are attributed to your node id. Here's the content of the metrics messages:
+
+```
+{
+    node: {
+        publishMessagesPerSecond: number
+        publishBytesPerSecond: number
+        sendMessagesPerSecond: number
+        sendBytesPerSecond: number
+        receiveMessagesPerSecond: number
+        receiveBytesPerSecond: number
+        connectionAverageCount: number
+        connectionTotalFailureCount: number
+    },
+    period: {
+        start: number
+        end: number
+    }
+}
+```
+
+If you don't want to publish metrics, you can turn it off in the client configuration:
+
+```
+const streamr = new StreamrClient({
+    ...
+    metrics: false
+})
+```
+
+If you want to use custom stream and/or reporting periods, you can specify the details like this:
+```
+const streamr = new StreamrClient({
+    ...
+    metrics: {
+        periods: [{
+            duration: 3600000, // in milliseconds
+            streamId: "my-metrics-stream.eth/hour"
+        }]
+    }
+})
+```
+
+        
+
 ### Stream partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
@@ -683,8 +557,9 @@ The partition key can be given as an argument to the `publish` methods, and the 
 ```js
 await stream.publish(
     msg,
-    Date.now(),
-    msg.vehicleId // msg.vehicleId is the partition key here
+    {
+        partitionKey: msg.vehicleId
+    }
 )
 ```
 
