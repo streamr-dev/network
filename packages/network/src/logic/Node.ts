@@ -150,6 +150,7 @@ export class Node extends EventEmitter {
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
+                    throw e
                 }
             },
             minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
