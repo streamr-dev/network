@@ -303,7 +303,7 @@ describe('Proxy connection tests', () => {
 
     it('will receive messages after lost connectivity', async () => {
         let receivedMessages = 0
-        contactNode.on(NodeEvent.MESSAGE_RECEIVED, (message) => {
+        contactNode.on(NodeEvent.MESSAGE_RECEIVED, (_message) => {
             receivedMessages += 1
         })
         await Promise.all([
