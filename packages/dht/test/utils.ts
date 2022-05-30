@@ -14,16 +14,22 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { generateId } from '../src/helpers/common'
 import { Simulator } from '../src/connection/Simulator'
 
-export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator): Promise<DhtNode> => {
-    const id = PeerID.fromString(stringId)
+export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator, binaryId?: Uint8Array): Promise<DhtNode> => {
+    let id: PeerID
+    if (binaryId) {
+        id = PeerID.fromValue(binaryId)
+    }
+    else {
+        id = PeerID.fromString(stringId)
+    }
     const peerDescriptor: PeerDescriptor = {
         peerId: id.value,
         type: NodeType.NODEJS
     }
-   
+
     const mockConnectionLayer = new MockConnectionManager(peerDescriptor, simulator)
-    
-    const node = new DhtNode({peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer})
+
+    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer })
     await node.start()
     simulator.addNode(node)
     return node
@@ -35,8 +41,8 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
         peerId: id.value,
         type: 0
     }
-    
-    const node = new DhtNode({peerDescriptor: descriptor, transportLayer: layer0Node})
+
+    const node = new DhtNode({ peerDescriptor: descriptor, transportLayer: layer0Node })
     await node.start()
     return node
 }
@@ -67,7 +73,7 @@ export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdStr
     const ret: PeerDescriptor = {
         peerId: peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value,
         type: NodeType.NODEJS,
-        websocket: {ip: msg.websocket!.ip, port: msg.websocket!.port}
+        websocket: { ip: msg.websocket!.ip, port: msg.websocket!.port }
     }
     return ret
 }
@@ -81,7 +87,7 @@ const MockDhtRpc: IDhtRpc = {
         }
         return response
     },
-    async ping(request: PingRequest,  _context: ServerCallContext): Promise<PingResponse> {
+    async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
             nonce: request.nonce
         }
