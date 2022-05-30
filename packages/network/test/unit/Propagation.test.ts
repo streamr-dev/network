@@ -73,6 +73,18 @@ describe(Propagation, () => {
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n4', msg)
         })
 
+        it('sends to previously failed neighbor', async () => {
+            sendToNeighbor.mockImplementation(async (neighbor) => {
+                if (neighbor === 'n3') {
+                    throw new Error('failed to send')
+                }
+            })
+            await setUpAndFeed(['n1', 'n2', 'n3'])
+            propagation.onNeighborJoined('n3', StreamPartIDUtils.parse('s1#0'))
+            expect(sendToNeighbor).toHaveBeenCalledTimes(1)
+            expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n3', msg)
+        })
+
         it('no-op if passed non-existing stream', async () => {
             await setUpAndFeed(['n1', 'n2', 'n3'])
             propagation.onNeighborJoined('n4', StreamPartIDUtils.parse('non-existing-stream#0'))
@@ -113,6 +125,4 @@ describe(Propagation, () => {
             expect(sendToNeighbor).toHaveBeenCalledTimes(0)
         })
     })
-
-    // TODO: write tests for sendFn failures & potential async behavior...
 })
