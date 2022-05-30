@@ -12,12 +12,14 @@ import {
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { Logger } from '../helpers/logger/LoggerNode'
+import { Propagation } from './propagation/Propagation'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
     trackerManager: TrackerManager,
     streamPartManager: StreamPartManager,
     nodeToNode: NodeToNode,
+    propagation: Propagation,
     node: Node,
     nodeConnectTimeout: number,
     acceptProxyConnections: boolean
@@ -45,6 +47,7 @@ export class ProxyStreamConnectionManager {
     private readonly nodeConnectTimeout: number
     private readonly acceptProxyConnections: boolean
     private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
+    private readonly propagation: Propagation
 
     constructor(opts: ProxyStreamConnectionManagerOptions) {
         this.trackerManager = opts.trackerManager
@@ -53,6 +56,7 @@ export class ProxyStreamConnectionManager {
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
         this.acceptProxyConnections = opts.acceptProxyConnections
+        this.propagation = opts.propagation
         this.connections = new Map()
     }
 
@@ -117,6 +121,7 @@ export class ProxyStreamConnectionManager {
             }
             this.addConnection(streamPartId, targetNodeId, direction)
             await this.connectAndNegotiate(streamPartId, targetNodeId, direction)
+            this.onOpen(targetNodeId, streamPartId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
             this.removeConnection(streamPartId, targetNodeId)
@@ -176,6 +181,7 @@ export class ProxyStreamConnectionManager {
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
             }
+            this.onOpen(nodeId, streamPartId)
         }
         await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
@@ -235,6 +241,11 @@ export class ProxyStreamConnectionManager {
             return [...this.connections.get(streamPartId)!.values()][0].direction === direction
         }
         return false
+    }
+
+    private onOpen(targetNodeId: NodeId, streamPartID: StreamPartID): void {
+        logger.trace(`Proxy connection opened on ${streamPartID} to ${targetNodeId}`)
+        this.propagation.onNeighborJoined(targetNodeId, streamPartID)
     }
 
     stop(): void {

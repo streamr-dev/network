@@ -173,6 +173,7 @@ export class Node extends EventEmitter {
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
             trackerManager: this.trackerManager,
             streamPartManager: this.streamPartManager,
+            propagation: this.propagation,
             node: this,
             nodeToNode: this.nodeToNode,
             acceptProxyConnections: this.acceptProxyConnections,
