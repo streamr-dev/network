@@ -1,6 +1,11 @@
 import { EventEmitter } from 'events'
-import { MessageLayer, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
+import {
+    MessageLayer,
+    StreamPartID,
+    StreamMessage,
+    ProxyDirection
+} from 'streamr-client-protocol'
+import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { promiseTimeout } from '../helpers/PromiseTools'
@@ -192,11 +197,6 @@ export class Node extends EventEmitter {
 
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
-        })
-        this.on(Event.PROXY_CONNECTION_ACCEPTED, (node: string, stream: StreamPartID) => {
-            // I as publish-proxy join a stream OR
-            // I as normal node receive subscribe-only connection
-            this.propagation.onNeighborJoined(node, stream)
         })
     }
 
