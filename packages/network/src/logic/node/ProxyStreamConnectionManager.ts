@@ -10,12 +10,14 @@ import {
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../../helpers/PromiseTools'
 import { Logger } from '../../helpers/logger/LoggerNode'
+import { Propagation } from './propagation/Propagation'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
     trackerManager: TrackerManager,
     streamPartManager: StreamPartManager,
     nodeToNode: NodeToNode,
+    propagation: Propagation,
     node: Node,
     nodeConnectTimeout: number,
     acceptProxyConnections: boolean
@@ -42,6 +44,7 @@ export class ProxyStreamConnectionManager {
     private readonly nodeConnectTimeout: number
     private readonly acceptProxyConnections: boolean
     private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
+    private readonly propagation: Propagation
 
     constructor(opts: ProxyStreamConnectionManagerOptions) {
         this.trackerManager = opts.trackerManager
@@ -50,6 +53,7 @@ export class ProxyStreamConnectionManager {
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
         this.acceptProxyConnections = opts.acceptProxyConnections
+        this.propagation = opts.propagation
         this.connections = new Map()
     }
 
@@ -173,6 +177,7 @@ export class ProxyStreamConnectionManager {
         if (message.accepted) {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+            this.propagation.onNeighborJoined(nodeId, streamPartId)
             this.node.emit(Event.PUBLISH_STREAM_ACCEPTED, nodeId, streamPartId)
         } else {
             this.removeConnection(streamPartId, nodeId)

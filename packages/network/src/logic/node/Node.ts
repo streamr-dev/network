@@ -146,6 +146,7 @@ export class Node extends EventEmitter {
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
+                    throw e
                 }
             },
             minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
@@ -171,6 +172,7 @@ export class Node extends EventEmitter {
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
             trackerManager: this.trackerManager,
             streamPartManager: this.streamPartManager,
+            propagation: this.propagation,
             node: this,
             nodeToNode: this.nodeToNode,
             acceptProxyConnections: this.acceptProxyConnections,
