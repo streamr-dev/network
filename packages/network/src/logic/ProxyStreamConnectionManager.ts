@@ -13,6 +13,7 @@ import {
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { Logger } from '../helpers/logger/LoggerNode'
 import { Propagation } from './propagation/Propagation'
+
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
@@ -121,7 +122,6 @@ export class ProxyStreamConnectionManager {
             }
             this.addConnection(streamPartId, targetNodeId, direction)
             await this.connectAndNegotiate(streamPartId, targetNodeId, direction)
-            this.onOpen(targetNodeId, streamPartId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
             this.removeConnection(streamPartId, targetNodeId)
@@ -180,8 +180,8 @@ export class ProxyStreamConnectionManager {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
             }
-            this.onOpen(nodeId, streamPartId)
         }
         await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
     }
@@ -192,6 +192,7 @@ export class ProxyStreamConnectionManager {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.propagation.onNeighborJoined(nodeId, streamPartId)
             } else {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
             }
@@ -241,11 +242,6 @@ export class ProxyStreamConnectionManager {
             return [...this.connections.get(streamPartId)!.values()][0].direction === direction
         }
         return false
-    }
-
-    private onOpen(targetNodeId: NodeId, streamPartID: StreamPartID): void {
-        logger.trace(`Proxy connection opened on ${streamPartID} to ${targetNodeId}`)
-        this.propagation.onNeighborJoined(targetNodeId, streamPartID)
     }
 
     stop(): void {
