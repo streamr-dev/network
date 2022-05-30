@@ -1,17 +1,17 @@
 import { Err } from '../helpers/errors'
 
-export const parser = <T>(message: Uint8Array, parseFn: (bytes: Uint8Array) => T): T | never => {
+export const parseWrapper = <T>(parseFn: () => T): T | never => {
     try {
-        return parseFn(message)
+        return parseFn()
     } catch (err) {
-        throw new Err.FailedToParse(`Could not parse binary with to message of type ${T.toString()}`, err)
+        throw new Err.FailedToParse(`Could not parse binary to JSON-object`, err)
     }
 }
 
-export const serializer = <T>(message: T, serializerFn: (message: T) => Uint8Array): Uint8Array | never => {
+export const serializeWrapper = <T>(serializerFn: () => Uint8Array): Uint8Array | never => {
     try {
-        return serializerFn(message)
+        return serializerFn()
     } catch (err) {
-        throw new Err.FailedToSerialize(`Could not serialize message with type ${T.toString()} to binary`, err)
+        throw new Err.FailedToSerialize(`Could not serialize message to binary`, err)
     }
 }
