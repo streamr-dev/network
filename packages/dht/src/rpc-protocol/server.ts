@@ -12,6 +12,7 @@ import { DummyServerCallContext } from './ServerTransport'
 import { nodeFormatPeerDescriptor } from '../helpers/common'
 import { DhtPeer } from '../dht/DhtPeer'
 import { TODO } from '../types'
+import { parseWrapper, serializeWrapper } from './ConversionWrappers'
 
 export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, canRoute: TODO): any => {
     const DhtRpc: IDhtRpc = {
@@ -58,19 +59,19 @@ export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, ca
 
     const RegisterDhtRpc = {
         async getClosestPeers(bytes: Uint8Array): Promise<Uint8Array> {
-            const request = ClosestPeersRequest.fromBinary(bytes)
+            const request = parseWrapper<ClosestPeersRequest>(() => ClosestPeersRequest.fromBinary(bytes))
             const response = await DhtRpc.getClosestPeers(request, new DummyServerCallContext())
-            return ClosestPeersResponse.toBinary(response)
+            return serializeWrapper(() => ClosestPeersResponse.toBinary(response))
         },
         async ping(bytes: Uint8Array): Promise<Uint8Array> {
-            const request = PingRequest.fromBinary(bytes)
+            const request = parseWrapper<PingRequest>(() => PingRequest.fromBinary(bytes))
             const response = await DhtRpc.ping(request, new DummyServerCallContext())
-            return PingResponse.toBinary(response)
+            return serializeWrapper(() => PingResponse.toBinary(response))
         },
         async routeMessage(bytes: Uint8Array): Promise<Uint8Array> {
-            const message = RouteMessageWrapper.fromBinary(bytes)
+            const message = parseWrapper<RouteMessageWrapper>(() => RouteMessageWrapper.fromBinary(bytes))
             const response = await DhtRpc.routeMessage(message, new DummyServerCallContext())
-            return RouteMessageAck.toBinary(response)
+            return serializeWrapper(() => RouteMessageAck.toBinary(response))
         }
     }
 
