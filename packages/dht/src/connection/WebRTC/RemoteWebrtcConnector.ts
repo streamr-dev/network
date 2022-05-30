@@ -14,6 +14,7 @@ import { IWebRtcConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DummyServerCallContext } from '../../rpc-protocol/ServerTransport'
 import { Logger } from '../../helpers/Logger'
+import { parseWrapper } from '../../rpc-protocol/ConversionWrappers'
 
 const logger = new Logger(module)
 
@@ -141,19 +142,19 @@ export const createRemoteWebRtcConnectorServer = (onRtcOffer: TODO, onRtcAnswer:
     }
     const register = {
         async requestConnection(bytes: Uint8Array): Promise<void> {
-            const request = WebRtcConnectionRequest.fromBinary(bytes)
+            const request = parseWrapper<WebRtcConnectionRequest>(() => WebRtcConnectionRequest.fromBinary(bytes))
             await rpc.requestConnection(request, new DummyServerCallContext())
         },
         async rtcOffer(bytes: Uint8Array): Promise<void> {
-            const request = RtcOffer.fromBinary(bytes)
+            const request = parseWrapper<RtcOffer>(() => RtcOffer.fromBinary(bytes))
             await rpc.rtcOffer(request, new DummyServerCallContext())
         },
         async rtcAnswer(bytes: Uint8Array): Promise<void> {
-            const request = RtcAnswer.fromBinary(bytes)
+            const request = parseWrapper<RtcAnswer>(() => RtcAnswer.fromBinary(bytes))
             await rpc.rtcAnswer(request, new DummyServerCallContext())
         },
         async iceCandidate(bytes: Uint8Array): Promise<void> {
-            const request = IceCandidate.fromBinary(bytes)
+            const request = parseWrapper<IceCandidate>(() => IceCandidate.fromBinary(bytes))
             await rpc.iceCandidate(request, new DummyServerCallContext())
         }
     }
