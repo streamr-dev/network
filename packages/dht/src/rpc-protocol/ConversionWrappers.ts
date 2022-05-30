@@ -8,7 +8,7 @@ export const parseWrapper = <T>(parseFn: () => T): T | never => {
     }
 }
 
-export const serializeWrapper = <T>(serializerFn: () => Uint8Array): Uint8Array | never => {
+export const serializeWrapper = (serializerFn: () => Uint8Array): Uint8Array | never => {
     try {
         return serializerFn()
     } catch (err) {

@@ -1,5 +1,5 @@
 import { parseWrapper, serializeWrapper } from '../../src/rpc-protocol/ConversionWrappers'
-import { PingRequest, RpcMessage } from '../../src/proto/DhtRpc'
+import { PingRequest } from '../../src/proto/DhtRpc'
 
 describe('ConversionWrappers', () => {
     it('Parses successfully', () => {
@@ -26,14 +26,14 @@ describe('ConversionWrappers', () => {
             nonce: 'conversionWrapper'
         }
         const directSerialized = PingRequest.toBinary(ping)
-        const serialized = serializeWrapper<PingRequest>(() => PingRequest.toBinary(ping))
+        const serialized = serializeWrapper(() => PingRequest.toBinary(ping))
         expect(Buffer.compare(directSerialized, serialized)).toEqual(0)
     })
 
     it('Serializing fails on incorrect messages', () => {
         let errorCount = 0
         try {
-            serializeWrapper<PingRequest>(() =>
+            serializeWrapper(() =>
                 PingRequest.toBinary(
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore

@@ -67,7 +67,7 @@ export const createRemoteWebSocketConnectorServer = (connectFn: TODO, canConnect
         async requestConnection(bytes: Uint8Array): Promise<Uint8Array> {
             const request = parseWrapper<WebSocketConnectionRequest>(() => WebSocketConnectionRequest.fromBinary(bytes))
             const response = await rpc.requestConnection(request, new DummyServerCallContext())
-            return serializeWrapper<WebSocketConnectionResponse>(() => WebSocketConnectionResponse.toBinary(response))
+            return serializeWrapper(() => WebSocketConnectionResponse.toBinary(response))
         },
     }
     return registerRpc

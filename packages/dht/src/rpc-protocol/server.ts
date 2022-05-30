@@ -61,17 +61,17 @@ export const createRpcMethods = (getClosestPeersFn: TODO, routeHandler: TODO, ca
         async getClosestPeers(bytes: Uint8Array): Promise<Uint8Array> {
             const request = parseWrapper<ClosestPeersRequest>(() => ClosestPeersRequest.fromBinary(bytes))
             const response = await DhtRpc.getClosestPeers(request, new DummyServerCallContext())
-            return serializeWrapper<ClosestPeersResponse>(() => ClosestPeersResponse.toBinary(response))
+            return serializeWrapper(() => ClosestPeersResponse.toBinary(response))
         },
         async ping(bytes: Uint8Array): Promise<Uint8Array> {
             const request = parseWrapper<PingRequest>(() => PingRequest.fromBinary(bytes))
             const response = await DhtRpc.ping(request, new DummyServerCallContext())
-            return serializeWrapper<PingResponse>(() => PingResponse.toBinary(response))
+            return serializeWrapper(() => PingResponse.toBinary(response))
         },
         async routeMessage(bytes: Uint8Array): Promise<Uint8Array> {
             const message = parseWrapper<RouteMessageWrapper>(() => RouteMessageWrapper.fromBinary(bytes))
             const response = await DhtRpc.routeMessage(message, new DummyServerCallContext())
-            return serializeWrapper<RouteMessageAck>(() => RouteMessageAck.toBinary(response))
+            return serializeWrapper(() => RouteMessageAck.toBinary(response))
         }
     }
 
