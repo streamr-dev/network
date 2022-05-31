@@ -9,6 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+## [6.0.8] - 2022-05-31
+
+### Fixed
+
+- Update `streamr-network` library to include propagation fix to proxy stream behaviour
+
 ## [6.0.7] - 2022-05-25
 
 ### Fixed
@@ -52,7 +58,8 @@ Remove this paragraph when content has been added.
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.7...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.8...HEAD
+[6.0.8]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.7...client/v6.0.8
 [6.0.7]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.6...client/v6.0.7
 [6.0.6]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.5...client/v6.0.6
 [6.0.5]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.4...client/v6.0.5
