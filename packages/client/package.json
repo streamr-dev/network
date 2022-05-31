@@ -164,7 +164,7 @@
         "sqlite": "^4.0.23",
         "sqlite3": "^5.0.2",
         "streamr-client-protocol": "^12.0.0",
-        "streamr-network": "^35.0.3",
+        "streamr-network": "^35.0.4",
         "ts-toolbelt": "^9.6.0",
         "tsyringe": "^4.6.0",
         "uuid": "^8.3.2"
