@@ -68,6 +68,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
 
+    private outgoingClosestPeersRequestsCounter = 0
+
     private cleanUpHandleForConnectionManager?: ConnectionManager
     private started = false
     private stopped = false
@@ -357,6 +359,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             return
         }
         logger.trace(`Getting closest peers from contact: ${contact.peerId.toString()}`)
+        this.outgoingClosestPeersRequestsCounter++
         this.neighborList!.setContacted(contact.peerId)
         this.neighborList!.setActive(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.ownPeerDescriptor!)
@@ -497,6 +500,10 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     public getOpenInternetPeerDescriptors(): PeerDescriptor[] {
         return this.openInternetPeers!.getActiveContacts().map((contact) => contact.getPeerDescriptor())
+    }
+
+    public getNumberOfOutgoingClosestPeersRequests(): number {
+        return this.outgoingClosestPeersRequestsCounter
     }
 
     private addClosestContactToBucket(): void {

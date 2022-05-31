@@ -20,7 +20,7 @@ describe('Kademlia correctness', () => {
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/simulation/data/nodeids.json').toString())
-    const groundTruth: { [nodeName: string]: Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }> } 
+    const groundTruth: { [nodeName: string]: Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }> }
         = JSON.parse(fs.readFileSync('test/simulation/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
@@ -65,9 +65,10 @@ describe('Kademlia correctness', () => {
         */
 
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
-
+        let maxOutgoingRpcCalls = 0
         let sumCorrectNeighbors = 0
-        //let sumKbucketSize = 1
+        let sumKbucketSize = 1
+        let sumOutgoingRpcCalls = 0
 
         for (let i = nodes.length - 1; i >= 0; i--) {
 
@@ -76,8 +77,16 @@ describe('Kademlia correctness', () => {
             /*
             console.log('Kbucket size: '+ nodes[i].getKBucketSize())
             console.log('Num incoming RPC calls: '+ nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: '+ nodes[i].getNumberOfOutgoingRpcCalls())
+            console.log('Num outgoing RPC calls: ' + nodes[i].getNumberOfOutgoingClosestPeersRequests())
             */
+
+            const outgoingCalls = nodes[i].getNumberOfOutgoingClosestPeersRequests()
+            
+            if (outgoingCalls > maxOutgoingRpcCalls) {
+                maxOutgoingRpcCalls = outgoingCalls
+            }
+            
+            sumOutgoingRpcCalls += outgoingCalls
 
             let groundTruthString = 'groundTruthNeighb: '
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
@@ -110,17 +119,20 @@ describe('Kademlia correctness', () => {
             console.log('Correct neighbors: ' + correctNeighbors)
 
             if (i > 0) {
-                //sumKbucketSize += nodes[i].getKBucketSize()
+                sumKbucketSize += nodes[i].getBucketSize()
                 sumCorrectNeighbors += correctNeighbors
             }
-
-            //const avgKbucketSize = sumKbucketSize / (NUM_NODES - 1)
-            const avgCorrectNeighbors = sumCorrectNeighbors / (NUM_NODES - 1)
-
-            console.log('----------- Simulation results ------------------')
-            console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
-            console.log('Average correct neighbors: ' + avgCorrectNeighbors)
-            //console.log('Average Kbucket size: ' + avgKbucketSize)
         }
+
+        const avgKbucketSize = sumKbucketSize / (NUM_NODES - 1)
+        const avgCorrectNeighbors = sumCorrectNeighbors / (NUM_NODES - 1)
+        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (NUM_NODES-1)
+
+        console.log('----------- Simulation results ------------------')
+        console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
+        console.log('Average correct neighbors: ' + avgCorrectNeighbors)
+        console.log('Average Kbucket size: ' + avgKbucketSize)
+        console.log('Average outgoing RPC calls: ' + avgNumberOfOutgoingRpcCalls)
+        console.log('Max outgoing RPC calls: ' + maxOutgoingRpcCalls)
     })
 })
