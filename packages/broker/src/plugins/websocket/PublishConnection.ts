@@ -5,7 +5,6 @@ import { ParsedQs } from 'qs'
 import { v4 as uuid } from 'uuid'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
-import { closeWithError } from './closeWebsocket'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 
 const logger = new Logger(module)
@@ -43,7 +42,7 @@ export class PublishConnection implements Connection {
                     msgChainId
                 })
             } catch (err: any) {
-                closeWithError(err, 'Unable to publish', ws, logger)
+                logger.warn('Unable to publish, reason: %s', err)
             }
         })
     }
