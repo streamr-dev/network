@@ -30,11 +30,11 @@ export class PublishConnection implements Connection {
 
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
         const msgChainId = uuid()
-        ws.on('message', (payload: string) => {
+        ws.on('message', async (payload: string) => {
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
-                streamrClient.publish({
+                await streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
                 }, content, {
