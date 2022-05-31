@@ -52,7 +52,7 @@ export class Bridge implements MqttServerListener {
             })
             this.publishMessageChains.add(createMessageChainKey(publishedMessage))
         } catch (err: any) {
-            logger.warn('Unable to publish')
+            logger.warn('Unable to publish, reason: %s', err)
         }
     }
 
