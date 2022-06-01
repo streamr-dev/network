@@ -72,8 +72,8 @@ describe('Kademlia correctness', () => {
 
         for (let i = nodes.length - 1; i >= 0; i--) {
 
-            console.log('-----------')
-            console.log('Node: ' + i)
+            // console.log('-----------')
+            // console.log('Node: ' + i)
             /*
             console.log('Kbucket size: '+ nodes[i].getKBucketSize())
             console.log('Num incoming RPC calls: '+ nodes[i].getNumberOfIncomingRpcCalls())
@@ -93,7 +93,7 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            console.log(groundTruthString)
+            // console.log(groundTruthString)
 
             const kademliaNeighbors = nodes[i].getNeighborList().getContactIds()
 
@@ -102,7 +102,7 @@ describe('Kademlia correctness', () => {
                 kadString += nodeIndicesById[JSON.stringify(neighbor.value)] + ','
             })
 
-            console.log(kadString)
+            // console.log(kadString)
 
             let correctNeighbors = 0
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
@@ -112,11 +112,16 @@ describe('Kademlia correctness', () => {
                 correctNeighbors++
             }
 
+            if (correctNeighbors === 0) {
+                console.log(groundTruthString)
+                console.log(kadString)
+            }
             if (correctNeighbors < minimumCorrectNeighbors) {
+                console.log("NEW MIN", i, correctNeighbors)
                 minimumCorrectNeighbors = correctNeighbors
             }
 
-            console.log('Correct neighbors: ' + correctNeighbors)
+            // console.log('Correct neighbors: ' + correctNeighbors)
 
             if (i > 0) {
                 sumKbucketSize += nodes[i].getBucketSize()

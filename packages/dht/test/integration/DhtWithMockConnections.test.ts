@@ -40,7 +40,7 @@ describe('Mock IConnection DHT Joining', () => {
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
         nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
+            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK() - 1)
             expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() * 2)
         })
         expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())

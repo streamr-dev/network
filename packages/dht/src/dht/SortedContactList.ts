@@ -78,7 +78,7 @@ export class SortedContactList {
     public getActiveContacts(): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
-            if (this.contactsById[contactId.toString()] && !this.contactsById[contactId.toString()].active) {
+            if (this.isActive(contactId)) {
                 ret.push(this.contactsById[contactId.toString()].contact)
             }
         })
@@ -123,5 +123,9 @@ export class SortedContactList {
 
     public getAllContacts(): DhtPeer[] {
         return Object.values(this.contactsById).map((contact) => contact.contact)
+    }
+
+    public getMaxSize(): number {
+        return this.maxSize
     }
 }
