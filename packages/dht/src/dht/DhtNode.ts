@@ -55,6 +55,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     static objectCounter = 0
     private objectId = 1
 
+    private noProgressCounter = 0
     private readonly ALPHA = 3
     private readonly K = 4
     private readonly peers: Map<string, DhtPeer>
@@ -378,7 +379,18 @@ export class DhtNode extends EventEmitter implements ITransport {
             const dhtPeers = contacts.map((peer) => {
                 return new DhtPeer(peer, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             })
+            
+            const oldClosestContact = this.neighborList!.getClosestContactId()
+            
             dhtPeers.forEach((contact) => this.addNewContact(contact.getPeerDescriptor(), false))
+            
+            if (this.neighborList!.getClosestContactId().equals(oldClosestContact)) {
+                this.noProgressCounter++
+            }
+            else {
+                this.noProgressCounter = 0
+            }
+
             if (this.ongoingJoinOperation && this.isJoinCompleted()) {
                 this.emit(Event.JOIN_COMPLETED)
                 this.ongoingJoinOperation = false
@@ -400,14 +412,17 @@ export class DhtNode extends EventEmitter implements ITransport {
     isJoinCompleted(): boolean {
         // console.log(this.neighborList!.getActiveContacts().length, this.neighborList!.getUncontactedContacts(this.ALPHA).length)
         return (this.neighborList!.getUncontactedContacts(this.ALPHA).length < 1
-            || this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
+            || this.noProgressCounter >= 5 || this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
         if (!this.started || this.stopped || this.ongoingJoinOperation) {
             return
         }
+        
         this.ongoingJoinOperation = true
+        this.noProgressCounter = 0
+
         logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
         const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
 

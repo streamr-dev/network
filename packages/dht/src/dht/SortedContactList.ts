@@ -35,6 +35,7 @@ export class SortedContactList {
                 this.contactsById[contact.peerId.toString()] = new ContactWrapper(contact)
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
+            
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
                 delete this.contactsById[removed!.toString()]
