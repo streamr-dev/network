@@ -57,8 +57,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     private objectId = 1
 
     private noProgressCounter = 0
-    private readonly ALPHA = 3
-    private readonly K = 20
+    private readonly PARALLELISM = 3
+    private readonly MAX_NEIGHBOR_LIST_SIZE = 20
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
@@ -221,8 +221,8 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.bucket.on('updated', (_oldContact: DhtPeer, _newContact: DhtPeer) => {
             // TODO: Update contact info to the connection manager and reconnect
         })
-        this.neighborList = new SortedContactList(selfId, this.K * 4)
-        this.openInternetPeers = new SortedContactList(selfId, this.K * 2)
+        this.neighborList = new SortedContactList(selfId, this.MAX_NEIGHBOR_LIST_SIZE)
+        this.openInternetPeers = new SortedContactList(selfId, this.MAX_NEIGHBOR_LIST_SIZE / 2)
     }
 
     public getNeighborList(): SortedContactList {
@@ -238,7 +238,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             return []
         }
         logger.trace(`processing getClosestPeersRequest`)
-        const ret = this.bucket!.closest(caller.peerId, this.K)
+        const ret = this.bucket!.closest(caller.peerId, 5)
         this.addNewContact(caller, true)
         //this.neighborList!.setContacted(PeerID.fromValue(caller.peerId))
         return ret
@@ -290,8 +290,8 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
         logger.trace(`Routing message ${params.messageId}`)
         let successAcks = 0
-        const queue = new PQueue({ concurrency: this.ALPHA, timeout: 4000 })
-        const closest = this.bucket!.closest(params.destinationPeer.peerId, this.K).filter((peer: DhtPeer) =>
+        const queue = new PQueue({ concurrency: this.PARALLELISM, timeout: 4000 })
+        const closest = this.bucket!.closest(params.destinationPeer.peerId, this.PARALLELISM).filter((peer: DhtPeer) =>
             this.routeCheck(
                 peer.peerId,
                 PeerID.fromValue(params.sourcePeer!.peerId),
@@ -299,7 +299,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             )
         )
         const initialLength = closest.length
-        while (successAcks < this.ALPHA && successAcks < initialLength && closest.length > 0) {
+        while (successAcks < this.PARALLELISM && successAcks < initialLength && closest.length > 0) {
             if (this.stopped) {
                 break
             }
@@ -338,7 +338,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             logger.trace(`Message ${routedMessage.nonce} is not routable due to being a duplicate`)
             return false
         }
-        const closestPeers = this.bucket!.closest(routedMessage.destinationPeer!.peerId, this.K)
+        const closestPeers = this.bucket!.closest(routedMessage.destinationPeer!.peerId, this.PARALLELISM)
         const notRoutableCount = this.notRoutableCount(closestPeers, routedMessage.sourcePeer!, routedMessage.previousPeer)
         return (closestPeers.length - notRoutableCount) > 0
     }
@@ -411,9 +411,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     isJoinCompleted(): boolean {
-        // console.log(this.neighborList!.getActiveContacts().length, this.neighborList!.getUncontactedContacts(this.ALPHA).length)
-        return (this.neighborList!.getUncontactedContacts(this.ALPHA).length < 1
-            || this.noProgressCounter >= 4 ) //|| this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
+        return (this.neighborList!.getUncontactedContacts(this.PARALLELISM).length < 1
+            || this.noProgressCounter >= 4)
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
@@ -432,7 +431,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
 
         this.addNewContact(entryPointDescriptor)
-        const closest = this.bucket!.closest(this.ownPeerId!.value, this.ALPHA)
+        const closest = this.bucket!.closest(this.ownPeerId!.value, this.PARALLELISM)
         this.neighborList!.addContacts(closest)
 
         this.findMoreContacts()
@@ -441,8 +440,8 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private findMoreContacts(): void {
         if (this.ongoingJoinOperation) {
-            const uncontacted = this.neighborList!.getUncontactedContacts(this.ALPHA)
-            while (this.ongoingClosestPeersRequests.size < this.ALPHA && uncontacted.length > 0) {
+            const uncontacted = this.neighborList!.getUncontactedContacts(this.PARALLELISM)
+            while (this.ongoingClosestPeersRequests.size < this.PARALLELISM && uncontacted.length > 0) {
                 const nextPeer = uncontacted.shift()
                 this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toString())
                 this.getClosestPeersFromContact(nextPeer!)
@@ -468,9 +467,6 @@ export class DhtNode extends EventEmitter implements ITransport {
             const peerId = PeerID.fromValue(contact.peerId)
             if (!this.neighborList!.isContact(peerId)) {
                 this.neighborList!.addContact(dhtPeer)
-                //if (this.config.nodeName == '0') {
-                //    console.log('entrypoint added a contact')
-                //}
             }
             if (contact.openInternet && !this.openInternetPeers!.isContact(peerId)) {
                 this.openInternetPeers!.addContact(dhtPeer)
@@ -516,7 +512,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     public getK(): number {
-        return this.K
+        return this.numberOfNodesPerKBucket
     }
 
     public getKBucketPeers(): PeerDescriptor[] {
