@@ -37,7 +37,6 @@ type TimeoutsConfig = {
 }
 
 export type SubscribeConfig = {
-    verifySignatures: boolean
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
@@ -126,7 +125,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     maxGapRequests: 5,
 
     // Encryption options
-    verifySignatures: true,
     encryptionKeys: {},
 
     // Ethereum related options

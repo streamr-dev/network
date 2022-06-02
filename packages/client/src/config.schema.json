@@ -105,9 +105,6 @@
         "ethereumNetworks": {
             "type": "object"
         },
-        "verifySignatures": {
-            "type": "boolean"
-        },
         "orderMessages": {
             "type": "boolean"
         },

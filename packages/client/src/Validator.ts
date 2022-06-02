@@ -65,12 +65,6 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
-        const { options } = this
-
-        // Check special cases controlled by the verifySignatures policy
-        if (options.verifySignatures === false && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-            return // no validation required
-        }
 
         // In all other cases validate using the validator
         // will throw with appropriate validation failure
