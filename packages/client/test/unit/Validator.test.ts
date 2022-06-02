@@ -38,7 +38,7 @@ interface MessageOptions {
     partition?: number
     publisher?: string
     privateKey?: string
-    signature?: string | null
+    signature?: string
 }
 
 const createMockMessage = async ({
@@ -88,24 +88,6 @@ describe('Validator', () => {
             await expect(() => validate({
                 signature: 'invalid-signature'
             })).rejects.toThrow('Signature validation failed')
-        })
-
-        describe('missing signature', () => {
-
-            it('default config', async () => {
-                await expect(() => validate({
-                    signature: null
-                })).rejects.toThrow('Stream data is required to be signed')
-            })
-
-            it('verifySignatures: false', async () => {
-                await expect(() => validate({
-                    signature: null
-                }, {
-                    verifySignatures: false
-                }))
-            })
-
         })
 
         it('invalid publisher', async () => {
