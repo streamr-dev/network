@@ -58,7 +58,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private noProgressCounter = 0
     private readonly ALPHA = 3
-    private readonly K = 20
+    private readonly K = 40
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
@@ -413,7 +413,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     isJoinCompleted(): boolean {
         // console.log(this.neighborList!.getActiveContacts().length, this.neighborList!.getUncontactedContacts(this.ALPHA).length)
         return (this.neighborList!.getUncontactedContacts(this.ALPHA).length < 1
-            || this.noProgressCounter >= 4 ) //|| this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
+            || this.noProgressCounter >= 6 ) //|| this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {

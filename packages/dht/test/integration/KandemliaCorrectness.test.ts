@@ -53,9 +53,11 @@ describe('Kademlia correctness', () => {
 
     it('Can find correct neighbors', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
+        
         await Promise.allSettled(
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
+        
         /*
         nodes.forEach((node) => {
             expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
