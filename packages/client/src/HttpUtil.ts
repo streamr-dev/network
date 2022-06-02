@@ -1,11 +1,12 @@
-/**
- * Wrap fetch with default headers
- */
-
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
 import { getVersionString, counterId } from './utils'
+import { Readable } from 'stream'
+import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
+import split2 from 'split2'
+import { StreamMessage } from 'streamr-client-protocol'
+import { Lifecycle, scoped } from 'tsyringe'
 
 export enum ErrorCode {
     NOT_FOUND = 'NOT_FOUND',
@@ -23,6 +24,7 @@ export class AuthFetchError extends Error {
     code: ErrorCode
     errorCode: ErrorCode
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
@@ -40,12 +42,14 @@ export class AuthFetchError extends Error {
 }
 
 export class ValidationError extends AuthFetchError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.VALIDATION_ERROR)
     }
 }
 
 export class NotFoundError extends AuthFetchError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.NOT_FOUND)
     }
@@ -68,9 +72,52 @@ const parseErrorCode = (body: string) => {
     return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
-export async function authRequest(
+@scoped(Lifecycle.ContainerScoped)
+export class HttpUtil {
+    async fetchHttpStream(
+        url: string,
+        opts = {}, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
+        abortController = new AbortController()
+    ): Promise<Readable> {
+        const startTime = Date.now()
+        const response = await authRequest(url, {
+            signal: abortController.signal,
+            ...opts,
+        })
+        if (!response.body) {
+            throw new Error('No Response Body')
+        }
+
+        try {
+            // in the browser, response.body will be a web stream. Convert this into a node stream.
+            const source: Readable = WebStreamToNodeStream(response.body as unknown as (ReadableStream | Readable))
+
+            const stream = source.pipe(split2((message: string) => {
+                return StreamMessage.deserialize(message)
+            }))
+
+            stream.once('close', () => {
+                abortController.abort()
+            })
+
+            return Object.assign(stream, {
+                startTime,
+            })
+        } catch (err) {
+            abortController.abort()
+            throw err
+        }
+    }
+
+    createQueryString(query: Record<string, any>): string {
+        const withoutEmpty = Object.fromEntries(Object.entries(query).filter(([_k, v]) => v != null))
+        return new URLSearchParams(withoutEmpty).toString()
+    }
+}
+
+async function authRequest(
     url: string,
-    opts?: any,
+    opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     debug?: Debugger,
     fetchFn: typeof fetch = fetch
 ): Promise<Response> {
@@ -108,25 +155,4 @@ export async function authRequest(
     const errorCode = parseErrorCode(body)
     const ErrorClass = ERROR_TYPES.get(errorCode)!
     throw new ErrorClass(`Request ${debug.namespace} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
-}
-
-/** @internal */
-export async function authFetch<T extends object>(
-    url: string,
-    opts?: any,
-    debug?: Debugger,
-    fetchFn?: typeof fetch
-): Promise<T> {
-    const id = counterId('authFetch')
-    debug = debug || Debug('utils').extend(id) // eslint-disable-line no-param-reassign
-
-    const response = await authRequest(url, opts, debug, fetchFn)
-    // can only be ok response
-    const body = await response.text()
-    try {
-        return JSON.parse(body || '{}') as T
-    } catch (e) {
-        debug('%s – failed to parse body: %s', url, e.stack)
-        throw new AuthFetchError(e.message, response, body)
-    }
 }

@@ -5,6 +5,7 @@ export * from './StreamrClient'
 export * from './Stream'
 export * from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
+export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
@@ -19,7 +20,6 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StreamValidationInfo } from './StreamEndpoints'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
@@ -54,8 +54,7 @@ export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export { NotFoundError, ErrorCode } from './authFetch'
-export { SignalListener } from './utils/Signal'
+export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/index'
 

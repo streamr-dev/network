@@ -18,33 +18,37 @@ const MOCK_MESSAGE_ID = {
 
 describe('MQTT Bridge', () => {
 
+    let streamrClient: Partial<StreamrClient>
+    let subscription: Pick<Subscription, 'streamPartId'|'unsubscribe'>
+
+    beforeEach(() => {
+        subscription = {
+            streamPartId: toStreamPartID(toStreamID(MOCK_STREAM_ID), 0),
+            unsubscribe: jest.fn().mockResolvedValue(undefined)
+        }
+        streamrClient = {
+            publish: jest.fn().mockResolvedValue({
+                messageId: MOCK_MESSAGE_ID
+            }),
+            subscribe: jest.fn().mockResolvedValue(subscription),
+            unsubscribe: jest.fn().mockResolvedValue(undefined)
+        }
+    })
+
     describe.each([
         [MOCK_STREAM_ID_DOMAIN, MOCK_TOPIC],
         [undefined, MOCK_STREAM_ID]
     ])('streamIdDomain: %p', (streamIdDomain: string|undefined, topic: string) => {
 
         let bridge: Bridge
-        let streamrClient: Partial<StreamrClient>
-        let subscription: Pick<Subscription, 'streamPartId'|'unsubscribe'>
 
         beforeEach(() => {
-            subscription = {
-                streamPartId: toStreamPartID(toStreamID(MOCK_STREAM_ID), 0),
-                unsubscribe: jest.fn().mockResolvedValue(undefined)
-            }
-            streamrClient = {
-                publish: jest.fn().mockResolvedValue({
-                    messageId: MOCK_MESSAGE_ID
-                }),
-                subscribe: jest.fn().mockResolvedValue(subscription),
-                unsubscribe: jest.fn().mockResolvedValue(undefined)
-            }
             bridge = new Bridge(streamrClient as any, undefined as any, new PlainPayloadFormat(), streamIdDomain)
         })
 
         it('onMessageReceived', async () => {
-            await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT))
-            expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, undefined)
+            await bridge.onMessageReceived(topic, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            expect(streamrClient.publish).toBeCalledWith(MOCK_STREAM_ID, MOCK_CONTENT, { msgChainId: expect.any(String) })
         })
 
         it('onSubscribed', async () => {
@@ -58,5 +62,31 @@ describe('MQTT Bridge', () => {
             expect(subscription.unsubscribe).toBeCalled()
         })
     
+    })
+
+    describe('msgChain', () => {
+
+        let bridge: Bridge
+
+        beforeEach(() => {
+            bridge = new Bridge(streamrClient as any, undefined as any, new PlainPayloadFormat(), undefined)
+        })
+
+        it('constant between publish calls', async () => {
+            await bridge.onMessageReceived(MOCK_TOPIC, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            await bridge.onMessageReceived(MOCK_TOPIC, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            const firstMessageMsgChainId = (streamrClient.publish as any).mock.calls[0][2].msgChainId
+            const secondMessageMsgChainId = (streamrClient.publish as any).mock.calls[1][2].msgChainId
+            expect(firstMessageMsgChainId).toBe(secondMessageMsgChainId)
+        })
+    
+        it('different for each connection', async () => {
+            await bridge.onMessageReceived(MOCK_TOPIC, JSON.stringify(MOCK_CONTENT), MOCK_CLIENT_ID)
+            await bridge.onMessageReceived(MOCK_TOPIC, JSON.stringify(MOCK_CONTENT), 'other-client-id')
+            const firstMessageMsgChainId = (streamrClient.publish as any).mock.calls[0][2].msgChainId
+            const secondMessageMsgChainId = (streamrClient.publish as any).mock.calls[1][2].msgChainId
+            expect(firstMessageMsgChainId).not.toBe(secondMessageMsgChainId)
+        })
+
     })
 })

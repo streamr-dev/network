@@ -148,7 +148,7 @@ describe('Subscriber', () => {
                 })
 
                 const onErrorHandler = jest.fn()
-                sub.onError(onErrorHandler)
+                sub.onError.listen(onErrorHandler)
 
                 const received: unknown[] = []
                 for await (const msg of sub) {
@@ -193,7 +193,7 @@ describe('Subscriber', () => {
                 })
 
                 const onErrorHandler = jest.fn()
-                sub.onError(onErrorHandler)
+                sub.onError.listen(onErrorHandler)
 
                 const received: any[] = []
                 for await (const m of v) {
@@ -225,7 +225,7 @@ describe('Subscriber', () => {
                 })
 
                 const onErrorHandler = jest.fn()
-                sub1.onError(onErrorHandler)
+                sub1.onError.listen(onErrorHandler)
 
                 await sub1.collectContent(NUM_MESSAGES)
                 const received = await sub2.collectContent(NUM_MESSAGES)
@@ -239,7 +239,7 @@ describe('Subscriber', () => {
                 const sub1 = await M.subscribe(streamDefinition)
 
                 const onError1 = jest.fn()
-                sub1.onError(onError1)
+                sub1.onError.listen(onError1)
 
                 let count = 0
                 const published = await publishTestMessages(NUM_MESSAGES, {
@@ -275,7 +275,7 @@ describe('Subscriber', () => {
                 })
 
                 const onError1 = jest.fn()
-                sub1.onError(onError1)
+                sub1.onError.listen(onError1)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -301,9 +301,9 @@ describe('Subscriber', () => {
                 const sub2 = await M.subscribe(streamDefinition)
 
                 const onError1 = jest.fn()
-                sub1.onError(onError1)
+                sub1.onError.listen(onError1)
                 const onError2 = jest.fn()
-                sub2.onError(onError2)
+                sub2.onError.listen(onError2)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -377,7 +377,7 @@ describe('Subscriber', () => {
                 const onSubscriptionError = jest.fn((error: Error) => {
                     sub.debug('onSubscriptionError', error)
                 })
-                sub.onError(onSubscriptionError)
+                sub.onError.listen(onSubscriptionError)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -423,7 +423,7 @@ describe('Subscriber', () => {
                     throw error
                 })
 
-                sub.onError(onSubscriptionError)
+                sub.onError.listen(onSubscriptionError)
 
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
@@ -508,12 +508,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 })
             ])
@@ -534,12 +534,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 })
             ])
@@ -736,7 +736,7 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === published.length) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received }) => {
@@ -756,12 +756,12 @@ describe('Subscriber', () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {
                     if (received.length === MAX_ITEMS - 1) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
                 collect(sub2, async ({ received, iterator }) => {
                     if (received.length === MAX_ITEMS) {
-                        await iterator.return()
+                        await iterator.return(undefined)
                     }
                 }),
             ])

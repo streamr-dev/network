@@ -31,7 +31,6 @@ module.exports = {
                 blankLine: 'always', prev: 'if', next: 'if'
             }
         ],
-        'prefer-destructuring': 'warn',
         'object-curly-newline': 'off',
         'no-continue': 'off',
         'max-classes-per-file': 'off', // javascript is not java

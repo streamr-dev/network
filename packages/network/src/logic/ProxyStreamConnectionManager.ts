@@ -12,12 +12,15 @@ import {
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { Logger } from '../helpers/logger/LoggerNode'
+import { Propagation } from './propagation/Propagation'
+
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
     trackerManager: TrackerManager,
     streamPartManager: StreamPartManager,
     nodeToNode: NodeToNode,
+    propagation: Propagation,
     node: Node,
     nodeConnectTimeout: number,
     acceptProxyConnections: boolean
@@ -45,6 +48,7 @@ export class ProxyStreamConnectionManager {
     private readonly nodeConnectTimeout: number
     private readonly acceptProxyConnections: boolean
     private readonly connections: Map<StreamPartID, Map<NodeId, ProxyConnection>>
+    private readonly propagation: Propagation
 
     constructor(opts: ProxyStreamConnectionManagerOptions) {
         this.trackerManager = opts.trackerManager
@@ -53,6 +57,7 @@ export class ProxyStreamConnectionManager {
         this.node = opts.node
         this.nodeConnectTimeout = opts.nodeConnectTimeout
         this.acceptProxyConnections = opts.acceptProxyConnections
+        this.propagation = opts.propagation
         this.connections = new Map()
     }
 
@@ -175,6 +180,7 @@ export class ProxyStreamConnectionManager {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
             }
         }
         await this.nodeToNode.respondToProxyConnectionRequest(nodeId, streamPartId, message.direction, isAccepted)
@@ -186,6 +192,7 @@ export class ProxyStreamConnectionManager {
             this.getConnection(nodeId, streamPartId)!.state = State.ACCEPTED
             if (message.direction === ProxyDirection.PUBLISH) {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.propagation.onNeighborJoined(nodeId, streamPartId)
             } else {
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
             }
@@ -204,7 +211,11 @@ export class ProxyStreamConnectionManager {
     }
 
     async reconnect(targetNodeId: NodeId, streamPartId: StreamPartID): Promise<void> {
-        const connection = this.getConnection(targetNodeId, streamPartId)!
+        const connection = this.getConnection(targetNodeId, streamPartId)
+        if (!connection) {
+            logger.trace(`Cannot reconnect to a non-existing proxy connection on ${targetNodeId} ${streamPartId}`)
+            return
+        }
         if (connection.state !== State.RENEGOTIATING) {
             connection.state = State.RENEGOTIATING
         }

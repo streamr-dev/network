@@ -7,7 +7,7 @@ import {
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
-import { AverageMetric, Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
+import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
@@ -56,7 +56,6 @@ export interface NodeOptions extends TrackerManagerOptions {
 interface Metrics extends MetricsDefinition {
     publishMessagesPerSecond: Metric
     publishBytesPerSecond: Metric
-    latencyAverageMs: Metric
 }
 
 export interface Node {
@@ -111,7 +110,6 @@ export class Node extends EventEmitter {
         this.metrics = {
             publishMessagesPerSecond: new RateMetric(),
             publishBytesPerSecond: new RateMetric(),
-            latencyAverageMs: new AverageMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
         if (opts.signers !== undefined) {
@@ -167,6 +165,7 @@ export class Node extends EventEmitter {
                         this.onNodeDisconnected(neighborId) // force disconnect
                         this.consecutiveDeliveryFailures[neighborId] = 0
                     }
+                    throw e
                 }
             },
             minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
@@ -194,6 +193,7 @@ export class Node extends EventEmitter {
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
             trackerManager: this.trackerManager,
             streamPartManager: this.streamPartManager,
+            propagation: this.propagation,
             node: this,
             nodeToNode: this.nodeToNode,
             acceptProxyConnections: this.acceptProxyConnections,
@@ -212,11 +212,6 @@ export class Node extends EventEmitter {
 
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
-        })
-        this.on(Event.UNSEEN_MESSAGE_RECEIVED, (message) => {
-            const now = new Date().getTime()
-            const currentLatency = now - message.messageId.timestamp
-            this.metrics.latencyAverageMs.record(currentLatency)
         })
     }
 

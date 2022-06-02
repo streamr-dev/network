@@ -1,7 +1,8 @@
 import { Wallet } from 'ethers'
 
-import { createTestStream, until, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
-import { NotFoundError } from '../../src/authFetch'
+import { createTestStream, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { until } from '../../src/utils'
+import { NotFoundError } from '../../src/HttpUtil'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
@@ -47,7 +48,7 @@ describe('StreamRegistry', () => {
         })
 
         it('valid id', async () => {
-            const newId = `${wallet.address.toLowerCase()}/StreamEndpoints-createStream-newId-${Date.now()}`
+            const newId = `${wallet.address.toLowerCase()}/StreamRegistry-createStream-newId-${Date.now()}`
             const newStream = await client.createStream({
                 id: newId,
             })
@@ -56,7 +57,7 @@ describe('StreamRegistry', () => {
         })
 
         it('valid path', async () => {
-            const newPath = `/StreamEndpoints-createStream-newPath-${Date.now()}`
+            const newPath = `/StreamRegistry-createStream-newPath-${Date.now()}`
             const expectedId = `${wallet.address.toLowerCase()}${newPath}`
             const newStream = await client.createStream({
                 id: newPath,
@@ -115,7 +116,7 @@ describe('StreamRegistry', () => {
         })
 
         it('get a non-existing Stream', async () => {
-            const streamId = `${wallet.address.toLowerCase()}/StreamEndpoints-nonexisting-${Date.now()}`
+            const streamId = `${wallet.address.toLowerCase()}/StreamRegistry-nonexisting-${Date.now()}`
             return expect(() => client.getStream(streamId)).rejects.toThrow(NotFoundError)
         })
     })
@@ -129,7 +130,7 @@ describe('StreamRegistry', () => {
         })
 
         it('new Stream by id', async () => {
-            const newId = `${wallet.address.toLowerCase()}/StreamEndpoints-getOrCreate-newId-${Date.now()}`
+            const newId = `${wallet.address.toLowerCase()}/StreamRegistry-getOrCreate-newId-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
@@ -137,7 +138,7 @@ describe('StreamRegistry', () => {
         })
 
         it('new Stream by path', async () => {
-            const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
+            const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 id: newPath,
             })
@@ -153,7 +154,7 @@ describe('StreamRegistry', () => {
         it('fails if stream prefixed with other users address', async () => {
             // can't create streams for other users
             const otherAddress = randomEthereumAddress()
-            const newPath = `/StreamEndpoints-getOrCreate-newPath-${Date.now()}`
+            const newPath = `/StreamRegistry-getOrCreate-newPath-${Date.now()}`
             // backend should error
             await expect(async () => {
                 await client.getOrCreateStream({
@@ -240,7 +241,6 @@ describe('StreamRegistry', () => {
                     return err.errorCode === 'NOT_FOUND'
                 }
             }, 100000, 1000)
-            expect(await client.streamExistsOnChain(stream.id)).toEqual(false)
             return expect(client.getStream(stream.id)).rejects.toThrow()
         })
     })

@@ -89,7 +89,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
     }
 
-    async init() {
+    async init(): Promise<void> {
         this.initCalled = true
         try {
             await fs.mkdir(dirname(this.dbFilePath), { recursive: true })
@@ -133,7 +133,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.debug('init')
     }
 
-    async get(key: string) {
+    async get(key: string): Promise<string | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }
@@ -144,7 +144,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return value?.groupKey
     }
 
-    async has(key: string) {
+    async has(key: string): Promise<boolean> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return false }
@@ -155,7 +155,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
     }
 
-    private async setKeyValue(key: string, value: string) {
+    private async setKeyValue(key: string, value: string): Promise<boolean> {
         // set, but without init so init can insert initialData
         const result = await this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
             $id: key,
@@ -166,12 +166,12 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return !!result?.changes
     }
 
-    async set(key: string, value: string) {
+    async set(key: string, value: string): Promise<boolean> {
         await this.init()
         return this.setKeyValue(key, value)
     }
 
-    async delete(key: string) {
+    async delete(key: string): Promise<boolean> {
         if (!this.initCalled) {
             // can't delete if if db doesn't exist
             if (!(await this.exists())) { return false }
@@ -182,7 +182,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return !!result?.changes
     }
 
-    async clear() {
+    async clear(): Promise<boolean> {
         this.debug('clear')
         if (!this.initCalled) {
             // nothing to clear if doesn't exist
@@ -194,7 +194,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return !!result?.changes
     }
 
-    async size() {
+    async size(): Promise<number> {
         if (!this.initCalled) {
             // can only have size 0 if doesn't exist
             if (!(await this.exists())) { return 0 }
@@ -205,7 +205,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         return size && size['COUNT(*)']
     }
 
-    async close() {
+    async close(): Promise<void> {
         this.debug('close')
         if (!this.initCalled) {
             // nothing to close if never opened
@@ -216,7 +216,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         await this.store!.close()
     }
 
-    async destroy() {
+    async destroy(): Promise<void> {
         this.debug('destroy')
         if (!this.initCalled) {
             // nothing to destroy if doesn't exist
@@ -228,7 +228,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.init = pOnce(Object.getPrototypeOf(this).init.bind(this))
     }
 
-    get [Symbol.toStringTag]() {
+    get [Symbol.toStringTag](): string {
         return this.constructor.name
     }
 }

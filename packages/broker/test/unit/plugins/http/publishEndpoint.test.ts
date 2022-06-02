@@ -1,6 +1,6 @@
 import express from 'express'
 import request from 'supertest'
-import { createEndpoint } from '../../../../src/plugins/publishHttp/publishEndpoint'
+import { createEndpoint } from '../../../../src/plugins/http/publishEndpoint'
 
 const MOCK_STREAM_ID = 'mock-stream-id'
 
@@ -46,7 +46,11 @@ describe('PublishEndpoint', () => {
             streamPartition: expectedPartition
         }, {
             foo: 'bar'
-        }, expectedTimestamp, expectedPartitionKey)
+        }, {
+            timestamp: expectedTimestamp,
+            partitionKey: expectedPartitionKey,
+            msgChainId: expect.any(String)
+        })
     }
 
     beforeEach(() => {
@@ -85,6 +89,20 @@ describe('PublishEndpoint', () => {
             queryParams: { partitionKey: 'mock-key' },
             expectedPartitionKey: 'mock-key'
         })
+    })
+
+    it('msgChainId constant between publish calls', async () => {
+        await postMessage({
+            foo: 1
+        }, {})
+        await postMessage({
+            foo: 2
+        }, {})
+        expect(streamrClient.publish).toBeCalledTimes(2)
+        const firstMessageMsgChainId = (streamrClient.publish as any).mock.calls[0][2].msgChainId
+        const secondMessageMsgChainId = (streamrClient.publish as any).mock.calls[1][2].msgChainId
+        expect(firstMessageMsgChainId).toBeDefined()
+        expect(firstMessageMsgChainId).toBe(secondMessageMsgChainId)
     })
 
     it('empty', async () => {

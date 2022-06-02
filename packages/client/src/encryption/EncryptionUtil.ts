@@ -7,7 +7,7 @@ import { GroupKey } from './GroupKey'
 
 const { webcrypto } = crypto
 
-function getSubtle() {
+function getSubtle(): any {
     // @ts-expect-error webcrypto.subtle does not currently exist in node types
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
     if (!subtle) {
@@ -29,13 +29,13 @@ export class UnableToDecryptError extends StreamMessageProcessingError {
     }
 }
 
-function ab2str(...args: any[]) {
-    // @ts-ignore
-    return String.fromCharCode.apply(null, new Uint8Array(...args))
+function ab2str(...args: any[]): string {
+    // @ts-expect-error Uint8Array parameters
+    return String.fromCharCode.apply(null, new Uint8Array(...args) as unknown as number[])
 }
 
 // shim browser btoa for node
-function btoa(str: string | Uint8Array) {
+function btoa(str: string | Uint8Array): string {
     if (global.btoa) { return global.btoa(str as string) }
     let buffer
 
@@ -48,7 +48,7 @@ function btoa(str: string | Uint8Array) {
     return buffer.toString('base64')
 }
 
-async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}) {
+async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Promise<string> {
     const keyType = isPrivate ? 'pkcs8' : 'spki'
     const exported = await getSubtle().exportKey(keyType, key)
     const exportedAsString = ab2str(exported)
@@ -60,7 +60,7 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}) {
 // put all static functions into EncryptionUtilBase, with exception of create,
 // so it's clearer what the static & instance APIs look like
 class EncryptionUtilBase {
-    static validatePublicKey(publicKey: crypto.KeyLike) {
+    static validatePublicKey(publicKey: crypto.KeyLike): void|never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
@@ -100,7 +100,7 @@ class EncryptionUtilBase {
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decrypt(ciphertext: string, groupKey: GroupKey) {
+    static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
         GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
@@ -111,7 +111,7 @@ class EncryptionUtilBase {
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
 
-    static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey) {
+    static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
         GroupKey.validate(groupKey)
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
@@ -119,7 +119,7 @@ class EncryptionUtilBase {
 
         if (nextGroupKey) {
             GroupKey.validate(nextGroupKey)
-            // @ts-expect-error
+            // @ts-expect-error expecting EncryptedGroupKey
             streamMessage.newGroupKey = nextGroupKey
         }
 
@@ -132,16 +132,9 @@ class EncryptionUtilBase {
         /* eslint-enable no-param-reassign */
     }
 
-    /*
-     * Decrypts the serialized content of 'streamMessage' with 'groupKey'. If the resulting plaintext is the concatenation
-     * of a new group key and a message content, sets the content of 'streamMessage' with that message content and returns
-     * the key. If the resulting plaintext is only a message content, sets the content of 'streamMessage' with that
-     * message content and returns null.
-     */
-
-    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey) {
+    static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
-            return null
+            return
         }
 
         try {
@@ -165,7 +158,7 @@ class EncryptionUtilBase {
             const { newGroupKey } = streamMessage
             if (newGroupKey) {
                 // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
-                // @ts-expect-error
+                // @ts-expect-error expecting EncryptedGroupKey
                 streamMessage.newGroupKey = GroupKey.from([
                     newGroupKey.groupKeyId,
                     this.decrypt(newGroupKey.encryptedGroupKeyHex, groupKey)
@@ -175,7 +168,6 @@ class EncryptionUtilBase {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
         }
-        return null
         /* eslint-enable no-param-reassign */
     }
 }
@@ -192,7 +184,7 @@ export class EncryptionUtil extends EncryptionUtilBase {
      * Convenience.
      */
 
-    static async create() {
+    static async create(): Promise<EncryptionUtil> {
         const encryptionUtil = new EncryptionUtil()
         await encryptionUtil.onReady()
         return encryptionUtil
@@ -202,7 +194,7 @@ export class EncryptionUtil extends EncryptionUtilBase {
     publicKey: string | undefined
     private _generateKeyPairPromise: Promise<void> | undefined
 
-    async onReady() {
+    async onReady(): Promise<void> {
         if (this.isReady()) { return undefined }
         return this._generateKeyPair()
     }
@@ -212,31 +204,31 @@ export class EncryptionUtil extends EncryptionUtilBase {
     }
 
     // Returns a Buffer
-    decryptWithPrivateKey(ciphertext: string | Uint8Array, isHexString = false) {
+    decryptWithPrivateKey(ciphertext: string | Uint8Array, isHexString = false): Buffer {
         if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
         const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
         return crypto.privateDecrypt(this.privateKey, ciphertextBuffer)
     }
 
     // Returns a String (base64 encoding)
-    getPublicKey() {
+    getPublicKey(): string {
         if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
         return this.publicKey
     }
 
-    async _generateKeyPair() {
+    async _generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
             this._generateKeyPairPromise = this.__generateKeyPair()
         }
         return this._generateKeyPairPromise
     }
 
-    async __generateKeyPair() {
+    async __generateKeyPair(): Promise<void> {
         if (typeof window !== 'undefined') { return this._keyPairBrowser() }
         return this._keyPairServer()
     }
 
-    async _keyPairServer() {
+    async _keyPairServer(): Promise<void> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -255,7 +247,7 @@ export class EncryptionUtil extends EncryptionUtilBase {
         this.publicKey = publicKey
     }
 
-    async _keyPairBrowser() {
+    async _keyPairBrowser(): Promise<void> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,

@@ -114,9 +114,6 @@
         "maxGapRequests": {
             "type": "number"
         },
-        "maxRetries": {
-            "type": "number"
-        },
         "verifySignatures": {
             "type": "string",
             "enum": [
@@ -278,7 +275,7 @@
                             "type": "array",
                             "items": {
                                 "type": "object",
-                                 "required": [
+                                "required": [
                                     "streamId",
                                     "duration"
                                 ],

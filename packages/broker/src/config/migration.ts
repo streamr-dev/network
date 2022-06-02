@@ -148,6 +148,10 @@ const convertV1ToV2 = (source: any): Config => {
     if (target.client?.network?.name !== undefined) {
         delete target.client.network.name 
     }
+    if (source.plugins.publishHttp !== undefined) {
+        target.plugins.http = source.plugins.publishHttp
+        delete target.plugins.publishHttp
+    }
     return target as Config
 }
 

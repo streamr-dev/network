@@ -22,8 +22,8 @@
         "packages/eslint-config-monorepo",
         "packages/test-utils",
         "packages/protocol",
-        "packages/network-tracker",
         "packages/network",
+        "packages/network-tracker",
         "packages/client",
         "packages/broker",
         "packages/cli-tools"

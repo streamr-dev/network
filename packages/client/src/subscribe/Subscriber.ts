@@ -6,7 +6,7 @@ import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamID, StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { StreamDefinition } from '../types'
 import { MessageStream, pullManyToOne } from './MessageStream'
 import { range } from 'lodash'
@@ -25,7 +25,7 @@ export class Subscriber implements Context {
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(delay(() => StreamEndpointsCached))private streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -39,11 +39,8 @@ export class Subscriber implements Context {
         return this.subscribeTo(streamPartId, onMessage)
     }
 
-    /**
-     * Subscribe to all partitions for stream.
-     */
     async subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        const { partitions } = await this.streamRegistryCached.getStream(streamId)
         if (partitions === 1) {
             // nothing interesting to do, treat as regular subscription
             return this.subscribe<T>(streamId, onMessage)
@@ -68,21 +65,19 @@ export class Subscriber implements Context {
         return sub
     }
 
-    /** @internal */
-    getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID) {
+    getOrCreateSubscriptionSession<T>(streamPartId: StreamPartID): SubscriptionSession<T> {
         if (this.subSessions.has(streamPartId)) {
             return this.getSubscriptionSession<T>(streamPartId)!
         }
         this.debug('creating new SubscriptionSession: %s', streamPartId)
         const subSession = new SubscriptionSession<T>(this, streamPartId, this.container)
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
-        subSession.onRetired(() => {
+        subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)
         })
         return subSession
     }
 
-    /** @internal */
     async addSubscription<T>(sub: Subscription<T>): Promise<Subscription<T>> {
         const subSession = this.getOrCreateSubscriptionSession<T>(sub.streamPartId)
 
@@ -117,9 +112,6 @@ export class Subscriber implements Context {
         await subSession.remove(sub)
     }
 
-    /**
-     * @category Important
-     */
     async unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
         if (streamDefinitionOrSubscription instanceof Subscription) {
             return this.remove(streamDefinitionOrSubscription)
@@ -141,9 +133,8 @@ export class Subscriber implements Context {
 
     /**
      * Count all subscriptions.
-    * @internal
      */
-    countAll() {
+    countAll(): number {
         let count = 0
         this.subSessions.forEach((s) => {
             count += s.count()
@@ -153,7 +144,6 @@ export class Subscriber implements Context {
 
     /**
      * Count all matching subscriptions.
-     * @internal
      */
     // TODO rename this to something more specific?
     async count(streamDefinition?: StreamDefinition): Promise<number> {
@@ -173,7 +163,6 @@ export class Subscriber implements Context {
 
     /**
      * Get subscription session for matching sub options.
-     * @internal
      */
     getSubscriptionSession<T = unknown>(streamPartId: StreamPartID): SubscriptionSession<T> | undefined {
         const subSession = this.subSessions.get(streamPartId)
@@ -184,15 +173,10 @@ export class Subscriber implements Context {
         return subSession as SubscriptionSession<T>
     }
 
-    /** @internal */
-    countSubscriptionSessions() {
+    countSubscriptionSessions(): number {
         return this.subSessions.size
     }
 
-    /**
-     * Get subscriptions matching streamId or streamId + streamPartition
-     * @category Important
-     */
     async getSubscriptions(streamDefinition?: StreamDefinition): Promise<Subscription<unknown>[]> {
         if (!streamDefinition) {
             return this.getAllSubscriptions()
@@ -211,8 +195,7 @@ export class Subscriber implements Context {
         ]))
     }
 
-    /** @internal */
-    async stop() {
+    async stop(): Promise<void> {
         await this.removeAll()
     }
 }

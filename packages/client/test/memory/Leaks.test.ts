@@ -28,7 +28,6 @@ describeRepeats('Leaks', () => {
                 auth: {
                     privateKey: fakePrivateKey(),
                 },
-                maxRetries: 2,
                 ...opts,
             })
             return c

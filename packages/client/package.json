@@ -90,7 +90,7 @@
         "benchmark": "^2.1.4",
         "buffer": "^6.0.3",
         "bytes": "^3.1.1",
-        "chromedriver": "^100.0.0",
+        "chromedriver": "^101.0.0",
         "concurrently": "^6.4.0",
         "cors": "^2.8.5",
         "crypto-browserify": "^3.12.0",
