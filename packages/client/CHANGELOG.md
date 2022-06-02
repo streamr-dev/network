@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed all DataUnion code. New DataUnion client will be released under https://github.com/dataunions/data-unions
 - Remove method `getAllStorageNodes()`, use `getStorageNodes()` without arguments instead
-- Remove (non-functional) client configuration options `autoConnect` and `autoDisconnect`
+- Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect` and `maxRetries`
 - Remove method `disconnect()`, use `destroy()` instead
 - Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead
 - Remove client configuration option `client.network.name`

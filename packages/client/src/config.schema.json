@@ -114,9 +114,6 @@
         "maxGapRequests": {
             "type": "number"
         },
-        "maxRetries": {
-            "type": "number"
-        },
         "verifySignatures": {
             "type": "boolean"
         },

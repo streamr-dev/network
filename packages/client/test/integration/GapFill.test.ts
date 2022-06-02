@@ -43,7 +43,6 @@ describe('GapFill', () => {
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = clientFactory.createClient({
-            maxRetries: 2,
             maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,

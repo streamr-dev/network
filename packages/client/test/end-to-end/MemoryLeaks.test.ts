@@ -64,7 +64,6 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    maxRetries: 2,
                     ...opts,
                 })
                 const { childContainer, rootContext } = initContainer(config)
@@ -124,7 +123,6 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    maxRetries: 2,
                     ...opts,
                 })
                 return c

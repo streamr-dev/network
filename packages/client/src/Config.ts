@@ -41,7 +41,6 @@ export type SubscribeConfig = {
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
-    maxRetries: number
     verifySignatures: boolean
     retryResendAfter: number
     gapFillTimeout: number
@@ -125,7 +124,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFillTimeout: 5000,
     gapFill: true,
     maxGapRequests: 5,
-    maxRetries: 5,
 
     // Encryption options
     verifySignatures: true,
