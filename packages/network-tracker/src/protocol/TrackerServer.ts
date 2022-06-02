@@ -65,10 +65,10 @@ export class TrackerServer extends EventEmitter {
         }))
     }
 
-    async sendUnknownPeerRtcError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
+    async sendUnknownPeerError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.ErrorMessage({
             requestId,
-            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             targetNode
         }))
     }

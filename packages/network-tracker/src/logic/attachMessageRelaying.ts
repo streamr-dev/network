@@ -12,9 +12,9 @@ export function attachMessageRelaying(trackerServer: TrackerServer): void {
             await trackerServer.send(relayMessage.targetNode, relayMessage)
         } catch (err) {
             if (err.code === UnknownPeerError.CODE) {
-                trackerServer.sendUnknownPeerRtcError(originator.peerId, requestId, targetNode)
+                trackerServer.sendUnknownPeerError(originator.peerId, requestId, targetNode)
                     .catch((e) => {
-                        logger.error('failed to sendUnknownPeerRtcError, reason: %s', e)
+                        logger.error('failed to sendUnknownPeerError, reason: %s', e)
                     })
             } else {
                 logger.warn('failed to relay message %s to %s, reason: %s', subType, targetNode, err)

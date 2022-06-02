@@ -159,7 +159,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
         const requestId = await requestIdPromise
         expect(rtcErrors[0]).toEqual(new ErrorMessage({
             requestId: requestId!,
-            errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+            errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             targetNode: 'nonExistingNode'
         }))
     })

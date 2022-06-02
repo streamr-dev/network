@@ -142,14 +142,14 @@ describe('RtcSignaller', () => {
             new ErrorMessage({
                 requestId: '',
                 targetNode: 'unknownTargetNode',
-                errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+                errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             }),
             'router'
         )
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
             targetNode: 'unknownTargetNode',
-            errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER
+            errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER
         })
     })
 })
