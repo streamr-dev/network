@@ -58,7 +58,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     private noProgressCounter = 0
     private readonly PARALLELISM = 3
     private readonly MAX_NEIGHBOR_LIST_SIZE = 100
-    private readonly NUMBER_OF_NODES_PER_K_BUCKET = 8
+    private readonly NUMBER_OF_NODES_PER_K_BUCKET = 1
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector

@@ -14,7 +14,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { generateId } from '../src/helpers/common'
 import { Simulator } from '../src/connection/Simulator'
 
-export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator, binaryId?: Uint8Array): Promise<DhtNode> => {
+export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator, binaryId?: Uint8Array, K?: number): Promise<DhtNode> => {
     let id: PeerID
     if (binaryId) {
         id = PeerID.fromValue(binaryId)
@@ -30,7 +30,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
     const mockConnectionLayer = new MockConnectionManager(peerDescriptor, simulator)
 
     const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer, 
-        nodeName: stringId })
+        nodeName: stringId, numberOfNodesPerKBucket: K })
     await node.start()
     simulator.addNode(node)
     return node
