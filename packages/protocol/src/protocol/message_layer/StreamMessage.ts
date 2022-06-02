@@ -29,7 +29,6 @@ export enum ContentType {
 
 export enum SignatureType {
     NONE = 0,
-    ETH_LEGACY = 1,
     ETH = 2
 }
 
@@ -87,7 +86,7 @@ export type StreamMessageUnsigned<T> = StreamMessage<T> & {
  * Signed StreamMessage.
  */
 export type StreamMessageSigned<T> = StreamMessage<T> & {
-    signatureType: SignatureType.ETH | SignatureType.ETH_LEGACY
+    signatureType: SignatureType.ETH
     signature: string
 }
 
@@ -330,12 +329,7 @@ export default class StreamMessage<T = unknown> {
             return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
                 + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
         }
-
-        if (signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY) {
-            // verification of messages signed by old clients
-            return `${this.getStreamId()}${this.getTimestamp()}${this.getPublisherId().toLowerCase()}${this.getSerializedContent()}`
-        }
-
+        
         throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
     }
 

@@ -116,8 +116,7 @@ export default class StreamMessageValidator {
     ): Promise<void> {
         const payload = streamMessage.getPayloadToSign()
 
-        if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY
-            || streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
+        if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
             let success
             try {
                 success = verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature!)
