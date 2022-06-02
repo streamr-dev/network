@@ -4,8 +4,7 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     TrackerLayer,
-    TrackerMessageType,
-    RelayMessageSubType
+    TrackerMessageType
 } from 'streamr-client-protocol'
 import {
     Logger,
@@ -63,79 +62,6 @@ export class TrackerServer extends EventEmitter {
             streamPartition,
             nodeIds,
             counter
-        }))
-    }
-
-    async sendRtcOffer(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RelayMessageSubType.RTC_OFFER,
-            data: {
-                connectionId,
-                description
-            }
-        }))
-    }
-
-    async sendRtcAnswer(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RelayMessageSubType.RTC_ANSWER,
-            data: {
-                connectionId,
-                description
-            }
-        }))
-    }
-
-    async sendRtcConnect(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RelayMessageSubType.RTC_CONNECT,
-            data: {}
-        }))
-    }
-
-    async sendRtcIceCandidate(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        candidate: string,
-        mid: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RelayMessageSubType.ICE_CANDIDATE,
-            data: {
-                connectionId,
-                candidate,
-                mid
-            }
         }))
     }
 
