@@ -37,11 +37,11 @@ type TimeoutsConfig = {
 }
 
 export type SubscribeConfig = {
+    verifySignatures: boolean
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
-    verifySignatures: boolean
     retryResendAfter: number
     gapFillTimeout: number
 }
