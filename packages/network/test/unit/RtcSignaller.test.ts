@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
@@ -45,7 +45,7 @@ describe('RtcSignaller', () => {
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
-                subType: 'rtcConnect',
+                subType: RelayMessageSubType.RTC_CONNECT,
                 data: {}
             }),
             'router'
@@ -66,8 +66,9 @@ describe('RtcSignaller', () => {
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
-                subType: 'rtcOffer',
+                subType: RelayMessageSubType.RTC_OFFER,
                 data: {
+                    connectionId: 'connectionId',
                     description: 'description'
                 }
             }),
@@ -76,6 +77,7 @@ describe('RtcSignaller', () => {
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
             originatorInfo: PeerInfo.newNode('originator'),
+            connectionId: 'connectionId',
             description: 'description',
         })
     })
@@ -89,8 +91,9 @@ describe('RtcSignaller', () => {
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
-                subType: 'rtcAnswer',
+                subType: RelayMessageSubType.RTC_ANSWER,
                 data: {
+                    connectionId: 'connectionId',
                     description: 'description'
                 }
             }),
@@ -99,6 +102,7 @@ describe('RtcSignaller', () => {
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
             originatorInfo: PeerInfo.newNode('originator'),
+            connectionId: 'connectionId',
             description: 'description'
         })
     })
@@ -112,8 +116,9 @@ describe('RtcSignaller', () => {
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
                 targetNode: 'node',
-                subType: 'iceCandidate',
+                subType: RelayMessageSubType.ICE_CANDIDATE,
                 data: {
+                    connectionId: 'connectionId',
                     candidate: 'candidate',
                     mid: 'mid'
                 }
@@ -123,6 +128,7 @@ describe('RtcSignaller', () => {
         expect(cbFn).toHaveBeenCalledWith({
             routerId: 'router',
             originatorInfo: PeerInfo.newNode('originator'),
+            connectionId: 'connectionId',
             candidate: 'candidate',
             mid: 'mid'
         })

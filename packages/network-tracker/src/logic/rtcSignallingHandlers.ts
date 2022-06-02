@@ -1,14 +1,15 @@
 import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
 import {
-    RtcIceCandidateMessage,
-    RtcOfferMessage,
-    RtcAnswerMessage,
-    RelayMessage,
-    RtcConnectMessage,
-    RtcSubTypes,
     UnknownPeerError,
     Logger
 } from 'streamr-network'
+import {
+    RelayMessage,
+    RtcOfferMessage,
+    RtcAnswerMessage,
+    RtcConnectMessage,
+    RtcIceCandidateMessage
+} from 'streamr-client-protocol'
 
 export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {
@@ -73,13 +74,13 @@ export function attachRtcSignalling(trackerServer: TrackerServer): void {
         } = relayMessage
         // TODO: validate that source === originator
         try {
-            if (relayMessage.subType === RtcSubTypes.RTC_OFFER) {
+            if (relayMessage.isRtcOfferMessage()) {
                 await handleRtcOffer(relayMessage)
-            } else if (relayMessage.subType === RtcSubTypes.RTC_ANSWER) {
+            } else if (relayMessage.isRtcAnswerMessage()) {
                 await handleRtcAnswer(relayMessage)
-            } else if (relayMessage.subType === RtcSubTypes.ICE_CANDIDATE) {
+            } else if (relayMessage.isIceCandidateMessage()) {
                 await handleIceCandidate(relayMessage)
-            } else if (relayMessage.subType === RtcSubTypes.RTC_CONNECT) {
+            } else if (relayMessage.isRtcConnectMessage()) {
                 await handleRtcConnect(relayMessage)
             } else {
                 logger.warn('unrecognized RelayMessage subType %s with contents %o', subType, relayMessage)

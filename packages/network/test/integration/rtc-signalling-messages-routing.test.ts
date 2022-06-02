@@ -1,11 +1,10 @@
 import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { RtcSubTypes } from '../../src/identifiers'
 
 const { RelayMessage, ErrorMessage } = TrackerLayer
 
@@ -71,7 +70,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
-            subType: RtcSubTypes.RTC_OFFER,
+            subType: RelayMessageSubType.RTC_OFFER,
             data: {
                 connectionId: 'connectionid',
                 description: 'description'
@@ -96,7 +95,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
-            subType: RtcSubTypes.RTC_ANSWER,
+            subType: RelayMessageSubType.RTC_ANSWER,
             data: {
                 connectionId: 'connectionid',
                 description: 'description'
@@ -122,7 +121,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
-            subType: RtcSubTypes.ICE_CANDIDATE,
+            subType: RelayMessageSubType.ICE_CANDIDATE,
             data: {
                 connectionId: 'connectionid',
                 candidate: 'candidate',
@@ -143,7 +142,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
             requestId: requestId!,
             originator: PeerInfo.newNode('originator'),
             targetNode: 'target',
-            subType: RtcSubTypes.RTC_CONNECT,
+            subType: RelayMessageSubType.RTC_CONNECT,
             data: {}
         }))
     })

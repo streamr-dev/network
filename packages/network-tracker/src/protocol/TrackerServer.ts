@@ -1,10 +1,15 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { StreamPartID, StreamPartIDUtils, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
+import {
+    StreamPartID,
+    StreamPartIDUtils,
+    TrackerLayer,
+    TrackerMessageType,
+    RelayMessageSubType
+} from 'streamr-client-protocol'
 import {
     Logger,
     decode,
-    RtcSubTypes,
     PeerId,
     PeerInfo,
     NameDirectory,
@@ -12,7 +17,7 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     WsEndpointEvent,
-    NodeId
+    NodeId,
 } from 'streamr-network'
 
 export enum Event {
@@ -72,7 +77,7 @@ export class TrackerServer extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_OFFER,
+            subType: RelayMessageSubType.RTC_OFFER,
             data: {
                 connectionId,
                 description
@@ -91,7 +96,7 @@ export class TrackerServer extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_ANSWER,
+            subType: RelayMessageSubType.RTC_ANSWER,
             data: {
                 connectionId,
                 description
@@ -108,9 +113,8 @@ export class TrackerServer extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_CONNECT,
-            // eslint-disable-next-line no-new-object
-            data: new Object()
+            subType: RelayMessageSubType.RTC_CONNECT,
+            data: {}
         }))
     }
 
@@ -126,7 +130,7 @@ export class TrackerServer extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode: receiverNodeId,
-            subType: RtcSubTypes.ICE_CANDIDATE,
+            subType: RelayMessageSubType.ICE_CANDIDATE,
             data: {
                 connectionId,
                 candidate,
