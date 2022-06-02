@@ -58,7 +58,8 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private noProgressCounter = 0
     private readonly PARALLELISM = 3
-    private readonly MAX_NEIGHBOR_LIST_SIZE = 20
+    private readonly MAX_NEIGHBOR_LIST_SIZE = 100
+    private readonly NUMBER_OF_NODES_PER_K_BUCKET = 8
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
@@ -94,7 +95,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         else {
             this.appId = DEFAULT_APP_ID
         }
-        this.numberOfNodesPerKBucket = config.numberOfNodesPerKBucket || 1
+        this.numberOfNodesPerKBucket = config.numberOfNodesPerKBucket || this.NUMBER_OF_NODES_PER_K_BUCKET
         this.ongoingClosestPeersRequests = new Set()
         // False positives at 0.05% at maximum capacity
         this.routerDuplicateDetector = new RouterDuplicateDetector(2 ** 15, 16, 1050, 2100)
@@ -208,7 +209,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
-            if (contact.peerId.toString() !== this.ownPeerId!.toString()) {
+            if ( !contact.peerId.equals(this.ownPeerId!) ) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
                     this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
@@ -321,8 +322,8 @@ export class DhtNode extends EventEmitter implements ITransport {
         // Only throw if originator
         if (successAcks === 0 && this.ownPeerId!.equals(PeerID.fromValue(params.sourcePeer!.peerId))) {
             throw new Err.CouldNotRoute(
-                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toString()}`
-                + ` from ${this.ownPeerId!.toString()} failed.`
+                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toMapKey()}`
+                + ` from ${this.ownPeerId!.toMapKey()} failed.`
             )
         }
     }
@@ -366,7 +367,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return []
         }
-        logger.trace(`Getting closest peers from contact: ${contact.peerId.toString()}`)
+        logger.trace(`Getting closest peers from contact: ${contact.peerId.toMapKey()}`)
         this.outgoingClosestPeersRequestsCounter++
         this.neighborList!.setContacted(contact.peerId)
         const returnedContacts = await contact.getClosestPeers(this.ownPeerDescriptor!)
@@ -375,8 +376,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private onClosestPeersRequestSucceeded(peerId: PeerID, contacts: PeerDescriptor[]) {
-        if (this.ongoingClosestPeersRequests.has(peerId.toString())) {
-            this.ongoingClosestPeersRequests.delete(peerId.toString())
+        if (this.ongoingClosestPeersRequests.has(peerId.toMapKey())) {
+            this.ongoingClosestPeersRequests.delete(peerId.toMapKey())
             const dhtPeers = contacts.map((peer) => {
                 return new DhtPeer(peer, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             })
@@ -402,8 +403,8 @@ export class DhtNode extends EventEmitter implements ITransport {
     }
 
     private onClosestPeersRequestFailed(peerId: PeerID, exception: Error) {
-        if (this.ongoingClosestPeersRequests.has(peerId.toString())) {
-            this.ongoingClosestPeersRequests.delete(peerId.toString())
+        if (this.ongoingClosestPeersRequests.has(peerId.toMapKey())) {
+            this.ongoingClosestPeersRequests.delete(peerId.toMapKey())
             logger.debug('onClosestPeersRequestFailed: ' + exception)
             this.neighborList!.removeContact(peerId)
             this.findMoreContacts()
@@ -443,7 +444,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             const uncontacted = this.neighborList!.getUncontactedContacts(this.PARALLELISM)
             while (this.ongoingClosestPeersRequests.size < this.PARALLELISM && uncontacted.length > 0) {
                 const nextPeer = uncontacted.shift()
-                this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toString())
+                this.ongoingClosestPeersRequests.add(nextPeer!.peerId.toMapKey())
                 this.getClosestPeersFromContact(nextPeer!)
                     .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
                     .catch((err) => this.onClosestPeersRequestFailed(nextPeer!.peerId, err))
@@ -459,16 +460,16 @@ export class DhtNode extends EventEmitter implements ITransport {
         if (!this.started || this.stopped
             || (
                 !this.bucket!.get(contact.peerId)
-                && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId).toString())
+                && !this.neighborList!.getContact(PeerID.fromValue(contact.peerId))
             )
         ) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             const peerId = PeerID.fromValue(contact.peerId)
-            if (!this.neighborList!.isContact(peerId)) {
+            if (!this.neighborList!.hasContact(peerId)) {
                 this.neighborList!.addContact(dhtPeer)
             }
-            if (contact.openInternet && !this.openInternetPeers!.isContact(peerId)) {
+            if (contact.openInternet && !this.openInternetPeers!.hasContact(peerId)) {
                 this.openInternetPeers!.addContact(dhtPeer)
             }
             if (setActive) {
@@ -540,7 +541,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     private getClosestActiveContactNotInBucket(): DhtPeer | null {
         for (const contactId of this.neighborList!.getContactIds()) {
             if (!this.bucket!.get(contactId.value) && this.neighborList!.isActive(contactId)) {
-                return this.neighborList!.getContact(contactId.toString()).contact
+                return this.neighborList!.getContact(contactId).contact
             }
         }
         return null

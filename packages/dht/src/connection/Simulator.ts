@@ -20,18 +20,18 @@ export class Simulator {
     */
 
     addNode(node: DhtNode): void {
-        this.nodes[node.getNodeId().toString()] = node
+        this.nodes[node.getNodeId().toMapKey()] = node
     }
 
     send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
         if (this.latenciesEnabled) {
             setTimeout(() => {
-                this.nodes[PeerID.fromValue(targetDescriptor.peerId).toString()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
+                this.nodes[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
             }
             , Math.random() * (250 - 5) + 5)
         }
         else {
-            this.nodes[PeerID.fromValue(targetDescriptor.peerId).toString()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
+            this.nodes[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
         }
     }
 

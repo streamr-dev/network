@@ -210,15 +210,15 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
         if (message.messageType === MessageType.HANDSHAKE && this.ownPeerDescriptor) {
             const handshake = HandshakeMessage.fromBinary(message.body)
-            const stringId = PeerID.fromValue(handshake.sourceId).toString()
+            const hexId = PeerID.fromValue(handshake.sourceId).toMapKey()
             connection.setPeerDescriptor(handshake.peerDescriptor as PeerDescriptor)
-            if (!this.connections.hasOwnProperty(stringId)
-                || (this.connections[stringId] && this.connections[stringId].connectionType === ConnectionType.DEFERRED)) {
+            if (!this.connections.hasOwnProperty(hexId)
+                || (this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)) {
                 let oldConnection
-                if ((this.connections[stringId] && this.connections[stringId].connectionType === ConnectionType.DEFERRED)) {
-                    oldConnection = this.connections[stringId]
+                if ((this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)) {
+                    oldConnection = this.connections[hexId]
                 }
-                this.connections[stringId] = connection
+                this.connections[hexId] = connection
 
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
@@ -275,14 +275,14 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.peerId.toString()}`)
 
-        if (this.connections.hasOwnProperty(stringId)) {
-            this.connections[stringId].send(Message.toBinary(message))
+        if (this.connections.hasOwnProperty(hexId)) {
+            this.connections[hexId].send(Message.toBinary(message))
         }
 
         else if (peerDescriptor.websocket) {
@@ -291,7 +291,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 port: peerDescriptor.websocket.port
             })
             connection.setPeerDescriptor(peerDescriptor)
-            this.connections[stringId] = connection
+            this.connections[hexId] = connection
             connection.send(Message.toBinary(message))
         }
 
@@ -300,12 +300,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 ownPeerDescriptor: this.ownPeerDescriptor!,
                 targetPeerDescriptor: peerDescriptor
             })
-            this.connections[stringId] = connection
+            this.connections[hexId] = connection
             connection.send(Message.toBinary(message))
         }
         else if (this.webrtcConnector) {
             const connection = this.webrtcConnector.connect(peerDescriptor)
-            this.connections[stringId] = connection
+            this.connections[hexId] = connection
             connection.send(Message.toBinary(message))
         }
     }
@@ -314,9 +314,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (!this.started || this.stopped) {
             return
         }
-        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
-        this.disconnectionTimeouts[stringId] = setTimeout(() => {
-            this.closeConnection(stringId, reason)
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        this.disconnectionTimeouts[hexId] = setTimeout(() => {
+            this.closeConnection(hexId, reason)
         }, timeout)
     }
 
@@ -331,8 +331,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     getConnection(peerDescriptor: PeerDescriptor): IConnection | null {
-        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
-        return this.connections[stringId] || null
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        return this.connections[hexId] || null
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -340,8 +340,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const stringId = PeerID.fromValue(peerDescriptor.peerId).toString()
-        return !!this.connections[stringId]
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        return !!this.connections[hexId]
     }
 
     canConnect(peerDescriptor: PeerDescriptor, _ip: string, port: number): boolean {
@@ -359,7 +359,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 && this.getConnection(peerDescriptor)!.connectionType === ConnectionType.DEFERRED)
         ) {
 
-            this.connections[PeerID.fromValue(peerDescriptor.peerId).toString()] = connection
+            this.connections[PeerID.fromValue(peerDescriptor.peerId).toMapKey()] = connection
             return true
         }
         return false

@@ -135,7 +135,7 @@ export class PeerID {
         
     }
 
-    toHex(): string {
+    toMapKey(): string {
         return hex(this.data)
     }
 

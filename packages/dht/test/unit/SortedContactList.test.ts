@@ -90,7 +90,7 @@ describe('SortedContactList', () => {
         list.addContact(peer2)
         list.addContact(peer1)
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id4.toString())).toBeFalsy()
+        expect(list.getContact(id4)).toBeFalsy()
     })
 
     it('removing contacts', async () => {
@@ -101,7 +101,7 @@ describe('SortedContactList', () => {
         list.addContact(peer1)
         list.removeContact(id2)
         expect(list.getSize()).toEqual(3)
-        expect(list.getContact(id2.toString())).toBeFalsy()
+        expect(list.getContact(id2)).toBeFalsy()
         expect(list.getContactIds()).toEqual(list.getContactIds().sort(list.compareIds))
         const ret = list.removeContact(PeerID.fromValue(Buffer.from([0, 0, 0, 6])))
         expect(ret).toEqual(false)

@@ -39,9 +39,9 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
 
     start(isOffering: boolean): void {
         logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
-        const stringId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toString()
+        const hexId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toMapKey()
         this.isOffering = isOffering
-        this.connection = new PeerConnection(stringId, {
+        this.connection = new PeerConnection(hexId, {
             iceServers: [...this.stunUrls],
             maxMessageSize: this.maxMessageSize
         })
