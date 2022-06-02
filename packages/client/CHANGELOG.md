@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - resends support multiple storage nodes (the data is fetched from a random storage node)
 - Configuration parameter `groupKeys` renamed to `encryptionKeys`
 - Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
+- Configuration parameter `verifySignatures` changed from enum to boolean
+  - to disable signature verification, use `verifySignatures=false` (previously `verifySignatures=never`)
 
 ### Deprecated
 

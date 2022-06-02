@@ -118,12 +118,7 @@
             "type": "number"
         },
         "verifySignatures": {
-            "type": "string",
-            "enum": [
-                "auto",
-                "always",
-                "never"
-            ]
+            "type": "boolean"
         },
         "retryResendAfter": {
             "type": "number"

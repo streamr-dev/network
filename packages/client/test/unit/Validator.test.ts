@@ -96,19 +96,11 @@ describe('Validator', () => {
                 })).rejects.toThrow('Stream data is required to be signed')
             })
 
-            it('verifySignatures=always', async () => {
+            it('verifySignatures: false', async () => {
                 await expect(() => validate({
                     signature: null
                 }, {
-                    verifySignatures: 'always'
-                })).rejects.toThrow('Client requires data to be signed')
-            })
-
-            it('verifySignatures=never', async () => {
-                await expect(() => validate({
-                    signature: null
-                }, {
-                    verifySignatures: 'never'
+                    verifySignatures: false
                 }))
             })
 
