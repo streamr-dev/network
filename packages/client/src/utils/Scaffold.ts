@@ -1,7 +1,7 @@
 import pLimit from 'p-limit'
 
 import { MaybeAsync } from '../types'
-import AggregatedError from './AggregatedError'
+import { AggregatedError } from './AggregatedError'
 
 /**
  * Takes a sequence of async steps & a check function.
@@ -26,11 +26,23 @@ type ScaffoldOptions = {
 
 const noop = () => {}
 
-export default function Scaffold(
+type ScaffoldReturnType = (() => Promise<void>) & 
+{ 
+    readonly activeCount: number
+    readonly pendingCount: number
+    next: () => Promise<void>
+    isActive: () => boolean
+    getCurrentStep(): Promise<void>
+    setError(err: Error): void
+    getError(): Error | undefined
+    clearError(): Error | undefined
+}
+
+export function Scaffold(
     sequence: Step[] = [],
     _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
-) {
+): ScaffoldReturnType {
     let error: Error | undefined
     // ignore error if check fails
 
@@ -52,7 +64,7 @@ export default function Scaffold(
     let isDone = false
     let didStart = false
 
-    function collectErrors(err: Error) {
+    function collectErrors(err: Error): void {
         try {
             if (typeof onError === 'function') {
                 onError(err) // give option to suppress error
@@ -132,7 +144,7 @@ export default function Scaffold(
         return Promise.resolve()
     }
 
-    function isActive() {
+    function isActive(): boolean {
         return !(
             didStart
             && isDone
@@ -169,7 +181,7 @@ export default function Scaffold(
     return Object.assign(queuedNext, {
         next: nextDone,
         isActive,
-        getCurrentStep() {
+        getCurrentStep(): Promise<void> {
             return currentStep
         },
         get activeCount() {
@@ -178,13 +190,13 @@ export default function Scaffold(
         get pendingCount() {
             return queue.pendingCount
         },
-        setError(err: Error) {
+        setError(err: Error): void {
             error = AggregatedError.from(error, err)
         },
-        getError() {
+        getError(): Error | undefined {
             return error
         },
-        clearError() {
+        clearError(): Error | undefined {
             const err = error
             error = undefined
             return err

@@ -21,10 +21,6 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getNameDescription = (name: string|undefined, id: string) => {
-    return (name !== undefined) ? `${name} (id=${id})` : id
-}
-
 export const createBroker = async (config: Config): Promise<Broker> => {
     validateConfig(config, BROKER_CONFIG_SCHEMA)
     validateClientConfig(config.client)
@@ -45,9 +41,18 @@ export const createBroker = async (config: Config): Promise<Broker> => {
         return createPlugin(name, pluginOptions)
     })
 
-    let httpServer: HttpServer|HttpsServer|undefined
+    let started = false
+    let httpServer: HttpServer | HttpsServer | undefined
+
+    const getNode = async (): Promise<NetworkNodeStub> => {
+        if (!started) {
+            throw new Error('cannot invoke on non-started broker')
+        }
+        return streamrClient.getNode()
+    }
 
     return {
+        getNode,
         start: async () => {
             logger.info(`Starting broker version ${CURRENT_VERSION}`)
             await Promise.all(plugins.map((plugin) => plugin.start()))
@@ -60,15 +65,10 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
-            logger.info(`Network node ${getNameDescription(config.client.network?.name, nodeId)} running`)
+            logger.info(`Network node ${nodeId} running`)
             logger.info(`Ethereum address ${brokerAddress}`)
-            logger.info(`Tracker Configuration: ${
-                config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'
-            }`)
+            logger.info(`Tracker Configuration: ${config.client.network?.trackers ? JSON.stringify(config.client.network?.trackers) : 'default'}`)
 
-            if (config.client.restUrl !== undefined) {
-                logger.info(`Configured with Streamr: ${config.client.restUrl}`)
-            }
             logger.info(`Plugins: ${JSON.stringify(plugins.map((p) => p.name))}`)
 
             if (config.client.network?.webrtcDisallowPrivateAddresses === undefined || config.client.network.webrtcDisallowPrivateAddresses) {
@@ -76,18 +76,14 @@ export const createBroker = async (config: Config): Promise<Broker> => {
                     'This makes it impossible to create network layer connections directly via local routers ' +
                     'More info: https://github.com/streamr-dev/network-monorepo/wiki/WebRTC-private-addresses')
             }
+            started = true
         },
         stop: async () => {
             if (httpServer !== undefined) {
                 await stopServer(httpServer)
             }
             await Promise.all(plugins.map((plugin) => plugin.stop()))
-            if (streamrClient !== undefined) {
-                await streamrClient.destroy()
-            }
-        },
-        getNode: async () => {
-            return streamrClient.getNode()
+            await streamrClient.destroy()
         }
     }
 }

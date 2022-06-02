@@ -1,7 +1,8 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
-import { StorageNodeAssignmentEvent, Stream, StreamrClient } from 'streamr-client'
-import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID} from 'streamr-client-protocol'
+import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
+import { range } from 'lodash'
 
 const { parse } = StreamPartIDUtils
 
@@ -16,34 +17,34 @@ const PARTITION_COUNT_LOOKUP: Record<string, number> = Object.freeze({
 function makeStubStream(streamId: string): Stream {
     return {
         id: toStreamID(streamId),
-        partitions: PARTITION_COUNT_LOOKUP[streamId]
+        partitions: PARTITION_COUNT_LOOKUP[streamId],
+        getStreamParts(): StreamPartID[] { // TODO: duplicated code from client
+            return range(0, this.partitions).map((p) => toStreamPartID(this.id, p))
+        }
     } as Stream
 }
 
 describe(StorageConfig, () => {
     let getStoredStreams: jest.Mock<Promise<{ streams: Stream[], blockNumber: number }>, [nodeAddress: EthereumAddress]>
-    let storageEventListener: ((event: StorageNodeAssignmentEvent) => any) | undefined
-    let stubClient: Pick<StreamrClient, 'getStream'
-        | 'getStoredStreams'
-        | 'registerStorageEventListener'
-        | 'unregisterStorageEventListeners' >
+    let storageEventListeners: Map<keyof StreamrClientEvents, ((event: StorageNodeAssignmentEvent) => void)>
+    let stubClient: Pick<StreamrClient, 'getStream' | 'getStoredStreams' | 'on' | 'off' >
     let onStreamPartAdded: jest.Mock<void, [StreamPartID]>
     let onStreamPartRemoved: jest.Mock<void, [StreamPartID]>
     let storageConfig: StorageConfig
 
     beforeEach(async () => {
         getStoredStreams = jest.fn()
-        storageEventListener = undefined
+        storageEventListeners = new Map()
         stubClient = {
             getStoredStreams,
             async getStream(streamIdOrPath: string) {
                 return makeStubStream(streamIdOrPath, )
             },
-            async registerStorageEventListener(cb: (event: StorageNodeAssignmentEvent) => any) {
-                storageEventListener = cb
+            on(eventName: keyof StreamrClientEvents, listener: any) {
+                storageEventListeners.set(eventName, listener)
             },
-            unregisterStorageEventListeners: async () => {
-                storageEventListener = undefined
+            off(eventName: keyof StreamrClientEvents) {
+                storageEventListeners.delete(eventName)
             }
         }
         onStreamPartAdded = jest.fn()
@@ -97,24 +98,23 @@ describe(StorageConfig, () => {
     describe('on event-based results', () => {
         beforeEach(async () => {
             await storageConfig.start()
-            storageEventListener!({
+            const addToStorageNodeListener = storageEventListeners.get('addToStorageNode')!
+            const removeFromStorageNodeListener = storageEventListeners.get('removeFromStorageNode')!
+            addToStorageNodeListener({
                 streamId: 'stream-1',
                 nodeAddress: 'clusterId',
-                type: 'added',
                 blockNumber: 10,
             })
             await wait(0)
-            storageEventListener!({
+            addToStorageNodeListener({
                 streamId: 'stream-3',
                 nodeAddress: 'clusterId',
-                type: 'added',
                 blockNumber: 15,
             })
             await wait(0)
-            storageEventListener!({
+            removeFromStorageNodeListener({
                 streamId: 'stream-1',
                 nodeAddress: 'clusterId',
-                type: 'removed',
                 blockNumber: 13,
             })
             await wait(0)
@@ -149,7 +149,7 @@ describe(StorageConfig, () => {
         })
         await wait(POLL_TIME * 2)
 
-        expect(storageEventListener).toBeUndefined()
+        expect(storageEventListeners.size).toBe(0)
         expect(getStoredStreams).toHaveBeenCalledTimes(0)
         expect(onStreamPartAdded).toHaveBeenCalledTimes(0)
         expect(onStreamPartRemoved).toHaveBeenCalledTimes(0)
@@ -168,7 +168,7 @@ describe(StorageConfig, () => {
             ],
             blockNumber: 10
         })
-        expect(storageEventListener).toBeUndefined()
+        expect(storageEventListeners.size).toBe(0)
         await wait(POLL_TIME * 2)
 
         expect(getStoredStreams).toHaveBeenCalledTimes(0)

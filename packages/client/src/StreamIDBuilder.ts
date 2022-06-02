@@ -7,7 +7,7 @@ import {
     toStreamID,
     toStreamPartID
 } from 'streamr-client-protocol'
-import Ethereum from './Ethereum'
+import { Ethereum } from './Ethereum'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
 

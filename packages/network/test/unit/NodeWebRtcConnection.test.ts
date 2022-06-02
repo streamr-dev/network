@@ -1,8 +1,8 @@
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
-import { runAndWaitForEvents } from "streamr-test-utils"
-import { MessageQueue} from "../../src/connection/MessageQueue"
-import { ConstructorOptions } from "../../src/connection/WebRtcConnection"
-import { DeferredConnectionAttempt } from "../../src/connection/DeferredConnectionAttempt"
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { runAndWaitForEvents } from 'streamr-test-utils'
+import { MessageQueue} from '../../src/connection/MessageQueue'
+import { ConstructorOptions } from '../../src/connection/webrtc/WebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 
 const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
@@ -24,19 +24,19 @@ const connectionOpts2: ConstructorOptions = {
 
 describe('NodeWebRtcConnection', () => {
 
-    const conn1 = NodeWebRtcConnectionFactory.createConnection(connectionOpts1)
-    const conn2 = NodeWebRtcConnectionFactory.createConnection(connectionOpts2)
+    const conn1 = webRtcConnectionFactory.createConnection(connectionOpts1)
+    const conn2 = webRtcConnectionFactory.createConnection(connectionOpts2)
 
-    conn1.on('localCandidate', (candidate, mid) => {
+    conn1.on('localCandidate', (candidate: any, mid: any) => {
         conn2.addRemoteCandidate(candidate, mid)
     })
-    conn2.on('localCandidate', (candidate, mid) => {
+    conn2.on('localCandidate', (candidate: any, mid: any) => {
         conn1.addRemoteCandidate(candidate, mid)
     })
-    conn1.on('localDescription', (type, description) => {
+    conn1.on('localDescription', (type: any, description: any) => {
         conn2.setRemoteDescription(description, type)
     })
-    conn2.on('localDescription', (type, description) => {
+    conn2.on('localDescription', (type: any, description: any) => {
         conn1.setRemoteDescription(description, type)
     })
     beforeAll(async () => {
@@ -55,7 +55,6 @@ describe('NodeWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
-        NodeWebRtcConnectionFactory.cleanUp()
     })
 
     it('can connect', async () => {

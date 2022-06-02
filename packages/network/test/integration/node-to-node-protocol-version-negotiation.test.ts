@@ -1,17 +1,16 @@
-import { Event as wrtcEvent } from '../../src/connection/IWebRtcEndpoint'
+import { Event as wrtcEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo, PeerType } from '../../src/connection/PeerInfo'
-import { MetricsContext } from '../../src/helpers/MetricsContext'
-import { RtcSignaller } from '../../src/logic/node/RtcSignaller'
-import { Tracker } from '../../src/logic/tracker/Tracker'
-import { startTracker } from '../../src/composition'
+import { MetricsContext } from '../../src/helpers/Metric'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { NegotiatedProtocolVersions } from "../../src/connection/NegotiatedProtocolVersions"
 import { Event as ntnEvent, NodeToNode } from "../../src/protocol/NodeToNode"
 import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-import { WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
-import NodeWebRtcConnectionFactory from "../../src/connection/NodeWebRtcConnection"
+import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
+import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 
 describe('Node-to-Node protocol version negotiation', () => {
     let tracker: Tracker
@@ -37,9 +36,9 @@ describe('Node-to-Node protocol version negotiation', () => {
         const peerInfo3 = new PeerInfo('node-endpoint3', PeerType.Node, [1, 2], [33])
         const trackerPeerInfo = PeerInfo.newTracker(tracker.getTrackerId())
         // Need to set up NodeToTrackers and WsEndpoint(s) to exchange RelayMessage(s) via tracker
-        const wsEp1 = new NodeClientWsEndpoint(peerInfo1, new MetricsContext(peerInfo1.peerId))
-        const wsEp2 = new NodeClientWsEndpoint(peerInfo2, new MetricsContext(peerInfo2.peerId))
-        const wsEp3 = new NodeClientWsEndpoint(peerInfo3, new MetricsContext(peerInfo2.peerId))
+        const wsEp1 = new NodeClientWsEndpoint(peerInfo1)
+        const wsEp2 = new NodeClientWsEndpoint(peerInfo2)
+        const wsEp3 = new NodeClientWsEndpoint(peerInfo3)
         nodeToTracker1 = new NodeToTracker(wsEp1)
         nodeToTracker2 = new NodeToTracker(wsEp2)
         nodeToTracker3 = new NodeToTracker(wsEp3)
@@ -53,27 +52,27 @@ describe('Node-to-Node protocol version negotiation', () => {
             peerInfo1,
             [],
             new RtcSignaller(peerInfo1, nodeToTracker1),
-            new MetricsContext('node-endpoint1'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo1),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         ep2 = new WebRtcEndpoint(
             peerInfo2,
             [],
             new RtcSignaller(peerInfo2, nodeToTracker2),
-            new MetricsContext('node-endpoint2'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo2),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         ep3 = new WebRtcEndpoint(
             peerInfo3,
             [],
             new RtcSignaller(peerInfo3, nodeToTracker3),
-            new MetricsContext('node-endpoint3'),
+            new MetricsContext(),
             new NegotiatedProtocolVersions(peerInfo3),
-            NodeWebRtcConnectionFactory,
+            webRtcConnectionFactory,
             5000
         )
         nodeToNode1 = new NodeToNode(ep1)

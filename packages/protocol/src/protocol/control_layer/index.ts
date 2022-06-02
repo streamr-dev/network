@@ -1,8 +1,8 @@
 import BroadcastMessage from "./broadcast_message/BroadcastMessage"
 import ErrorResponse from "./error_response/ErrorResponse"
 import { ErrorCode } from "./error_response/ErrorResponse"
-import PublishStreamConnectionRequest from "./publish_stream_connection_request/PublishStreamConnectionRequest"
-import PublishStreamConnectionResponse from "./publish_stream_connection_response/PublishStreamConnectionResponse"
+import ProxyConnectionRequest from "./proxy_connection_request/ProxyConnectionRequest"
+import ProxyConnectionResponse from "./proxy_connection_response/ProxyConnectionResponse"
 import UnsubscribeRequest from "./unsubscribe_request/UnsubscribeRequest"
 import ControlMessage from "./ControlMessage"
 import { ControlMessageType } from "./ControlMessage"
@@ -11,8 +11,8 @@ import { ControlMessageType } from "./ControlMessage"
 import './broadcast_message/BroadcastMessageSerializerV2'
 import './error_response/ErrorResponseSerializerV2'
 import './unsubscribe_request/UnsubscribeRequestSerializerV2'
-import './publish_stream_connection_request/PublishStreamConnectionRequestSerializerV2'
-import './publish_stream_connection_response/PublishStreamConnectionResponseSerializerV2'
+import './proxy_connection_request/ProxyConnectionRequestSerializerV2'
+import './proxy_connection_response/ProxyConnectionResponseSerializerV2'
 
 export {
     BroadcastMessage,
@@ -21,6 +21,6 @@ export {
     UnsubscribeRequest,
     ControlMessage,
     ControlMessageType,
-    PublishStreamConnectionRequest,
-    PublishStreamConnectionResponse
+    ProxyConnectionRequest,
+    ProxyConnectionResponse
 }

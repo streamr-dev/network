@@ -155,49 +155,4 @@ export class BatchManager extends EventEmitter {
             batch.scheduleInsert()
         }
     }
-
-    metrics(): {
-        totalBatches: number,
-        meanBatchAge: number,
-        meanBatchRetries: number,
-        batchesWithFiveOrMoreRetries: number,
-        batchesWithTenOrMoreRetries: number,
-        batchesWithHundredOrMoreRetries: number,
-        } {
-        const now = Date.now()
-        const { batches, pendingBatches } = this
-        const totalBatches = Object.values(batches).length + Object.values(pendingBatches).length
-        const meanBatchAge = totalBatches === 0 ? 0
-            : [
-                ...Object.values(batches),
-                ...Object.values(pendingBatches)
-            ].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
-        const meanBatchRetries = totalBatches === 0 ? 0
-            : Object.values(pendingBatches).reduce((acc, batch) => acc + batch.retries, 0) / totalBatches
-
-        let batchesWithFiveOrMoreRetries = 0
-        let batchesWithTenOrMoreRetries = 0
-        let batchesWithHundredOrMoreRetries = 0
-
-        Object.values(pendingBatches).forEach((batch) => {
-            if (batch.retries >= 5) {
-                batchesWithFiveOrMoreRetries += 1
-                if (batch.retries >= 10) {
-                    batchesWithTenOrMoreRetries += 1
-                    if (batch.retries >= 100) {
-                        batchesWithHundredOrMoreRetries += 1
-                    }
-                }
-            }
-        })
-
-        return {
-            totalBatches,
-            meanBatchAge,
-            meanBatchRetries,
-            batchesWithFiveOrMoreRetries,
-            batchesWithTenOrMoreRetries,
-            batchesWithHundredOrMoreRetries,
-        }
-    }
 }

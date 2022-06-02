@@ -1,7 +1,7 @@
 import { collect, unique } from './GeneratorUtils'
 import { StreamID, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { identity } from 'lodash'
-import { PushPipeline } from './Pipeline'
+import { PushPipeline } from './PushPipeline'
 
 export function waitForAssignmentsToPropagate(
     pushPipeline: PushPipeline<any>,

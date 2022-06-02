@@ -1,5 +1,5 @@
 import { instanceId } from './index'
-import Gate from './Gate'
+import { Gate } from './Gate'
 import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
 import * as G from './GeneratorUtils'
@@ -82,7 +82,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      * Blocks until writeGate is open again (or locked)
      * @returns Promise<true> if item was pushed, Promise<false> if done or became done before writeGate opened.
      */
-    async push(item: T | Error) {
+    async push(item: T | Error): Promise<boolean> {
         if (!this.isWritable()) {
             return false
         }
@@ -93,25 +93,25 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
         return this.writeGate.check()
     }
 
-    map<NewOutType>(fn: G.GeneratorMap<T, NewOutType>) {
+    map<NewOutType>(fn: G.GeneratorMap<T, NewOutType>): PushBuffer<NewOutType> {
         const p = new PushBuffer<NewOutType>(this.bufferSize)
         pull(G.map(this, fn), p)
         return p
     }
 
-    forEach(fn: G.GeneratorForEach<T>) {
+    forEach(fn: G.GeneratorForEach<T>): PushBuffer<unknown> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.forEach(this, fn), p)
         return p
     }
 
-    filter(fn: G.GeneratorFilter<T>) {
+    filter(fn: G.GeneratorFilter<T>): PushBuffer<unknown> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.filter(this, fn), p)
         return p
     }
 
-    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType) {
+    reduce<NewOutType>(fn: G.GeneratorReduce<T, NewOutType>, initialValue: NewOutType): PushBuffer<unknown> {
         const p = new PushBuffer(this.bufferSize)
         pull(G.reduce(this, fn, initialValue), p)
         return p
@@ -120,7 +120,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     /**
      * Collect n/all messages into an array.
      */
-    async collect(n?: number) {
+    async collect(n?: number): Promise<T[]> {
         if (this.isIterating) {
             // @ts-expect-error ts can't do this.constructor properly
             throw new this.constructor.Error(this, 'Cannot collect if already iterating.')
@@ -128,7 +128,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
         return G.collect(this, n)
     }
 
-    private updateWriteGate() {
+    private updateWriteGate(): void {
         this.writeGate.setOpenState(!this.isFull())
     }
 
@@ -136,7 +136,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      * Immediate end of reading and writing
      * Buffer will not flush.
      */
-    end(err?: Error) {
+    end(err?: Error): void {
         if (err) {
             this.error = err
         }
@@ -146,7 +146,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     /**
      * Prevent further reads or writes.
      */
-    lock() {
+    lock(): void {
         this.writeGate.lock()
         this.readGate.lock()
     }
@@ -155,7 +155,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      * Prevent further writes.
      * Allows buffer to flush before ending.
      */
-    endWrite(err?: Error) {
+    endWrite(err?: Error): void {
         if (err && !this.error) {
             this.error = err
         }
@@ -168,14 +168,14 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      * True if buffered at least bufferSize items.
      * After this point, push will block until buffer is emptied again.
      */
-    isFull() {
+    isFull(): boolean {
         return this.buffer.length >= this.bufferSize
     }
 
     /**
      * True if buffer has closed reads and writes.
      */
-    isDone() {
+    isDone(): boolean {
         return this.writeGate.isLocked && this.readGate.isLocked
     }
 
@@ -183,11 +183,11 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
      * Can't write if write gate locked.
      * No point writing if read gate is locked.
      */
-    isWritable() {
+    isWritable(): boolean {
         return !this.writeGate.isLocked && !this.readGate.isLocked
     }
 
-    private async* iterate() {
+    private async* iterate(): AsyncGenerator<T, void, unknown> {
         this.isIterating = true
         try {
             // if there's something buffered, we want to flush it
@@ -233,32 +233,32 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
         }
     }
 
-    get length() {
+    get length(): number {
         return this.buffer.length
     }
 
     // clears any pending items in buffer
-    clear() {
+    clear(): void {
         this.buffer.length = 0
     }
 
     // AsyncGenerator implementation
 
-    async throw(err: Error) {
+    async throw(err: Error): Promise<IteratorResult<T, any>> {
         this.endWrite(err)
         return this.iterator.throw(err)
     }
 
-    async return(v?: T) {
+    async return(v?: T): Promise<IteratorResult<T, any>> {
         this.end()
         return this.iterator.return(v)
     }
 
-    next() {
+    next(): Promise<IteratorResult<T, any>> {
         return this.iterator.next()
     }
 
-    async pull(src: AsyncGenerator<T>) {
+    async pull(src: AsyncGenerator<T>): Promise<void> {
         try {
             for await (const v of src) {
                 const ok = await this.push(v)
@@ -270,7 +270,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
         this.endWrite()
     }
 
-    [Symbol.asyncIterator]() {
+    [Symbol.asyncIterator](): this {
         if (this.isIterating) {
             // @ts-expect-error ts can't do this.constructor properly
             throw new this.constructor.Error(this, 'already iterating')
@@ -315,7 +315,7 @@ export async function pull<InType, OutType = InType>(
     }
 }
 
-export function flow<T>(asyncIterable: AsyncIterable<T>) {
+export function flow<T>(asyncIterable: AsyncIterable<T>): Promise<void> {
     const consume = async () => {
         for await (const _ of asyncIterable) {
             // do nothing, just consume iterator
@@ -331,34 +331,4 @@ export function flow<T>(asyncIterable: AsyncIterable<T>) {
     const task = consume()
     task.catch(() => {}) // prevent unhandled
     return task
-}
-
-/**
- * Pull from a source into self.
- */
-
-export class PullBuffer<InType> extends PushBuffer<InType> {
-    source: AsyncGenerator<InType>
-    constructor(source: AsyncGenerator<InType>, ...args: ConstructorParameters<typeof PushBuffer>) {
-        super(...args)
-        this.source = source
-        pull(this.source, this).catch(() => {
-        })
-    }
-
-    map<NewOutType>(fn: G.GeneratorMap<InType, NewOutType>) {
-        return new PullBuffer<NewOutType>(G.map(this, fn), this.bufferSize)
-    }
-
-    forEach(fn: G.GeneratorForEach<InType>) {
-        return new PullBuffer(G.forEach(this, fn), this.bufferSize)
-    }
-
-    filter(fn: G.GeneratorFilter<InType>) {
-        return new PullBuffer(G.filter(this, fn), this.bufferSize)
-    }
-
-    reduce<NewOutType>(fn: G.GeneratorReduce<InType, NewOutType>, initialValue: NewOutType) {
-        return new PullBuffer(G.reduce(this, fn, initialValue), this.bufferSize)
-    }
 }

@@ -1,7 +1,7 @@
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
+import { createNetworkNode } from '../../src/composition'
 
 describe('NetworkNode', () => {
     let tracker: Tracker

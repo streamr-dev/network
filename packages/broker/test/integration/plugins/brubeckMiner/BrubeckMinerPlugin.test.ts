@@ -2,7 +2,8 @@ import { Server } from 'http'
 import { once } from 'events'
 import { Wallet } from 'ethers'
 import express, { Request, Response} from 'express'
-import { Logger, Tracker } from 'streamr-network'
+import { Logger } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
 import { waitForCondition } from 'streamr-test-utils'
 
@@ -79,7 +80,6 @@ describe('BrubeckMinerPlugin', () => {
         await claimServer.start()
         brokerWallet = Wallet.createRandom()
         broker = await startBroker({
-            name: 'broker',
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,
             extraPlugins: {

@@ -9,7 +9,7 @@ import StreamrClient, {
 import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
-import { Tracker, startTracker } from 'streamr-network'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { KeyServer, waitForCondition } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
@@ -19,7 +19,6 @@ import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migr
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
 interface TestConfig {
-    name: string
     trackerPort: number
     privateKey: string
     httpPort?: null | number
@@ -28,22 +27,19 @@ interface TestConfig {
     enableCassandra?: boolean
     privateKeyFileName?: null | string
     certFileName?: null | string
-    restUrl?: string
     storageConfigRefreshInterval?: number
 }
 
 export const formConfig = ({
-    name,
     trackerPort,
     privateKey,
     httpPort = null,
     extraPlugins = {},
     apiAuthentication = null,
     enableCassandra = false,
-    restUrl = `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
     storageConfigRefreshInterval = 0,
 }: TestConfig): Config => {
-    const plugins: Record<string,any> = { ...extraPlugins }
+    const plugins: Record<string, any> = { ...extraPlugins }
     if (httpPort) {
         if (enableCassandra) {
             plugins['storage'] = {
@@ -68,9 +64,7 @@ export const formConfig = ({
             auth: {
                 privateKey
             },
-            restUrl,
             network: {
-                name,
                 id: new Wallet(privateKey).address,
                 trackers: [
                     {
@@ -141,15 +135,17 @@ export const createClient = async (
     privateKey: string,
     clientOptions?: StreamrClientConfig
 ): Promise<StreamrClient> => {
+    const networkOptions = {
+        ...ConfigTest?.network,
+        trackers: [tracker.getConfigRecord()],
+        ...clientOptions?.network
+    }
     return new StreamrClient({
         ...ConfigTest,
         auth: {
             privateKey
         },
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v2`,
-        network: {
-            trackers: [tracker.getConfigRecord()]
-        },
+        network: networkOptions,
         ...clientOptions,
     })
 }
@@ -183,6 +179,10 @@ export class Queue<T> {
     async pop(timeout?: number): Promise<T> {
         await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
+    }
+
+    size(): number {
+        return this.items.length
     }
 }
 
@@ -252,13 +252,14 @@ export async function startStorageNode(
         },
     })
     try {
-        await client.createOrUpdateNodeInStorageNodeRegistry(`{"http": "http://127.0.0.1:${httpPort}"}`)
+        await client.setStorageNodeMetadata({
+            http: `http://127.0.0.1:${httpPort}`
+        })
         await createAssignmentStream(client)
     } finally {
         client?.destroy()
     }
     return startBroker({
-        name: 'storageNode',
         privateKey: storageNodePrivateKey,
         trackerPort,
         httpPort,

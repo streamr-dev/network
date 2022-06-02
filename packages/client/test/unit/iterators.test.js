@@ -3,7 +3,7 @@ import { wait } from 'streamr-test-utils'
 import { iteratorFinally, CancelableGenerator } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils'
 
-import IteratorTest, { expected, MAX_ITEMS } from './IteratorTest'
+import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 
 const WAIT = 20
 

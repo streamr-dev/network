@@ -1,8 +1,8 @@
 import debug from 'debug'
 import { pull } from 'lodash'
-import { EthereumAddress, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
-import BrubeckNode, { NetworkNodeStub } from '../../../src/BrubeckNode'
+import { BrubeckNode, NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { ActiveNodes } from './ActiveNodes'
 
@@ -11,7 +11,7 @@ type MessageListener = (msg: StreamMessage) => void
 class FakeNetworkNodeStub implements NetworkNodeStub {
 
     private readonly node: FakeBrubeckNode
-    readonly subsciptions: Set<StreamPartID> = new Set()
+    readonly subscriptions: Set<StreamPartID> = new Set()
     private readonly messageListeners: MessageListener[] = []
 
     constructor(node: FakeBrubeckNode) {
@@ -31,21 +31,21 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     }
 
     subscribe(streamPartId: StreamPartID): void {
-        this.subsciptions.add(streamPartId)
+        this.subscriptions.add(streamPartId)
     }
 
     unsubscribe(streamPartId: StreamPartID): void {
-        this.subsciptions.delete(streamPartId)
+        this.subscriptions.delete(streamPartId)
     }
 
     async subscribeAndWaitForJoin(streamPartId: StreamPartID, _timeout?: number): Promise<number> {
-        this.subsciptions.add(streamPartId)
+        this.subscriptions.add(streamPartId)
         return this.getNeighborsForStreamPart(streamPartId).length
     }
 
     async waitForJoinAndPublish(msg: StreamMessage, _timeout?: number): Promise<number> {
         const streamPartID = msg.getStreamPartID()
-        this.subsciptions.add(streamPartID)
+        this.subscriptions.add(streamPartID)
         this.publish(msg)
         return this.getNeighborsForStreamPart(streamPartID).length
     }
@@ -60,9 +60,12 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         this.node.activeNodes.getNodes()
             .forEach(async (n) => {
                 const networkNode = await n.getNode()
-                if (networkNode.subsciptions.has(msg.getStreamPartID())) {
-                    const deserialized = StreamMessage.deserialize(serialized)
-                    networkNode.messageListeners.forEach((listener) => listener(deserialized))
+                if (networkNode.subscriptions.has(msg.getStreamPartID())) {
+                    networkNode.messageListeners.forEach((listener) => {
+                        // return a clone as client mutates message when it decrypts messages
+                        const deserialized = StreamMessage.deserialize(serialized)
+                        listener(deserialized)
+                    })
                 }
             })
     }
@@ -81,7 +84,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
         const allNodes = this.node.activeNodes.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.node.id))
-            .filter((node) => node.networkNodeStub.subsciptions.has(streamPartId))
+            .filter((node) => node.networkNodeStub.subscriptions.has(streamPartId))
             .map((node) => node.id)
     }
 
@@ -97,6 +100,15 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
 
     // eslint-disable-next-line class-methods-use-this
     getMetricsContext(): MetricsContext {
+        throw new Error('not implemented')
+    }
+
+    hasStreamPart(streamPartId: StreamPartID): boolean {
+        return this.subscriptions.has(streamPartId)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    hasProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): boolean {
         throw new Error('not implemented')
     }
 }
@@ -119,7 +131,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.activeNodes = activeNodes
         this.networkNodeStub = new FakeNetworkNodeStub(this)
         if (destroySignal !== undefined) {
-            destroySignal.onDestroy(() => {
+            destroySignal.onDestroy.listen(() => {
                 this.debug(`destroy ${this.id}`)
                 this.activeNodes.removeNode(this.id)
             })
@@ -145,12 +157,12 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async openPublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
+    async openProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async closePublishProxyConnectionOnStreamPart(_streamPartId: StreamPartID, _nodeId: string): Promise<void> {
+    async closeProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
     }
 }

@@ -18,7 +18,7 @@ export class GraphQLClient {
         this.debug = context.debug.extend(instanceId(this))
     }
 
-    async sendQuery(gqlQuery: string): Promise<Object> {
+    async sendQuery(gqlQuery: string): Promise<any> {
         this.debug('GraphQL query: %s', gqlQuery)
         const res = await this.httpFetcher.fetch(this.config.theGraphUrl, {
             method: 'POST',
@@ -63,7 +63,7 @@ export class GraphQLClient {
         } while (lastResultSet.length === pageSize)
     }
 
-    async getIndexBlockNumber() {
+    async getIndexBlockNumber(): Promise<number> {
         const gqlQuery = JSON.stringify({
             query: '{ _meta { block { number } } }'
         })

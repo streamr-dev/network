@@ -1,8 +1,10 @@
-import IteratorTest, { expected, MAX_ITEMS } from './IteratorTest'
+import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 import { wait } from 'streamr-test-utils'
 
-import { Pipeline, PushPipeline } from '../../src/utils/Pipeline'
-import { PushBuffer, PullBuffer } from '../../src/utils/PushBuffer'
+import { Pipeline } from '../../src/utils/Pipeline'
+import { PushPipeline } from '../../src/utils/PushPipeline'
+import { PushBuffer } from '../../src/utils/PushBuffer'
+import { PullBuffer } from '../../src/utils/PullBuffer'
 import { iteratorFinally } from '../../src/utils/iterators'
 
 const WAIT = 20
@@ -149,15 +151,16 @@ describe('Pipeline', () => {
         describe('Pipeline', () => {
             describe('baseline', () => {
                 IteratorTest('single step with onFinally', () => {
-                    return new Pipeline(generate())
+                    const p = new Pipeline(generate())
                         .pipe(async function* Step(src) {
                             yield* src
                         })
-                        .onFinally(onFinally)
+                    p.onFinally.listen(onFinally)
+                    return p
                 })
 
                 IteratorTest('multiple steps with onFinally', () => {
-                    return new Pipeline(generate())
+                    const p = new Pipeline(generate())
                         .pipe(async function* Step1(s) {
                             for await (const msg of s) {
                                 yield msg + 2
@@ -168,7 +171,8 @@ describe('Pipeline', () => {
                                 yield msg - 2
                             }
                         })
-                        .onFinally(onFinally)
+                    p.onFinally.listen(onFinally)
+                    return p
                 })
             })
 
@@ -200,7 +204,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -248,7 +252,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -296,7 +300,7 @@ describe('Pipeline', () => {
                             afterStep2()
                         }
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -324,7 +328,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -350,7 +354,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -376,7 +380,7 @@ describe('Pipeline', () => {
                         yield* s
                         yield await new Promise<number>(() => {}) // would wait forever
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -399,7 +403,7 @@ describe('Pipeline', () => {
                         yield* s
                         throw err
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 await expect(async () => {
@@ -423,8 +427,8 @@ describe('Pipeline', () => {
                         yield* s
                         throw err
                     })
-                    .onFinally(onFinally)
-                    .onError(onError)
+                p.onFinally.listen(onFinally)
+                p.onError.listen(onError)
 
                 const received: number[] = []
                 for await (const msg of p) {
@@ -451,8 +455,8 @@ describe('Pipeline', () => {
                             throw err
                         }
                     })
-                    .onFinally(onFinally)
-                    .onError(onError)
+                p.onFinally.listen(onFinally)
+                p.onError.listen(onError)
 
                 const received: number[] = []
                 for await (const msg of p) {
@@ -487,8 +491,8 @@ describe('Pipeline', () => {
                             throw err
                         }
                     })
-                    .onFinally(onFinally)
-                    .onError(onError)
+                p.onFinally.listen(onFinally)
+                p.onError.listen(onError)
 
                 const received: number[] = []
                 const task = (async () => {
@@ -520,7 +524,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -556,7 +560,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
                 for await (const msg of p) {
@@ -593,7 +597,7 @@ describe('Pipeline', () => {
                     .pipe(async function* finallyFn(s) {
                         yield* iteratorFinally(s, onFinallyInner)
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
                 const received: number[] = []
                 await expect(async () => {
                     for await (const msg of p) {
@@ -619,14 +623,15 @@ describe('Pipeline', () => {
                 const firstStream = new PullBuffer(generate())
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
-                        yield* new Pipeline(src)
+                        const subPipeline = new Pipeline(src)
                             .pipe(async function* Step1(s) {
                                 for await (const msg of s) {
                                     receivedStep1.push(msg)
                                     yield msg
                                 }
                             })
-                            .onFinally(onFinallyInner)
+                        subPipeline.onFinally.listen(onFinallyInner)
+                        yield* subPipeline
                     })
                     .pipe(async function* Step2(s) {
                         for await (const msg of s) {
@@ -634,7 +639,7 @@ describe('Pipeline', () => {
                             yield msg
                         }
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received = []
                 for await (const msg of p) {
@@ -663,7 +668,7 @@ describe('Pipeline', () => {
                 const firstStream = new PullBuffer(generate())
                 const p = new Pipeline(firstStream)
                     .pipe(async function* Step2(src) {
-                        yield* new Pipeline(src)
+                        const subPipeline = new Pipeline(src)
                             .pipe(async function* Step1(s) {
                                 for await (const msg of s) {
                                     receivedStep1.push(msg)
@@ -673,7 +678,8 @@ describe('Pipeline', () => {
                                     }
                                 }
                             })
-                            .onFinally(onFinallyInner)
+                        subPipeline.onFinally.listen(onFinallyInner)
+                        yield* subPipeline
                     })
                     .pipe(async function* Step2(s) {
                         for await (const msg of s) {
@@ -681,7 +687,7 @@ describe('Pipeline', () => {
                             yield msg
                         }
                     })
-                    .onFinally(onFinally)
+                p.onFinally.listen(onFinally)
 
                 const received: number[] = []
 
@@ -709,7 +715,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value * 10
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(result).toEqual(expected.map((v) => v * 10))
                     })
@@ -723,7 +729,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value * 10
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(onFinally).toHaveBeenCalledTimes(1)
                         expect(result).toEqual(expected.map((v) => v * 10))
@@ -740,7 +746,7 @@ describe('Pipeline', () => {
                                 items.push(value)
                                 count += 1
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(result).toEqual(expected)
                         expect(items).toEqual(expected)
@@ -756,7 +762,7 @@ describe('Pipeline', () => {
                                 items.push(value)
                                 count += 1
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(result).toEqual(expected)
                         expect(items).toEqual(expected)
@@ -772,7 +778,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value % 2
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(result).toEqual(expected.filter((v) => v % 2))
                     })
@@ -786,7 +792,7 @@ describe('Pipeline', () => {
                                 count += 1
                                 return value % 2
                             })
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const result = await p.collect()
                         expect(result).toEqual(expected.filter((v) => v % 2))
                     })
@@ -798,7 +804,7 @@ describe('Pipeline', () => {
                             .reduce((prev, value) => {
                                 return prev + value
                             }, 0)
-                            .onFinally(onFinally)
+                        p.onFinally.listen(onFinally)
                         const results = await p.collect()
                         expect(results[results.length - 1]).toEqual(expected.reduce((w, v) => w + v, 0))
                     })
@@ -810,7 +816,8 @@ describe('Pipeline', () => {
             IteratorTest('single step with onFinally', () => {
                 const pipeline = new PushPipeline().pipe(async function* Step1(s) {
                     yield* s
-                }).onFinally(onFinally)
+                })
+                pipeline.onFinally.listen(onFinally)
 
                 pipeline.pull(generate())
                 return pipeline
@@ -820,7 +827,8 @@ describe('Pipeline', () => {
                 const err = new Error('expected')
                 const pipeline = new PushPipeline<number>().pipe(async function* Step1(s) {
                     yield* s
-                }).onFinally(onFinally)
+                })
+                pipeline.onFinally.listen(onFinally)
 
                 pipeline.pull((async function* generateError() {
                     yield* generate()
@@ -840,7 +848,8 @@ describe('Pipeline', () => {
                 const err = new Error('expected')
                 const pipeline = new PushPipeline().pipe(async function* Step1(s) {
                     yield* s
-                }).onFinally(onFinally)
+                })
+                pipeline.onFinally.listen(onFinally)
 
                 // eslint-disable-next-line require-yield
                 pipeline.pull((async function* generateError() {

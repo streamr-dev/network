@@ -2,36 +2,27 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
-import { instanceId, counterId } from '../utils'
+import { instanceId, counterId, wait } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
-import SubscribePipeline from './SubscribePipeline'
+import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
-import { createQueryString, Rest } from '../Rest'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
-import { range } from 'lodash'
+import { StreamRegistryCached } from '../StreamRegistryCached'
+import { random, range } from 'lodash'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { HttpUtil } from '../HttpUtil'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
-
-const createUrl = (baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}) => {
-    const queryMap = {
-        ...query,
-        format: 'raw'
-    }
-    const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-    const queryString = createQueryString(queryMap)
-    return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
-}
 
 export type ResendRef = MessageRef | {
     timestamp: number | Date | string,
@@ -69,7 +60,7 @@ function isResendRange<T extends ResendRangeOptions>(options: any): options is T
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export default class Resend implements Context {
+export class Resends implements Context {
     readonly id
     readonly debug
 
@@ -77,18 +68,15 @@ export default class Resend implements Context {
         context: Context,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamEndpointsCached)) private streamEndpoints: StreamEndpointsCached,
-        @inject(Rest) private rest: Rest,
-        @inject(BrubeckContainer) private container: DependencyContainer
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
+        @inject(BrubeckContainer) private container: DependencyContainer,
+        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
+        @inject(HttpUtil) private httpUtil: HttpUtil
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 
-    /**
-     * Call last/from/range as appropriate based on arguments
-     * @category Important
-     */
     async resend<T>(
         streamDefinition: StreamDefinition,
         options: ResendOptions,
@@ -105,11 +93,8 @@ export default class Resend implements Context {
         return sub
     }
 
-    /**
-     * Resend for all partitions of a stream.
-     */
     async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamEndpoints.getStream(streamId)
+        const { partitions } = await this.streamRegistryCached.getStream(streamId)
         if (partitions === 1) {
             // nothing interesting to do, treat as regular subscription
             return this.resend<T>(streamId, options, onMessage)
@@ -162,15 +147,16 @@ export default class Resend implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAdresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
-        if (!nodeAdresses.length) {
+        const nodeAddresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
+        if (!nodeAddresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
 
-        const nodeUrl = await this.storageNodeRegistry.getStorageNodeUrl(nodeAdresses[0]) // TODO: handle multiple nodes
-        const url = createUrl(nodeUrl, endpointSuffix, streamPartId, query)
+        const nodeAddress = nodeAddresses[random(0, nodeAddresses.length - 1)]
+        const nodeUrl = (await this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)).http
+        const url = this.createUrl(nodeUrl, endpointSuffix, streamPartId, query)
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             streamPartId,
@@ -183,7 +169,7 @@ export default class Resend implements Context {
             count += 1
         })
 
-        const dataStream = await this.rest.fetchStream(url)
+        const dataStream = await this.httpUtil.fetchHttpStream(url)
         messageStream.pull((async function* readStream() {
             try {
                 yield* dataStream
@@ -223,7 +209,6 @@ export default class Resend implements Context {
         })
     }
 
-    /** @internal */
     async range<T>(streamPartId: StreamPartID, {
         fromTimestamp,
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
@@ -249,8 +234,75 @@ export default class Resend implements Context {
         })
     }
 
-    /** @internal */
-    async stop() {
-        await this.storageNodeRegistry.stop()
+    async waitForStorage(streamMessage: StreamMessage, {
+        // eslint-disable-next-line no-underscore-dangle
+        interval = this.config._timeouts.storageNode.retryInterval,
+        // eslint-disable-next-line no-underscore-dangle
+        timeout = this.config._timeouts.storageNode.timeout,
+        count = 100,
+        messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
+            return msgTarget.signature === msgGot.signature
+        }
+    }: {
+        interval?: number
+        timeout?: number
+        count?: number
+        messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
+    } = {}): Promise<void> {
+        if (!streamMessage) {
+            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
+        }
+
+        const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
+        const streamDefinition = { streamId, partition }
+
+        /* eslint-disable no-await-in-loop */
+        const start = Date.now()
+        let last: StreamMessage[]
+        // eslint-disable-next-line no-constant-condition
+        let found = false
+        while (!found) {
+            const duration = Date.now() - start
+            if (duration > timeout) {
+                this.debug('waitForStorage timeout %o', {
+                    timeout,
+                    duration
+                }, {
+                    streamMessage,
+                    last: last!.map((l: any) => l.content),
+                })
+                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(streamMessage)}`)
+                err.streamMessage = streamMessage
+                throw err
+            }
+
+            const resendStream = await this.resend(streamDefinition, { last: count })
+            last = await resendStream.collect()
+            for (const lastMsg of last) {
+                if (messageMatchFn(streamMessage, lastMsg)) {
+                    found = true
+                    this.debug('last message found')
+                    return
+                }
+            }
+
+            this.debug('message not found, retrying... %o', {
+                msg: streamMessage.getParsedContent(),
+                'last 3': last.slice(-3).map(({ content }: any) => content)
+            })
+
+            await wait(interval)
+        }
+        /* eslint-enable no-await-in-loop */
+    }
+
+    private createUrl(baseUrl: string, endpointSuffix: string, streamPartId: StreamPartID, query: QueryDict = {}): string {
+        const queryMap = {
+            ...query,
+            format: 'raw'
+        }
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        const queryString = this.httpUtil.createQueryString(queryMap)
+        return `${baseUrl}/streams/${encodeURIComponent(streamId)}/data/partitions/${streamPartition}/${endpointSuffix}?${queryString}`
     }
 }

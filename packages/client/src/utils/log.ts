@@ -58,6 +58,7 @@ export {
     StreamrDebug as Debug,
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function inspect(value: any, inspectOptions: Parameters<typeof util.inspect>[1] = {}): string {
     return util.inspect(value, {
         ...DEFAULT_INSPECT_OPTS,
@@ -65,6 +66,7 @@ export function inspect(value: any, inspectOptions: Parameters<typeof util.inspe
     })
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function formatWithOptions(inspectOptions: Parameters<typeof util.formatWithOptions>[0], msgFormat?: any, ...param: any[]): string {
     if (typeof util.formatWithOptions !== 'function') {
         // util.formatWithOptions is not browserified, use util.format instead
@@ -77,6 +79,7 @@ export function formatWithOptions(inspectOptions: Parameters<typeof util.formatW
     }, msgFormat, ...param)
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function format(msgFormat?: any, ...param: any[]): string {
     return formatWithOptions(DEFAULT_INSPECT_OPTS, msgFormat, ...param)
 }

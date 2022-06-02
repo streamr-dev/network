@@ -15,8 +15,8 @@ import { Stoppable } from '../utils/Stoppable'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import Ethereum from '../Ethereum'
-import StreamPartitioner from './StreamPartitioner'
+import { Ethereum } from '../Ethereum'
+import { StreamPartitioner } from './StreamPartitioner'
 
 export type MessageCreateOptions<T = unknown> = {
     content: T,
@@ -30,21 +30,21 @@ export interface IMessageCreator {
     stop: () => Promise<void> | void
 }
 
-export class StreamMessageCreatorAnonymous implements IMessageCreator {
+export class MessageCreatorAnonymous implements IMessageCreator {
     // eslint-disable-next-line class-methods-use-this
     async create<T>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
         throw new Error('Anonymous user can not publish.')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop() {}
+    stop(): void {}
 }
 
 /**
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class StreamMessageCreator implements IMessageCreator, Stoppable {
+export class MessageCreator implements IMessageCreator, Stoppable {
     isStopped = false
     // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
@@ -105,11 +105,11 @@ export default class StreamMessageCreator implements IMessageCreator, Stoppable 
         })
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.isStopped = false
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()

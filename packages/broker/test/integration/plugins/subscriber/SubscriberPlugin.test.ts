@@ -1,12 +1,13 @@
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { createClient, startTestTracker } from '../../../utils'
 import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
+import StreamrClient from 'streamr-client'
 
 const TRACKER_PORT = 12465
 const wallet = Wallet.createRandom()
 
-const createMockPlugin = async (tracker: Tracker) => {
+const createMockPlugin = async (streamrClient: StreamrClient) => {
     const brokerConfig: any = {
         client: {
             auth: {
@@ -34,7 +35,7 @@ const createMockPlugin = async (tracker: Tracker) => {
     }
     return new SubscriberPlugin({
         name: 'subscriber',
-        streamrClient: await createClient(tracker, wallet.privateKey),
+        streamrClient,
         apiAuthenticator: undefined as any,
         brokerConfig
     })
@@ -42,16 +43,19 @@ const createMockPlugin = async (tracker: Tracker) => {
 
 describe('Subscriber Plugin', () => {
     let tracker: Tracker
+    let client: StreamrClient
     let plugin: any
 
     beforeAll(async () => {
         tracker = await startTestTracker(TRACKER_PORT)
-        plugin = await createMockPlugin(tracker)
+        client = await createClient(tracker, wallet.privateKey)
+        plugin = await createMockPlugin(client)
         await plugin.start()
     })
 
     afterAll(async () => {
         await Promise.allSettled([
+            client?.destroy(),
             plugin?.stop(),
             tracker?.stop(),
         ])

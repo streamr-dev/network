@@ -1,6 +1,6 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { getPublishTestMessages, createTestStream, getCreateClient, describeRepeats } from '../test-utils/utils'
+import { createTestStream, getCreateClient, getPublishTestMessages } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -11,7 +11,7 @@ const MAX_MESSAGES = 4
 const PARTITIONS = 3
 jest.setTimeout(60000)
 
-describeRepeats('SubscribeAll', () => {
+describe('SubscribeAll', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -66,7 +66,7 @@ describeRepeats('SubscribeAll', () => {
             expect(subMsgs).toContainEqual(msg)
         }
         await client.unsubscribe()
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('works with single partition', async () => {
@@ -90,7 +90,7 @@ describeRepeats('SubscribeAll', () => {
             expect(subMsgs).toContainEqual(msg)
         }
         await client.unsubscribe()
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('can stop prematurely', async () => {
@@ -106,11 +106,12 @@ describeRepeats('SubscribeAll', () => {
         }))
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
-        await sub.onFinally()
+        await sub.onFinally.listen()
+        await wait(500) // TODO: why is this wait needed? wasn't needed before encryption was enabled.
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
         // unsubscribed from everything
-        expect(client.countAll()).toBe(0)
+        expect((await client.getSubscriptions(stream.id)).length).toBe(0)
     })
 
     it('stops with unsubscribeAll', async () => {
@@ -126,11 +127,11 @@ describeRepeats('SubscribeAll', () => {
         }))
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
-        await sub.onFinally()
+        await sub.onFinally.listen()
         // got the messages
         expect(subMsgs).toHaveLength(MAX_MESSAGES)
         // unsubscribed from everything
-        expect(client.countAll()).toBe(0)
+        expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('stops only when all subs are unsubbed', async () => {
@@ -139,7 +140,7 @@ describeRepeats('SubscribeAll', () => {
             subMsgs.push(msg)
         })
         const onFinallyCalled = jest.fn()
-        sub.onFinally(onFinallyCalled)
+        sub.onFinally.listen(onFinallyCalled)
 
         const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
             return publishTestMessages(NUM_MESSAGES, { partitionKey: streamPartition })
@@ -149,7 +150,7 @@ describeRepeats('SubscribeAll', () => {
         await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
         expect(onFinallyCalled).toHaveBeenCalledTimes(0)
         // unsub from each partition
-        // should only onFinally once all unsubbed
+        // should only call onFinally once all unsubbed
         for (const p of range(PARTITIONS)) {
             expect(onFinallyCalled).toHaveBeenCalledTimes(0)
             // eslint-disable-next-line no-await-in-loop
@@ -165,6 +166,6 @@ describeRepeats('SubscribeAll', () => {
         // got the messages
         expect(subMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         // unsubscribed from everything
-        expect(client.countAll()).toBe(0)
+        expect((await client.getSubscriptions(stream.id)).length).toBe(0)
     })
 })

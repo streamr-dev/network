@@ -1,6 +1,6 @@
 /**
  eslint-disable array-bracket-spacing
-import StreamMessageCreator from '../../src/publish/MessageCreator'
+import { MessageCreator } from '../../src/publish/MessageCreator'
 import { StreamIDish } from '../../src/publish/utils'
 import { createMockAddress } from '../utils'
 
@@ -26,7 +26,7 @@ const createMockMessageCreator = () => {
         canEncrypt: jest.fn().mockReturnValue(true),
         getAddress: jest.fn().mockResolvedValue(userAddress)
     }
-    return new StreamMessageCreator(client as any)
+    return new MessageCreator(client as any)
 }
 
 const createMockMessage = async (streamObjectOrId: StreamIDish, partitionKey?: string) => {

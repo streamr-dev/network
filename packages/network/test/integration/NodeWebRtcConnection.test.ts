@@ -1,8 +1,8 @@
 import { once } from 'events'
 import { DescriptionType } from 'node-datachannel'
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { NodeWebRtcConnection } from '../../src/connection/NodeWebRtcConnection'
-import { DeferredConnectionAttempt } from '../../src/connection/DeferredConnectionAttempt'
+import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConnection'
+import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
 import { runAndWaitForEvents, wait, waitForCondition } from 'streamr-test-utils'
 
 /**

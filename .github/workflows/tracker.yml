@@ -1,0 +1,97 @@
+---
+# Lint, Test and Publish
+name: Tracker
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+concurrency:
+  group: network-tracker-build-${{ github.head_ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: packages/network-tracker
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
+          npm run bootstrap-pkg @streamr/network-tracker
+      - run: npm run eslint
+      - run: npm run test-unit
+        env:
+          CI: true
+      - name: Run test-integration
+        run: |
+          ulimit -c unlimited
+          mkdir -p /tmp/cores
+          chmod a+rwx /tmp/cores
+          echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
+          npm run test-integration
+        env:
+          CI: true
+      - if: failure()
+        name: Print core dump
+        run: |
+          if ls /tmp/cores/core.* 1> /dev/null 2>&1; then
+            echo "Core dump found, printing stack trace..."
+            sudo apt-get install -y gdb > /dev/null
+            for c in /tmp/cores/core.*; do
+              gdb node --core=$c --eval-command="set pagination off" --eval-command="info threads" --eval-command="backtrace" --eval-command="quit"
+              done
+          else
+            echo "No core dump found."
+          fi
+  test-docker:
+    name: "Docker Image: test"
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      test_services_to_start: "tracker-1"
+      build_platforms: linux/amd64
+      image_name: streamr/tracker
+      test_script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            docker inspect --format '{{json .State.Health }}' streamr-dev-tracker-1
+            curl -s http://localhost:30301/topology;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to tracker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1
+
+  docker-push:
+    name: "Docker Image: push"
+    needs: [test, test-docker]
+    # only push for nightly runs and manual triggers
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      image_name: streamr/tracker
+      build_platforms: linux/amd64
+      push_image: true
+      test_success: ${{ !(needs.test.result == 'failure' || needs.test-docker.result == 'failure') }}
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}

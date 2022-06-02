@@ -1,21 +1,20 @@
 import { EventEmitter } from 'events'
-import { ConstructorOptions, WebRtcConnection } from '../connection/WebRtcConnection'
+import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
 import { Logger } from "../helpers/Logger"
 import { NameDirectory } from "../NameDirectory"
-import { WebRtcConnectionFactory } from "../connection/WebRtcEndpoint"
+import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"
 import { DescriptionType } from 'node-datachannel'
 
-const NodeWebRtcConnectionFactory: WebRtcConnectionFactory = Object.freeze({
+export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {
         return new NodeWebRtcConnection(opts)
-    },
-    cleanUp(): void {
-        //nodeDataChannel.cleanup()
     }
-})
-
-export default NodeWebRtcConnectionFactory
+    registerWebRtcEndpoint(): void {
+    }
+    unregisterWebRtcEndpoint(): void {
+    }
+}
 
 export class NodeWebRtcConnection extends WebRtcConnection {
     private readonly logger: Logger

@@ -12,9 +12,6 @@ import { Simulator } from './Simulator'
 export const NodeWebSocketConnectionFactory: WebSocketConnectionFactory<NodeClientWsConnection> = Object.freeze({
     createConnection(peerInfo: PeerInfo): NodeClientWsConnection {
         return new NodeClientWsConnection(peerInfo)
-    },
-    cleanUp(): void {
-
     }
 })
 */

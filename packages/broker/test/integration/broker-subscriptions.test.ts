@@ -1,7 +1,7 @@
 import { Wallet } from '@ethersproject/wallet'
 import mqtt, { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream, StreamPermission } from 'streamr-client'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import { fastWallet, wait, waitForCondition } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, fetchPrivateKeyWithGas, getStreamParts, startTestTracker } from '../utils'
@@ -41,7 +41,6 @@ describe('broker subscriptions', () => {
         const broker2User = fastWallet()
         tracker = await startTestTracker(trackerPort)
         broker1 = await startBroker({
-            name: 'broker1',
             privateKey: broker1User.privateKey,
             trackerPort,
             extraPlugins: {
@@ -51,7 +50,6 @@ describe('broker subscriptions', () => {
             }
         })
         broker2 = await startBroker({
-            name: 'broker2',
             privateKey: broker2User.privateKey,
             trackerPort,
             extraPlugins: {

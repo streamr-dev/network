@@ -3,14 +3,12 @@ import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
-import { RelayMessage, RtcSubTypes, Status } from '../identifiers'
+import { RelayMessage, RtcSubTypes, Status, NodeId, TrackerId } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
 import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
-import { NodeId } from '../logic/node/Node'
-import { TrackerId } from '../logic/tracker/Tracker'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',

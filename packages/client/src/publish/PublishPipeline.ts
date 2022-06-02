@@ -7,17 +7,19 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { inspect } from '../utils/log'
 import { instanceId, Defer, Deferred } from '../utils'
 import { Context, ContextError } from '../utils/Context'
-import { PushPipeline, Pipeline } from '../utils/Pipeline'
+import { Pipeline } from '../utils/Pipeline'
+import { PushPipeline } from '../utils/PushPipeline'
 import { Stoppable } from '../utils/Stoppable'
 
-import StreamMessageCreator from './MessageCreator'
-import BrubeckNode from '../BrubeckNode'
-import Signer from './Signer'
-import Encrypt from './Encrypt'
-import Validator from '../Validator'
+import { MessageCreator } from './MessageCreator'
+import { BrubeckNode } from '../BrubeckNode'
+import { Signer } from './Signer'
+import { Encrypt } from './Encrypt'
+import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
 import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
     publishMetadata
@@ -32,7 +34,7 @@ export class FailedToPublishError extends Error {
         }
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
         return inspect(this, {
             ...options,
             customInspect: false,
@@ -41,11 +43,16 @@ export class FailedToPublishError extends Error {
     }
 }
 
-export type PublishMetadata<T = unknown> = {
-    content: T
+export interface MessageMetadata {
     timestamp?: string | number | Date
     sequenceNumber?: number
-    partitionKey?: string | number
+    partitionKey?: string | number,
+    msgChainId?: string
+}
+
+// TODO better name? 
+export type PublishMetadata<T = unknown> = MessageMetadata & {
+    content: T
 }
 
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
@@ -58,7 +65,7 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export default class PublishPipeline implements Context, Stoppable {
+export class PublishPipeline implements Context, Stoppable {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
@@ -72,7 +79,7 @@ export default class PublishPipeline implements Context, Stoppable {
     constructor(
         context: Context,
         private node: BrubeckNode,
-        private messageCreator: StreamMessageCreator,
+        private messageCreator: MessageCreator,
         private signer: Signer,
         private validator: Validator,
         private destroySignal: DestroySignal,
@@ -83,27 +90,27 @@ export default class PublishPipeline implements Context, Stoppable {
         this.debug = context.debug.extend(this.id)
         this.streamMessageQueue = new PushPipeline<PublishQueueIn>()
             .pipe(this.toStreamMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
 
         this.publishQueue = new Pipeline<PublishQueueOut>(this.streamMessageQueue)
             .forEach(this.encryptMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.signMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.validateMessage.bind(this))
-            .filter(this.filterResolved)
+            .filter(this.filterNonSettled)
             .forEach(this.consumeQueue.bind(this))
 
-        destroySignal.onDestroy(this.stop.bind(this))
+        destroySignal.onDestroy.listen(this.stop.bind(this))
     }
 
-    private filterResolved = ([_streamMessage, defer]: PublishQueueOut): boolean => {
-        if (this.isStopped && !defer.isResolved()) {
+    private filterNonSettled = ([_streamMessage, defer]: PublishQueueOut): boolean => {
+        if (this.isStopped && !defer.isSettled()) {
             defer.reject(new ContextError(this, 'Pipeline Stopped. Client probably disconnected'))
             return false
         }
 
-        return !defer.isResolved()
+        return !defer.isSettled()
     }
 
     private async* toStreamMessage(src: AsyncGenerator<PublishQueueIn>): AsyncGenerator<PublishQueueOut> {
@@ -133,7 +140,7 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     private async signMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
         const onError = (err: Error) => {
             defer.reject(err)
         }
@@ -142,7 +149,7 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     private async validateMessage([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
         const onError = (err: Error) => {
             defer.reject(err)
         }
@@ -151,7 +158,7 @@ export default class PublishPipeline implements Context, Stoppable {
     }
 
     private async consumeQueue([streamMessage, defer]: PublishQueueOut): Promise<void> {
-        if (defer.isResolved()) { return }
+        if (defer.isSettled()) { return }
 
         try {
             this.check()
@@ -189,7 +196,8 @@ export default class PublishPipeline implements Context, Stoppable {
         this.debug('publish >> %o', {
             streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
             timestamp: publishMetadata.timestamp,
-            partitionKey: publishMetadata.partitionKey
+            partitionKey: publishMetadata.partitionKey,
+            msgChainId: publishMetadata.msgChainId
         })
         this.startQueue()
 

@@ -1,5 +1,5 @@
 import { Stream, StreamrClient } from 'streamr-client'
-import { Tracker } from 'streamr-network'
+import { Tracker } from '@streamr/network-tracker'
 import mqtt from 'async-mqtt'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream, Queue, fetchPrivateKeyWithGas, startTestTracker } from '../../../utils'
@@ -33,7 +33,6 @@ describe('MQTT Bridge', () => {
         brokerUser = new Wallet(await fetchPrivateKeyWithGas())
         tracker = await startTestTracker(TRACKER_PORT)
         broker = await startBroker({
-            name: 'broker',
             privateKey: brokerUser.privateKey,
             trackerPort: TRACKER_PORT,
             extraPlugins: {
@@ -57,7 +56,6 @@ describe('MQTT Bridge', () => {
     })
 
     afterEach(async () => {
-        streamrClient?.debug('destroy after test')
         await streamrClient?.destroy()
     })
 

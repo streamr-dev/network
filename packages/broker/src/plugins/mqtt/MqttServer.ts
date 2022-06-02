@@ -8,7 +8,7 @@ import { ApiAuthenticator } from '../../apiAuthenticator'
 const logger = new Logger(module)
 
 export interface MqttServerListener {
-    onMessageReceived(topic: string, payload: string): void
+    onMessageReceived(topic: string, payload: string, clientId: string): void
     onSubscribed(topics: string, clientId: string): void
     onUnsubscribed(topics: string, clientId: string): void
 }
@@ -31,7 +31,7 @@ export class MqttServer {
         })
         this.aedes.on('publish', (packet: IPublishPacket, client: aedes.Client) => {
             if (client !== null) {  // is null if the this server sent the message
-                this.listener?.onMessageReceived(packet.topic, packet.payload.toString())
+                this.listener?.onMessageReceived(packet.topic, packet.payload.toString(), client.id)
             }
         })
         this.aedes.on('subscribe', (subscriptions: ISubscription[], client: aedes.Client) => {

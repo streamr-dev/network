@@ -1,10 +1,10 @@
-import { NetworkNode } from '../../src/logic/node/NetworkNode'
-import { Tracker } from '../../src/logic/tracker/Tracker'
+import { NetworkNode } from '../../src/logic/NetworkNode'
+import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { createNetworkNode, startTracker } from '../../src/composition'
-import { Event as NodeEvent } from "../../src/logic/node/Node"
+import { createNetworkNode } from '../../src/composition'
+import { Event as NodeEvent } from '../../src/logic/Node'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -16,6 +16,7 @@ describe('duplicate message detection and avoidance', () => {
     let contactNode: NetworkNode
     let otherNodes: NetworkNode[]
     let numOfReceivedMessages: number[]
+    let numOfDuplicateMessages: number[]
 
     beforeAll(async () => {
         tracker = await startTracker({
@@ -86,12 +87,16 @@ describe('duplicate message detection and avoidance', () => {
         // Set up 1st test case
         let totalMessages = 0
         numOfReceivedMessages = [0, 0, 0, 0, 0]
+        numOfDuplicateMessages = [0, 0, 0, 0, 0]
         const updater = (i: number) => () => {
             totalMessages += 1
             numOfReceivedMessages[i] += 1
         }
         for (let i = 0; i < otherNodes.length; ++i) {
             otherNodes[i].addMessageListener(updater(i))
+            otherNodes[i].on(NodeEvent.DUPLICATE_MESSAGE_RECEIVED, () => {
+                numOfDuplicateMessages[i] += 1
+            })
         }
 
         // Produce data
@@ -124,15 +129,8 @@ describe('duplicate message detection and avoidance', () => {
     })
 
     test('maximum times a node receives duplicates of message is bounded by total number of repeaters', async () => {
-        const numOfDuplicates = await Promise.all(otherNodes.map(async (n) => {
-            // @ts-expect-error private field
-            const report = await n.metrics.report()
-            return (report['onDataReceived:ignoredDuplicate'] as any).total
-        }))
-
-        expect(numOfDuplicates).toHaveLength(5)
-        numOfDuplicates.forEach((n) => {
-            expect(n).toBeLessThanOrEqual((otherNodes.length * 2)) // multiplier because 2 separate messages
+        numOfDuplicateMessages.forEach((n) => {
+            expect(n).toBeLessThanOrEqual(otherNodes.length * 2) // multiplier because 2 separate messages
         })
     })
 })

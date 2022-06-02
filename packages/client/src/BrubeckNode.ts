@@ -6,9 +6,9 @@ import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } fr
 import { pOnce, uuid, instanceId } from './utils'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import Ethereum from './Ethereum'
+import { Ethereum } from './Ethereum'
 import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
@@ -27,6 +27,13 @@ export interface NetworkNodeStub {
     getRtt: (nodeId: string) => number|undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
+    hasStreamPart: (streamPartId: StreamPartID) => boolean
+    hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+}
+
+export const getEthereumAddressFromNodeId = (nodeId: string): string => {
+    const ETHERUM_ADDRESS_LENGTH = 42
+    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
 }
 
 /**
@@ -34,12 +41,10 @@ export interface NetworkNodeStub {
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
-export default class BrubeckNode implements Context {
+export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private options
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
@@ -53,10 +58,10 @@ export default class BrubeckNode implements Context {
         this.options = options
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        destroySignal.onDestroy(this.destroy)
+        destroySignal.onDestroy.listen(this.destroy)
     }
 
-    private assertNotDestroyed() {
+    private assertNotDestroyed(): void {
         this.destroySignal.assertNotDestroyed(this)
     }
 
@@ -74,7 +79,7 @@ export default class BrubeckNode implements Context {
         return this.options as NetworkNodeOptions
     }
 
-    private async initNode() {
+    private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
@@ -97,10 +102,9 @@ export default class BrubeckNode implements Context {
         const networkOptions = await this.getNormalizedNetworkOptions()
         const node = createNetworkNode({
             disconnectionWaitTime: 200,
-            name: id,
             ...networkOptions,
             id,
-            metricsContext: new MetricsContext(options.name ?? id)
+            metricsContext: new MetricsContext()
         })
 
         if (!this.destroySignal.isDestroyed()) {
@@ -110,7 +114,7 @@ export default class BrubeckNode implements Context {
         return node
     }
 
-    private async generateId() {
+    private async generateId(): Promise<string> {
         if (this.ethereum.isAuthenticated()) {
             const address = await this.ethereum.getAddress()
             return `${address}#${uuid()}`
@@ -172,16 +176,11 @@ export default class BrubeckNode implements Context {
         }
     })
 
-    /** @internal */
     startNode: () => Promise<unknown> = this.startNodeTask
 
-    /**
-     * Get started network node.
-     */
     getNode: () => Promise<NetworkNodeStub> = this.startNodeTask
 
-    /** @internal */
-    async getNodeId() {
+    async getNodeId(): Promise<string> {
         const node = await this.getNode()
         return node.getNodeId()
     }
@@ -191,7 +190,6 @@ export default class BrubeckNode implements Context {
      * Basically a wrapper around: (await getNode()).publish(…)
      * but will be sync in case that node is already started.
      * Zalgo intentional. See below.
-     * @internal
      */
     publishToNode(streamMessage: StreamMessage): void | Promise<void> {
         // NOTE: function is intentionally not async for performance reasons.
@@ -201,7 +199,7 @@ export default class BrubeckNode implements Context {
         try {
             this.destroySignal.assertNotDestroyed(this)
 
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 // use .then instead of async/await so
                 // this.cachedNode.publish call can be sync
                 return this.startNodeTask().then((node) => {
@@ -209,31 +207,36 @@ export default class BrubeckNode implements Context {
                 })
             }
 
-            return this.cachedNode.publish(streamMessage)
+            return this.cachedNode!.publish(streamMessage)
         } finally {
             this.debug('publishToNode << %o', streamMessage.getMessageID())
         }
     }
 
-    async openPublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    async openProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.joinStreamPartAsPurePublisher(streamPartId, nodeId)
+            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
 
-    async closePublishProxyConnectionOnStreamPart(streamPartId: StreamPartID, nodeId: string): Promise<void> {
+    async closeProxyConnection(streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection): Promise<void> {
         try {
-            if (!this.cachedNode || !this.startNodeComplete) {
+            if (this.isStarting()) {
                 return
             }
-            await this.cachedNode!.leavePurePublishingStreamPart(streamPartId, nodeId)
+            await this.cachedNode!.closeProxyConnection(streamPartId, nodeId, direction)
         } finally {
             this.debug('closeProxyConnectionOnStream << %o', streamPartId, nodeId)
         }
     }
+
+    private isStarting(): boolean {
+        return !this.cachedNode || !this.startNodeComplete
+    }
 }
+

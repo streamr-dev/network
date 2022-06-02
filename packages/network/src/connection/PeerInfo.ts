@@ -1,7 +1,5 @@
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { Location } from '../identifiers'
-import { NodeId } from '../logic/node/Node'
-import { TrackerId } from '../logic/tracker/Tracker'
+import { Location, NodeId, TrackerId } from '../identifiers'
 
 export type PeerId = NodeId | TrackerId | string
 
@@ -16,7 +14,6 @@ interface ObjectRepresentation {
     peerType: string
     controlLayerVersions: number[] | null
     messageLayerVersions: number[] | null
-    peerName?: string | null | undefined
     location?: Location | null | undefined
 }
 
@@ -26,7 +23,6 @@ const defaultMessageLayerVersions = MessageLayer.StreamMessage.getSupportedVersi
 export class PeerInfo {
     static newTracker(
         peerId: TrackerId,
-        peerName?: string | null | undefined,
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
         location?: Location
@@ -36,14 +32,12 @@ export class PeerInfo {
             PeerType.Tracker,
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
-            peerName,
             location
         )
     }
 
     static newNode(
         peerId: NodeId,
-        peerName?: string | null | undefined,
         controlLayerVersions?: number[] | undefined,
         messageLayerVersions?: number[] | undefined,
         location?: Location
@@ -53,7 +47,6 @@ export class PeerInfo {
             PeerType.Node,
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
-            peerName,
             location
         )
     }
@@ -62,13 +55,12 @@ export class PeerInfo {
         return new PeerInfo(peerId, PeerType.Unknown, defaultControlLayerVersions, defaultMessageLayerVersions)
     }
 
-    static fromObject({ peerId, peerType, peerName, location, controlLayerVersions, messageLayerVersions }: ObjectRepresentation): PeerInfo  {
+    static fromObject({ peerId, peerType, location, controlLayerVersions, messageLayerVersions }: ObjectRepresentation): PeerInfo  {
         return new PeerInfo(
             peerId,
             peerType as PeerType,
             controlLayerVersions || defaultControlLayerVersions,
             messageLayerVersions || defaultMessageLayerVersions,
-            peerName,
             location ?? undefined
         )
     }
@@ -77,7 +69,6 @@ export class PeerInfo {
     readonly peerType: PeerType
     readonly controlLayerVersions: number[]
     readonly messageLayerVersions: number[]
-    readonly peerName: string | null
     readonly location: Location | undefined
 
     constructor(
@@ -85,7 +76,6 @@ export class PeerInfo {
         peerType: PeerType,
         controlLayerVersions?: number[],
         messageLayerVersions?: number[],
-        peerName?: string | null | undefined,
         location?: Location
     ) {
         if (!peerId) {
@@ -108,7 +98,6 @@ export class PeerInfo {
         this.peerType = peerType
         this.controlLayerVersions = controlLayerVersions
         this.messageLayerVersions = messageLayerVersions
-        this.peerName = peerName ? peerName : null
         this.location = location
     }
 
@@ -121,6 +110,6 @@ export class PeerInfo {
     }
 
     toString(): string {
-        return (this.peerName ? `${this.peerName}` : '') + `<${this.peerId.slice(0, 8)}>`
+        return `<${this.peerId.slice(0, 8)}>`
     }
 }

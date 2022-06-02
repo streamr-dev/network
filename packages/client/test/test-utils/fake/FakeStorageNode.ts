@@ -1,6 +1,7 @@
 import {
     EthereumAddress,
     MessageID,
+    SigningUtil,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -11,6 +12,8 @@ import { ActiveNodes } from './ActiveNodes'
 import { Multimap } from '../utils'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
+
+const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
 
 export class FakeStorageNode extends FakeBrubeckNode {
 
@@ -25,13 +28,13 @@ export class FakeStorageNode extends FakeBrubeckNode {
     async addAssignment(streamId: StreamID): Promise<void> {
         const stream = await this.streamRegistry.getStream(streamId)
         const networkNode = await this.getNode()
-        stream.getStreamParts().forEach((streamPartId, idx) => {
-            if (!networkNode.subsciptions.has(streamPartId)) {
+        stream.getStreamParts().forEach(async (streamPartId, idx) => {
+            if (!networkNode.subscriptions.has(streamPartId)) {
                 networkNode.addMessageListener((msg: StreamMessage) => {
                     this.storeMessage(msg)
                 })
                 networkNode.subscribe(streamPartId)
-                this.publishToNode(new StreamMessage({
+                const assignmentMessage = new StreamMessage({
                     messageId: new MessageID(
                         toStreamID(formStorageNodeAssignmentStreamId(this.id)),
                         0,
@@ -43,7 +46,10 @@ export class FakeStorageNode extends FakeBrubeckNode {
                     content: {
                         streamPart: streamPartId,
                     }
-                }))
+                })
+                const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
+                assignmentMessage.signature = await SigningUtil.sign(payload, PRIVATE_KEY)
+                this.publishToNode(assignmentMessage)
             }
         })
     }
@@ -58,7 +64,11 @@ export class FakeStorageNode extends FakeBrubeckNode {
         if (messages !== undefined) {
             const firstIndex = Math.max(messages.length - count, 0)
             const lastIndex = Math.min(firstIndex + count, messages.length - 1)
-            return messages.slice(firstIndex, lastIndex + 1)
+            return messages.slice(firstIndex, lastIndex + 1).map((msg: StreamMessage) => {
+                // return a clone as client mutates message when it decrypts messages
+                const serialized = msg.serialize()
+                return StreamMessage.deserialize(serialized)
+            })
             // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?

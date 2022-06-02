@@ -1,15 +1,16 @@
 import { wait } from 'streamr-test-utils'
 
-import { describeRepeats, uid, getCreateClient, Msg, publishManyGenerator } from '../test-utils/utils'
+import { getCreateClient, Msg, publishManyGenerator, uid } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
+import { StreamPermission } from '../../src'
 
 const TEST_TIMEOUT = 60 * 1000
 
 jest.setTimeout(TEST_TIMEOUT)
 
-describeRepeats('StreamrClient', () => {
+describe('StreamrClient', () => {
     const MAX_MESSAGES = 10
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
@@ -52,6 +53,7 @@ describeRepeats('StreamrClient', () => {
         client = await createClient()
         client.debug('create stream >>')
         stream = await createStream()
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('create stream <<')
         expect(onError).toHaveBeenCalledTimes(0)
     })
@@ -78,9 +80,9 @@ describeRepeats('StreamrClient', () => {
                 streamId: stream.id,
             })
             const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-            // @ts-expect-error
+            // @ts-expect-error private
             const publish = client.publisher.publishFromMetadata(stream, source)
-            // @ts-expect-error
+            // @ts-expect-error private
             const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
             const received = []
             for await (const msg of sub) {
@@ -100,9 +102,9 @@ describeRepeats('StreamrClient', () => {
                     streamId: testStream.id,
                 })
                 const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-                // @ts-expect-error
+                // @ts-expect-error private
                 const publish = client.publisher.publishFromMetadata(testStream, source)
-                // @ts-expect-error
+                // @ts-expect-error private
                 const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
                 const received = []
                 for await (const msg of sub) {
@@ -115,6 +117,8 @@ describeRepeats('StreamrClient', () => {
                 return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
             }
             const stream2 = await createStream()
+            await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+
             const tasks = [
                 testPubSub(stream),
                 testPubSub(stream2),

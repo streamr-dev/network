@@ -4,20 +4,20 @@
 
 import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
 
-import OrderMessages from './OrderMessages'
+import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 
-import Validator from '../Validator'
+import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
-import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { Context } from '../utils/Context'
 import { ConfigInjectionToken } from '../Config'
-import Resends from './Resends'
+import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 
-export default function SubscribePipeline<T = unknown>(
+export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
     streamPartId: StreamPartID,
     context: Context,
@@ -25,7 +25,7 @@ export default function SubscribePipeline<T = unknown>(
 ): MessageStream<T> {
     const validate = new Validator(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(ConfigInjectionToken.Subscribe),
         container.resolve(ConfigInjectionToken.Cache)
     )
@@ -63,7 +63,7 @@ export default function SubscribePipeline<T = unknown>(
 
     const decrypt = new Decrypt<T>(
         context,
-        container.resolve(StreamEndpointsCached),
+        container.resolve(StreamRegistryCached),
         container.resolve(SubscriberKeyExchange),
         container.resolve(DestroySignal),
     )
@@ -72,13 +72,13 @@ export default function SubscribePipeline<T = unknown>(
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-    return messageStream
-        .onError(onError)
+    messageStream.onError.listen(onError)
+    messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
         // convert group key error responses into errors
         // (only for subscribe pipeline, not publish pipeline)
-        .forEach((streamMessage) => {
+        .forEach((streamMessage: StreamMessage) => {
             if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
                 const errMsg = streamMessage as StreamMessage<any>
                 const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
@@ -87,22 +87,22 @@ export default function SubscribePipeline<T = unknown>(
             }
         })
         // validate
-        .forEach(async (streamMessage) => {
+        .forEach(async (streamMessage: StreamMessage) => {
             await validate.validate(streamMessage)
         })
         // decrypt
-        .forEach(decrypt.decrypt)
+        .map(decrypt.decrypt)
         // parse content
-        .forEach(async (streamMessage) => {
+        .forEach(async (streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
         })
         // re-order messages (ignore gaps)
         .pipe(orderMessages.transform())
         // ignore any failed messages
-        .filter(async (streamMessage) => {
+        .filter(async (streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
-        .onBeforeFinally(async () => {
+        .onBeforeFinally.listen(async () => {
             const tasks = [
                 orderMessages.stop(),
                 gapFillMessages.stop(),
@@ -111,4 +111,5 @@ export default function SubscribePipeline<T = unknown>(
             ]
             await Promise.allSettled(tasks)
         })
+    return messageStream
 }

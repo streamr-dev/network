@@ -1,30 +1,30 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
-import BrubeckNode from '../../../src/BrubeckNode'
+import { BrubeckNode } from '../../../src/BrubeckNode'
 import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig } from '../../../src/Config'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { AuthConfig } from '../../../src/Ethereum'
-import { Rest } from '../../../src/Rest'
 import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { StreamrClient } from '../../../src/StreamrClient'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
-import { FakeRest } from './FakeRest'
 import { createEthereumAddressCache } from '../utils'
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
+import { FakeHttpUtil } from './FakeHttpUtil'
+import { HttpUtil } from '../../../src/HttpUtil'
 
 export interface ClientFactory {
-    createClient: (opts?: any) => StreamrClient
+    createClient: (opts?: StreamrClientConfig) => StreamrClient
 }
 
 export const createClientFactory = (): ClientFactory => {
     const mockContainer = container.createChildContainer()
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
+    mockContainer.registerSingleton(HttpUtil, FakeHttpUtil)
     mockContainer.registerSingleton(ActiveNodes, ActiveNodes as any)
-    mockContainer.registerSingleton(Rest, FakeRest as any)
     const ethereumAddressCache = createEthereumAddressCache()
     mockContainer.register(BrubeckNode, { useFactory: (c: DependencyContainer) => {
         /*
@@ -62,8 +62,9 @@ export const createClientFactory = (): ClientFactory => {
                 }
             }
             const config = {
-                ...opts,
-                ...authOpts
+                metrics: false,
+                ...authOpts,
+                ...opts
             }
             return new StreamrClient(config, mockContainer)
         }

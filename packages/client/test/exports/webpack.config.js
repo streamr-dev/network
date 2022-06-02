@@ -1,5 +1,4 @@
 /* eslint-disable prefer-template */
-/* eslint-disable prefer-destructuring */
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
 

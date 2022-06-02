@@ -2,6 +2,7 @@ import WebSocket from 'ws'
 import { StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
 import { ParsedQs } from 'qs'
+import { v4 as uuid } from 'uuid'
 import { parsePositiveInteger, parseQueryParameter } from '../../helpers/parser'
 import { Connection } from './Connection'
 import { closeWithError } from './closeWebsocket'
@@ -28,14 +29,19 @@ export class PublishConnection implements Connection {
     }
 
     init(ws: WebSocket, streamrClient: StreamrClient, payloadFormat: PayloadFormat): void {
-        ws.on('message', (payload: string) => {
+        const msgChainId = uuid()
+        ws.on('message', async (payload: string) => {
             try {
                 const { content, metadata } = payloadFormat.createMessage(payload)
                 const partitionKey = this.partitionKey ?? (this.partitionKeyField ? (content[this.partitionKeyField] as string) : undefined)
-                streamrClient.publish({
+                await streamrClient.publish({
                     id: this.streamId,
                     partition: this.partition
-                }, content, metadata.timestamp, partitionKey)
+                }, content, {
+                    timestamp: metadata.timestamp,
+                    partitionKey,
+                    msgChainId
+                })
             } catch (err: any) {
                 closeWithError(err, 'Unable to publish', ws, logger)
             }

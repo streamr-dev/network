@@ -1,5 +1,5 @@
 import { Logger } from 'streamr-network'
-import { keyToArrayIndex, StreamPartID, toStreamPartID, StreamID } from 'streamr-client-protocol'
+import { keyToArrayIndex, StreamPartID } from 'streamr-client-protocol'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'
 import { StoragePoller } from './StoragePoller'
@@ -10,14 +10,6 @@ const logger = new Logger(module)
 export interface StorageConfigListener {
     onStreamPartAdded: (streamPart: StreamPartID) => void
     onStreamPartRemoved: (streamPart: StreamPartID) => void
-}
-
-function createStreamPartIDs(streamId: StreamID, partitions: number): StreamPartID[] {
-    const ids: StreamPartID[] = []
-    for (let i = 0; i < partitions; i++) {
-        ids.push(toStreamPartID(streamId, i))
-    }
-    return ids
 }
 
 /**
@@ -91,8 +83,8 @@ export class StorageConfig {
         return this.synchronizer.getState()
     }
 
-    private createMyStreamParts({ id, partitions }: Stream): Set<StreamPartID> {
-        return new Set<StreamPartID>(createStreamPartIDs(id, partitions).filter((streamPart) => {
+    private createMyStreamParts(stream: Stream): Set<StreamPartID> {
+        return new Set<StreamPartID>(stream.getStreamParts().filter((streamPart) => {
             const hashedIndex = keyToArrayIndex(this.clusterSize, streamPart)
             return hashedIndex === this.myIndexInCluster
         }))

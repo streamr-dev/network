@@ -3,16 +3,16 @@
  */
 import { StreamMessage } from 'streamr-client-protocol'
 
-import EncryptionUtil, { UnableToDecryptError } from '../encryption/Encryption'
-import { SubscriberKeyExchange } from '../encryption/KeyExchangeSubscriber'
-import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { EncryptionUtil, UnableToDecryptError } from '../encryption/EncryptionUtil'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamRegistryCached } from '../StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 import { Stoppable } from '../utils/Stoppable'
 import { instanceId } from '../utils'
 
 type IDecrypt<T> = {
-    decrypt: (streamMessage: StreamMessage<T>) => Promise<void>
+    decrypt: (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
 }
 
 export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
@@ -22,31 +22,31 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
 
     constructor(
         context: Context,
-        private streamEndpoints: StreamEndpointsCached,
+        private streamRegistryCached: StreamRegistryCached,
         private keyExchange: SubscriberKeyExchange,
         private destroySignal: DestroySignal,
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
-        this.destroySignal.onDestroy(async () => {
+        this.destroySignal.onDestroy.listen(async () => {
             if (!this.isStopped) {
                 await this.stop()
             }
         })
     }
 
-    async decrypt(streamMessage: StreamMessage<T>) {
+    async decrypt(streamMessage: StreamMessage<T>): Promise<StreamMessage<T>> {
         if (this.isStopped) {
-            return
+            return streamMessage
         }
 
         if (!streamMessage.groupKeyId) {
-            return
+            return streamMessage
         }
 
         if (streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES) {
-            return
+            return streamMessage
         }
 
         try {
@@ -61,19 +61,25 @@ export class Decrypt<T> implements IDecrypt<T>, Context, Stoppable {
                 ].join(' '), streamMessage)
             }
 
-            if (this.isStopped) { return }
-            EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
-            await this.keyExchange.addNewKey(streamMessage)
+            if (this.isStopped) { 
+                return streamMessage
+            }
+            const clone = StreamMessage.deserialize(streamMessage.serialize())
+            EncryptionUtil.decryptStreamMessage(clone, groupKey)
+            await this.keyExchange.addNewKey(clone)
+            return clone as StreamMessage<T>
         } catch (err) {
-            if (this.isStopped) { return }
+            if (this.isStopped) { 
+                return streamMessage
+            }
             this.debug('Decrypt Error', err)
             // clear cached permissions if cannot decrypt, likely permissions need updating
-            this.streamEndpoints.clearStream(streamMessage.getStreamId())
+            this.streamRegistryCached.clearStream(streamMessage.getStreamId())
             throw err
         }
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.debug('stop')
         this.isStopped = true
     }

@@ -1,5 +1,5 @@
 import { auth, Client, types, tracker } from 'cassandra-driver'
-import { MetricsContext } from 'streamr-network'
+import { MetricsContext, RateMetric } from 'streamr-network'
 import { BatchManager } from './BatchManager'
 import { Readable, Transform } from 'stream'
 import { EventEmitter } from 'events'
@@ -231,19 +231,20 @@ export class Storage extends EventEmitter {
     }
 
     enableMetrics(metricsContext: MetricsContext): void {
-        const cassandraMetrics = metricsContext.create('broker/cassandra')
-            .addRecordedMetric('readCount')
-            .addRecordedMetric('readBytes')
-            .addRecordedMetric('writeCount')
-            .addRecordedMetric('writeBytes')
-            .addQueriedMetric('batchManager', () => this.batchManager.metrics())
+        const metrics = {
+            readMessagesPerSecond: new RateMetric(),
+            readBytesPerSecond: new RateMetric(),
+            writeMessagesPerSecond: new RateMetric(),
+            writeBytesPerSecond: new RateMetric()
+        }
+        metricsContext.addMetrics('broker.plugin.storage', metrics)
         this.on('read', (streamMessage: StreamMessage) => {
-            cassandraMetrics.record('readCount', 1)
-            cassandraMetrics.record('readBytes', streamMessage.getContent(false).length)
+            metrics.readMessagesPerSecond.record(1)
+            metrics.readBytesPerSecond.record(streamMessage.getContent(false).length)
         })
         this.on('write', (streamMessage: StreamMessage) => {
-            cassandraMetrics.record('writeCount', 1)
-            cassandraMetrics.record('writeBytes', streamMessage.getContent(false).length)
+            metrics.writeMessagesPerSecond.record(1)
+            metrics.writeBytesPerSecond.record(streamMessage.getContent(false).length)
         })
     }
 

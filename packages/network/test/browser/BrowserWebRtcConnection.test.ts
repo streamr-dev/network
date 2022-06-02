@@ -1,8 +1,8 @@
-import BrowserWebRtcConnectionFactory from "../../src/connection/BrowserWebRtcConnection"
+import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
 import { MessageQueue} from "../../src/connection/MessageQueue"
-import { ConstructorOptions } from "../../src/connection/WebRtcConnection"
-import { DeferredConnectionAttempt } from "../../src/connection/DeferredConnectionAttempt"
+import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
+import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
 
 const connectionOpts1: ConstructorOptions = {
     selfId: 'peer1',
@@ -24,8 +24,8 @@ const connectionOpts2: ConstructorOptions = {
 
 describe('BrowserWebRtcConnection', () => {
 
-    const conn1 = BrowserWebRtcConnectionFactory.createConnection(connectionOpts1)
-    const conn2 = BrowserWebRtcConnectionFactory.createConnection(connectionOpts2)
+    const conn1 = webRtcConnectionFactory.createConnection(connectionOpts1)
+    const conn2 = webRtcConnectionFactory.createConnection(connectionOpts2)
 
     conn1.on('localCandidate', (candidate, mid) => {
         conn2.addRemoteCandidate(candidate, mid)
@@ -55,7 +55,6 @@ describe('BrowserWebRtcConnection', () => {
     afterAll(() => {
         conn1.close()
         conn2.close()
-        BrowserWebRtcConnectionFactory.cleanUp()
     })
 
     it('can connect', async () => {

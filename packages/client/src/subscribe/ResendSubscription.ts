@@ -1,16 +1,20 @@
 import { DependencyContainer } from 'tsyringe'
-import SubscriptionSession from './SubscriptionSession'
+import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription } from './Subscription'
 import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { ConfigInjectionToken } from '../Config'
-import OrderMessages from './OrderMessages'
-import Resends, { ResendOptions } from './Resends'
-import Signal from '../utils/Signal'
+import { OrderMessages } from './OrderMessages'
+import { ResendOptions, Resends } from './Resends'
+import EventEmitter from 'eventemitter3'
+import { DestroySignal } from '../DestroySignal'
+
+export interface ResendSubscriptionEvents {
+    resendComplete: () => void
+}
 
 export class ResendSubscription<T> extends Subscription<T> {
-    onResent = Signal.once()
-
     private orderMessages
+    private eventEmitter: EventEmitter<ResendSubscriptionEvents>
     /** @internal */
     constructor(
         subSession: SubscriptionSession<T>,
@@ -19,6 +23,7 @@ export class ResendSubscription<T> extends Subscription<T> {
         container: DependencyContainer
     ) {
         super(subSession)
+        this.eventEmitter = new EventEmitter<ResendSubscriptionEvents>()
         this.resendThenRealtime = this.resendThenRealtime.bind(this)
         this.orderMessages = new OrderMessages<T>(
             container.resolve(ConfigInjectionToken.Subscribe),
@@ -28,8 +33,12 @@ export class ResendSubscription<T> extends Subscription<T> {
         )
         this.pipe(this.resendThenRealtime)
         this.pipe(this.orderMessages.transform())
-        this.onBeforeFinally(async () => {
+        this.onBeforeFinally.listen(async () => {
             this.orderMessages.stop()
+        })
+        const destroySignal = container.resolve(DestroySignal)
+        destroySignal.onDestroy.listen(() => {
+            this.eventEmitter.removeAllListeners()
         })
     }
 
@@ -40,7 +49,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             partition,
         }, this.resendOptions)
 
-        this.onBeforeFinally(async () => {
+        this.onBeforeFinally.listen(async () => {
             resentMsgs.end()
             await resentMsgs.return()
         })
@@ -48,8 +57,16 @@ export class ResendSubscription<T> extends Subscription<T> {
         return resentMsgs
     }
 
+    once<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
+        this.eventEmitter.once(eventName, listener as any)
+    }
+
+    off<E extends keyof ResendSubscriptionEvents>(eventName: E, listener: ResendSubscriptionEvents[E]): void {
+        this.eventEmitter.off(eventName, listener as any)
+    }
+
     /** @internal */
-    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>) {
+    async* resendThenRealtime(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
         try {
             yield* await this.getResent()
         } catch (err) {
@@ -59,7 +76,7 @@ export class ResendSubscription<T> extends Subscription<T> {
             }
         }
 
-        await this.onResent.trigger()
+        this.eventEmitter.emit('resendComplete')
         yield* src
     }
 }

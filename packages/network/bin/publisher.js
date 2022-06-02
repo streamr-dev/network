@@ -4,7 +4,7 @@ const { MessageLayer } = require('streamr-client-protocol')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { createNetworkNode } = require('../dist/src/composition')
+const { createNetworkNode } = require('..')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -12,7 +12,6 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 program
     .version(CURRENT_VERSION)
     .option('--id <id>', 'Ethereum address / node id', undefined)
-    .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
     .option('--trackerIds <trackersIds>', 'tracker Ids', (value) => value.split(','), ['tracker'])
     .option('--streamIds <streamIds>', 'streamId to publish',  (value) => value.split(','), ['stream-0'])
@@ -23,7 +22,6 @@ program
     .parse(process.argv)
 
 const id = program.opts().id || 'PU'
-const name = program.opts().nodeName || id
 const logger = new Logger(module)
 
 const trackerInfos = program.opts().trackers.map((ws, i) => {
@@ -47,15 +45,15 @@ function generateString(length) {
     return result
 }
 
-const metricsContext = new MetricsContext(id)
+const metricsContext = new MetricsContext()
 const publisher = createNetworkNode({
-    name,
     id,
     trackers: trackerInfos,
-    metricsContext
+    metricsContext,
+    webrtcDisallowPrivateAddresses: false
 })
-logger.info('started publisher id: %s, name: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-    id, name, program.opts().ip, program.opts().trackers.join(', '),
+logger.info('started publisher id: %s, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+    id, program.opts().ip, program.opts().trackers.join(', '),
     program.opts().streamIds, program.opts().intervalInMs, program.opts().metrics)
 
 publisher.start()

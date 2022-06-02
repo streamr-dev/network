@@ -1,10 +1,9 @@
 import {
-    Msg,
-    describeRepeats,
-    fetchPrivateKeyWithGas,
-    getWaitForStorage,
-    getPublishTestStreamMessages,
     createTestStream,
+    fetchPrivateKeyWithGas,
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    Msg,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -17,7 +16,7 @@ const ITERATIONS = 4
 
 jest.setTimeout(30000)
 
-describeRepeats('sequential resend subscribe', () => {
+describe('sequential resend subscribe', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let stream: Stream
@@ -45,6 +44,7 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         stream = await createTestStream(publisher, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
@@ -94,11 +94,13 @@ describeRepeats('sequential resend subscribe', () => {
             })
 
             const onResent = jest.fn()
-            sub.onResent(onResent)
+            sub.once('resendComplete', onResent)
 
             const message = Msg()
             // eslint-disable-next-line no-await-in-loop
-            const streamMessage = await publisher.publish(stream.id, message, id) // should be realtime
+            const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
+                timestamp: id
+            })
             // keep track of published messages so we can check they are resent in next test(s)
             published.push(streamMessage)
             const msgs = await sub.collect(published.length)

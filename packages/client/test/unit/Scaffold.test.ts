@@ -3,7 +3,7 @@ import Emitter from 'events'
 import { wait } from 'streamr-test-utils'
 
 import { Defer } from '../../src/utils'
-import Scaffold from '../../src/utils/Scaffold'
+import { Scaffold } from '../../src/utils/Scaffold'
 
 describe('Scaffold', () => {
     let order: string[]

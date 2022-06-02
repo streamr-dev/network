@@ -1,8 +1,7 @@
 import { Wallet } from 'ethers'
 import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { StorageNodeAssignmentEvent } from '../../src/StorageNodeRegistry'
-import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createEthereumAddress, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
@@ -45,39 +44,17 @@ describe('StorageNodeRegistry2', () => {
     })
 
     it('creates a node', async () => {
-        const expectedUrl = `http://mock.com/${Date.now()}`
-        const metadata = JSON.stringify({ http: expectedUrl })
-        await storageNodeClient.createOrUpdateNodeInStorageNodeRegistry(metadata)
-        const createdNodeUrl = await storageNodeClient.getStorageNodeUrl(storageNodeAddress)
-        expect(createdNodeUrl).toEqual(expectedUrl)
+        const url = `http://mock.com/${Date.now()}`
+        await storageNodeClient.setStorageNodeMetadata({
+            http: url
+        })
+        const metadata = await storageNodeClient.getStorageNodeMetadata(storageNodeAddress)
+        expect(metadata.http).toEqual(url)
     })
 
     it('add stream to storage node', async () => {
         await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
         expect(await client.isStoredStream(createdStream.id, storageNodeAddress)).toEqual(true)
-    })
-
-    it('storage event listener', async () => {
-        const promise = Promise
-        const callback = (event: StorageNodeAssignmentEvent) => {
-            // check if they are values from this test and not other test running in parallel
-            if (event.streamId === createdStream.id && event.nodeAddress === storageNodeAddress) {
-                expect(event).toEqual({
-                    blockNumber: expect.any(Number),
-                    streamId: createdStream.id,
-                    nodeAddress: storageNodeAddress,
-                    type: 'added'
-                })
-                promise.resolve()
-            }
-        }
-        try {
-            await client.registerStorageEventListener(callback)
-            await client.addStreamToStorageNode(createdStream.id, storageNodeAddress)
-            await promise
-        } finally {
-            await client?.unregisterStorageEventListeners()
-        }
     })
 
     describe('getStorageNodes', () => {
@@ -110,8 +87,14 @@ describe('StorageNodeRegistry2', () => {
         expect(isStored).toEqual(true)
     })
 
-    it('delete a node ', async () => {
-        await storageNodeClient.removeNodeFromStorageNodeRegistry()
-        return expect(storageNodeClient.getStorageNodeUrl(storageNodeAddress)).rejects.toThrow()
+    it('delete a node', async () => {
+        await storageNodeClient.setStorageNodeMetadata(undefined)
+        return expect(storageNodeClient.getStorageNodeMetadata(storageNodeAddress)).rejects.toThrow()
+    })
+
+    it('metadata from non-existing node', async () => {
+        return expect(async () => {
+            await storageNodeClient.getStorageNodeMetadata(createEthereumAddress(Date.now()))
+        }).rejects.toThrow('Node not found')
     })
 })

@@ -5,7 +5,7 @@ import { GraphQLClient } from './GraphQLClient'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { ObservableContract, withErrorHandlingAndLogging } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
-import Gate from './Gate'
+import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
 import { instanceId, wait, withTimeout } from './index'
@@ -143,11 +143,11 @@ export class SynchronizedGraphQLClient {
         )
     }
 
-    updateRequiredBlockNumber(blockNumber: number) {
+    updateRequiredBlockNumber(blockNumber: number): void {
         this.requiredBlockNumber = Math.max(blockNumber, this.requiredBlockNumber)
     }
 
-    async sendQuery(gqlQuery: string): Promise<Object> {
+    async sendQuery(gqlQuery: string): Promise<any> {
         await this.indexingState.waitUntilIndexed(this.requiredBlockNumber)
         return this.delegate.sendQuery(gqlQuery)
     }

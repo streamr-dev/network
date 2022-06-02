@@ -3,7 +3,8 @@
  * Subscriptions are MessageStreams.
  * Not all MessageStreams are Subscriptions.
  */
-import { PushPipeline, PipelineTransform } from '../utils/Pipeline'
+import { PipelineTransform } from '../utils/Pipeline'
+import { PushPipeline } from '../utils/PushPipeline'
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -35,7 +36,7 @@ export class MessageStream<
      */
     useLegacyOnMessageHandler(onMessage?: MessageStreamOnMessage<T>): this {
         if (onMessage) {
-            this.onMessage(async (streamMessage) => {
+            this.onMessage.listen(async (streamMessage) => {
                 if (streamMessage instanceof StreamMessage) {
                     await onMessage(streamMessage.getParsedContent(), streamMessage)
                 }
@@ -47,7 +48,7 @@ export class MessageStream<
     }
 
     /** @internal */
-    async collectContent(n?: number) {
+    async collectContent(n?: number): Promise<any[]> {
         const messages = await this.collect(n)
         return messages.map((streamMessage) => {
             if (streamMessage instanceof StreamMessage) {
@@ -149,8 +150,8 @@ export async function pullManyToOne<T>(
 
     // pull inputStreams into output stream
     for (const sub of inputStreams) {
-        sub.onFinally(() => maybeEnd())
-        sub.onError((err) => outputStream.handleError(err))
+        sub.onFinally.listen(() => maybeEnd())
+        sub.onError.listen((err) => outputStream.handleError(err))
         outputStream.pull(sub, { endDest: false })
     }
     return outputStream

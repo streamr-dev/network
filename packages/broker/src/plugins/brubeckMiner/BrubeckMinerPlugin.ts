@@ -1,9 +1,8 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, Metrics } from 'streamr-network'
+import { Logger, scheduleAtInterval } from 'streamr-network'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { scheduleAtInterval } from '../../helpers/scheduler'
 import { withTimeout } from '../../helpers/withTimeout'
 import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
@@ -19,8 +18,6 @@ const NAT_ANALYSIS_TIMEOUT = {
     errorCode: 'NAT_ANALYSIS_TIMEOUT'
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
-const METRIC_CONTEXT_NAME = 'broker/plugin/brubeckMiner'
-const METRIC_LATEST_CODE = 'latestCode'
 
 const logger = new Logger(module)
 
@@ -41,7 +38,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     latestLatency?: number
     latencyPoller?: { stop: () => void }
     natType?: string
-    metrics?: Metrics
     dummyMessagesReceived: number
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
@@ -49,9 +45,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     constructor(options: PluginOptions) {
         super(options)
-        if (this.streamrClient === undefined) {
-            throw new Error('StreamrClient is not available')
-        }
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
@@ -59,8 +52,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     }
 
     async start(): Promise<void> {
-        const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
-        this.metrics = metricsContext.create(METRIC_CONTEXT_NAME).addFixedMetric(METRIC_LATEST_CODE)
         this.latencyPoller = await scheduleAtInterval(async () => {
             this.latestLatency = await this.getLatency()
         }, LATENCY_POLL_INTERVAL, true)
@@ -82,7 +73,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
 
     private async onRewardCodeReceived(rewardCode: string): Promise<void> {
         logger.info(`Reward code received: ${rewardCode}`)
-        this.metrics!.set(METRIC_LATEST_CODE, Date.now())
         const peers = await this.getPeers()
         const delay = Math.floor(Math.random() * this.pluginConfig.maxClaimDelay)
         await wait(delay) 
@@ -112,7 +102,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 this.dummyMessagesReceived += 1
             }
         })
-        subscription.onError((err) => {
+        subscription.on('error', (err) => {
             logger.warn('Failed to claim reward code due to error %s', err?.message)
             logger.debug('', err)
         })

@@ -1,14 +1,16 @@
-import { getPublishTestMessages, getCreateClient, describeRepeats, createTestStream } from '../test-utils/utils'
+import { createTestStream, getCreateClient, getPublishTestMessages } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
-import Subscriber from '../../src/subscribe/Subscriber'
+import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
+import { StreamPermission } from '../../src'
+import { StreamMessage } from 'streamr-client-protocol'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(30000)
 
-describeRepeats('Validation', () => {
+describe('Validation', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let client: StreamrClient
     let stream: Stream
@@ -19,12 +21,11 @@ describeRepeats('Validation', () => {
     async function setupClient(opts: any) {
         // eslint-disable-next-line require-atomic-updates
         client = await createClient(opts)
-        // @ts-expect-error
+        // @ts-expect-error private
         subscriber = client.subscriber
         client.debug('connecting before test >>')
-        stream = await createTestStream(client, module, {
-            requireSignedData: true
-        })
+        stream = await createTestStream(client, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
         return client
@@ -63,10 +64,10 @@ describeRepeats('Validation', () => {
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
-            sub.context.pipeline.forEachBefore((streamMessage, index) => {
+            sub.context.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     // eslint-disable-next-line no-param-reassign
                     streamMessage.signature = 'badsignature'
@@ -131,10 +132,10 @@ describeRepeats('Validation', () => {
             const onSubError = jest.fn((err) => {
                 errs.push(err)
             })
-            sub.onError(onSubError)
+            sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
-            sub.context.pipeline.mapBefore(async (streamMessage, index) => {
+            sub.context.pipeline.mapBefore(async (streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     const msg = streamMessage.clone()
                     // eslint-disable-next-line no-param-reassign

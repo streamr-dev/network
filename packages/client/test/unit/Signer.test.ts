@@ -3,7 +3,7 @@ import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'stre
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-import Signer from '../../src/publish/Signer'
+import { Signer } from '../../src/publish/Signer'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -41,7 +41,7 @@ describe('Signer', () => {
                 + 'b717d2431e498294f202d8dfd9f56158391d453c018470aea92ed6a80a23c20ab6f7ac1b')
         })
 
-        it('should sign StreamMessageV31 with null previous ref correctly', async () => {
+        it('should sign with null previous ref correctly', async () => {
             const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
@@ -62,11 +62,9 @@ describe('Signer', () => {
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
 
-        it('should sign StreamMessageV31 with non-null previous ref correctly', async () => {
+        it('should sign with non-null previous ref correctly', async () => {
             const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
-                // @ts-expect-error
-                version: 31,
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
                 content: data,
@@ -88,12 +86,9 @@ describe('Signer', () => {
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
         it('signing should throw when constructed with no auth', async () => {
-            // @ts-expect-error
-            signer = new Signer({})
+            signer = new Signer({} as any)
             const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
-                // @ts-expect-error
-                version: 31,
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
                 content: data,

@@ -6,10 +6,10 @@ import { OrderingUtil, StreamMessage, StreamPartID, MessageRef, EthereumAddress 
 
 import { PushBuffer } from '../utils/PushBuffer'
 import { Context } from '../utils/Context'
-import Signal from '../utils/Signal'
+import { Signal } from '../utils/Signal'
 import { instanceId } from '../utils'
 
-import Resends from './Resends'
+import { Resends } from './Resends'
 import { MessageStream } from './MessageStream'
 import { SubscribeConfig } from '../Config'
 
@@ -18,7 +18,7 @@ import { SubscribeConfig } from '../Config'
  * Implements gap filling
  */
 @injectable()
-export default class OrderMessages<T> implements Context {
+export class OrderMessages<T> implements Context {
     readonly id
     readonly debug
     stopSignal = Signal.once()
@@ -38,7 +38,7 @@ export default class OrderMessages<T> implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        this.stopSignal(() => {
+        this.stopSignal.listen(() => {
             this.done = true
         })
         this.onOrdered = this.onOrdered.bind(this)
@@ -61,7 +61,7 @@ export default class OrderMessages<T> implements Context {
         this.orderingUtil.on('error', this.maybeClose) // probably noop
     }
 
-    async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) {
+    async onGap(from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string): Promise<void> {
         if (this.done || !this.enabled) { return }
         this.debug('gap %o', {
             streamPartId: this.streamPartId, publisherId, msgChainId, from, to,
@@ -78,7 +78,7 @@ export default class OrderMessages<T> implements Context {
                 publisherId,
                 msgChainId,
             })
-            resendMessageStream.onFinally(() => {
+            resendMessageStream.onFinally.listen(() => {
                 this.resendStreams.delete(resendMessageStream)
             })
             this.resendStreams.add(resendMessageStream)
@@ -106,7 +106,7 @@ export default class OrderMessages<T> implements Context {
         }
     }
 
-    onOrdered(orderedMessage: StreamMessage) {
+    onOrdered(orderedMessage: StreamMessage): void {
         if (this.outBuffer.isDone() || this.done) {
             return
         }
@@ -114,11 +114,11 @@ export default class OrderMessages<T> implements Context {
         this.outBuffer.push(orderedMessage as StreamMessage<T>)
     }
 
-    stop() {
+    stop(): Promise<void> {
         return this.stopSignal.trigger()
     }
 
-    maybeClose() {
+    maybeClose(): void {
         // we can close when:
         // input has closed (i.e. all messages sent)
         // AND
@@ -131,7 +131,7 @@ export default class OrderMessages<T> implements Context {
         }
     }
 
-    async addToOrderingUtil(src: AsyncGenerator<StreamMessage<T>>) {
+    async addToOrderingUtil(src: AsyncGenerator<StreamMessage<T>>): Promise<void> {
         try {
             for await (const msg of src) {
                 this.orderingUtil.add(msg)
@@ -143,7 +143,7 @@ export default class OrderMessages<T> implements Context {
         }
     }
 
-    transform() {
+    transform(): (src: AsyncGenerator<StreamMessage<T>, any, unknown>) => AsyncGenerator<StreamMessage<T>, void, unknown> {
         return async function* Transform(this: OrderMessages<T>, src: AsyncGenerator<StreamMessage<T>>) {
             if (!this.orderMessages) {
                 yield* src

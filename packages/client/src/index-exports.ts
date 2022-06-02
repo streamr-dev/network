@@ -3,11 +3,13 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export * from './encryption/Encryption'
+export * from './encryption/EncryptionUtil'
+export { StreamrClientEvents } from './events'
+export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
-export { ResendSubscription } from './subscribe/ResendSubscription'
+export { ResendSubscription, ResendSubscriptionEvents } from './subscribe/ResendSubscription'
 export { ResendOptions, ResendLastOptions, ResendFromOptions, ResendRangeOptions, ResendRef } from './subscribe/Resends'
 export {
     StreamPermission,
@@ -18,16 +20,13 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { UserDetails } from './LoginEndpoints'
-export { StreamValidationInfo, StreamMessageAsObject } from './StreamEndpoints'
-export { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
+export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './searchStreams'
 export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
     SubscribeConfig,
     ConnectionConfig,
-    DataUnionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
     DebugConfig,
@@ -46,27 +45,21 @@ export {
     ProviderAuthConfig,
     ProviderConfig,
     PrivateKeyAuthConfig,
-    SessionTokenAuthConfig,
     XOR,
     Without
 } from './Ethereum'
-export { EncryptionConfig, GroupKeysSerialized, GroupKeyId } from './encryption/KeyExchangeUtils'
-export { GroupKey, GroupKeyish, GroupKeyObject } from './encryption/Encryption'
+export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
+export { GroupKey as EncryptionKey } from './encryption/GroupKey'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
-export * from './dataunion/DataUnion'
-export { NotFoundError, ErrorCode } from './authFetch'
-export { SignalListener } from './utils/Signal'
+export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/index'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 
-// TODO should export these to support StreamMessageAsObject:
-// export {
-//   StreamMessageType, ContentType, EncryptionType, SignatureType
-// } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'
 export { Contract } from '@ethersproject/contracts'

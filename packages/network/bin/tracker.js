@@ -3,13 +3,12 @@ const program = require('commander')
 
 const { Logger } = require('../dist/src/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
-const { startTracker } = require('../dist/src/composition')
+const { startTracker } = require('@streamr/network-tracker')
 const { MetricsContext } = require('../dist/src/helpers/MetricsContext')
 
 program
     .version(CURRENT_VERSION)
     .option('--id <id>', 'Ethereum address / tracker id', undefined)
-    .option('--trackerName <trackerName>', 'Human readable name', undefined)
     .option('--port <port>', 'port', '27777')
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--unixSocket <unixSocket>', 'unixSocket', undefined)
@@ -22,7 +21,6 @@ program
     .parse(process.argv)
 
 const id = program.opts().id || `TR${program.opts().port}`
-const name = program.opts().trackerName || id
 const logger = new Logger(module)
 const listen = program.opts().unixSocket ? program.opts().unixSocket : {
     hostname: program.opts().ip,
@@ -43,12 +41,11 @@ const getTopologyStabilization = () => {
 }
 
 async function main() {
-    const metricsContext = new MetricsContext(id)
+    const metricsContext = new MetricsContext()
     try {
         await startTracker({
             listen,
             id,
-            name,
             maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),
             metricsContext,
             topologyStabilization: getTopologyStabilization()
@@ -62,17 +59,23 @@ async function main() {
 
         logger.info('started tracker: %o', {
             id,
-            name,
             ...trackerObj
         })
 
         if (program.opts().metrics) {
+            const previousTotals = {}
             setInterval(async () => {
                 const metrics = await metricsContext.report(true)
-                // output to console
-                if (program.opts().metrics) {
-                    logger.info(JSON.stringify(metrics, null, 4))
+                const output = {
+                    peerId: metrics.peerId,
                 }
+                Object.keys(metrics.metrics.tracker).forEach((key) => {
+                    const currentTotal = metrics.metrics.tracker[key].total
+                    const previousTotal = previousTotals[key] || 0
+                    output[key] = currentTotal - previousTotal
+                    previousTotals[key] = currentTotal
+                })
+                logger.info(JSON.stringify(output, null, 4))
             }, program.opts().metricsInterval)
         }
     } catch (err) {

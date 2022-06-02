@@ -4,20 +4,17 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
-    describeRepeats,
     getPublishTestStreamMessages,
     getWaitForStorage,
     createTestStream,
     fetchPrivateKeyWithGas,
     Msg,
-    createRelativeTestStreamId
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import Resend from '../../src/subscribe/Resends'
+import { Resends } from '../../src/subscribe/Resends'
 
 import { Stream } from '../../src/Stream'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-// import { EthereumAddress } from '../types'
 
 /* eslint-disable no-await-in-loop */
 
@@ -26,14 +23,14 @@ const MAX_MESSAGES = 5
 
 jest.setTimeout(60000)
 
-describeRepeats('resends', () => {
+describe('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
-    let subscriber: Resend
+    let subscriber: Resends
 
     beforeAll(async () => {
         client = new StreamrClient({
@@ -42,7 +39,7 @@ describeRepeats('resends', () => {
                 privateKey: await fetchPrivateKeyWithGas()
             }
         })
-        // @ts-expect-error
+        // @ts-expect-error private
         subscriber = client.resends
 
         // eslint-disable-next-line require-atomic-updates
@@ -153,7 +150,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
                 const publishedStream2 = await publishTestMessagesStream2(3)
 
                 const receivedMsgs: any[] = []
@@ -167,10 +164,10 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
                 expect(receivedMsgs).toEqual(publishedStream2)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(await client.count(stream2.id)).toBe(0)
+                expect(await client.getSubscriptions(stream2.id)).toHaveLength(0)
             })
 
-            it('handles errors in resend', async () => {
+            it('can ignore errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
                 await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
@@ -193,18 +190,16 @@ describeRepeats('resends', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
 
                 await publishTestMessagesStream2(3)
-                await expect(async () => {
-                    await sub.collect(5)
-                }).rejects.toThrow(err)
+                await sub.collect(3)
 
-                expect(await client.count(stream2.id)).toBe(0)
+                expect(await client.getSubscriptions(stream2.id)).toHaveLength(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
             })
 
-            it('can ignore errors in resend', async () => {
+            it('can handle errors in resend', async () => {
                 const stream2 = await createTestStream(client, module)
                 await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
@@ -223,15 +218,15 @@ describeRepeats('resends', () => {
                 const mockFn = jest.spyOn(sub, 'getResent') as any
                 const err = new Error('expected')
                 mockFn.mockRejectedValueOnce(err)
-                sub.onResent(onResent)
-                const onSubError = jest.fn(() => {})
-                sub.onError(onSubError) // suppress
+                sub.once('resendComplete', onResent)
+                const onSubError = jest.fn()
+                sub.on('error', onSubError) // suppress
 
                 const published = await publishTestMessagesStream2(3)
                 const receivedMsgs = await sub.collect(3)
 
                 expect(receivedMsgs).toEqual(published)
-                expect(await client.count(stream2.id)).toBe(0)
+                expect(await client.getSubscriptions(stream2.id)).toHaveLength(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(onSubError).toHaveBeenCalledTimes(1)
             })
@@ -248,7 +243,7 @@ describeRepeats('resends', () => {
                     }
                 })
 
-                sub.onError((err: any) => {
+                sub.onError.listen((err: any) => {
                     if (err.code === 'NO_STORAGE_NODES') { return }
 
                     throw err
@@ -262,7 +257,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual([])
                 })
 
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -274,7 +269,7 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
                 expect(receivedMsgs).toEqual(publishedStream2)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
         })
     })
@@ -415,7 +410,7 @@ describeRepeats('resends', () => {
                 receivedMsgs.push(streamMessage)
             })
 
-            await sub.onFinally()
+            await sub.onFinally.listen()
             expect(receivedMsgs).toHaveLength(published.length)
             expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
         })
@@ -428,10 +423,10 @@ describeRepeats('resends', () => {
                         last: published.length
                     }
                 })
-                expect(await client.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 const onResent = jest.fn()
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
 
                 // eslint-disable-next-line no-await-in-loop
                 published.push(...await publishTestMessages(2))
@@ -441,12 +436,12 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs).toEqual(published)
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('client.subscribe works as regular subscribe when just passing streamId as string', async () => {
                 const sub = await client.subscribe(stream.id)
-                expect(await client.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 published.push(...await publishTestMessages(2))
 
@@ -469,7 +464,7 @@ describeRepeats('resends', () => {
                     expect(receivedMsgs).toEqual(publishedBefore)
                 })
 
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg)
@@ -480,7 +475,7 @@ describeRepeats('resends', () => {
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs).toEqual(published)
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('ends resend if unsubscribed', async () => {
@@ -503,7 +498,7 @@ describeRepeats('resends', () => {
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('can return before start', async () => {
@@ -514,13 +509,13 @@ describeRepeats('resends', () => {
                     }
                 })
 
-                expect(await client.count(stream.id)).toBe(1)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(1)
 
                 await sub.return()
                 published.push(...await publishTestMessages(2))
                 const received = await sub.collect(published.length)
                 expect(received).toHaveLength(0)
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('can end asynchronously', async () => {
@@ -551,7 +546,7 @@ describeRepeats('resends', () => {
                 const msgs = received
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('can end inside resend', async () => {
@@ -575,7 +570,7 @@ describeRepeats('resends', () => {
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
-                expect(await client.count(stream.id)).toBe(0)
+                expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
             it('does not error if no storage assigned', async () => {
@@ -586,10 +581,10 @@ describeRepeats('resends', () => {
                         last: 5
                     }
                 })
-                expect(await client.count(nonStoredStream.id)).toBe(1)
+                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(1)
 
                 const onResent = jest.fn()
-                sub.onResent(onResent)
+                sub.once('resendComplete', onResent)
 
                 const publishedMessages = await getPublishTestStreamMessages(client, nonStoredStream.id)(2)
 
@@ -597,7 +592,7 @@ describeRepeats('resends', () => {
                 expect(receivedMsgs).toHaveLength(publishedMessages.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(receivedMsgs).toEqual(publishedMessages)
-                expect(await client.count(nonStoredStream.id)).toBe(0)
+                expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
     })
@@ -615,21 +610,5 @@ describeRepeats('resends', () => {
             })
         const messages = await sub.collectContent()
         expect(messages).toEqual([publishedMessage])
-    })
-
-    it('getStreamLast', async () => {
-        const stream2 = await client.createStream({
-            id: await createRelativeTestStreamId(module),
-        })
-
-        // does error if has no storage assigned
-        await expect(async () => {
-            await client.getStreamLast(stream2.id)
-        }).rejects.toThrow()
-
-        // does not error if has storage assigned
-        await stream2.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        const result = await client.getStreamLast(stream2.id)
-        expect(result).toEqual([])
     })
 })
