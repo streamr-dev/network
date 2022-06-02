@@ -105,6 +105,9 @@
         "ethereumNetworks": {
             "type": "object"
         },
+        "verifySignatures": {
+            "type": "boolean"
+        },
         "orderMessages": {
             "type": "boolean"
         },
@@ -113,9 +116,6 @@
         },
         "maxGapRequests": {
             "type": "number"
-        },
-        "verifySignatures": {
-            "type": "boolean"
         },
         "retryResendAfter": {
             "type": "number"
