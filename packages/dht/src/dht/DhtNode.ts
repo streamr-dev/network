@@ -46,7 +46,8 @@ export interface DhtNodeConfig {
     webSocketPort?: number
     peerIdString?: string
     appId?: string
-    numberOfNodesPerKBucket?: number
+    numberOfNodesPerKBucket?: number,
+    nodeName?: string
 }
 
 const logger = new Logger(module)
@@ -57,7 +58,7 @@ export class DhtNode extends EventEmitter implements ITransport {
 
     private noProgressCounter = 0
     private readonly ALPHA = 3
-    private readonly K = 4
+    private readonly K = 20
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
@@ -239,7 +240,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         logger.trace(`processing getClosestPeersRequest`)
         const ret = this.bucket!.closest(caller.peerId, this.K)
         this.addNewContact(caller, true)
-        this.neighborList!.setContacted(PeerID.fromValue(caller.peerId))
+        //this.neighborList!.setContacted(PeerID.fromValue(caller.peerId))
         return ret
     }
 
@@ -412,7 +413,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     isJoinCompleted(): boolean {
         // console.log(this.neighborList!.getActiveContacts().length, this.neighborList!.getUncontactedContacts(this.ALPHA).length)
         return (this.neighborList!.getUncontactedContacts(this.ALPHA).length < 1
-            || this.noProgressCounter >= 5 || this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
+            || this.noProgressCounter >= 4 ) //|| this.neighborList!.getActiveContacts().length >= this.neighborList!.getMaxSize() / 2)
     }
 
     async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
@@ -467,6 +468,9 @@ export class DhtNode extends EventEmitter implements ITransport {
             const peerId = PeerID.fromValue(contact.peerId)
             if (!this.neighborList!.isContact(peerId)) {
                 this.neighborList!.addContact(dhtPeer)
+                //if (this.config.nodeName == '0') {
+                //    console.log('entrypoint added a contact')
+                //}
             }
             if (contact.openInternet && !this.openInternetPeers!.isContact(peerId)) {
                 this.openInternetPeers!.addContact(dhtPeer)
@@ -544,6 +548,15 @@ export class DhtNode extends EventEmitter implements ITransport {
             }
         }
         return null
+    }
+
+    public getNodeName(): string {
+        if (this.config.nodeName) {
+            return this.config.nodeName
+        }
+        else {
+            return 'unnamed node'
+        }
     }
 
     public async stop(): Promise<void> {

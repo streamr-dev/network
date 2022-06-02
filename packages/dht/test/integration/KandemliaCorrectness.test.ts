@@ -29,7 +29,7 @@ describe('Kademlia correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data))
         nodes.push(entryPoint)
-        nodeIndicesById[JSON.stringify(entryPoint.getNodeId().value)] = 0
+        nodeIndicesById[entryPoint.getNodeId().toString()] = 0
         entrypointDescriptor = {
             peerId: entryPoint.getNodeId().value,
             type: 0
@@ -39,7 +39,7 @@ describe('Kademlia correctness', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
-            nodeIndicesById[JSON.stringify(node.getNodeId().value)] = i
+            nodeIndicesById[node.getNodeId().toString()] = i
             nodes.push(node)
         }
     })
@@ -99,20 +99,21 @@ describe('Kademlia correctness', () => {
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
-                kadString += nodeIndicesById[JSON.stringify(neighbor.value)] + ','
+                kadString += nodeIndicesById[neighbor.toString()] + ','
             })
 
             // console.log(kadString)
 
             let correctNeighbors = 0
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                if (groundTruth[i + ''][j].name != (nodeIndicesById[JSON.stringify(kademliaNeighbors[j].value)] + '')) {
+                if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toString()] + '')) {
                     break
                 }
                 correctNeighbors++
             }
 
             if (correctNeighbors === 0) {
+                console.log('No correct neighbors found for node ' + i)
                 console.log(groundTruthString)
                 console.log(kadString)
             }
