@@ -54,7 +54,9 @@ const createMockMessage = async ({
         },
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH
     })
-    msg.signature = (signature === undefined) ? await SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey) : signature
+    msg.signature = (signature === undefined) 
+        ? SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey) 
+        : signature
     return msg
 }
 
