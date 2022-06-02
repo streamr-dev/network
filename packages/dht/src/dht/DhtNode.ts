@@ -19,7 +19,6 @@ import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '../helpers/Logger'
-import { waitForEvent } from 'streamr-test-utils'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -65,6 +64,7 @@ export class DhtNode extends EventEmitter implements ITransport {
     private readonly routerDuplicateDetector: RouterDuplicateDetector
     private readonly appId: string
     private readonly ongoingClosestPeersRequests: Set<string>
+    private joinTimeoutRef: NodeJS.Timeout | null = null
     private ongoingJoinOperation = false
 
     private bucket?: KBucket<DhtPeer>
@@ -416,9 +416,9 @@ export class DhtNode extends EventEmitter implements ITransport {
             || this.noProgressCounter >= 4)
     }
 
-    async joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
+    joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {
         if (!this.started || this.stopped || this.ongoingJoinOperation) {
-            return
+            return new Promise((resolve, _reject) => resolve())
         }
         
         this.ongoingJoinOperation = true
@@ -428,7 +428,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
-            return
+            return new Promise((resolve, _reject) => resolve())
         }
 
         this.addNewContact(entryPointDescriptor)
@@ -436,7 +436,20 @@ export class DhtNode extends EventEmitter implements ITransport {
         this.neighborList!.addContacts(closest)
 
         this.findMoreContacts()
-        await waitForEvent(this, Event.JOIN_COMPLETED, 30000)
+        return new Promise((resolve, reject) => {
+            const resolveFn = () => {
+                if (this.joinTimeoutRef) {
+                    clearTimeout(this.joinTimeoutRef)
+                }
+                resolve()
+            }
+            this.joinTimeoutRef = setTimeout(() => {
+                this.off(Event.JOIN_COMPLETED, resolveFn)
+                reject('join timed out')
+            }, 60000)
+
+            this.once(Event.JOIN_COMPLETED, resolveFn)
+        })
     }
 
     private findMoreContacts(): void {
@@ -559,6 +572,9 @@ export class DhtNode extends EventEmitter implements ITransport {
     public async stop(): Promise<void> {
         if (!this.started) {
             throw new Err.CouldNotStop('Cannot not stop() before start()')
+        }
+        if (this.joinTimeoutRef) {
+            clearTimeout(this.joinTimeoutRef)
         }
         this.stopped = true
         this.ongoingJoinOperation = false
