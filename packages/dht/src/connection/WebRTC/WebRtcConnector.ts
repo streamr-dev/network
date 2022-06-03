@@ -1,6 +1,14 @@
 import { EventEmitter } from "events"
 import { Event as ConnectionSourceEvents, IConnectionSource } from '../IConnectionSource'
-import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
+import {
+    HandshakeMessage,
+    IceCandidate,
+    Message,
+    MessageType,
+    PeerDescriptor,
+    RtcAnswer,
+    RtcOffer, WebRtcConnectionRequest
+} from '../../proto/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { ConnectionType, Event as ConnectionEvents, IConnection } from '../IConnection'
@@ -52,10 +60,10 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
             this.onRemoteCandidate.bind(this),
             this.onConnectionRequest.bind(this),
         )
-        this.rpcCommunicator.registerServerMethod('rtcOffer', methods.rtcOffer)
-        this.rpcCommunicator.registerServerMethod('rtcAnswer', methods.rtcAnswer)
-        this.rpcCommunicator.registerServerMethod('iceCandidate', methods.iceCandidate)
-        this.rpcCommunicator.registerServerMethod('requestConnection', methods.requestConnection)
+        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', methods.rtcOffer)
+        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', methods.rtcAnswer)
+        this.rpcCommunicator.registerRpcNotification(IceCandidate,'iceCandidate', methods.iceCandidate)
+        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', methods.requestConnection)
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): IConnection {

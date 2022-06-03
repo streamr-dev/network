@@ -1,10 +1,10 @@
 import { ITransport } from '../../src/transport/ITransport'
-import { getMockPeers, MockRegisterDhtRpc } from '../utils'
+import { getMockPeers, MockDhtRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
-import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, Message, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/helpers/errors'
 import { Simulator } from '../../src/connection/Simulator'
@@ -33,13 +33,13 @@ describe('DhtRpc', () => {
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1
         })
-        rpcCommunicator1.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
         })
-        rpcCommunicator2.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
@@ -89,7 +89,7 @@ describe('DhtRpc', () => {
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
-        rpcCommunicator2.registerServerMethod('getClosestPeers', () => {
+        rpcCommunicator2.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', () => {
             return new Promise(async (resolve, _reject) => {
                 timeout = setTimeout(() => {
                     resolve(new Uint8Array())

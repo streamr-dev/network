@@ -9,7 +9,14 @@ import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from
 import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { createRemoteWebSocketConnectorServer, RemoteWebSocketConnector } from './RemoteWebSocketConnector'
-import { HandshakeMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
+import {
+    HandshakeMessage,
+    Message,
+    MessageType,
+    PeerDescriptor,
+    WebSocketConnectionRequest,
+    WebSocketConnectionResponse
+} from '../../proto/DhtRpc'
 import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { DeferredConnection } from '../DeferredConnection'
 import { TODO } from '../../types'
@@ -40,7 +47,12 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             this.connect.bind(this),
             fnCanConnect
         )
-        this.rpcCommunicator.registerServerMethod('requestConnection', methods.requestConnection)
+        this.rpcCommunicator.registerRpcRequest(
+            WebSocketConnectionRequest,
+            WebSocketConnectionResponse,
+            'requestConnection',
+            methods.requestConnection
+        )
     }
 
     connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {

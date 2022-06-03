@@ -14,7 +14,7 @@ import {
     RpcMessage,
     RpcResponseError
 } from '../proto/DhtRpc'
-import { Event as DhtTransportServerEvent, Parser, RegisteredMethod, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
+import { Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
 import { EventEmitter } from 'events'
 import { Event as ITransportEvent, ITransport } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
@@ -133,13 +133,21 @@ export class RpcCommunicator extends EventEmitter {
         return this.rpcClientTransport
     }
 
-    public registerServerMethod(methodName: string, fn: RegisteredMethod): void {
-        this.rpcServerTransport.registerMethod(methodName, fn)
+    public registerRpcRequest<RequestType extends Parser, ReturnType extends Serializer>(
+        requestClass: RequestType,
+        returnClass: ReturnType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
+        this.rpcServerTransport.registerRpcRequest(requestClass, returnClass, name, fn)
     }
 
-    public registerRpcMethod<RequestType extends Parser, ReturnType extends Serializer>(requestClass: RequestType, returnClass: ReturnType,
-        name: string, fn: (rq: any, _context: ServerCallContext) => Promise<any>): void {
-        this.rpcServerTransport.registerRpcMethod(requestClass, returnClass, name, fn)
+    registerRpcNotification<RequestType extends Parser>(
+        requestClass: RequestType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
+        this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
     }
 
     private async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {

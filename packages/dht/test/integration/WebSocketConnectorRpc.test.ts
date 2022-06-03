@@ -2,8 +2,13 @@ import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
-import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { MockRegisterWebSocketConnectorRpc } from '../utils'
+import {
+    Message,
+    PeerDescriptor,
+    WebSocketConnectionRequest,
+    WebSocketConnectionResponse
+} from '../../src/proto/DhtRpc'
+import { MockWebSocketConnectorRpc } from '../utils'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
 
@@ -33,14 +38,24 @@ describe('WebSocketConnectorRpc', () => {
             connectionLayer: mockConnectionLayer1,
             appId: "websocket"
         })
-        rpcCommunicator1.registerServerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
+        rpcCommunicator1.registerRpcRequest(
+            WebSocketConnectionRequest,
+            WebSocketConnectionResponse,
+            'requestConnection',
+            MockWebSocketConnectorRpc.requestConnection
+        )
 
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
             appId: "websocket"
         })
-        rpcCommunicator2.registerServerMethod('requestConnection', MockRegisterWebSocketConnectorRpc.requestConnection)
+        rpcCommunicator2.registerRpcRequest(
+            WebSocketConnectionRequest,
+            WebSocketConnectionResponse,
+            'requestConnection',
+            MockWebSocketConnectorRpc.requestConnection
+        )
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)

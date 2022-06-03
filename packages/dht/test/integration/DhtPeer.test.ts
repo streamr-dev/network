@@ -1,8 +1,15 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { createWrappedClosestPeersRequest, getMockPeers, MockRegisterDhtRpc } from '../utils'
-import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
+import { createWrappedClosestPeersRequest, getMockPeers, MockDhtRpc } from '../utils'
+import {
+    ClosestPeersRequest,
+    ClosestPeersResponse,
+    Message,
+    MessageType,
+    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
+    RpcMessage
+} from '../../src/proto/DhtRpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { Simulator } from '../../src/connection/Simulator'
 import { generateId } from '../../src/helpers/common'
@@ -36,9 +43,9 @@ describe('DhtPeer', () => {
             appId: 'unit-test'
         })
 
-        serverRpcCommunicator.registerServerMethod('getClosestPeers', MockRegisterDhtRpc.getClosestPeers)
-        serverRpcCommunicator.registerServerMethod('ping', MockRegisterDhtRpc.ping)
-        serverRpcCommunicator.registerServerMethod('routeMessage', MockRegisterDhtRpc.routeMessage)
+        serverRpcCommunicator.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        serverRpcCommunicator.registerRpcRequest(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
+        serverRpcCommunicator.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
         clientRpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             serverRpcCommunicator.onIncomingMessage(peerDescriptor, message)
@@ -85,7 +92,7 @@ describe('DhtPeer', () => {
     })
 
     it('ping error path', async () => {
-        serverRpcCommunicator.registerServerMethod('ping', (_data) => {
+        serverRpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', (_data) => {
             throw new Error()
         })
         const active = await dhtPeer.ping(clientPeerDescriptor)
@@ -93,7 +100,7 @@ describe('DhtPeer', () => {
     })
 
     it('getClosestPeers error path', async () => {
-        serverRpcCommunicator.registerServerMethod('getClosestPeers', (_data) => {
+        serverRpcCommunicator.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', (_data) => {
             throw new Error()
         })
         const neighborList = await dhtPeer.getClosestPeers(clientPeerDescriptor)
@@ -101,7 +108,7 @@ describe('DhtPeer', () => {
     })
 
     it('routeMessage error path', async () => {
-        serverRpcCommunicator.registerServerMethod('routeMessage', (_data) => {
+        serverRpcCommunicator.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', (_data) => {
             throw new Error()
         })
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)

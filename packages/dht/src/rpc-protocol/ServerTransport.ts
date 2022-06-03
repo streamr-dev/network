@@ -17,14 +17,10 @@ export interface ServerTransport {
     on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
 
-/*
-export interface Parser<Target> {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
-export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
-*/
 export interface Parser {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => any }
 export interface Serializer { toBinary: (message: any, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
-export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
+export type RegisteredMethod = (request: Uint8Array) => Promise<any>
 
 const logger = new Logger(module)
 
@@ -62,26 +58,31 @@ export class ServerTransport extends EventEmitter {
         await promiseTimeout(1000, fn!(rpcMessage.body))
     }
 
-    registerMethod(name: string, fn: RegisteredMethod): void {
-        if (this.stopped) {
-            return
-        }
-        this.methods.set(name, fn)
-    }
-
     removeMethod(name: string): void {
         this.methods.delete(name)
     }
     
-    registerRpcMethod<RequestType extends Parser, ReturnType extends Serializer>(requestClass: RequestType, returnClass: ReturnType, 
-        name: string, fn: (rq: any, _context: ServerCallContext) => Promise<any>): void {
-
+    registerRpcRequest<RequestType extends Parser, ReturnType extends Serializer>(
+        requestClass: RequestType,
+        returnClass: ReturnType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
         this.methods.set(name, async (bytes: Uint8Array) => {
-            
             const request = requestClass.fromBinary(bytes)
-            
             const response = await fn(request, new DummyServerCallContext())
             return returnClass.toBinary(response)
+        })
+    }
+
+    registerRpcNotification<RequestType extends Parser>(
+        requestClass: RequestType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
+        this.methods.set(name, async (bytes: Uint8Array) => {
+            const request = requestClass.fromBinary(bytes)
+            await fn(request, new DummyServerCallContext())
         })
     }
 
