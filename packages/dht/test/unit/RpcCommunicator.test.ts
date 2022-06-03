@@ -16,7 +16,7 @@ import { DeferredPromises } from '../../src/rpc-protocol/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/helpers/errors'
 import { waitForCondition } from 'streamr-test-utils'
-import { MockRegisterDhtRpc } from '../utils'
+import { MockDhtRpc, MockRegisterDhtRpc } from '../utils'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator
@@ -153,6 +153,24 @@ describe('RpcCommunicator', () => {
     it('Success responses to requests', async () => {
         let successCounter = 0
         rpcCommunicator.registerServerMethod('ping', MockRegisterDhtRpc.ping)
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (!pongWrapper.responseError) {
+                successCounter += 1
+            }
+        })
+        const requestMessage: Message = {
+            messageType: MessageType.RPC,
+            messageId: 'id',
+            body: RpcMessage.toBinary(request)
+        }
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => successCounter === 1)
+    })
+
+    it.only('Success responses to new registration method', async () => {
+        let successCounter = 0
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (!pongWrapper.responseError) {

@@ -79,7 +79,7 @@ export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdStr
     return ret
 }
 
-const MockDhtRpc: IDhtRpc = {
+export const MockDhtRpc: IDhtRpc = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {

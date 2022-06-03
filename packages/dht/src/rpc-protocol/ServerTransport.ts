@@ -1,6 +1,7 @@
 import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from '../helpers/common'
 import { Err } from '../helpers/errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
@@ -15,6 +16,13 @@ export interface ServerTransport {
     on(event: Event.RPC_RESPONSE, listener: (rpcMessage: RpcMessage) => void): this
     on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
+
+/*
+export interface Parser<Target> {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
+export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
+*/
+export interface Parser {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => any }
+export interface Serializer { toBinary: (message: any, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
 export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
 
@@ -63,6 +71,18 @@ export class ServerTransport extends EventEmitter {
 
     removeMethod(name: string): void {
         this.methods.delete(name)
+    }
+    
+    registerRpcMethod<RequestType extends Parser, ReturnType extends Serializer>(requestClass: RequestType, returnClass: ReturnType, 
+        name: string, fn: (rq: any, _context: ServerCallContext) => Promise<any>): void {
+
+        this.methods.set(name, async (bytes: Uint8Array) => {
+            
+            const request = requestClass.fromBinary(bytes)
+            
+            const response = await fn(request, new DummyServerCallContext())
+            return returnClass.toBinary(response)
+        })
     }
 
     stop(): void {
