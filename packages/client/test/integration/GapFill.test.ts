@@ -18,7 +18,7 @@ jest.setTimeout(50000)
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
     // eslint-disable-next-line no-param-reassign
-    sub.context.pipeline.pipeBefore(async function* DropMessages(src) {
+    sub.context.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
             const result = fn(msg, count)
             count += 1
@@ -43,13 +43,12 @@ describe('GapFill', () => {
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = clientFactory.createClient({
-            maxRetries: 2,
             maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
             ...opts
         })
-        // @ts-expect-error
+        // @ts-expect-error private
         subscriber = client.subscriber
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
@@ -101,7 +100,7 @@ describe('GapFill', () => {
 
         describe('realtime (uses resend)', () => {
             it('can fill single gap', async () => {
-                // @ts-expect-error
+                // @ts-expect-error private
                 const calledResend = jest.spyOn(client.resends, 'range')
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
@@ -269,7 +268,7 @@ describe('GapFill', () => {
                 maxGapRequests: 99 // would time out test if doesn't give up
             })
 
-            // @ts-expect-error
+            // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')
 
             const node = await client.getNode()
@@ -311,7 +310,7 @@ describe('GapFill', () => {
 
             await client.connect()
 
-            // @ts-expect-error
+            // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')
             const node = await client.getNode()
             let publishCount = 0

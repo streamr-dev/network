@@ -43,9 +43,10 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
         this.onError = this.onError.bind(this)
         this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
-            .onError(this.onError)
+        this.pipeline.onError.listen(this.onError)
+        this.pipeline
             .pipe(this.distributeMessage)
-            .onBeforeFinally(async () => {
+            .onBeforeFinally.listen(async () => {
                 if (!this.isStopped) {
                     await this.stop()
                 }
@@ -53,7 +54,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.pipeline.flow()
     }
 
-    private async retire() {
+    private async retire(): Promise<void> {
         if (this.isRetired) {
             return
         }
@@ -62,13 +63,13 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         await this.onRetired.trigger()
     }
 
-    private async onError(error: Error) {
+    private async onError(error: Error): Promise<void> {
         await Promise.allSettled([...this.subscriptions].map(async (sub) => {
             await sub.handleError(error)
         }))
     }
 
-    async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>) {
+    async* distributeMessage(src: AsyncGenerator<StreamMessage<T>>): AsyncGenerator<StreamMessage<T>, void, unknown> {
         for await (const msg of src) {
             await Promise.all([...this.subscriptions].map(async (sub) => {
                 await sub.push(msg)
@@ -121,18 +122,18 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         ], () => this.shouldBeSubscribed())
     })()
 
-    async updateSubscriptions() {
+    async updateSubscriptions(): Promise<void> {
         await this.updateNodeSubscriptions()
         if (!this.shouldBeSubscribed() && !this.isStopped) {
             await this.stop()
         }
     }
 
-    shouldBeSubscribed() {
+    shouldBeSubscribed(): boolean {
         return !this.isRetired && !this.isStopped && !!this.count()
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.debug('stop')
         this.isStopped = true
         this.pipeline.end()
@@ -144,7 +145,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         return this.subscriptions.has(sub)
     }
 
-    async waitForNeighbours(numNeighbours = 1, timeout = 10000) {
+    async waitForNeighbours(numNeighbours = 1, timeout = 10000): Promise<boolean> {
         return until(async () => {
             if (!this.shouldBeSubscribed()) { return true } // abort
             const node = await this.node.getNode()
@@ -162,7 +163,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.debug('add', sub.id)
         this.subscriptions.add(sub)
 
-        sub.onBeforeFinally(() => {
+        sub.onBeforeFinally.listen(() => {
             return this.remove(sub)
         })
 
@@ -184,7 +185,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.subscriptions.delete(sub)
 
         try {
-            if (!sub.isUnsubscribed && !sub.isDone()) {
+            if (!sub.isDone()) {
                 await sub.unsubscribe()
             }
         } finally {

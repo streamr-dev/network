@@ -76,7 +76,10 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, undefined
+                MOCK_MESSAGE,
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -87,7 +90,10 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: 123
                 }, 
-                MOCK_MESSAGE, undefined, undefined
+                MOCK_MESSAGE,
+                {
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -98,7 +104,11 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, 'mock-key'
+                MOCK_MESSAGE,
+                {
+                    partitionKey: 'mock-key',
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -109,7 +119,11 @@ describe('WebsocketServer', () => {
                     id: MOCK_STREAM_ID,
                     partition: undefined
                 }, 
-                MOCK_MESSAGE, undefined, 'bar'
+                MOCK_MESSAGE,
+                {
+                    partitionKey: 'bar',
+                    msgChainId: expect.any(String)
+                }
             )
         })
 
@@ -123,15 +137,6 @@ describe('WebsocketServer', () => {
                 wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
                 await assertConnectionError(400)
             })
-        })
-
-        it('invalid json', async () => {
-            wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM)
-            await waitForEvent(wsClient, 'open')
-            wsClient.send('{ "x": invalid-payload } ')
-            const closeEvent = await waitForEvent(wsClient, 'close')
-            expect(closeEvent[0]).toBeTruthy()
-            expect(closeEvent[1]).toBe('Unable to publish: Payload is not a JSON string: Unexpected token i in JSON at position 7')
         })
 
     })

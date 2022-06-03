@@ -1,5 +1,5 @@
 import { Plugin, PluginOptions } from './Plugin'
-import { PublishHttpPlugin } from './plugins/publishHttp/PublishHttpPlugin'
+import { HttpPlugin } from './plugins/http/HttpPlugin'
 import { ConsoleMetricsPlugin } from './plugins/consoleMetrics/ConsoleMetricsPlugin'
 import { WebsocketPlugin } from './plugins/websocket/WebsocketPlugin'
 import { MqttPlugin } from './plugins/mqtt/MqttPlugin'
@@ -10,8 +10,8 @@ import { InfoPlugin } from './plugins/info/InfoPlugin'
 
 export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
     switch (name) {
-        case 'publishHttp':
-            return new PublishHttpPlugin(pluginOptions)
+        case 'http':
+            return new HttpPlugin(pluginOptions)
         case 'consoleMetrics':
             return new ConsoleMetricsPlugin(pluginOptions)
         case 'websocket':

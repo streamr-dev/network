@@ -15,12 +15,12 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to
             // use the webcrypto apis
-            // @ts-expect-error
+            // @ts-expect-error unknown property
             process.browser = !!isBrowser
         })
 
         afterAll(() => {
-            // @ts-expect-error
+            // @ts-expect-error unknown property
             process.browser = !isBrowser
         })
 
@@ -99,8 +99,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 signature: null,
             })
             EncryptionUtil.encryptStreamMessage(streamMessage, key)
-            const newKey = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-            expect(newKey).toBe(null)
+            EncryptionUtil.decryptStreamMessage(streamMessage, key)
             expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
             expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
         })
@@ -114,8 +113,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
 
             it('throws if key is not a buffer', () => {
                 expect(() => {
-                    // expected error below is desirable, show typecheks working as intended
-                    // @ts-expect-error
+                    // @ts-expect-error expected error below is desirable, show typecheks working as intended
                     GroupKey.validate(GroupKey.from(['test', Array.from(crypto.randomBytes(32))]))
                 }).toThrow('Buffer')
             })

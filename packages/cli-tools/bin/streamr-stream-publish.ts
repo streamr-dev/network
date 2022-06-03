@@ -28,7 +28,7 @@ const publishStream = (
                 return
             }
             const partitionKey = (partitionKeyField !== undefined) ? json[partitionKeyField] : undefined
-            client.publish(stream, json, Date.now(), partitionKey).then(
+            client.publish(stream, json, { partitionKey }).then(
                 () => done(),
                 (err) => done(err)
             )

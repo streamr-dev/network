@@ -49,7 +49,6 @@ export const ConfigTest: StreamrClientConfig = {
         }]
     },
     streamRegistryChainRPCs: sideChainConfig,
-    maxRetries: 2,
     _timeouts: {
         theGraph: {
             timeout: 10 * 1000,

@@ -180,6 +180,10 @@ export class Queue<T> {
         await waitForCondition(() => this.items.length > 0, timeout)
         return this.items.shift()!
     }
+
+    size(): number {
+        return this.items.length
+    }
 }
 
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {

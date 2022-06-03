@@ -37,7 +37,7 @@ export class MessageCreatorAnonymous implements IMessageCreator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    stop() {}
+    stop(): void {}
 }
 
 /**
@@ -105,11 +105,11 @@ export class MessageCreator implements IMessageCreator, Stoppable {
         })
     }
 
-    async start() {
+    async start(): Promise<void> {
         this.isStopped = false
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()

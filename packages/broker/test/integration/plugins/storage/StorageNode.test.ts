@@ -6,14 +6,12 @@ import {
     startTestTracker
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
-import StreamrClient from 'streamr-client'
 
 const trackerPort = 12503
 
 describe('StorageNode', () => {
     let tracker: Tracker
     let storageNode: Broker
-    let storageNodeClient: StreamrClient
     let storageNodeAccount: Wallet
 
     beforeAll(async () => {
@@ -28,7 +26,6 @@ describe('StorageNode', () => {
     afterAll(async () => {
         await tracker?.stop()
         await storageNode?.stop()
-        await storageNodeClient?.destroy()
     })
 
     it('has node id same as address', async () => {

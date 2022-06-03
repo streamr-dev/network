@@ -11,11 +11,11 @@ import { StreamRegistry } from './StreamRegistry'
 import { Ethereum } from './Ethereum'
 import { StorageNodeRegistry } from './StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
-import { StreamEndpoints } from './StreamEndpoints'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 import {
     EthereumAddress,
     StreamID,
+    StreamMessage,
     StreamMetadata,
     StreamPartID,
     toStreamPartID
@@ -27,6 +27,8 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId, withTimeout } from './utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
+import { InspectOptions } from 'util'
+import { MessageMetadata } from './index-exports'
 
 export interface StreamProperties {
     id: string
@@ -85,9 +87,8 @@ class StreamrStream implements StreamMetadata {
     protected _resends: Resends
     protected _publisher: Publisher
     protected _subscriber: Subscriber
-    protected _streamEndpoints: StreamEndpoints
-    protected _streamEndpointsCached: StreamEndpointsCached
     protected _streamRegistry: StreamRegistry
+    protected _streamRegistryCached: StreamRegistryCached
     protected _nodeRegistry: StorageNodeRegistry
     protected _ethereuem: Ethereum
     private readonly _httpFetcher: HttpFetcher
@@ -104,8 +105,7 @@ class StreamrStream implements StreamMetadata {
         this._resends = _container.resolve<Resends>(Resends)
         this._publisher = _container.resolve<Publisher>(Publisher)
         this._subscriber = _container.resolve<Subscriber>(Subscriber)
-        this._streamEndpoints = _container.resolve<StreamEndpoints>(StreamEndpoints)
-        this._streamEndpointsCached = _container.resolve<StreamEndpointsCached>(StreamEndpointsCached)
+        this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this._ethereuem = _container.resolve<Ethereum>(Ethereum)
@@ -116,7 +116,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * Persist stream metadata updates.
      */
-    async update(props: Omit<StreamProperties, 'id'>) {
+    async update(props: Omit<StreamProperties, 'id'>): Promise<void> {
         try {
             await this._streamRegistry.updateStream({
                 ...this.toObject(),
@@ -124,11 +124,10 @@ class StreamrStream implements StreamMetadata {
                 id: this.id
             })
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
         for (const key of Object.keys(props)) {
-            // @ts-expect-error
-            this[key] = props[key]
+            (this as any)[key] = (props as any)[key]
         }
     }
 
@@ -137,24 +136,23 @@ class StreamrStream implements StreamMetadata {
     }
 
     toObject(): StreamProperties {
-        const result = {}
+        const result: any = {}
         Object.keys(this).forEach((key) => {
             if (key.startsWith('_') || typeof key === 'function') { return }
-            // @ts-expect-error
-            result[key] = this[key]
+            result[key] = (this as any)[key]
         })
         return result as StreamProperties
     }
 
-    async delete() {
+    async delete(): Promise<void> {
         try {
             await this._streamRegistry.deleteStream(this.id)
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
     }
 
-    async detectFields() {
+    async detectFields(): Promise<void> {
         // Get last message of the stream to be used for field detecting
         const sub = await this._resends.resend(
             this.id,
@@ -188,7 +186,7 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}) {
+    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
         try {
             assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
@@ -201,7 +199,7 @@ class StreamrStream implements StreamMetadata {
                 'timed out waiting for storage nodes to respond'
             )
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
             await assignmentSubscription?.unsubscribe() // should never reject...
         }
     }
@@ -209,23 +207,23 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async removeFromStorageNode(nodeAddress: EthereumAddress) {
+    async removeFromStorageNode(nodeAddress: EthereumAddress): Promise<void> {
         try {
             return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
         } finally {
-            this._streamEndpointsCached.clearStream(this.id)
+            this._streamRegistryCached.clearStream(this.id)
         }
     }
 
-    async getStorageNodes() {
+    async getStorageNodes(): Promise<string[]> {
         return this._nodeRegistry.getStorageNodes(this.id)
     }
 
     /**
      * @category Important
      */
-    async publish<T>(content: T, timestamp?: number|string|Date, partitionKey?: string) {
-        return this._publisher.publish(this.id, content, timestamp, partitionKey)
+    async publish<T>(content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
+        return this._publisher.publish(this.id, content, metadata)
     }
 
     /** @internal */
@@ -268,7 +266,7 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
         return inspect(this.toObject(), {
             ...options,
             customInspect: false,

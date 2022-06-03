@@ -5,7 +5,7 @@ describe('Signal', () => {
     it('can trigger', async () => {
         const onSignal = jest.fn()
         const signal = Signal.create()
-        signal(onSignal)
+        signal.listen(onSignal)
         await signal.trigger()
         expect(onSignal).toHaveBeenCalledTimes(1)
         await signal.trigger()
@@ -23,8 +23,8 @@ describe('Signal', () => {
             callOrder.push(2)
         })
         const signal = Signal.create()
-        signal(onSignal1)
-        signal(onSignal2)
+        signal.listen(onSignal1)
+        signal.listen(onSignal2)
         await signal.trigger()
         expect(onSignal1).toHaveBeenCalledTimes(1)
         expect(onSignal2).toHaveBeenCalledTimes(1)
@@ -33,7 +33,7 @@ describe('Signal', () => {
     it('does not execute tasks immediately, but in next async tick', async () => {
         const onSignal = jest.fn()
         const signal = Signal.create()
-        signal(onSignal)
+        signal.listen(onSignal)
         expect(onSignal).toHaveBeenCalledTimes(0)
         const triggerTask = signal.trigger()
         triggerTask.catch(() => {})
@@ -49,11 +49,11 @@ describe('Signal', () => {
         const onSignalSlow = jest.fn()
         const onSignalFast = jest.fn()
         const signal = Signal.create()
-        signal(async () => {
+        signal.listen(async () => {
             await wait(25)
             onSignalSlow()
         })
-        signal(onSignalFast)
+        signal.listen(onSignalFast)
         const triggerTask = signal.trigger()
         triggerTask.catch(() => {})
         expect(onSignalSlow).toHaveBeenCalledTimes(0)
@@ -75,7 +75,7 @@ describe('Signal', () => {
     it('returns promise if no listener is provided', async () => {
         const onSignalFinished = jest.fn()
         const signal = Signal.create()
-        const onSignalTask = signal().then(onSignalFinished)
+        const onSignalTask = signal.listen().then(onSignalFinished)
         onSignalTask.catch(() => {})
         await signal.trigger()
         expect(onSignalFinished).toHaveBeenCalledTimes(1)
@@ -108,7 +108,7 @@ describe('Signal', () => {
             throw err
         })
         const signal = Signal.create()
-        signal(onSignal)
+        signal.listen(onSignal)
         await expect(async () => {
             await signal.trigger()
         }).rejects.toThrow(err)
@@ -123,9 +123,9 @@ describe('Signal', () => {
         })
         const handler3 = jest.fn()
         const signal = Signal.create()
-        signal(handler1)
-        signal(handler2)
-        signal(handler3)
+        signal.listen(handler1)
+        signal.listen(handler2)
+        signal.listen(handler3)
         await expect(async () => {
             await signal.trigger()
         }).rejects.toThrow(err)
@@ -146,9 +146,9 @@ describe('Signal', () => {
         })
         const handler3 = jest.fn()
         const signal = Signal.create()
-        signal(handler1)
-        signal(handler2)
-        signal(handler3)
+        signal.listen(handler1)
+        signal.listen(handler2)
+        signal.listen(handler3)
         await expect(async () => {
             await signal.trigger()
         }).rejects.toThrow(err)
@@ -175,7 +175,7 @@ describe('Signal', () => {
                 onSignalFinished()
             }
             const signal = Signal.queue()
-            signal(onSignal)
+            signal.listen(onSignal)
             const triggerTask1 = signal.trigger()
             triggerTask1.catch(() => {})
             const triggerTask2 = signal.trigger()
@@ -231,7 +231,7 @@ describe('Signal', () => {
                 onSignalFinished()
             }
             const signal = Signal.parallel()
-            signal(onSignal)
+            signal.listen(onSignal)
             const triggerTask1 = signal.trigger()
             triggerTask1.catch(() => {})
             const triggerTask2 = signal.trigger()
@@ -290,7 +290,7 @@ describe('Signal', () => {
                 onSignalFinished()
             }
             const signal = Signal.one()
-            signal(onSignal)
+            signal.listen(onSignal)
             const triggerTask1 = signal.trigger()
             triggerTask1.catch(() => {})
             const triggerTask2 = signal.trigger()
@@ -322,7 +322,7 @@ describe('Signal', () => {
         it('only triggers once', async () => {
             const onSignal = jest.fn()
             const signal = Signal.once()
-            signal(onSignal)
+            signal.listen(onSignal)
             await signal.trigger()
             await signal.trigger()
             await signal.trigger()
@@ -333,7 +333,7 @@ describe('Signal', () => {
                 await wait(10)
             })
             const signal = Signal.once()
-            signal(onSignal)
+            signal.listen(onSignal)
             await Promise.all([
                 signal.trigger(),
                 signal.trigger()
@@ -351,7 +351,7 @@ describe('Signal', () => {
                 results.push(v)
             })
             const signal = Signal.once<[ValueType]>()
-            signal(onSignal)
+            signal.listen(onSignal)
             await Promise.all([
                 // test parallel
                 signal.trigger(value),
@@ -373,7 +373,7 @@ describe('Signal', () => {
             const onSignal2 = jest.fn((v: ValueType) => {
                 results2.push(v)
             })
-            signal(onSignal2)
+            signal.listen(onSignal2)
             await Promise.resolve()
             expect(onSignal2).toHaveBeenCalledTimes(1)
             expect(results2[0]).toBe(value)
@@ -386,7 +386,7 @@ describe('Signal', () => {
                 throw err
             })
             const signal = Signal.once()
-            signal(onSignal)
+            signal.listen(onSignal)
             await expect(async () => signal.trigger()).rejects.toThrow(err)
             await expect(async () => signal.trigger()).rejects.toThrow(err)
             await expect(async () => signal.trigger()).rejects.toThrow(err)

@@ -80,9 +80,9 @@ describe('StreamrClient', () => {
                 streamId: stream.id,
             })
             const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-            // @ts-expect-error
+            // @ts-expect-error private
             const publish = client.publisher.publishFromMetadata(stream, source)
-            // @ts-expect-error
+            // @ts-expect-error private
             const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
             const received = []
             for await (const msg of sub) {
@@ -102,9 +102,9 @@ describe('StreamrClient', () => {
                     streamId: testStream.id,
                 })
                 const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-                // @ts-expect-error
+                // @ts-expect-error private
                 const publish = client.publisher.publishFromMetadata(testStream, source)
-                // @ts-expect-error
+                // @ts-expect-error private
                 const published = await client.publisher.collectMessages(publish, MAX_MESSAGES)
                 const received = []
                 for await (const msg of sub) {

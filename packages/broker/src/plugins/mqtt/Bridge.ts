@@ -36,7 +36,7 @@ export class Bridge implements MqttServerListener {
         this.streamIdDomain = streamIdDomain
     }
 
-    async onMessageReceived(topic: string, payload: string): Promise<void> {
+    async onMessageReceived(topic: string, payload: string, clientId: string): Promise<void> {
         let message
         try {
             message = this.payloadFormat.createMessage(payload)
@@ -45,8 +45,15 @@ export class Bridge implements MqttServerListener {
             return
         }
         const { content, metadata } = message
-        const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, metadata.timestamp)
-        this.publishMessageChains.add(createMessageChainKey(publishedMessage))
+        try {
+            const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
+                timestamp: metadata.timestamp,
+                msgChainId: clientId
+            })
+            this.publishMessageChains.add(createMessageChainKey(publishedMessage))
+        } catch (err: any) {
+            logger.warn('Unable to publish, reason: %s', err)
+        }
     }
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {

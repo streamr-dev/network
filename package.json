@@ -23,8 +23,8 @@
         "packages/test-utils",
         "packages/protocol",
         "packages/dht",
-        "packages/network-tracker",
         "packages/network",
+        "packages/network-tracker",
         "packages/client",
         "packages/broker",
         "packages/cli-tools"

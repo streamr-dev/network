@@ -10,7 +10,7 @@ import { instanceId, until } from './utils'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
-import { NotFoundError } from './authFetch'
+import { ErrorCode, NotFoundError } from './HttpUtil'
 import {
     StreamID,
     EthereumAddress,
@@ -36,9 +36,8 @@ import {
     streamPermissionToSolidityType,
     ChainPermissions
 } from './permission'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 
-/** @internal */
 export type StreamQueryResult = {
     id: string,
     metadata: string
@@ -63,9 +62,7 @@ const streamContractErrorProcessor = (err: any, streamId: StreamID, registry: st
 
 @scoped(Lifecycle.ContainerScoped)
 export class StreamRegistry implements Context {
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private streamRegistryContract?: ObservableContract<StreamRegistryContract>
     private streamRegistryContractsReadonly: ObservableContract<StreamRegistryContract>[]
@@ -77,7 +74,7 @@ export class StreamRegistry implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamEndpointsCached)) private streamEndpointsCached: StreamEndpointsCached
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -100,7 +97,7 @@ export class StreamRegistry implements Context {
     // Send transactions to the StreamRegistry contract
     // --------------------------------------------------------------------------------------------
 
-    private async connectToStreamRegistryContract() {
+    private async connectToStreamRegistryContract(): Promise<void> {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
@@ -113,9 +110,23 @@ export class StreamRegistry implements Context {
         }
     }
 
-    /**
-     * @category Important
-     */
+    async getOrCreateStream(props: { id: string, partitions?: number }): Promise<Stream> {
+        this.debug('getOrCreateStream %o', {
+            props,
+        })
+        try {
+            return await this.getStream(props.id)
+        } catch (err: any) {
+            // If stream does not exist, attempt to create it
+            if (err.errorCode === ErrorCode.NOT_FOUND) {
+                const stream = await this.createStream(props)
+                this.debug('created stream: %s %o', props.id, stream.toObject())
+                return stream
+            }
+            throw err
+        }
+    }
+
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
@@ -184,7 +195,7 @@ export class StreamRegistry implements Context {
         }, this.container)
     }
 
-    async deleteStream(streamIdOrPath: string) {
+    async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Deleting stream %s', streamId)
         await this.connectToStreamRegistryContract()
@@ -205,9 +216,6 @@ export class StreamRegistry implements Context {
         ])
     }
 
-    /**
-     * @category Important
-     */
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
@@ -299,12 +307,10 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    /** @internal */
     static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    /** @internal */
     static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {
@@ -399,7 +405,7 @@ export class StreamRegistry implements Context {
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.streamEndpointsCached.clearStream(streamId)
+        this.streamRegistryCached.clearStream(streamId)
         await this.connectToStreamRegistryContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
@@ -422,7 +428,7 @@ export class StreamRegistry implements Context {
         for (const item of items) {
             // eslint-disable-next-line no-await-in-loop
             const streamId = await this.streamIdBuilder.toStreamID(item.streamId)
-            this.streamEndpointsCached.clearStream(streamId)
+            this.streamRegistryCached.clearStream(streamId)
             streamIds.push(streamId)
             targets.push(item.assignments.map((assignment) => {
                 return isPublicPermissionAssignment(assignment) ? PUBLIC_PERMISSION_ADDRESS : assignment.user
@@ -468,7 +474,7 @@ export class StreamRegistry implements Context {
     // Helpers
     // --------------------------------------------------------------------------------------------
 
-    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>) {
+    private queryAllReadonlyContracts<T>(call: (contract: StreamRegistryContract) => Promise<T>): any {
         return Promise.any([
             ...this.streamRegistryContractsReadonly.map((contract: StreamRegistryContract) => {
                 return call(contract)

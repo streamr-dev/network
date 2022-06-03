@@ -34,6 +34,8 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Requesting historical messages](#requesting-historical-messages)
     - [Searching for streams](#searching-for-streams)
     - [Interacting with the `Stream` object](#interacting-with-the-stream-object)
+     - [Getting existing streams](#getting-existing-streams)
+     - [Stream access control](#stream-access-control)
     - [Enabling storage](#enabling-storage)
     - [Utility functions](#utility-functions)
 - [Advanced usage](#advanced-usage)
@@ -41,7 +43,7 @@ Please see the [Streamr project docs](https://streamr.network/docs) for more det
     - [Stream partitioning](#stream-partitioning)
     - [Disable message ordering and gap filling](#disable-message-ordering-and-gap-filling)
     - [Encryption keys](#encryption-keys)
-    - [Proxy publishing](#proxy-publishing)
+    - [Proxy publishing and subscribing](#proxy-publishing-and-subscribing)
     - [Logging](#logging)
 
 ## Getting started
@@ -189,13 +191,13 @@ const msg = {
 await streamr.publish(streamId, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-await streamr.publish(streamId, msg, new Date(1546300800123))
+await streamr.publish(streamId, msg, { timestamp: new Date(1546300800123) })
 
 // Publish with a specific timestamp in ms
-await streamr.publish(streamId, msg, 1546300800123)
+await streamr.publish(streamId, msg, { timestamp: 1546300800123 })
 
 // Publish with a specific timestamp as a ISO8601 string
-await streamr.publish(streamId, msg, '2019-01-01T00:00:00.123Z')
+await streamr.publish(streamId, msg, { timestamp: '2019-01-01T00:00:00.123Z' })
 
 // For convenience, stream.publish(...) equals streamr.publish(stream, ...)
 await stream.publish(msg)
@@ -317,9 +319,9 @@ const stream = await streamr.getOrCreateStream({
 })
 ```
 
-#### Stream permissions
+#### Stream access control
 
-There are 5 different permissions:
+There are 5 different stream permissions:
 - StreamPermission.PUBLISH
 - StreamPermission.SUBSCRIBE
 - StreamPermission.EDIT
@@ -467,7 +469,6 @@ By default, the `StreamrClient` publishes metrics to the network at regular inte
     node: {
         publishMessagesPerSecond: number
         publishBytesPerSecond: number
-        latencyAverageMs: number
         sendMessagesPerSecond: number
         sendBytesPerSecond: number
         receiveMessagesPerSecond: number
@@ -558,8 +559,9 @@ The partition key can be given as an argument to the `publish` methods, and the 
 ```js
 await stream.publish(
     msg,
-    Date.now(),
-    msg.vehicleId // msg.vehicleId is the partition key here
+    {
+        partitionKey: msg.vehicleId
+    }
 )
 ```
 

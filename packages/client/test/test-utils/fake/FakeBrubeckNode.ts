@@ -131,7 +131,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.activeNodes = activeNodes
         this.networkNodeStub = new FakeNetworkNodeStub(this)
         if (destroySignal !== undefined) {
-            destroySignal.onDestroy(() => {
+            destroySignal.onDestroy.listen(() => {
                 this.debug(`destroy ${this.id}`)
                 this.activeNodes.removeNode(this.id)
             })

@@ -6,7 +6,7 @@ import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from '
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
-import { pLimitFn, sleep } from '../utils'
+import { pLimitFn, wait } from '../utils'
 import type { AuthenticatedConfig } from '../Ethereum'
 import { ConfigInjectionToken } from '../Config'
 
@@ -17,7 +17,7 @@ export class Signer {
         this.signData = Signer.getSigningFunction(authOptions)
     }
 
-    static getSigningFunction(options: AuthenticatedConfig) {
+    static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
         if ('privateKey' in options && options.privateKey) {
             const { privateKey } = options
             const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
@@ -34,7 +34,7 @@ export class Signer {
             // otherwise metamask extension may not show the prompt window
             return pLimitFn(async (d: Bytes | string) => {
                 const sig = await signer.signMessage(d)
-                await sleep(50)
+                await wait(50)
                 return sig
             }, 1)
         }

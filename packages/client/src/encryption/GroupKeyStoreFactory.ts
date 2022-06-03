@@ -23,13 +23,10 @@ export interface UpdateEncryptionKeyOptions {
 
 @scoped(Lifecycle.ContainerScoped)
 export class GroupKeyStoreFactory implements Context {
-    /** @internal */
     readonly id
-    /** @internal */
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
     initialGroupKeys
-    /** @internal */
     getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
     constructor(
         context: Context,
@@ -41,7 +38,7 @@ export class GroupKeyStoreFactory implements Context {
         this.debug = context.debug.extend(this.id)
         this.getStore = CacheAsyncFn(this.getNewStore.bind(this), {
             ...cacheConfig,
-            cacheKey([streamId]) {
+            cacheKey([streamId]): StreamID {
                 return streamId
             }
         })
@@ -49,7 +46,7 @@ export class GroupKeyStoreFactory implements Context {
         this.initialGroupKeys = encryptionConfig.encryptionKeys
     }
 
-    private async getNewStore(streamId: StreamID) {
+    private async getNewStore(streamId: StreamID): Promise<GroupKeyStore> {
         if (!streamId || typeof streamId !== 'string') {
             throw new ContextError(this, `invalid streamId for store: ${inspect(streamId)}`)
         }
@@ -72,31 +69,27 @@ export class GroupKeyStoreFactory implements Context {
         return store
     }
 
-    /** @internal */
-    async useGroupKey(streamId: StreamID) {
+    async useGroupKey(streamId: StreamID): Promise<[GroupKey | undefined, GroupKey | undefined]> {
         const store = await this.getStore(streamId)
         return store.useGroupKey()
     }
 
-    /** @internal */
-    async rotateGroupKey(streamId: StreamID) {
+    async rotateGroupKey(streamId: StreamID): Promise<void> {
         const store = await this.getStore(streamId)
         return store.rotateGroupKey()
     }
 
-    /** @internal */
-    async setNextGroupKey(streamId: StreamID, newKey: GroupKey) {
+    async setNextGroupKey(streamId: StreamID, newKey: GroupKey): Promise<void> {
         const store = await this.getStore(streamId)
         return store.setNextGroupKey(newKey)
     }
 
-    /** @internal */
-    async rekey(streamId: StreamID, newKey?: GroupKey) {
+    async rekey(streamId: StreamID, newKey?: GroupKey): Promise<void> {
         const store = await this.getStore(streamId)
         return store.rekey(newKey)
     }
 
-    async stop() {
+    async stop(): Promise<void> {
         this.getStore.clear()
         const { cleanupFns } = this
         this.cleanupFns = []

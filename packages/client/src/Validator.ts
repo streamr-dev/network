@@ -11,10 +11,10 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 
-import { pOrderedResolve, CacheAsyncFn, instanceId } from './utils'
+import { pOrderedResolve, instanceId, CacheFn } from './utils'
 import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
-import { StreamEndpointsCached } from './StreamEndpointsCached'
+import { StreamRegistryCached } from './StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 
 export class SignatureRequiredError extends StreamMessageError {
@@ -36,19 +36,19 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
     private doValidation: StreamMessageValidator['validate']
     constructor(
         context: Context,
-        @inject(delay(() => StreamEndpointsCached)) streamEndpoints: StreamEndpointsCached,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
         @inject(ConfigInjectionToken.Subscribe) private options: SubscribeConfig,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
     ) {
         super({
             getStream: (streamId: StreamID) => {
-                return streamEndpoints.getStream(streamId)
+                return streamRegistryCached.getStream(streamId)
             },
             isPublisher: (publisherId: EthereumAddress, streamId: StreamID) => {
-                return streamEndpoints.isStreamPublisher(streamId, publisherId)
+                return streamRegistryCached.isStreamPublisher(streamId, publisherId)
             },
             isSubscriber: (ethAddress: EthereumAddress, streamId: StreamID) => {
-                return streamEndpoints.isStreamSubscriber(streamId, ethAddress)
+                return streamRegistryCached.isStreamSubscriber(streamId, ethAddress)
             },
             verify: (address: EthereumAddress, payload: string, signature: string) => {
                 return this.cachedVerify(address, payload, signature)
@@ -60,14 +60,13 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
         this.doValidation = super.validate.bind(this)
     }
 
-    private cachedVerify = CacheAsyncFn(async (address: EthereumAddress, payload: string, signature: string) => {
+    private cachedVerify = CacheFn( (address: EthereumAddress, payload: string, signature: string) => {
         if (this.isStopped) { return true }
         return SigningUtil.verify(address, payload, signature)
     }, {
         // forcibly use small cache otherwise keeps n serialized messages in memory
         ...this.cacheOptions,
         maxSize: 100,
-        cachePromiseRejection: true,
         cacheKey: (args) => args.join('|'),
     })
 
@@ -96,12 +95,12 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
         })
     })
 
-    async validate(msg: StreamMessage) {
+    async validate(msg: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
         await this.orderedValidate(msg)
     }
 
-    stop() {
+    stop(): void {
         this.isStopped = true
         this.cachedVerify.clear()
         this.orderedValidate.clear()

@@ -26,7 +26,7 @@ type OnFinallyFn = MaybeAsync<(err?: Error) => void>
 export function iteratorFinally<T>( // eslint-disable-line no-redeclare
     iterable: MaybeCancelable<AsyncIterable<T> | AsyncGenerator<T>>,
     onFinally?: OnFinallyFn
-) {
+): AsyncGenerator<T, any, unknown> {
     if (!onFinally) {
         // noop if no onFinally
         return (async function* Noop() {
@@ -176,7 +176,7 @@ export function CancelableGenerator<T>(
     iterable: MaybeCancelable<AsyncIterable<T> | AsyncGenerator<T>>,
     onFinally: OnFinallyFn = () => {},
     { timeout = 250 } = {}
-) {
+): Cancelable<AsyncGenerator<T, any, unknown>> {
     let cancelled = false
     let finalCalled = false
     let error: Error | AggregatedError | undefined

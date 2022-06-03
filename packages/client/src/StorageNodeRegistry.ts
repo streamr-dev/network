@@ -10,7 +10,7 @@ import { BrubeckContainer } from './Container'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
 import { Ethereum } from './Ethereum'
-import { NotFoundError } from './authFetch'
+import { NotFoundError } from './HttpUtil'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
@@ -92,7 +92,11 @@ export class StorageNodeRegistry {
         this.initStreamAssignmentEventListener('removeFromStorageNode', 'Removed', eventEmitter)
     }
 
-    initStreamAssignmentEventListener(clientEvent: keyof StreamrClientEvents, contractEvent: string, eventEmitter: StreamrClientEventEmitter) {
+    private initStreamAssignmentEventListener(
+        clientEvent: keyof StreamrClientEvents,
+        contractEvent: string,
+        eventEmitter: StreamrClientEventEmitter
+    ) {
         type Listener = (streamId: string, nodeAddress: string, extra: any) => void
         initEventGateway(
             clientEvent,

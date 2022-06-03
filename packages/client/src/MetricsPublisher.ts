@@ -61,7 +61,7 @@ export class MetricsPublisher {
         if (this.periodConfigs.length > 0) {
             this.eventEmitter.on('publish', () => this.ensureStarted())
             this.eventEmitter.on('subscribe', () => this.ensureStarted())
-            this.destroySignal.onDestroy(() => this.stop())
+            this.destroySignal.onDestroy.listen(() => this.stop())
         }
     }
 
@@ -80,7 +80,9 @@ export class MetricsPublisher {
 
     private async publish(report: MetricsReport, streamId: string, partitionKey: string): Promise<void> {
         try {
-            await this.publisher.publish(streamId, report, undefined, partitionKey)
+            await this.publisher.publish(streamId, report, {
+                partitionKey
+            })
         } catch (e: any) {
             console.warn(`Unable to publish metrics: ${e.message}`)
         }

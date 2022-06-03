@@ -19,6 +19,7 @@ import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
 import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
     publishMetadata
@@ -33,7 +34,7 @@ export class FailedToPublishError extends Error {
         }
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: any) {
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
         return inspect(this, {
             ...options,
             customInspect: false,
@@ -42,11 +43,16 @@ export class FailedToPublishError extends Error {
     }
 }
 
-export type PublishMetadata<T = unknown> = {
-    content: T
+export interface MessageMetadata {
     timestamp?: string | number | Date
     sequenceNumber?: number
-    partitionKey?: string | number
+    partitionKey?: string | number,
+    msgChainId?: string
+}
+
+// TODO better name? 
+export type PublishMetadata<T = unknown> = MessageMetadata & {
+    content: T
 }
 
 export type PublishMetadataStrict<T = unknown> = PublishMetadata<T> & {
@@ -95,7 +101,7 @@ export class PublishPipeline implements Context, Stoppable {
             .filter(this.filterNonSettled)
             .forEach(this.consumeQueue.bind(this))
 
-        destroySignal.onDestroy(this.stop.bind(this))
+        destroySignal.onDestroy.listen(this.stop.bind(this))
     }
 
     private filterNonSettled = ([_streamMessage, defer]: PublishQueueOut): boolean => {
@@ -190,7 +196,8 @@ export class PublishPipeline implements Context, Stoppable {
         this.debug('publish >> %o', {
             streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
             timestamp: publishMetadata.timestamp,
-            partitionKey: publishMetadata.partitionKey
+            partitionKey: publishMetadata.partitionKey,
+            msgChainId: publishMetadata.msgChainId
         })
         this.startQueue()
 
