@@ -6,6 +6,7 @@ import { promiseTimeout } from '../helpers/common'
 import { Err } from '../helpers/errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from '../helpers/Logger'
+import { parseWrapper, serializeWrapper } from './ConversionWrappers'
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
@@ -69,9 +70,9 @@ export class ServerTransport extends EventEmitter {
         fn: (rq: any, _context: ServerCallContext) => Promise<any>
     ): void {
         this.methods.set(name, async (bytes: Uint8Array) => {
-            const request = requestClass.fromBinary(bytes)
+            const request = parseWrapper(() => requestClass.fromBinary(bytes))
             const response = await fn(request, new DummyServerCallContext())
-            return returnClass.toBinary(response)
+            return serializeWrapper(() => returnClass.toBinary(response))
         })
     }
 
@@ -81,7 +82,7 @@ export class ServerTransport extends EventEmitter {
         fn: (rq: any, _context: ServerCallContext) => Promise<any>
     ): void {
         this.methods.set(name, async (bytes: Uint8Array) => {
-            const request = requestClass.fromBinary(bytes)
+            const request = parseWrapper(() => requestClass.fromBinary(bytes))
             await fn(request, new DummyServerCallContext())
         })
     }
