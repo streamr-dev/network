@@ -1,8 +1,8 @@
-import { ControlLayer, ErrorCode } from 'streamr-client-protocol'
+import { ControlLayer, ErrorCode, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 
 import { decode } from '../../src/protocol/utils'
 
-describe('encoder', () => {
+describe('decode', () => {
     const controlMessage = new ControlLayer.ErrorResponse({
         requestId: 'requestId',
         errorMessage: 'This is an error',
@@ -26,6 +26,12 @@ describe('encoder', () => {
 
     it('decode returns null if unknown control message type', () => {
         const result = decode('[2,6666,"requestId","streamId",0]', ControlLayer.ControlMessage.deserialize)
+        expect(result).toBeNull()
+    })
+
+    it('decode returns null if message validation fails', () => {
+        const errorMessage = JSON.stringify([2, TrackerMessageType.ErrorMessage, 'requestId', 'invalid-error-code', 'targetNode'])
+        const result = decode(errorMessage, TrackerLayer.TrackerMessage.deserialize)
         expect(result).toBeNull()
     })
 })
