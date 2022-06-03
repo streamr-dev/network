@@ -6,12 +6,10 @@ import {
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
-import { DummyServerCallContext } from '../../rpc-protocol/ServerTransport'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { TODO } from '../../types'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { Logger } from '../../helpers/Logger'
-import { parseWrapper, serializeWrapper } from '../../rpc-protocol/ConversionWrappers'
 
 const logger = new Logger(module)
 
@@ -63,12 +61,5 @@ export const createRemoteWebSocketConnectorServer = (connectFn: TODO, canConnect
             return res
         }
     }
-    const registerRpc = {
-        async requestConnection(bytes: Uint8Array): Promise<Uint8Array> {
-            const request = parseWrapper<WebSocketConnectionRequest>(() => WebSocketConnectionRequest.fromBinary(bytes))
-            const response = await rpc.requestConnection(request, new DummyServerCallContext())
-            return serializeWrapper(() => WebSocketConnectionResponse.toBinary(response))
-        },
-    }
-    return registerRpc
+    return rpc
 }

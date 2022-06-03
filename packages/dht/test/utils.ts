@@ -1,5 +1,4 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { DummyServerCallContext } from '../src/rpc-protocol/ServerTransport'
 import { MockConnectionManager } from '../src/connection/MockConnectionManager'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
@@ -79,7 +78,7 @@ export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdStr
     return ret
 }
 
-const MockDhtRpc: IDhtRpc = {
+export const MockDhtRpc: IDhtRpc = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
@@ -105,33 +104,7 @@ const MockDhtRpc: IDhtRpc = {
     }
 }
 
-export const MockRegisterDhtRpc = {
-    async getClosestPeers(bytes: Uint8Array): Promise<Uint8Array> {
-        const request = ClosestPeersRequest.fromBinary(bytes)
-        const response = await MockDhtRpc.getClosestPeers(request, new DummyServerCallContext())
-        return ClosestPeersResponse.toBinary(response)
-    },
-    async ping(bytes: Uint8Array): Promise<Uint8Array> {
-        const request = PingRequest.fromBinary(bytes)
-        const response = await MockDhtRpc.ping(request, new DummyServerCallContext())
-        return PingResponse.toBinary(response)
-    },
-    async routeMessage(bytes: Uint8Array): Promise<Uint8Array> {
-        const message = RouteMessageWrapper.fromBinary(bytes)
-        const response = await MockDhtRpc.routeMessage(message, new DummyServerCallContext())
-        return RouteMessageAck.toBinary(response)
-    }
-}
-
-export const MockRegisterWebSocketConnectorRpc = {
-    async requestConnection(bytes: Uint8Array): Promise<Uint8Array> {
-        const request = WebSocketConnectionRequest.fromBinary(bytes)
-        const response = await MockWebSocketConnectorRpc.requestConnection(request, new DummyServerCallContext())
-        return WebSocketConnectionResponse.toBinary(response)
-    }
-}
-
-const MockWebSocketConnectorRpc: IWebSocketConnector = {
+export const MockWebSocketConnectorRpc: IWebSocketConnector = {
     async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
             target: request.target,

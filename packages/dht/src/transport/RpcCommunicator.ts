@@ -14,12 +14,13 @@ import {
     RpcMessage,
     RpcResponseError
 } from '../proto/DhtRpc'
-import { Event as DhtTransportServerEvent, RegisteredMethod, ServerTransport } from '../rpc-protocol/ServerTransport'
+import { Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
 import { EventEmitter } from 'events'
 import { Event as ITransportEvent, ITransport } from './ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DEFAULT_APP_ID } from '../dht/DhtNode'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '../helpers/Logger'
 
 export enum Event {
@@ -96,7 +97,7 @@ export class RpcCommunicator extends EventEmitter {
         } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
-        const msg: Message = {messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage)}
+        const msg: Message = { messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage) }
 
         logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
         this.emit(Event.OUTGOING_MESSAGE)
@@ -132,9 +133,23 @@ export class RpcCommunicator extends EventEmitter {
         return this.rpcClientTransport
     }
 
-    public registerServerMethod(methodName: string, fn: RegisteredMethod): void {
-        this.rpcServerTransport.registerMethod(methodName, fn)
+    public registerRpcRequest<RequestType extends Parser, ReturnType extends Serializer>(
+        requestClass: RequestType,
+        returnClass: ReturnType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
+        this.rpcServerTransport.registerRpcRequest(requestClass, returnClass, name, fn)
     }
+
+    registerRpcNotification<RequestType extends Parser>(
+        requestClass: RequestType,
+        name: string,
+        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+    ): void {
+        this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
+    }
+
     private async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
         if (this.stopped) {
             return
@@ -167,7 +182,7 @@ export class RpcCommunicator extends EventEmitter {
         }
         try {
             await this.rpcServerTransport.onNotification(senderDescriptor, rpcMessage)
-        } catch (err) {}
+        } catch (err) { }
     }
 
     private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {
@@ -224,7 +239,7 @@ export class RpcCommunicator extends EventEmitter {
         if (!this.stopped && deferredPromises.message.state === DeferredState.PENDING) {
             deferredPromises.message.reject(error)
             deferredPromises.header.reject(error)
-            deferredPromises.status.reject({code, detail: error.message})
+            deferredPromises.status.reject({ code, detail: error.message })
             deferredPromises.trailer.reject(error)
         }
     }
@@ -281,7 +296,7 @@ export class RpcCommunicator extends EventEmitter {
             this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), 'STOPPED')
         })
         this.removeAllListeners()
-        this.send = () => {}
+        this.send = () => { }
         this.ongoingRequests.clear()
         this.rpcClientTransport.stop()
         this.rpcServerTransport.stop()

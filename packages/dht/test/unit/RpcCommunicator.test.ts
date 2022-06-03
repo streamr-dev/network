@@ -16,7 +16,7 @@ import { DeferredPromises } from '../../src/rpc-protocol/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/helpers/errors'
 import { waitForCondition } from 'streamr-test-utils'
-import { MockRegisterDhtRpc } from '../utils'
+import { MockDhtRpc } from '../utils'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator
@@ -152,7 +152,25 @@ describe('RpcCommunicator', () => {
 
     it('Success responses to requests', async () => {
         let successCounter = 0
-        rpcCommunicator.registerServerMethod('ping', MockRegisterDhtRpc.ping)
+        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
+        rpcCommunicator.setSendFn((_peer, message) => {
+            const pongWrapper = RpcMessage.fromBinary(message.body)
+            if (!pongWrapper.responseError) {
+                successCounter += 1
+            }
+        })
+        const requestMessage: Message = {
+            messageType: MessageType.RPC,
+            messageId: 'id',
+            body: RpcMessage.toBinary(request)
+        }
+        rpcCommunicator.onIncomingMessage(peerDescriptor2, requestMessage)
+        await waitForCondition(() => successCounter === 1)
+    })
+
+    it('Success responses to new registration method', async () => {
+        let successCounter = 0
+        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (!pongWrapper.responseError) {
@@ -187,7 +205,8 @@ describe('RpcCommunicator', () => {
 
     it('Error response on server timeout', async () => {
         let errorCounter = 0
-        rpcCommunicator.registerServerMethod('ping', (_any: Uint8Array) => {
+
+        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', (_any: Uint8Array) => {
             return new Promise((resolve, _reject) => {
                 setTimeout(() => resolve(new Uint8Array()), 2000)
             })
@@ -209,7 +228,7 @@ describe('RpcCommunicator', () => {
 
     it('Error response on server timeout', async () => {
         let errorCounter = 0
-        rpcCommunicator.registerServerMethod('ping', (_any: Uint8Array) => {
+        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping',  (_any: Uint8Array) => {
             return new Promise((_resolve, reject) => reject('error'))
         })
         rpcCommunicator.setSendFn((_peer, message) => {

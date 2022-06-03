@@ -2,7 +2,14 @@ import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
 import { Simulator } from '../../src/connection/Simulator'
-import { Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import {
+    IceCandidate,
+    Message,
+    PeerDescriptor,
+    RtcAnswer,
+    RtcOffer,
+    WebRtcConnectionRequest
+} from '../../src/proto/DhtRpc'
 import { generateId } from '../../src/helpers/common'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { createRemoteWebRtcConnectorServer } from '../../src/connection/WebRTC/RemoteWebrtcConnector'
@@ -55,10 +62,10 @@ describe('WebRTC rpc messages', () => {
             connectionLayer: mockConnectionLayer2,
             appId: "webrtc"
         })
-        rpcCommunicator2.registerServerMethod('rtcOffer', serverFunctions.rtcOffer)
-        rpcCommunicator2.registerServerMethod('rtcAnswer', serverFunctions.rtcAnswer)
-        rpcCommunicator2.registerServerMethod('iceCandidate', serverFunctions.iceCandidate)
-        rpcCommunicator2.registerServerMethod('requestConnection', serverFunctions.requestConnection)
+        rpcCommunicator2.registerRpcNotification(RtcOffer, 'rtcOffer', serverFunctions.rtcOffer)
+        rpcCommunicator2.registerRpcNotification(RtcAnswer,'rtcAnswer', serverFunctions.rtcAnswer)
+        rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
+        rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)

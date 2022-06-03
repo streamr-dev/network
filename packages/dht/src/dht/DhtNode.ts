@@ -3,14 +3,15 @@ import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
-import { createRpcMethods } from '../rpc-protocol/server'
+import { createRpcMethods } from './server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { PeerID } from '../helpers/PeerID'
 import {
+    ClosestPeersRequest, ClosestPeersResponse,
     ConnectivityResponseMessage,
     Message,
     NodeType,
-    PeerDescriptor,
+    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
@@ -514,9 +515,9 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
         logger.trace(`Binding default DHT RPC methods`)
         const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
-        this.rpcCommunicator!.registerServerMethod('getClosestPeers', methods.getClosestPeers)
-        this.rpcCommunicator!.registerServerMethod('ping', methods.ping)
-        this.rpcCommunicator!.registerServerMethod('routeMessage', methods.routeMessage)
+        this.rpcCommunicator!.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', methods.getClosestPeers)
+        this.rpcCommunicator!.registerRpcRequest(PingRequest, PingResponse, 'ping', methods.ping)
+        this.rpcCommunicator!.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', methods.routeMessage)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
