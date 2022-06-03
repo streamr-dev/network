@@ -6,6 +6,7 @@ import { Event, NodeToNode } from '../../protocol/NodeToNode'
 import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { Signers } from './SignatureFunctions'
+import { ReceiptStore } from './ReceiptStore'
 
 const DEFAULT_WINDOW_TIMEOUT_MARGIN = WINDOW_LENGTH  // TODO: define production value
 const DEFAULT_UPDATE_TIMEOUT_MARGIN = WINDOW_LENGTH  // TODO: define production value
@@ -15,6 +16,7 @@ const logger = new Logger(module)
 export interface ConstructorOptions {
     myNodeId: NodeId
     nodeToNode: NodeToNode
+    receiptStore: ReceiptStore
     signers: Signers
     windowTimeoutMargin?: number
     bucketUpdateTimeoutMargin?: number
@@ -23,6 +25,7 @@ export interface ConstructorOptions {
 export class ReceiptRequester {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
+    private readonly receiptStore: ReceiptStore
     private readonly signers: Signers
     private readonly windowTimeoutMargin: number
     private readonly bucketUpdateTimeoutMargin: number
@@ -32,12 +35,14 @@ export class ReceiptRequester {
     constructor({
         myNodeId,
         nodeToNode,
+        receiptStore,
         signers,
         windowTimeoutMargin,
         bucketUpdateTimeoutMargin
     }: ConstructorOptions) {
         this.myNodeId = myNodeId
         this.nodeToNode = nodeToNode
+        this.receiptStore = receiptStore
         this.signers = signers
         this.windowTimeoutMargin = windowTimeoutMargin || DEFAULT_WINDOW_TIMEOUT_MARGIN
         this.bucketUpdateTimeoutMargin = bucketUpdateTimeoutMargin || DEFAULT_UPDATE_TIMEOUT_MARGIN
@@ -77,6 +82,7 @@ export class ReceiptRequester {
                 // TODO: cut connection?
                 return
             }
+            this.receiptStore.store(receipt)
             logger.info("Accepted receipt %j", receipt)
         })
     }

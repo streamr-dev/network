@@ -22,6 +22,7 @@ import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
 import { ReceiptResponder } from './receipts/ReceiptResponder'
 import { ReceiptRequester } from './receipts/ReceiptRequester'
 import { Signers } from './receipts/SignatureFunctions'
+import { ReceiptStore } from './receipts/ReceiptStore'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -93,6 +94,7 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
+    private readonly receiptStore?: ReceiptStore
     private readonly receiptRequester?: ReceiptRequester
     private readonly receiptResponder?: ReceiptResponder
 
@@ -112,13 +114,21 @@ export class Node extends EventEmitter {
             publishBytesPerSecond: new RateMetric(),
         }
         this.metricsContext.addMetrics('node', this.metrics)
+
         if (opts.signers !== undefined) {
+            this.receiptStore = new ReceiptStore(this.peerInfo.peerId)
             this.receiptRequester = new ReceiptRequester({
                 myNodeId: this.peerInfo.peerId,
                 nodeToNode: this.nodeToNode,
+                receiptStore: this.receiptStore,
                 signers: opts.signers
             })
-            this.receiptResponder = new ReceiptResponder(this.peerInfo, this.nodeToNode, opts.signers)
+            this.receiptResponder = new ReceiptResponder(
+                this.peerInfo,
+                this.nodeToNode,
+                this.receiptStore,
+                opts.signers
+            )
         }
 
         this.streamPartManager = new StreamPartManager()

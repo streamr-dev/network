@@ -2,7 +2,7 @@ import { BucketCollector } from './BucketCollector'
 import {
     Claim,
     ErrorCode,
-    ErrorResponse,
+    ErrorResponse, Receipt,
     ReceiptRequest,
     ReceiptResponse,
     toStreamPartID
@@ -13,6 +13,7 @@ import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
 import { Signers } from './SignatureFunctions'
+import { ReceiptStore } from './ReceiptStore'
 
 const logger = new Logger(module)
 
@@ -29,12 +30,14 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
 export class ReceiptResponder {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
+    private readonly receiptStore: ReceiptStore
     private readonly signers: Signers
     private readonly collector: BucketCollector
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, signers: Signers) {
+    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, receiptStore: ReceiptStore, signers: Signers) {
         this.myNodeId = myPeerInfo.peerId
         this.nodeToNode = nodeToNode
+        this.receiptStore = receiptStore
         this.signers = signers
         this.collector = new BucketCollector()
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
@@ -73,18 +76,20 @@ export class ReceiptResponder {
         }
 
         logger.info("I agree with claim %j", claim)
-        this.sendReceiptResponse(claim, requestId)
+        const receipt = {
+            claim,
+            signature: this.signers.receipt.sign({ claim })
+        }
+        this.receiptStore.store(receipt)
+        this.sendReceiptResponse(receipt, requestId)
     }
 
-    private sendReceiptResponse(claim: Claim, requestId: string): void {
-        this.nodeToNode.send(claim.sender, new ReceiptResponse({
+    private sendReceiptResponse(receipt: Receipt, requestId: string): void {
+        this.nodeToNode.send(receipt.claim.sender, new ReceiptResponse({
             requestId,
-            receipt: {
-                claim,
-                signature: this.signers.receipt.sign({ claim })
-            }
+            receipt
         })).catch((e) => {
-            logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', claim.sender, e)
+            logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', receipt.claim.sender, e)
         })
     }
 
