@@ -19,6 +19,7 @@ import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '../helpers/Logger'
+import { v4 } from 'uuid'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -274,6 +275,7 @@ export class DhtNode extends EventEmitter implements ITransport {
         }
         const params: RouteMessageParams = {
             message: Message.toBinary(msg),
+            messageId: v4(),
             destinationPeer: targetPeerDescriptor,
             appId: appId ? appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!

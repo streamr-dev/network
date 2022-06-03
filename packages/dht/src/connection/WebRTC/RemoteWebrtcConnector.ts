@@ -65,7 +65,7 @@ export class RemoteWebrtcConnector {
     }
 
     async sendRtcAnswer(sourceDescriptor: PeerDescriptor, description: string, connectionId: string): Promise<boolean> {
-        const request: RtcOffer = {
+        const request: RtcAnswer = {
             target: this.peerDescriptor,
             requester: sourceDescriptor,
             connectionId,
