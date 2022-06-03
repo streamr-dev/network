@@ -60,6 +60,22 @@ function utf8ArrayToString(aBytes: Uint8Array): string {
     return sView
 }
 
+const byteToHex: string[] = []
+
+for (let n = 0; n <= 0xff; ++n) {
+    const hexOctet = n.toString(16).padStart(2, "0")
+    byteToHex.push(hexOctet)
+}
+
+function hex(buff: Uint8Array) {
+    const hexOctets = [] // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
+
+    for (let i = 0; i < buff.length; ++i) {
+        hexOctets.push(byteToHex[buff[i]])
+    }
+    return hexOctets.join("")
+}
+
 export class PeerID {
     private data!: Uint8Array;
 
@@ -116,6 +132,11 @@ export class PeerID {
 
     toString(): string {
         return utf8ArrayToString(this.data)
+        
+    }
+
+    toMapKey(): string {
+        return hex(this.data)
     }
 
     get value(): Uint8Array {

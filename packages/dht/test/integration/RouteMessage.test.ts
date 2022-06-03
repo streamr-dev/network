@@ -123,9 +123,9 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routers.map((node) => {
                 node.joinDht(entryPointDescriptor)
-                numsOfReceivedMessages[node.getNodeId().toString()] = 0
+                numsOfReceivedMessages[node.getNodeId().toMapKey()] = 0
                 node.on(MessageRouterEvent.DATA, () => {
-                    numsOfReceivedMessages[node.getNodeId().toString()] = numsOfReceivedMessages[node.getNodeId().toString()] + 1
+                    numsOfReceivedMessages[node.getNodeId().toMapKey()] = numsOfReceivedMessages[node.getNodeId().toMapKey()] + 1
                 })
             })
         )
@@ -149,7 +149,7 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toString()] >= routers.length - 1, 30000)
+        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toMapKey()] >= routers.length - 1, 30000)
         await Promise.allSettled(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 await waitForCondition(() => {

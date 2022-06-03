@@ -42,15 +42,24 @@ export class DhtSimulation {
         
         let sumCorrectNeighbors = 0
         let sumKbucketSize = 1
+        let sumOutgoingRpcCalls = 0
+        let maxOutgoingRpcCalls = 0
 
         for (let i = this.nodes.length-1; i >= 0; i--) {
             
+            const numberOfOutgoingRpcCalls = this.nodes[i].getNumberOfOutgoingRpcCalls()
             console.log('-----------')
             console.log('Node: ' + i)
             console.log('Kbucket size: '+ this.nodes[i].getKBucketSize())
             console.log('Num incoming RPC calls: '+ this.nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: '+ this.nodes[i].getNumberOfOutgoingRpcCalls())
-            
+            console.log('Num outgoing RPC calls: '+ numberOfOutgoingRpcCalls)
+    
+            sumOutgoingRpcCalls += numberOfOutgoingRpcCalls
+    
+            if (maxOutgoingRpcCalls < numberOfOutgoingRpcCalls) {
+                maxOutgoingRpcCalls = numberOfOutgoingRpcCalls
+            }
+    
             /*
             let groundTruthString = 'groundTruthNeighb: '
             for (let j=0; j < this.groundTruth[i+''].length; j++) {
@@ -91,11 +100,14 @@ export class DhtSimulation {
 
         const avgCorrectNeighbors = sumCorrectNeighbors / (this.NUM_NODES-1)
         const avgKbucketSize = sumKbucketSize / (this.NUM_NODES-1)
+        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (this.NUM_NODES-1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)
         console.log('Average correct neighbors: ' + avgCorrectNeighbors)
         console.log('Average Kbucket size: ' + avgKbucketSize)
+        console.log('Average number of outgoing RPC calls: ' + avgNumberOfOutgoingRpcCalls)
+        console.log('MAX number of outgoing RPC calls: ' + maxOutgoingRpcCalls)
     }
 }
 

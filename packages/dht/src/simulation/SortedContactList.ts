@@ -88,7 +88,7 @@ export class SortedContactList {
     public getActiveContacts(): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
-            if (!this.contactsById[JSON.stringify(contactId)].active) {
+            if (this.contactsById[JSON.stringify(contactId)].active) {
                 ret.push(this.contactsById[JSON.stringify(contactId)].contact)
             }
         })
