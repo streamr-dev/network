@@ -27,7 +27,7 @@ describe('Kademlia correctness', () => {
 
         nodes = []
         const entryPointId = '0'
-        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data))
+        entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
         nodeIndicesById[entryPoint.getNodeId().toMapKey()] = 0
         entrypointDescriptor = {

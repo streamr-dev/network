@@ -39,6 +39,8 @@ jobs:
         run: npm run test-integration
       - name: End-to-End Tests
         run: npm run test-end-to-end
+      - name: Correctness Tests
+        run: npm run test-correctness
 
   test-browser:
     name: Test Browser

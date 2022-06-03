@@ -9,3 +9,5 @@ dist
 google
 src/proto
 coverage
+test/simulation/data/nodeids.json
+test/simulation/data/orderedneighbors.json
