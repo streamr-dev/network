@@ -137,8 +137,9 @@ export class RpcCommunicator extends EventEmitter {
         this.rpcServerTransport.registerMethod(methodName, fn)
     }
 
-    public registerRpcMethod<RequestType extends Parser, ReturnType extends Serializer>(requestClass: RequestType, returnClass: ReturnType,
-        name: string, fn: (rq: any, _context: ServerCallContext) => Promise<any>): void {
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
+    (requestClass: RequestClass, returnClass: ReturnClass,
+        name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
         this.rpcServerTransport.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 

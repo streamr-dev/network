@@ -42,7 +42,7 @@ describe('RpcCommunicator', () => {
             rpcRequestTimeout: 1000,
             appId
         })
-        rpcCommunicator.setSendFn(() => {})
+        rpcCommunicator.setSendFn(() => { })
 
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
@@ -58,7 +58,7 @@ describe('RpcCommunicator', () => {
                 method: 'ping',
                 request: 'request',
             },
-            body: PingRequest.toBinary({nonce: 'nonce'}),
+            body: PingRequest.toBinary({ nonce: 'nonce' }),
             sourceDescriptor: peerDescriptor1,
             targetDescriptor: peerDescriptor2
         }
@@ -68,7 +68,7 @@ describe('RpcCommunicator', () => {
                 method: 'ping',
                 response: 'response',
             },
-            body: PingResponse.toBinary({nonce: 'nonce'}),
+            body: PingResponse.toBinary({ nonce: 'nonce' }),
             sourceDescriptor: peerDescriptor2,
             targetDescriptor: peerDescriptor1
         }
@@ -87,7 +87,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.onIncomingMessage(peerDescriptor2, response)
         const pong = await promises.message.promise
-        expect(pong).toEqual({nonce: 'nonce'})
+        expect(pong).toEqual({ nonce: 'nonce' })
     })
 
     it('Timeouts Promises', async () => {
@@ -144,7 +144,7 @@ describe('RpcCommunicator', () => {
                 notification: 'notification'
             }
         }
-        promises.messageParser  = (bytes: Uint8Array) => NotificationResponse.fromBinary(bytes)
+        promises.messageParser = (bytes: Uint8Array) => NotificationResponse.fromBinary(bytes)
         rpcCommunicator.onOutgoingMessage(notification, promises)
         const res = await promises.message.promise as NotificationResponse
         expect(res.sent).toEqual(true)
@@ -171,6 +171,7 @@ describe('RpcCommunicator', () => {
     it.only('Success responses to new registration method', async () => {
         let successCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
+
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (!pongWrapper.responseError) {

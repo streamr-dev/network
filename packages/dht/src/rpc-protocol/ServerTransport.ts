@@ -17,13 +17,8 @@ export interface ServerTransport {
     on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
 
-/*
-export interface Parser<Target> {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
+export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
-*/
-export interface Parser {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => any }
-export interface Serializer { toBinary: (message: any, options?: Partial<BinaryWriteOptions>) => Uint8Array }
-
 export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
 
 const logger = new Logger(module)
@@ -72,14 +67,15 @@ export class ServerTransport extends EventEmitter {
     removeMethod(name: string): void {
         this.methods.delete(name)
     }
-    
-    registerRpcMethod<RequestType extends Parser, ReturnType extends Serializer>(requestClass: RequestType, returnClass: ReturnType, 
-        name: string, fn: (rq: any, _context: ServerCallContext) => Promise<any>): void {
+
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
+    (requestClass: RequestClass, returnClass: ReturnClass,
+        name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
 
         this.methods.set(name, async (bytes: Uint8Array) => {
-            
+
             const request = requestClass.fromBinary(bytes)
-            
+
             const response = await fn(request, new DummyServerCallContext())
             return returnClass.toBinary(response)
         })
@@ -120,5 +116,5 @@ export class DummyServerCallContext implements ServerCallContext {
     onCancel(_cb: () => void): () => void {
         throw new Err.NotImplemented('Method not implemented.')
     }
-    constructor() {}
+    constructor() { }
 }
