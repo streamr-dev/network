@@ -78,7 +78,14 @@ export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdStr
     return ret
 }
 
-export const MockDhtRpc: IDhtRpc = {
+interface IDhtRpcWithError extends IDhtRpc {
+    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
+    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
+    throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
+    throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
+}
+
+export const MockDhtRpc: IDhtRpcWithError = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
@@ -101,6 +108,23 @@ export const MockDhtRpc: IDhtRpc = {
             error: ''
         }
         return response
+    },
+    async throwPingError(_urequest: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        throw new Error()
+    },
+    respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
+        return new Promise((resolve, _reject) => {
+            const response: PingResponse = {
+                nonce: request.nonce
+            }
+            setTimeout(() => resolve(response), 2000)
+        })
+    },
+    async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        throw new Error()
+    },
+    async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        throw new Error()
     }
 }
 

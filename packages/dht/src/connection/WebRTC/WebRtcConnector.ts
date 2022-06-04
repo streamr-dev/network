@@ -1,3 +1,4 @@
+require('setimmediate')
 import { EventEmitter } from "events"
 import { Event as ConnectionSourceEvents, IConnectionSource } from '../IConnectionSource'
 import {
@@ -5,6 +6,7 @@ import {
     IceCandidate,
     Message,
     MessageType,
+    NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
@@ -13,7 +15,7 @@ import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
 import { ConnectionType, Event as ConnectionEvents, IConnection } from '../IConnection'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
-import { createRemoteWebRtcConnectorServer, RemoteWebrtcConnector } from './RemoteWebrtcConnector'
+import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorClient } from '../../proto/DhtRpc.client'
 import { Event as IWebRtcEvent } from './IWebRtcConnection'
 import { PeerID } from '../../helpers/PeerID'
@@ -23,6 +25,8 @@ import { TODO } from '../../types'
 import { DeferredConnection } from '../DeferredConnection'
 import { Logger } from '../../helpers/Logger'
 import { Err } from '../../helpers/errors'
+import { IWebRtcConnector } from "../../proto/DhtRpc.server"
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 const logger = new Logger(module)
 
@@ -34,17 +38,17 @@ export interface WebRtcConnectorParams {
     fnAddConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
 }
 
-export class WebRtcConnector extends EventEmitter implements IConnectionSource {
+export class WebRtcConnector extends EventEmitter implements IConnectionSource, IWebRtcConnector {
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RpcCommunicator
     private rpcTransport: ITransport
     private getManagerConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
-    constructor(params: WebRtcConnectorParams) {
+    constructor(private config: WebRtcConnectorParams) {
         super()
-        this.rpcTransport = params.rpcTransport
-        if (params.rpcCommunicator) {
-            this.rpcCommunicator = params.rpcCommunicator
+        this.rpcTransport = config.rpcTransport
+        if (config.rpcCommunicator) {
+            this.rpcCommunicator = config.rpcCommunicator
         } else {
             this.rpcCommunicator = new RpcCommunicator({
                 rpcRequestTimeout: 10000,
@@ -52,18 +56,18 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
                 connectionLayer: this.rpcTransport
             })
         }
-        this.getManagerConnection = params.fnGetConnection
-        this.addManagerConnection = params.fnAddConnection
-        const methods = createRemoteWebRtcConnectorServer(
-            this.onRtcOffer.bind(this),
-            this.onRtcAnswer.bind(this),
-            this.onRemoteCandidate.bind(this),
-            this.onConnectionRequest.bind(this),
-        )
-        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', methods.rtcOffer)
-        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', methods.rtcAnswer)
-        this.rpcCommunicator.registerRpcNotification(IceCandidate,'iceCandidate', methods.iceCandidate)
-        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', methods.requestConnection)
+        this.getManagerConnection = config.fnGetConnection
+        this.addManagerConnection = config.fnAddConnection
+
+        this.rtcOffer = this.rtcOffer.bind(this)
+        this.rtcAnswer =  this.rtcAnswer.bind(this)
+        this.iceCandidate = this.iceCandidate.bind(this)
+        this.requestConnection = this.requestConnection.bind(this)
+
+        this.rpcCommunicator.registerRpcNotification(RtcOffer, 'rtcOffer', this.rtcOffer)
+        this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', this.rtcAnswer)
+        this.rpcCommunicator.registerRpcNotification(IceCandidate,'iceCandidate', this.iceCandidate)
+        this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', this.requestConnection)
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): IConnection {
@@ -243,5 +247,39 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource {
                 connection.sendBufferedMessages()
             }
         })
+    }
+
+    // IWebRTCConnector implementation
+
+    async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> {
+        setImmediate(() => this.onConnectionRequest(request.requester!))
+        const res: NotificationResponse = {
+            sent: true
+        }
+        return res
+    }
+
+    async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<NotificationResponse> {
+        setImmediate(() => this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId))
+        const res: NotificationResponse = {
+            sent: true
+        }
+        return res
+    }
+
+    async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<NotificationResponse> {
+        setImmediate(() => this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId))
+        const res: NotificationResponse = {
+            sent: true
+        }
+        return res
+    }
+
+    async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<NotificationResponse> {
+        setImmediate(() => this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId))
+        const res: NotificationResponse = {
+            sent: true
+        }
+        return res
     }
 }

@@ -1,4 +1,4 @@
-import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
+import { NotificationResponse, PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
 import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
@@ -6,7 +6,7 @@ import { promiseTimeout } from '../helpers/common'
 import { Err } from '../helpers/errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from '../helpers/Logger'
-import { parseWrapper, serializeWrapper } from './ConversionWrappers'
+import { parseWrapper } from './ConversionWrappers'
 
 export enum Event {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
@@ -18,10 +18,10 @@ export interface ServerTransport {
     on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
 
-export interface Parser {fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => any }
-export interface Serializer { toBinary: (message: any, options?: Partial<BinaryWriteOptions>) => Uint8Array }
+export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
+export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
-export type RegisteredMethod = (request: Uint8Array) => Promise<any>
+export type RegisteredMethod = (request: Uint8Array) => Promise<Uint8Array>
 
 const logger = new Logger(module)
 
@@ -63,27 +63,26 @@ export class ServerTransport extends EventEmitter {
         this.methods.delete(name)
     }
     
-    registerRpcRequest<RequestType extends Parser, ReturnType extends Serializer>(
-        requestClass: RequestType,
-        returnClass: ReturnType,
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
+    (requestClass: RequestClass, returnClass: ReturnClass,
+        name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
+
+        this.methods.set(name, async (bytes: Uint8Array) => {
+            const request = requestClass.fromBinary(bytes)
+            const response = await fn(request, new DummyServerCallContext())
+            return returnClass.toBinary(response)
+        })
+    }
+
+    registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
+        requestClass: RequestClass,
         name: string,
-        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<NotificationResponse>
     ): void {
         this.methods.set(name, async (bytes: Uint8Array) => {
             const request = parseWrapper(() => requestClass.fromBinary(bytes))
             const response = await fn(request, new DummyServerCallContext())
-            return serializeWrapper(() => returnClass.toBinary(response))
-        })
-    }
-
-    registerRpcNotification<RequestType extends Parser>(
-        requestClass: RequestType,
-        name: string,
-        fn: (rq: any, _context: ServerCallContext) => Promise<any>
-    ): void {
-        this.methods.set(name, async (bytes: Uint8Array) => {
-            const request = parseWrapper(() => requestClass.fromBinary(bytes))
-            await fn(request, new DummyServerCallContext())
+            return NotificationResponse.toBinary(response)
         })
     }
 

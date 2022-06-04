@@ -38,7 +38,7 @@ describe('WebSocketConnectorRpc', () => {
             connectionLayer: mockConnectionLayer1,
             appId: "websocket"
         })
-        rpcCommunicator1.registerRpcRequest(
+        rpcCommunicator1.registerRpcMethod(
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
@@ -50,7 +50,7 @@ describe('WebSocketConnectorRpc', () => {
             connectionLayer: mockConnectionLayer2,
             appId: "websocket"
         })
-        rpcCommunicator2.registerRpcRequest(
+        rpcCommunicator2.registerRpcMethod(
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',

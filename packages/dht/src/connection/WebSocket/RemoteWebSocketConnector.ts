@@ -1,14 +1,10 @@
 import {
     PeerDescriptor,
-    WebSocketConnectionRequest,
-    WebSocketConnectionResponse
+    WebSocketConnectionRequest
 } from '../../proto/DhtRpc'
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { TODO } from '../../types'
-import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { Logger } from '../../helpers/Logger'
 
 const logger = new Logger(module)
@@ -43,23 +39,4 @@ export class RemoteWebSocketConnector {
             return false
         }
     }
-}
-
-export const createRemoteWebSocketConnectorServer = (connectFn: TODO, canConnect: TODO): any => {
-    const rpc: IWebSocketConnector = {
-        async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse>  {
-            if (canConnect(request.requester, request.ip, request.port)) {
-                setImmediate(() => connectFn({host: request.ip, port: request.port}))
-                const res: WebSocketConnectionResponse = {
-                    accepted: true
-                }
-                return res
-            }
-            const res: WebSocketConnectionResponse = {
-                accepted: false
-            }
-            return res
-        }
-    }
-    return rpc
 }

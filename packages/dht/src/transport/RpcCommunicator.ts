@@ -133,19 +133,16 @@ export class RpcCommunicator extends EventEmitter {
         return this.rpcClientTransport
     }
 
-    public registerRpcRequest<RequestType extends Parser, ReturnType extends Serializer>(
-        requestClass: RequestType,
-        returnClass: ReturnType,
-        name: string,
-        fn: (rq: any, _context: ServerCallContext) => Promise<any>
-    ): void {
-        this.rpcServerTransport.registerRpcRequest(requestClass, returnClass, name, fn)
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
+    (requestClass: RequestClass, returnClass: ReturnClass,
+        name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
+        this.rpcServerTransport.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 
-    registerRpcNotification<RequestType extends Parser>(
-        requestClass: RequestType,
+    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
+        requestClass: RequestClass,
         name: string,
-        fn: (rq: any, _context: ServerCallContext) => Promise<any>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<NotificationResponse>
     ): void {
         this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
     }

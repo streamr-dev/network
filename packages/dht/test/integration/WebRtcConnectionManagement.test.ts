@@ -113,7 +113,7 @@ describe('WebRTC Connection Management', () => {
         await waitForCondition(() => (manager2.getConnection(peerDescriptor1) as NodeWebRtcConnection).isOpen())
         await waitForCondition(() => (manager1.getConnection(peerDescriptor2) as NodeWebRtcConnection).isOpen())
     })
-
+    
     it('Peer2 can open WebRTC Datachannel', async () => {
         const dummyMessage: Message = {
             body: new Uint8Array(),

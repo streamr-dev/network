@@ -1,6 +1,6 @@
+require('setimmediate')
 import {
     IceCandidate,
-    NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
@@ -9,9 +9,6 @@ import {
 import { IWebRtcConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
-import { TODO } from '../../types'
-import { IWebRtcConnector } from '../../proto/DhtRpc.server'
-import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '../../helpers/Logger'
 
 const logger = new Logger(module)
@@ -107,36 +104,3 @@ export class RemoteWebrtcConnector {
     }
 }
 
-export const createRemoteWebRtcConnectorServer = (onRtcOffer: TODO, onRtcAnswer: TODO, onIceCandidate: TODO, connectFn: TODO): any => {
-    const rpc: IWebRtcConnector = {
-        async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> {
-            setImmediate(() => connectFn(request.requester, request.target, request.connectionId))
-            const res: NotificationResponse = {
-                sent: true
-            }
-            return res
-        },
-        async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<NotificationResponse> {
-            setImmediate(() => onRtcOffer(request.requester, request.target, request.description, request.connectionId))
-            const res: NotificationResponse = {
-                sent: true
-            }
-            return res
-        },
-        async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<NotificationResponse> {
-            setImmediate(() => onRtcAnswer(request.requester, request.target, request.description, request.connectionId))
-            const res: NotificationResponse = {
-                sent: true
-            }
-            return res
-        },
-        async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<NotificationResponse> {
-            setImmediate(() => onIceCandidate(request.requester, request.target, request.candidate, request.mid, request.connectionId))
-            const res: NotificationResponse = {
-                sent: true
-            }
-            return res
-        }
-    }
-    return rpc
-}

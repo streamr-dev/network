@@ -152,7 +152,7 @@ describe('RpcCommunicator', () => {
 
     it('Success responses to requests', async () => {
         let successCounter = 0
-        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (!pongWrapper.responseError) {
@@ -170,7 +170,7 @@ describe('RpcCommunicator', () => {
 
     it('Success responses to new registration method', async () => {
         let successCounter = 0
-        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (!pongWrapper.responseError) {
@@ -206,11 +206,7 @@ describe('RpcCommunicator', () => {
     it('Error response on server timeout', async () => {
         let errorCounter = 0
 
-        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', (_any: Uint8Array) => {
-            return new Promise((resolve, _reject) => {
-                setTimeout(() => resolve(new Uint8Array()), 2000)
-            })
-        })
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.respondPingWithTimeout)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_TIMOUT as RpcResponseError) {
@@ -228,9 +224,7 @@ describe('RpcCommunicator', () => {
 
     it('Error response on server timeout', async () => {
         let errorCounter = 0
-        rpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping',  (_any: Uint8Array) => {
-            return new Promise((_resolve, reject) => reject('error'))
-        })
+        rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
         rpcCommunicator.setSendFn((_peer, message) => {
             const pongWrapper = RpcMessage.fromBinary(message.body)
             if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_ERROR) {

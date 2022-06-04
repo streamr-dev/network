@@ -5,6 +5,7 @@ import { Simulator } from '../../src/connection/Simulator'
 import {
     IceCandidate,
     Message,
+    NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
@@ -12,8 +13,9 @@ import {
 } from '../../src/proto/DhtRpc'
 import { generateId } from '../../src/helpers/common'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
-import { createRemoteWebRtcConnectorServer } from '../../src/connection/WebRTC/RemoteWebrtcConnector'
 import { waitForCondition } from 'streamr-test-utils'
+import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 describe('WebRTC rpc messages', () => {
     let mockConnectionLayer1: ITransport,
@@ -50,12 +52,40 @@ describe('WebRTC rpc messages', () => {
             connectionLayer: mockConnectionLayer1,
             appId: "webrtc"
         })
-        const serverFunctions = createRemoteWebRtcConnectorServer(
-            () => { rtcOfferCounter += 1 },
-            () => { rtcAnswerCounter += 1 },
-            () => { iceCandidateCounter += 1 },
-            () => { requestConnectionCounter += 1 }
-        )
+        const serverFunctions: IWebRtcConnector = {
+
+            requestConnection: async (_urequest: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> => {
+                requestConnectionCounter += 1
+                const res: NotificationResponse = {
+                    sent: true
+                }
+                return res
+            },
+
+            rtcOffer: async (_urequest: RtcOffer, _context: ServerCallContext): Promise<NotificationResponse> => {
+                rtcOfferCounter += 1
+                const res: NotificationResponse = {
+                    sent: true
+                }
+                return res
+            },
+
+            rtcAnswer: async (_urequest: RtcAnswer, _context: ServerCallContext): Promise<NotificationResponse> => {
+                rtcAnswerCounter += 1
+                const res: NotificationResponse = {
+                    sent: true
+                }
+                return res
+            },
+
+            iceCandidate: async (_urequest: IceCandidate, _context: ServerCallContext): Promise<NotificationResponse> => {
+                iceCandidateCounter += 1
+                const res: NotificationResponse = {
+                    sent: true
+                }
+                return res
+            }
+        }
 
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
@@ -63,7 +93,7 @@ describe('WebRTC rpc messages', () => {
             appId: "webrtc"
         })
         rpcCommunicator2.registerRpcNotification(RtcOffer, 'rtcOffer', serverFunctions.rtcOffer)
-        rpcCommunicator2.registerRpcNotification(RtcAnswer,'rtcAnswer', serverFunctions.rtcAnswer)
+        rpcCommunicator2.registerRpcNotification(RtcAnswer, 'rtcAnswer', serverFunctions.rtcAnswer)
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 

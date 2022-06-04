@@ -64,7 +64,7 @@ describe('Route Message With Mock Connections', () => {
         }
         await Promise.all([
             waitForEvent(destinationNode, MessageRouterEvent.DATA),
-            sourceNode.routeMessage({
+            sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 appId: APP_ID,
@@ -82,7 +82,7 @@ describe('Route Message With Mock Connections', () => {
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
         }
-        await expect(sourceNode.routeMessage({
+        await expect(sourceNode.doRouteMessage({
             message: Message.toBinary(message),
             destinationPeer: destinationNode.getPeerDescriptor(),
             appId: APP_ID,
@@ -106,7 +106,7 @@ describe('Route Message With Mock Connections', () => {
             body: RpcMessage.toBinary(rpcWrapper)
         }
         for (let i = 0; i < numOfMessages; i++ ) {
-            sourceNode.routeMessage({
+            sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 appId: APP_ID,
@@ -139,7 +139,7 @@ describe('Route Message With Mock Connections', () => {
                             messageType: MessageType.RPC,
                             body: RpcMessage.toBinary(rpcWrapper)
                         }
-                        await node.routeMessage({
+                        await node.doRouteMessage({
                             message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
                             appId: APP_ID,

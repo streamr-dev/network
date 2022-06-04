@@ -8,6 +8,7 @@ import { ClosestPeersRequest, ClosestPeersResponse, Message, PeerDescriptor } fr
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/helpers/errors'
 import { Simulator } from '../../src/connection/Simulator'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 describe('DhtRpc', () => {
     let mockConnectionLayer1: ITransport,
@@ -33,13 +34,13 @@ describe('DhtRpc', () => {
         rpcCommunicator1 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer1
         })
-        rpcCommunicator1.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
         rpcCommunicator2 = new RpcCommunicator({
             connectionLayer: mockConnectionLayer2,
         })
-        rpcCommunicator2.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
@@ -89,13 +90,21 @@ describe('DhtRpc', () => {
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
-        rpcCommunicator2.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', () => {
+        
+        function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+            const neighbors = getMockPeers()
+            const response: ClosestPeersResponse = {
+                peers: neighbors,
+                nonce: 'why am i still here'
+            }
             return new Promise(async (resolve, _reject) => {
                 timeout = setTimeout(() => {
-                    resolve(new Uint8Array())
+                    resolve(response)
                 }, 5000)
             })
-        })
+        }
+        
+        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }

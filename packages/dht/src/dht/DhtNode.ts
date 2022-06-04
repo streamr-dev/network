@@ -3,8 +3,8 @@ import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
-import { createRpcMethods } from './server'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
@@ -21,6 +21,8 @@ import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '../helpers/Logger'
 import { v4 } from 'uuid'
+import { nodeFormatPeerDescriptor } from '../helpers/common'
+import { IDhtRpc } from '../proto/DhtRpc.server'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -53,7 +55,7 @@ export interface DhtNodeConfig {
 
 const logger = new Logger(module)
 
-export class DhtNode extends EventEmitter implements ITransport {
+export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     static objectCounter = 0
     private objectId = 1
 
@@ -259,7 +261,7 @@ export class DhtNode extends EventEmitter implements ITransport {
             const message = Message.fromBinary(routedMessage.message)
             this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message, routedMessage.appId)
         } else {
-            await this.routeMessage({
+            await this.doRouteMessage({
                 message: routedMessage.message,
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
@@ -281,12 +283,12 @@ export class DhtNode extends EventEmitter implements ITransport {
             appId: appId ? appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
-        this.routeMessage(params).catch((err) => {
+        this.doRouteMessage(params).catch((err) => {
             logger.warn(`Failed to send (routeMessage) to ${targetPeerDescriptor.peerId.toString()}: ${err}`)
         })
     }
 
-    public async routeMessage(params: RouteMessageParams): Promise<void> {
+    public async doRouteMessage(params: RouteMessageParams): Promise<void> {
         if (!this.started
             || this.stopped
             || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer!.peerId))) {
@@ -514,10 +516,14 @@ export class DhtNode extends EventEmitter implements ITransport {
             return
         }
         logger.trace(`Binding default DHT RPC methods`)
-        const methods = createRpcMethods(this.onGetClosestPeers.bind(this), this.onRoutedMessage.bind(this), this.canRoute.bind(this))
-        this.rpcCommunicator!.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', methods.getClosestPeers)
-        this.rpcCommunicator!.registerRpcRequest(PingRequest, PingResponse, 'ping', methods.ping)
-        this.rpcCommunicator!.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', methods.routeMessage)
+        
+        this.getClosestPeers = this.getClosestPeers.bind(this)
+        this.ping = this.ping.bind(this)
+        this.routeMessage = this.routeMessage.bind(this)
+
+        this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
+        this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
+        this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
     }
 
     public getRpcCommunicator(): RpcCommunicator {
@@ -588,4 +594,49 @@ export class DhtNode extends EventEmitter implements ITransport {
             await this.cleanUpHandleForConnectionManager.stop()
         }
     }
+
+    // IDHTRpc implementation
+
+    async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
+        const peerDescriptor = nodeFormatPeerDescriptor(request.peerDescriptor!)
+        const closestPeers = this.onGetClosestPeers(peerDescriptor)
+        const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
+        const response = {
+            peers: peerDescriptors,
+            nonce: 'aaaaaa'
+        }
+        return response
+    }
+
+    async ping(request: PingRequest,  _context: ServerCallContext): Promise<PingResponse> {
+        const response: PingResponse = {
+            nonce: request.nonce
+        }
+        return response
+    }
+    
+    async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        const converted = {
+            ...routed,
+            destinationPeer: nodeFormatPeerDescriptor(routed.destinationPeer!),
+            sourcePeer: nodeFormatPeerDescriptor(routed.sourcePeer!)
+        }
+        const routable = this.canRoute(converted)
+
+        const response: RouteMessageAck = {
+            nonce: routed.nonce,
+            destinationPeer: routed.sourcePeer,
+            sourcePeer: routed.destinationPeer,
+            error: routable ? '' : 'Could not forward the message'
+        }
+        if (routable) {
+            setImmediate(async () => {
+                try {
+                    await this.onRoutedMessage(converted)
+                } catch (err) {}
+            })
+        }
+        return response
+    }
+
 }

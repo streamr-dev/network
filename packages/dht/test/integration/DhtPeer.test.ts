@@ -43,9 +43,9 @@ describe('DhtPeer', () => {
             appId: 'unit-test'
         })
 
-        serverRpcCommunicator.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
-        serverRpcCommunicator.registerRpcRequest(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
-        serverRpcCommunicator.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
+        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
+        serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
         clientRpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
             serverRpcCommunicator.onIncomingMessage(peerDescriptor, message)
@@ -92,25 +92,19 @@ describe('DhtPeer', () => {
     })
 
     it('ping error path', async () => {
-        serverRpcCommunicator.registerRpcRequest(PingRequest, PingResponse, 'ping', (_data) => {
-            throw new Error()
-        })
+        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
         const active = await dhtPeer.ping(clientPeerDescriptor)
         expect(active).toEqual(false)
     })
 
     it('getClosestPeers error path', async () => {
-        serverRpcCommunicator.registerRpcRequest(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', (_data) => {
-            throw new Error()
-        })
+        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.throwGetClosestPeersError)
         const neighborList = await dhtPeer.getClosestPeers(clientPeerDescriptor)
         expect(neighborList.length).toEqual(0)
     })
 
     it('routeMessage error path', async () => {
-        serverRpcCommunicator.registerRpcRequest(RouteMessageWrapper, RouteMessageAck, 'routeMessage', (_data) => {
-            throw new Error()
-        })
+        serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
             messageId: 'routed',

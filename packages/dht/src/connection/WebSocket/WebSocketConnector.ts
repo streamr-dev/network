@@ -1,3 +1,4 @@
+require('setimmediate')
 import { EventEmitter } from 'events'
 import {
     IConnectionSource,
@@ -8,7 +9,7 @@ import { ClientWebSocket } from './ClientWebSocket'
 import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { RpcCommunicator } from '../../transport/RpcCommunicator'
-import { createRemoteWebSocketConnectorServer, RemoteWebSocketConnector } from './RemoteWebSocketConnector'
+import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     HandshakeMessage,
     Message,
@@ -21,12 +22,15 @@ import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { DeferredConnection } from '../DeferredConnection'
 import { TODO } from '../../types'
 import { Logger } from '../../helpers/Logger'
+import { IWebSocketConnector } from '../../proto/DhtRpc.server'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 const logger = new Logger(module)
 
-export class WebSocketConnector extends EventEmitter implements IConnectionSource {
+export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
     private rpcCommunicator: RpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
+    private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
 
     constructor(
         private rpcTransport: ITransport,
@@ -34,6 +38,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         rpcCommunicator?: RpcCommunicator
     ) {
         super()
+        this.canConnectFunction = fnCanConnect.bind(this)
         if (rpcCommunicator) {
             this.rpcCommunicator = rpcCommunicator
         } else {
@@ -43,15 +48,13 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 connectionLayer: rpcTransport
             })
         }
-        const methods = createRemoteWebSocketConnectorServer(
-            this.connect.bind(this),
-            fnCanConnect
-        )
-        this.rpcCommunicator.registerRpcRequest(
+        this.requestConnection = this.requestConnection.bind(this)
+
+        this.rpcCommunicator.registerRpcMethod(
             WebSocketConnectionRequest,
             WebSocketConnectionResponse,
             'requestConnection',
-            methods.requestConnection
+            this.requestConnection
         )
     }
 
@@ -65,7 +68,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     ): IConnection {
 
         if (!host && !port && !url && ownPeerDescriptor && targetPeerDescriptor) {
-            return this.requestConnection(ownPeerDescriptor, targetPeerDescriptor)
+            return this.requestConnectionFromPeer(ownPeerDescriptor, targetPeerDescriptor)
         }
         const socket = new ClientWebSocket()
 
@@ -131,7 +134,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         return !!port
     }
 
-    requestConnection(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): IConnection {
+    requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): IConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
@@ -179,4 +182,18 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         this.rpcCommunicator.stop()
     }
 
+    // IWebSocketConnector implementation
+    async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse>  {
+        if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
+            setImmediate(() => this.connect({host: request.ip, port: request.port}))
+            const res: WebSocketConnectionResponse = {
+                accepted: true
+            }
+            return res
+        }
+        const res: WebSocketConnectionResponse = {
+            accepted: false
+        }
+        return res
+    }
 }
