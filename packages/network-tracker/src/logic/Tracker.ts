@@ -5,7 +5,7 @@ import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerS
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
-import { attachRtcSignalling } from './rtcSignallingHandlers'
+import { attachMessageRelaying } from './attachMessageRelaying'
 import {
     PeerId,
     PeerInfo,
@@ -160,7 +160,7 @@ export class Tracker extends EventEmitter {
                 )
             }
         })
-        attachRtcSignalling(this.trackerServer)
+        attachMessageRelaying(this.trackerServer)
 
         this.metrics = {
             nodeDisconnected: new RateMetric(),

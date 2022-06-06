@@ -1,10 +1,14 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { StreamPartID, StreamPartIDUtils, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
+import {
+    StreamPartID,
+    StreamPartIDUtils,
+    TrackerLayer,
+    TrackerMessageType
+} from 'streamr-client-protocol'
 import {
     Logger,
     decode,
-    RtcSubTypes,
     PeerId,
     PeerInfo,
     NameDirectory,
@@ -12,7 +16,7 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     WsEndpointEvent,
-    NodeId
+    NodeId,
 } from 'streamr-network'
 
 export enum Event {
@@ -61,84 +65,10 @@ export class TrackerServer extends EventEmitter {
         }))
     }
 
-    async sendRtcOffer(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_OFFER,
-            data: {
-                connectionId,
-                description
-            }
-        }))
-    }
-
-    async sendRtcAnswer(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_ANSWER,
-            data: {
-                connectionId,
-                description
-            }
-        }))
-    }
-
-    async sendRtcConnect(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_CONNECT,
-            // eslint-disable-next-line no-new-object
-            data: new Object()
-        }))
-    }
-
-    async sendRtcIceCandidate(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        candidate: string,
-        mid: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.ICE_CANDIDATE,
-            data: {
-                connectionId,
-                candidate,
-                mid
-            }
-        }))
-    }
-
-    async sendUnknownPeerRtcError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
+    async sendUnknownPeerError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
         await this.send(receiverNodeId, new TrackerLayer.ErrorMessage({
             requestId,
-            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             targetNode
         }))
     }
