@@ -40,7 +40,7 @@ describe('Network RPC', () => {
         rpcCommunicator2.registerRpcNotification(
             DataMessage,
             'sendData',
-            async (msg: DataMessage, _context: DummyServerCallContext): Promise<NotificationResponse> => {
+            async (_msg: DataMessage, _context: DummyServerCallContext): Promise<NotificationResponse> => {
                 recvCounter += 1
                 const res: NotificationResponse = {
                     sent: true
