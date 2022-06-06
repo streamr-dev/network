@@ -7,12 +7,10 @@
     },
     "include": [
         "src/**/*",
-        "test/**/*",
-        "google/**/*"
+        "test/**/*"
     ],
     "exclude": [
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
-    ],  
+    ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "./tsconfig.node.json" }

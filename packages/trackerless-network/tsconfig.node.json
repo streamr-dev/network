@@ -6,11 +6,9 @@
     },
     "include": [
         "src/**/*",
-        "google/**/*"
     ],
     "exclude": [
         "dist",
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
     ],
     "references": [
 
