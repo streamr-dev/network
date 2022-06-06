@@ -9,8 +9,7 @@
         "src/**/*",
         "test/**/*"
     ],
-    "exclude": [
-    ],
+    "exclude": [],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" },
         { "path": "./tsconfig.node.json" }
