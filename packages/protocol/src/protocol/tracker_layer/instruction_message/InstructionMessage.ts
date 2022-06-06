@@ -28,7 +28,7 @@ export default class InstructionMessage extends TrackerMessage {
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
         validateIsArray('nodeIds', nodeIds)
-        validateIsInteger('counter', counter)
+        validateIsNotNegativeInteger('counter', counter)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
