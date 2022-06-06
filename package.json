@@ -23,6 +23,7 @@
         "packages/test-utils",
         "packages/protocol",
         "packages/dht",
+        "packages/trackerless-network",
         "packages/network",
         "packages/network-tracker",
         "packages/client",
