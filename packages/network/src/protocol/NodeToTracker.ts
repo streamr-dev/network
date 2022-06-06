@@ -14,12 +14,14 @@ export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
     TRACKER_DISCONNECTED = 'streamr:tracker-node:tracker-disconnected',
     TRACKER_INSTRUCTION_RECEIVED = 'streamr:tracker-node:tracker-instruction-received',
+    STATUS_ACK_RECEIVED = 'streamr:tracker-node:status-ack-received',
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker-node:relay-message-received',
     RTC_ERROR_RECEIVED = 'streamr:tracker-node:rtc-error-received',
 }
 
 const eventPerType: { [key: number]: string } = {}
 eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = Event.TRACKER_INSTRUCTION_RECEIVED
+eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusAckMessage] = Event.STATUS_ACK_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerLayer.TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
 
