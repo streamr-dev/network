@@ -10,7 +10,9 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
+    "sandbox": "ts-node src/index.ts",
     "build": "tsc -b tsconfig.node.json",
+    "prebuild": "./proto.sh",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -19,6 +21,7 @@
     "test-unit": "jest test/unit"
   },
   "dependencies": {
+    "@protobuf-ts/plugin": "^2.4.0",
     "@streamr/dht": "0.0.1"
   },
   "devDependencies": {

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+service NetworkRpc {
+  rpc sendData (DataMessage) returns (NotificationResponse);
+}
+
+message DataMessage {
+  string content = 1;
+}
+
+message NotificationResponse {
+  bool sent = 1;
+}
