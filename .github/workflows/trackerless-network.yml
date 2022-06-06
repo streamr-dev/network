@@ -1,0 +1,38 @@
+---
+# Lint, Test and Publish
+name: Trackerless Network
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+concurrency:
+  group: dht-build-${{ github.head_ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: packages/dht
+jobs:
+  test-nodejs:
+    name: Lint & Test NodeJS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: npm run bootstrap-pkg @streamr/trackerless-network
+      - name: Eslint
+        run: npm run eslint
+      - name: Tests
+        run: npm run test
+
