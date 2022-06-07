@@ -1,22 +1,23 @@
 import { Message, MessageType, PeerDescriptor } from "../proto/DhtRpc"
-import { IRpcIo, Event as RpcIoEvent } from "./IRpcIo"
+import { Event as RpcIoEvent } from "./IRpcIo"
 import { ITransport, Event as TransportEvent } from "./ITransport"
 import { v4 } from "uuid"
 import { CallContext } from "../rpc-protocol/ServerTransport"
+import { RpcCommunicator, RpcCommunicatorConfig } from "./RpcCommunicator"
 
-export class RpcAdapter {
+export class RoutingRpcCommunicator extends RpcCommunicator{
     
-    constructor(private ownAppId: string, private transport: ITransport, private rpc: IRpcIo) {
-
+    constructor(private ownAppId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
+        super(config)
         transport.on(TransportEvent.DATA, (peerDescriptor: PeerDescriptor, message: Message) => {    
             if (message.appId == this.ownAppId) {
                 const context = new CallContext()
                 context.incomingSourceDescriptor = peerDescriptor
-                this.rpc.handleIncomingMessage(message.body, context)
+                this.handleIncomingMessage(message.body, context)
             }
         })
 
-        this.rpc.on(RpcIoEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
+        this.on(RpcIoEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
             
             let targetDescriptor: PeerDescriptor
             // rpc call message

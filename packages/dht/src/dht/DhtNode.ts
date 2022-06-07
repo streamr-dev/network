@@ -3,6 +3,7 @@ import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
@@ -23,7 +24,6 @@ import { Logger } from '../helpers/Logger'
 import { v4 } from 'uuid'
 import { nodeFormatPeerDescriptor } from '../helpers/common'
 import { IDhtRpc } from '../proto/DhtRpc.server'
-import { RpcAdapter } from '../transport/RpcAdapter'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -75,8 +75,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     private bucket?: KBucket<DhtPeer>
     private neighborList?: SortedContactList
     private openInternetPeers?: SortedContactList
-    private rpcCommunicator?: RpcCommunicator
-    private rpcAdapter?: RpcAdapter
+    private rpcCommunicator?: RoutingRpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
@@ -157,8 +156,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.transportLayer = connectionManager
         }
 
-        this.rpcCommunicator = new RpcCommunicator()
-        this.rpcAdapter = new RpcAdapter(this.appId, this.transportLayer, this.rpcCommunicator)
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.appId, this.transportLayer)
         
         this.bindDefaultServerMethods()
         this.initKBucket(this.ownPeerId!)
@@ -530,10 +528,6 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
 
     public getRpcCommunicator(): RpcCommunicator {
         return this.rpcCommunicator!
-    }
-
-    public getRpcAdapter(): RpcAdapter {
-        return this.rpcAdapter!
     }
 
     public getTransport(): ITransport {

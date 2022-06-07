@@ -12,7 +12,7 @@ import {
     RtcOffer, WebRtcConnectionRequest
 } from '../../proto/DhtRpc'
 import { ITransport } from '../../transport/ITransport'
-import { RpcCommunicator } from '../../transport/RpcCommunicator'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ConnectionType, Event as ConnectionEvents, IConnection } from '../IConnection'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
@@ -27,7 +27,6 @@ import { Logger } from '../../helpers/Logger'
 import { Err } from '../../helpers/errors'
 import { IWebRtcConnector } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcAdapter } from "../../transport/RpcAdapter"
 
 const logger = new Logger(module)
 
@@ -41,8 +40,7 @@ export interface WebRtcConnectorConfig {
 export class WebRtcConnector extends EventEmitter implements IConnectionSource, IWebRtcConnector {
     private WEBRTC_CONNECTOR_APP_ID = 'webrtc_connector'
     private ownPeerDescriptor: PeerDescriptor | null = null
-    private rpcCommunicator: RpcCommunicator
-    private rpcAdapter: RpcAdapter
+    private rpcCommunicator: RoutingRpcCommunicator
     private rpcTransport: ITransport
     private getManagerConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
@@ -50,11 +48,9 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RpcCommunicator({
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.WEBRTC_CONNECTOR_APP_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
-
-        this.rpcAdapter = new RpcAdapter(this.WEBRTC_CONNECTOR_APP_ID, this.rpcTransport, this.rpcCommunicator)
 
         this.getManagerConnection = config.fnGetConnection
         this.addManagerConnection = config.fnAddConnection

@@ -8,7 +8,7 @@ import {
 import { ClientWebSocket } from './ClientWebSocket'
 import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
-import { RpcCommunicator } from '../../transport/RpcCommunicator'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     HandshakeMessage,
@@ -24,15 +24,13 @@ import { TODO } from '../../types'
 import { Logger } from '../../helpers/Logger'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcAdapter } from '../../transport/RpcAdapter'
 import { v4 } from 'uuid'
 
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
     private WESOCKET_CONNECTOR_APP_ID = "websocketconnector"
-    private rpcCommunicator: RpcCommunicator
-    private rpcAdapter: RpcAdapter
+    private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
 
@@ -43,7 +41,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         super()
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RpcCommunicator({
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.WESOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
@@ -55,7 +53,6 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             'requestConnection',
             this.requestConnection
         )
-        this.rpcAdapter = new RpcAdapter(this.WESOCKET_CONNECTOR_APP_ID, this.rpcTransport, this.rpcCommunicator)
     }
 
     connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {
