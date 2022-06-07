@@ -1,4 +1,3 @@
-import { v4 } from 'uuid'
 import { Err, ErrorCode } from '../helpers/errors'
 import {
     ClientTransport,
@@ -7,36 +6,25 @@ import {
     Event as DhtTransportClientEvent
 } from '../rpc-protocol/ClientTransport'
 import {
-    Message,
-    MessageType,
     NotificationResponse,
-    PeerDescriptor,
     RpcMessage,
     RpcResponseError
 } from '../proto/DhtRpc'
-import { Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
+import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
 import { EventEmitter } from 'events'
-import { Event as ITransportEvent, ITransport } from './ITransport'
-import { ConnectionManager } from '../connection/ConnectionManager'
-import { DEFAULT_APP_ID } from '../dht/DhtNode'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from '../helpers/Logger'
+//import { Logger } from '../helpers/Logger'
+import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
 
 export enum Event {
     OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
     INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
 }
 
-export interface RpcCommunicatorConstructor {
-    connectionLayer: ITransport,
+export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number,
-    appId?: string
-}
-
-export interface RpcCommunicator {
-    on(event: Event.OUTGOING_MESSAGE, listener: () => void): this
-    on(event: Event.INCOMING_MESSAGE, listener: () => void): this
+    //appId?: string
 }
 
 interface OngoingRequest {
@@ -44,89 +32,86 @@ interface OngoingRequest {
     timeoutRef: NodeJS.Timeout
 }
 
-const logger = new Logger(module)
+//const logger = new Logger(module)
 
-export class RpcCommunicator extends EventEmitter {
+export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private stopped = false
     private static objectCounter = 0
     private objectId = 0
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerTransport: ServerTransport
-    private readonly connectionLayer: ITransport
     private readonly ongoingRequests: Map<string, OngoingRequest>
-    public send: (peerDescriptor: PeerDescriptor, message: Message, appId: string) => void
-    private readonly defaultRpcRequestTimeout: number
-    private readonly appId: string
+    private defaultRpcRequestTimeout = 5000 
+    //private readonly appId: string
 
-    constructor(params: RpcCommunicatorConstructor) {
+    constructor(params?: RpcCommunicatorConfig) {
         super()
         this.objectId = RpcCommunicator.objectCounter
         RpcCommunicator.objectCounter++
 
-        this.defaultRpcRequestTimeout = params.rpcRequestTimeout || 5000
-        this.appId = params.appId || DEFAULT_APP_ID
+        if (params && params.hasOwnProperty('rpcRequestTimeout')) {
+            this.defaultRpcRequestTimeout = params.rpcRequestTimeout!
+        }
+        
+        //this.appId = params.appId || DEFAULT_APP_ID
         this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
         this.rpcServerTransport = new ServerTransport()
-        this.connectionLayer = params.connectionLayer
         this.ongoingRequests = new Map()
-        this.send = this.connectionLayer.send.bind(this.connectionLayer)    // ((_peerDescriptor, _bytes) => { throw new Error('send not defined') })
+        
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
             deferredPromises: DeferredPromises,
             rpcMessage: RpcMessage,
             options: DhtRpcOptions
         ) => {
-            this.onOutgoingMessage(rpcMessage, deferredPromises, options)
+            this.onOutgoingMessage(rpcMessage, deferredPromises, options as CallContext)
         })
         this.rpcServerTransport.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
-        this.connectionLayer.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message, appId?: string) => {
-            if (!appId || appId === this.appId) {
-                await this.onIncomingMessage(peerDescriptor, message)
-            }
-        })
     }
 
-    public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, options?: DhtRpcOptions): void {
+    async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
+        const rpcCall = RpcMessage.fromBinary(message)
+        return this.onIncomingMessage(rpcCall, callContext)
+    }
+
+    public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, callContext?: CallContext): void {
         if (this.stopped) {
             return
         }
-        const requestOptions = this.rpcClientTransport.mergeOptions(options)
+        const requestOptions = this.rpcClientTransport.mergeOptions(callContext )
         if (deferredPromises && rpcMessage.header.notification) {
             this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
         } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
-        const msg: Message = { messageId: v4(), messageType: MessageType.RPC, body: RpcMessage.toBinary(rpcMessage) }
+        const msg = RpcMessage.toBinary(rpcMessage)
 
-        logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
-        this.emit(Event.OUTGOING_MESSAGE)
-        this.send(rpcMessage.targetDescriptor!, msg, this.appId)
+        //logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
+        
+        this.emit(IRpcIoEvents.OUTGOING_MESSAGE, msg, callContext)
     }
 
-    public async onIncomingMessage(senderDescriptor: PeerDescriptor, message: Message): Promise<void> {
-        if (this.stopped || message.messageType !== MessageType.RPC) {
+    private async onIncomingMessage(rpcMessage: RpcMessage, 
+        callContext?: CallContext): Promise<void> {
+        if (this.stopped) {
             return
         }
-        logger.trace(`onIncomingMessage on ${this.appId} rpc, messageId: ${message.messageId}`)
-        const rpcCall = RpcMessage.fromBinary(message.body)
-        if (rpcCall.header.response && this.ongoingRequests.has(rpcCall.requestId)) {
-            if (rpcCall.responseError !== undefined) {
-                this.rejectOngoingRequest(rpcCall)
+        //logger.trace(`onIncomingMessage on ${this.appId} rpc, requestId: ${rpcMessage.requestId}`)
+        
+        if (rpcMessage.header.response && this.ongoingRequests.has(rpcMessage.requestId)) {
+            if (rpcMessage.responseError !== undefined) {
+                this.rejectOngoingRequest(rpcMessage)
             } else {
-                this.resolveOngoingRequest(rpcCall)
+                this.resolveOngoingRequest(rpcMessage)
             }
-        } else if (rpcCall.header.request && rpcCall.header.method) {
-            if (rpcCall.header.notification) {
-                await this.handleNotification(senderDescriptor, rpcCall)
+        } else if (rpcMessage.header.request && rpcMessage.header.method) {
+            if (rpcMessage.header.notification) {
+                await this.handleNotification(rpcMessage, callContext)
             } else {
-                await this.handleRequest(senderDescriptor, rpcCall)
+                await this.handleRequest(rpcMessage, callContext)
             }
         }
-    }
-
-    public setSendFn(fn: (peerDescriptor: PeerDescriptor, message: Message) => void): void {
-        this.send = fn.bind(this)
     }
 
     public getRpcClientTransport(): ClientTransport {
@@ -147,13 +132,13 @@ export class RpcCommunicator extends EventEmitter {
         this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
     }
 
-    private async handleRequest(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+    private async handleRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {
         if (this.stopped) {
             return
         }
         let response: RpcMessage
         try {
-            const bytes = await this.rpcServerTransport.onRequest(senderDescriptor, rpcMessage)
+            const bytes = await this.rpcServerTransport.onRequest(rpcMessage, callContext)
             response = this.createResponseRpcMessage({
                 request: rpcMessage,
                 body: bytes
@@ -170,15 +155,16 @@ export class RpcCommunicator extends EventEmitter {
                 responseError
             })
         }
-        this.onOutgoingMessage(response)
+        this.onOutgoingMessage(response, undefined, callContext)
     }
 
-    private async handleNotification(senderDescriptor: PeerDescriptor, rpcMessage: RpcMessage): Promise<void> {
+    private async handleNotification(rpcMessage: RpcMessage, 
+        callContext?: CallContext): Promise<void> {
         if (this.stopped) {
             return
         }
         try {
-            await this.rpcServerTransport.onNotification(senderDescriptor, rpcMessage)
+            await this.rpcServerTransport.onNotification(rpcMessage, callContext)
         } catch (err) { }
     }
 
@@ -261,17 +247,8 @@ export class RpcCommunicator extends EventEmitter {
                 method: request.header.method
             },
             requestId: request.requestId,
-            targetDescriptor: request.sourceDescriptor,
-            sourceDescriptor: request.targetDescriptor,
             responseError
         }
-    }
-
-    public getConnectionManager(): ConnectionManager | never {
-        if (this.appId === DEFAULT_APP_ID) {
-            return this.connectionLayer as ConnectionManager
-        }
-        throw new Err.LayerViolation('RpcCommunicator can only access ConnectionManager on layer 0')
     }
 
     private notificationResponse(requestId: string): RpcMessage {
@@ -293,7 +270,6 @@ export class RpcCommunicator extends EventEmitter {
             this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), 'STOPPED')
         })
         this.removeAllListeners()
-        this.send = () => { }
         this.ongoingRequests.clear()
         this.rpcClientTransport.stop()
         this.rpcServerTransport.stop()

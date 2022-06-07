@@ -6,11 +6,11 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { Err } from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
+    const appId = 'test'
     let wsServerManager: ConnectionManager
     let noWsServerManager: ConnectionManager
 
@@ -33,44 +33,22 @@ describe('WebSocket Connection Management', () => {
     let connectorTransport1: ITransport
     let connectorTransport2: ITransport
 
-    let connectorRpc1: RpcCommunicator
-    let connectorRpc2: RpcCommunicator
-
     beforeEach(async () => {
 
         connectorTransport1 = new MockConnectionManager(wsServerConnectorPeerDescriptor , simulator)
         connectorTransport2 = new MockConnectionManager(noWsServerConnectorPeerDescriptor, simulator)
 
-        connectorRpc1 = new RpcCommunicator({
-            rpcRequestTimeout: 10000,
-            appId: "websocket",
-            connectionLayer: connectorTransport1
-        })
-
-        connectorRpc2 = new RpcCommunicator({
-            rpcRequestTimeout: 10000,
-            appId: "websocket",
-            connectionLayer: connectorTransport2
-        })
-        connectorRpc1.setSendFn((_targetPeer, message) => {
-            connectorRpc2.onIncomingMessage(wsServerConnectorPeerDescriptor, message)
-        })
-        connectorRpc2.setSendFn((_targetPeer, message) => {
-            connectorRpc1.onIncomingMessage(noWsServerConnectorPeerDescriptor, message)
-        })
-
         const config1 = {
+            transportLayer: connectorTransport1,
             webSocketHost: 'localhost',
             webSocketPort: 12223,
         }
         const config2 = {
+            transportLayer: connectorTransport2
         }
 
         wsServerManager = new ConnectionManager(config1)
         noWsServerManager = new ConnectionManager(config2)
-
-        wsServerManager.createWsConnector(connectorTransport1, connectorRpc1)
-        noWsServerManager.createWsConnector(connectorTransport2, connectorRpc2)
 
         await wsServerManager.start()
         await noWsServerManager.start()
@@ -86,6 +64,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to serverless peer', async () => {
         const dummyMessage: Message = {
+            appId: appId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -104,6 +83,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
+            appId: appId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -122,6 +102,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
+            appId: appId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'

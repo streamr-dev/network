@@ -1,5 +1,4 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { createWrappedClosestPeersRequest, getMockPeers, MockDhtRpc } from '../utils'
 import {
@@ -11,15 +10,15 @@ import {
     RpcMessage
 } from '../../src/proto/DhtRpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { Simulator } from '../../src/connection/Simulator'
 import { generateId } from '../../src/helpers/common'
+import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { CallContext } from '../../src/rpc-protocol/ServerTransport'
 
 describe('DhtPeer', () => {
     let dhtPeer: DhtPeer
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
-
-    const simulator = new Simulator()
+    const appId = 'test'
 
     const clientPeerDescriptor: PeerDescriptor = {
         peerId: generateId('dhtPeer'),
@@ -31,28 +30,20 @@ describe('DhtPeer', () => {
     }
 
     beforeEach(() => {
-        const mockConnectionLayer1 = new MockConnectionManager(clientPeerDescriptor, simulator)
-        clientRpcCommunicator = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer1,
-            appId: 'unit-test'
-        })
-
-        const mockConnectionLayer2 = new MockConnectionManager(serverPeerDescriptor, simulator)
-        serverRpcCommunicator = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer2,
-            appId: 'unit-test'
-        })
+        clientRpcCommunicator = new RpcCommunicator()
+        serverRpcCommunicator = new RpcCommunicator()
 
         serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
-        clientRpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            serverRpcCommunicator.onIncomingMessage(peerDescriptor, message)
+        clientRpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+       
+            serverRpcCommunicator.handleIncomingMessage(message)
         })
 
-        serverRpcCommunicator.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            clientRpcCommunicator.onIncomingMessage(peerDescriptor, message)
+        serverRpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+            clientRpcCommunicator.handleIncomingMessage(message)
         })
 
         const client = new DhtRpcClient(clientRpcCommunicator.getRpcClientTransport())
@@ -77,6 +68,7 @@ describe('DhtPeer', () => {
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
+            appId: appId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -107,6 +99,7 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
+            appId: appId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)

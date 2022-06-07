@@ -1,37 +1,35 @@
-import { DhtNode } from "../dht/DhtNode"
+//import { DhtNode } from "../dht/DhtNode"
 import { PeerID } from "../helpers/PeerID"
 import { Message, PeerDescriptor } from "../proto/DhtRpc"
+import { MockConnectionManager } from "./MockConnectionManager"
 
 export class Simulator {
 
     //private static singleton: Simulator
-    private nodes: { [id: string]: DhtNode } = {}
+    //private nodes: { [id: string]: DhtNode } = {}
+    private connectionManagers: { [id: string]: MockConnectionManager } = {}
+    
     private latenciesEnabled = false
 
     /*
-    private constructor() { }
-
-    public static instance(): Simulator {
-        if (!Simulator.singleton) {
-            Simulator.singleton = new Simulator()
-        }
-        return Simulator.singleton
+    addNode(node: DhtNode): void {
+        this.nodes[node.getNodeId().toMapKey()] = node
     }
     */
 
-    addNode(node: DhtNode): void {
-        this.nodes[node.getNodeId().toMapKey()] = node
+    addConnectionManager(manager: MockConnectionManager): void {
+        this.connectionManagers[PeerID.fromValue(manager.getPeerDescriptor().peerId).toMapKey()] = manager
     }
 
     send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
         if (this.latenciesEnabled) {
             setTimeout(() => {
-                this.nodes[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
+                this.connectionManagers[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].handleIncomingMessage(sourceDescriptor, msg)
             }
             , Math.random() * (250 - 5) + 5)
         }
         else {
-            this.nodes[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].getRpcCommunicator().onIncomingMessage(sourceDescriptor, msg)
+            this.connectionManagers[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].handleIncomingMessage(sourceDescriptor, msg)
         }
     }
 

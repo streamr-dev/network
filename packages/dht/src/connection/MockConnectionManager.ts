@@ -1,11 +1,12 @@
 import { Message, PeerDescriptor } from '../proto/DhtRpc'
 import { EventEmitter } from 'events'
-import { ITransport } from '../transport/ITransport'
+import { ITransport, Event } from '../transport/ITransport'
 import { Simulator } from './Simulator'
 
 export class MockConnectionManager extends EventEmitter implements ITransport {
     constructor(private ownPeerDescriptor: PeerDescriptor, private simulator: Simulator) {
         super()
+        this.simulator.addConnectionManager(this)
     }
 
     send(peerDescriptor: PeerDescriptor, msg: Message): void {
@@ -16,5 +17,9 @@ export class MockConnectionManager extends EventEmitter implements ITransport {
 
     getPeerDescriptor(): PeerDescriptor {
         return this.ownPeerDescriptor
+    }
+
+    handleIncomingMessage(peerDescriptor: PeerDescriptor, msg: Message): void {
+        this.emit(Event.DATA, peerDescriptor, msg)
     }
 }

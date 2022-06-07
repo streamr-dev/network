@@ -82,8 +82,7 @@ message RouteMessageWrapper {
   string nonce = 2;
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
-  string appId = 5; // application-specific id
-  bytes message = 6; // Expected to be of type Message
+  bytes message = 5; // Expected to be of type Message
 }
 
 message RouteMessageAck {
@@ -118,9 +117,7 @@ message RpcMessage {
   map<string, string> header = 1;
   bytes body = 2;
   string requestId = 3;
-  PeerDescriptor sourceDescriptor = 4;
-  PeerDescriptor targetDescriptor = 5;
-  optional RpcResponseError responseError = 6;
+  optional RpcResponseError responseError = 4;
 }
 
 // Wraps all messages
@@ -137,7 +134,10 @@ enum MessageType {
 message Message {
   string messageId = 1;
   MessageType messageType = 2;
-  bytes body = 3;
+  PeerDescriptor sourceDescriptor = 3;
+  PeerDescriptor targetDescriptor = 4;
+  string appId = 5; // application-specific id
+  bytes body = 6;
 }
 
 // Connector Messages
