@@ -13,16 +13,17 @@ import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
 import { PeerID } from '../helpers/PeerID'
 import { Event, ITransport } from '../transport/ITransport'
-import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
 import { Err } from '../helpers/errors'
 import { WebRtcCleanUp } from './WebRTC/NodeWebRtcConnection'
+import { v4 } from 'uuid'
 
 export interface ConnectionManagerConfig {
+    transportLayer: ITransport,
     webSocketHost?: string,
     webSocketPort?: number,
-    entryPoints?: PeerDescriptor[]
+    entryPoints?: PeerDescriptor[],
 }
 
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
@@ -31,6 +32,7 @@ const logger = new Logger(module)
 
 export class ConnectionManager extends EventEmitter implements ITransport {
     public PROTOCOL_VERSION = '1.0'
+    private CONNECTION_MANAGER_APP_ID = 'connectionmanager'
     private stopped = false
     private started = false
 
@@ -50,8 +52,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         } else {
             this.webSocketServer = null
         }
-        this.webSocketConnector = null
-        this.webrtcConnector = null
+        this.webSocketConnector = this.createWsConnector()
+        this.webrtcConnector = this.createWebRtcConnector()
     }
 
     private async handleIncomingConnectivityRequest(connection: IConnection, connectivityRequest: ConnectivityRequestMessage) {
@@ -91,7 +93,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
 
         const msg: Message = {
-            messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: '1234',
+            appId: this.CONNECTION_MANAGER_APP_ID,
+            messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: v4(),
             body: ConnectivityResponseMessage.toBinary(connectivityResponseMessage!)
         }
         connection.send(Message.toBinary(msg))
@@ -127,6 +130,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 // send connectivity request
                 const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort! }
                 const msg: Message = {
+                    appId: this.CONNECTION_MANAGER_APP_ID,
                     messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
                     body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
                 }
@@ -226,8 +230,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     peerDescriptor: this.ownPeerDescriptor
                 }
                 const msg: Message = {
+                    appId: this.CONNECTION_MANAGER_APP_ID,
                     messageType: MessageType.HANDSHAKE, 
-                    messageId: 'xyz',
+                    messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
                 }
                 connection.send(Message.toBinary(msg))
@@ -261,8 +266,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (this.webSocketConnector) {
             this.webSocketConnector!.stop()
         }
-        if (this.webSocketConnector) {
-            this.webSocketConnector!.stop()
+        if (this.webrtcConnector) {
+            this.webrtcConnector!.stop()
         }
         Object.values(this.connections).forEach((connection) => connection.close())
         WebRtcCleanUp.cleanUp()
@@ -365,16 +370,18 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return false
     }
 
-    createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+    //private createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+    private createWsConnector(): WebSocketConnector {
         logger.trace(`Creating WebSocket Connector`)
-        this.webSocketConnector = new WebSocketConnector(transport, this.canConnect.bind(this), rpcCommunicator)
+        return new WebSocketConnector(this.config.transportLayer, this.canConnect.bind(this))
     }
 
-    createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+    //private createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
+    
+    private createWebRtcConnector(): WebRtcConnector {
         logger.trace(`Creating WebRTC Connector`)
-        this.webrtcConnector = new WebRtcConnector({
-            rpcTransport: transport,
-            rpcCommunicator,
+        return  new WebRtcConnector({
+            rpcTransport: this.config.transportLayer,
             fnCanConnect: () => true,
             fnGetConnection: this.getConnection.bind(this),
             fnAddConnection: this.addConnection.bind(this)

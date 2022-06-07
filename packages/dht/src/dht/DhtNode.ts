@@ -3,6 +3,7 @@ import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
@@ -74,7 +75,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     private bucket?: KBucket<DhtPeer>
     private neighborList?: SortedContactList
     private openInternetPeers?: SortedContactList
-    private rpcCommunicator?: RpcCommunicator
+    private rpcCommunicator?: RoutingRpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
     private ownPeerId?: PeerID
@@ -120,30 +121,30 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             let connectionManager: ConnectionManager
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
                 connectionManager = new ConnectionManager({
+                    transportLayer: this,
                     webSocketHost: this.config.peerDescriptor.websocket.ip,
                     webSocketPort: this.config.peerDescriptor.websocket.port,
-                    entryPoints: this.config.entryPoints
+                    entryPoints: this.config.entryPoints,
                 })
                 this.ownPeerDescriptor = this.config.peerDescriptor
-                connectionManager.createWsConnector(this)
-                connectionManager.createWebRtcConnector(this)
+                
                 await connectionManager.start()
             } else if (!this.config.webSocketPort) {
                 connectionManager = new ConnectionManager({
+                    transportLayer: this,
                     entryPoints: this.config.entryPoints
                 })
-                connectionManager.createWsConnector(this)
-                connectionManager.createWebRtcConnector(this)
+                
                 await connectionManager.start()
                 this.ownPeerDescriptor = this.createPeerDescriptor(undefined, this.config.peerIdString)
             } else {
                 connectionManager = new ConnectionManager({
+                    transportLayer: this,
                     webSocketHost: this.config.webSocketHost!,
                     webSocketPort: this.config.webSocketPort!,
                     entryPoints: this.config.entryPoints
                 })
-                connectionManager.createWsConnector(this)
-                connectionManager.createWebRtcConnector(this)
+                
                 const result = await connectionManager.start()
                 this.ownPeerDescriptor = this.createPeerDescriptor(result, this.config.peerIdString)
             }
@@ -155,10 +156,8 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.transportLayer = connectionManager
         }
 
-        this.rpcCommunicator = new RpcCommunicator({
-            connectionLayer: this.transportLayer,
-            appId: this.appId
-        })
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.appId, this.transportLayer)
+        
         this.bindDefaultServerMethods()
         this.initKBucket(this.ownPeerId!)
     }
@@ -205,8 +204,9 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             }
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
-            if (this.appId === DEFAULT_APP_ID) {
-                const connectionManager = this.rpcCommunicator!.getConnectionManager()
+            //if (this.appId === DEFAULT_APP_ID) {
+            if (this.cleanUpHandleForConnectionManager) {
+                const connectionManager = this.cleanUpHandleForConnectionManager!
                 connectionManager.disconnect(contact.getPeerDescriptor())
             }
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
@@ -256,23 +256,23 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         logger.trace(`Processing received routeMessage ${routedMessage.nonce}`)
         this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.nonce)
+        const message = Message.fromBinary(routedMessage.message)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`RouteMessage ${routedMessage.nonce} successfully arrived to destination`)
-            const message = Message.fromBinary(routedMessage.message)
-            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message, routedMessage.appId)
+            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message)
         } else {
             await this.doRouteMessage({
                 message: routedMessage.message,
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
                 sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
-                appId: routedMessage.appId,
+                appId: message.appId,
                 messageId: routedMessage.nonce
             })
         }
     }
 
-    public send(targetPeerDescriptor: PeerDescriptor, msg: Message, appId?: string): void {
+    public send(targetPeerDescriptor: PeerDescriptor, msg: Message): void {
         if (!this.started || this.stopped) {
             return
         }
@@ -280,7 +280,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             message: Message.toBinary(msg),
             messageId: v4(),
             destinationPeer: targetPeerDescriptor,
-            appId: appId ? appId : 'layer0',
+            appId: msg.appId ? msg.appId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
         this.doRouteMessage(params).catch((err) => {
@@ -528,6 +528,10 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
 
     public getRpcCommunicator(): RpcCommunicator {
         return this.rpcCommunicator!
+    }
+
+    public getTransport(): ITransport {
+        return this.transportLayer!
     }
 
     public getPeerDescriptor(): PeerDescriptor {

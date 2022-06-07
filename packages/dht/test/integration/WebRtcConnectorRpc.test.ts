@@ -1,10 +1,8 @@
-import { ITransport } from '../../src/transport/ITransport'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
+import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
 import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
-import { Simulator } from '../../src/connection/Simulator'
 import {
     IceCandidate,
-    Message,
     NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
@@ -12,19 +10,15 @@ import {
     WebRtcConnectionRequest
 } from '../../src/proto/DhtRpc'
 import { generateId } from '../../src/helpers/common'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { waitForCondition } from 'streamr-test-utils'
 import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { CallContext } from '../../src/rpc-protocol/ServerTransport'
 
 describe('WebRTC rpc messages', () => {
-    let mockConnectionLayer1: ITransport,
-        mockConnectionLayer2: ITransport,
-        rpcCommunicator1: RpcCommunicator,
-        rpcCommunicator2: RpcCommunicator,
-        client: WebRtcConnectorClient
-
-    const simulator = new Simulator()
+    let rpcCommunicator1: RpcCommunicator
+    let rpcCommunicator2: RpcCommunicator
+    let client: WebRtcConnectorClient
 
     let requestConnectionCounter: number
     let rtcOfferCounter: number
@@ -47,11 +41,7 @@ describe('WebRTC rpc messages', () => {
         rtcAnswerCounter = 0
         iceCandidateCounter = 0
 
-        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1, simulator)
-        rpcCommunicator1 = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer1,
-            appId: "webrtc"
-        })
+        rpcCommunicator1 = new RpcCommunicator()
         const serverFunctions: IWebRtcConnector = {
 
             requestConnection: async (_urequest: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> => {
@@ -87,22 +77,18 @@ describe('WebRTC rpc messages', () => {
             }
         }
 
-        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
-        rpcCommunicator2 = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer2,
-            appId: "webrtc"
-        })
+        rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcNotification(RtcOffer, 'rtcOffer', serverFunctions.rtcOffer)
         rpcCommunicator2.registerRpcNotification(RtcAnswer, 'rtcAnswer', serverFunctions.rtcAnswer)
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
+        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+            rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
+        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+            rpcCommunicator1.handleIncomingMessage(message)
         })
 
         client = new WebRtcConnectorClient(rpcCommunicator1.getRpcClientTransport())

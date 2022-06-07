@@ -1,5 +1,6 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
 
 describe('WebSocket IConnection Requests', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -36,8 +37,8 @@ describe('WebSocket IConnection Requests', () => {
         await node2.joinDht(epPeerDescriptor)
         await node1.joinDht(epPeerDescriptor)
 
-        expect(node1.getRpcCommunicator().getConnectionManager().hasConnection(node2.getPeerDescriptor())).toEqual(true)
-        expect(node2.getRpcCommunicator().getConnectionManager().hasConnection(node1.getPeerDescriptor())).toEqual(true)
+        expect((node1.getTransport() as ConnectionManager).hasConnection(node2.getPeerDescriptor())).toEqual(true)
+        expect((node2.getTransport() as ConnectionManager).hasConnection(node1.getPeerDescriptor())).toEqual(true)
 
     }, 10000)
 })

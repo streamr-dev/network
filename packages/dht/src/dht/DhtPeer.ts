@@ -85,7 +85,6 @@ export class DhtPeer {
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            appId: params.appId,
             nonce: params.messageId || v4()
         }
         const options: DhtRpcOptions = {

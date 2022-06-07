@@ -58,6 +58,7 @@ describe('Route Message With Mock Connections', () => {
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         const message: Message = {
+            appId: APP_ID,
             messageId: 'tsatsa',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -78,6 +79,7 @@ describe('Route Message With Mock Connections', () => {
 
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         const message: Message = {
+            appId: APP_ID,
             messageId: 'tsutsu',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -101,6 +103,7 @@ describe('Route Message With Mock Connections', () => {
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
         const message: Message = {
+            appId: APP_ID,
             messageId: 'tsutsu',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -135,6 +138,7 @@ describe('Route Message With Mock Connections', () => {
                     if (!node.getNodeId().equals(receiver.getNodeId())) {
                         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
                         const message: Message = {
+                            appId: APP_ID,
                             messageId: 'tsutsu',
                             messageType: MessageType.RPC,
                             body: RpcMessage.toBinary(rpcWrapper)

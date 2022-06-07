@@ -35,8 +35,8 @@ export interface DeferredPromises {
 }
 
 export interface DhtRpcOptions extends RpcOptions {
-    targetDescriptor: PeerDescriptor
-    sourceDescriptor: PeerDescriptor
+    targetDescriptor?: PeerDescriptor
+    sourceDescriptor?: PeerDescriptor
     notification?: boolean
     clientId?: number
 }
@@ -83,9 +83,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         const request: RpcMessage = {
             header: this.createRequestHeaders(method, options.notification),
             body: requestBody,
-            requestId: v4(),
-            sourceDescriptor: options.sourceDescriptor as PeerDescriptor,
-            targetDescriptor: options.targetDescriptor as PeerDescriptor
+            requestId: v4()
         }
 
         const unary = new UnaryCall<I, O>(
