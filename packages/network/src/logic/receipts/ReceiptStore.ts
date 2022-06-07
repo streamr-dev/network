@@ -1,16 +1,16 @@
 import { NodeId } from '../../identifiers'
 import { Receipt } from 'streamr-client-protocol'
 
-function store(key: string, receipt: Receipt, map: Map<string, Set<Receipt>>): void {
+function store(key: string, receipt: Receipt, map: Map<string, Receipt[]>): void {
     if (!map.has(key)) {
-        map.set(key, new Set<Receipt>())
+        map.set(key, [])
     }
-    map.get(key)!.add(receipt)
+    map.get(key)!.push(receipt)
 }
 
 export class ReceiptStore {
-    private readonly myReceipts = new Map<NodeId, Set<Receipt>>()
-    private readonly theirReceipts = new Map<NodeId, Set<Receipt>>()
+    private readonly myReceipts = new Map<NodeId, Receipt[]>()
+    private readonly theirReceipts = new Map<NodeId, Receipt[]>()
     private readonly myId: NodeId
 
     constructor(myId: NodeId) {
@@ -25,7 +25,7 @@ export class ReceiptStore {
         }
     }
 
-    getTheirReceipts(nodeId: NodeId): ReadonlySet<Receipt> {
-        return this.theirReceipts.get(nodeId) ?? new Set<Receipt>()
+    getTheirReceipts(nodeId: NodeId): ReadonlyArray<Receipt> {
+        return this.theirReceipts.get(nodeId) ?? []
     }
 }
