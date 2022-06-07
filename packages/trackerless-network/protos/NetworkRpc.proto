@@ -10,6 +10,14 @@ message DataMessage {
   string content = 1;
 }
 
+message Layer2Message {
+  Layer2Type type = 1;
+}
+
+enum Layer2Type {
+  Data = 0;
+}
+
 message NotificationResponse {
   bool sent = 1;
 }
