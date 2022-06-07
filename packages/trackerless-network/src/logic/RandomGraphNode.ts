@@ -50,13 +50,13 @@ export class RandomGraphNode extends EventEmitter {
 
     }
 
-    // broadcast(_msg: DataMessage): void {
-    //
-    // }
-    //
-    // setMessageListener(listener: messageListener): void {
-    //     this.messageListener = listener
-    // }
+    broadcast(_msg: DataMessage): void {
+
+    }
+
+    setMessageListener(listener: messageListener): void {
+        this.messageListener = listener
+    }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         const toReplace: string[] = []
