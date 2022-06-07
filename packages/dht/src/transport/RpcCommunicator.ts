@@ -14,7 +14,7 @@ import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, Serv
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-//import { Logger } from '../helpers/Logger'
+import { Logger } from '../helpers/Logger'
 import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
 
 export enum Event {
@@ -24,7 +24,6 @@ export enum Event {
 
 export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number,
-    //appId?: string
 }
 
 interface OngoingRequest {
@@ -32,7 +31,7 @@ interface OngoingRequest {
     timeoutRef: NodeJS.Timeout
 }
 
-//const logger = new Logger(module)
+const logger = new Logger(module)
 
 export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private stopped = false
@@ -42,7 +41,6 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private readonly rpcServerTransport: ServerTransport
     private readonly ongoingRequests: Map<string, OngoingRequest>
     private defaultRpcRequestTimeout = 5000 
-    //private readonly appId: string
 
     constructor(params?: RpcCommunicatorConfig) {
         super()
@@ -53,7 +51,6 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             this.defaultRpcRequestTimeout = params.rpcRequestTimeout!
         }
         
-        //this.appId = params.appId || DEFAULT_APP_ID
         this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
         this.rpcServerTransport = new ServerTransport()
         this.ongoingRequests = new Map()
@@ -87,7 +84,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         const msg = RpcMessage.toBinary(rpcMessage)
 
-        //logger.trace(`onOutGoingMessage on ${this.appId}, messageId: ${msg.messageId}`)
+        logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
         
         this.emit(IRpcIoEvents.OUTGOING_MESSAGE, msg, callContext)
     }
@@ -97,7 +94,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         if (this.stopped) {
             return
         }
-        //logger.trace(`onIncomingMessage on ${this.appId} rpc, requestId: ${rpcMessage.requestId}`)
+        logger.trace(`onIncomingMessage, requestId: ${rpcMessage.requestId}`)
         
         if (rpcMessage.header.response && this.ongoingRequests.has(rpcMessage.requestId)) {
             if (rpcMessage.responseError !== undefined) {

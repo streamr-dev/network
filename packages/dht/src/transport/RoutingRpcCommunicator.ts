@@ -34,38 +34,4 @@ export class RoutingRpcCommunicator extends RpcCommunicator{
         })
 
     }
-
-    /*
-    private apps: {[appId: string]: IRpcIo} = {}
-
-    constructor(private transport: ITransport) {
-        transport.on(TransportEvent.DATA, (peerDescriptor: PeerDescriptor, message: Message, appId?: string) => {
-            if (appId && this.apps.hasOwnProperty(appId)) {
-                const context = new CallContext()
-                context.incomingSourceDescriptor = peerDescriptor
-
-                this.apps[appId].handleIncomingMessage(message.body, context)
-            }
-        })
-    }
-
-    public registerApp(appId: string, rpcIo: IRpcIo) {
-        rpcIo.on(RpcIoEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
-            
-            let targetDescriptor: PeerDescriptor
-            // rpc call message
-            if (callContext!.targetDescriptor) {
-                targetDescriptor = callContext!.targetDescriptor!
-            }
-            // rpc reply message
-            else {
-                targetDescriptor = callContext!.incomingSourceDescriptor!
-            }
-
-            const message: Message = {messageId: v4(), appId: appId, body: msgBody, messageType: MessageType.RPC}
-            this.transport.send( targetDescriptor!, message, appId)
-        })
-        this.apps[appId] = rpcIo
-    }
-    */
 }
