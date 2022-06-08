@@ -30,7 +30,7 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
     const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
-            await EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
         )
     ))
     await Promise.allSettled(tasks)
