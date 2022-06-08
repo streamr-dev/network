@@ -114,14 +114,6 @@ export class Publisher implements Context {
         }
     }
 
-    startKeyExchange(): Promise<void> {
-        return this.keyExchange.start()
-    }
-
-    stopKeyExchange(): Promise<void> {
-        return this.keyExchange.stop()
-    }
-
     async start(): Promise<void> {
         this.pipeline.start()
     }

@@ -98,10 +98,12 @@ describe('Group Key Persistence', () => {
             }, 2 * TIMEOUT)
 
             it('works', async () => {
+                // @ts-expect-error private
+                const publisherKeyExchange: PublisherKeyExchange = publisher2.container.resolve(PublisherKeyExchange)
+                // subscribes to the key exchange stream
                 // TODO: this should probably happen automatically if there are keys
                 // also probably needs to create a connection handle
-                // @ts-expect-error private
-                await publisher2.publisher.startKeyExchange()
+                await publisherKeyExchange.useGroupKey(stream.id)
 
                 const received = []
                 const sub = await subscriber.resend(
