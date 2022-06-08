@@ -1,20 +1,19 @@
-import { Err, ErrorCode } from '../helpers/errors'
+import { Err, ErrorCode } from './errors'
 import {
     ClientTransport,
     DeferredPromises,
-    DhtRpcOptions,
+    ProtoRpcOptions,
     Event as DhtTransportClientEvent
-} from '../rpc-protocol/ClientTransport'
+} from './ClientTransport'
 import {
     NotificationResponse,
     RpcMessage,
     RpcResponseError
-} from '../proto/DhtRpc'
-import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
+} from './proto/ProtoRpc'
+import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from './ServerTransport'
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from '../helpers/Logger'
 import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
 
 export enum Event {
@@ -58,7 +57,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
             deferredPromises: DeferredPromises,
             rpcMessage: RpcMessage,
-            options: DhtRpcOptions
+            options: ProtoRpcOptions
         ) => {
             this.onOutgoingMessage(rpcMessage, deferredPromises, options as CallContext)
         })

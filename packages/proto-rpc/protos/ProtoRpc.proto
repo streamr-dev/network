@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+enum RpcResponseError {
+    SERVER_TIMOUT = 0;
+    CLIENT_TIMEOUT = 1;
+    SERVER_ERROR = 2;
+    UNKNOWN_RPC_METHOD = 3;
+  }
+
+message NotificationResponse {
+    bool sent = 1;
+  }
+
+message PingRequest {
+    string nonce = 1;
+  }
+  
+message PingResponse {
+    string nonce = 1;
+  }
+
+message RpcMessage {
+    map<string, string> header = 1;
+    bytes body = 2;
+    string requestId = 3;
+    optional RpcResponseError responseError = 4;
+  }
+

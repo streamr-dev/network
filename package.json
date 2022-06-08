@@ -27,7 +27,8 @@
         "packages/network-tracker",
         "packages/client",
         "packages/broker",
-        "packages/cli-tools"
+        "packages/cli-tools",
+        "packages/proto-rpc"
     ],
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
