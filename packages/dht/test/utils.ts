@@ -31,7 +31,8 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
     const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer, 
         nodeName: stringId, numberOfNodesPerKBucket: K })
     await node.start()
-    simulator.addNode(node)
+
+    simulator.addConnectionManager(mockConnectionLayer)
     return node
 }
 
@@ -49,7 +50,7 @@ export const createMockConnectionLayer1Node = async (stringId: string, layer0Nod
 
 export const createWrappedClosestPeersRequest = (
     sourceDescriptor: PeerDescriptor,
-    destinationDescriptor: PeerDescriptor
+    _udestinationDescriptor: PeerDescriptor
 ): RpcMessage => {
 
     const routedMessage: ClosestPeersRequest = {
@@ -62,9 +63,7 @@ export const createWrappedClosestPeersRequest = (
             method: 'closestPeersRequest',
             request: 'request'
         },
-        requestId: 'testId',
-        sourceDescriptor: sourceDescriptor,
-        targetDescriptor: destinationDescriptor
+        requestId: 'testId'
     }
     return rpcWrapper
 }

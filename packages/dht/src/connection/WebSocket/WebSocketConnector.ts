@@ -8,7 +8,7 @@ import {
 import { ClientWebSocket } from './ClientWebSocket'
 import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
-import { RpcCommunicator } from '../../transport/RpcCommunicator'
+import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
     HandshakeMessage,
@@ -24,30 +24,27 @@ import { TODO } from '../../types'
 import { Logger } from '../../helpers/Logger'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { v4 } from 'uuid'
 
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
-    private rpcCommunicator: RpcCommunicator
+    private WESOCKET_CONNECTOR_APP_ID = "websocketconnector"
+    private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
 
     constructor(
         private rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
-        rpcCommunicator?: RpcCommunicator
+        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
     ) {
         super()
         this.canConnectFunction = fnCanConnect.bind(this)
-        if (rpcCommunicator) {
-            this.rpcCommunicator = rpcCommunicator
-        } else {
-            this.rpcCommunicator = new RpcCommunicator({
-                rpcRequestTimeout: 10000,
-                appId: "websocket",
-                connectionLayer: rpcTransport
-            })
-        }
+
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.WESOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
+            rpcRequestTimeout: 10000
+        })
+
         this.requestConnection = this.requestConnection.bind(this)
 
         this.rpcCommunicator.registerRpcMethod(
@@ -59,12 +56,12 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     }
 
     connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {
-                host?: string,
-                port?: number,
-                url?: string,
-                ownPeerDescriptor?: PeerDescriptor,
-                targetPeerDescriptor?: PeerDescriptor
-            } = {}
+        host?: string,
+        port?: number,
+        url?: string,
+        ownPeerDescriptor?: PeerDescriptor,
+        targetPeerDescriptor?: PeerDescriptor
+    } = {}
     ): IConnection {
 
         if (!host && !port && !url && ownPeerDescriptor && targetPeerDescriptor) {
@@ -75,7 +72,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         socket.once(ConnectionEvent.CONNECTED, () => {
             this.emit(ConnectionSourceEvent.CONNECTED, socket)
         })
-        
+
         let address = ''
         if (url) {
             address = url
@@ -168,7 +165,9 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 }
 
                 const msg: Message = {
-                    messageType: MessageType.HANDSHAKE, messageId: 'xyz',
+                    appId: this.WESOCKET_CONNECTOR_APP_ID,
+                    messageType: MessageType.HANDSHAKE,
+                    messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
                 }
 
@@ -183,9 +182,9 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     }
 
     // IWebSocketConnector implementation
-    async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse>  {
+    async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
         if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
-            setImmediate(() => this.connect({host: request.ip, port: request.port}))
+            setImmediate(() => this.connect({ host: request.ip, port: request.port }))
             const res: WebSocketConnectionResponse = {
                 accepted: true
             }

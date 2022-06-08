@@ -53,9 +53,9 @@ describe('Layer0MixedConnectionTypes', () => {
     it('2 non-server peers join first', async () => {
         await Promise.all([
             // @ts-expect-error private
-            waitForEvent(node3.getRpcCommunicator().getConnectionManager().webrtcConnector, ConnectionSourceEvent.CONNECTED),
+            waitForEvent((node3.getTransport() as ConnectionManager).webrtcConnector, ConnectionSourceEvent.CONNECTED),
             // @ts-expect-error private
-            waitForEvent(node4.getRpcCommunicator().getConnectionManager().webrtcConnector, ConnectionSourceEvent.CONNECTED),
+            waitForEvent((node4.getTransport() as ConnectionManager).webrtcConnector, ConnectionSourceEvent.CONNECTED),
             node3.joinDht(epPeerDescriptor),
             node4.joinDht(epPeerDescriptor)
         ])

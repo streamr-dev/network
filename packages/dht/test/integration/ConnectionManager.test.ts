@@ -10,8 +10,16 @@ import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
+import { appendFile } from "fs"
 
 describe('ConnectionManager', () => {
+    const appId = 'demo'
+    
+    const mockPeerDescriptor0: PeerDescriptor = {
+        peerId: PeerID.fromString("tester0").value,
+        type: NodeType.NODEJS
+    }
+
     const mockPeerDescriptor1: PeerDescriptor = {
         peerId: PeerID.fromString("tester1").value,
         type: NodeType.NODEJS
@@ -21,18 +29,19 @@ describe('ConnectionManager', () => {
         type: NodeType.NODEJS
     }
     const simulator = new Simulator()
+
+    const mockTransport = new MockConnectionManager(mockPeerDescriptor1, simulator)
     const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1, simulator)
     const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2, simulator)
 
     beforeAll(async () => {
 
     })
+
     it('Can start alone', async () => {
-        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9991 })
+        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
 
-        connectionManager.createWsConnector(mockConnectorTransport1)
         const result = await connectionManager.start()
-
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
 
@@ -42,11 +51,12 @@ describe('ConnectionManager', () => {
     it('Throws an async exception if fails to connect to entrypoints', async () => {
 
         const connectionManager = new ConnectionManager({
+            transportLayer: mockTransport,
             webSocketPort: 9992, entryPoints: [
                 { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 123 } }
             ]
         })
-        connectionManager.createWsConnector(mockConnectorTransport1)
+        
         await expect(connectionManager.start())
             .rejects
             .toThrow('Failed to connect to the entrypoints')
@@ -55,9 +65,8 @@ describe('ConnectionManager', () => {
     })
 
     it('Can probe connectivity in open internet', async () => {
-        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9993 })
+        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
 
-        connectionManager.createWsConnector(mockConnectorTransport1)
         const result = await connectionManager.start()
         connectionManager.enableConnectivity(createPeerDescriptor(result))
 
@@ -65,11 +74,12 @@ describe('ConnectionManager', () => {
         expect(result.openInternet).toEqual(true)
 
         const connectionManager2 = new ConnectionManager({
+            transportLayer: mockConnectorTransport2,
             webSocketPort: 9994, entryPoints: [
                 { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 9993 } }
             ]
         })
-        connectionManager2.createWsConnector(mockConnectorTransport2)
+       
         const result2 = await connectionManager2.start()
         connectionManager2.enableConnectivity(createPeerDescriptor(result2))
 
@@ -81,9 +91,8 @@ describe('ConnectionManager', () => {
     })
 
     it('Can send data to other connectionmanager over websocket', async () => {
-        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9995 })
+        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
 
-        connectionManager.createWsConnector(mockConnectorTransport1)
         const result = await connectionManager.start()
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
@@ -92,12 +101,12 @@ describe('ConnectionManager', () => {
         expect(result.openInternet).toEqual(true)
 
         const connectionManager2 = new ConnectionManager({
+            transportLayer: mockConnectorTransport2,
             webSocketPort: 9996, entryPoints: [
                 peerDescriptor 
             ]
         })
 
-        connectionManager2.createWsConnector(mockConnectorTransport2)
         const result2 = await connectionManager2.start()
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
@@ -107,6 +116,7 @@ describe('ConnectionManager', () => {
 
         const arr = new Uint8Array(10)
         const msg: Message = {
+            appId: appId,
             messageType: MessageType.RPC, 
             messageId: '1',
             body: arr
@@ -127,9 +137,8 @@ describe('ConnectionManager', () => {
     })
 
     it('Can disconnect', async () => {
-        const connectionManager = new ConnectionManager({ webSocketHost: 'localhost', webSocketPort: 9997 })
+        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
 
-        connectionManager.createWsConnector(mockConnectorTransport1)
         const result = await connectionManager.start()
         const peerDescriptor = createPeerDescriptor(result)
         connectionManager.enableConnectivity(peerDescriptor)
@@ -138,12 +147,12 @@ describe('ConnectionManager', () => {
         expect(result.openInternet).toEqual(true)
 
         const connectionManager2 = new ConnectionManager({
+            transportLayer: mockConnectorTransport2,
             webSocketPort: 9999, entryPoints: [
                 peerDescriptor
             ]
         })
 
-        connectionManager2.createWsConnector(mockConnectorTransport2)
         const result2 = await connectionManager2.start()
         const peerDescriptor2 = createPeerDescriptor(result2)
         connectionManager2.enableConnectivity(peerDescriptor2)
@@ -153,6 +162,7 @@ describe('ConnectionManager', () => {
 
         const arr = new Uint8Array(10)
         const msg: Message = {
+            appId: appId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: arr

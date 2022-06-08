@@ -1,24 +1,20 @@
-import { ITransport } from '../../src/transport/ITransport'
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
-import { ClosestPeersRequest, ClosestPeersResponse, Message, PeerDescriptor } from '../../src/proto/DhtRpc'
+import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/helpers/errors'
-import { Simulator } from '../../src/connection/Simulator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { CallContext } from '../../src/rpc-protocol/ServerTransport'
 
 describe('DhtRpc', () => {
-    let mockConnectionLayer1: ITransport,
-        mockConnectionLayer2: ITransport,
-        rpcCommunicator1: RpcCommunicator,
-        rpcCommunicator2: RpcCommunicator,
-        client1: DhtRpcClient,
-        client2: DhtRpcClient
+    let rpcCommunicator1: RpcCommunicator
+    let rpcCommunicator2: RpcCommunicator
+    let client1: DhtRpcClient
+    let client2: DhtRpcClient
 
-    const simulator = new Simulator()
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
         type: 0
@@ -29,26 +25,22 @@ describe('DhtRpc', () => {
         type: 0
     }
 
+    const outgoingListener2 = (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.handleIncomingMessage(message)
+    }
+
     beforeEach(() => {
-        mockConnectionLayer1 = new MockConnectionManager(peerDescriptor1, simulator)
-        rpcCommunicator1 = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer1
-        })
+        rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        mockConnectionLayer2 = new MockConnectionManager(peerDescriptor2, simulator)
-        rpcCommunicator2 = new RpcCommunicator({
-            connectionLayer: mockConnectionLayer2,
-        })
+        rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            rpcCommunicator2.onIncomingMessage(peerDescriptor, message)
+        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+            rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.setSendFn((peerDescriptor: PeerDescriptor, message: Message) => {
-            rpcCommunicator1.onIncomingMessage(peerDescriptor, message)
-        })
+        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
         
         client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
         client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
@@ -76,7 +68,8 @@ describe('DhtRpc', () => {
     })
     
     it('Default RPC timeout, client side', async () => {
-        rpcCommunicator2.setSendFn(async (_peerDescriptor: PeerDescriptor, _messsage: Message) => {
+        rpcCommunicator2.off(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
+        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: CallContext) => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
