@@ -22,13 +22,13 @@ export class SubscriptionSession<T> implements Context {
     readonly debug
     public readonly streamPartId: StreamPartID
     /** active subs */
-    subscriptions: Set<Subscription<T>> = new Set()
-    pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    isRetired: boolean = false
-    isStopped = false
-    pipeline
-    node
-    onRetired = Signal.once()
+    private subscriptions: Set<Subscription<T>> = new Set()
+    private pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    private isRetired: boolean = false
+    private isStopped = false
+    private pipeline
+    private node
+    public readonly onRetired = Signal.once()
 
     constructor(
         context: Context,

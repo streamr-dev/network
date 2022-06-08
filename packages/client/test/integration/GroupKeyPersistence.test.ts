@@ -139,7 +139,8 @@ describe('Group Key Persistence', () => {
 
             // this will be called if group key request is sent
             // @ts-expect-error private
-            const onKeyExchangeMessage = jest.spyOn(publisher.publisher.keyExchange, 'onKeyExchangeMessage')
+            const publisherKeyExchange = publisher.container.resolve(PublisherKeyExchange)
+            const onKeyExchangeMessage = jest.spyOn(publisherKeyExchange, 'onKeyExchangeMessage' as any)
 
             // this should set up group key
             const published = await publishTestMessages(1)

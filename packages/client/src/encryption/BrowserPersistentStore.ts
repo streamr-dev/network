@@ -1,11 +1,11 @@
-import { get, set, del, clear, keys, createStore } from 'idb-keyval'
+import { get, set, del, clear, keys, createStore, UseStore } from 'idb-keyval'
 import { PersistentStore } from './PersistentStore'
 import { StreamID } from 'streamr-client-protocol'
 
 export default class BrowserPersistentStore implements PersistentStore<string, string> {
-    readonly clientId: string
-    readonly streamId: string
-    private store
+    private readonly clientId: string
+    private readonly streamId: string
+    private store: UseStore
     private dbName: string
 
     constructor({ clientId, streamId }: { clientId: string, streamId: StreamID }) {

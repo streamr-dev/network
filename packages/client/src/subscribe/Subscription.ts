@@ -13,7 +13,7 @@ export { MessageStreamOnMessage as SubscriptionOnMessage }
  */
 export class Subscription<T = unknown> extends MessageStream<T> {
     /** @internal */
-    context: SubscriptionSession<T>
+    private context: SubscriptionSession<T>
     readonly streamPartId: StreamPartID
 
     /** @internal */

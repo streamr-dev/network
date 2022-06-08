@@ -14,8 +14,8 @@ import { Signal } from './utils/Signal'
  */
 @scoped(Lifecycle.ContainerScoped)
 export class DestroySignal implements Context {
-    onDestroy = Signal.once()
-    trigger = this.destroy
+    public onDestroy = Signal.once()
+    public trigger = this.destroy
     readonly id = instanceId(this)
     readonly debug
 

@@ -6,7 +6,7 @@ import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { Ethereum } from '../Ethereum'
 
-import { EncryptionConfig, parseGroupKeys } from './KeyExchangeStream'
+import { EncryptionConfig, GroupKeysSerialized, parseGroupKeys } from './KeyExchangeStream'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
@@ -26,8 +26,9 @@ export class GroupKeyStoreFactory implements Context {
     readonly id
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
-    initialGroupKeys
-    getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
+    private initialGroupKeys: Record<string, GroupKeysSerialized>
+    public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
+
     constructor(
         context: Context,
         private ethereum: Ethereum,

@@ -221,12 +221,12 @@ export function snapshot(): string {
 }
 
 export class LeaksDetector {
-    leakDetectors: Map<string, LeakDetector> = new Map()
-    ignoredValues = new WeakSet()
-    id = instanceId(this)
-    debug = testDebug(this.id)
-    seen = new WeakSet()
-    didGC = false
+    private leakDetectors: Map<string, LeakDetector> = new Map()
+    private ignoredValues = new WeakSet()
+    private id = instanceId(this)
+    private debug = testDebug(this.id)
+    private seen = new WeakSet()
+    private didGC = false
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([

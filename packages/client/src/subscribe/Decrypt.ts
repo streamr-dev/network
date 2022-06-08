@@ -15,9 +15,9 @@ type IDecrypt<T> = {
 }
 
 export class Decrypt<T> implements IDecrypt<T>, Context {
-    id
-    debug
-    isStopped = false
+    readonly id
+    readonly debug
+    private isStopped = false
 
     constructor(
         context: Context,

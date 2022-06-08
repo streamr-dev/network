@@ -536,6 +536,7 @@ describe('decryption', () => {
                     // @ts-expect-error private
                     const subSession = subscriber.subscriber.getSubscriptionSession(sub.streamPartId)
                     if (!subSession) { throw new Error('no subsession?') }
+                    // @ts-expect-error private
                     subSession.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                         if (index === BAD_INDEX) {
                             // eslint-disable-next-line no-param-reassign

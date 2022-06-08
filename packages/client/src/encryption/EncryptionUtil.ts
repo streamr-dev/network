@@ -60,7 +60,7 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
 // put all static functions into EncryptionUtilBase, with exception of create,
 // so it's clearer what the static & instance APIs look like
 class EncryptionUtilBase {
-    static validatePublicKey(publicKey: crypto.KeyLike): void|never {
+    private static validatePublicKey(publicKey: crypto.KeyLike): void|never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
@@ -89,7 +89,7 @@ class EncryptionUtilBase {
     /*
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
-    static encrypt(data: Uint8Array, groupKey: GroupKey): string {
+    private static encrypt(data: Uint8Array, groupKey: GroupKey): string {
         GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
@@ -100,7 +100,7 @@ class EncryptionUtilBase {
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
+    private static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
         GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
@@ -190,8 +190,8 @@ export class EncryptionUtil extends EncryptionUtilBase {
         return encryptionUtil
     }
 
-    privateKey: string | undefined
-    publicKey: string | undefined
+    public privateKey: string | undefined
+    public publicKey: string | undefined
     private _generateKeyPairPromise: Promise<void> | undefined
 
     async onReady(): Promise<void> {
@@ -216,19 +216,19 @@ export class EncryptionUtil extends EncryptionUtilBase {
         return this.publicKey
     }
 
-    async _generateKeyPair(): Promise<void> {
+    private async _generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
             this._generateKeyPairPromise = this.__generateKeyPair()
         }
         return this._generateKeyPairPromise
     }
 
-    async __generateKeyPair(): Promise<void> {
+    private async __generateKeyPair(): Promise<void> {
         if (typeof window !== 'undefined') { return this._keyPairBrowser() }
         return this._keyPairServer()
     }
 
-    async _keyPairServer(): Promise<void> {
+    private async _keyPairServer(): Promise<void> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -247,7 +247,7 @@ export class EncryptionUtil extends EncryptionUtilBase {
         this.publicKey = publicKey
     }
 
-    async _keyPairBrowser(): Promise<void> {
+    private async _keyPairBrowser(): Promise<void> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,

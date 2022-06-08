@@ -2,14 +2,13 @@
  * Public Publishing API
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { scoped, Lifecycle, inject, delay } from 'tsyringe'
+import { scoped, Lifecycle } from 'tsyringe'
 
 import { instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
 import { MessageMetadata, PublishMetadata, PublishPipeline } from './PublishPipeline'
-import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamDefinition } from '../types'
 
 export type { PublishMetadata }
@@ -26,19 +25,19 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 export class Publisher implements Context {
     readonly id
     readonly debug
-    streamMessageQueue
-    publishQueue
-
+    private streamMessageQueue
+    private publishQueue
     private inProgress = new Set<ICancelable>()
 
     constructor(
         context: Context,
-        private pipeline: PublishPipeline,
-        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange
+        private pipeline: PublishPipeline
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+        // @ts-expect-error private
         this.streamMessageQueue = pipeline.streamMessageQueue
+        // @ts-expect-error private
         this.publishQueue = pipeline.publishQueue
     }
 

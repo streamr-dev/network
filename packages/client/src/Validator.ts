@@ -29,10 +29,11 @@ export class SignatureRequiredError extends StreamMessageError {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class Validator extends StreamMessageValidator implements Context {
-    id
-    debug
-    isStopped = false
+    readonly id
+    readonly debug
+    private isStopped = false
     private doValidation: StreamMessageValidator['validate']
+
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,

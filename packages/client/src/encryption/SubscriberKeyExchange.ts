@@ -40,7 +40,7 @@ async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encry
 export class SubscriberKeyExchange implements Context {
     readonly id
     readonly debug
-    encryptionUtil
+    private encryptionUtil: EncryptionUtil
 
     constructor(
         private subscriber: Subscriber,

@@ -10,7 +10,7 @@ import { Ethereum } from '../Ethereum'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Encrypt {
-    isStopped = false
+    private isStopped = false
 
     constructor(
         private streamRegistryCached: StreamRegistryCached,
