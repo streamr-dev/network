@@ -22,6 +22,7 @@ import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
+import { PublishPipeline } from '../../src/publish/PublishPipeline'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -490,7 +491,9 @@ export function getPublishTestStreamMessages(
 
         const contents = new WeakMap()
         // @ts-expect-error private
-        client.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
+        const publishPipeline = client.container.resolve(PublishPipeline)
+        // @ts-expect-error private
+        publishPipeline.streamMessageQueue.onMessage.listen(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)

@@ -25,8 +25,6 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 export class Publisher implements Context {
     readonly id
     readonly debug
-    private streamMessageQueue
-    private publishQueue
     private inProgress = new Set<ICancelable>()
 
     constructor(
@@ -35,10 +33,6 @@ export class Publisher implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        // @ts-expect-error private
-        this.streamMessageQueue = pipeline.streamMessageQueue
-        // @ts-expect-error private
-        this.publishQueue = pipeline.publishQueue
     }
 
     async publish<T>(streamDefinition: StreamDefinition, content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {
