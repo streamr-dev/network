@@ -175,52 +175,11 @@ export class PublisherKeyExchange implements Context {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
-    async rotateGroupKey(streamId: StreamID): Promise<void> {
-        if (!this.enabled) { return }
-        try {
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            await groupKeyStore.rotateGroupKey()
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
-        }
-    }
-
-    async setNextGroupKey(streamId: StreamID, groupKey: GroupKey): Promise<void> {
-        if (!this.enabled) { return }
-        try {
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            if (!this.enabled) { return }
-
-            await groupKeyStore.setNextGroupKey(groupKey)
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
-        }
-    }
-
     async useGroupKey(streamId: StreamID): Promise<never[] | [GroupKey | undefined, GroupKey | undefined]> {
         await this.getSubscription()
         if (!this.enabled) { return [] }
         const groupKeyStore = await this.getGroupKeyStore(streamId)
         if (!this.enabled) { return [] }
         return groupKeyStore.useGroupKey()
-    }
-
-    async hasAnyGroupKey(streamId: StreamID): Promise<boolean> {
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return false }
-        return !(await groupKeyStore.isEmpty())
-    }
-
-    async rekey(streamId: StreamID): Promise<void> {
-        try {
-            if (!this.enabled) { return }
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            if (!this.enabled) { return }
-            await groupKeyStore.rekey()
-            if (!this.enabled) { return }
-            await this.getSubscription()
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
-        }
     }
 }
