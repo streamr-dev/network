@@ -1,11 +1,19 @@
 import { EventEmitter } from 'events'
-import { ControlLayer, MessageLayer, ProxyDirection, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import {
+    ControlLayer,
+    ControlMessage,
+    ErrorResponse,
+    MessageLayer,
+    ProxyDirection,
+    StreamPartID,
+    StreamPartIDUtils
+} from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts, NodeId } from "../identifiers"
-import { ErrorHandlerFn, ErrorResponseHandler } from './ErrorResponseHandler'
+import { ResponseAwaiter } from './ResponseAwaiter'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
@@ -52,13 +60,13 @@ export interface NodeToNode {
 
 export class NodeToNode extends EventEmitter {
     private readonly endpoint: IWebRtcEndpoint
-    private readonly errorResponseHandler: ErrorResponseHandler
+    private readonly responseAwaiter: ResponseAwaiter<ControlMessage>
     private readonly logger: Logger
 
     constructor(endpoint: IWebRtcEndpoint) {
         super()
         this.endpoint = endpoint
-        this.errorResponseHandler = new ErrorResponseHandler(this)
+        this.responseAwaiter = new ResponseAwaiter<ControlMessage>(this, [Event.ERROR_RESPONSE_RECEIVED])
         this.logger = new Logger(module)
         endpoint.on(WebRtcEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WebRtcEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
@@ -82,8 +90,13 @@ export class NodeToNode extends EventEmitter {
         }))
     }
 
-    registerErrorHandler(requestId: string, errorHandler: ErrorHandlerFn): void {
-        this.errorResponseHandler.register(requestId, errorHandler)
+    registerErrorHandler(requestId: string, errorHandler: (errorResponse: ErrorResponse, source: NodeId) => void): void {
+        this.responseAwaiter.register(requestId, (msg, source) => {
+            if (msg instanceof ErrorResponse) {
+                errorHandler(msg, source)
+            }
+            return true
+        })
     }
 
     send<T>(receiverNodeId: NodeId, message: T & ControlLayer.ControlMessage): Promise<T> {

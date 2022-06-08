@@ -3,7 +3,7 @@ import {
     MessageLayer,
     StreamPartID,
     StreamMessage,
-    ProxyDirection
+    ProxyDirection, Receipt
 } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
@@ -23,6 +23,7 @@ import { ReceiptResponder } from './receipts/ReceiptResponder'
 import { ReceiptRequester } from './receipts/ReceiptRequester'
 import { Signers } from './receipts/SignatureFunctions'
 import { ReceiptStore } from './receipts/ReceiptStore'
+import { attachInspectResponder } from './receipts/attachInspectResponder'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -81,6 +82,7 @@ export class Node extends EventEmitter {
     /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
+    private readonly nodeToTracker: NodeToTracker
     private readonly nodeConnectTimeout: number
     private readonly started: string
 
@@ -102,6 +104,7 @@ export class Node extends EventEmitter {
         super()
 
         this.nodeToNode = opts.protocols.nodeToNode
+        this.nodeToTracker = opts.protocols.nodeToTracker
         this.peerInfo = opts.peerInfo
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 15000
         this.consecutiveDeliveryFailures = {}
@@ -129,6 +132,11 @@ export class Node extends EventEmitter {
                 this.receiptStore,
                 opts.signers
             )
+            attachInspectResponder({
+                myPeerInfo: this.peerInfo,
+                receiptStore: this.receiptStore,
+                nodeToTracker: this.nodeToTracker
+            })
         }
 
         this.streamPartManager = new StreamPartManager()
@@ -181,7 +189,7 @@ export class Node extends EventEmitter {
             minPropagationTargets: Math.floor(DEFAULT_MAX_NEIGHBOR_COUNT / 2)
         })
         this.trackerManager = new TrackerManager(
-            opts.protocols.nodeToTracker,
+            this.nodeToTracker,
             opts,
             this.streamPartManager,
             (includeRtt) => ({
@@ -356,6 +364,26 @@ export class Node extends EventEmitter {
         this.receiptRequester?.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
+    }
+
+    protected inspect(nodeId: NodeId, inspectionTarget: NodeId): Promise<Receipt[]> {
+        return withTimeout(new Promise(async (resolve) => {
+            const sharedTrackerId = 'gdsgd'
+            const requestId = await this.nodeToTracker.sendInspectRequestMessage(sharedTrackerId, nodeId, this.peerInfo, inspectionTarget)
+            const results = new Array<Receipt>()
+            this.nodeToTracker.registerRelayMessageHandler(requestId, (relayMessage, _source) => {
+                // TODO: check source?
+                if (relayMessage.isInspectResponsePartMessage()) {
+                    if (relayMessage.data.done) {
+                        resolve(results)
+                        return true
+                    } else {
+                        results.push(relayMessage.data.receipt)
+                    }
+                }
+                return false
+            })
+        }), 60 * 1000, 'sdgasdg')
     }
 
     private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {

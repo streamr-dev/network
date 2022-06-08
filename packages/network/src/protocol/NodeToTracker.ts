@@ -1,6 +1,13 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { RelayMessage, RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
+import {
+    ErrorResponse,
+    Receipt,
+    RelayMessage,
+    RelayMessageSubType,
+    TrackerLayer,
+    TrackerMessage
+} from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { Status, NodeId, TrackerId } from '../identifiers'
@@ -9,6 +16,7 @@ import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
 import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
+import { ResponseAwaiter } from './ResponseAwaiter'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -35,11 +43,13 @@ export type UUID = string
 
 export class NodeToTracker extends EventEmitter {
     private readonly endpoint: AbstractClientWsEndpoint<AbstractWsConnection>
+    private readonly responseAwaiter: ResponseAwaiter<TrackerMessage>
     private readonly logger: Logger
 
     constructor(endpoint: AbstractClientWsEndpoint<AbstractWsConnection>) {
         super()
         this.endpoint = endpoint
+        this.responseAwaiter = new ResponseAwaiter<TrackerMessage>(this, [Event.RELAY_MESSAGE_RECEIVED])
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
@@ -132,8 +142,53 @@ export class NodeToTracker extends EventEmitter {
         return requestId
     }
 
+    async sendInspectRequestMessage(
+        trackerId: TrackerId,
+        targetNode: NodeId,
+        originatorInfo: PeerInfo,
+        inspectionTarget: NodeId
+    ): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
+            originator: originatorInfo,
+            targetNode,
+            subType: RelayMessageSubType.INSPECT_REQUEST,
+            data: {
+                inspectionTarget
+            }
+        }))
+        return requestId
+    }
+
+    async sendInspectResponsePart(
+        trackerId: TrackerId,
+        targetNode: NodeId,
+        originatorInfo: PeerInfo,
+        requestId: string,
+        receipt: Receipt | null
+    ): Promise<UUID> {
+        await this.send(trackerId, new TrackerLayer.RelayMessage({
+            requestId,
+            originator: originatorInfo,
+            targetNode,
+            subType: RelayMessageSubType.INSPECT_RESPONSE_PART,
+            data: receipt !== null ? { receipt } : { done: true }
+        }))
+        return requestId
+    }
+
     async send<T>(receiverTrackerId: TrackerId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
         await this.endpoint.send(receiverTrackerId, message.serialize())
+    }
+
+    registerRelayMessageHandler(requestId: string, handler: (relayMessage: RelayMessage, source: NodeId) => boolean): void {
+        this.responseAwaiter.register(requestId, (msg, source) => {
+            if (msg instanceof RelayMessage) {
+                return handler(msg, source)
+            }
+            return false
+        })
     }
 
     getServerUrlByTrackerId(trackerId: TrackerId): string | undefined {
