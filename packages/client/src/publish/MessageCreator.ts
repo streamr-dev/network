@@ -44,7 +44,6 @@ export class MessageCreatorAnonymous implements IMessageCreator {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class MessageCreator implements IMessageCreator {
-    isStopped = false
     // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
     getMsgChain
@@ -104,12 +103,7 @@ export class MessageCreator implements IMessageCreator {
         })
     }
 
-    async start(): Promise<void> {
-        this.isStopped = false
-    }
-
     async stop(): Promise<void> {
-        this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()
         this.getMsgChain.clear()
