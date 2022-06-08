@@ -1,12 +1,11 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator } from '../../src/RpcCommunicator'
+import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
 import { DhtRpcClient } from '../proto/TestProtos.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../proto/TestProtos'
 import { wait } from 'streamr-test-utils'
 import { Err } from '../../src/errors'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Event as RpcIoEvent } from '../../src/IRpcIo'
 import { CallContext } from '../../src/ServerTransport'
 
 describe('DhtRpc', () => {
@@ -36,11 +35,11 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, outgoingListener2)
         
         client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
         client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
@@ -68,8 +67,8 @@ describe('DhtRpc', () => {
     })
     
     it('Default RPC timeout, client side', async () => {
-        rpcCommunicator2.off(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator2.off(RpcCommunicatorEvents.OUTGOING_MESSAGE, outgoingListener2)
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: CallContext) => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(

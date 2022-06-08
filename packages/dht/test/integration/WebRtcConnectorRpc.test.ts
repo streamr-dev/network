@@ -1,5 +1,4 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
 import {
     IceCandidate,
@@ -13,7 +12,7 @@ import { generateId } from '../../src/helpers/common'
 import { waitForCondition } from 'streamr-test-utils'
 import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { CallContext } from '../../src/rpc-protocol/ServerTransport'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -83,11 +82,11 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

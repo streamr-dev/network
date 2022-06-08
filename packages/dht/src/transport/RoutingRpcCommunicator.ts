@@ -1,9 +1,8 @@
 import { Message, MessageType, PeerDescriptor } from "../proto/DhtRpc"
-import { Event as RpcIoEvent } from "./IRpcIo"
 import { ITransport, Event as TransportEvent } from "./ITransport"
 import { v4 } from "uuid"
-import { CallContext } from "../rpc-protocol/ServerTransport"
-import { RpcCommunicator, RpcCommunicatorConfig } from "./RpcCommunicator"
+import { RpcCommunicator, RpcCommunicatorConfig, RpcCommunicatorEvents } from "@streamr/proto-rpc"
+import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
 
 export class RoutingRpcCommunicator extends RpcCommunicator{
     
@@ -11,16 +10,17 @@ export class RoutingRpcCommunicator extends RpcCommunicator{
         super(config)
         transport.on(TransportEvent.DATA, (peerDescriptor: PeerDescriptor, message: Message) => {    
             if (message.appId == this.ownAppId) {
-                const context = new CallContext()
+                const context = new DhtCallContext()
                 context.incomingSourceDescriptor = peerDescriptor
                 this.handleIncomingMessage(message.body, context)
             }
         })
 
-        this.on(RpcIoEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
+        this.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: DhtCallContext) => {
             
             let targetDescriptor: PeerDescriptor
             // rpc call message
+            
             if (callContext!.targetDescriptor) {
                 targetDescriptor = callContext!.targetDescriptor!
             }

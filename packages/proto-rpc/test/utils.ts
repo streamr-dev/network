@@ -1,4 +1,3 @@
-
 import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from './PeerID'
@@ -11,7 +10,6 @@ interface IDhtRpcWithError extends IDhtRpc {
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
     throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
 }
-
 
 export const MockDhtRpc: IDhtRpcWithError = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {

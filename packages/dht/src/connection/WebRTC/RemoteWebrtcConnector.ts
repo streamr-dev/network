@@ -8,7 +8,7 @@ import {
 } from '../../proto/DhtRpc'
 import { IWebRtcConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
-import { DhtRpcOptions } from '../../rpc-protocol/ClientTransport'
+import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '../../helpers/Logger'
 
 const logger = new Logger(module)

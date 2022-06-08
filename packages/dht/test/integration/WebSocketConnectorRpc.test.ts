@@ -1,5 +1,4 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
 import {
@@ -8,7 +7,7 @@ import {
     WebSocketConnectionResponse
 } from '../../src/proto/DhtRpc'
 import { MockWebSocketConnectorRpc } from '../utils'
-import { CallContext } from '../../src/rpc-protocol/ServerTransport'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebSocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -43,11 +42,11 @@ describe('WebSocketConnectorRpc', () => {
             MockWebSocketConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

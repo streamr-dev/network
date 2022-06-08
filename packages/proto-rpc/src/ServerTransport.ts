@@ -6,7 +6,7 @@ import { promiseTimeout } from './common'
 import { Err } from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from './Logger'
-import { parseWrapper } from './ConversionWrappers'
+import { ConversionWrappers } from './ConversionWrappers'
 import { ProtoRpcOptions } from './ClientTransport'
 
 export enum Event {
@@ -82,7 +82,7 @@ export class ServerTransport extends EventEmitter {
         fn: (rq: RequestType, _context: CallContext) => Promise<NotificationResponse>
     ): void {
         this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext) => {
-            const request = parseWrapper(() => requestClass.fromBinary(bytes))
+            const request = ConversionWrappers.parseWrapper(() => requestClass.fromBinary(bytes))
             const response = await fn(request, callContext)
             return NotificationResponse.toBinary(response)
         })

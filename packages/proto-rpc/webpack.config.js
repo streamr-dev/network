@@ -35,8 +35,6 @@ const fallbacks = (env) => {
 const aliases = (env) => {
     const aliases = {
         'process': 'process/browser',
-        [path.resolve(__dirname, 'src/connection/WebRTC/NodeWebRtcConnection.ts')]:
-            path.resolve(__dirname, 'src/connection/WebRTC/BrowserWebRtcConnection.ts')
     }
     return aliases
 }

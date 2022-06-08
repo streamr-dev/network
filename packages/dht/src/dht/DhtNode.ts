@@ -4,7 +4,6 @@ import PQueue from 'p-queue'
 import EventEmitter from 'events'
 import { SortedContactList } from './SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
-import { RpcCommunicator } from '../transport/RpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
 import {
@@ -526,7 +525,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
     }
 
-    public getRpcCommunicator(): RpcCommunicator {
+    public getRpcCommunicator(): RoutingRpcCommunicator {
         return this.rpcCommunicator!
     }
 

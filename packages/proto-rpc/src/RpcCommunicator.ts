@@ -15,15 +15,19 @@ import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from './Logger'
-import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
 
-export enum Event {
-    OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
-    INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
+export enum RpcCommunicatorEvents {
+    OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
+    //INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
 }
 
 export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number,
+}
+
+interface IRpcIo {
+    handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> 
+    on(event: RpcCommunicatorEvents.OUTGOING_MESSAGE, listener: (message: Uint8Array, callContext?: CallContext) => void): this
 }
 
 interface OngoingRequest {
@@ -67,7 +71,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         })
     }
 
-    async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
+    public async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
         const rpcCall = RpcMessage.fromBinary(message)
         return this.onIncomingMessage(rpcCall, callContext)
     }
@@ -86,7 +90,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
         
-        this.emit(IRpcIoEvents.OUTGOING_MESSAGE, msg, callContext)
+        this.emit(RpcCommunicatorEvents.OUTGOING_MESSAGE, msg, callContext)
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, 

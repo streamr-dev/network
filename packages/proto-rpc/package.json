@@ -7,6 +7,8 @@
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
     "directory": "packages/proto-rpc"
   },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
