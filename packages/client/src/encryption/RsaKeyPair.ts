@@ -65,7 +65,7 @@ export class RsaKeyPair {
 
     async onReady(): Promise<void> {
         if (this.isReady()) { return undefined }
-        return this._generateKeyPair()
+        return this.generateKeyPair()
     }
 
     isReady(this: RsaKeyPair): this is InitializedRsaKeyPair {
@@ -84,19 +84,16 @@ export class RsaKeyPair {
         return this.privateKey
     }
 
-    private async _generateKeyPair(): Promise<void> {
+    private async generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
-            this._generateKeyPairPromise = this.__generateKeyPair()
+            this._generateKeyPairPromise = (typeof window !== 'undefined')
+                ? this.keyPairBrowser()
+                : this.keyPairServer()
         }
         return this._generateKeyPairPromise
     }
 
-    private async __generateKeyPair(): Promise<void> {
-        if (typeof window !== 'undefined') { return this._keyPairBrowser() }
-        return this._keyPairServer()
-    }
-
-    private async _keyPairServer(): Promise<void> {
+    private async keyPairServer(): Promise<void> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -115,7 +112,8 @@ export class RsaKeyPair {
         this.publicKey = publicKey
     }
 
-    private async _keyPairBrowser(): Promise<void> {
+    private async keyPairBrowser(): Promise<void> {
+        // eslint-disable-next-line
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
