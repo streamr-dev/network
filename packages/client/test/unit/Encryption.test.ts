@@ -4,7 +4,7 @@ import { ethers } from 'ethers'
 import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil, RsaKeyPair } from '../../src/encryption/EncryptionUtil'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -25,29 +25,31 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         describe('EncryptionUtil instance', () => {
-            let encryptionUtil: EncryptionUtil
+            let rsaKeyPair: RsaKeyPair
 
             beforeEach(async () => {
-                encryptionUtil = await EncryptionUtil.create()
+                rsaKeyPair = await RsaKeyPair.create()
             }, 10000)
 
             it('rsa decryption after encryption equals the initial plaintext', () => {
                 const plaintext = 'some random text'
-                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey())
-                expect(encryptionUtil.decryptWithPrivateKey(ciphertext).toString('utf8')).toStrictEqual(plaintext)
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), rsaKeyPair.getPublicKey())
+                expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, rsaKeyPair.getPrivateKey()).toString('utf8')).toStrictEqual(plaintext)
             })
 
             it('rsa decryption after encryption equals the initial plaintext (hex strings)', () => {
                 const plaintext = 'some random text'
-                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), encryptionUtil.getPublicKey(), true)
-                expect(encryptionUtil.decryptWithPrivateKey(ciphertext, true).toString('utf8')).toStrictEqual(plaintext)
+                const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), rsaKeyPair.getPublicKey(), true)
+                expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, rsaKeyPair.getPrivateKey(), true).toString('utf8')).toStrictEqual(plaintext)
             })
         })
 
         it('aes decryption after encryption equals the initial plaintext', () => {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
+            // @ts-expect-error private
             const ciphertext = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
+            // @ts-expect-error private
             expect(EncryptionUtil.decrypt(ciphertext, key).toString('utf8')).toStrictEqual(plaintext)
         })
 
@@ -55,6 +57,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
             const plaintextBuffer = Buffer.from(plaintext, 'utf8')
+            // @ts-expect-error private
             const ciphertext = EncryptionUtil.encrypt(plaintextBuffer, key)
             const ciphertextBuffer = ethers.utils.arrayify(`0x${ciphertext}`)
             expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
@@ -63,7 +66,9 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
+            // @ts-expect-error private
             const ciphertext1 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
+            // @ts-expect-error private
             const ciphertext2 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
             expect(ciphertext1.slice(0, 32)).not.toStrictEqual(ciphertext2.slice(0, 32))
             expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))

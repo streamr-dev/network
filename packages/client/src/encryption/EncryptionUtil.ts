@@ -57,10 +57,8 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-// put all static functions into EncryptionUtilBase, with exception of create,
-// so it's clearer what the static & instance APIs look like
-class EncryptionUtilBase {
-    static validatePublicKey(publicKey: crypto.KeyLike): void|never {
+export class EncryptionUtil {
+    private static validatePublicKey(publicKey: crypto.KeyLike): void|never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
@@ -76,7 +74,7 @@ class EncryptionUtilBase {
     // These overrides tell ts outputInHex returns string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
-    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false) {
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false): string | Buffer {
         this.validatePublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         if (outputInHex) {
@@ -86,21 +84,26 @@ class EncryptionUtilBase {
     }
     /* eslint-disable no-dupe-class-members */
 
+    // Returns a Buffer
+    static decryptWithPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
+        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
+        return crypto.privateDecrypt(privateKey, ciphertextBuffer)
+    }
+
     /*
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
-    static encrypt(data: Uint8Array, groupKey: GroupKey): string {
+    private static encrypt(data: Uint8Array, groupKey: GroupKey): string {
         GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
-
         return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
     }
 
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
+    private static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
         GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
@@ -110,7 +113,6 @@ class EncryptionUtilBase {
     /*
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
-
     static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
         GroupKey.validate(groupKey)
         /* eslint-disable no-param-reassign */
@@ -172,26 +174,25 @@ class EncryptionUtilBase {
     }
 }
 
-// after EncryptionUtil is ready
-type InitializedEncryptionUtil = O.Overwrite<EncryptionUtil, {
+// after RsaKeyPair is ready
+type InitializedRsaKeyPair = O.Overwrite<RsaKeyPair, {
     privateKey: string,
     publicKey: string,
 }>
 
-export class EncryptionUtil extends EncryptionUtilBase {
+export class RsaKeyPair {
     /**
      * Creates a new instance + waits for ready.
      * Convenience.
      */
-
-    static async create(): Promise<EncryptionUtil> {
-        const encryptionUtil = new EncryptionUtil()
-        await encryptionUtil.onReady()
-        return encryptionUtil
+    static async create(): Promise<RsaKeyPair> {
+        const pair = new RsaKeyPair()
+        await pair.onReady()
+        return pair
     }
 
-    privateKey: string | undefined
-    publicKey: string | undefined
+    public privateKey: string | undefined
+    public publicKey: string | undefined
     private _generateKeyPairPromise: Promise<void> | undefined
 
     async onReady(): Promise<void> {
@@ -199,36 +200,35 @@ export class EncryptionUtil extends EncryptionUtilBase {
         return this._generateKeyPair()
     }
 
-    isReady(this: EncryptionUtil): this is InitializedEncryptionUtil {
+    isReady(this: RsaKeyPair): this is InitializedRsaKeyPair {
         return (this.privateKey !== undefined && this.publicKey !== undefined)
-    }
-
-    // Returns a Buffer
-    decryptWithPrivateKey(ciphertext: string | Uint8Array, isHexString = false): Buffer {
-        if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
-        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
-        return crypto.privateDecrypt(this.privateKey, ciphertextBuffer)
     }
 
     // Returns a String (base64 encoding)
     getPublicKey(): string {
-        if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
+        if (!this.isReady()) { throw new Error('RsaKeyPair not ready.') }
         return this.publicKey
     }
 
-    async _generateKeyPair(): Promise<void> {
+    // Returns a String (base64 encoding)
+    getPrivateKey(): string {
+        if (!this.isReady()) { throw new Error('RsaKeyPair not ready.') }
+        return this.privateKey
+    }
+
+    private async _generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
             this._generateKeyPairPromise = this.__generateKeyPair()
         }
         return this._generateKeyPairPromise
     }
 
-    async __generateKeyPair(): Promise<void> {
+    private async __generateKeyPair(): Promise<void> {
         if (typeof window !== 'undefined') { return this._keyPairBrowser() }
         return this._keyPairServer()
     }
 
-    async _keyPairServer(): Promise<void> {
+    private async _keyPairServer(): Promise<void> {
         // promisify here to work around browser/server packaging
         const generateKeyPair = promisify(crypto.generateKeyPair)
         const { publicKey, privateKey } = await generateKeyPair('rsa', {
@@ -247,7 +247,7 @@ export class EncryptionUtil extends EncryptionUtilBase {
         this.publicKey = publicKey
     }
 
-    async _keyPairBrowser(): Promise<void> {
+    private async _keyPairBrowser(): Promise<void> {
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
