@@ -1,4 +1,4 @@
-export function decode<R>(serializedMessage: string, deserializeFn: (serializedMessage: string) => R): R | null | never {
+export function decode<R>(serializedMessage: string, deserializeFn: (serializedMessage: string) => R): R | null {
     try {
         return deserializeFn(serializedMessage)
     } catch {
