@@ -29,12 +29,16 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
+    "lodash": "^4.17.21",
+    "pino": "^6.11.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/express": "^4.17.13",
+    "@types/lodash": "^4.14.175",
     "@types/node": "^16.10.6",
+    "@types/pino": "^6.3.8",
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
