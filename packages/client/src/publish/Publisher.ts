@@ -28,7 +28,6 @@ export class Publisher implements Context {
     readonly debug
     streamMessageQueue
     publishQueue
-    isStopped = false
 
     private inProgress = new Set<ICancelable>()
 
@@ -124,12 +123,10 @@ export class Publisher implements Context {
     }
 
     async start(): Promise<void> {
-        this.isStopped = false
         this.pipeline.start()
     }
 
     async stop(): Promise<void> {
-        this.isStopped = true
         await Promise.allSettled([
             this.pipeline.stop(),
             ...[...this.inProgress].map((item) => item.cancel().catch(() => {}))
