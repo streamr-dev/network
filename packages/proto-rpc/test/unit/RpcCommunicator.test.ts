@@ -2,11 +2,10 @@ import { RpcCommunicator } from '../../src/RpcCommunicator'
 import { Event as RpcIoEvent } from '../../src/IRpcIo'
 import {
     NotificationResponse,
-    PingRequest,
-    PingResponse,
     RpcMessage,
     RpcResponseError
 } from '../../src/proto/ProtoRpc'
+import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { DeferredPromises } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/errors'

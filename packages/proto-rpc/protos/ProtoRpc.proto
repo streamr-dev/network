@@ -13,14 +13,6 @@ message NotificationResponse {
     bool sent = 1;
   }
 
-message PingRequest {
-    string nonce = 1;
-  }
-  
-message PingResponse {
-    string nonce = 1;
-  }
-
 message RpcMessage {
     map<string, string> header = 1;
     bytes body = 2;

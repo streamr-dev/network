@@ -14,6 +14,7 @@ import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, Serv
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Logger } from './Logger'
 import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
 
 export enum Event {
