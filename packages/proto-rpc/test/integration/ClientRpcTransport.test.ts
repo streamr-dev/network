@@ -3,7 +3,6 @@ import { RpcMessage } from '../../src/proto/ProtoRpc'
 import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
 import { DhtRpcClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
-import { PeerID } from '../PeerID'
 import { CallContext } from '../../src/ServerTransport'
 
 describe('DhtClientRpcTransport', () => {
@@ -35,7 +34,7 @@ describe('DhtClientRpcTransport', () => {
         const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
-            peerId: PeerID.fromString('peer').value,
+            peerId: new Uint8Array([1,2,3]),
             type: 0
         }
         const response = client.getClosestPeers({peerDescriptor, nonce: '1'})

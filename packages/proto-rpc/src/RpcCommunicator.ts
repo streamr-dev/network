@@ -18,7 +18,6 @@ import { Logger } from './Logger'
 
 export enum RpcCommunicatorEvents {
     OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
-    //INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
 }
 
 export interface RpcCommunicatorConfig {
