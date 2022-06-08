@@ -57,7 +57,6 @@ export class SubscriberKeyExchange implements Context {
         publisherId: string,
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {
-        if (this.isStopped) { return [] }
         const requestId = uuid('GroupKeyRequest')
         const rsaPublicKey = this.encryptionUtil.getPublicKey()
         const msg = new GroupKeyRequest({
