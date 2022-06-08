@@ -1,37 +1,13 @@
-import crypto from 'crypto'
-
 import { ethers } from 'ethers'
 import { MessageLayer, toStreamID } from 'streamr-client-protocol'
-
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { RsaKeyPair } from '../../src/encryption/RsaKeyPair'
 
 const { StreamMessage, MessageID } = MessageLayer
 
 const STREAM_ID = toStreamID('streamId')
 
-describe('EncryptionUtil and RsaKeyPair', () => {
-    describe('RsaKeyPair instance', () => {
-        let rsaKeyPair: RsaKeyPair
-
-        beforeEach(async () => {
-            rsaKeyPair = await RsaKeyPair.create()
-        }, 10000)
-
-        it('rsa decryption after encryption equals the initial plaintext', () => {
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), rsaKeyPair.getPublicKey())
-            expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, rsaKeyPair.getPrivateKey()).toString('utf8')).toStrictEqual(plaintext)
-        })
-
-        it('rsa decryption after encryption equals the initial plaintext (hex strings)', () => {
-            const plaintext = 'some random text'
-            const ciphertext = EncryptionUtil.encryptWithPublicKey(Buffer.from(plaintext, 'utf8'), rsaKeyPair.getPublicKey(), true)
-            expect(EncryptionUtil.decryptWithPrivateKey(ciphertext, rsaKeyPair.getPrivateKey(), true).toString('utf8')).toStrictEqual(plaintext)
-        })
-    })
-
+describe('EncryptionUtil', () => {
     it('aes decryption after encryption equals the initial plaintext', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
@@ -96,24 +72,4 @@ describe('EncryptionUtil and RsaKeyPair', () => {
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
     })
-
-    describe('GroupKey.validate', () => {
-        it('throws if key is the wrong size', () => {
-            expect(() => {
-                GroupKey.validate(GroupKey.from(['test', crypto.randomBytes(16)]))
-            }).toThrow('size')
-        })
-
-        it('throws if key is not a buffer', () => {
-            expect(() => {
-                // @ts-expect-error expected error below is desirable, show typecheks working as intended
-                GroupKey.validate(GroupKey.from(['test', Array.from(crypto.randomBytes(32))]))
-            }).toThrow('Buffer')
-        })
-
-        it('does not throw with valid values', () => {
-            GroupKey.validate(GroupKey.generate())
-        })
-    })
 })
-
