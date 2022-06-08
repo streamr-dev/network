@@ -1,0 +1,11 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+import "ProtoRpc.proto";
+
+service WakeUpRpc {
+  rpc  wakeUp (WakeUpRequest) returns (NotificationResponse);
+}
+
+message WakeUpRequest {
+    string reason = 1;
+  }

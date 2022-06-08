@@ -60,7 +60,7 @@ class HelloService implements IHelloRpc {
     communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
 ```
 
-- start a RPC communicator for the client side, and register the RPC method you just created,
+- start a RPC communicator for the client side, register the RPC method you just created,
   and bind it to the auto-generated HelloClient class
 
 
@@ -69,11 +69,11 @@ class HelloService implements IHelloRpc {
     const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
 ```
 
-- start listening to outgoing packets from the RpcCpommunicators on both the client and server sides, and
+- listen to outgoing packets from the RpcCpommunicators on both the client and server sides, and
   deliver them to the correct recipient. In real life this would happen over a network connection (Websocket, WebRTC, HTTP..)
   but here we will simulate the connection using method calls.
 
-  ```typescript
+```typescript
     communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, 
       (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator2.handleIncomingMessage(msgBody)
@@ -82,21 +82,33 @@ class HelloService implements IHelloRpc {
       (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator1.handleIncomingMessage(msgBody)
     })
-  ```
+```
 
 - make the RPC call and print the result
   
-  ```typescript
+```typescript
     const result = await helloClient.sayHello({ myName: 'Alice' })
     console.log(result.response.greeting)
-  ```
+```
 
 - finally, discard the RpcCommunicators to clean up pontially pending async calls and other
   allocated resources
   
-  ```typescript
+```typescript
     communicator1.stop()
     communicator2.stop()
-  ```
+```
 
-  For complete code example, see [examples/hello](examples) 
+For complete code example, see [examples/hello](examples/hello)
+
+## Advanced topics
+
+### Passing context information (eg. for routing)
+
+You can pass context information through the RpcCommunicator between the clients, RPC methods and the event handlers. This is
+especially useful in case you wish to use a single RpcCommunicator as a server for multiple clients, and need to figure out
+where to route the Uint8Arrays output by the RpcCommunicator. 
+
+### Notifications
+
+### Errors and timeouts

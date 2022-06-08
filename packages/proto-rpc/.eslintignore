@@ -8,3 +8,4 @@ src/proto/**
 test/proto/**
 examples/hello/HelloRpc*
 examples/hello/proto/**
+examples/wakeup/proto/**
