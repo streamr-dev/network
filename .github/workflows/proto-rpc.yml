@@ -1,6 +1,6 @@
 ---
 # Lint, Test and Publish
-name: DHT
+name: Proto-RPC
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
     branches:
       - '*'
 concurrency:
-  group: dht-build-${{ github.head_ref }}
+  group: proto-rpc-build-${{ github.head_ref }}
   cancel-in-progress: true
 defaults:
   run:
