@@ -3,7 +3,6 @@ import { RpcMessage } from '../../src/proto/ProtoRpc'
 import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
 import { DhtRpcClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
-import { PeerID } from '../PeerID'
 import { CallContext } from '../../src/ServerTransport'
 
 describe('DhtClientRpcTransport', () => {
