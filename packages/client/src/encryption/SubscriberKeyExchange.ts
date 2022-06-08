@@ -12,7 +12,8 @@ import {
 } from './KeyExchangeStream'
 
 import { GroupKey } from './GroupKey'
-import { EncryptionUtil, RsaKeyPair } from './EncryptionUtil'
+import { EncryptionUtil } from './EncryptionUtil'
+import { RsaKeyPair } from './RsaKeyPair'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'

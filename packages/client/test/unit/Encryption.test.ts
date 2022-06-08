@@ -4,16 +4,17 @@ import { ethers } from 'ethers'
 import { MessageLayer, toStreamID } from 'streamr-client-protocol'
 
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil, RsaKeyPair } from '../../src/encryption/EncryptionUtil'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { RsaKeyPair } from '../../src/encryption/RsaKeyPair'
 
 const { StreamMessage, MessageID } = MessageLayer
 
 // wrap these tests so can run same tests as if in browser
-function TestEncryptionUtil({ isBrowser = false } = {}) {
+function runTests({ isBrowser = false } = {}) {
     const streamId = toStreamID('streamId')
-    describe(`EncryptionUtil ${isBrowser ? 'Browser' : 'Server'}`, () => {
+    describe(`Environment: ${isBrowser ? 'Browser' : 'Server'}`, () => {
         beforeAll(() => {
-            // this is the toggle used in EncryptionUtil to
+            // this is the toggle used in EncryptionUtil/RsaKeyPair to
             // use the webcrypto apis
             // @ts-expect-error unknown property
             process.browser = !!isBrowser
@@ -24,7 +25,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             process.browser = !isBrowser
         })
 
-        describe('EncryptionUtil instance', () => {
+        describe('RsaKeyPair instance', () => {
             let rsaKeyPair: RsaKeyPair
 
             beforeEach(async () => {
@@ -130,10 +131,10 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
     })
 }
 
-TestEncryptionUtil({
+runTests({
     isBrowser: false,
 })
 
-TestEncryptionUtil({
+runTests({
     isBrowser: true,
 })
