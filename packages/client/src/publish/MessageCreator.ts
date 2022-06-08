@@ -11,7 +11,6 @@ import {
 } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
@@ -44,8 +43,7 @@ export class MessageCreatorAnonymous implements IMessageCreator {
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class MessageCreator implements IMessageCreator, Stoppable {
-    isStopped = false
+export class MessageCreator implements IMessageCreator {
     // encrypt
     queue: ReturnType<typeof LimitAsyncFnByKey>
     getMsgChain
@@ -105,12 +103,7 @@ export class MessageCreator implements IMessageCreator, Stoppable {
         })
     }
 
-    async start(): Promise<void> {
-        this.isStopped = false
-    }
-
     async stop(): Promise<void> {
-        this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()
         this.getMsgChain.clear()

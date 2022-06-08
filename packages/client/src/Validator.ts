@@ -12,7 +12,6 @@ import {
 } from 'streamr-client-protocol'
 
 import { pOrderedResolve, instanceId, CacheFn } from './utils'
-import { Stoppable } from './utils/Stoppable'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
@@ -29,7 +28,7 @@ export class SignatureRequiredError extends StreamMessageError {
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export class Validator extends StreamMessageValidator implements Stoppable, Context {
+export class Validator extends StreamMessageValidator implements Context {
     id
     debug
     isStopped = false

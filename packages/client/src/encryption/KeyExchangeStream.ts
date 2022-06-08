@@ -16,7 +16,6 @@ import { Subscriber } from '../subscribe/Subscriber'
 import { Publisher } from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
 import { Ethereum } from '../Ethereum'
-import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './GroupKey'
 
@@ -61,11 +60,10 @@ function waitForSubMessage(
 const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_TYPES
 
 @scoped(Lifecycle.ContainerScoped)
-export class KeyExchangeStream implements Context, Stoppable {
+export class KeyExchangeStream implements Context {
     readonly id
     readonly debug
     subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }
-    isStopped = false
     constructor(
         context: Context,
         private ethereum: Ethereum,
@@ -94,13 +92,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         return sub
     }
 
-    stop(): void {
-        this.isStopped = true
-    }
-
     async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
-        if (this.isStopped) { return undefined }
-
         const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
 
         let responseTask: Deferred<StreamMessage<unknown>> | undefined
@@ -114,7 +106,6 @@ export class KeyExchangeStream implements Context, Stoppable {
         let sub: Subscription<unknown> | undefined
         try {
             sub = await this.createSubscription()
-            if (this.isStopped || !sub) { return undefined }
             responseTask = waitForSubMessage(sub, (content, streamMessage) => {
                 const { messageType } = streamMessage
                 if (messageType !== GROUP_KEY_RESPONSE && messageType !== GROUP_KEY_ERROR_RESPONSE) {
@@ -124,14 +115,7 @@ export class KeyExchangeStream implements Context, Stoppable {
                 return GroupKeyResponse.fromArray(content).requestId === request.requestId
             })
 
-            if (this.isStopped) { return undefined }
-
             await this.publisher.publish(streamId, request)
-
-            if (this.isStopped) {
-                responseTask.resolve(undefined)
-                return undefined
-            }
 
             return await responseTask
         } catch (err) {
@@ -153,8 +137,6 @@ export class KeyExchangeStream implements Context, Stoppable {
         subscriberId: EthereumAddress, 
         response: GroupKeyResponse | GroupKeyErrorResponse
     ): Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
-        if (this.isStopped) { return undefined }
-
         // hack overriding toStreamMessage method to set correct encryption type
         const toStreamMessage = response.toStreamMessage.bind(response)
         response.toStreamMessage = (...args) => {

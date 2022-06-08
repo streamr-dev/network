@@ -3,7 +3,6 @@ import { DependencyContainer, inject } from 'tsyringe'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 
 import { Scaffold, instanceId, until } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
 import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
@@ -18,7 +17,7 @@ import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export class SubscriptionSession<T> implements Context, Stoppable {
+export class SubscriptionSession<T> implements Context {
     readonly id
     readonly debug
     public readonly streamPartId: StreamPartID

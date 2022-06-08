@@ -7,6 +7,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
+import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
@@ -98,10 +99,12 @@ describe('Group Key Persistence', () => {
             }, 2 * TIMEOUT)
 
             it('works', async () => {
+                // @ts-expect-error private
+                const publisherKeyExchange = publisher2.container.resolve(PublisherKeyExchange)
+                // subscribes to the key exchange stream
                 // TODO: this should probably happen automatically if there are keys
                 // also probably needs to create a connection handle
-                // @ts-expect-error private
-                await publisher2.publisher.startKeyExchange()
+                await publisherKeyExchange.useGroupKey(stream.id)
 
                 const received = []
                 const sub = await subscriber.resend(

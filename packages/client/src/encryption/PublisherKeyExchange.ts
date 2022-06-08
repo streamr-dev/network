@@ -202,15 +202,4 @@ export class PublisherKeyExchange implements Context {
             this.streamRegistryCached.clearStream(streamId)
         }
     }
-
-    async start(): Promise<void> {
-        this.enabled = true
-        await this.subscribe()
-    }
-
-    async stop(): Promise<void> {
-        this.enabled = false
-        this.getSubscription.reset()
-        await this.subscribe()
-    }
 }

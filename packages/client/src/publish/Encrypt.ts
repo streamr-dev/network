@@ -7,10 +7,9 @@ import { StreamRegistryCached } from '../StreamRegistryCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { Ethereum } from '../Ethereum'
-import { Stoppable } from '../utils/Stoppable'
 
 @scoped(Lifecycle.ContainerScoped)
-export class Encrypt implements Stoppable {
+export class Encrypt {
     isStopped = false
 
     constructor(
