@@ -22,13 +22,13 @@
         "packages/eslint-config-monorepo",
         "packages/test-utils",
         "packages/protocol",
+        "packages/proto-rpc",
         "packages/dht",
         "packages/network",
         "packages/network-tracker",
         "packages/client",
         "packages/broker",
-        "packages/cli-tools",
-        "packages/proto-rpc"
+        "packages/cli-tools"
     ],
     "dependencies": {
         "@commitlint/cli": "^12.1.4",
