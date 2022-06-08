@@ -6,6 +6,7 @@ import { MessageID, toStreamID } from '../../../src'
 import OrderingUtil from '../../../src/utils/OrderingUtil'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageRef from '../../../src/protocol/message_layer/MessageRef'
+import { wait } from 'streamr-test-utils'
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp: number | null = null,
