@@ -5,7 +5,9 @@ import {
     EncryptedGroupKey,
     GroupKeyErrorResponse,
     ValidationError,
-    StreamID
+    StreamID,
+    EthereumAddress,
+    GroupKeyRequestSerialized
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
@@ -21,11 +23,47 @@ import { KeyExchangeStream } from './KeyExchangeStream'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { Subscription } from '../subscribe/Subscription'
 import { GroupKeyStore } from './GroupKeyStore'
+import { Debugger } from '../utils/log'
 
 class InvalidGroupKeyRequestError extends ValidationError {
     constructor(msg: string) {
         super(msg, 'INVALID_GROUP_KEY_REQUEST')
     }
+}
+
+export const createGroupKeyResponse = async (
+    streamMessage: StreamMessage<GroupKeyRequestSerialized>,
+    getGroupKey: (groupKeyId: string, streamId: StreamID) => Promise<GroupKey | undefined>,
+    isStreamSubscriber: (streamId: StreamID, ethAddress: EthereumAddress) => Promise<boolean>,
+    debug?: Debugger
+): Promise<GroupKeyResponse> => {
+    const request = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
+    const subscriberId = streamMessage.getPublisherId()
+    // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
+    const { requestId, streamId, rsaPublicKey, groupKeyIds } = request
+
+    const isSubscriber = await isStreamSubscriber(streamId, subscriberId)
+    
+    const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
+        const groupKey = await getGroupKey(id, streamId)
+        if (!groupKey) {
+            return null // will be filtered out
+        }
+        const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
+        return new EncryptedGroupKey(id, key)
+    }))).filter(Boolean) as EncryptedGroupKey[]
+
+    debug?.('Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
+        subscriberId,
+        groupKeyIds,
+        responseKeys: encryptedGroupKeys.map(({ groupKeyId }) => groupKeyId),
+    })
+
+    return new GroupKeyResponse({
+        streamId,
+        requestId,
+        encryptedGroupKeys,
+    })
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -84,34 +122,17 @@ export class PublisherKeyExchange implements Context {
                 return
             }
 
-            // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-            const { requestId, streamId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
+            const response = await createGroupKeyResponse(
+                streamMessage,
+                async (groupKeyId: string, streamId: StreamID) => {
+                    const store = await this.groupKeyStoreFactory.getStore(streamId)
+                    return store.get(groupKeyId)
+                },
+                (streamId: StreamID, address: EthereumAddress) => this.streamRegistryCached.isStreamSubscriber(streamId, address),
+                this.debug
+            )
 
             const subscriberId = streamMessage.getPublisherId()
-
-            const isSubscriber = await this.streamRegistryCached.isStreamSubscriber(streamId, subscriberId)
-            const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
-            const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
-                const groupKey = await groupKeyStore.get(id)
-                if (!groupKey) {
-                    return null // will be filtered out
-                }
-                const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
-                return new EncryptedGroupKey(id, key)
-            }))).filter(Boolean) as EncryptedGroupKey[]
-
-            this.debug('Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
-                subscriberId,
-                groupKeyIds,
-                responseKeys: encryptedGroupKeys.map(({ groupKeyId }) => groupKeyId),
-            })
-
-            const response = new GroupKeyResponse({
-                streamId,
-                requestId,
-                encryptedGroupKeys,
-            })
-
             await this.keyExchangeStream.response(subscriberId, response)
         } catch (err: any) {
             if (!('streamMessage' in err)) {
