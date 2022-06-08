@@ -139,6 +139,15 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
+    addSubscriber(streamPartId: StreamPartID, onMessage: (msg: StreamMessage<unknown>) => unknown): void {
+        this.networkNodeStub.addMessageListener((msg: StreamMessage) => {
+            if (msg.getStreamPartID() === streamPartId) {
+                onMessage(msg)
+            }
+        })
+        this.networkNodeStub.subscribe(streamPartId)
+    }
+
     async getNodeId(): Promise<EthereumAddress> {
         return this.id
     }

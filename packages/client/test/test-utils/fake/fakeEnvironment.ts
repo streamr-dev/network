@@ -14,6 +14,7 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeHttpUtil } from './FakeHttpUtil'
 import { HttpUtil } from '../../../src/HttpUtil'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export interface ClientFactory {
     createClient: (opts?: StreamrClientConfig) => StreamrClient
@@ -76,4 +77,15 @@ export const createClientFactory = (): ClientFactory => {
             return new StreamrClient(config, mockContainer)
         }
     }
+}
+
+export const addFakeNode = (
+    nodeId: EthereumAddress,
+    mockContainer: DependencyContainer
+): FakeBrubeckNode => {
+    const activeNodes = mockContainer.resolve(ActiveNodes)
+    const destroySignal = mockContainer.resolve(DestroySignal)
+    const node = new FakeBrubeckNode(nodeId, activeNodes, destroySignal)
+    activeNodes.addNode(node)
+    return node
 }
