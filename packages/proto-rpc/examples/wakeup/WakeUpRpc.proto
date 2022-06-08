@@ -1,9 +1,10 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
-import "ProtoRpc.proto";
+
+import "google/protobuf/empty.proto";
 
 service WakeUpRpc {
-  rpc  wakeUp (WakeUpRequest) returns (NotificationResponse);
+  rpc  wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
 }
 
 message WakeUpRequest {

@@ -5,12 +5,14 @@ import { NodeType, PeerDescriptor } from './proto/TestProtos'
 import { IDhtRpc } from './proto/TestProtos.server'
 
 interface IDhtRpcWithError extends IDhtRpc {
-    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
-    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
+    throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
+    respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
     throwRouteMessageError: (request: RouteMessageWrapper, _context: ServerCallContext) => Promise<RouteMessageAck>
 }
 
+let timeoutCounter = 0
+const timeouts: { [key: string]: any } = {}
 export const MockDhtRpc: IDhtRpcWithError = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()
@@ -43,7 +45,12 @@ export const MockDhtRpc: IDhtRpcWithError = {
             const response: PingResponse = {
                 nonce: request.nonce
             }
-            setTimeout(() => resolve(response), 2000)
+            timeoutCounter++
+            const timeoutId = '' + timeoutCounter
+            timeouts[timeoutId] = setTimeout(() => {
+                delete timeouts[timeoutId]
+                resolve(response)
+            }, 2000)
         })
     },
     async throwGetClosestPeersError(_urequest: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
@@ -51,6 +58,13 @@ export const MockDhtRpc: IDhtRpcWithError = {
     },
     async throwRouteMessageError(_urequest: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         throw new Error()
+    }
+}
+
+export function clearMockTimeouts(): void {
+    for (const [k, v] of Object.entries(timeouts)) {
+        clearTimeout(v)
+        delete timeouts[k]
     }
 }
 

@@ -6,10 +6,10 @@ import {
     Event as DhtTransportClientEvent
 } from './ClientTransport'
 import {
-    NotificationResponse,
     RpcMessage,
     RpcResponseError
 } from './proto/ProtoRpc'
+import { Empty } from './proto/google/protobuf/empty'
 import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from './ServerTransport'
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
@@ -127,7 +127,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
         requestClass: RequestClass,
         name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<NotificationResponse>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
     ): void {
         this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
     }
@@ -252,11 +252,10 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     }
 
     private notificationResponse(requestId: string): RpcMessage {
-        const notificationResponse: NotificationResponse = {
-            sent: true
-        }
+        const ret: Empty = {}
+
         const wrapper: RpcMessage = {
-            body: NotificationResponse.toBinary(notificationResponse),
+            body: Empty.toBinary(ret),
             header: {},
             requestId,
         }

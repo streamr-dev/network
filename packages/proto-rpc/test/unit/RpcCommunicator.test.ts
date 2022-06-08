@@ -1,15 +1,15 @@
 import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
 import {
-    NotificationResponse,
     RpcMessage,
     RpcResponseError
 } from '../../src/proto/ProtoRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { DeferredPromises } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/errors'
 import { waitForCondition } from 'streamr-test-utils'
-import { MockDhtRpc } from '../utils'
+import { MockDhtRpc, clearMockTimeouts } from '../utils'
 import { CallContext } from '../../src/ServerTransport'
 
 describe('RpcCommunicator', () => {
@@ -57,6 +57,10 @@ describe('RpcCommunicator', () => {
 
     afterEach(() => {
         rpcCommunicator.stop()
+    })
+
+    afterAll(() => {
+        clearMockTimeouts()
     })
 
     it('Resolves Promises', async () => {
@@ -120,10 +124,10 @@ describe('RpcCommunicator', () => {
                 notification: 'notification'
             }
         }
-        promises.messageParser = (bytes: Uint8Array) => NotificationResponse.fromBinary(bytes)
+        promises.messageParser = (bytes: Uint8Array) => Empty.fromBinary(bytes)
         rpcCommunicator.onOutgoingMessage(notification, promises)
-        const res = await promises.message.promise as NotificationResponse
-        expect(res.sent).toEqual(true)
+        const res = await promises.message.promise as Empty
+        expect(res).toBeTruthy()
     })
 
     it('Success responses to requests', async () => {

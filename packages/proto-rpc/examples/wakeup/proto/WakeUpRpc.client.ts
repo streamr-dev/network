@@ -5,7 +5,7 @@ import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { WakeUpRpc } from "./WakeUpRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
-import type { NotificationResponse } from "./ProtoRpc";
+import type { Empty } from "./google/protobuf/empty";
 import type { WakeUpRequest } from "./WakeUpRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
@@ -14,9 +14,9 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
  */
 export interface IWakeUpRpcClient {
     /**
-     * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (NotificationResponse);
+     * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (google.protobuf.Empty);
      */
-    wakeUp(input: WakeUpRequest, options?: RpcOptions): UnaryCall<WakeUpRequest, NotificationResponse>;
+    wakeUp(input: WakeUpRequest, options?: RpcOptions): UnaryCall<WakeUpRequest, Empty>;
 }
 /**
  * @generated from protobuf service WakeUpRpc
@@ -28,10 +28,10 @@ export class WakeUpRpcClient implements IWakeUpRpcClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (NotificationResponse);
+     * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (google.protobuf.Empty);
      */
-    wakeUp(input: WakeUpRequest, options?: RpcOptions): UnaryCall<WakeUpRequest, NotificationResponse> {
+    wakeUp(input: WakeUpRequest, options?: RpcOptions): UnaryCall<WakeUpRequest, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<WakeUpRequest, NotificationResponse>("unary", this._transport, method, opt, input);
+        return stackIntercept<WakeUpRequest, Empty>("unary", this._transport, method, opt, input);
     }
 }

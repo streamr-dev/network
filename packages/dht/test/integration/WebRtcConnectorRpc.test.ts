@@ -2,12 +2,12 @@ import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
 import {
     IceCandidate,
-    NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer,
     WebRtcConnectionRequest
 } from '../../src/proto/DhtRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
 import { generateId } from '../../src/helpers/common'
 import { waitForCondition } from 'streamr-test-utils'
 import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
@@ -43,35 +43,27 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator1 = new RpcCommunicator()
         const serverFunctions: IWebRtcConnector = {
 
-            requestConnection: async (_urequest: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> => {
+            requestConnection: async (_urequest: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> => {
                 requestConnectionCounter += 1
-                const res: NotificationResponse = {
-                    sent: true
-                }
+                const res: Empty = {}
                 return res
             },
 
-            rtcOffer: async (_urequest: RtcOffer, _context: ServerCallContext): Promise<NotificationResponse> => {
+            rtcOffer: async (_urequest: RtcOffer, _context: ServerCallContext): Promise<Empty> => {
                 rtcOfferCounter += 1
-                const res: NotificationResponse = {
-                    sent: true
-                }
+                const res: Empty = {}
                 return res
             },
 
-            rtcAnswer: async (_urequest: RtcAnswer, _context: ServerCallContext): Promise<NotificationResponse> => {
+            rtcAnswer: async (_urequest: RtcAnswer, _context: ServerCallContext): Promise<Empty> => {
                 rtcAnswerCounter += 1
-                const res: NotificationResponse = {
-                    sent: true
-                }
+                const res: Empty = {}
                 return res
             },
 
-            iceCandidate: async (_urequest: IceCandidate, _context: ServerCallContext): Promise<NotificationResponse> => {
+            iceCandidate: async (_urequest: IceCandidate, _context: ServerCallContext): Promise<Empty> => {
                 iceCandidateCounter += 1
-                const res: NotificationResponse = {
-                    sent: true
-                }
+                const res: Empty = {}
                 return res
             }
         }
@@ -107,7 +99,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor: peerDescriptor2, notification: true }
         )
         const res = await response.response
-        await (expect(res.sent)).toEqual(true)
+        await (expect(res)).toBeTruthy()
         await waitForCondition(() => requestConnectionCounter === 1)
     })
 
@@ -121,7 +113,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor: peerDescriptor2, notification: true }
         )
         const res = await response.response
-        await (expect(res.sent)).toEqual(true)
+        await (expect(res)).toBeTruthy()
         await waitForCondition(() => rtcOfferCounter === 1)
     })
 
@@ -135,7 +127,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor: peerDescriptor2, notification: true }
         )
         const res = await response.response
-        await (expect(res.sent)).toEqual(true)
+        await (expect(res)).toBeTruthy()
         await waitForCondition(() => rtcAnswerCounter === 1)
     })
 
@@ -150,7 +142,7 @@ describe('WebRTC rpc messages', () => {
         { targetDescriptor: peerDescriptor2, notification: true }
         )
         const res = await response.response
-        await (expect(res.sent)).toEqual(true)
+        await (expect(res)).toBeTruthy()
         await waitForCondition(() => iceCandidateCounter === 1)
     })
 })

@@ -3,20 +3,18 @@ import { RpcCommunicator, RpcCommunicatorEvents, CallContext } from '@streamr/pr
 import { IWakeUpRpc } from './proto/WakeUpRpc.server'
 import { WakeUpRequest } from './proto/WakeUpRpc'
 import { WakeUpRpcClient } from './proto/WakeUpRpc.client'
-
-import { NotificationResponse } from './proto/ProtoRpc'
+import { Empty } from './proto/google/protobuf/empty'
 
 // Rpc service
 class WakeUpService implements IWakeUpRpc {
     constructor(public nodeId: string) {
         this.wakeUp = this.wakeUp.bind(this)
     }
-    async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<NotificationResponse> {
-        console.log("WakeUp of node "+this.nodeId+" called with reason: "+ request.reason)
-        const res: NotificationResponse = {
-            sent: true
-        }
-        return res
+    // You always have return google.protobuf.Empty from notifications
+    async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
+        console.log("WakeUp notification of node "+this.nodeId+" called with reason: "+ request.reason)
+        const ret: Empty = {}
+        return ret
     }
 }
 

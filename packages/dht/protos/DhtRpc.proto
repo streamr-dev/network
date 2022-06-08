@@ -1,6 +1,7 @@
 syntax = "proto3";
-
 option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
 
 service DhtRpc {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
@@ -13,10 +14,10 @@ service WebSocketConnector {
 }
 
 service WebRtcConnector {
-  rpc requestConnection (WebRtcConnectionRequest) returns (NotificationResponse);
-  rpc rtcOffer (RtcOffer) returns (NotificationResponse);
-  rpc rtcAnswer (RtcAnswer) returns (NotificationResponse);
-  rpc iceCandidate (IceCandidate) returns (NotificationResponse);
+  rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
+  rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
+  rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
+  rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
 }
 
 // Used inside RpcMessage
@@ -141,10 +142,6 @@ message Message {
 }
 
 // Connector Messages
-
-message NotificationResponse {
-  bool sent = 1;
-}
 
 // WebSocket
 message WebSocketConnectionRequest {
