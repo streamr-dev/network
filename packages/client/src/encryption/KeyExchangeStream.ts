@@ -16,7 +16,6 @@ import { Subscriber } from '../subscribe/Subscriber'
 import { Publisher } from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
 import { Ethereum } from '../Ethereum'
-import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './GroupKey'
 
@@ -61,7 +60,7 @@ function waitForSubMessage(
 const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_TYPES
 
 @scoped(Lifecycle.ContainerScoped)
-export class KeyExchangeStream implements Context, Stoppable {
+export class KeyExchangeStream implements Context {
     readonly id
     readonly debug
     subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }

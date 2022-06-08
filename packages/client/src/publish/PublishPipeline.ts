@@ -9,7 +9,6 @@ import { instanceId, Defer, Deferred } from '../utils'
 import { Context, ContextError } from '../utils/Context'
 import { Pipeline } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { Stoppable } from '../utils/Stoppable'
 
 import { MessageCreator } from './MessageCreator'
 import { BrubeckNode } from '../BrubeckNode'
@@ -65,7 +64,7 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublishPipeline implements Context, Stoppable {
+export class PublishPipeline implements Context {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */

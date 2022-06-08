@@ -9,7 +9,6 @@ import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 
 import { MessageMetadata, PublishMetadata, PublishPipeline } from './PublishPipeline'
-import { Stoppable } from '../utils/Stoppable'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamDefinition } from '../types'
 
@@ -24,7 +23,7 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class Publisher implements Context, Stoppable {
+export class Publisher implements Context {
     readonly id
     readonly debug
     streamMessageQueue
