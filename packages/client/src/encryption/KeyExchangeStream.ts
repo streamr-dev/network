@@ -8,7 +8,7 @@ import {
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
-import { pOnce, Defer, instanceId, Deferred } from '../utils'
+import { pOnce, instanceId } from '../utils'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 
@@ -18,6 +18,7 @@ import { Subscription } from '../subscribe/Subscription'
 import { Ethereum } from '../Ethereum'
 
 import { GroupKey, GroupKeyish } from './GroupKey'
+import { publishAndWaitForResponseMessage } from '../utils/waitForMessage'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
@@ -31,30 +32,6 @@ export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKe
         if (!value || !key) { return null }
         return [key, GroupKey.from(value)]
     }).filter(Boolean) as [])
-}
-
-type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
-
-function waitForSubMessage(
-    sub: Subscription<unknown>,
-    matchFn: MessageMatch
-): Deferred<StreamMessage> {
-    const task = Defer<StreamMessage>()
-    const onMessage = (streamMessage: StreamMessage) => {
-        try {
-            if (matchFn(streamMessage.getContent(), streamMessage)) {
-                task.resolve(streamMessage)
-            }
-        } catch (err) {
-            task.reject(err)
-        }
-    }
-    task.finally(async () => {
-        await sub.unsubscribe()
-    }).catch(() => {}) // important: prevent unchained finally cleanup causing unhandled rejection
-    sub.consume(onMessage).catch((err) => task.reject(err))
-    sub.onError.listen(task.reject)
-    return task
 }
 
 const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_TYPES
@@ -96,42 +73,22 @@ export class KeyExchangeStream implements Context {
     async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
         const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
 
-        let responseTask: Deferred<StreamMessage<unknown>> | undefined
-        const onDestroy = () => {
-            if (responseTask) {
-                responseTask.resolve(undefined)
+        const matchFn = (streamMessage: StreamMessage) => {
+            const { messageType } = streamMessage
+            if (messageType !== GROUP_KEY_RESPONSE && messageType !== GROUP_KEY_ERROR_RESPONSE) {
+                return false
             }
+            const content = streamMessage.getContent() as any
+            return GroupKeyResponse.fromArray(content).requestId === request.requestId
         }
 
-        this.destroySignal.onDestroy.listen(onDestroy)
-        let sub: Subscription<unknown> | undefined
-        try {
-            sub = await this.createSubscription()
-            responseTask = waitForSubMessage(sub, (content, streamMessage) => {
-                const { messageType } = streamMessage
-                if (messageType !== GROUP_KEY_RESPONSE && messageType !== GROUP_KEY_ERROR_RESPONSE) {
-                    return false
-                }
-
-                return GroupKeyResponse.fromArray(content).requestId === request.requestId
-            })
-
-            await this.publisher.publish(streamId, request)
-
-            return await responseTask
-        } catch (err) {
-            if (responseTask) {
-                responseTask.reject(err)
-            }
-            throw err
-        } finally {
-            this.destroySignal.onDestroy.unlisten(onDestroy)
-            this.subscribe.reset()
-            if (sub) {
-                await sub.unsubscribe()
-            }
-            await responseTask
-        }
+        return publishAndWaitForResponseMessage(
+            () => this.publisher.publish(streamId, request),
+            matchFn,
+            () => this.createSubscription(),
+            () => this.subscribe.reset(),
+            this.destroySignal,
+        )
     }
 
     async response(
