@@ -1,78 +1,86 @@
-/**
- eslint-disable array-bracket-spacing
+import 'reflect-metadata'
+import { EthereumAddress, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { Ethereum } from '../../src/Ethereum'
 import { MessageCreator } from '../../src/publish/MessageCreator'
-import { StreamIDish } from '../../src/publish/utils'
-import { createMockAddress } from '../utils'
+import { StreamPartitioner } from '../../src/publish/StreamPartitioner'
 
 const MOCK_STREAM_ID = 'mock-stream-id'
-const MOCK_STREAM_PARTITION = 123
-const MOCK_PARTITION_KEY = 'mock-partition-key'
+const MOCK_STREAM_PARTITION = 50
 const MOCK_CONTENT = { foo: 'bar' }
 const MOCK_TIMESTAMP = 1234567890
-const DEFAULT_STREAM_PARTITION = 0
+const MOCK_USER_ADDRESS = '0xAbcdeabCDE123456789012345678901234567890'
 
 const createMockMessageCreator = () => {
-    const userAddress = createMockAddress()
-    const cachedStream = {
-        id: MOCK_STREAM_ID,
-        partitions: 456
-    }
-    const client = {
-        options: {},
-        cached: {
-            getStream: jest.fn().mockResolvedValueOnce(cachedStream),
-            getUserId: jest.fn().mockResolvedValueOnce(undefined)
+    const streamPartitioner: Pick<StreamPartitioner, 'compute' | 'clear'> = {
+        compute: async (): Promise<number> => {
+            return MOCK_STREAM_PARTITION
         },
-        canEncrypt: jest.fn().mockReturnValue(true),
-        getAddress: jest.fn().mockResolvedValue(userAddress)
+        clear: () => {}
     }
-    return new MessageCreator(client as any)
+    const ethereum: Pick<Ethereum, 'getAddress'> = {
+        getAddress: async (): Promise<EthereumAddress> => {
+            return MOCK_USER_ADDRESS
+        }
+    }
+    return new MessageCreator(
+        streamPartitioner as any, 
+        ethereum as any,
+        {
+            maxSize: 1,
+            maxAge: 0
+        }
+    )
 }
 
-const createMockMessage = async (streamObjectOrId: StreamIDish, partitionKey?: string) => {
+const createMockMessage = async (streamId: string, partitionKey?: string) => {
     const creator = createMockMessageCreator()
-    return creator.create(streamObjectOrId, {
+    const result = await creator.create(toStreamID(streamId), {
         content: MOCK_CONTENT,
         timestamp: MOCK_TIMESTAMP,
         partitionKey
     })
+    creator.stop()
+    return result
 }
 
 describe('MessageCreator', () => {
 
-    describe('parse partition', () => {
-
-        describe.each([
-            // See NET-344 for possible specification change for the first three assertions
-            [ MOCK_STREAM_ID, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { id: MOCK_STREAM_ID }, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { streamId: MOCK_STREAM_ID }, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
-            [ { streamId: MOCK_STREAM_ID, streamPartition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
-            [ MOCK_STREAM_ID, MOCK_PARTITION_KEY, 85 ]
-        ])('valid', (definition: StreamIDish, partitionKey: string|undefined, expectedPartition: number) => {
-            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, async () => {
-                const msg = await createMockMessage(definition, partitionKey)
-                expect(msg.getParsedContent()).toBe(MOCK_CONTENT)
-                expect(msg.messageId.streamId).toBe(MOCK_STREAM_ID)
-                expect(msg.messageId.streamPartition).toBe(expectedPartition)
-                expect(msg.messageId.timestamp).toBe(MOCK_TIMESTAMP)
-            })
+    it('happy path', async () => {
+        const msg = await createMockMessage(MOCK_STREAM_ID, undefined)
+        expect(msg).toEqual({
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            groupKeyId: null,
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: MOCK_USER_ADDRESS.toLowerCase(),
+                sequenceNumber: 0,
+                streamId: MOCK_STREAM_ID,
+                streamPartition: MOCK_STREAM_PARTITION,
+                timestamp: MOCK_TIMESTAMP,
+            },
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            newGroupKey: null,
+            parsedContent: MOCK_CONTENT,
+            prevMsgRef: null,
+            serializedContent: JSON.stringify(MOCK_CONTENT),
+            signature: null,
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         })
+    })
 
-        describe.each([
-            [ { partition: MOCK_STREAM_PARTITION }, undefined, 'First argument must be a Stream object or the stream id!'],
-            [ { streamPartition: MOCK_STREAM_PARTITION }, undefined, 'First argument must be a Stream object or the stream id!'],
-            [ {}, undefined, 'First argument must be a Stream object or the stream id!' ],
-            [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, MOCK_PARTITION_KEY, 'Invalid combination of "partition" and "partitionKey"']
-        ])('invalid', (definition: StreamIDish, partitionKey: string|undefined, expectedErrorMessage: string) => {
-            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, () => {
-                return expect(() => createMockMessage(definition, partitionKey)).rejects.toThrow(expectedErrorMessage)
-            })
+    it('chaining', async () => {
+        const creator = createMockMessageCreator()
+        const msg1 = await creator.create(toStreamID(MOCK_STREAM_ID), {
+            content: MOCK_CONTENT,
+            timestamp: MOCK_TIMESTAMP
         })
-
+        const msg2 = await creator.create(toStreamID(MOCK_STREAM_ID), {
+            content: MOCK_CONTENT,
+            timestamp: MOCK_TIMESTAMP
+        })
+        expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
+        expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+        creator.stop()
     })
 })
-*/
-
-it.skip('is skipped', () => {})
