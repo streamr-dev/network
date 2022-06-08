@@ -65,7 +65,8 @@ export class StreamrClient implements Context {
 
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const config = createStrictConfig(options)
-        const { childContainer: container } = initContainer(config, parentContainer)
+        const container = parentContainer.createChildContainer()
+        initContainer(config, container)
 
         this.container = container
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
@@ -423,9 +424,8 @@ export class StreamrClient implements Context {
  */
 export function initContainer(
     config: StrictStreamrClientConfig, 
-    parentContainer = rootContainer
-): { childContainer: DependencyContainer; rootContext: Context } {
-    const c = parentContainer.createChildContainer()
+    c: DependencyContainer
+): Context {
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
@@ -472,8 +472,5 @@ export function initContainer(
         c.register(token, { useValue })
     })
 
-    return {
-        childContainer: c,
-        rootContext
-    }
+    return rootContext
 }
