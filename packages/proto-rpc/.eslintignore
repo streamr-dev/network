@@ -6,3 +6,5 @@ docs/**
 .idea/**
 src/proto/**
 test/proto/**
+examples/hello/HelloRpc*
+examples/hello/proto/**
