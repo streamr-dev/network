@@ -3,14 +3,10 @@ import { PersistentStore } from './PersistentStore'
 import { StreamID } from 'streamr-client-protocol'
 
 export default class BrowserPersistentStore implements PersistentStore<string, string> {
-    private readonly clientId: string
-    private readonly streamId: string
     private store: UseStore
     private dbName: string
 
     constructor({ clientId, streamId }: { clientId: string, streamId: StreamID }) {
-        this.streamId = encodeURIComponent(streamId)
-        this.clientId = encodeURIComponent(clientId)
         this.dbName = `streamr-client::${clientId}::${streamId}`
         this.store = createStore(this.dbName, 'GroupKeys')
     }
