@@ -61,7 +61,7 @@ export class Signer {
             throw new Error('Timestamp is required as part of the data to sign.')
         }
 
-        if (signatureType !== SignatureType.ETH_LEGACY && signatureType !== SignatureType.ETH) {
+        if (signatureType !== SignatureType.ETH) {
             throw new Error(`Unrecognized signature type: ${signatureType}`)
         }
 
