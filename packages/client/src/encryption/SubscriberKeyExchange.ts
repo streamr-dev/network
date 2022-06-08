@@ -53,7 +53,7 @@ export class SubscriberKeyExchange implements Context {
         this.rsaKeyPair = new RsaKeyPair()
     }
 
-    async requestKeys({ streamId, publisherId, groupKeyIds }: {
+    private async requestKeys({ streamId, publisherId, groupKeyIds }: {
         streamId: StreamID,
         publisherId: string,
         groupKeyIds: GroupKeyId[]
@@ -70,11 +70,11 @@ export class SubscriberKeyExchange implements Context {
         return response ? getGroupKeysFromStreamMessage(response, this.rsaKeyPair.getPrivateKey()) : []
     }
 
-    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
+    private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
-    async getKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
+    private async getKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
         const streamId = streamMessage.getStreamId()
         const publisherId = streamMessage.getPublisherId()
         const { groupKeyId } = streamMessage

@@ -86,7 +86,7 @@ export class PublisherKeyExchange implements Context {
         this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
     }
 
-    getWrapError(
+    private getWrapError(
         streamMessage: StreamMessage
     ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
         return async (error: ValidationError) => {
@@ -171,7 +171,7 @@ export class PublisherKeyExchange implements Context {
         return sub
     }
 
-    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
+    private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
