@@ -35,7 +35,7 @@ describe('DhtClientRpcTransport', () => {
         const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
-            peerId: PeerID.fromString('peer').value,
+            peerId: new Uint8Array([1,2,3]),
             type: 0
         }
         const response = client.getClosestPeers({peerDescriptor, nonce: '1'})

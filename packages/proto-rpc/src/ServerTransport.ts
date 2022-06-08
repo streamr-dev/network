@@ -96,9 +96,7 @@ export class ServerTransport extends EventEmitter {
 
 export class CallContext implements ServerCallContext, ProtoRpcOptions {
     [extra: string]: unknown
-    
-    //used by client
-   
+
     notification?: boolean
     method: MethodInfo<any, any> = {
         // @ts-expect-error TS2322

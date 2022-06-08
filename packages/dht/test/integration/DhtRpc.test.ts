@@ -1,10 +1,9 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvents, RpcError } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
-import { Err } from '../../src/helpers/errors'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -76,7 +75,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response2.response).rejects.toEqual(
-            new Err.RpcTimeout('Rpc request timed out')
+            new RpcError.RpcTimeout('Rpc request timed out')
         )
     })
 
@@ -102,7 +101,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new Err.RpcTimeout('Server timed out on request')
+            new RpcError.RpcTimeout('Server timed out on request')
         )
         clearTimeout(timeout!)
     })
@@ -113,7 +112,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new Err.UnknownRpcMethod('Server does not implement method ping')
+            new RpcError.UnknownRpcMethod('Server does not implement method ping')
         )
     })
 })

@@ -9,8 +9,7 @@
         "google/**/*"
     ],
     "exclude": [
-        "dist",
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+        "dist"
     ],
     "references": [
 

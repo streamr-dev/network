@@ -34,15 +34,6 @@ export interface DeferredPromises {
     messageParser: (bytes: Uint8Array) => object
 }
 
-/*
-export interface DhtRpcOptions extends RpcOptions {
-    targetDescriptor?: PeerDescriptor
-    sourceDescriptor?: PeerDescriptor
-    notification?: boolean
-    clientId?: number
-}
-*/
-
 export interface ProtoRpcOptions extends RpcOptions {
     notification?: boolean
 }

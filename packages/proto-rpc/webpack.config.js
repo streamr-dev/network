@@ -7,7 +7,6 @@ const libraryName = pkg.name
 
 const externals = (env) => {
     const externals = {
-        'node-datachannel': 'commonjs node-datachannel',
         'http': 'HTTP',
         'https': 'HTTPS',
         'express': 'Express',
