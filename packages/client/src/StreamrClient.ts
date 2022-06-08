@@ -380,6 +380,7 @@ export class StreamrClient implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.publisher.stop(),
             this.subscriber.stop(),
+            this.groupKeyStore.stop()
         ]
 
         await Promise.allSettled(tasks)

@@ -88,4 +88,11 @@ export class GroupKeyStoreFactory implements Context {
         const store = await this.getStore(streamId)
         return store.rekey(newKey)
     }
+
+    async stop(): Promise<void> {
+        this.getStore.clear()
+        const { cleanupFns } = this
+        this.cleanupFns = []
+        await Promise.allSettled(cleanupFns)
+    }
 }
