@@ -1,7 +1,4 @@
-import {
-    PeerDescriptor,
-    Simulator
-} from '@streamr/dht'
+import { PeerDescriptor } from '@streamr/dht'
 import { RpcCommunicator, CallContext, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
 import { DataMessage } from '../../src/proto/NetworkRpc'
@@ -10,10 +7,6 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 describe('Network RPC', () => {
-    const peer1: PeerDescriptor = {
-        peerId: new Uint8Array([1,1,1]),
-        type: 1
-    }
     const peer2: PeerDescriptor = {
         peerId: new Uint8Array([2,2,2]),
         type: 1
