@@ -15,7 +15,7 @@ Unlike existing protobuf RPC frameworks such as gRPC, gRPC-web and twirp, proto-
 - install the library
 
 ```bash
-`npm install @streamr/proto-rpc`
+npm install @streamr/proto-rpc
 ```
 
 - write RPC service description in a `.proto` file:
