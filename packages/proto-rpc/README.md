@@ -138,3 +138,20 @@ async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty
 For a complete code example of using notifications, see [examples/wakeup](examples/wakeup)
 
 ### Errors and timeouts
+
+All standard errors in the library can be found the `src/errors.ts` file.
+
+- `RpcTimeout` is thrown by default whenever the client or server times out its operations.
+- `RpcRequest` is thrown by the server to be sent as an error response back to the client if the request fails.
+- `FailedToParse` is thrown whenever parsing a protobuf message fails.
+- `FailedToSerialize` is thrown whenever serializing a protobuf message fails.
+- `UnknownRcMethod` is thrown whenever a server receives an RPC call for a method that it has not registered
+- `NotImplemented` is thrown whenever something internal that is not supposed to be used is called. For example ts-protobuf ServerCallContext methods.
+
+When developing you can use the errors as follows:
+
+```typescript
+throw new RpcError.RpcTimeout()
+throw new RpcError.RpcTimeout('RPC Request timed out')
+throw new RpcError.RpcTimeout('RPC Request timed out', originalError)
+```
