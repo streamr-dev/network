@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 
-describe('GroupKey.validate', () => {
+describe('GroupKey', () => {
 
     describe('validate', () => {
         it('throws if key is the wrong size', () => {
