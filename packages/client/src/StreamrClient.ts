@@ -56,7 +56,7 @@ export class StreamrClient implements Context {
     private publisher: Publisher
     private subscriber: Subscriber
     private proxyPublishSubscribe: ProxyPublishSubscribe
-    private groupKeyStore: GroupKeyStoreFactory
+    private groupKeyStoreFactory: GroupKeyStoreFactory
     private destroySignal: DestroySignal
     private streamRegistry: StreamRegistry
     private storageNodeRegistry: StorageNodeRegistry
@@ -65,7 +65,8 @@ export class StreamrClient implements Context {
 
     constructor(options: StreamrClientConfig = {}, parentContainer = rootContainer) {
         const config = createStrictConfig(options)
-        const { childContainer: container } = initContainer(config, parentContainer)
+        const container = parentContainer.createChildContainer()
+        initContainer(config, container)
 
         this.container = container
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
@@ -74,7 +75,7 @@ export class StreamrClient implements Context {
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.proxyPublishSubscribe = container.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe)
-        this.groupKeyStore = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
+        this.groupKeyStoreFactory = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
@@ -109,14 +110,15 @@ export class StreamrClient implements Context {
             throw new Error('streamId required')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
+        const store = await this.groupKeyStoreFactory.getStore(streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
-                return this.groupKeyStore.rotateGroupKey(streamId)
+                return store.rotateGroupKey()
             } else { // eslint-disable-line no-else-return
-                return this.groupKeyStore.setNextGroupKey(streamId, opts.key)
+                return store.setNextGroupKey(opts.key)
             }
         } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
-            return this.groupKeyStore.rekey(streamId, opts.key)
+            return store.rekey(opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
@@ -380,7 +382,7 @@ export class StreamrClient implements Context {
             this.destroySignal.destroy().then(() => undefined),
             this.publisher.stop(),
             this.subscriber.stop(),
-            this.groupKeyStore.stop()
+            this.groupKeyStoreFactory.stop()
         ]
 
         await Promise.allSettled(tasks)
@@ -423,9 +425,8 @@ export class StreamrClient implements Context {
  */
 export function initContainer(
     config: StrictStreamrClientConfig, 
-    parentContainer = rootContainer
-): { childContainer: DependencyContainer; rootContext: Context } {
-    const c = parentContainer.createChildContainer()
+    c: DependencyContainer
+): Context {
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
     const debug = Debug(id)
@@ -472,8 +473,5 @@ export function initContainer(
         c.register(token, { useValue })
     })
 
-    return {
-        childContainer: c,
-        rootContext
-    }
+    return rootContext
 }

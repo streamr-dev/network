@@ -3,7 +3,7 @@ import MessageRef from "./MessageRef"
 import StreamMessage from "./StreamMessage"
 import { StreamMessageType } from "./StreamMessage"
 import GroupKeyMessage from "./GroupKeyMessage"
-import GroupKeyRequest from "./GroupKeyRequest"
+import GroupKeyRequest, { GroupKeyRequestSerialized } from "./GroupKeyRequest"
 import GroupKeyResponse from "./GroupKeyResponse"
 import GroupKeyAnnounce from "./GroupKeyAnnounce"
 import GroupKeyErrorResponse from "./GroupKeyErrorResponse"
@@ -21,6 +21,7 @@ export {
     StreamMessageType,
     GroupKeyMessage,
     GroupKeyRequest,
+    GroupKeyRequestSerialized,
     GroupKeyResponse,
     GroupKeyAnnounce,
     GroupKeyErrorResponse,

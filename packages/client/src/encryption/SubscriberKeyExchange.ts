@@ -18,7 +18,7 @@ import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
 
-async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
+export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
     if (GroupKeyResponse.is(streamMessage)) {
         encryptedGroupKeys = GroupKeyResponse.fromArray(streamMessage.getParsedContent() || []).encryptedGroupKeys || []
@@ -30,7 +30,7 @@ async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPr
     const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
-            await EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
         )
     ))
     await Promise.allSettled(tasks)
@@ -53,7 +53,7 @@ export class SubscriberKeyExchange implements Context {
         this.rsaKeyPair = new RsaKeyPair()
     }
 
-    async requestKeys({ streamId, publisherId, groupKeyIds }: {
+    private async requestKeys({ streamId, publisherId, groupKeyIds }: {
         streamId: StreamID,
         publisherId: string,
         groupKeyIds: GroupKeyId[]
@@ -70,11 +70,11 @@ export class SubscriberKeyExchange implements Context {
         return response ? getGroupKeysFromStreamMessage(response, this.rsaKeyPair.getPrivateKey()) : []
     }
 
-    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
+    private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
         return this.groupKeyStoreFactory.getStore(streamId)
     }
 
-    async getKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
+    private async getKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
         const streamId = streamMessage.getStreamId()
         const publisherId = streamMessage.getPublisherId()
         const { groupKeyId } = streamMessage

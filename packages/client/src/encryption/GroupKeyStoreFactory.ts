@@ -70,26 +70,6 @@ export class GroupKeyStoreFactory implements Context {
         return store
     }
 
-    async useGroupKey(streamId: StreamID): Promise<[GroupKey | undefined, GroupKey | undefined]> {
-        const store = await this.getStore(streamId)
-        return store.useGroupKey()
-    }
-
-    async rotateGroupKey(streamId: StreamID): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.rotateGroupKey()
-    }
-
-    async setNextGroupKey(streamId: StreamID, newKey: GroupKey): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.setNextGroupKey(newKey)
-    }
-
-    async rekey(streamId: StreamID, newKey?: GroupKey): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.rekey(newKey)
-    }
-
     async stop(): Promise<void> {
         this.getStore.clear()
         const { cleanupFns } = this

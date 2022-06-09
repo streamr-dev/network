@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
 import { StreamrClient, initContainer } from '../../src/StreamrClient'
-import { container, DependencyContainer } from 'tsyringe'
+import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId, Defer } from '../../src/utils'
 
@@ -37,7 +37,7 @@ describe('MemoryLeaks', () => {
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
-        leaksDetector.ignoreAll(container)
+        leaksDetector.ignoreAll(rootContainer)
         leaksDetector.ignoreAll(ethers)
         snapshot()
     })
@@ -66,7 +66,8 @@ describe('MemoryLeaks', () => {
                     },
                     ...opts,
                 })
-                const { childContainer, rootContext } = initContainer(config)
+                const childContainer = rootContainer.createChildContainer()
+                const rootContext = initContainer(config, childContainer)
                 return { config, childContainer, rootContext }
             }
         })
