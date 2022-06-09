@@ -39,12 +39,12 @@ const createMockStream = async (
     return stream
 }
 
-const createMockGroupKeyRequest = (
+const createGroupKeyRequest = (
     streamId: StreamID,
     rsaPublicKey: string,
     subscriberWallet: Wallet,
     publisherAddress: EthereumAddress
-) => {
+): StreamMessage => {
     const publisherKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(publisherAddress)
     const msg = new StreamMessage({
         messageId: new MessageID(publisherKeyExchangeStreamId, DEFAULT_PARTITION, 0, 0, subscriberWallet.address, 'msgChainId'),
@@ -85,11 +85,15 @@ describe('PublisherKeyExchange', () => {
         publisherRsaKeyPair = await RsaKeyPair.create()
     })
 
-    it('responses to a group key request', async () => {
+    /*
+     * A publisher node starts a subscription to receive group key requests
+     * - tests that a correct kind of response message is sent to a subscriber node
+     */
+    it('responds to a group key request', async () => {
         const publisherKeyExchange = fakeContainer.resolve(PublisherKeyExchange)
         await publisherKeyExchange.useGroupKey(mockStream.id) // subscribes to the key exchange stream
 
-        const groupKeyRequest = createMockGroupKeyRequest(
+        const groupKeyRequest = createGroupKeyRequest(
             mockStream.id,
             publisherRsaKeyPair.getPublicKey(),
             subscriberWallet,

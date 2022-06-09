@@ -74,6 +74,11 @@ describe('SubscriberKeyExchange', () => {
         mockStream = await createMockStream(publisherWallet.address, fakeContainer)
     })
 
+    /*
+     * A subscriber node requests a group key by calling subscriberKeyExchange.getGroupKey()
+     * - tests that a correct kind of request message is sent to a publisher node
+     * - tests that we can parse the group key from the response sent by the publisher
+     */
     it('requests a group key', async () => {
         const groupKeyRequests: StreamMessage<GroupKeyRequestSerialized>[] = []
         const publisherNode = addFakeNode(publisherWallet.address, fakeContainer)
