@@ -108,10 +108,16 @@ describe('SubscriberKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
+        expect(groupKeyRequest.getParsedContent()).toEqual([
+            expect.any(String),
+            mockStream.id,
+            expect.any(String),
+            [ MOCK_GROUP_KEY.id ]
+        ])
         
         const groupKeyResponse = await createMockGroupKeyResponse(groupKeyRequest, publisherWallet) 
         publisherNode.publishToNode(groupKeyResponse)
         
-        expect((await receivedGroupKey)!.hex).toBe(MOCK_GROUP_KEY.hex)
+        expect((await receivedGroupKey)!).toEqual(MOCK_GROUP_KEY)
     })
 })
