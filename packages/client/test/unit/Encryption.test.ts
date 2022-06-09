@@ -47,7 +47,9 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('aes decryption after encryption equals the initial plaintext', () => {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
+            // @ts-expect-error private
             const ciphertext = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
+            // @ts-expect-error private
             expect(EncryptionUtil.decrypt(ciphertext, key).toString('utf8')).toStrictEqual(plaintext)
         })
 
@@ -55,6 +57,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
             const plaintextBuffer = Buffer.from(plaintext, 'utf8')
+            // @ts-expect-error private
             const ciphertext = EncryptionUtil.encrypt(plaintextBuffer, key)
             const ciphertextBuffer = ethers.utils.arrayify(`0x${ciphertext}`)
             expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
@@ -63,7 +66,9 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
             const key = GroupKey.generate()
             const plaintext = 'some random text'
+            // @ts-expect-error private
             const ciphertext1 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
+            // @ts-expect-error private
             const ciphertext2 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
             expect(ciphertext1.slice(0, 32)).not.toStrictEqual(ciphertext2.slice(0, 32))
             expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))

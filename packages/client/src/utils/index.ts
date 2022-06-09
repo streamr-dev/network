@@ -534,7 +534,8 @@ export function pOnce<ArgsType extends unknown[], ReturnType>(
 }
 
 export class TimeoutError extends Error {
-    timeout: number
+    public timeout: number
+    
     constructor(msg = '', timeout = 0) {
         super(`The operation timed out. ${timeout}ms. ${msg}`)
         this.timeout = timeout

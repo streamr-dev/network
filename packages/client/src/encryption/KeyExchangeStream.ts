@@ -63,7 +63,8 @@ const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_T
 export class KeyExchangeStream implements Context {
     readonly id
     readonly debug
-    subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }
+    public subscribe: (() => Promise<Subscription<unknown>>) & { reset(): void }
+    
     constructor(
         context: Context,
         private ethereum: Ethereum,

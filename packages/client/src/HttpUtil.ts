@@ -19,10 +19,10 @@ export const DEFAULT_HEADERS = {
 }
 
 export class AuthFetchError extends Error {
-    response?: Response
-    body?: any
-    code: ErrorCode
-    errorCode: ErrorCode
+    public response?: Response
+    public body?: any
+    public code: ErrorCode
+    public errorCode: ErrorCode
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {

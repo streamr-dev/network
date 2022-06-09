@@ -30,10 +30,10 @@ class InvalidGroupKeyRequestError extends ValidationError {
 
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange implements Context {
-    enabled = true
+    private enabled = true
     readonly id
     readonly debug
-    getSubscription
+    private getSubscription: (() => Promise<Subscription<unknown> | undefined>) & { reset(): void, isStarted(): boolean }
 
     constructor(
         @inject(delay(() => Publisher)) private publisher: Publisher,

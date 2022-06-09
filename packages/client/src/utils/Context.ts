@@ -10,8 +10,9 @@ export abstract class Context {
 }
 
 export class ContextError extends Error {
-    context: Context
-    code?: string
+    public context: Context
+    public code?: string
+    
     constructor(context: Context, message: string = '', ...args: any[]) {
         // @ts-expect-error inspectOpts not in debug types
         super(`${context?.id}: ${formatWithOptions({ ...(context?.debug?.inspectOpts || {}), colors: false }, message, ...args)}`)

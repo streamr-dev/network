@@ -24,14 +24,13 @@ export type ServerPersistentStoreOptions = {
 
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
     readonly id: string
-    readonly clientId: string
-    readonly streamId: string
-    readonly dbFilePath: string
+    private readonly streamId: string
+    private readonly dbFilePath: string
     private store?: Database
     private error?: Error
     private readonly initialData
     private initCalled = false
-    readonly migrationsPath: string
+    private readonly migrationsPath: string
     readonly debug
 
     constructor({
@@ -45,7 +44,6 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.streamId = encodeURIComponent(streamId)
-        this.clientId = encodeURIComponent(clientId)
         this.initialData = initialData
         const paths = envPaths('streamr-client')
         const dbFilePath = resolve(paths.data, join(rootPath, clientId, 'GroupKeys.db'))

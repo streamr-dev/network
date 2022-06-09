@@ -39,9 +39,9 @@ export function getCachedMessageChain(cacheConfig: CacheConfig):
 export class MessageChain {
     private readonly streamId: StreamID
     private readonly streamPartition: number
-    readonly publisherId
-    readonly msgChainId
-    prevMsgRef?: MessageRef
+    private readonly publisherId: string
+    private readonly msgChainId: string
+    private prevMsgRef?: MessageRef
 
     constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
