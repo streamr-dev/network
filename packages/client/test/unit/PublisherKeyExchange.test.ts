@@ -14,7 +14,6 @@ import { StreamRegistry } from '../../src/StreamRegistry'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
-import { waitForCondition } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { RsaKeyPair } from '../../src/encryption/RsaKeyPair'
 import { Stream } from '../../src/Stream'
@@ -98,22 +97,19 @@ describe('PublisherKeyExchange', () => {
         const publisherKeyExchange = fakeContainer.resolve(PublisherKeyExchange)
         await publisherKeyExchange.useGroupKey(mockStream.id) // subscribes to the key exchange stream
 
+        const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
+        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+        const receivedMessages = subscriberNode.addSubscriber(subscriberKeyExchangeStreamPartId)
+
         const groupKeyRequest = createGroupKeyRequest(
             mockStream.id,
             subscriberRsaKeyPair.getPublicKey(),
             subscriberWallet,
             publisherWallet.address
         )
-        const groupKeyResponses: StreamMessage[] = []
-        const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
-        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
-        subscriberNode.addSubscriber(subscriberKeyExchangeStreamPartId, (msg: StreamMessage) => {
-            groupKeyResponses.push(msg)
-        })
         subscriberNode.publishToNode(groupKeyRequest)
 
-        await waitForCondition(() => groupKeyResponses.length > 0)
-        const groupKeyResponse = groupKeyResponses[0]
+        const groupKeyResponse = await receivedMessages.pop()
         expect(groupKeyResponse).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),

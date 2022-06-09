@@ -12,7 +12,6 @@ import {
 import { StreamRegistry } from '../../src/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { createGroupKeyResponse } from '../../src/encryption/PublisherKeyExchange'
-import { waitForCondition } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
@@ -85,12 +84,9 @@ describe('SubscriberKeyExchange', () => {
      * - tests that we can parse the group key from the response sent by the publisher
      */
     it('requests a group key', async () => {
-        const groupKeyRequests: StreamMessage<GroupKeyRequestSerialized>[] = []
         const publisherNode = addFakeNode(publisherWallet.address, fakeContainer)
         const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
-        publisherNode.addSubscriber(publisherKeyExchangeStreamPartId, (msg: StreamMessage) => {
-            groupKeyRequests.push(msg as any)
-        })
+        const receivedMessages = publisherNode.addSubscriber(publisherKeyExchangeStreamPartId)
     
         const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
         const receivedGroupKey = subscriberKeyExchange.getGroupKey({
@@ -99,8 +95,7 @@ describe('SubscriberKeyExchange', () => {
             groupKeyId: MOCK_GROUP_KEY.id
         } as any)
         
-        await waitForCondition(() => groupKeyRequests.length > 0)
-        const groupKeyRequest = groupKeyRequests[0]
+        const groupKeyRequest = await receivedMessages.pop()
         expect(groupKeyRequest).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(publisherKeyExchangeStreamPartId),
@@ -120,7 +115,7 @@ describe('SubscriberKeyExchange', () => {
             [ MOCK_GROUP_KEY.id ]
         ])
         
-        const groupKeyResponse = await createMockGroupKeyResponse(groupKeyRequest, publisherWallet) 
+        const groupKeyResponse = await createMockGroupKeyResponse(groupKeyRequest as any, publisherWallet) 
         publisherNode.publishToNode(groupKeyResponse)
         
         expect((await receivedGroupKey)!).toEqual(MOCK_GROUP_KEY)
