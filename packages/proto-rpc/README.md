@@ -137,7 +137,7 @@ async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty
 
 For a complete code example of using notifications, see [examples/wakeup](examples/wakeup)
 
-### Errors and timeouts
+### Errors
 
 All standard errors in the library can be found the `src/errors.ts` file.
 
@@ -154,4 +154,13 @@ When developing you can use the errors as follows:
 throw new RpcError.RpcTimeout()
 throw new RpcError.RpcTimeout('RPC Request timed out')
 throw new RpcError.RpcTimeout('RPC Request timed out', originalError)
+```
+
+### Timeouts
+
+Client side timeouts can be set along side requests via the options parameter. By default the client side timeout is `5000` milliseconds.
+
+Example:
+```typescript
+	await helloClient.sayHello({ myName: 'Alice' }, { timeout: 15000 })
 ```
