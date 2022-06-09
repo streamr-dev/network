@@ -13,17 +13,17 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { TODO } from '../types'
-import { PeerDescriptor, RpcMessage } from '../proto/DhtRpc'
+import { TODO } from './types'
+import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
-import { Logger } from '../helpers/Logger'
+import { Logger } from './Logger'
 
 export enum Event {
     RPC_REQUEST = 'streamr:dht-transport:request-new'
 }
 
 export interface ClientTransport {
-    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage, options: DhtRpcOptions) => void): this
+    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage, options: ProtoRpcOptions) => void): this
 }
 
 export interface DeferredPromises {
@@ -34,11 +34,8 @@ export interface DeferredPromises {
     messageParser: (bytes: Uint8Array) => object
 }
 
-export interface DhtRpcOptions extends RpcOptions {
-    targetDescriptor?: PeerDescriptor
-    sourceDescriptor?: PeerDescriptor
+export interface ProtoRpcOptions extends RpcOptions {
     notification?: boolean
-    clientId?: number
 }
 
 const logger = new Logger(module)
@@ -60,7 +57,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         }
     }
 
-    mergeOptions(options?: Partial<DhtRpcOptions>): RpcOptions {
+    mergeOptions(options?: Partial<ProtoRpcOptions>): RpcOptions {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
@@ -72,7 +69,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         }
     }
 
-    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: DhtRpcOptions): UnaryCall<I, O> {
+    unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
         const
             requestBody = method.I.toBinary(input),
             defHeader = new Deferred<RpcMetadata>(),

@@ -22,6 +22,7 @@
         "packages/eslint-config-monorepo",
         "packages/test-utils",
         "packages/protocol",
+        "packages/proto-rpc",
         "packages/dht",
         "packages/network",
         "packages/network-tracker",
