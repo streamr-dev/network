@@ -2,9 +2,9 @@ import assert from 'assert'
 import { KeyExchangeStreamIDUtils } from '../../../src/utils/KeyExchangeStreamID'
 import { toStreamID } from '../../../src/utils/StreamID'
 
-describe('formKeyExchangeStreamID', () => {
-    it('forms key-exchange stream ids', () => {
-        expect(KeyExchangeStreamIDUtils.formKeyExchangeStreamID('0xFaFa1234')).toEqual('SYSTEM/keyexchange/0xfafa1234')
+describe('formStreamPartID', () => {
+    it('forms key-exchange stream part id', () => {
+        expect(KeyExchangeStreamIDUtils.formStreamPartID('0xFaFa1234')).toEqual('SYSTEM/keyexchange/0xfafa1234#0')
     })
 })
 

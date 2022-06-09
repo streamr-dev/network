@@ -59,7 +59,7 @@ describe('isPathOnlyFormat', () => {
     })
 
     it('returns false on key-exchange format', () => {
-        expect(StreamIDUtils.isPathOnlyFormat(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toEqual(false)
+        expect(StreamIDUtils.isPathOnlyFormat(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toEqual(false)
     })
 
     it('returns false on legacy format', () => {
@@ -81,7 +81,7 @@ describe('getDomainAndPath', () => {
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomainAndPath(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getDomainAndPath(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
     })
 
     it('returns domain and path for full stream id', () => {
@@ -96,7 +96,7 @@ describe('getDomain', () => {
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomain(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getDomain(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
     })
 
     it('returns address for full stream id', () => {
@@ -135,7 +135,7 @@ describe('getPath', () => {
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getPath(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getPath(toStreamID(KeyExchangeStreamIDUtils.formStreamPartID(address)))).toBeUndefined()
     })
 
     it('returns path for full stream id', () => {
