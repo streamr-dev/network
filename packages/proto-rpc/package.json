@@ -1,6 +1,6 @@
 {
   "name": "@streamr/proto-rpc",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Proto-RPC",
   "repository": {
     "type": "git",

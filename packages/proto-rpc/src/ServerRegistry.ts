@@ -10,14 +10,14 @@ import { ConversionWrappers } from './ConversionWrappers'
 import { ProtoRpcOptions } from './ClientTransport'
 import { Empty } from './proto/google/protobuf/empty'
 
-export enum Event {
+export enum ServerRegistryEvent {
     RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
     RPC_REQUEST = 'streamr:dht-transport:server:request-new',
 }
 
-export interface ServerTransport {
-    on(event: Event.RPC_RESPONSE, listener: (rpcMessage: RpcMessage) => void): this
-    on(event: Event.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
+export interface ServerRegistry {
+    on(event: ServerRegistryEvent.RPC_RESPONSE, listener: (rpcMessage: RpcMessage) => void): this
+    on(event: ServerRegistryEvent.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
 }
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
@@ -28,7 +28,7 @@ export type RegisteredNotification = (request: Uint8Array, callContext: CallCont
 
 const logger = new Logger(module)
 
-export class ServerTransport extends EventEmitter {
+export class ServerRegistry extends EventEmitter {
     methods: Map<string, RegisteredMethod | RegisteredNotification>
     private stopped = false
     constructor() {
@@ -36,7 +36,7 @@ export class ServerTransport extends EventEmitter {
         this.methods = new Map()
     }
 
-    async onRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Uint8Array> {
+    public async onRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Uint8Array> {
         if (this.stopped) {
             return new Uint8Array()
         }
@@ -50,7 +50,7 @@ export class ServerTransport extends EventEmitter {
         return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new CallContext()))
     }
 
-    async onNotification(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Empty> {
+    public async onNotification(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Empty> {
         if (this.stopped) {
             return {} as Empty
         }
@@ -63,7 +63,7 @@ export class ServerTransport extends EventEmitter {
         return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new CallContext()))
     }
 
-    removeMethod(name: string): void {
+    public removeMethod(name: string): void {
         this.methods.delete(name)
     }
 
@@ -79,7 +79,7 @@ export class ServerTransport extends EventEmitter {
         })
     }
 
-    registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
+    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
         requestClass: RequestClass, name: string,
         fn: (rq: RequestType, _context: CallContext) => Promise<Empty>
     ): void {
@@ -91,7 +91,7 @@ export class ServerTransport extends EventEmitter {
         })
     }
 
-    stop(): void {
+    public stop(): void {
         this.stopped = true
         this.methods.clear()
     }

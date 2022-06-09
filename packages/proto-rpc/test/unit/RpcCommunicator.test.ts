@@ -10,7 +10,7 @@ import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/errors'
 import { waitForCondition } from 'streamr-test-utils'
 import { MockDhtRpc, clearMockTimeouts } from '../utils'
-import { CallContext } from '../../src/ServerTransport'
+import { CallContext } from '../../src/ServerRegistry'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator

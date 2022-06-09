@@ -10,7 +10,7 @@ import {
     RpcResponseError
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
-import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from './ServerTransport'
+import { CallContext, ServerRegistryEvent as ServerRegistryEvent, Parser, Serializer, ServerRegistry } from './ServerRegistry'
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -41,7 +41,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private static objectCounter = 0
     private objectId = 0
     private readonly rpcClientTransport: ClientTransport
-    private readonly rpcServerTransport: ServerTransport
+    private readonly rpcServerRegistry: ServerRegistry
     private readonly ongoingRequests: Map<string, OngoingRequest>
     private defaultRpcRequestTimeout = 5000 
 
@@ -55,7 +55,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         
         this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
-        this.rpcServerTransport = new ServerTransport()
+        this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
         
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
@@ -65,7 +65,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         ) => {
             this.onOutgoingMessage(rpcMessage, deferredPromises, options as CallContext)
         })
-        this.rpcServerTransport.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
+        this.rpcServerRegistry.on(ServerRegistryEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
     }
@@ -121,7 +121,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
     (requestClass: RequestClass, returnClass: ReturnClass,
         name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
-        this.rpcServerTransport.registerRpcMethod(requestClass, returnClass, name, fn)
+        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 
     public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
@@ -129,7 +129,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         name: string,
         fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
     ): void {
-        this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
+        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
     }
 
     private async handleRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {
@@ -138,7 +138,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         let response: RpcMessage
         try {
-            const bytes = await this.rpcServerTransport.onRequest(rpcMessage, callContext)
+            const bytes = await this.rpcServerRegistry.onRequest(rpcMessage, callContext)
             response = this.createResponseRpcMessage({
                 request: rpcMessage,
                 body: bytes
@@ -164,7 +164,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             return
         }
         try {
-            await this.rpcServerTransport.onNotification(rpcMessage, callContext)
+            await this.rpcServerRegistry.onNotification(rpcMessage, callContext)
         } catch (err) { }
     }
 
@@ -271,6 +271,6 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.removeAllListeners()
         this.ongoingRequests.clear()
         this.rpcClientTransport.stop()
-        this.rpcServerTransport.stop()
+        this.rpcServerRegistry.stop()
     }
 }

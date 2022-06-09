@@ -99,7 +99,7 @@ class HelloService implements IHelloRpc {
     communicator2.stop()
 ```
 
-For complete code example, see [examples/hello](examples/hello)
+For a complete code example, see [examples/hello](examples/hello)
 
 ## Advanced topics
 
@@ -109,6 +109,32 @@ You can pass context information through the RpcCommunicator between the clients
 especially useful in case you wish to use a single RpcCommunicator as a server for multiple clients, and need to figure out
 where to route the Uint8Arrays output by the RpcCommunicator. 
 
+For a complete code example of passing context information, see [examples/routed-hello](examples/routed-hello)
+
 ### Notifications
+
+Unlike gRPC, proto-rpc supports JSON-RPC style notifications (RPC functions that return nothing). 
+
+- In the .proto service definitions, the notification functions need to have `google.protobuf.Empty` as their return type.
+
+```proto
+service WakeUpRpc {
+  rpc  wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
+}
+```
+
+- The notification function implementations need to return a `google.protobuf.Empty` object.
+
+```typescript
+async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
+        console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
+        const ret: Empty = {}
+        return ret
+    }
+```
+
+- In case of a notification call, RpcCommunicator does not file the `RpcCommunicatorEvents.OUTGOING_MESSAGE` event for the return value.
+
+For a complete code example of using notifications, see [examples/wakeup](examples/wakeup)
 
 ### Errors and timeouts
