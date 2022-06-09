@@ -51,7 +51,7 @@ export const createGroupKeyResponse = async (
         }
         const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
         return new EncryptedGroupKey(id, key)
-    }))).filter(Boolean) as EncryptedGroupKey[]
+    }))).filter((item) => item !== null) as EncryptedGroupKey[]
 
     debug?.('Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
         subscriberId,
