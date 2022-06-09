@@ -67,7 +67,7 @@ describe('PublisherKeyExchange', () => {
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let mockStream: Stream
-    let publisherRsaKeyPair: RsaKeyPair
+    let subscriberRsaKeyPair: RsaKeyPair
     let fakeContainer: DependencyContainer
 
     beforeAll(async () => {
@@ -82,7 +82,7 @@ describe('PublisherKeyExchange', () => {
         const groupKeyStoreFactory = fakeContainer.resolve(GroupKeyStoreFactory)
         const groupKeyStore = await groupKeyStoreFactory.getStore(mockStream.id)
         groupKeyStore.add(MOCK_GROUP_KEY)
-        publisherRsaKeyPair = await RsaKeyPair.create()
+        subscriberRsaKeyPair = await RsaKeyPair.create()
     })
 
     /*
@@ -95,7 +95,7 @@ describe('PublisherKeyExchange', () => {
 
         const groupKeyRequest = createGroupKeyRequest(
             mockStream.id,
-            publisherRsaKeyPair.getPublicKey(),
+            subscriberRsaKeyPair.getPublicKey(),
             subscriberWallet,
             publisherWallet.address
         )
@@ -121,8 +121,8 @@ describe('PublisherKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
-        const groupKeys = await getGroupKeysFromStreamMessage(groupKeyResponse, publisherRsaKeyPair.getPrivateKey())
+        const groupKeys = await getGroupKeysFromStreamMessage(groupKeyResponse, subscriberRsaKeyPair.getPrivateKey())
         expect(groupKeys).toHaveLength(1)
-        expect(groupKeys[0].hex).toBe(MOCK_GROUP_KEY.hex)
+        expect(groupKeys[0]).toEqual(MOCK_GROUP_KEY)
     })
 })
