@@ -21,14 +21,14 @@ import { SubscribeConfig } from '../Config'
 export class OrderMessages<T> implements Context {
     readonly id
     readonly debug
-    stopSignal = Signal.once()
-    done = false
-    resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
-    outBuffer = new PushBuffer<StreamMessage<T>>()
-    inputClosed = false
-    orderMessages: boolean
-    enabled = true
-    orderingUtil
+    private stopSignal = Signal.once()
+    private done = false
+    private resendStreams = new Set<MessageStream<T>>() // holds outstanding resends for cleanup
+    private outBuffer = new PushBuffer<StreamMessage<T>>()
+    private inputClosed = false
+    private orderMessages: boolean
+    private enabled = true
+    private orderingUtil
 
     constructor(
         private options: SubscribeConfig,

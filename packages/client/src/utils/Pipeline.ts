@@ -92,7 +92,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     /** @internal */
-    isCleaningUp = false
+    public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
 
     /** @internal */

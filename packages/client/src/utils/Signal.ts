@@ -78,9 +78,9 @@ export class Signal<ArgsType extends any[] = []> {
         return this.create<ArgsType>(TRIGGER_TYPE.PARALLEL)
     }
 
-    listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
-    isEnded = false
-    triggerCountValue = 0
+    protected listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
+    protected isEnded = false
+    protected triggerCountValue = 0
 
     constructor(
         protected triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL

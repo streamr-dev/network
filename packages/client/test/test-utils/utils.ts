@@ -22,6 +22,7 @@ import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
+import { PublishPipeline } from '../../src/publish/PublishPipeline'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -221,12 +222,12 @@ export function snapshot(): string {
 }
 
 export class LeaksDetector {
-    leakDetectors: Map<string, LeakDetector> = new Map()
-    ignoredValues = new WeakSet()
-    id = instanceId(this)
-    debug = testDebug(this.id)
-    seen = new WeakSet()
-    didGC = false
+    private leakDetectors: Map<string, LeakDetector> = new Map()
+    private ignoredValues = new WeakSet()
+    private id = instanceId(this)
+    private debug = testDebug(this.id)
+    private seen = new WeakSet()
+    private didGC = false
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([
@@ -490,7 +491,9 @@ export function getPublishTestStreamMessages(
 
         const contents = new WeakMap()
         // @ts-expect-error private
-        client.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
+        const publishPipeline = client.container.resolve(PublishPipeline)
+        // @ts-expect-error private
+        publishPipeline.streamMessageQueue.onMessage.listen(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)

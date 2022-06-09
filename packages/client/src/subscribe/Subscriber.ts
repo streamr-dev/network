@@ -19,7 +19,7 @@ import { range } from 'lodash'
 export class Subscriber implements Context {
     readonly id
     readonly debug
-    readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
+    private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
     constructor(
         context: Context,
@@ -156,6 +156,7 @@ export class Subscriber implements Context {
      */
     private getAllSubscriptions(): Subscription<unknown>[] {
         return [...this.subSessions.values()].reduce((o: Subscription<unknown>[], s: SubscriptionSession<unknown>) => {
+            // @ts-expect-error private
             o.push(...s.subscriptions)
             return o
         }, [])
@@ -191,6 +192,7 @@ export class Subscriber implements Context {
         }))
 
         return results.flatMap((subSession) => ([
+            // @ts-expect-error private
             ...subSession.subscriptions
         ]))
     }

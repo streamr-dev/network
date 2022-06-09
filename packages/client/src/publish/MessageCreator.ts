@@ -45,8 +45,8 @@ export class MessageCreatorAnonymous implements IMessageCreator {
 @scoped(Lifecycle.ContainerScoped)
 export class MessageCreator implements IMessageCreator {
     // encrypt
-    queue: ReturnType<typeof LimitAsyncFnByKey>
-    getMsgChain
+    private queue: ReturnType<typeof LimitAsyncFnByKey>
+    private getMsgChain
 
     /*
      * Get function for creating stream messages.

@@ -21,8 +21,8 @@ import { StreamDefinition } from '../types'
 import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
-    publishMetadata
-    reason
+    public publishMetadata
+    public reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
         super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
@@ -68,12 +68,12 @@ export class PublishPipeline implements Context {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
-    streamMessageQueue!: PushPipeline<PublishQueueIn, PublishQueueOut>
+    private streamMessageQueue!: PushPipeline<PublishQueueIn, PublishQueueOut>
     /** signs, encrypts then publishes messages */
-    publishQueue!: Pipeline<PublishQueueOut, PublishQueueOut>
-    isStarted = false
-    isStopped = false
-    inProgress = new Set<Deferred<StreamMessage>>()
+    private publishQueue!: Pipeline<PublishQueueOut, PublishQueueOut>
+    private isStarted = false
+    private isStopped = false
+    private inProgress = new Set<Deferred<StreamMessage>>()
 
     constructor(
         context: Context,
