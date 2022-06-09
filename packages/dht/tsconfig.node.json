@@ -13,6 +13,8 @@
         "src/connection/WebRTC/BrowserWebRtcConnection.ts"
     ],
     "references": [
-
+        {
+            "path": "../proto-rpc/tsconfig.node.json"
+        }
     ]
 }

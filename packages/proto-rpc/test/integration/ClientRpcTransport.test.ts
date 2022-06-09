@@ -1,10 +1,9 @@
-import { ClosestPeersResponse, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { ClosestPeersResponse, PeerDescriptor } from '../proto/TestProtos'
+import { RpcMessage } from '../../src/proto/ProtoRpc'
+import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
+import { DhtRpcClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
-import { PeerID } from '../../src/helpers/PeerID'
-import { CallContext } from '../../src/rpc-protocol/ServerTransport'
-import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { CallContext } from '../../src/ServerRegistry'
 
 describe('DhtClientRpcTransport', () => {
 
@@ -14,7 +13,7 @@ describe('DhtClientRpcTransport', () => {
 
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const request = RpcMessage.fromBinary(message)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
@@ -35,7 +34,7 @@ describe('DhtClientRpcTransport', () => {
         const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
-            peerId: PeerID.fromString('peer').value,
+            peerId: new Uint8Array([1,2,3]),
             type: 0
         }
         const response = client.getClosestPeers({peerDescriptor, nonce: '1'})

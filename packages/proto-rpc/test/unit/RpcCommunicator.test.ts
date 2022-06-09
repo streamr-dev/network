@@ -1,35 +1,27 @@
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
-import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
+import { RpcCommunicator, RpcCommunicatorEvents } from '../../src/RpcCommunicator'
 import {
-    Message,
-    MessageType,
-    NotificationResponse,
-    PingRequest,
-    PingResponse,
     RpcMessage,
     RpcResponseError
-} from '../../src/proto/DhtRpc'
-import { DeferredPromises } from '../../src/rpc-protocol/ClientTransport'
+} from '../../src/proto/ProtoRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
+import { PingRequest, PingResponse } from '../proto/TestProtos' 
+import { DeferredPromises } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
-import { Err } from '../../src/helpers/errors'
+import { Err } from '../../src/errors'
 import { waitForCondition } from 'streamr-test-utils'
-import { MockDhtRpc } from '../utils'
-import { CallContext } from '../../src/rpc-protocol/ServerTransport'
+import { MockDhtRpc, clearMockTimeouts } from '../utils'
+import { CallContext } from '../../src/ServerRegistry'
 
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator
-    const appId = 'unitTest'
 
     let promises: DeferredPromises
     let request: RpcMessage
     let responseRpcMessage: RpcMessage
-    let response: Message
 
     beforeEach(() => {
         rpcCommunicator = new RpcCommunicator({ rpcRequestTimeout: 1000})
         
-        //rpcCommunicator.setSendFn(() => {})
-
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
             header: new Deferred<RpcMetadata>(),
@@ -54,17 +46,21 @@ describe('RpcCommunicator', () => {
             },
             body: PingResponse.toBinary({nonce: 'nonce'}),
         }
-        
+        /*
         response = {
             appId: appId,
             messageId: 'aaaa',
             body: RpcMessage.toBinary(responseRpcMessage),
             messageType: MessageType.RPC
-        }  
+        } */ 
     })
 
     afterEach(() => {
         rpcCommunicator.stop()
+    })
+
+    afterAll(() => {
+        clearMockTimeouts()
     })
 
     it('Resolves Promises', async () => {
@@ -86,7 +82,7 @@ describe('RpcCommunicator', () => {
             ...responseRpcMessage,
             responseError: RpcResponseError.SERVER_ERROR
         }
-        response.body = RpcMessage.toBinary(errorResponse)
+        //response.body = RpcMessage.toBinary(errorResponse)
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -99,7 +95,7 @@ describe('RpcCommunicator', () => {
             ...responseRpcMessage,
             responseError: RpcResponseError.SERVER_TIMOUT
         }
-        response.body = RpcMessage.toBinary(errorResponse)
+        //response.body = RpcMessage.toBinary(errorResponse)
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -112,7 +108,7 @@ describe('RpcCommunicator', () => {
             ...responseRpcMessage,
             responseError: RpcResponseError.UNKNOWN_RPC_METHOD
         }
-        response.body = RpcMessage.toBinary(errorResponse)
+        //response.body = RpcMessage.toBinary(errorResponse)
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -128,16 +124,16 @@ describe('RpcCommunicator', () => {
                 notification: 'notification'
             }
         }
-        promises.messageParser = (bytes: Uint8Array) => NotificationResponse.fromBinary(bytes)
+        promises.messageParser = (bytes: Uint8Array) => Empty.fromBinary(bytes)
         rpcCommunicator.onOutgoingMessage(notification, promises)
-        const res = await promises.message.promise as NotificationResponse
-        expect(res.sent).toEqual(true)
+        const res = await promises.message.promise as Empty
+        expect(res).toBeTruthy()
     })
 
     it('Success responses to requests', async () => {
         let successCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
             if (!pongWrapper.responseError) {
                 successCounter += 1
@@ -151,7 +147,7 @@ describe('RpcCommunicator', () => {
     it('Success responses to new registration method', async () => {
         let successCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
             if (!pongWrapper.responseError) {
                 successCounter += 1
@@ -164,7 +160,7 @@ describe('RpcCommunicator', () => {
 
     it('Error response on unknown method', async () => {
         let errorCounter = 0
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
             if (pongWrapper.responseError && pongWrapper.responseError === RpcResponseError.UNKNOWN_RPC_METHOD) {
                 errorCounter += 1
@@ -179,7 +175,7 @@ describe('RpcCommunicator', () => {
         let errorCounter = 0
 
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.respondPingWithTimeout)
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
             if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_TIMOUT as RpcResponseError) {
                 errorCounter += 1
@@ -193,7 +189,7 @@ describe('RpcCommunicator', () => {
     it('Error response on server timeout', async () => {
         let errorCounter = 0
         rpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.throwPingError)
-        rpcCommunicator.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             const pongWrapper = RpcMessage.fromBinary(message)
             if (pongWrapper.responseError !== undefined && pongWrapper.responseError === RpcResponseError.SERVER_ERROR) {
                 errorCounter += 1

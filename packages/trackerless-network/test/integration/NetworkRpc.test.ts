@@ -1,14 +1,13 @@
 import {
-    RpcCommunicator,
-    MockConnectionManager,
     PeerDescriptor,
-    Simulator,
-    Message
+    Simulator
 } from '@streamr/dht'
+import { RpcCommunicator, CallContext, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
-import { DataMessage, NotificationResponse } from '../../src/proto/NetworkRpc'
-import { DummyServerCallContext } from '@streamr/dht/dist/src/rpc-protocol/ServerTransport'
+import { DataMessage } from '../../src/proto/NetworkRpc'
 import { waitForCondition } from 'streamr-test-utils'
+import { Empty } from '../../src/proto/google/protobuf/empty'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 describe('Network RPC', () => {
     const peer1: PeerDescriptor = {
@@ -26,26 +25,18 @@ describe('Network RPC', () => {
     let recvCounter = 0
 
     beforeEach(() => {
-        const simulator = new Simulator()
-
-        rpcCommunicator1 = new RpcCommunicator({
-            connectionLayer: new MockConnectionManager(peer1, simulator)
+        rpcCommunicator1 = new RpcCommunicator()
+        rpcCommunicator2 = new RpcCommunicator()
+        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+            rpcCommunicator2.handleIncomingMessage(message)
         })
-        rpcCommunicator2 = new RpcCommunicator({
-            connectionLayer: new MockConnectionManager(peer2, simulator)
-        })
-        rpcCommunicator1.setSendFn((pd: PeerDescriptor, msg: Message) => rpcCommunicator2.onIncomingMessage(pd, msg))
-
         client = new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport())
         rpcCommunicator2.registerRpcNotification(
             DataMessage,
             'sendData',
-            async (_msg: DataMessage, _context: DummyServerCallContext): Promise<NotificationResponse> => {
+            async (_msg: DataMessage, _context: ServerCallContext): Promise<Empty> => {
                 recvCounter += 1
-                const res: NotificationResponse = {
-                    sent: true
-                }
-                return res
+                return Empty
             }
         )
     })

@@ -1,29 +1,32 @@
-import { Err, ErrorCode } from '../helpers/errors'
+import { Err, ErrorCode } from './errors'
 import {
     ClientTransport,
     DeferredPromises,
-    DhtRpcOptions,
+    ProtoRpcOptions,
     Event as DhtTransportClientEvent
-} from '../rpc-protocol/ClientTransport'
+} from './ClientTransport'
 import {
-    NotificationResponse,
     RpcMessage,
     RpcResponseError
-} from '../proto/DhtRpc'
-import { CallContext, Event as DhtTransportServerEvent, Parser, Serializer, ServerTransport } from '../rpc-protocol/ServerTransport'
+} from './proto/ProtoRpc'
+import { Empty } from './proto/google/protobuf/empty'
+import { CallContext, ServerRegistryEvent as ServerRegistryEvent, Parser, Serializer, ServerRegistry } from './ServerRegistry'
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from '../helpers/Logger'
-import { IRpcIo, Event as IRpcIoEvents } from './IRpcIo'
+import { Logger } from './Logger'
 
-export enum Event {
-    OUTGOING_MESSAGE = 'streamr:dht:transport:rpc-communicator:outgoing-message',
-    INCOMING_MESSAGE = 'streamr:dht:transport:rpc-communicator:incoming-message'
+export enum RpcCommunicatorEvents {
+    OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
 }
 
 export interface RpcCommunicatorConfig {
     rpcRequestTimeout?: number,
+}
+
+interface IRpcIo {
+    handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> 
+    on(event: RpcCommunicatorEvents.OUTGOING_MESSAGE, listener: (message: Uint8Array, callContext?: CallContext) => void): this
 }
 
 interface OngoingRequest {
@@ -38,7 +41,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private static objectCounter = 0
     private objectId = 0
     private readonly rpcClientTransport: ClientTransport
-    private readonly rpcServerTransport: ServerTransport
+    private readonly rpcServerRegistry: ServerRegistry
     private readonly ongoingRequests: Map<string, OngoingRequest>
     private defaultRpcRequestTimeout = 5000 
 
@@ -52,22 +55,22 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         
         this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
-        this.rpcServerTransport = new ServerTransport()
+        this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
         
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
             deferredPromises: DeferredPromises,
             rpcMessage: RpcMessage,
-            options: DhtRpcOptions
+            options: ProtoRpcOptions
         ) => {
             this.onOutgoingMessage(rpcMessage, deferredPromises, options as CallContext)
         })
-        this.rpcServerTransport.on(DhtTransportServerEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
+        this.rpcServerRegistry.on(ServerRegistryEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
     }
 
-    async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
+    public async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
         const rpcCall = RpcMessage.fromBinary(message)
         return this.onIncomingMessage(rpcCall, callContext)
     }
@@ -86,7 +89,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
         
-        this.emit(IRpcIoEvents.OUTGOING_MESSAGE, msg, callContext)
+        this.emit(RpcCommunicatorEvents.OUTGOING_MESSAGE, msg, callContext)
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, 
@@ -118,15 +121,15 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
     (requestClass: RequestClass, returnClass: ReturnClass,
         name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
-        this.rpcServerTransport.registerRpcMethod(requestClass, returnClass, name, fn)
+        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 
     public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
         requestClass: RequestClass,
         name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<NotificationResponse>
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
     ): void {
-        this.rpcServerTransport.registerRpcNotification(requestClass, name, fn)
+        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
     }
 
     private async handleRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {
@@ -135,7 +138,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         let response: RpcMessage
         try {
-            const bytes = await this.rpcServerTransport.onRequest(rpcMessage, callContext)
+            const bytes = await this.rpcServerRegistry.onRequest(rpcMessage, callContext)
             response = this.createResponseRpcMessage({
                 request: rpcMessage,
                 body: bytes
@@ -161,7 +164,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             return
         }
         try {
-            await this.rpcServerTransport.onNotification(rpcMessage, callContext)
+            await this.rpcServerRegistry.onNotification(rpcMessage, callContext)
         } catch (err) { }
     }
 
@@ -249,11 +252,10 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     }
 
     private notificationResponse(requestId: string): RpcMessage {
-        const notificationResponse: NotificationResponse = {
-            sent: true
-        }
+        const ret: Empty = {}
+
         const wrapper: RpcMessage = {
-            body: NotificationResponse.toBinary(notificationResponse),
+            body: Empty.toBinary(ret),
             header: {},
             requestId,
         }
@@ -269,6 +271,6 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.removeAllListeners()
         this.ongoingRequests.clear()
         this.rpcClientTransport.stop()
-        this.rpcServerTransport.stop()
+        this.rpcServerRegistry.stop()
     }
 }

@@ -1,13 +1,11 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator } from '../../src/transport/RpcCommunicator'
+import { RpcCommunicator, RpcCommunicatorEvents, RpcError } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../../src/helpers/common'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
-import { Err } from '../../src/helpers/errors'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Event as RpcIoEvent } from '../../src/transport/IRpcIo'
-import { CallContext } from '../../src/rpc-protocol/ServerTransport'
+import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtRpc', () => {
     let rpcCommunicator1: RpcCommunicator
@@ -25,7 +23,7 @@ describe('DhtRpc', () => {
         type: 0
     }
 
-    const outgoingListener2 = (message: Uint8Array, _ucallContext?: CallContext) => {
+    const outgoingListener2 = (message: Uint8Array, _ucallContext?: DhtCallContext) => {
         rpcCommunicator1.handleIncomingMessage(message)
     }
 
@@ -36,11 +34,11 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on(RpcIoEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, outgoingListener2)
         
         client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
         client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
@@ -68,8 +66,8 @@ describe('DhtRpc', () => {
     })
     
     it('Default RPC timeout, client side', async () => {
-        rpcCommunicator2.off(RpcIoEvent.OUTGOING_MESSAGE, outgoingListener2)
-        rpcCommunicator2.on(RpcIoEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator2.off(RpcCommunicatorEvents.OUTGOING_MESSAGE, outgoingListener2)
+        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
@@ -77,7 +75,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response2.response).rejects.toEqual(
-            new Err.RpcTimeout('Rpc request timed out')
+            new RpcError.RpcTimeout('Rpc request timed out')
         )
     })
 
@@ -103,7 +101,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new Err.RpcTimeout('Server timed out on request')
+            new RpcError.RpcTimeout('Server timed out on request')
         )
         clearTimeout(timeout!)
     })
@@ -114,7 +112,7 @@ describe('DhtRpc', () => {
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response.response).rejects.toEqual(
-            new Err.UnknownRpcMethod('Server does not implement method ping')
+            new RpcError.UnknownRpcMethod('Server does not implement method ping')
         )
     })
 })

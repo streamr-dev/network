@@ -2,8 +2,10 @@ syntax = "proto3";
 
 option optimize_for = CODE_SIZE;
 
+import "google/protobuf/empty.proto";
+
 service NetworkRpc {
-  rpc sendData (DataMessage) returns (NotificationResponse);
+  rpc sendData (DataMessage) returns (google.protobuf.Empty);
 }
 
 message DataMessage {
@@ -16,8 +18,4 @@ message Layer2Message {
 
 enum Layer2Type {
   Data = 0;
-}
-
-message NotificationResponse {
-  bool sent = 1;
 }

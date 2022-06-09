@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
-    "@streamr/dht": "0.0.1"
+    "@streamr/dht": "0.0.1",
+    "@streamr/proto-rpc": "1.1.1"
   },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",

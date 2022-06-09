@@ -6,11 +6,11 @@ import {
     IceCandidate,
     Message,
     MessageType,
-    NotificationResponse,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
 } from '../../proto/DhtRpc'
+import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { ConnectionType, Event as ConnectionEvents, IConnection } from '../IConnection'
@@ -248,35 +248,27 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
 
     // IWebRTCConnector implementation
 
-    async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<NotificationResponse> {
+    async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onConnectionRequest(request.requester!))
-        const res: NotificationResponse = {
-            sent: true
-        }
+        const res: Empty = {}
         return res
     }
 
-    async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<NotificationResponse> {
+    async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId))
-        const res: NotificationResponse = {
-            sent: true
-        }
+        const res: Empty = {}
         return res
     }
 
-    async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<NotificationResponse> {
+    async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId))
-        const res: NotificationResponse = {
-            sent: true
-        }
+        const res: Empty = {}
         return res
     }
 
-    async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<NotificationResponse> {
+    async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId))
-        const res: NotificationResponse = {
-            sent: true
-        }
+        const res: Empty = {}
         return res
     }
 }

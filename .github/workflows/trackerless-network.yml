@@ -31,6 +31,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
+          npm run bootstrap-pkg @streamr/proto-rpc
           npm run bootstrap-pkg @streamr/dht
           npm run bootstrap-pkg @streamr/trackerless-network
       - name: Eslint
