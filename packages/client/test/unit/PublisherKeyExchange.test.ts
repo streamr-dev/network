@@ -3,10 +3,10 @@ import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
 import { 
     EthereumAddress,
+    KeyExchangeStreamIDUtils,
     MessageID,
     SigningUtil,
     StreamID,
-    StreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
     toStreamPartID
@@ -45,7 +45,7 @@ const createGroupKeyRequest = (
     subscriberWallet: Wallet,
     publisherAddress: EthereumAddress
 ): StreamMessage => {
-    const publisherKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(publisherAddress)
+    const publisherKeyExchangeStreamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(publisherAddress)
     const msg = new StreamMessage({
         messageId: new MessageID(publisherKeyExchangeStreamId, DEFAULT_PARTITION, 0, 0, subscriberWallet.address, 'msgChainId'),
         content: JSON.stringify([
@@ -101,7 +101,7 @@ describe('PublisherKeyExchange', () => {
         )
         const groupKeyResponses: StreamMessage[] = []
         const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
-        const subscriberKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(subscriberWallet.address)
+        const subscriberKeyExchangeStreamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(subscriberWallet.address)
         subscriberNode.addSubscriber(toStreamPartID(subscriberKeyExchangeStreamId, DEFAULT_PARTITION), (msg: StreamMessage) => {
             groupKeyResponses.push(msg)
         })

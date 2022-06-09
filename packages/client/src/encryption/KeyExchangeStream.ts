@@ -3,8 +3,8 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyErrorResponse,
-    StreamIDUtils,
-    EthereumAddress
+    EthereumAddress,
+    KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -57,7 +57,7 @@ export class KeyExchangeStream implements Context {
     private async createSubscription(): Promise<Subscription<unknown>> {
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
+        const streamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(publisherId)
         const sub = await this.subscriber.subscribe(streamId)
         const onDestroy = () => {
             return sub.unsubscribe()
@@ -71,7 +71,7 @@ export class KeyExchangeStream implements Context {
     }
 
     async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
+        const streamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(publisherId)
 
         const matchFn = (streamMessage: StreamMessage) => {
             const { messageType } = streamMessage
@@ -103,6 +103,6 @@ export class KeyExchangeStream implements Context {
             return msg
         }
 
-        return this.publisher.publish(StreamIDUtils.formKeyExchangeStreamID(subscriberId), response)
+        return this.publisher.publish(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(subscriberId), response)
     }
 }

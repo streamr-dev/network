@@ -3,9 +3,9 @@ import { DependencyContainer } from 'tsyringe'
 import { 
     EthereumAddress,
     GroupKeyRequestSerialized,
+    KeyExchangeStreamIDUtils,
     MessageID,
     SigningUtil,
-    StreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
     toStreamPartID
@@ -41,7 +41,7 @@ const createMockGroupKeyResponse = async (
     publisherWallet: Wallet
 ): Promise<StreamMessage> => {
     const subscriberAddress = groupKeyRequest.getPublisherId()
-    const subscriberKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(subscriberAddress)
+    const subscriberKeyExchangeStreamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(subscriberAddress)
     const msg = new StreamMessage({
         messageId: new MessageID(subscriberKeyExchangeStreamId, DEFAULT_PARTITION, 0, 0, publisherWallet.address, 'msgChainId'),
         content: (await createGroupKeyResponse(
@@ -82,7 +82,7 @@ describe('SubscriberKeyExchange', () => {
     it('requests a group key', async () => {
         const groupKeyRequests: StreamMessage<GroupKeyRequestSerialized>[] = []
         const publisherNode = addFakeNode(publisherWallet.address, fakeContainer)
-        const publisherKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(publisherWallet.address)
+        const publisherKeyExchangeStreamId = KeyExchangeStreamIDUtils.formKeyExchangeStreamID(publisherWallet.address)
         publisherNode.addSubscriber(toStreamPartID(publisherKeyExchangeStreamId, DEFAULT_PARTITION), (msg: StreamMessage) => {
             groupKeyRequests.push(msg as any)
         })

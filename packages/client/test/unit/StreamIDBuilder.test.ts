@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
 import { Ethereum } from '../../src/Ethereum'
-import { StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
+import { KeyExchangeStreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamDefinition } from '../../src'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
@@ -29,7 +29,7 @@ describe('StreamIDBuilder', () => {
         })
 
         it('key-exchange stream id', () => {
-            return expect(streamIdBuilder.toStreamID(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX + '0xABCdef12345'))
+            return expect(streamIdBuilder.toStreamID(KeyExchangeStreamIDUtils.STREAM_ID_PREFIX + '0xABCdef12345'))
                 .resolves
                 .toEqual('SYSTEM/keyexchange/0xABCdef12345')
         })

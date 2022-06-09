@@ -1,16 +1,10 @@
-import assert from 'assert'
 import {
     StreamIDUtils,
     toStreamID
 } from '../../../src'
+import { KeyExchangeStreamIDUtils } from '../../../src/utils/KeyExchangeStreamID'
 
 const address = '0xaAAAaaaaAA123456789012345678901234567890'
-
-describe('formKeyExchangeStreamID', () => {
-    it('forms key-exchange stream ids', () => {
-        expect(StreamIDUtils.formKeyExchangeStreamID('0xFaFa1234')).toEqual(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX + '0xfafa1234')
-    })
-})
 
 describe('toStreamID', () => {
     it('path-only format', () => {
@@ -65,7 +59,7 @@ describe('isPathOnlyFormat', () => {
     })
 
     it('returns false on key-exchange format', () => {
-        expect(StreamIDUtils.isPathOnlyFormat(StreamIDUtils.formKeyExchangeStreamID(address))).toEqual(false)
+        expect(StreamIDUtils.isPathOnlyFormat(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toEqual(false)
     })
 
     it('returns false on legacy format', () => {
@@ -81,23 +75,13 @@ describe('isPathOnlyFormat', () => {
     })
 })
 
-describe('isKeyExchangeStream', () => {
-    it('returns true for streams that start with the correct prefix', () => {
-        assert(StreamIDUtils.isKeyExchangeStream('SYSTEM/keyexchange/0x1234'))
-        assert(StreamIDUtils.isKeyExchangeStream('SYSTEM/keyexchange/foo'))
-    })
-    it('returns false for other streams', () => {
-        assert(!StreamIDUtils.isKeyExchangeStream('SYSTEM/keyexchangefoo'))
-    })
-})
-
 describe('getDomainAndPath', () => {
     it('returns undefined for legacy stream id', () => {
         expect(StreamIDUtils.getDomainAndPath(toStreamID('7wa7APtlTq6EC5iTCBy6dw'))).toBeUndefined()
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomainAndPath(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getDomainAndPath(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns domain and path for full stream id', () => {
@@ -112,7 +96,7 @@ describe('getDomain', () => {
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getDomain(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getDomain(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns address for full stream id', () => {
@@ -151,7 +135,7 @@ describe('getPath', () => {
     })
 
     it('returns undefined for key-exchange stream id', () => {
-        expect(StreamIDUtils.getPath(StreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
+        expect(StreamIDUtils.getPath(KeyExchangeStreamIDUtils.formKeyExchangeStreamID(address))).toBeUndefined()
     })
 
     it('returns path for full stream id', () => {
@@ -159,14 +143,3 @@ describe('getPath', () => {
     })
 })
 
-describe('getRecipient', () => {
-    it('returns recipient in the case of a key-exchange stream', () => {
-        const streamId = toStreamID('SYSTEM/keyexchange/0x1234')
-        expect(StreamIDUtils.getRecipient(streamId)).toEqual('0x1234')
-    })
-
-    it('returns undefined in the case of a non-key-exchange stream', () => {
-        const streamId = toStreamID('/foo/BAR', address)
-        expect(StreamIDUtils.getRecipient(streamId)).toBeUndefined()
-    })
-})
