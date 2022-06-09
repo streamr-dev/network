@@ -1,8 +1,7 @@
 import WebSocket from 'ws'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent, Queue } from 'streamr-test-utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
-import { Queue } from '../../../utils'
 
 jest.setTimeout(30000)
 

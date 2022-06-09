@@ -169,23 +169,6 @@ export const createTestStream = async (
     return stream
 }
 
-export class Queue<T> {
-    items: T[] = []
-
-    push(item: T): void {
-        this.items.push(item)
-    }
-
-    async pop(timeout?: number): Promise<T> {
-        await waitForCondition(() => this.items.length > 0, timeout)
-        return this.items.shift()!
-    }
-
-    size(): number {
-        return this.items.length
-    }
-}
-
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {
     const node = await broker.getNode()
     return Array.from(node.getStreamParts())
