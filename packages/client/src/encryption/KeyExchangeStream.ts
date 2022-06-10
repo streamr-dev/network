@@ -79,7 +79,8 @@ export class KeyExchangeStream implements Context {
                 return false
             }
             const content = streamMessage.getContent() as any
-            return GroupKeyResponse.fromArray(content).requestId === request.requestId
+            const [ requestId ] = content
+            return requestId === request.requestId
         }
 
         return publishAndWaitForResponseMessage(
