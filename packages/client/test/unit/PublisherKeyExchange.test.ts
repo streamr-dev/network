@@ -2,11 +2,9 @@ import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
 import { 
-    EthereumAddress,
     KeyExchangeStreamIDUtils,
     MessageID,
     SigningUtil,
-    StreamID,
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
@@ -71,9 +69,9 @@ describe('PublisherKeyExchange', () => {
         return msg
     }
 
-    const createExpectedResponse = (): object => {
+    const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
         const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
-        return {
+        expect(actualResponse).toMatchObject({
             messageId: {
                 streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
                 streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
@@ -84,7 +82,9 @@ describe('PublisherKeyExchange', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
-        }
+        })
+        const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRsaKeyPair.getPrivateKey())
+        expect(actualKeys).toEqual(expectedGroupKeys)
     }
 
     beforeEach(async () => {
@@ -118,9 +118,7 @@ describe('PublisherKeyExchange', () => {
             subscriberNode.publishToNode(request)
     
             const response = await receivedResponses.pop()
-            expect(response).toMatchObject(createExpectedResponse())
-            const actualKeys = await getGroupKeysFromStreamMessage(response, subscriberRsaKeyPair.getPrivateKey())
-            expect(actualKeys).toEqual([key])
+            await testSuccessResponse(response, [key])
         })
     })
 })
