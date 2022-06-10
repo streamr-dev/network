@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
 import { 
+    GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
     MessageID,
     SigningUtil,
@@ -119,6 +120,46 @@ describe('PublisherKeyExchange', () => {
     
             const response = await receivedResponses.pop()
             await testSuccessResponse(response, [key])
+        })
+
+        it('no group key in store', async () => {
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+        
+            const request = createGroupKeyRequest(GroupKey.generate().id)
+            subscriberNode.publishToNode(request)
+    
+            const response = await receivedResponses.pop()
+            await testSuccessResponse(response, [])
+        })
+    
+        it('no signature in group key request', async () => {
+            const groupKey = GroupKey.generate()
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+        
+            const request: any = createGroupKeyRequest(groupKey.id)
+            delete request.signature
+            subscriberNode.publishToNode(request)
+    
+            const response = await receivedResponses.pop()
+            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+            expect(response).toMatchObject({
+                messageId: {
+                    streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                    streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                    publisherId: publisherWallet.address.toLowerCase(),
+                },
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: expect.any(String)
+            })
+            expect(GroupKeyErrorResponse.fromArray(response.getParsedContent() as any)).toMatchObject({
+                requestId: expect.any(String),
+                errorCode: expect.any(String),
+                errorMessage: expect.any(String),
+                groupKeyIds: [ groupKey.id ]
+            })
         })
     })
 })
