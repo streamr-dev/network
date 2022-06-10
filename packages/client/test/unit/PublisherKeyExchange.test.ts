@@ -20,8 +20,8 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
-
-const MOCK_GROUP_KEY = new GroupKey('mock-group-key-id', Buffer.from('mock-group-key-256-bits---------'))
+import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
+import { Queue } from 'streamr-test-utils'
 
 const createMockStream = async (
     subscriberAddress: EthereumAddress,
@@ -37,6 +37,7 @@ const createMockStream = async (
 }
 
 const createGroupKeyRequest = (
+    groupKeyId: string,
     streamId: StreamID,
     rsaPublicKey: string,
     subscriberWallet: Wallet,
@@ -56,7 +57,7 @@ const createGroupKeyRequest = (
             uuid(), 
             streamId,
             rsaPublicKey,
-            [MOCK_GROUP_KEY.id]
+            [groupKeyId]
         ]),
         messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -66,64 +67,72 @@ const createGroupKeyRequest = (
     return msg
 }
 
+const startPublisherKeyExchangeSubscription = async (streamId: StreamID, fakeContainer: DependencyContainer) => {
+    const publisherKeyExchange = fakeContainer.resolve(PublisherKeyExchange)
+    await publisherKeyExchange.useGroupKey(streamId)
+}
+
 describe('PublisherKeyExchange', () => {
 
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
-    let mockStream: Stream
     let subscriberRsaKeyPair: RsaKeyPair
+    let subscriberNode: FakeBrubeckNode
+    let mockStream: Stream
     let fakeContainer: DependencyContainer
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         publisherWallet = Wallet.createRandom()
         subscriberWallet = Wallet.createRandom()
+        subscriberRsaKeyPair = await RsaKeyPair.create()
         fakeContainer = createFakeContainer({
             auth: {
                 privateKey: publisherWallet.privateKey
             }
         })
         mockStream = await createMockStream(subscriberWallet.address, fakeContainer)
-        const groupKeyStoreFactory = fakeContainer.resolve(GroupKeyStoreFactory)
-        const groupKeyStore = await groupKeyStoreFactory.getStore(mockStream.id)
-        groupKeyStore.add(MOCK_GROUP_KEY)
-        subscriberRsaKeyPair = await RsaKeyPair.create()
+        subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
+        await startPublisherKeyExchangeSubscription(mockStream.id, fakeContainer)
     })
 
-    /*
-     * A publisher node starts a subscription to receive group key requests
-     * - tests that a correct kind of response message is sent to a subscriber node
-     */
-    it('responds to a group key request', async () => {
-        const publisherKeyExchange = fakeContainer.resolve(PublisherKeyExchange)
-        await publisherKeyExchange.useGroupKey(mockStream.id) // subscribes to the key exchange stream
+    describe('responds to a group key request', () => {
 
-        const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
-        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
-        const receivedMessages = subscriberNode.addSubscriber(subscriberKeyExchangeStreamPartId)
+        /*
+         * A publisher node starts a subscription to receive group key requests
+         * - tests that a correct kind of response message is sent to a subscriber node
+         */
+        it('happy path', async () => {
+            const key = GroupKey.generate()
+            const store = await (await fakeContainer.resolve(GroupKeyStoreFactory)).getStore(mockStream.id)
+            await store.add(key)
 
-        const groupKeyRequest = createGroupKeyRequest(
-            mockStream.id,
-            subscriberRsaKeyPair.getPublicKey(),
-            subscriberWallet,
-            publisherWallet.address
-        )
-        subscriberNode.publishToNode(groupKeyRequest)
-
-        const groupKeyResponse = await receivedMessages.pop()
-        expect(groupKeyResponse).toMatchObject({
-            messageId: {
-                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
-                publisherId: publisherWallet.address.toLowerCase(),
-            },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-            signature: expect.any(String)
+            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+            const receivedResponses = subscriberNode.addSubscriber(subscriberKeyExchangeStreamPartId)
+    
+            const request = createGroupKeyRequest(
+                key.id,
+                mockStream.id,
+                subscriberRsaKeyPair.getPublicKey(),
+                subscriberWallet,
+                publisherWallet.address
+            )
+            subscriberNode.publishToNode(request)
+    
+            const response = await receivedResponses.pop()
+            expect(response).toMatchObject({
+                messageId: {
+                    streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                    streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                    publisherId: publisherWallet.address.toLowerCase(),
+                },
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: expect.any(String)
+            })
+            const actualKeys = await getGroupKeysFromStreamMessage(response, subscriberRsaKeyPair.getPrivateKey())
+            expect(actualKeys).toEqual([key])
         })
-        const groupKeys = await getGroupKeysFromStreamMessage(groupKeyResponse, subscriberRsaKeyPair.getPrivateKey())
-        expect(groupKeys).toHaveLength(1)
-        expect(groupKeys[0]).toEqual(MOCK_GROUP_KEY)
     })
 })
