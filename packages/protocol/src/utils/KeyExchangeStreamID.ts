@@ -4,8 +4,8 @@ import { EthereumAddress } from './types'
 
 export class KeyExchangeStreamIDUtils {
 
-    static STREAM_ID_PREFIX = 'SYSTEM/keyexchange/'
-    static PARTITION = 0
+    static readonly STREAM_ID_PREFIX = 'SYSTEM/keyexchange/'
+    static readonly PARTITION = 0
 
     static formStreamPartID(recipient: EthereumAddress): StreamPartID {
         const streamId = (KeyExchangeStreamIDUtils.STREAM_ID_PREFIX + recipient.toLowerCase()) as StreamID
