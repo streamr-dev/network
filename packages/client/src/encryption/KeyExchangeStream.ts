@@ -99,7 +99,9 @@ export class KeyExchangeStream implements Context {
         const toStreamMessage = response.toStreamMessage.bind(response)
         response.toStreamMessage = (...args) => {
             const msg = toStreamMessage(...args)
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
+            if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
+                msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
+            }
             return msg
         }
 

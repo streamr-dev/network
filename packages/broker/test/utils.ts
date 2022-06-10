@@ -10,7 +10,7 @@ import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { KeyServer, waitForCondition } from 'streamr-test-utils'
+import { KeyServer } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
@@ -167,23 +167,6 @@ export const createTestStream = async (
         ...props
     })
     return stream
-}
-
-export class Queue<T> {
-    items: T[] = []
-
-    push(item: T): void {
-        this.items.push(item)
-    }
-
-    async pop(timeout?: number): Promise<T> {
-        await waitForCondition(() => this.items.length > 0, timeout)
-        return this.items.shift()!
-    }
-
-    size(): number {
-        return this.items.length
-    }
 }
 
 export const getStreamParts = async (broker: Broker): Promise<StreamPartID[]> => {

@@ -2,6 +2,7 @@ import debug from 'debug'
 import { pull } from 'lodash'
 import { EthereumAddress, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
+import { Queue } from 'streamr-test-utils'
 import { BrubeckNode, NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { ActiveNodes } from './ActiveNodes'
@@ -139,13 +140,15 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
-    addSubscriber(streamPartId: StreamPartID, onMessage: (msg: StreamMessage<unknown>) => unknown): void {
+    addSubscriber(streamPartId: StreamPartID): Queue<StreamMessage> {
+        const receivedMessages: Queue<StreamMessage> = new Queue()
         this.networkNodeStub.addMessageListener((msg: StreamMessage) => {
             if (msg.getStreamPartID() === streamPartId) {
-                onMessage(msg)
+                receivedMessages.push(msg)
             }
         })
         this.networkNodeStub.subscribe(streamPartId)
+        return receivedMessages
     }
 
     async getNodeId(): Promise<EthereumAddress> {
