@@ -2,7 +2,7 @@
  * Subscription message processing pipeline
  */
 
-import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID, KeyExchangeStreamIDUtils, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
@@ -79,7 +79,9 @@ export function SubscribePipeline<T = unknown>(
         // convert group key error responses into errors
         // (only for subscribe pipeline, not publish pipeline)
         .forEach((streamMessage: StreamMessage) => {
-            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            if ((streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) 
+                && (!KeyExchangeStreamIDUtils.isKeyExchangeStream(StreamPartIDUtils.getStreamID(streamPartId)))
+            ) {
                 const errMsg = streamMessage as StreamMessage<any>
                 const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
                 const err = new StreamMessageError(`GroupKeyErrorResponse: ${res.errorMessage}`, streamMessage, res.errorCode)
