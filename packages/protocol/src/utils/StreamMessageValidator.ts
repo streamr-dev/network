@@ -5,8 +5,9 @@ import GroupKeyRequest from '../protocol/message_layer/GroupKeyRequest'
 import GroupKeyMessage from '../protocol/message_layer/GroupKeyMessage'
 
 import SigningUtil from './SigningUtil'
-import { StreamIDUtils, StreamID } from './StreamID'
+import { StreamID } from './StreamID'
 import { EthereumAddress } from '.'
+import { KeyExchangeStreamIDUtils } from './KeyExchangeStreamID'
 
 export interface StreamMetadata {
     partitions: number
@@ -164,16 +165,16 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
+        if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
-                `Group key requests can only occur on stream ids of form ${`${StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                `Group key requests can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,
                 streamMessage
             )
         }
 
         const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
         const sender = streamMessage.getPublisherId()
-        const recipient = StreamIDUtils.getRecipient(streamMessage.getStreamId())
+        const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
@@ -194,9 +195,9 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
-        if (!StreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
+        if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
-                `${streamMessage.messageType} can only occur on stream ids of form ${`${StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX}{address}`}.`,
+                `${streamMessage.messageType} can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,
                 streamMessage
             )
         }
@@ -217,7 +218,7 @@ export default class StreamMessageValidator {
 
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
             // permit publishers to send error responses to invalid subscribers
-            const recipient = StreamIDUtils.getRecipient(streamMessage.getStreamId())
+            const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
             // Check that the recipient of the request is a valid subscriber of the stream
             const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
             if (!recipientIsSubscriber) {

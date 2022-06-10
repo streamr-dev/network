@@ -3,8 +3,8 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyErrorResponse,
-    StreamIDUtils,
-    EthereumAddress
+    EthereumAddress,
+    KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -57,8 +57,8 @@ export class KeyExchangeStream implements Context {
     private async createSubscription(): Promise<Subscription<unknown>> {
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
-        const sub = await this.subscriber.subscribe(streamId)
+        const streamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherId)
+        const sub = await this.subscriber.subscribe(streamPartId)
         const onDestroy = () => {
             return sub.unsubscribe()
         }
@@ -71,7 +71,7 @@ export class KeyExchangeStream implements Context {
     }
 
     async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
+        const streamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherId)
 
         const matchFn = (streamMessage: StreamMessage) => {
             const { messageType } = streamMessage
@@ -83,7 +83,7 @@ export class KeyExchangeStream implements Context {
         }
 
         return publishAndWaitForResponseMessage(
-            () => this.publisher.publish(streamId, request),
+            () => this.publisher.publish(streamPartId, request),
             matchFn,
             () => this.createSubscription(),
             () => this.subscribe.reset(),
@@ -103,6 +103,6 @@ export class KeyExchangeStream implements Context {
             return msg
         }
 
-        return this.publisher.publish(StreamIDUtils.formKeyExchangeStreamID(subscriberId), response)
+        return this.publisher.publish(KeyExchangeStreamIDUtils.formStreamPartID(subscriberId), response)
     }
 }

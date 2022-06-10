@@ -3,16 +3,14 @@ import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
 import { 
     EthereumAddress,
+    KeyExchangeStreamIDUtils,
     MessageID,
     SigningUtil,
     StreamID,
-    StreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
-    toStreamPartID
 } from 'streamr-client-protocol'
 import { StreamRegistry } from '../../src/StreamRegistry'
-import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
@@ -45,9 +43,16 @@ const createGroupKeyRequest = (
     subscriberWallet: Wallet,
     publisherAddress: EthereumAddress
 ): StreamMessage => {
-    const publisherKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(publisherAddress)
+    const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherAddress)
     const msg = new StreamMessage({
-        messageId: new MessageID(publisherKeyExchangeStreamId, DEFAULT_PARTITION, 0, 0, subscriberWallet.address, 'msgChainId'),
+        messageId: new MessageID(
+            StreamPartIDUtils.getStreamID(publisherKeyExchangeStreamPartId),
+            StreamPartIDUtils.getStreamPartition(publisherKeyExchangeStreamPartId),
+            0,
+            0,
+            subscriberWallet.address,
+            'msgChainId'
+        ),
         content: JSON.stringify([
             uuid(), 
             streamId,
@@ -101,8 +106,8 @@ describe('PublisherKeyExchange', () => {
         )
         const groupKeyResponses: StreamMessage[] = []
         const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
-        const subscriberKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(subscriberWallet.address)
-        subscriberNode.addSubscriber(toStreamPartID(subscriberKeyExchangeStreamId, DEFAULT_PARTITION), (msg: StreamMessage) => {
+        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+        subscriberNode.addSubscriber(subscriberKeyExchangeStreamPartId, (msg: StreamMessage) => {
             groupKeyResponses.push(msg)
         })
         subscriberNode.publishToNode(groupKeyRequest)
@@ -111,8 +116,8 @@ describe('PublisherKeyExchange', () => {
         const groupKeyResponse = groupKeyResponses[0]
         expect(groupKeyResponse).toMatchObject({
             messageId: {
-                streamId: subscriberKeyExchangeStreamId,
-                streamPartition: DEFAULT_PARTITION,
+                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
                 publisherId: publisherWallet.address.toLowerCase(),
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
