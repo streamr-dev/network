@@ -132,7 +132,7 @@ describe('PublisherKeyExchange', () => {
             await testSuccessResponse(response, [])
         })
     
-        it('no signature in group key request', async () => {
+        it('invalid request', async () => {
             const groupKey = GroupKey.generate()
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
         

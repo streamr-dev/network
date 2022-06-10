@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { 
-    EthereumAddress,
+    GroupKeyErrorResponse,
+    GroupKeyRequest,
     GroupKeyRequestSerialized,
     KeyExchangeStreamIDUtils,
     MessageID,
@@ -19,7 +20,8 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 
-const MOCK_GROUP_KEY = new GroupKey('mock-group-key-id', Buffer.from('mock-group-key-256-bits---------'))
+const AVAILABLE_GROUP_KEY = GroupKey.generate()
+const UNAVAILABLE_GROUP_KEY = GroupKey.generate()
 
 describe('SubscriberKeyExchange', () => {
 
@@ -39,7 +41,7 @@ describe('SubscriberKeyExchange', () => {
         return stream
     }
 
-    const testSuccessRequest = (request: StreamMessage): void => {
+    const testSuccessRequest = (request: StreamMessage, requestedKeyIds: string[]): void => {
         const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
         expect(request).toMatchObject({
             messageId: {
@@ -57,7 +59,7 @@ describe('SubscriberKeyExchange', () => {
             expect.any(String),
             mockStream.id,
             expect.any(String),
-            [ MOCK_GROUP_KEY.id ]
+            requestedKeyIds
         ])
     }
 
@@ -75,7 +77,7 @@ describe('SubscriberKeyExchange', () => {
             ),
             content: (await createGroupKeyResponse(
                 request,
-                async (groupKeyId: string) => (groupKeyId === MOCK_GROUP_KEY.id) ? MOCK_GROUP_KEY : undefined,
+                async (groupKeyId: string) => (groupKeyId === AVAILABLE_GROUP_KEY.id) ? AVAILABLE_GROUP_KEY : undefined,
                 async () => true
             )).serialize(),
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
@@ -111,16 +113,77 @@ describe('SubscriberKeyExchange', () => {
             const receivedKey = subscriberKeyExchange.getGroupKey({
                 getStreamId: () => mockStream.id,
                 getPublisherId: () => publisherWallet.address,
-                groupKeyId: MOCK_GROUP_KEY.id
+                groupKeyId: AVAILABLE_GROUP_KEY.id
             } as any)
             
             const groupKeyRequest = await receivedRequests.pop()
-            testSuccessRequest(groupKeyRequest)
+            testSuccessRequest(groupKeyRequest, [ AVAILABLE_GROUP_KEY.id ])
             
             const response = await createResponseMessage(groupKeyRequest as any) 
             publisherNode.publishToNode(response)
             
-            expect((await receivedKey)!).toEqual(MOCK_GROUP_KEY)
+            expect((await receivedKey)!).toEqual(AVAILABLE_GROUP_KEY)
+        })
+
+
+        it('no group key available', async () => {
+            const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+        
+            const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
+            const receivedKey = subscriberKeyExchange.getGroupKey({
+                getStreamId: () => mockStream.id,
+                getPublisherId: () => publisherWallet.address,
+                groupKeyId: UNAVAILABLE_GROUP_KEY.id
+            } as any)
+            
+            const groupKeyRequest = await receivedRequests.pop()
+            testSuccessRequest(groupKeyRequest, [ UNAVAILABLE_GROUP_KEY.id ])
+            
+            const response = await createResponseMessage(groupKeyRequest as any) 
+            publisherNode.publishToNode(response)
+            
+            expect((await receivedKey)!).toBeUndefined()
+        })
+
+        it('response error', async () => {
+            const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+
+            const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
+            const receivedKey = subscriberKeyExchange.getGroupKey({
+                getStreamId: () => mockStream.id,
+                getPublisherId: () => publisherWallet.address,
+                groupKeyId: UNAVAILABLE_GROUP_KEY.id
+            } as any)
+
+            const groupKeyRequest = await receivedRequests.pop()
+            const requestId = GroupKeyRequest.fromArray((groupKeyRequest as any).getParsedContent()).requestId
+
+            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+            const response = new StreamMessage({
+                messageId: new MessageID(
+                    StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                    StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                    0,
+                    0,
+                    publisherWallet.address.toLowerCase(),
+                    'msgChainId'
+                ),
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                content: new GroupKeyErrorResponse({
+                    requestId,
+                    streamId: mockStream.id,
+                    errorCode: 'UNEXPECTED_ERROR',
+                    errorMessage: '',
+                    groupKeyIds: [ UNAVAILABLE_GROUP_KEY.id ]
+                }).serialize()
+            })
+            response.signature = SigningUtil.sign(response.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey)
+            publisherNode.publishToNode(response)
+            
+            expect((await receivedKey)!).toBeUndefined()
         })
     })
 })
