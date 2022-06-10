@@ -125,7 +125,7 @@ describe('SubscriberKeyExchange', () => {
             expect((await receivedKey)!).toEqual(AVAILABLE_GROUP_KEY)
         })
 
-        it('no group key available', async () => {
+        it.skip('no group key available', async () => {
             const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
         
             const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
@@ -144,7 +144,7 @@ describe('SubscriberKeyExchange', () => {
             expect((await receivedKey)!).toBeUndefined()
         })
 
-        it('response error', async () => {
+        it.skip('response error', async () => {
             const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
 
             const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
