@@ -57,9 +57,9 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
 }
 
 describe(OrderingUtil, () => {
-    it('randomized "realistic" scenario with randomness', async () => {
-        const actual: Record<string, number[]> = {}
+    it('randomized "worst-case" scenario with missing messages and gap fill needs', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
+        const actual: Record<string, number[]> = {}
         const expected: Record<string, number[]> = {}
 
         for (const publisherId of PUBLISHER_IDS) {
@@ -89,7 +89,7 @@ describe(OrderingUtil, () => {
         }
 
         const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS)
-        util.on('error', () => {})
+        util.on('error', () => {}) // TODO: jest.fn() verify gap counts
 
         // supply 1st message of chain always to set gap detection to work from 1st message onwards
         for (const publisherId of PUBLISHER_IDS) {
