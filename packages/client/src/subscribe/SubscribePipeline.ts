@@ -1,12 +1,16 @@
 /**
  * Subscription message processing pipeline
  */
-
-import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID, KeyExchangeStreamIDUtils, StreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
-
+import { 
+    StreamMessage,
+    StreamMessageError,
+    GroupKeyErrorResponse,
+    StreamPartID,
+    KeyExchangeStreamIDUtils,
+    StreamPartIDUtils 
+} from 'streamr-client-protocol'
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
-
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'

@@ -125,7 +125,6 @@ describe('SubscriberKeyExchange', () => {
             expect((await receivedKey)!).toEqual(AVAILABLE_GROUP_KEY)
         })
 
-
         it('no group key available', async () => {
             const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
         
