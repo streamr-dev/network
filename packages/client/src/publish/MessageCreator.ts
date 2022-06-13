@@ -92,7 +92,7 @@ export class MessageCreator implements IMessageCreator {
 
             const [messageId, prevMsgRef] = chain.add(timestamp)
 
-            const streamMessage =new StreamMessage({
+            const streamMessage = new StreamMessage({
                 messageId,
                 prevMsgRef,
                 content,
