@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export { StreamMessageProcessingError, UnableToDecryptError } from './encryption/EncryptionUtil'
+export { UnableToDecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
