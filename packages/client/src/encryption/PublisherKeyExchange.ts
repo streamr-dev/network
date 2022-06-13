@@ -108,7 +108,7 @@ export class PublisherKeyExchange implements Context {
                     errorMessage: error.message,
                     groupKeyIds
                 })
-                return this.keyExchangeStream.response(subscriberId, response)
+                return await this.keyExchangeStream.response(subscriberId, response)
             } catch (err) {
                 this.debug('unexpected error responding with error', err)
                 return undefined
