@@ -33,13 +33,8 @@ export type MessageCreateOptions<T = unknown> = {
  */
 @scoped(Lifecycle.ContainerScoped)
 export class MessageCreator {
-    // encrypt
     private queue: ReturnType<typeof LimitAsyncFnByKey>
     private getMsgChain
-
-    /*
-     * Get function for creating stream messages.
-     */
 
     constructor(
         private streamPartitioner: StreamPartitioner,
