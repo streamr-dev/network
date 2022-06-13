@@ -28,12 +28,12 @@ service HelloRpc {
 }
 
 message HelloRequest {
-    string myName = 1;
-  }
+  string myName = 1;
+}
   
 message HelloResponse {
-    string greeting = 1;
-  }
+  string greeting = 1;
+}
 ```
   > `HelloRpc.proto`
 
@@ -58,17 +58,17 @@ class HelloService implements IHelloRpc {
   *Note that a RpcCommunicator can act both as a client and a server at the same time*    
 
 ```typescript
-    const communicator1 = new RpcCommunicator()
-    const helloService = new HelloService()
-    communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
+const communicator1 = new RpcCommunicator()
+const helloService = new HelloService()
+communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
 ```
 
 - start a RPC communicator for the client side, and bind it to the auto-generated HelloClient class
 
 
 ```typescript
-    const communicator2 = new RpcCommunicator()
-    const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
+const communicator2 = new RpcCommunicator()
+const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
 ```
 
 - listen to outgoing packets from the RpcCpommunicators on both the client and server sides, and
@@ -76,29 +76,27 @@ class HelloService implements IHelloRpc {
   but here we will simulate the connection using method calls.
 
 ```typescript
-    communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, 
-      (msgBody: Uint8Array, _ucallContext?: CallContext) => {
-        communicator2.handleIncomingMessage(msgBody)
-    })
-    communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, 
-      (msgBody: Uint8Array, _ucallContext?: CallContext) => {
-        communicator1.handleIncomingMessage(msgBody)
-    })
+communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+  communicator2.handleIncomingMessage(msgBody)
+})
+communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+  communicator1.handleIncomingMessage(msgBody)
+})
 ```
 
 - make the RPC call and print the result
   
 ```typescript
-    const result = await helloClient.sayHello({ myName: 'Alice' })
-    console.log(result.response.greeting)
+const result = await helloClient.sayHello({ myName: 'Alice' })
+console.log(result.response.greeting)
 ```
 
 - finally, discard the RpcCommunicators to clean up pontially pending async calls and other
   allocated resources
   
 ```typescript
-    communicator1.stop()
-    communicator2.stop()
+communicator1.stop()
+communicator2.stop()
 ```
 
 For a complete code example, see [examples/hello](examples/hello)
@@ -129,10 +127,10 @@ service WakeUpRpc {
 
 ```typescript
 async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
-        console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
-        const ret: Empty = {}
-        return ret
-    }
+  console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
+  const ret: Empty = {}
+  return ret
+}
 ```
 
 - In case of a notification call, RpcCommunicator does not fire the `RpcCommunicatorEvents.OUTGOING_MESSAGE` event for the return value.
@@ -164,5 +162,5 @@ Client side timeouts can be set along side requests via the options parameter. B
 
 Example:
 ```typescript
-	await helloClient.sayHello({ myName: 'Alice' }, { timeout: 15000 })
+await helloClient.sayHello({ myName: 'Alice' }, { timeout: 15000 })
 ```
