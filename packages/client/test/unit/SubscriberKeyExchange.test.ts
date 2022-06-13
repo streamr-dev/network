@@ -182,7 +182,7 @@ describe('SubscriberKeyExchange', () => {
             response.signature = SigningUtil.sign(response.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey)
             publisherNode.publishToNode(response)
             
-            expect((await receivedKey)!).toBeUndefined()
+            expect(receivedKey).rejects.toThrow()
         })
     })
 })
