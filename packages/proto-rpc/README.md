@@ -24,15 +24,15 @@ npm install @streamr/proto-rpc
 syntax = "proto3";
 
 service HelloRpc {
-  rpc sayHello (HelloRequest) returns (HelloResponse);
+    rpc sayHello (HelloRequest) returns (HelloResponse);
 }
 
 message HelloRequest {
-  string myName = 1;
+    string myName = 1;
 }
   
 message HelloResponse {
-  string greeting = 1;
+    string greeting = 1;
 }
 ```
   > `HelloRpc.proto`
@@ -77,10 +77,10 @@ const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
 
 ```typescript
 communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
-  communicator2.handleIncomingMessage(msgBody)
+    communicator2.handleIncomingMessage(msgBody)
 })
 communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
-  communicator1.handleIncomingMessage(msgBody)
+    communicator1.handleIncomingMessage(msgBody)
 })
 ```
 
@@ -119,7 +119,7 @@ Unlike gRPC, proto-rpc supports JSON-RPC style notifications (RPC functions that
 
 ```proto
 service WakeUpRpc {
-  rpc  wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
+    rpc wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
 }
 ```
 
@@ -127,9 +127,9 @@ service WakeUpRpc {
 
 ```typescript
 async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
-  console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
-  const ret: Empty = {}
-  return ret
+    console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
+    const ret: Empty = {}
+    return ret
 }
 ```
 
