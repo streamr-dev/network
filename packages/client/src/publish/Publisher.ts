@@ -41,7 +41,9 @@ export class Publisher implements Context {
             content,
             timestamp: parseTimestamp(metadata),
             partitionKey: metadata?.partitionKey,
-            msgChainId: metadata?.msgChainId
+            msgChainId: metadata?.msgChainId,
+            messageType: metadata?.messageType,
+            encryptionType: metadata?.encryptionType
         })
     }
 
