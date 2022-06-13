@@ -13,7 +13,7 @@ import { StreamPermission } from '../../src/permission'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
-import { first } from '../../src/utils/GeneratorUtils'
+import { nextValue } from '../../src/utils/iterators'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 
@@ -45,7 +45,7 @@ describe('SubscriberKeyExchange', () => {
             groupKeyId: requestedKeyId
         } as any)
 
-        const request = await first(receivedRequests)
+        const request = await nextValue(receivedRequests)
         const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
         expect(request).toMatchObject({
             messageId: {
@@ -59,7 +59,7 @@ describe('SubscriberKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
-        expect(request.getParsedContent()).toEqual([
+        expect(request!.getParsedContent()).toEqual([
             expect.any(String),
             mockStream.id,
             expect.any(String),

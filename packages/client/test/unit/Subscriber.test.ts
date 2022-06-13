@@ -9,7 +9,7 @@ import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { StreamPermission } from '../../src'
 import { createTestMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { first } from '../../src/utils/GeneratorUtils'
+import { nextValue } from '../../src/utils/iterators'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
@@ -55,8 +55,8 @@ describe('Subscriber', () => {
         const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
         publisherNode.publishToNode(createMockMessage())
 
-        const receivedMessage = await first(sub)
-        expect(receivedMessage.getParsedContent()).toEqual(MOCK_CONTENT)
+        const receivedMessage = await nextValue(sub)
+        expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
     it('with encryption', async () => {
@@ -73,8 +73,8 @@ describe('Subscriber', () => {
 
         publisherNode.publishToNode(createMockMessage(groupKey))
 
-        const receivedMessage = await first(sub)
-        expect(receivedMessage.getParsedContent()).toEqual(MOCK_CONTENT)
+        const receivedMessage = await nextValue(sub)
+        expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
     it('group key response error', async () => {

@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
 
-import { iteratorFinally, CancelableGenerator } from '../../src/utils/iterators'
+import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils'
 
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
@@ -904,5 +904,32 @@ describe('Iterator Utils', () => {
             expect(ranTests).toHaveBeenCalledTimes(1)
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
         })
+    })
+})
+
+describe('nextValue', () => {
+    it('happy path', async () => {
+        const generator = async function* () {
+            yield 1
+            yield 2
+        }()
+        expect(await nextValue(generator)).toBe(1)
+        expect(await nextValue(generator)).toBe(2)
+        expect(await nextValue(generator)).toBe(undefined)
+    })
+
+    it('return value', async () => {
+        const generator = async function* () {
+            yield 1
+            return 2
+        }()
+        expect(await nextValue(generator)).toBe(1)
+        expect(await nextValue(generator)).toBe(2)
+        expect(await nextValue(generator)).toBe(undefined)
+    })
+
+    it('empty', async () => {
+        const generator = async function* () {}()
+        expect(await nextValue(generator)).toBe(undefined)
     })
 })

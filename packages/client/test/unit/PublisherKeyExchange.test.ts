@@ -19,7 +19,7 @@ import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKe
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { createTestMessage } from '../test-utils/utils'
-import { first } from '../../src/utils/GeneratorUtils'
+import { nextValue } from '../../src/utils/iterators'
 
 describe('PublisherKeyExchange', () => {
 
@@ -109,8 +109,8 @@ describe('PublisherKeyExchange', () => {
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publishToNode(request)
 
-            const response = await first(receivedResponses)
-            await testSuccessResponse(response, [key])
+            const response = await nextValue(receivedResponses)
+            await testSuccessResponse(response!, [key])
         })
 
         it('no group key in store', async () => {
@@ -119,8 +119,8 @@ describe('PublisherKeyExchange', () => {
             const request = createGroupKeyRequest(GroupKey.generate().id)
             subscriberNode.publishToNode(request)
 
-            const response = await first(receivedResponses)
-            await testSuccessResponse(response, [])
+            const response = await nextValue(receivedResponses)
+            await testSuccessResponse(response!, [])
         })
 
         it('invalid request', async () => {
@@ -131,7 +131,7 @@ describe('PublisherKeyExchange', () => {
             delete request.signature
             subscriberNode.publishToNode(request)
 
-            const response = await first(receivedResponses)
+            const response = await nextValue(receivedResponses)
             const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
             expect(response).toMatchObject({
                 messageId: {
@@ -145,7 +145,7 @@ describe('PublisherKeyExchange', () => {
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: expect.any(String)
             })
-            expect(GroupKeyErrorResponse.fromArray(response.getParsedContent() as any)).toMatchObject({
+            expect(GroupKeyErrorResponse.fromArray(response!.getParsedContent() as any)).toMatchObject({
                 requestId: expect.any(String),
                 errorCode: expect.any(String),
                 errorMessage: expect.any(String),
