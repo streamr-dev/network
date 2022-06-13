@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
-import { 
+import {
     GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
     StreamMessage,
@@ -44,13 +44,13 @@ describe('PublisherKeyExchange', () => {
         })
         return stream
     }
-    
+
     const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
         return createTestMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
             publisher: subscriberWallet,
             content: JSON.stringify([
-                uuid(), 
+                uuid(),
                 mockStream.id,
                 subscriberRsaKeyPair.getPublicKey(),
                 [groupKeyId]
@@ -105,32 +105,32 @@ describe('PublisherKeyExchange', () => {
             await store.add(key)
 
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
-    
+
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publishToNode(request)
-    
+
             const response = await first(receivedResponses)
             await testSuccessResponse(response, [key])
         })
 
         it('no group key in store', async () => {
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
-        
+
             const request = createGroupKeyRequest(GroupKey.generate().id)
             subscriberNode.publishToNode(request)
-    
+
             const response = await first(receivedResponses)
             await testSuccessResponse(response, [])
         })
-    
+
         it('invalid request', async () => {
             const groupKey = GroupKey.generate()
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
-        
+
             const request: any = createGroupKeyRequest(groupKey.id)
             delete request.signature
             subscriberNode.publishToNode(request)
-    
+
             const response = await first(receivedResponses)
             const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
             expect(response).toMatchObject({

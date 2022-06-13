@@ -85,7 +85,7 @@ describe('Subscriber', () => {
         const publisherNode = await addFakePublisherNode(
             publisherWallet,
             [],
-            dependencyContainer, 
+            dependencyContainer,
             () => 'mock-error-code'
         )
 

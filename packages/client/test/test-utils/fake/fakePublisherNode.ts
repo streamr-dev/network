@@ -2,7 +2,7 @@ import { DependencyContainer } from 'tsyringe'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { createTestMessage } from '../utils'
-import { 
+import {
     EthereumAddress,
     GroupKeyErrorResponse,
     GroupKeyRequest,
@@ -17,7 +17,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { addFakeNode } from './fakeEnvironment'
 
 const createGroupKeySuccessResponse = async (
-    request: StreamMessage<GroupKeyRequestSerialized>, 
+    request: StreamMessage<GroupKeyRequestSerialized>,
     groupKeys: GroupKey[],
     publisherWallet: Wallet,
     streamRegistry: StreamRegistry
@@ -70,7 +70,7 @@ export const addFakePublisherNode = async (
     setImmediate(async () => {
         for await (const request of requests) {
             const errorCode = getError(request)
-            const response = (errorCode === undefined) 
+            const response = (errorCode === undefined)
                 ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet, streamRegistry)
                 : createGroupKeyErrorResponse(errorCode, request, publisherWallet)
             publisherNode.publishToNode(response)

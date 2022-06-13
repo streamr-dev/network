@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
-import { 
+import {
     KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
@@ -67,7 +67,7 @@ describe('SubscriberKeyExchange', () => {
         ])
         return await receivedKey
     }
-    
+
     beforeEach(async () => {
         publisherWallet = Wallet.createRandom()
         subscriberWallet = Wallet.createRandom()
@@ -100,7 +100,7 @@ describe('SubscriberKeyExchange', () => {
             await addFakePublisherNode(
                 publisherWallet,
                 [],
-                fakeContainer, 
+                fakeContainer,
                 () => 'mock-error-code'
             )
 
