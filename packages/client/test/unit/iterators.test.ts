@@ -38,8 +38,8 @@ describe('Iterator Utils', () => {
     })
 
     describe('iteratorFinally', () => {
-        let onFinally
-        let onFinallyAfter
+        let onFinally: jest.Mock
+        let onFinallyAfter: jest.Mock
 
         beforeEach(() => {
             onFinallyAfter = jest.fn()
@@ -61,7 +61,7 @@ describe('Iterator Utils', () => {
         it('runs fn when iterator.return() is called asynchronously', async () => {
             const done = Defer()
             try {
-                const received = []
+                const received: number[] = []
                 const itr = iteratorFinally(generate(), onFinally)
                 const onTimeoutReached = jest.fn()
                 let receievedAtCallTime
@@ -72,7 +72,7 @@ describe('Iterator Utils', () => {
                         setTimeout(done.wrap(() => {
                             onTimeoutReached()
                             receievedAtCallTime = received
-                            itr.return()
+                            itr.return(undefined)
                         }))
                     }
                 }
@@ -85,12 +85,12 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator returns + breaks during iteration', async () => {
-            const received = []
+            const received: number[] = []
             const itr = iteratorFinally(generate(), onFinally)
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
-                    itr.return() // no await
+                    itr.return(undefined) // no await
                     break
                 }
             }
@@ -100,7 +100,7 @@ describe('Iterator Utils', () => {
         it('does not call inner iterators onFinally with error if outer errors', async () => {
             // maybe not desirable, but captures existing behaviour.
             // this matches native generator/iterator behaviour, at most outermost iteration errors
-            const received = []
+            const received: number[] = []
             const err = new Error('expected err')
             const itr = iteratorFinally(generate(), onFinally)
             await expect(async () => {
@@ -116,14 +116,14 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator returns + throws during iteration', async () => {
-            const received = []
+            const received: number[] = []
             const err = new Error('expected err')
             const itr = iteratorFinally(generate(), onFinally)
             await expect(async () => {
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
-                        itr.return() // no await
+                        itr.return(undefined) // no await
                         throw err
                     }
                 }
@@ -133,9 +133,9 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator returns before iteration', async () => {
-            const received = []
+            const received: number[] = []
             const itr = iteratorFinally(generate(), onFinally)
-            await itr.return()
+            await itr.return(undefined)
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
             for await (const msg of itr) {
@@ -145,7 +145,7 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator returns before iteration', async () => {
-            const received = []
+            const received: number[] = []
             const onStarted = jest.fn()
             const itr = iteratorFinally((async function* Test() {
                 onStarted()
@@ -154,7 +154,7 @@ describe('Iterator Utils', () => {
                 await wait(WAIT * 5)
                 await onFinally()
             })
-            itr.return() // no await
+            itr.return(undefined) // no await
             for await (const msg of itr) {
                 received.push(msg)
             }
@@ -163,11 +163,11 @@ describe('Iterator Utils', () => {
         })
 
         it('runs finally once, waits for outstanding if returns before iteration', async () => {
-            const received = []
+            const received: number[] = []
             const itr = iteratorFinally(generate(), onFinally)
 
-            const t1 = itr.return()
-            const t2 = itr.return()
+            const t1 = itr.return(undefined)
+            const t2 = itr.return(undefined)
             await Promise.race([t1, t2])
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -182,7 +182,7 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator throws before iteration', async () => {
-            const received = []
+            const received: number[] = []
             const err = new Error('expected err')
             const itr = iteratorFinally(generate(), onFinally)
             await expect(async () => itr.throw(err)).rejects.toThrow(err)
@@ -196,7 +196,7 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when inner iterator throws during iteration', async () => {
-            const received = []
+            const received: number[] = []
             const err = new Error('expected err')
             const itr = iteratorFinally(generateThrow(expected, {
                 err,
@@ -212,8 +212,8 @@ describe('Iterator Utils', () => {
         })
 
         it('errored before start iterator works if onFinally is async', async () => {
-            const received = []
-            const errs = []
+            const received: number[] = []
+            const errs: Error[] = []
             const onFinallyDelayed = jest.fn(async (err) => {
                 errs.push(err)
                 await wait(100)
@@ -233,8 +233,8 @@ describe('Iterator Utils', () => {
         })
 
         it('errored iterator works if onFinally is async', async () => {
-            const received = []
-            const errs = []
+            const received: number[] = []
+            const errs: Error[] = []
             const onFinallyDelayed = jest.fn(async (err) => {
                 errs.push(err)
                 await wait(100)
@@ -257,8 +257,8 @@ describe('Iterator Utils', () => {
         })
 
         describe('nesting', () => {
-            let onFinallyInnerAfter
-            let onFinallyInner
+            let onFinallyInnerAfter: jest.Mock
+            let onFinallyInner: jest.Mock
 
             beforeEach(() => {
                 onFinallyInnerAfter = jest.fn()
@@ -283,7 +283,7 @@ describe('Iterator Utils', () => {
                 const itrInner = iteratorFinally(generate(), onFinallyInner)
                 const itr = iteratorFinally(itrInner, onFinally)
 
-                const received = []
+                const received: number[] = []
                 for await (const msg of itr) {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
@@ -295,7 +295,7 @@ describe('Iterator Utils', () => {
             })
 
             it('calls iterator onFinally with error if outer errors', async () => {
-                const received = []
+                const received: number[] = []
                 const err = new Error('expected err')
                 const innerItr = iteratorFinally(generate(), onFinallyInner)
                 const itr = iteratorFinally((async function* Outer() {
@@ -319,7 +319,7 @@ describe('Iterator Utils', () => {
             })
 
             it('calls iterator onFinally with error if inner errors', async () => {
-                const received = []
+                const received: number[] = []
                 const err = new Error('expected err')
                 const itrInner = iteratorFinally((async function* Outer() {
                     for await (const msg of generate()) {
@@ -345,14 +345,14 @@ describe('Iterator Utils', () => {
         })
 
         it('runs finally once, waits for outstanding', async () => {
-            const received = []
+            const received: number[] = []
             const itr = iteratorFinally(generate(), onFinally)
 
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
-                    const t1 = itr.return()
-                    const t2 = itr.return()
+                    const t1 = itr.return(undefined)
+                    const t2 = itr.return(undefined)
                     await Promise.race([t1, t2])
                     expect(onFinally).toHaveBeenCalledTimes(1)
                     expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -368,8 +368,8 @@ describe('Iterator Utils', () => {
     })
 
     describe('CancelableGenerator', () => {
-        let onFinally
-        let onFinallyAfter
+        let onFinally: jest.Mock
+        let onFinallyAfter: jest.Mock
 
         beforeEach(() => {
             onFinallyAfter = jest.fn()
@@ -390,7 +390,7 @@ describe('Iterator Utils', () => {
 
         it('can cancel during iteration', async () => {
             const itr = CancelableGenerator(generate(), onFinally)
-            const received = []
+            const received: number[] = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
@@ -404,7 +404,7 @@ describe('Iterator Utils', () => {
 
         it('can cancel before iteration', async () => {
             const itr = CancelableGenerator(generate(), onFinally)
-            const received = []
+            const received: number[] = []
             itr.cancel()
             expect(itr.isCancelled()).toEqual(true)
             for await (const msg of itr) {
@@ -419,7 +419,7 @@ describe('Iterator Utils', () => {
             const itr = CancelableGenerator(generate(), () => {
                 return onFinally()
             })
-            const received = []
+            const received: number[] = []
             const err = new Error('expected')
             itr.cancel(err)
             await expect(async () => {
@@ -435,7 +435,7 @@ describe('Iterator Utils', () => {
             const done = Defer()
             try {
                 const err = new Error('expected')
-                const received = []
+                const received: number[] = []
                 const itr = CancelableGenerator(generate(), onFinally, {
                     timeout: WAIT,
                 })
@@ -467,7 +467,7 @@ describe('Iterator Utils', () => {
         it('cancels when iterator.cancel() is called asynchronously', async () => {
             const done = Defer()
             try {
-                const received = []
+                const received: number[] = []
                 const itr = CancelableGenerator(generate(), onFinally, {
                     timeout: WAIT,
                 })
@@ -493,7 +493,7 @@ describe('Iterator Utils', () => {
         })
 
         it('prevents subsequent .next call', async () => {
-            const received = []
+            const received: any[] = []
             const triggeredForever = jest.fn()
             const itr = CancelableGenerator((async function* Gen() {
                 yield* expected
@@ -517,7 +517,7 @@ describe('Iterator Utils', () => {
         })
 
         it('interrupts outstanding .next call', async () => {
-            const received = []
+            const received: any[] = []
             const triggeredForever = jest.fn()
             const itr = CancelableGenerator((async function* Gen() {
                 yield* expected
@@ -539,7 +539,7 @@ describe('Iterator Utils', () => {
         it('interrupts outstanding .next call when called asynchronously', async () => {
             const done = Defer()
             try {
-                const received = []
+                const received: any[] = []
                 const triggeredForever = jest.fn()
                 const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
@@ -585,7 +585,7 @@ describe('Iterator Utils', () => {
                 timeout: WAIT * 2
             })
 
-            const received = []
+            const received: number[] = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === 2) {
@@ -604,7 +604,7 @@ describe('Iterator Utils', () => {
         it('interrupts outstanding .next call with error', async () => {
             const done = Defer()
             try {
-                const received = []
+                const received: any[] = []
                 const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     yield await new Promise(() => {}) // would wait forever
@@ -733,13 +733,13 @@ describe('Iterator Utils', () => {
         it('ignores err if cancelled', async () => {
             const done = Defer()
             try {
-                const received = []
+                const received: number[] = []
                 const err = new Error('expected')
                 const d = Defer()
                 const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     await wait(WAIT * 2)
-                    d.resolve()
+                    d.resolve(undefined)
                     throw new Error('should not see this')
                 }()), onFinally)
 
@@ -770,8 +770,8 @@ describe('Iterator Utils', () => {
         })
 
         describe('nesting', () => {
-            let onFinallyInnerAfter
-            let onFinallyInner
+            let onFinallyInnerAfter: jest.Mock
+            let onFinallyInner: jest.Mock
 
             beforeEach(() => {
                 onFinallyInnerAfter = jest.fn()
@@ -821,7 +821,7 @@ describe('Iterator Utils', () => {
                     timeout: WAIT,
                 })
 
-                const received = []
+                const received: any[] = []
                 for await (const msg of itrOuter) {
                     received.push(msg)
                     if (received.length === expected.length) {
@@ -862,7 +862,7 @@ describe('Iterator Utils', () => {
                         timeout: WAIT,
                     })
 
-                    const received = []
+                    const received: any[] = []
                     for await (const msg of itrOuter) {
                         received.push(msg)
                         if (received.length === expected.length) {
@@ -885,7 +885,7 @@ describe('Iterator Utils', () => {
             const itr = CancelableGenerator(generate(), onFinally)
             const ranTests = jest.fn()
 
-            const received = []
+            const received: number[] = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
