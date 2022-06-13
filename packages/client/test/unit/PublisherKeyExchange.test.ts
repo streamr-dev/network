@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 import { 
     GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
-    SigningUtil,
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
