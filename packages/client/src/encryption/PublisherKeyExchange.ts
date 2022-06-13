@@ -7,7 +7,9 @@ import {
     ValidationError,
     StreamID,
     EthereumAddress,
-    GroupKeyRequestSerialized
+    GroupKeyRequestSerialized,
+    GroupKeyResponseSerialized,
+    GroupKeyErrorResponseSerialized
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
@@ -88,7 +90,7 @@ export class PublisherKeyExchange implements Context {
 
     private getWrapError(
         streamMessage: StreamMessage
-    ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
+    ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponseSerialized | GroupKeyErrorResponseSerialized> | undefined> {
         return async (error: ValidationError) => {
             try {
                 const subscriberId = streamMessage.getPublisherId()
@@ -106,7 +108,7 @@ export class PublisherKeyExchange implements Context {
                     errorMessage: error.message,
                     groupKeyIds
                 })
-                return await this.keyExchangeStream.response(subscriberId, response)
+                return this.keyExchangeStream.response(subscriberId, response)
             } catch (err) {
                 this.debug('unexpected error responding with error', err)
                 return undefined

@@ -2,7 +2,9 @@ import {
     StreamMessage,
     GroupKeyRequest,
     GroupKeyResponse,
+    GroupKeyResponseSerialized,
     GroupKeyErrorResponse,
+    GroupKeyErrorResponseSerialized,
     EthereumAddress,
     KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
@@ -83,7 +85,9 @@ export class KeyExchangeStream implements Context {
         }
 
         return publishAndWaitForResponseMessage(
-            () => this.publisher.publish(streamPartId, request),
+            () => this.publisher.publish(streamPartId, request.toArray(), {
+                messageType: request.messageType
+            }),
             matchFn,
             () => this.createSubscription(),
             () => this.subscribe.reset(),
@@ -94,17 +98,15 @@ export class KeyExchangeStream implements Context {
     async response(
         subscriberId: EthereumAddress, 
         response: GroupKeyResponse | GroupKeyErrorResponse
-    ): Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
-        // hack overriding toStreamMessage method to set correct encryption type
-        const toStreamMessage = response.toStreamMessage.bind(response)
-        response.toStreamMessage = (...args) => {
-            const msg = toStreamMessage(...args)
-            if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-                msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
-            }
-            return msg
+    ): Promise<StreamMessage<GroupKeyResponseSerialized | GroupKeyErrorResponseSerialized>> {
+        const content = response.toArray()
+        const encryptionType = (response.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) 
+            ? StreamMessage.ENCRYPTION_TYPES.RSA 
+            : StreamMessage.ENCRYPTION_TYPES.NONE
+        const metadata = {
+            messageType: response.messageType,
+            encryptionType
         }
-
-        return this.publisher.publish(KeyExchangeStreamIDUtils.formStreamPartID(subscriberId), response)
+        return this.publisher.publish(KeyExchangeStreamIDUtils.formStreamPartID(subscriberId), content, metadata)
     }
 }
