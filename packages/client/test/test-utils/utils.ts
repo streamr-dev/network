@@ -676,15 +676,21 @@ export const toStreamDefinition = (streamPart: StreamPartID): { id: string, part
     }
 }
 
-export const createTestMessage = (opts: Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
-    streamPartId: StreamPartID,
+type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
     publisher: Wallet
     msgChainId?: string
     timestamp?: number
     sequenceNumber?: number,
     encryptionKey?: GroupKey
-}): StreamMessage<any> => {
-    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(opts.streamPartId)
+}
+
+export const createMockMessage = (  
+    opts: CreateMockMessageOptionsBase 
+    & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
+): StreamMessage<any> => {
+    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
+        opts.streamPartId ?? opts.stream.getStreamParts()[0]
+    )
     const msg = new StreamMessage({
         messageId: new MessageID(
             streamId,

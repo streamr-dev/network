@@ -18,7 +18,7 @@ import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
-import { createTestMessage } from '../test-utils/utils'
+import { createMockMessage } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
 
 describe('PublisherKeyExchange', () => {
@@ -46,7 +46,7 @@ describe('PublisherKeyExchange', () => {
     }
 
     const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
-        return createTestMessage({
+        return createMockMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
             publisher: subscriberWallet,
             content: JSON.stringify([

@@ -1,7 +1,7 @@
 import { DependencyContainer } from 'tsyringe'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
-import { createTestMessage } from '../utils'
+import { createMockMessage } from '../utils'
 import {
     EthereumAddress,
     GroupKeyErrorResponse,
@@ -22,7 +22,7 @@ const createGroupKeySuccessResponse = async (
     publisherWallet: Wallet,
     streamRegistry: StreamRegistry
 ): Promise<StreamMessage<any>> => {
-    return createTestMessage({
+    return createMockMessage({
         streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(request.getPublisherId()),
         publisher: publisherWallet,
         content: (await createGroupKeyResponse(
@@ -42,7 +42,7 @@ const createGroupKeyErrorResponse = (
 ): StreamMessage<any> => {
     const request = GroupKeyRequest.fromArray(requestMessage.getParsedContent())
     const { requestId, streamId, groupKeyIds } = request
-    return createTestMessage({
+    return createMockMessage({
         streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(requestMessage.getPublisherId()),
         publisher: publisherWallet,
         messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
