@@ -163,3 +163,7 @@ export async function* unique<T>(
         }
     }
 }
+
+export const first = async <T>(source: AsyncGenerator<T>): Promise<T> => {
+    return (await collect<T>(source, 1))[0]
+}

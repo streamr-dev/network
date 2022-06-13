@@ -19,6 +19,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { createTestMessage } from '../test-utils/utils'
+import { first } from '../../src/utils/GeneratorUtils'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 const UNAVAILABLE_GROUP_KEY = GroupKey.generate()
@@ -64,9 +65,8 @@ describe('SubscriberKeyExchange', () => {
     }
 
     const createResponseMessage = async (request: StreamMessage<GroupKeyRequestSerialized>): Promise<StreamMessage> => {
-        const subscriberAddress = request.getPublisherId()
         return createTestMessage({
-            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(subscriberAddress),
+            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(request.getPublisherId()),
             publisher: publisherWallet,
             content: (await createGroupKeyResponse(
                 request,
@@ -107,7 +107,7 @@ describe('SubscriberKeyExchange', () => {
                 groupKeyId: AVAILABLE_GROUP_KEY.id
             } as any)
             
-            const groupKeyRequest = await receivedRequests.pop()
+            const groupKeyRequest = await first(receivedRequests)
             testSuccessRequest(groupKeyRequest, [ AVAILABLE_GROUP_KEY.id ])
             
             const response = await createResponseMessage(groupKeyRequest as any) 
@@ -126,7 +126,7 @@ describe('SubscriberKeyExchange', () => {
                 groupKeyId: UNAVAILABLE_GROUP_KEY.id
             } as any)
             
-            const groupKeyRequest = await receivedRequests.pop()
+            const groupKeyRequest = await first(receivedRequests)
             testSuccessRequest(groupKeyRequest, [ UNAVAILABLE_GROUP_KEY.id ])
             
             const response = await createResponseMessage(groupKeyRequest as any) 
@@ -145,7 +145,7 @@ describe('SubscriberKeyExchange', () => {
                 groupKeyId: UNAVAILABLE_GROUP_KEY.id
             } as any)
 
-            const groupKeyRequest = await receivedRequests.pop()
+            const groupKeyRequest = await first(receivedRequests)
             const requestId = GroupKeyRequest.fromArray((groupKeyRequest as any).getParsedContent()).requestId
 
             const response = createTestMessage({

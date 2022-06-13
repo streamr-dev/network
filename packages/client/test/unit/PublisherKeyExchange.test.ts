@@ -20,6 +20,7 @@ import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKe
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { createTestMessage } from '../test-utils/utils'
+import { first } from '../../src/utils/GeneratorUtils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -109,7 +110,7 @@ describe('PublisherKeyExchange', () => {
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publishToNode(request)
     
-            const response = await receivedResponses.pop()
+            const response = await first(receivedResponses)
             await testSuccessResponse(response, [key])
         })
 
@@ -119,7 +120,7 @@ describe('PublisherKeyExchange', () => {
             const request = createGroupKeyRequest(GroupKey.generate().id)
             subscriberNode.publishToNode(request)
     
-            const response = await receivedResponses.pop()
+            const response = await first(receivedResponses)
             await testSuccessResponse(response, [])
         })
     
@@ -131,7 +132,7 @@ describe('PublisherKeyExchange', () => {
             delete request.signature
             subscriberNode.publishToNode(request)
     
-            const response = await receivedResponses.pop()
+            const response = await first(receivedResponses)
             const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
             expect(response).toMatchObject({
                 messageId: {
