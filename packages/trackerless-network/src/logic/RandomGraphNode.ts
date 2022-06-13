@@ -2,6 +2,7 @@ import EventEmitter = require('events')
 import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer } from '@streamr/dht'
 import { DataMessage, Layer2Message } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
+import { range } from 'lodash'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -44,7 +45,6 @@ export class RandomGraphNode extends EventEmitter {
         this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         const candidates = this.getNewNeighborCandidates()
-        console.log(candidates.length)
         if (candidates.length) {
             this.newContact(candidates[0], candidates)
         }
@@ -63,7 +63,6 @@ export class RandomGraphNode extends EventEmitter {
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
-        console.log(closestTen.length)
         const toReplace: string[] = []
         this.contactPool.replaceAll(closestTen)
         this.selectedNeighbors.getStringIds().forEach((neighbor) => {
@@ -88,18 +87,34 @@ export class RandomGraphNode extends EventEmitter {
         this.replaceNeighbors(toReplace)
     }
 
-    private async replaceNeighbors(stringIds: string[]): void {
-        stringIds.map((replace) => {
-            if (this.selectedNeighbors.hasNeighborWithStringId(replace)) {
-                this.selectedNeighbors.
+    private async replaceNeighbors(stringIds: string[]): Promise<void> {
+        const promises = stringIds.map((replace) => {
+            const toReplace = this.selectedNeighbors.getNeighborWithId(replace)
+            if (toReplace) {
+                this.selectedNeighbors.remove(toReplace)
+                this.addRandomContactToNeighbors()
             }
         })
+        // Fill up neighbors to N
+        if (this.selectedNeighbors.size() < this.N) {
+            promises.concat(...range(this.N - this.selectedNeighbors.size()).map(() => {
+                this.addRandomContactToNeighbors()
+            }))
+        }
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
         return this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
         })
+    }
+
+    private addRandomContactToNeighbors(): void {
+        const newNeighbor = this.contactPool.getRandom()
+        if (newNeighbor) {
+            // Negotiate Layer 2 connection here if success add as neighbor
+            this.selectedNeighbors.add(newNeighbor)
+        }
     }
 
     getSelectedNeighborIds(): string[] {

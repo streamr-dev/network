@@ -12,10 +12,10 @@
     ],
     "references": [
         {
-            "path": "../dht/tsconfig.node.json"
+            "path": "../proto-rpc/tsconfig.node.json"
         },
         {
-            "path": "../proto-rpc/tsconfig.node.json"
+            "path": "../dht/tsconfig.node.json"
         }
     ]
 }

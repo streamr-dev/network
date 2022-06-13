@@ -1,4 +1,5 @@
 import { PeerDescriptor, PeerID } from '@streamr/dht'
+import { shuffle } from 'lodash'
 
 export class NodeNeighbors {
     private readonly neighbors: Map<string, PeerDescriptor>
@@ -46,5 +47,18 @@ export class NodeNeighbors {
 
     private toStringId(peerDescriptor: PeerDescriptor): string {
         return PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+    }
+
+    size(): number {
+        return this.neighbors.size
+    }
+
+    getRandom(): PeerDescriptor | undefined {
+        const keys = [...this.neighbors.keys()]
+        const shuffled = shuffle(keys)
+        if (shuffled.length) {
+            return this.neighbors.get(shuffled[0])
+        }
+        return undefined
     }
 }
