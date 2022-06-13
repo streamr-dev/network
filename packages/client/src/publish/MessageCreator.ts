@@ -7,7 +7,9 @@ import {
     StreamMessageEncrypted,
     StreamMessageSigned,
     StreamID,
-    toStreamPartID
+    toStreamPartID,
+    StreamMessageType,
+    EncryptionType
 } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from '../utils'
@@ -21,7 +23,9 @@ export type MessageCreateOptions<T = unknown> = {
     content: T,
     timestamp: number,
     partitionKey?: string | number
-    msgChainId?: string
+    msgChainId?: string,
+    messageType?: StreamMessageType
+    encryptionType?: EncryptionType
 }
 
 export interface IMessageCreator {

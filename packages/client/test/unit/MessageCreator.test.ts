@@ -74,6 +74,28 @@ describe('MessageCreator', () => {
         expect(streamPartitioner.compute).toHaveBeenCalledWith(MOCK_STREAM_ID, undefined)
     })
 
+    it('options', async () => {
+        const partitionKey = 'mock-partition-key'
+        const msgChainId = 'mock-msg-chain-id'
+        const messageType = StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        const encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
+        const msg = await createMockMessage({
+            partitionKey,
+            msgChainId,
+            messageType,
+            encryptionType
+        })
+        expect(msg).toMatchObject({
+            encryptionType,
+            messageId: {
+                msgChainId,
+                streamPartition: MOCK_STREAM_PARTITION
+            },
+            messageType
+        })
+        expect(streamPartitioner.compute).toHaveBeenCalledWith(MOCK_STREAM_ID, partitionKey)
+    })
+
     it('chaining', async () => {
         const msg1 = await createMockMessage()
         const msg2 = await createMockMessage()
