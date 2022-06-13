@@ -40,6 +40,10 @@ export class NodeNeighbors {
         return [...this.neighbors.keys()]
     }
 
+    getNeighborWithId(id: string): PeerDescriptor | undefined {
+        return this.neighbors.get(id)
+    }
+
     private toStringId(peerDescriptor: PeerDescriptor): string {
         return PeerID.fromValue(peerDescriptor.peerId).toMapKey()
     }

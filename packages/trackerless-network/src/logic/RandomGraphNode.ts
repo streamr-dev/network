@@ -1,5 +1,5 @@
 import EventEmitter = require('events')
-import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor } from '@streamr/dht'
+import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer } from '@streamr/dht'
 import { DataMessage, Layer2Message } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
 
@@ -25,7 +25,7 @@ export class RandomGraphNode extends EventEmitter {
     private readonly layer1: DhtNode
     private messageListener: messageListener | null = null
     private readonly contactPool: NodeNeighbors
-    private readonly closeNeighbors: NodeNeighbors = new NodeNeighbors(4)
+    private readonly selectedNeighbors: NodeNeighbors = new NodeNeighbors(4)
     // private readonly randomNeighbors: PeerDescriptor[] = []
 
     constructor(params: RandomGraphNodeParams) {
@@ -34,7 +34,7 @@ export class RandomGraphNode extends EventEmitter {
         this.layer1 = params.layer1
 
         this.contactPool = new NodeNeighbors(this.PEER_VIEW_SIZE)
-        this.closeNeighbors = new NodeNeighbors(this.N)
+        this.selectedNeighbors = new NodeNeighbors(this.N)
     }
 
     start(): void {
@@ -43,7 +43,11 @@ export class RandomGraphNode extends EventEmitter {
         }
         this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
-
+        const candidates = this.getNewNeighborCandidates()
+        console.log(candidates.length)
+        if (candidates.length) {
+            this.newContact(candidates[0], candidates)
+        }
     }
 
     stop(): void {
@@ -59,37 +63,50 @@ export class RandomGraphNode extends EventEmitter {
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+        console.log(closestTen.length)
         const toReplace: string[] = []
         this.contactPool.replaceAll(closestTen)
-        this.closeNeighbors.getStringIds().forEach((neighbor) => {
+        this.selectedNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
             }
         })
-        this.replaceContacts(toReplace)
+        this.replaceNeighbors(toReplace)
     }
 
     private removedContact(removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         const toReplace: string[] = []
-        if (this.closeNeighbors.hasNeighbor(removedContact)) {
+        if (this.selectedNeighbors.hasNeighbor(removedContact)) {
             toReplace.push(PeerID.fromValue(removedContact.peerId).toMapKey())
         }
         this.contactPool.replaceAll(closestTen)
-        this.closeNeighbors.getStringIds().forEach((neighbor) => {
+        this.selectedNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
             }
         })
-        this.replaceContacts(toReplace)
+        this.replaceNeighbors(toReplace)
     }
 
-    private replaceContacts(_stringIds: string[]): void {
-
+    private async replaceNeighbors(stringIds: string[]): void {
+        stringIds.map((replace) => {
+            if (this.selectedNeighbors.hasNeighborWithStringId(replace)) {
+                this.selectedNeighbors.
+            }
+        })
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
-        return this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((contact) => {
+        return this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
         })
+    }
+
+    getSelectedNeighborIds(): string[] {
+        return this.selectedNeighbors.getStringIds()
+    }
+
+    getContactPoolIds(): string[] {
+        return this.contactPool.getStringIds()
     }
 }
