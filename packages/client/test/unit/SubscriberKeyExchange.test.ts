@@ -5,7 +5,6 @@ import {
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     KeyExchangeStreamIDUtils,
-    MessageID,
     SigningUtil,
     StreamMessage,
     StreamPartIDUtils,
@@ -19,6 +18,7 @@ import { StreamPermission } from '../../src/permission'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
+import { createTestMessage } from '../test-utils/utils'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 const UNAVAILABLE_GROUP_KEY = GroupKey.generate()
@@ -65,16 +65,9 @@ describe('SubscriberKeyExchange', () => {
 
     const createResponseMessage = async (request: StreamMessage<GroupKeyRequestSerialized>): Promise<StreamMessage> => {
         const subscriberAddress = request.getPublisherId()
-        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberAddress)
-        const msg = new StreamMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
-                0,
-                0,
-                publisherWallet.address,
-                'msgChainId'
-            ),
+        const msg = createTestMessage({
+            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(subscriberAddress),
+            publisherId: publisherWallet.address,
             content: (await createGroupKeyResponse(
                 request,
                 async (groupKeyId: string) => (groupKeyId === AVAILABLE_GROUP_KEY.id) ? AVAILABLE_GROUP_KEY : undefined,
@@ -157,16 +150,9 @@ describe('SubscriberKeyExchange', () => {
             const groupKeyRequest = await receivedRequests.pop()
             const requestId = GroupKeyRequest.fromArray((groupKeyRequest as any).getParsedContent()).requestId
 
-            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
-            const response = new StreamMessage({
-                messageId: new MessageID(
-                    StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                    StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
-                    0,
-                    0,
-                    publisherWallet.address.toLowerCase(),
-                    'msgChainId'
-                ),
+            const response = createTestMessage({
+                streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address),
+                publisherId: publisherWallet.address,
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
                 contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,

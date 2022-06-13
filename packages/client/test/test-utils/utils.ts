@@ -5,7 +5,16 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { EthereumAddress, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamPartID, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
+import { 
+    EthereumAddress,
+    StreamMessage,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamPartID,
+    MAX_PARTITION_COUNT,
+    StreamMessageOptions,
+    MessageID 
+} from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../../src/StreamrClient'
@@ -662,4 +671,26 @@ export const toStreamDefinition = (streamPart: StreamPartID): { id: string, part
         id,
         partition
     }
+}
+
+export const createTestMessage = (opts: Omit<Partial<StreamMessageOptions<any>>, 'messageId'> & {
+    streamPartId: StreamPartID,
+    publisherId: string
+    msgChainId?: string
+    timestamp?: number
+    sequenceNumber?: number
+}) => {
+    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(opts.streamPartId)
+    return new StreamMessage({
+        messageId: new MessageID(
+            streamId,
+            partition,
+            opts.timestamp ?? Date.now(),
+            opts.sequenceNumber ?? 0,
+            opts.publisherId,
+            opts.msgChainId ?? 'msgChainId'
+        ),
+        content: {},
+        ...opts
+    })
 }

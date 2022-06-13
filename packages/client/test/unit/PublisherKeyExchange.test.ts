@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 import { 
     GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
-    MessageID,
     SigningUtil,
     StreamMessage,
     StreamPartIDUtils,
@@ -20,6 +19,7 @@ import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
+import { createTestMessage } from '../test-utils/utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -46,16 +46,9 @@ describe('PublisherKeyExchange', () => {
     }
     
     const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
-        const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
-        const msg = new StreamMessage({
-            messageId: new MessageID(
-                StreamPartIDUtils.getStreamID(publisherKeyExchangeStreamPartId),
-                StreamPartIDUtils.getStreamPartition(publisherKeyExchangeStreamPartId),
-                0,
-                0,
-                subscriberWallet.address,
-                'msgChainId'
-            ),
+        const msg = createTestMessage({
+            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
+            publisherId: subscriberWallet.address,
             content: JSON.stringify([
                 uuid(), 
                 mockStream.id,
