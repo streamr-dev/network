@@ -65,19 +65,17 @@ describe('SubscriberKeyExchange', () => {
 
     const createResponseMessage = async (request: StreamMessage<GroupKeyRequestSerialized>): Promise<StreamMessage> => {
         const subscriberAddress = request.getPublisherId()
-        const msg = createTestMessage({
+        return createTestMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(subscriberAddress),
-            publisherId: publisherWallet.address,
+            publisher: publisherWallet,
             content: (await createGroupKeyResponse(
                 request,
                 async (groupKeyId: string) => (groupKeyId === AVAILABLE_GROUP_KEY.id) ? AVAILABLE_GROUP_KEY : undefined,
                 async () => true
             )).serialize(),
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
         })
-        msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey)
-        return msg
     }
 
     beforeEach(async () => {
@@ -152,20 +150,18 @@ describe('SubscriberKeyExchange', () => {
 
             const response = createTestMessage({
                 streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address),
-                publisherId: publisherWallet.address,
+                publisher: publisherWallet,
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
                 contentType: StreamMessage.CONTENT_TYPES.JSON,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 content: new GroupKeyErrorResponse({
                     requestId,
                     streamId: mockStream.id,
                     errorCode: 'UNEXPECTED_ERROR',
                     errorMessage: '',
                     groupKeyIds: [ UNAVAILABLE_GROUP_KEY.id ]
-                }).serialize()
+                }).serialize(),
             })
-            response.signature = SigningUtil.sign(response.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey)
             publisherNode.publishToNode(response)
             
             expect(receivedKey).rejects.toThrow()

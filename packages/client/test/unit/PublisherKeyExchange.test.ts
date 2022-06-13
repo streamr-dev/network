@@ -46,9 +46,9 @@ describe('PublisherKeyExchange', () => {
     }
     
     const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
-        const msg = createTestMessage({
+        return createTestMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
-            publisherId: subscriberWallet.address,
+            publisher: subscriberWallet,
             content: JSON.stringify([
                 uuid(), 
                 mockStream.id,
@@ -57,10 +57,8 @@ describe('PublisherKeyExchange', () => {
             ]),
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
         })
-        msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), subscriberWallet.privateKey)
-        return msg
     }
 
     const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
