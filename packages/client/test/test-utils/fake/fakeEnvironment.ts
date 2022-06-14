@@ -16,6 +16,10 @@ import { FakeHttpUtil } from './FakeHttpUtil'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { EthereumAddress } from 'streamr-client-protocol'
 
+export const DEFAULT_CLIENT_OPTIONS = {
+    metrics: false
+}
+
 export interface ClientFactory {
     createClient: (opts?: StreamrClientConfig) => StreamrClient
 }
@@ -44,7 +48,7 @@ export const createFakeContainer = (config: StreamrClientConfig | undefined): De
          */
         const { privateKey } = c.resolve(ConfigInjectionToken.Auth) as AuthConfig
         const activeNodes = c.resolve(ActiveNodes)
-        const address = ethereumAddressCache.getAddress(privateKey!)
+        const address = ethereumAddressCache.getAddress(privateKey ?? fastPrivateKey())
         let node = activeNodes.getNode(address)
         if (node === undefined) {
             const { id } = c.resolve(ConfigInjectionToken.Root) as StrictStreamrClientConfig
@@ -70,7 +74,7 @@ export const createClientFactory = (): ClientFactory => {
                 }
             }
             const config = {
-                metrics: false,
+                ...DEFAULT_CLIENT_OPTIONS,
                 ...authOpts,
                 ...opts
             }
