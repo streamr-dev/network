@@ -133,10 +133,6 @@ export class Ethereum {
         return (this._getAddress !== undefined)
     }
 
-    canEncrypt(): boolean {
-        return !!(this._getAddress && this._getSigner)
-    }
-
     async getAddress(): Promise<EthereumAddress> {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor

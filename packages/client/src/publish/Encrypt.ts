@@ -6,7 +6,6 @@ import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { Ethereum } from '../Ethereum'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Encrypt {
@@ -15,7 +14,6 @@ export class Encrypt {
     constructor(
         private streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
-        private ethereum: Ethereum,
     ) {
     }
 
@@ -24,10 +22,6 @@ export class Encrypt {
 
         if (StreamMessage.isEncrypted(streamMessage)) {
             // already encrypted
-            return
-        }
-
-        if (!this.ethereum.canEncrypt()) {
             return
         }
 
