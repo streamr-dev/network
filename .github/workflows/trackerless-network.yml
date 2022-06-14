@@ -28,21 +28,9 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: Install protoc
-        run: |
-          version=3.12.0
-          archive=protoc-${version}-linux-x86_64.zip
-          curl -O -L https://github.com/protocolbuffers/protobuf/releases/download/v${version}/${archive}
-          sudo unzip -d '/usr/local' ${archive} 'bin/*' 'include/*'
-          sudo chmod 755 /usr/local/bin/protoc
-          rm ${archive}
-          protoc --version
       - name: bootstrap-pkg
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/proto-rpc
-          npm run bootstrap-pkg @streamr/dht
-          npm run bootstrap-pkg @streamr/trackerless-network
+        run: npm run bootstrap-pkg @streamr/trackerless-network
       - name: Eslint
         run: npm run eslint
       - name: Tests
