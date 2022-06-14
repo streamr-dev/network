@@ -30,8 +30,7 @@ jobs:
           node-version-file: '.nvmrc'
       - name: bootstrap-pkg
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/proto-rpc
+        run:
           npm run bootstrap-pkg @streamr/dht
       - name: Eslint
         run: npm run eslint
