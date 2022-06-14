@@ -5,6 +5,7 @@ import { MetricsContext } from 'streamr-network'
 import { BrubeckNode, NetworkNodeStub } from '../../../src/BrubeckNode'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { ActiveNodes } from './ActiveNodes'
+import { TransformStream } from 'node:stream/web'
 
 type MessageListener = (msg: StreamMessage) => void
 
@@ -139,13 +140,16 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
-    addSubscriber(streamPartId: StreamPartID, onMessage: (msg: StreamMessage<unknown>) => unknown): void {
+    async* addSubscriber<T>(streamPartId: StreamPartID): AsyncGenerator<StreamMessage<T>, any, undefined> {
+        const messages = new TransformStream()
+        const messageWriter = messages.writable.getWriter()
         this.networkNodeStub.addMessageListener((msg: StreamMessage) => {
             if (msg.getStreamPartID() === streamPartId) {
-                onMessage(msg)
+                messageWriter.write(msg)
             }
         })
         this.networkNodeStub.subscribe(streamPartId)
+        yield* messages.readable
     }
 
     async getNodeId(): Promise<EthereumAddress> {

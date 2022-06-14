@@ -22,6 +22,7 @@ describe('Connection', () => {
             targetPeerId: 'peer2',
             routerId: 'tracker',
             stunUrls: [],
+            pingInterval: 5000,
             messageQueue: new MessageQueue<string>(),
             deferredConnectionAttempt: new DeferredConnectionAttempt()
         }
@@ -31,6 +32,7 @@ describe('Connection', () => {
             targetPeerId: 'peer1',
             routerId: 'tracker',
             stunUrls: [],
+            pingInterval: 5000,
             messageQueue: new MessageQueue<string>(),
             deferredConnectionAttempt: new DeferredConnectionAttempt()
         }

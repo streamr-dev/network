@@ -1,118 +1,72 @@
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { v4 as uuid } from 'uuid'
-import { 
-    EthereumAddress,
-    MessageID,
-    SigningUtil,
-    StreamID,
-    StreamIDUtils,
+import {
+    GroupKeyErrorResponse,
+    KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
-    toStreamPartID
 } from 'streamr-client-protocol'
 import { StreamRegistry } from '../../src/StreamRegistry'
-import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
-import { waitForCondition } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import { RsaKeyPair } from '../../src/encryption/RsaKeyPair'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
-
-const MOCK_GROUP_KEY = new GroupKey('mock-group-key-id', Buffer.from('mock-group-key-256-bits---------'))
-
-const createMockStream = async (
-    subscriberAddress: EthereumAddress,
-    fakeContainer: DependencyContainer
-) => {
-    const streamRegistry = fakeContainer.resolve(StreamRegistry)
-    const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
-    streamRegistry.grantPermissions(stream.id, {
-        permissions: [StreamPermission.SUBSCRIBE],
-        user: subscriberAddress
-    })
-    return stream
-}
-
-const createGroupKeyRequest = (
-    streamId: StreamID,
-    rsaPublicKey: string,
-    subscriberWallet: Wallet,
-    publisherAddress: EthereumAddress
-): StreamMessage => {
-    const publisherKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(publisherAddress)
-    const msg = new StreamMessage({
-        messageId: new MessageID(publisherKeyExchangeStreamId, DEFAULT_PARTITION, 0, 0, subscriberWallet.address, 'msgChainId'),
-        content: JSON.stringify([
-            uuid(), 
-            streamId,
-            rsaPublicKey,
-            [MOCK_GROUP_KEY.id]
-        ]),
-        messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-        encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-        contentType: StreamMessage.CONTENT_TYPES.JSON
-    })
-    msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), subscriberWallet.privateKey)
-    return msg
-}
+import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
+import { createMockMessage } from '../test-utils/utils'
+import { nextValue } from '../../src/utils/iterators'
 
 describe('PublisherKeyExchange', () => {
 
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
-    let mockStream: Stream
     let subscriberRsaKeyPair: RsaKeyPair
+    let subscriberNode: FakeBrubeckNode
+    let mockStream: Stream
     let fakeContainer: DependencyContainer
 
-    beforeAll(async () => {
-        publisherWallet = Wallet.createRandom()
-        subscriberWallet = Wallet.createRandom()
-        fakeContainer = createFakeContainer({
-            auth: {
-                privateKey: publisherWallet.privateKey
-            }
-        })
-        mockStream = await createMockStream(subscriberWallet.address, fakeContainer)
-        const groupKeyStoreFactory = fakeContainer.resolve(GroupKeyStoreFactory)
-        const groupKeyStore = await groupKeyStoreFactory.getStore(mockStream.id)
-        groupKeyStore.add(MOCK_GROUP_KEY)
-        subscriberRsaKeyPair = await RsaKeyPair.create()
-    })
-
-    /*
-     * A publisher node starts a subscription to receive group key requests
-     * - tests that a correct kind of response message is sent to a subscriber node
-     */
-    it('responds to a group key request', async () => {
+    const startPublisherKeyExchangeSubscription = async (): Promise<void> => {
         const publisherKeyExchange = fakeContainer.resolve(PublisherKeyExchange)
-        await publisherKeyExchange.useGroupKey(mockStream.id) // subscribes to the key exchange stream
+        await publisherKeyExchange.useGroupKey(mockStream.id)
+    }
 
-        const groupKeyRequest = createGroupKeyRequest(
-            mockStream.id,
-            subscriberRsaKeyPair.getPublicKey(),
-            subscriberWallet,
-            publisherWallet.address
-        )
-        const groupKeyResponses: StreamMessage[] = []
-        const subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
-        const subscriberKeyExchangeStreamId = StreamIDUtils.formKeyExchangeStreamID(subscriberWallet.address)
-        subscriberNode.addSubscriber(toStreamPartID(subscriberKeyExchangeStreamId, DEFAULT_PARTITION), (msg: StreamMessage) => {
-            groupKeyResponses.push(msg)
+    const createStream = async () => {
+        const streamRegistry = fakeContainer.resolve(StreamRegistry)
+        const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
+        streamRegistry.grantPermissions(stream.id, {
+            permissions: [StreamPermission.SUBSCRIBE],
+            user: subscriberWallet.address
         })
-        subscriberNode.publishToNode(groupKeyRequest)
+        return stream
+    }
 
-        await waitForCondition(() => groupKeyResponses.length > 0)
-        const groupKeyResponse = groupKeyResponses[0]
-        expect(groupKeyResponse).toMatchObject({
+    const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
+        return createMockMessage({
+            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
+            publisher: subscriberWallet,
+            content: JSON.stringify([
+                uuid(),
+                mockStream.id,
+                subscriberRsaKeyPair.getPublicKey(),
+                [groupKeyId]
+            ]),
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
+        })
+    }
+
+    const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
+        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+        expect(actualResponse).toMatchObject({
             messageId: {
-                streamId: subscriberKeyExchangeStreamId,
-                streamPartition: DEFAULT_PARTITION,
+                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
                 publisherId: publisherWallet.address.toLowerCase(),
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
@@ -121,8 +75,82 @@ describe('PublisherKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
-        const groupKeys = await getGroupKeysFromStreamMessage(groupKeyResponse, subscriberRsaKeyPair.getPrivateKey())
-        expect(groupKeys).toHaveLength(1)
-        expect(groupKeys[0]).toEqual(MOCK_GROUP_KEY)
+        const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRsaKeyPair.getPrivateKey())
+        expect(actualKeys).toEqual(expectedGroupKeys)
+    }
+
+    beforeEach(async () => {
+        publisherWallet = Wallet.createRandom()
+        subscriberWallet = Wallet.createRandom()
+        subscriberRsaKeyPair = await RsaKeyPair.create()
+        fakeContainer = createFakeContainer({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        })
+        mockStream = await createStream()
+        subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
+        await startPublisherKeyExchangeSubscription()
+    })
+
+    describe('responds to a group key request', () => {
+
+        /*
+         * A publisher node starts a subscription to receive group key requests
+         * - tests that a correct kind of response message is sent to a subscriber node
+         */
+        it('happy path', async () => {
+            const key = GroupKey.generate()
+            const store = await (await fakeContainer.resolve(GroupKeyStoreFactory)).getStore(mockStream.id)
+            await store.add(key)
+
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+
+            const request = createGroupKeyRequest(key.id)
+            subscriberNode.publishToNode(request)
+
+            const response = await nextValue(receivedResponses)
+            await testSuccessResponse(response!, [key])
+        })
+
+        it('no group key in store', async () => {
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+
+            const request = createGroupKeyRequest(GroupKey.generate().id)
+            subscriberNode.publishToNode(request)
+
+            const response = await nextValue(receivedResponses)
+            await testSuccessResponse(response!, [])
+        })
+
+        it('invalid request', async () => {
+            const groupKey = GroupKey.generate()
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+
+            const request: any = createGroupKeyRequest(groupKey.id)
+            delete request.signature
+            subscriberNode.publishToNode(request)
+
+            const response = await nextValue(receivedResponses)
+            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
+            expect(response).toMatchObject({
+                messageId: {
+                    streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                    streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                    publisherId: publisherWallet.address.toLowerCase(),
+                },
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                signature: expect.any(String)
+            })
+            expect(GroupKeyErrorResponse.fromArray(response!.getParsedContent() as any)).toMatchObject({
+                requestId: expect.any(String),
+                errorCode: expect.any(String),
+                errorMessage: expect.any(String),
+                groupKeyIds: [ groupKey.id ]
+            })
+        })
     })
 })

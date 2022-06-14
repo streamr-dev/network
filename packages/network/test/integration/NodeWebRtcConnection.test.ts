@@ -48,6 +48,7 @@ describe('Connection', () => {
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
+            pingInterval: 5000,
             stunUrls: [],
             messageQueue: messageQueueOne,
             deferredConnectionAttempt: deferredConnectionAttemptOne
@@ -59,6 +60,7 @@ describe('Connection', () => {
             selfId: 'two',
             targetPeerId: 'one',
             routerId: 'routerId',
+            pingInterval: 5000,
             stunUrls: [],
             messageQueue: messageQueueTwo,
             deferredConnectionAttempt: deferredConnectionAttemptTwo

@@ -66,13 +66,6 @@ export interface ObjectType<T> {
     signatureType: SignatureType;
     signature: string|null
 }
-/**
- * Any object that contains a toStreamMessage interface.
- * e.g. GroupKeyMessage
- */
-export type StreamMessageContainer<T = unknown> = {
-    toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
-}
 
 /**
  * Unsigned StreamMessage.
@@ -447,11 +440,6 @@ export default class StreamMessage<T = unknown> {
 
     static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
-    }
-
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static isStreamMessageContainer<T = unknown>(content: any): content is StreamMessageContainer<T> {
-        return !!(content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
     }
 
     toObject(): ObjectType<T> {

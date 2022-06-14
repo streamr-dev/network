@@ -2,9 +2,11 @@ import {
     StreamMessage,
     GroupKeyRequest,
     GroupKeyResponse,
+    GroupKeyResponseSerialized,
     GroupKeyErrorResponse,
-    StreamIDUtils,
-    EthereumAddress
+    GroupKeyErrorResponseSerialized,
+    EthereumAddress,
+    KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -57,8 +59,8 @@ export class KeyExchangeStream implements Context {
     private async createSubscription(): Promise<Subscription<unknown>> {
         // subscribing to own keyexchange stream
         const publisherId = await this.ethereum.getAddress()
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
-        const sub = await this.subscriber.subscribe(streamId)
+        const streamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherId)
+        const sub = await this.subscriber.subscribe(streamPartId)
         const onDestroy = () => {
             return sub.unsubscribe()
         }
@@ -71,7 +73,7 @@ export class KeyExchangeStream implements Context {
     }
 
     async request(publisherId: EthereumAddress, request: GroupKeyRequest): Promise<StreamMessage<unknown> | undefined> {
-        const streamId = StreamIDUtils.formKeyExchangeStreamID(publisherId)
+        const streamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherId)
 
         const matchFn = (streamMessage: StreamMessage) => {
             const { messageType } = streamMessage
@@ -83,7 +85,9 @@ export class KeyExchangeStream implements Context {
         }
 
         return publishAndWaitForResponseMessage(
-            () => this.publisher.publish(streamId, request),
+            () => this.publisher.publish(streamPartId, request.toArray(), {
+                messageType: request.messageType
+            }),
             matchFn,
             () => this.createSubscription(),
             () => this.subscribe.reset(),
@@ -94,15 +98,15 @@ export class KeyExchangeStream implements Context {
     async response(
         subscriberId: EthereumAddress, 
         response: GroupKeyResponse | GroupKeyErrorResponse
-    ): Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
-        // hack overriding toStreamMessage method to set correct encryption type
-        const toStreamMessage = response.toStreamMessage.bind(response)
-        response.toStreamMessage = (...args) => {
-            const msg = toStreamMessage(...args)
-            msg.encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
-            return msg
+    ): Promise<StreamMessage<GroupKeyResponseSerialized | GroupKeyErrorResponseSerialized>> {
+        const content = response.toArray()
+        const encryptionType = (response.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) 
+            ? StreamMessage.ENCRYPTION_TYPES.RSA 
+            : StreamMessage.ENCRYPTION_TYPES.NONE
+        const metadata = {
+            messageType: response.messageType,
+            encryptionType
         }
-
-        return this.publisher.publish(StreamIDUtils.formKeyExchangeStreamID(subscriberId), response)
+        return this.publisher.publish(KeyExchangeStreamIDUtils.formStreamPartID(subscriberId), content, metadata)
     }
 }

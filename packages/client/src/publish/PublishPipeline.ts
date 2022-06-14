@@ -1,7 +1,7 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from '../utils/log'
@@ -46,7 +46,11 @@ export interface MessageMetadata {
     timestamp?: string | number | Date
     sequenceNumber?: number
     partitionKey?: string | number,
-    msgChainId?: string
+    msgChainId?: string,
+    /** @internal */
+    messageType?: StreamMessageType
+    /** @internal */
+    encryptionType?: EncryptionType
 }
 
 // TODO better name? 
