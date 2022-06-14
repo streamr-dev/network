@@ -606,7 +606,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
         const response = {
             peers: peerDescriptors,
-            nonce: 'aaaaaa'
+            nonce: request.nonce
         }
         return response
     }

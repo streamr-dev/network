@@ -88,7 +88,8 @@ communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _
   
 ```typescript
 const result = await helloClient.sayHello({ myName: 'Alice' })
-console.log(result.response.greeting)
+const response = await result.response
+console.log(response.greeting)
 ```
 
 - finally, discard the RpcCommunicators to clean up pontially pending async calls and other
