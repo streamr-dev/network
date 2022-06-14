@@ -177,7 +177,7 @@ describe('Connection', () => {
 
         expect(connectionOne.isOpen()).toEqual(false)
         expect(connectionTwo.isOpen()).toEqual(false)
-    })
+    }, 30 * 1000)
     
     it('can not connect if closed then opened again in series', async () => {
         // open
