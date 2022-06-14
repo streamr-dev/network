@@ -19,7 +19,7 @@ import { Publisher } from '../publish/Publisher'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
 import { GroupKey } from './GroupKey'
-import { EncryptionUtil, StreamMessageProcessingError } from './EncryptionUtil'
+import { EncryptionUtil, UnableToDecryptError } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
 import { StreamRegistryCached } from '../StreamRegistryCached'
@@ -157,7 +157,7 @@ export class PublisherKeyExchange implements Context {
         }
 
         sub.consume(this.onKeyExchangeMessage).catch(() => {})
-        sub.onError.listen(async (err: Error | StreamMessageProcessingError) => {
+        sub.onError.listen(async (err: Error | UnableToDecryptError) => {
             if (!('streamMessage' in err)) {
                 this.debug('unexpected', err)
                 return // do nothing, supress.

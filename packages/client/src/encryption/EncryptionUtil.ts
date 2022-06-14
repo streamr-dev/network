@@ -3,13 +3,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes'
 import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-client-protocol'
 import { GroupKey } from './GroupKey'
 
-export class StreamMessageProcessingError extends StreamMessageError {
-    constructor(message = '', streamMessage: StreamMessage) {
-        super(`Could not process. ${message}`, streamMessage)
-    }
-}
-
-export class UnableToDecryptError extends StreamMessageProcessingError {
+export class UnableToDecryptError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
         super(`Unable to decrypt. ${message}`, streamMessage)
     }

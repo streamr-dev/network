@@ -12,20 +12,15 @@ import * as G from '../utils/GeneratorUtils'
 
 export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
 
-export type MessageStreamOptions = {
-    bufferSize?: number
-    name?: string
-}
-
 export class MessageStream<
     T = unknown,
     InType = StreamMessage<T>,
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
     /** @internal */
-    constructor(context: Context, { bufferSize, name = '' }: MessageStreamOptions = {}) {
-        super(bufferSize)
-        this.id = instanceId(this, name)
+    constructor(context: Context) {
+        super(undefined)
+        this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 

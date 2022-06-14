@@ -3,7 +3,7 @@
  * Primary interface for consuming StreamMessages.
  */
 import { StreamPartID } from 'streamr-client-protocol'
-import { MessageStream, MessageStreamOptions, MessageStreamOnMessage } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { SubscriptionSession } from './SubscriptionSession'
 
 export { MessageStreamOnMessage as SubscriptionOnMessage }
@@ -17,8 +17,8 @@ export class Subscription<T = unknown> extends MessageStream<T> {
     readonly streamPartId: StreamPartID
 
     /** @internal */
-    constructor(subSession: SubscriptionSession<T>, options?: MessageStreamOptions) {
-        super(subSession, options)
+    constructor(subSession: SubscriptionSession<T>) {
+        super(subSession)
         this.context = subSession
         this.streamPartId = subSession.streamPartId
         this.onMessage.listen((msg) => {
