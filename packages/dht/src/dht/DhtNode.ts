@@ -209,13 +209,21 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 connectionManager.disconnect(contact.getPeerDescriptor())
             }
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
-            this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor(), this.neighborList!.getActiveContacts(10))
+            this.emit(
+                Event.CONTACT_REMOVED,
+                contact.getPeerDescriptor(),
+                this.neighborList!.getActiveContacts(10).map((peer) => peer.getPeerDescriptor())
+            )
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
             if ( !contact.peerId.equals(this.ownPeerId!) ) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
-                    this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor(), this.neighborList!.getActiveContacts(10))
+                    this.emit(
+                        Event.NEW_CONTACT,
+                        contact.getPeerDescriptor(),
+                        this.neighborList!.getActiveContacts(10).map((peer) => peer.getPeerDescriptor())
+                    )
                 } else {
                     this.removeContact(contact.getPeerDescriptor())
                     this.addClosestContactToBucket()

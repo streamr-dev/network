@@ -1,56 +1,87 @@
-import { DhtNode, Simulator, MockConnectionManager, PeerDescriptor } from '@streamr/dht'
+import { DhtNode, Simulator, MockConnectionManager, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { range } from 'lodash'
 
 describe('RandomGraphNode-DhtNode', () => {
-    let dhtNode: DhtNode
+    const numOfNodes = 128
+    let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
-    let graphNode: RandomGraphNode
+    let graphNodes: RandomGraphNode[]
 
     const streamId = 'Stream1'
     const entrypointDescriptor: PeerDescriptor = {
-        peerId: new Uint8Array([1,1,1]),
+        peerId: PeerID.fromString('entrypoint').value,
         type: 0
     }
 
-    const peerDescriptor: PeerDescriptor = {
-        peerId: new Uint8Array([1,2,3]),
-        type: 0
-    }
+    const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
+        return {
+            peerId: PeerID.fromString(`peer${i}`).value,
+            type: 0
+        }
+    })
     beforeEach(async () => {
         const simulator = new Simulator()
-        const cm1 = new MockConnectionManager(entrypointDescriptor, simulator)
-        const cm2 = new MockConnectionManager(peerDescriptor, simulator)
+        const entrypointCm = new MockConnectionManager(entrypointDescriptor, simulator)
+
+        const cms: MockConnectionManager[] = range(numOfNodes).map((i) =>
+            new MockConnectionManager(peerDescriptors[i], simulator)
+        )
 
         dhtEntryPoint = new DhtNode({
-            transportLayer: cm1,
+            transportLayer: entrypointCm,
             peerDescriptor: entrypointDescriptor,
             appId: streamId
         })
-        dhtNode = new DhtNode({
-            transportLayer: cm2,
-            peerDescriptor: peerDescriptor,
-            appId: streamId
-        })
 
-        graphNode = new RandomGraphNode({
+        dhtNodes = range(numOfNodes).map((i) => new DhtNode({
+            transportLayer: cms[i],
+            peerDescriptor: peerDescriptors[i],
+            appId: streamId
+        }))
+
+        graphNodes = range(numOfNodes).map((i) => new RandomGraphNode({
             randomGraphId: streamId,
-            layer1: dhtNode
-        })
+            layer1: dhtNodes[i]
+        }))
+
         await dhtEntryPoint.start()
         await dhtEntryPoint.joinDht(entrypointDescriptor)
-        await dhtNode.start()
-        await dhtNode.joinDht(entrypointDescriptor)
-        graphNode.start()
+        await Promise.all(dhtNodes.map((node) => node.start()))
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         dhtEntryPoint.stop()
-        dhtNode.stop()
-        graphNode.stop()
+        await Promise.all(dhtNodes.map((node) => node.stop()))
+        await Promise.all(graphNodes.map((node) => node.stop()))
     })
 
-    it('todo', () => {
-        expect(graphNode.getContactPoolIds().length).toEqual(1)
-        expect(graphNode.getSelectedNeighborIds().length).toEqual(1)
+    it('happy path single peer', async () => {
+        await dhtNodes[0].joinDht(entrypointDescriptor)
+        await graphNodes[0].start()
+        expect(graphNodes[0].getContactPoolIds().length).toEqual(1)
+        expect(graphNodes[0].getSelectedNeighborIds().length).toEqual(1)
+    })
+
+    it('happy path 4 peers', async () => {
+        range(4).map((i) => graphNodes[i].start())
+        await Promise.all(range(4).map(async (i) => {
+            await dhtNodes[i].joinDht(entrypointDescriptor)
+        }))
+        range(4).map((i) => {
+            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(2)
+            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
+        })
+    })
+
+    it('happy path 128 peers', async () => {
+        range(numOfNodes).map((i) => graphNodes[i].start())
+        await Promise.all(range(numOfNodes).map(async (i) => {
+            await dhtNodes[i].joinDht(entrypointDescriptor)
+        }))
+        range(numOfNodes).map((i) => {
+            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(8)
+            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(3)
+        })
     })
 })

@@ -61,4 +61,8 @@ export class NodeNeighbors {
         }
         return undefined
     }
+
+    clear(): void {
+        this.neighbors.clear()
+    }
 }
