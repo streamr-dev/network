@@ -51,7 +51,11 @@ export class RandomGraphNode extends EventEmitter {
     }
 
     stop(): void {
-
+        this.removeAllListeners()
+        this.layer1.off(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.off(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.contactPool.clear()
+        this.selectedNeighbors.clear()
     }
 
     broadcast(_msg: DataMessage): void {
@@ -76,6 +80,7 @@ export class RandomGraphNode extends EventEmitter {
     private removedContact(removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         const toReplace: string[] = []
         if (this.selectedNeighbors.hasNeighbor(removedContact)) {
+            console.log(removedContact)
             toReplace.push(PeerID.fromValue(removedContact.peerId).toMapKey())
         }
         this.contactPool.replaceAll(closestTen)
@@ -87,7 +92,7 @@ export class RandomGraphNode extends EventEmitter {
         this.replaceNeighbors(toReplace)
     }
 
-    private async replaceNeighbors(stringIds: string[]): Promise<void> {
+    private replaceNeighbors(stringIds: string[]): void{
         const promises = stringIds.map((replace) => {
             const toReplace = this.selectedNeighbors.getNeighborWithId(replace)
             if (toReplace) {
@@ -101,6 +106,7 @@ export class RandomGraphNode extends EventEmitter {
                 this.addRandomContactToNeighbors()
             }))
         }
+
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
