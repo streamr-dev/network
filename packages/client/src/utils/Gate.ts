@@ -36,7 +36,7 @@ import { Debug } from './log'
 export class Gate implements Context {
     readonly id
     readonly debug
-    isLocked = false
+    public isLocked = false
     private pending?: Deferred<void>
 
     constructor(name?: string) {

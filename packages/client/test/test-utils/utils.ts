@@ -5,7 +5,17 @@ import { DependencyContainer } from 'tsyringe'
 import fetch from 'node-fetch'
 import { KeyServer, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
-import { EthereumAddress, StreamMessage, StreamPartID, StreamPartIDUtils, toStreamPartID, MAX_PARTITION_COUNT } from 'streamr-client-protocol'
+import { 
+    EthereumAddress,
+    StreamMessage,
+    StreamPartID,
+    StreamPartIDUtils,
+    toStreamPartID,
+    MAX_PARTITION_COUNT,
+    StreamMessageOptions,
+    MessageID, 
+    SigningUtil
+} from 'streamr-client-protocol'
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../../src/StreamrClient'
@@ -22,6 +32,9 @@ import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
+import { PublishPipeline } from '../../src/publish/PublishPipeline'
+import { GroupKey } from '../../src/encryption/GroupKey'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -221,12 +234,12 @@ export function snapshot(): string {
 }
 
 export class LeaksDetector {
-    leakDetectors: Map<string, LeakDetector> = new Map()
-    ignoredValues = new WeakSet()
-    id = instanceId(this)
-    debug = testDebug(this.id)
-    seen = new WeakSet()
-    didGC = false
+    private leakDetectors: Map<string, LeakDetector> = new Map()
+    private ignoredValues = new WeakSet()
+    private id = instanceId(this)
+    private debug = testDebug(this.id)
+    private seen = new WeakSet()
+    private didGC = false
 
     // temporary whitelist leaks in network code
     ignoredKeys = new Set([
@@ -490,7 +503,9 @@ export function getPublishTestStreamMessages(
 
         const contents = new WeakMap()
         // @ts-expect-error private
-        client.publisher.streamMessageQueue.onMessage.listen(([streamMessage]) => {
+        const publishPipeline = client.container.resolve(PublishPipeline)
+        // @ts-expect-error private
+        publishPipeline.streamMessageQueue.onMessage.listen(([streamMessage]) => {
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
@@ -659,4 +674,39 @@ export const toStreamDefinition = (streamPart: StreamPartID): { id: string, part
         id,
         partition
     }
+}
+
+type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
+    publisher: Wallet
+    msgChainId?: string
+    timestamp?: number
+    sequenceNumber?: number,
+    encryptionKey?: GroupKey
+}
+
+export const createMockMessage = (  
+    opts: CreateMockMessageOptionsBase 
+    & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
+): StreamMessage<any> => {
+    const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
+        opts.streamPartId ?? opts.stream.getStreamParts()[0]
+    )
+    const msg = new StreamMessage({
+        messageId: new MessageID(
+            streamId,
+            partition,
+            opts.timestamp ?? Date.now(),
+            opts.sequenceNumber ?? 0,
+            opts.publisher.address,
+            opts.msgChainId ?? 'msgChainId'
+        ),
+        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+        content: {},
+        ...opts
+    })
+    if (opts.encryptionKey !== undefined) {
+        EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
+    }
+    msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
+    return msg
 }

@@ -1,5 +1,11 @@
 import { EventEmitter } from 'events'
-import { ControlLayer, MessageLayer, ProxyDirection, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import {
+    ControlLayer,
+    MessageLayer,
+    ProxyDirection,
+    StreamPartID,
+    StreamPartIDUtils
+} from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
@@ -101,7 +107,7 @@ export class NodeToNode extends EventEmitter {
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
         if (peerInfo.isNode()) {
-            const message = decode(rawMessage, ControlLayer.ControlMessage.deserialize)
+            const message = decode<ControlLayer.ControlMessage>(rawMessage, ControlLayer.ControlMessage.deserialize)
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {

@@ -1,9 +1,11 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
+import { Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, Queue, fetchPrivateKeyWithGas, startTestTracker } from '../utils'
+import { createClient, startBroker, createTestStream, fetchPrivateKeyWithGas, startTestTracker } from '../utils'
+import { wait } from 'streamr-test-utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
@@ -93,24 +95,39 @@ export const createMessagingPluginTest = <T>(
             await streamrClient?.destroy()
         })
 
-        test('publish', async () => {
-            await streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
-                messageQueue.push({ content, metadata: metadata.messageId })
+        describe('happy path', () => {
+            test('publish', async () => {
+                await streamrClient.subscribe(stream.id, (content: any, metadata: any) => {
+                    messageQueue.push({ content, metadata: metadata.messageId })
+                })
+                pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
+                await api.publish(MOCK_MESSAGE, stream.id, pluginClient)
+                const message = await messageQueue.pop()
+                assertReceivedMessage(message)
             })
-            pluginClient = await api.createClient('publish', stream.id, MOCK_API_KEY)
-            await api.publish(MOCK_MESSAGE, stream.id, pluginClient)
-            const message = await messageQueue.pop()
-            assertReceivedMessage(message)
+    
+            test('subscribe', async () => {
+                pluginClient = await api.createClient('subscribe', stream.id, MOCK_API_KEY)
+                await api.subscribe(messageQueue, stream.id, pluginClient)
+                await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
+                    timestamp: MOCK_MESSAGE.metadata.timestamp
+                })
+                const message = await messageQueue.pop()
+                assertReceivedMessage(message)
+            })
         })
 
-        test('subscribe', async () => {
-            pluginClient = await api.createClient('subscribe', stream.id, MOCK_API_KEY)
-            await api.subscribe(messageQueue, stream.id, pluginClient)
-            await streamrClient.publish(stream.id, MOCK_MESSAGE.content, {
-                timestamp: MOCK_MESSAGE.metadata.timestamp
-            })
-            const message = await messageQueue.pop()
-            assertReceivedMessage(message)
+        it('publish to non-existent stream', async () => {
+            const streamId = 'non-existent-stream'
+            pluginClient = await api.createClient('publish', streamId, MOCK_API_KEY)
+            await api.publish(MOCK_MESSAGE, streamId, pluginClient)
+            // Wait for some time so that the plugin can handle the publish request (api.publish() 
+            // resolves immediately e.g. in websocket plugin test as websocket.send() doesn't 
+            // return a promise). 
+            // If the api.publish call causes the plugin to throw an unhandled error, jest catches 
+            // the error and this test fails. There should be "Unable to publish" warning in the 
+            // Broker log, but this test can't verify it. 
+            await wait(1000)
         })
     })
 }

@@ -5,13 +5,24 @@ import sinon from 'sinon'
 import { StreamMessageValidator, SigningUtil, toStreamID, EthereumAddress } from '../../../src'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageID from '../../../src/protocol/message_layer/MessageID'
+import GroupKeyMessage from '../../../src/protocol/message_layer/GroupKeyMessage'
 import GroupKeyRequest from '../../../src/protocol/message_layer/GroupKeyRequest'
 import GroupKeyResponse from '../../../src/protocol/message_layer/GroupKeyResponse'
 import GroupKeyAnnounce from '../../../src/protocol/message_layer/GroupKeyAnnounce'
+import MessageRef from '../../../src/protocol/message_layer/MessageRef'
 import GroupKeyErrorResponse from '../../../src/protocol/message_layer/GroupKeyErrorResponse'
 import EncryptedGroupKey from '../../../src/protocol/message_layer/EncryptedGroupKey'
 import ValidationError from '../../../src/errors/ValidationError'
 import { StreamMetadata } from '../../../src/utils/StreamMessageValidator'
+
+const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
+    return new StreamMessage({
+        messageId,
+        prevMsgRef,
+        content: groupKeyMessage.serialize(),
+        messageType: groupKeyMessage.messageType,
+    })
+}
 
 describe('StreamMessageValidator', () => {
     let getStream: (streamId: string) => Promise<StreamMetadata>
@@ -77,48 +88,40 @@ describe('StreamMessageValidator', () => {
         sign(msgWithNewGroupKey, publisherPrivateKey)
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
-        groupKeyRequest = new GroupKeyRequest({
+        groupKeyRequest = groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
             streamId: toStreamID('streamId'),
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
-        }).toStreamMessage(
-            new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null,
-        )
+        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null)
         sign(groupKeyRequest, subscriberPrivateKey)
 
-        groupKeyResponse = new GroupKeyResponse({
+        groupKeyResponse = groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
             streamId: toStreamID('streamId'),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
-        }).toStreamMessage(
-            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
-        )
+        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
         sign(groupKeyResponse, publisherPrivateKey)
 
-        groupKeyAnnounce = new GroupKeyAnnounce({
+        groupKeyAnnounce = groupKeyMessageToStreamMessage(new GroupKeyAnnounce({
             streamId: toStreamID('streamId'),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
-        }).toStreamMessage(
-            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
-        )
+        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
         sign(groupKeyAnnounce, publisherPrivateKey)
 
-        groupKeyErrorResponse = new GroupKeyErrorResponse({
+        groupKeyErrorResponse = groupKeyMessageToStreamMessage(new GroupKeyErrorResponse({
             requestId: 'requestId',
             streamId: toStreamID('streamId'),
             errorCode: 'ErrorCode',
             errorMessage: 'errorMessage',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
-        }).toStreamMessage(
-            new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null,
-        )
+        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
         sign(groupKeyErrorResponse, publisherPrivateKey)
     })
 

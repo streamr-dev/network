@@ -1,12 +1,14 @@
 /**
  * Subscription message processing pipeline
  */
-
-import { StreamMessage, StreamMessageError, GroupKeyErrorResponse, StreamPartID } from 'streamr-client-protocol'
-
+import { 
+    StreamMessage,
+    StreamMessageError,
+    GroupKeyErrorResponse,
+    StreamPartID
+} from 'streamr-client-protocol'
 import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
-
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
@@ -69,7 +71,7 @@ export function SubscribePipeline<T = unknown>(
         // convert group key error responses into errors
         // (only for subscribe pipeline, not publish pipeline)
         .forEach((streamMessage: StreamMessage) => {
-            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            if ((streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE)) {
                 const errMsg = streamMessage as StreamMessage<any>
                 const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
                 const err = new StreamMessageError(`GroupKeyErrorResponse: ${res.errorMessage}`, streamMessage, res.errorCode)

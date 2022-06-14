@@ -7,11 +7,12 @@ import {
     StreamMessageEncrypted,
     StreamMessageSigned,
     StreamID,
-    toStreamPartID
+    toStreamPartID,
+    StreamMessageType,
+    EncryptionType
 } from 'streamr-client-protocol'
 
 import { LimitAsyncFnByKey } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
@@ -22,7 +23,9 @@ export type MessageCreateOptions<T = unknown> = {
     content: T,
     timestamp: number,
     partitionKey?: string | number
-    msgChainId?: string
+    msgChainId?: string,
+    messageType?: StreamMessageType
+    encryptionType?: EncryptionType
 }
 
 export interface IMessageCreator {
@@ -44,11 +47,10 @@ export class MessageCreatorAnonymous implements IMessageCreator {
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class MessageCreator implements IMessageCreator, Stoppable {
-    isStopped = false
+export class MessageCreator implements IMessageCreator {
     // encrypt
-    queue: ReturnType<typeof LimitAsyncFnByKey>
-    getMsgChain
+    private queue: ReturnType<typeof LimitAsyncFnByKey>
+    private getMsgChain
 
     /*
      * Get function for creating stream messages.
@@ -90,27 +92,17 @@ export class MessageCreator implements IMessageCreator, Stoppable {
 
             const [messageId, prevMsgRef] = chain.add(timestamp)
 
-            const streamMessage: StreamMessage<T> = StreamMessage.isStreamMessageContainer(content)
-                // TODO: typing for stream message containers
-                // e.g. transparent handling for StreamMessage<SomeClass> where SomeClass implements toStreamMessage & {de}serialization methods
-                ? (content.toStreamMessage(messageId, prevMsgRef || null)) as StreamMessage<any>
-                : new StreamMessage({
-                    messageId,
-                    prevMsgRef,
-                    content,
-                    ...opts
-                })
-
+            const streamMessage = new StreamMessage({
+                messageId,
+                prevMsgRef,
+                content,
+                ...opts
+            })
             return streamMessage
         })
     }
 
-    async start(): Promise<void> {
-        this.isStopped = false
-    }
-
     async stop(): Promise<void> {
-        this.isStopped = true
         this.streamPartitioner.clear()
         this.queue.clear()
         this.getMsgChain.clear()

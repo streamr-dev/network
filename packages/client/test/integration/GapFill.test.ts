@@ -18,6 +18,7 @@ jest.setTimeout(50000)
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
     // eslint-disable-next-line no-param-reassign
+    // @ts-expect-error private
     sub.context.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
             const result = fn(msg, count)
@@ -43,7 +44,6 @@ describe('GapFill', () => {
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
         client = clientFactory.createClient({
-            maxRetries: 2,
             maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,

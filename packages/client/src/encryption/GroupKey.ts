@@ -75,8 +75,11 @@ export class GroupKey {
 
     }
 
+    /** @internal */
     id: string
+    /** @internal */
     hex: string
+    /** @internal */
     data: Uint8Array
 
     constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {

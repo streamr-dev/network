@@ -18,6 +18,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import * as G from '../../src/utils/GeneratorUtils'
+import { PublishPipeline } from '../../src/publish/PublishPipeline'
 
 jest.setTimeout(60000)
 
@@ -247,7 +248,9 @@ describeRepeats('StreamrClient', () => {
             const gotMessages = Defer()
             const published: any[] = []
             // @ts-expect-error private
-            client.publisher.publishQueue.onMessage.listen(async ([streamMessage]) => {
+            const publishPipeline = client.container.resolve(PublishPipeline)
+            // @ts-expect-error private
+            publishPipeline.publishQueue.onMessage.listen(async ([streamMessage]) => {
                 const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
                 if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }
                 onMessage()

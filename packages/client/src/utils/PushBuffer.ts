@@ -44,8 +44,9 @@ export type IPushBuffer<InType, OutType = InType> = {
  */
 export class PushBuffer<T> implements IPushBuffer<T>, Context {
     static Error = PushBufferError
-    id
-    debug
+
+    readonly id
+    readonly debug
 
     protected readonly buffer: (T | Error)[] = []
     readonly bufferSize: number

@@ -12,12 +12,13 @@ import { ConfigInjectionToken } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Signer {
-    signData
+    private signData: (d: string) => Promise<string>
+
     constructor(@inject(ConfigInjectionToken.Auth) authOptions: AuthenticatedConfig) {
         this.signData = Signer.getSigningFunction(authOptions)
     }
 
-    static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
+    private static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
         if ('privateKey' in options && options.privateKey) {
             const { privateKey } = options
             const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
@@ -61,7 +62,7 @@ export class Signer {
             throw new Error('Timestamp is required as part of the data to sign.')
         }
 
-        if (signatureType !== SignatureType.ETH_LEGACY && signatureType !== SignatureType.ETH) {
+        if (signatureType !== SignatureType.ETH) {
             throw new Error(`Unrecognized signature type: ${signatureType}`)
         }
 

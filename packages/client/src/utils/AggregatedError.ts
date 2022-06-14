@@ -27,9 +27,10 @@ function joinStackTraces(errs: Error[]): string {
 }
 
 export class AggregatedError extends Error {
-    errors: Set<Error>
-    ownMessage: string
-    ownStack?: string
+    public errors: Set<Error>
+    public ownMessage: string
+    public ownStack?: string
+    
     constructor(errors: Error[] = [], errorMessage = '') {
         const message = joinMessages([
             errorMessage,

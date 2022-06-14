@@ -3,10 +3,10 @@ import MessageRef from "./MessageRef"
 import StreamMessage from "./StreamMessage"
 import { StreamMessageType } from "./StreamMessage"
 import GroupKeyMessage from "./GroupKeyMessage"
-import GroupKeyRequest from "./GroupKeyRequest"
-import GroupKeyResponse from "./GroupKeyResponse"
+import GroupKeyRequest, { GroupKeyRequestSerialized } from "./GroupKeyRequest"
+import GroupKeyResponse, { GroupKeyResponseSerialized } from "./GroupKeyResponse"
 import GroupKeyAnnounce from "./GroupKeyAnnounce"
-import GroupKeyErrorResponse from "./GroupKeyErrorResponse"
+import GroupKeyErrorResponse, { GroupKeyErrorResponseSerialized }  from "./GroupKeyErrorResponse"
 import EncryptedGroupKey from "./EncryptedGroupKey"
 
 export * from './StreamMessage'
@@ -21,8 +21,11 @@ export {
     StreamMessageType,
     GroupKeyMessage,
     GroupKeyRequest,
+    GroupKeyRequestSerialized,
     GroupKeyResponse,
+    GroupKeyResponseSerialized,
     GroupKeyAnnounce,
     GroupKeyErrorResponse,
+    GroupKeyErrorResponseSerialized,
     EncryptedGroupKey,
 }

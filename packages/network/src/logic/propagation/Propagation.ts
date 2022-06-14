@@ -1,10 +1,10 @@
 import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
-import { PropagationTaskStore } from './PropagationTaskStore'
+import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
 type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 
-type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => void
+type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<void>
 
 type ConstructorOptions = {
     getNeighbors: GetNeighborsFn
@@ -48,19 +48,15 @@ export class Propagation {
      * Node should invoke this when it learns about a new message
      */
     feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
-        const streamPartId = message.getStreamPartID()
-        const targetNeighbors = this.getNeighbors(streamPartId).filter((n) => n !== source)
-
-        targetNeighbors.forEach((neighborId) => {
-            this.sendToNeighbor(neighborId, message)
-        })
-
-        if (targetNeighbors.length < this.minPropagationTargets) {
-            this.activeTaskStore.add({
-                message,
-                source,
-                handledNeighbors: new Set<NodeId>(targetNeighbors)
-            })
+        const task = {
+            message,
+            source,
+            handledNeighbors: new Set<NodeId>()
+        }
+        this.activeTaskStore.add(task)
+        const neighbors = this.getNeighbors(message.getStreamPartID())
+        for (const neighborId of neighbors) {
+            this.sendAndAwaitThenMark(task, neighborId)
         }
     }
 
@@ -69,14 +65,27 @@ export class Propagation {
      */
     onNeighborJoined(neighborId: NodeId, streamPartId: StreamPartID): void {
         const tasksOfStream = this.activeTaskStore.get(streamPartId)
-        tasksOfStream.forEach(({ handledNeighbors, source, message}) => {
-            if (!handledNeighbors.has(neighborId) && neighborId !== source) {
-                this.sendToNeighbor(neighborId, message)
+        for (const task of tasksOfStream) {
+            this.sendAndAwaitThenMark(task, neighborId)
+        }
+    }
+
+    private sendAndAwaitThenMark({ message, source, handledNeighbors }: PropagationTask, neighborId: NodeId): void {
+        if (!handledNeighbors.has(neighborId) && neighborId !== source) {
+            (async () => {
+                try {
+                    await this.sendToNeighbor(neighborId, message)
+                } catch {
+                    return
+                }
+                // Side-note: due to asynchronicity, the task being modified at this point could already be stale and
+                // deleted from `activeTaskStore`. However, as modifying it or re-deleting it is pretty much
+                // inconsequential at this point, leaving the logic as is.
                 handledNeighbors.add(neighborId)
                 if (handledNeighbors.size >= this.minPropagationTargets) {
                     this.activeTaskStore.delete(message.messageId)
                 }
-            }
-        })
+            })()
+        }
     }
 }

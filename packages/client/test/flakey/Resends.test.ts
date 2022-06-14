@@ -20,7 +20,6 @@ describeRepeats('StreamrClient resends', () => {
                 auth: {
                     privateKey: await fetchPrivateKeyWithGas(),
                 },
-                maxRetries: 2,
                 ...opts,
             })
             return c
