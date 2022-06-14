@@ -56,6 +56,20 @@ function createMsg({ publisherId, timestamp }: MessageInfo): StreamMessage {
     })
 }
 
+function calculateNumberOfGaps(messageInfosInOrder: MessageInfo[]): number {
+    let lastMissing = false
+    let gaps = 0
+    messageInfosInOrder.forEach((mi) => {
+        if (!lastMissing && mi.missing) {
+            lastMissing = true
+        } else if (lastMissing && !mi.missing) {
+            gaps += 1
+            lastMissing = false
+        }
+    })
+    return gaps
+}
+
 describe(OrderingUtil, () => {
     it('randomized "worst-case" scenario with missing messages and gap fill needs', async () => {
         const groundTruthMessages: Record<string, MessageInfo[]> = {}
@@ -69,6 +83,10 @@ describe(OrderingUtil, () => {
                 .filter((mi) => !mi.missing)
                 .map((mi) => mi.timestamp)
         }
+
+        const totalGaps = PUBLISHER_IDS.reduce((sum, publisherId) => (
+            sum + calculateNumberOfGaps(groundTruthMessages[publisherId])
+        ), 0)
 
         const inOrderHandler = (msg: StreamMessage) => {
             actual[msg.getPublisherId()].push(msg.getTimestamp())
@@ -88,8 +106,9 @@ describe(OrderingUtil, () => {
             }
         }
 
+        const errorHandler = jest.fn()
         const util = new OrderingUtil(inOrderHandler, gapHandler, PROPAGATION_TIMEOUT, RESEND_TIMEOUT, MAX_GAP_REQUESTS)
-        util.on('error', () => {}) // TODO: jest.fn() verify gap counts
+        util.on('error', errorHandler)
 
         // supply 1st message of chain always to set gap detection to work from 1st message onwards
         for (const publisherId of PUBLISHER_IDS) {
@@ -103,9 +122,12 @@ describe(OrderingUtil, () => {
         }
 
         await Promise.race([
-            waitForCondition(() => PUBLISHER_IDS.every((publisherId) => expected[publisherId].length === actual[publisherId].length), 30*1000),
+            waitForCondition(() => PUBLISHER_IDS.every((publisherId) => (
+                expected[publisherId].length === actual[publisherId].length
+            )), 30*1000),
             wait(29 * 1000)
         ])
         expect(expected).toStrictEqual(actual)
+        expect(errorHandler).toHaveBeenCalledTimes(totalGaps)
     }, 60 * 1000)
 })
