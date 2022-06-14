@@ -1,7 +1,7 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageLayer, ProxyDirection, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
@@ -312,6 +312,7 @@ describe('Proxy connection tests', () => {
         ])
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
 
+        await wait(50)
         // @ts-expect-error private
         contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
 
