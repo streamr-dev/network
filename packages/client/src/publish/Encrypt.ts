@@ -52,13 +52,11 @@ export class Encrypt {
             return
         }
 
-        const stream = await this.streamRegistryCached.getStream(streamId)
-
-        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(stream.id)
+        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(streamId)
         if (this.isStopped) { return }
 
         if (!groupKey) {
-            throw new Error(`Tried to use group key but no group key found for stream: ${stream.id}`)
+            throw new Error(`Tried to use group key but no group key found for stream: ${streamId}`)
         }
 
         EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
