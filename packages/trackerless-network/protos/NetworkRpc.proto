@@ -6,6 +6,7 @@ import "google/protobuf/empty.proto";
 
 service NetworkRpc {
   rpc sendData (DataMessage) returns (google.protobuf.Empty);
+  rpc handshake (HandshakeRequest) returns (HandshakeResponse);
 }
 
 message DataMessage {
@@ -18,4 +19,15 @@ message Layer2Message {
 
 enum Layer2Type {
   Data = 0;
+}
+
+message HandshakeRequest {
+  string randomGraphId = 1;
+  string senderId = 2;
+  string requestId = 3;
+}
+
+message HandshakeResponse {
+  bool accepted = 1;
+  string requestId = 2;
 }
