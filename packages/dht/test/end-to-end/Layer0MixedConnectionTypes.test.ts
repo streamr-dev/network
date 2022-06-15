@@ -30,11 +30,13 @@ describe('Layer0MixedConnectionTypes', () => {
         node4 = new DhtNode({peerIdString: 'Peer4', entryPoints: [epPeerDescriptor]})
         node5 = new DhtNode({peerIdString: 'Peer5', entryPoints: [epPeerDescriptor]})
 
-        await node1.start()
-        await node2.start()
-        await node3.start()
-        await node4.start()
-        await node5.start()
+        await Promise.all([
+            node1.start(),
+            node2.start(),
+            node3.start(),
+            node4.start(),
+            node5.start()
+        ])
 
         await epDhtNode.joinDht(epPeerDescriptor)
     })

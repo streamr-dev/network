@@ -22,27 +22,30 @@ describe('Layer0-Layer1', () => {
     let stream2Node2: DhtNode
 
     beforeEach(async () => {
-        
+
         epDhtNode = new DhtNode({ peerDescriptor: epPeerDescriptor })
         await epDhtNode.start()
         await epDhtNode.joinDht(epPeerDescriptor)
 
-        node1 = new DhtNode({peerIdString: '1', webSocketPort: 10017, entryPoints: [epPeerDescriptor]}) 
-        node2 = new DhtNode({peerIdString: '2', webSocketPort: 10018, entryPoints: [epPeerDescriptor]}) 
-       
+        node1 = new DhtNode({peerIdString: '1', webSocketPort: 10017, entryPoints: [epPeerDescriptor]})
+        node2 = new DhtNode({peerIdString: '2', webSocketPort: 10018, entryPoints: [epPeerDescriptor]})
+
         await node1.start()
         await node2.start()
 
         stream1Node1 = new DhtNode({ transportLayer: epDhtNode, appId: STREAM_ID1 })
         stream1Node2 = new DhtNode({ transportLayer: node1, appId: STREAM_ID1 })
-        
+
         stream2Node1 = new DhtNode({ transportLayer: epDhtNode, appId: STREAM_ID2 })
         stream2Node2 = new DhtNode({ transportLayer: node2, appId: STREAM_ID2 })
 
-        await stream1Node1.start()
-        await stream1Node2.start()
-        await stream2Node1.start()
-        await stream2Node2.start()
+        await Promise.all([
+            stream1Node1.start(),
+            stream1Node2.start(),
+            stream2Node1.start(),
+            stream2Node2.start()
+        ])
+
     })
 
     afterEach(async () => {
@@ -58,11 +61,14 @@ describe('Layer0-Layer1', () => {
     })
 
     it('Happy path', async () => {
-        await node1.joinDht(epPeerDescriptor),
-        await node2.joinDht(epPeerDescriptor)
-        
-        await stream1Node1.joinDht(epPeerDescriptor),
-        await stream1Node2.joinDht(epPeerDescriptor)
+        await Promise.all([
+            node1.joinDht(epPeerDescriptor),
+            node2.joinDht(epPeerDescriptor)
+        ])
+        await Promise.all([
+            stream1Node1.joinDht(epPeerDescriptor),
+            stream1Node2.joinDht(epPeerDescriptor)
+        ])
         
         await Promise.all([
             stream2Node1.joinDht(epPeerDescriptor),
