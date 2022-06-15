@@ -1,18 +1,19 @@
 import * as utils from '../../src/utils/utils'
 import { until } from '../../src/utils/promises'
+import { uuid } from '../../src/utils/uuid'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
 describe('utils', () => {
     describe('uuid', () => {
         it('generates different ids', () => {
-            expect(utils.uuid('test')).not.toEqual(utils.uuid('test'))
+            expect(uuid('test')).not.toEqual(uuid('test'))
         })
         it('includes text', () => {
-            expect(utils.uuid('test')).toContain('test')
+            expect(uuid('test')).toContain('test')
         })
         it('increments', () => {
-            const uid = utils.uuid('test') // generate new text to ensure count starts at 1
-            expect(utils.uuid(uid) < utils.uuid(uid)).toBeTruthy()
+            const uid = uuid('test') // generate new text to ensure count starts at 1
+            expect(uuid(uid) < uuid(uid)).toBeTruthy()
         })
     })
 

@@ -2,15 +2,10 @@ import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
 
-import { AggregatedError } from './AggregatedError'
-import { Scaffold } from './Scaffold'
 import { Debug } from './log'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
-
-export { uuid } from './uuid'
-export { AggregatedError, Scaffold }
 
 export function randomString(length = 20): string {
     // eslint-disable-next-line no-bitwise

@@ -2,7 +2,7 @@ import Emitter from 'events'
 import pMemoize from 'p-memoize'
 import { MaybeAsync } from '../types'
 
-import { AggregatedError } from './utils'
+import { AggregatedError } from './AggregatedError'
 import { pTimeout } from './promises'
 import { Defer } from './Defer'
 import { Debug } from './log'

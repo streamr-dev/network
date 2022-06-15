@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { ValidationError } from 'streamr-client-protocol'
-import { uuid } from '../utils/utils'
+import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
 
 class InvalidGroupKeyError extends ValidationError {
