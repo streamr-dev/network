@@ -6,7 +6,7 @@ import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from '
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
-import { pLimitFn, wait } from '../utils'
+import { pLimitFn, wait } from '../utils/promises'
 import type { AuthenticatedConfig } from '../Ethereum'
 import { ConfigInjectionToken } from '../Config'
 

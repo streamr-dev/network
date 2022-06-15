@@ -2,7 +2,8 @@ import { DependencyContainer, inject } from 'tsyringe'
 
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 
-import { Scaffold, instanceId, until } from '../utils'
+import { Scaffold, instanceId } from '../utils'
+import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'

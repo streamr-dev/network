@@ -2,7 +2,7 @@
  * Derive partitions for StreamMessages.
  */
 import { StreamID, Utils } from 'streamr-client-protocol'
-import { CacheFn } from '../utils'
+import { CacheFn } from '../utils/caches'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamRegistryCached } from '../StreamRegistryCached'

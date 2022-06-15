@@ -16,7 +16,7 @@ import {
 } from '../test-utils/utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils'
+import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
 

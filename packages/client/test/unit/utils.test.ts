@@ -1,4 +1,5 @@
 import * as utils from '../../src/utils'
+import { until } from '../../src/utils/promises'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 
 describe('utils', () => {
@@ -26,13 +27,13 @@ describe('utils', () => {
     describe('until', () => {
         it('works with sync true', async () => {
             const condition = jest.fn(() => true)
-            await utils.until(condition)
+            await until(condition)
             expect(condition).toHaveBeenCalledTimes(1)
         })
 
         it('works with async true', async () => {
             const condition = jest.fn(async () => true)
-            await utils.until(condition)
+            await until(condition)
             expect(condition).toHaveBeenCalledTimes(1)
         })
 
@@ -42,7 +43,7 @@ describe('utils', () => {
                 calls += 1
                 return calls > 1
             })
-            await utils.until(condition)
+            await until(condition)
             expect(condition).toHaveBeenCalledTimes(2)
         })
 
@@ -52,14 +53,14 @@ describe('utils', () => {
                 calls += 1
                 return calls > 1
             })
-            await utils.until(condition)
+            await until(condition)
             expect(condition).toHaveBeenCalledTimes(2)
         })
 
         it('can time out', async () => {
             const condition = jest.fn(() => false)
             await expect(async () => {
-                await utils.until(condition, 100)
+                await until(condition, 100)
             }).rejects.toThrow('Timeout')
             expect(condition).toHaveBeenCalled()
         })
@@ -67,7 +68,7 @@ describe('utils', () => {
         it('can set interval', async () => {
             const condition = jest.fn(() => false)
             await expect(async () => {
-                await utils.until(condition, 100, 20)
+                await until(condition, 100, 20)
             }).rejects.toThrow('Timeout')
             expect(condition.mock.calls.length).toBeLessThan(7)
             // ideally it should be 5.

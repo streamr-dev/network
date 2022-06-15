@@ -1,6 +1,6 @@
 import { wait } from 'streamr-test-utils'
-
-import { pOrderedResolve, CacheAsyncFn, CacheFn, pOnce, pLimitFn, pOne } from '../../src/utils'
+import { pOrderedResolve, pOnce, pLimitFn, pOne } from '../../src/utils/promises'
+import { CacheAsyncFn, CacheFn} from '../../src/utils/caches'
 
 const WAIT_TIME = 25
 

@@ -3,7 +3,8 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
-import { pOnce, uuid, instanceId } from './utils'
+import { uuid, instanceId } from './utils'
+import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'

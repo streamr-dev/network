@@ -1,6 +1,6 @@
 import { StreamMessage } from 'streamr-client-protocol'
 
-import { Defer, Deferred } from '../utils'
+import { Defer, Deferred } from '../utils/Defer'
 import { DestroySignal } from '../DestroySignal'
 
 import { Subscription } from '../subscribe/Subscription'

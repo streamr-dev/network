@@ -5,7 +5,8 @@ import { EncryptionType, StreamMessage, StreamMessageType } from 'streamr-client
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from '../utils/log'
-import { instanceId, Defer, Deferred } from '../utils'
+import { instanceId } from '../utils'
+import { Defer, Deferred } from '../utils/Defer'
 import { Context, ContextError } from '../utils/Context'
 import { Pipeline } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
