@@ -1,4 +1,4 @@
-import { SmartContractRecord, StreamID, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StreamID } from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/Metric'
 
 export type NodeId = string
@@ -30,52 +30,6 @@ export interface Status {
     version?: string
     extra: Record<string, unknown>
 }
-
-export enum RtcSubTypes {
-    ICE_CANDIDATE = 'iceCandidate',
-    RTC_OFFER = 'rtcOffer',
-    RTC_ANSWER = 'rtcAnswer',
-    RTC_CONNECT = 'rtcConnect',
-}
-
-export type RtcIceCandidateMessage = {
-    subType: RtcSubTypes.ICE_CANDIDATE
-    data: {
-        connectionId: string,
-        candidate: string
-        mid: string
-    }
-}
-
-export type RtcConnectMessage = {
-    subType: RtcSubTypes.RTC_CONNECT
-    data: {
-        force: boolean
-    }
-}
-
-export type RtcOfferMessage = {
-    subType: RtcSubTypes.RTC_OFFER
-    data: {
-        connectionId: string,
-        description: string,
-    }
-}
-
-export type RtcAnswerMessage = {
-    subType: RtcSubTypes.RTC_ANSWER
-    data: {
-        connectionId: string,
-        description: string
-    }
-}
-
-export type RelayMessage = (
-    RtcOfferMessage
-        | RtcAnswerMessage
-        | RtcIceCandidateMessage
-        | RtcConnectMessage
-    ) & TrackerLayer.RelayMessage
 
 export interface RtcErrorMessage {
     targetNode: NodeId

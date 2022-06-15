@@ -11,14 +11,14 @@ const VERSION = 2
 const message = new ErrorMessage({
     version: VERSION,
     requestId: 'requestId',
-    errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+    errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
     targetNode: 'targetNode'
 })
 const serializedMessage = JSON.stringify([
     VERSION,
     TrackerMessage.TYPES.ErrorMessage,
     'requestId',
-    ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+    ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
     'targetNode'
 ])
 
