@@ -31,17 +31,14 @@ export class RemoteRandomGraphNode {
         }
     }
 
-    async sendData(ownPeerDescriptor: PeerDescriptor, data: {[key: string]: any}): Promise<void> {
-        const notification: DataMessage = {
-            content: JSON.stringify(data)
-        }
+    async sendData(ownPeerDescriptor: PeerDescriptor, dataMessage: DataMessage): Promise<void> {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
             notification: true
         }
         try {
-            await this.client.sendData(notification, options)
+            await this.client.sendData(dataMessage, options)
         } catch (err) {
             console.error(err)
         }

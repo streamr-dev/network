@@ -41,7 +41,10 @@ describe('Network RPC', () => {
 
     it('sends Data', async () => {
         const data: DataMessage = {
-            content: 'data'
+            content: 'data',
+            senderId: 'peer1',
+            messageId: 'test',
+            streamPartId: 'testStream'
         }
         await client.sendData(data,
             { targetDescriptor: peer2, notification: 'notification' }

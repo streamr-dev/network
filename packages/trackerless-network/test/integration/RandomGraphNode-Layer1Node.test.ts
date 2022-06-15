@@ -82,7 +82,7 @@ describe('RandomGraphNode-DhtNode', () => {
         }))
         range(numOfNodes).map((i) => {
             expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(8)
-            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(3)
+            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
         })
     })
 })
