@@ -7,16 +7,16 @@ import {
     TrackerMessageType
 } from 'streamr-client-protocol'
 import {
-    Logger,
     decode,
-    PeerId,
-    PeerInfo,
-    NameDirectory,
-    ServerWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    WsEndpointEvent,
+    Logger,
+    NameDirectory,
     NodeId,
+    PeerId,
+    PeerInfo,
+    ServerWsEndpoint,
+    WsEndpointEvent
 } from 'streamr-network'
 
 export enum Event {
@@ -114,7 +114,7 @@ export class TrackerServer extends EventEmitter {
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
         if (peerInfo.isNode()) {
-            const message = decode<string, TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+            const message = decode<TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {

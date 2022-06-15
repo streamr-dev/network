@@ -4,7 +4,8 @@
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
-import { instanceId, counterId, wait } from '../utils'
+import { instanceId, counterId } from '../utils/utils'
+import { wait } from '../utils/promises'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 

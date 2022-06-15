@@ -1,12 +1,13 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 
-import { CacheAsyncFn, instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
+import { CacheAsyncFn } from '../utils/caches'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { Ethereum } from '../Ethereum'
 
-import { EncryptionConfig, parseGroupKeys } from './KeyExchangeStream'
+import { EncryptionConfig, GroupKeysSerialized, parseGroupKeys } from './KeyExchangeStream'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
@@ -26,8 +27,9 @@ export class GroupKeyStoreFactory implements Context {
     readonly id
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
-    initialGroupKeys
-    getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
+    private initialGroupKeys: Record<string, GroupKeysSerialized>
+    public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
+
     constructor(
         context: Context,
         private ethereum: Ethereum,
@@ -67,26 +69,6 @@ export class GroupKeyStoreFactory implements Context {
             }
         })
         return store
-    }
-
-    async useGroupKey(streamId: StreamID): Promise<[GroupKey | undefined, GroupKey | undefined]> {
-        const store = await this.getStore(streamId)
-        return store.useGroupKey()
-    }
-
-    async rotateGroupKey(streamId: StreamID): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.rotateGroupKey()
-    }
-
-    async setNextGroupKey(streamId: StreamID, newKey: GroupKey): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.setNextGroupKey(newKey)
-    }
-
-    async rekey(streamId: StreamID, newKey?: GroupKey): Promise<void> {
-        const store = await this.getStore(streamId)
-        return store.rekey(newKey)
     }
 
     async stop(): Promise<void> {

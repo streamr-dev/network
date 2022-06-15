@@ -2,7 +2,9 @@ import Emitter from 'events'
 import pMemoize from 'p-memoize'
 import { MaybeAsync } from '../types'
 
-import { Defer, pTimeout, AggregatedError } from './index'
+import { AggregatedError } from './AggregatedError'
+import { pTimeout } from './promises'
+import { Defer } from './Defer'
 import { Debug } from './log'
 
 export const debug = Debug('iterators')
@@ -321,4 +323,9 @@ export function CancelableGenerator<T>(
     })
 
     return cancelableGenerator as Cancelable<typeof cancelableGenerator>
+}
+
+export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | void> => {
+    const item = source.next()
+    return (await item).value
 }

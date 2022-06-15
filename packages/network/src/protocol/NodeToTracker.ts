@@ -146,7 +146,7 @@ export class NodeToTracker extends EventEmitter {
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
         if (peerInfo.isTracker()) {
-            const message = decode<string, TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+            const message = decode<TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {

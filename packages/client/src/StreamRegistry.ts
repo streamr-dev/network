@@ -6,7 +6,8 @@ import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from './Container'
 import { Ethereum } from './Ethereum'
-import { instanceId, until } from './utils'
+import { instanceId } from './utils/utils'
+import { until } from './utils/promises'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
 import { Stream, StreamProperties } from './Stream'
@@ -14,7 +15,9 @@ import { ErrorCode, NotFoundError } from './HttpUtil'
 import {
     StreamID,
     EthereumAddress,
-    StreamIDUtils, toStreamID,
+    StreamIDUtils, 
+    toStreamID,
+    KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { omit } from 'lodash'
@@ -219,7 +222,7 @@ export class StreamRegistry implements Context {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
-        if (StreamIDUtils.isKeyExchangeStream(streamId)) {
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
         let metadata
@@ -236,7 +239,7 @@ export class StreamRegistry implements Context {
     private async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s from theGraph', streamId)
-        if (StreamIDUtils.isKeyExchangeStream(streamId)) {
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
             return new Stream({ id: streamId, partitions: 1 }, this.container)
         }
         const response = await this.graphQLClient.sendQuery(

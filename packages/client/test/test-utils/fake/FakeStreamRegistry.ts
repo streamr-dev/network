@@ -1,5 +1,5 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
-import { EthereumAddress, StreamID, StreamIDUtils } from 'streamr-client-protocol'
+import { EthereumAddress, KeyExchangeStreamIDUtils, StreamID } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
     StreamPermission,
@@ -16,7 +16,7 @@ import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
 import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
-import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 
 type PublicPermissionTarget = 'public'
 const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
@@ -86,7 +86,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     async getStream(id: StreamID): Promise<Stream> {
-        if (StreamIDUtils.isKeyExchangeStream(id)) {
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(id)) {
             return new Stream({ id, partitions: 1 }, this.container)
         }
         const registryItem = this.registryItems.get(id)

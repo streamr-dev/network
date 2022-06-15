@@ -1,4 +1,5 @@
-import { instanceId, Defer, Deferred } from './index'
+import { instanceId } from './utils'
+import { Defer, Deferred } from './Defer'
 import { Context } from './Context'
 import { Debug } from './log'
 
@@ -36,7 +37,7 @@ import { Debug } from './log'
 export class Gate implements Context {
     readonly id
     readonly debug
-    isLocked = false
+    public isLocked = false
     private pending?: Deferred<void>
 
     constructor(name?: string) {

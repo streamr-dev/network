@@ -2,7 +2,7 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Debugger } from 'debug'
 import { Context } from './Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { instanceId } from './index'
+import { instanceId } from './utils'
 import fetch, { Response } from 'node-fetch'
 
 @scoped(Lifecycle.ContainerScoped)

@@ -364,3 +364,20 @@ export class KeyServer {
         })
     }
 }
+
+export class Queue<T> {
+    items: T[] = []
+
+    push(item: T): void {
+        this.items.push(item)
+    }
+
+    async pop(timeout?: number): Promise<T> {
+        await waitForCondition(() => this.items.length > 0, timeout)
+        return this.items.shift()!
+    }
+
+    size(): number {
+        return this.items.length
+    }
+}

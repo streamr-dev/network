@@ -1,6 +1,4 @@
 import { validateIsString } from '../../utils/validations'
-import MessageID from './MessageID'
-import MessageRef from './MessageRef'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
 import { StreamID } from '../../utils/StreamID'
@@ -39,15 +37,6 @@ export default abstract class GroupKeyMessage {
 
     static fromStreamMessage(streamMessage: StreamMessage): GroupKeyMessage {
         return GroupKeyMessage.deserialize(streamMessage.getSerializedContent()!, streamMessage.messageType)
-    }
-
-    toStreamMessage(messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage {
-        return new StreamMessage({
-            messageId,
-            prevMsgRef,
-            content: this.serialize(),
-            messageType: this.messageType,
-        })
     }
 
     abstract toArray(): any[]

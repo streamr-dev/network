@@ -1,7 +1,7 @@
 import { Wallet } from 'ethers'
 
 import { createTestStream, createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
-import { until } from '../../src/utils'
+import { until } from '../../src/utils/promises'
 import { NotFoundError } from '../../src/HttpUtil'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'

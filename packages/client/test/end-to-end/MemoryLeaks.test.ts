@@ -1,9 +1,10 @@
 import { wait } from 'streamr-test-utils'
 import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
 import { StreamrClient, initContainer } from '../../src/StreamrClient'
-import { container, DependencyContainer } from 'tsyringe'
+import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId, Defer } from '../../src/utils'
+import { counterId } from '../../src/utils/utils'
+import { Defer } from '../../src/utils/Defer'
 
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
@@ -37,7 +38,7 @@ describe('MemoryLeaks', () => {
 
     beforeEach(() => {
         leaksDetector = new LeaksDetector()
-        leaksDetector.ignoreAll(container)
+        leaksDetector.ignoreAll(rootContainer)
         leaksDetector.ignoreAll(ethers)
         snapshot()
     })
@@ -64,10 +65,10 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    maxRetries: 2,
                     ...opts,
                 })
-                const { childContainer, rootContext } = initContainer(config)
+                const childContainer = rootContainer.createChildContainer()
+                const rootContext = initContainer(config, childContainer)
                 return { config, childContainer, rootContext }
             }
         })
@@ -124,7 +125,6 @@ describe('MemoryLeaks', () => {
                     auth: {
                         privateKey: await fetchPrivateKeyWithGas(),
                     },
-                    maxRetries: 2,
                     ...opts,
                 })
                 return c

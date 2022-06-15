@@ -1,66 +1,16 @@
 import crypto from 'crypto'
-import { O } from 'ts-toolbelt'
-import { promisify } from 'util'
 import { arrayify, hexlify } from '@ethersproject/bytes'
 import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-client-protocol'
 import { GroupKey } from './GroupKey'
 
-const { webcrypto } = crypto
-
-function getSubtle(): any {
-    // @ts-expect-error webcrypto.subtle does not currently exist in node types
-    const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
-    if (!subtle) {
-        const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'
-        throw new Error(`SubtleCrypto not supported. This feature is available only in secure contexts (HTTPS) & Node 16+. ${url}`)
-    }
-    return subtle
-}
-
-export class StreamMessageProcessingError extends StreamMessageError {
-    constructor(message = '', streamMessage: StreamMessage) {
-        super(`Could not process. ${message}`, streamMessage)
-    }
-}
-
-export class UnableToDecryptError extends StreamMessageProcessingError {
+export class UnableToDecryptError extends StreamMessageError {
     constructor(message = '', streamMessage: StreamMessage) {
         super(`Unable to decrypt. ${message}`, streamMessage)
     }
 }
 
-function ab2str(...args: any[]): string {
-    // @ts-expect-error Uint8Array parameters
-    return String.fromCharCode.apply(null, new Uint8Array(...args) as unknown as number[])
-}
-
-// shim browser btoa for node
-function btoa(str: string | Uint8Array): string {
-    if (global.btoa) { return global.btoa(str as string) }
-    let buffer
-
-    if (Buffer.isBuffer(str)) {
-        buffer = str
-    } else {
-        buffer = Buffer.from(str.toString(), 'binary')
-    }
-
-    return buffer.toString('base64')
-}
-
-async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Promise<string> {
-    const keyType = isPrivate ? 'pkcs8' : 'spki'
-    const exported = await getSubtle().exportKey(keyType, key)
-    const exportedAsString = ab2str(exported)
-    const exportedAsBase64 = btoa(exportedAsString)
-    const TYPE = isPrivate ? 'PRIVATE' : 'PUBLIC'
-    return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
-}
-
-// put all static functions into EncryptionUtilBase, with exception of create,
-// so it's clearer what the static & instance APIs look like
-class EncryptionUtilBase {
-    static validatePublicKey(publicKey: crypto.KeyLike): void|never {
+export class EncryptionUtil {
+    private static validatePublicKey(publicKey: crypto.KeyLike): void|never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
@@ -76,7 +26,7 @@ class EncryptionUtilBase {
     // These overrides tell ts outputInHex returns string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
     static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: false): Buffer
-    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false) {
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: boolean = false): string | Buffer {
         this.validatePublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         if (outputInHex) {
@@ -86,21 +36,26 @@ class EncryptionUtilBase {
     }
     /* eslint-disable no-dupe-class-members */
 
+    // Returns a Buffer
+    static decryptWithPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
+        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
+        return crypto.privateDecrypt(privateKey, ciphertextBuffer)
+    }
+
     /*
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
-    static encrypt(data: Uint8Array, groupKey: GroupKey): string {
+    private static encrypt(data: Uint8Array, groupKey: GroupKey): string {
         GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
-
         return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
     }
 
     /*
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
+    private static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
         GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
@@ -110,7 +65,6 @@ class EncryptionUtilBase {
     /*
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
-
     static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
         GroupKey.validate(groupKey)
         /* eslint-disable no-param-reassign */
@@ -172,102 +126,3 @@ class EncryptionUtilBase {
     }
 }
 
-// after EncryptionUtil is ready
-type InitializedEncryptionUtil = O.Overwrite<EncryptionUtil, {
-    privateKey: string,
-    publicKey: string,
-}>
-
-export class EncryptionUtil extends EncryptionUtilBase {
-    /**
-     * Creates a new instance + waits for ready.
-     * Convenience.
-     */
-
-    static async create(): Promise<EncryptionUtil> {
-        const encryptionUtil = new EncryptionUtil()
-        await encryptionUtil.onReady()
-        return encryptionUtil
-    }
-
-    privateKey: string | undefined
-    publicKey: string | undefined
-    private _generateKeyPairPromise: Promise<void> | undefined
-
-    async onReady(): Promise<void> {
-        if (this.isReady()) { return undefined }
-        return this._generateKeyPair()
-    }
-
-    isReady(this: EncryptionUtil): this is InitializedEncryptionUtil {
-        return (this.privateKey !== undefined && this.publicKey !== undefined)
-    }
-
-    // Returns a Buffer
-    decryptWithPrivateKey(ciphertext: string | Uint8Array, isHexString = false): Buffer {
-        if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
-        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
-        return crypto.privateDecrypt(this.privateKey, ciphertextBuffer)
-    }
-
-    // Returns a String (base64 encoding)
-    getPublicKey(): string {
-        if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
-        return this.publicKey
-    }
-
-    async _generateKeyPair(): Promise<void> {
-        if (!this._generateKeyPairPromise) {
-            this._generateKeyPairPromise = this.__generateKeyPair()
-        }
-        return this._generateKeyPairPromise
-    }
-
-    async __generateKeyPair(): Promise<void> {
-        if (typeof window !== 'undefined') { return this._keyPairBrowser() }
-        return this._keyPairServer()
-    }
-
-    async _keyPairServer(): Promise<void> {
-        // promisify here to work around browser/server packaging
-        const generateKeyPair = promisify(crypto.generateKeyPair)
-        const { publicKey, privateKey } = await generateKeyPair('rsa', {
-            modulusLength: 4096,
-            publicKeyEncoding: {
-                type: 'spki',
-                format: 'pem',
-            },
-            privateKeyEncoding: {
-                type: 'pkcs8',
-                format: 'pem',
-            },
-        })
-
-        this.privateKey = privateKey
-        this.publicKey = publicKey
-    }
-
-    async _keyPairBrowser(): Promise<void> {
-        const { publicKey, privateKey } = await getSubtle().generateKey({
-            name: 'RSA-OAEP',
-            modulusLength: 4096,
-            publicExponent: new Uint8Array([1, 0, 1]), // 65537
-            hash: 'SHA-256'
-        }, true, ['encrypt', 'decrypt'])
-        if (!(publicKey && privateKey)) {
-            // TS says this is possible.
-            throw new Error('could not generate keys')
-        }
-
-        const [exportedPrivate, exportedPublic] = await Promise.all([
-            exportCryptoKey(privateKey, {
-                isPrivate: true,
-            }),
-            exportCryptoKey(publicKey, {
-                isPrivate: false,
-            })
-        ])
-        this.privateKey = exportedPrivate
-        this.publicKey = exportedPublic
-    }
-}

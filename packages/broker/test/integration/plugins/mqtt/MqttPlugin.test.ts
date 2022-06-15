@@ -1,8 +1,8 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import mqtt from 'async-mqtt'
+import { Queue } from 'streamr-test-utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
-import { Queue } from '../../../utils'
 
 const MQTT_PORT = 12430
 const TRACKER_PORT = 12432
