@@ -5,7 +5,6 @@ import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
     StreamMessageValidator,
-    SigningUtil,
     StreamMessageError,
     StreamID,
     EthereumAddress
@@ -15,6 +14,7 @@ import { pOrderedResolve, instanceId, CacheFn } from './utils'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
+import { verifyMessage } from '@ethersproject/wallet'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {
@@ -62,7 +62,8 @@ export class Validator extends StreamMessageValidator implements Context {
 
     private cachedVerify = CacheFn( (address: EthereumAddress, payload: string, signature: string) => {
         if (this.isStopped) { return true }
-        return SigningUtil.verify(address, payload, signature)
+        const recoveredAddress = verifyMessage(payload, signature)
+        return recoveredAddress.toLowerCase() === address.toLowerCase()
     }, {
         // forcibly use small cache otherwise keeps n serialized messages in memory
         ...this.cacheOptions,

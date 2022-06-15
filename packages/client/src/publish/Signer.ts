@@ -2,13 +2,14 @@
  * StreamMessage Signing in-place.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamMessage, StreamMessageSigned, SignatureType, SigningUtil } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageSigned, SignatureType } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, wait } from '../utils'
 import type { AuthenticatedConfig } from '../Ethereum'
 import { ConfigInjectionToken } from '../Config'
+import { Wallet } from '@ethersproject/wallet'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Signer {
@@ -20,7 +21,8 @@ export class Signer {
 
     private static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
         if ('privateKey' in options && options.privateKey) {
-            return async (d: string) => SigningUtil.sign(d, options.privateKey)
+            const wallet = new Wallet(options.privateKey)
+            return async (d: string) => wallet.signMessage(d)
         }
 
         if ('ethereum' in options && options.ethereum) {
