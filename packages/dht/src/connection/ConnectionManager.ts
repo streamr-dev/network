@@ -273,9 +273,6 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         WebRtcCleanUp.cleanUp()
     }
 
-    // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
-    // or it might fail completely! Where should we buffer the outgoing data?
-
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         if (!this.started || this.stopped) {
             return
@@ -370,14 +367,11 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return false
     }
 
-    //private createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
     private createWsConnector(): WebSocketConnector {
         logger.trace(`Creating WebSocket Connector`)
         return new WebSocketConnector(this.config.transportLayer, this.canConnect.bind(this))
     }
 
-    //private createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
-    
     private createWebRtcConnector(): WebRtcConnector {
         logger.trace(`Creating WebRTC Connector`)
         return  new WebRtcConnector({
