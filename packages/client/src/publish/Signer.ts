@@ -20,11 +20,7 @@ export class Signer {
 
     private static getSigningFunction(options: AuthenticatedConfig): (d: string) => Promise<string> {
         if ('privateKey' in options && options.privateKey) {
-            const { privateKey } = options
-            const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
-                ? privateKey.slice(2) // strip leading 0x
-                : privateKey
-            return async (d: string) => SigningUtil.sign(d, key.toString())
+            return async (d: string) => SigningUtil.sign(d, options.privateKey)
         }
 
         if ('ethereum' in options && options.ethereum) {
