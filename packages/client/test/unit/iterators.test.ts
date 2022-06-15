@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'
-import { Defer } from '../../src/utils'
+import { Defer } from '../../src/utils/Defer'
 
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
 

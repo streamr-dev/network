@@ -8,7 +8,8 @@ import { EthereumAddress } from 'streamr-client-protocol'
 import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
-import { instanceId, wait, withTimeout } from './index'
+import { instanceId } from './utils'
+import { wait, withTimeout } from './promises'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the

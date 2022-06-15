@@ -9,7 +9,7 @@ import {
     createStreamPartIterator
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer } from '../../src/utils'
+import { Defer } from '../../src/utils/Defer'
 
 import { Subscription } from '../../src/subscribe/Subscription'
 import { Subscriber } from '../../src/subscribe/Subscriber'

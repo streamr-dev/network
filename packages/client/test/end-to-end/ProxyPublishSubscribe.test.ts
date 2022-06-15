@@ -5,7 +5,7 @@ import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { ProxyDirection, toStreamPartID } from 'streamr-client-protocol'
-import { until } from '../../src/utils'
+import { until } from '../../src/utils/promises'
 
 jest.setTimeout(50000)
 const SUBSCRIBE_WAIT_TIME = 2000

@@ -2,7 +2,9 @@ import Emitter from 'events'
 import pMemoize from 'p-memoize'
 import { MaybeAsync } from '../types'
 
-import { Defer, pTimeout, AggregatedError } from './index'
+import { AggregatedError } from './AggregatedError'
+import { pTimeout } from './promises'
+import { Defer } from './Defer'
 import { Debug } from './log'
 
 export const debug = Debug('iterators')

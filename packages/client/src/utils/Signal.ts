@@ -1,4 +1,4 @@
-import { pOnce, pLimitFn, pOne } from './index'
+import { pOnce, pLimitFn, pOne } from './promises'
 
 export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {

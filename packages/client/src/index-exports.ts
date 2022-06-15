@@ -56,7 +56,7 @@ export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
 export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
-export { formStorageNodeAssignmentStreamId } from './utils/index'
+export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 

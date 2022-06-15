@@ -1,7 +1,7 @@
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
-import { getVersionString, counterId } from './utils'
+import { getVersionString, counterId } from './utils/utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'

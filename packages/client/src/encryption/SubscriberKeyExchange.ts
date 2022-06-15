@@ -2,7 +2,8 @@ import {
     StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce, StreamID
 } from 'streamr-client-protocol'
 
-import { uuid, instanceId } from '../utils'
+import { uuid } from '../utils/uuid'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { Subscriber } from '../subscribe/Subscriber'
 

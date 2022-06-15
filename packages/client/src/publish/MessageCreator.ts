@@ -12,7 +12,7 @@ import {
     EncryptionType
 } from 'streamr-client-protocol'
 
-import { LimitAsyncFnByKey } from '../utils'
+import { LimitAsyncFnByKey } from '../utils/promises'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'

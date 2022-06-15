@@ -1,4 +1,5 @@
-import { instanceId, pOnce } from './index'
+import { instanceId } from './utils'
+import { pOnce } from './promises'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
 import { ContextError, Context } from './Context'

@@ -11,7 +11,9 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 
-import { pOrderedResolve, instanceId, CacheFn } from './utils'
+import { instanceId } from './utils/utils'
+import { pOrderedResolve } from './utils/promises'
+import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
