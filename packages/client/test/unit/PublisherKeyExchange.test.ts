@@ -38,7 +38,7 @@ describe('PublisherKeyExchange', () => {
     const createStream = async () => {
         const streamRegistry = fakeContainer.resolve(StreamRegistry)
         const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
-        streamRegistry.grantPermissions(stream.id, {
+        await streamRegistry.grantPermissions(stream.id, {
             permissions: [StreamPermission.SUBSCRIBE],
             user: subscriberWallet.address
         })
@@ -91,7 +91,7 @@ describe('PublisherKeyExchange', () => {
         mockStream = await createStream()
         subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
         await startPublisherKeyExchangeSubscription()
-    })
+    }, 15 * 1000)
 
     describe('responds to a group key request', () => {
 
