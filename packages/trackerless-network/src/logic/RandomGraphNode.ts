@@ -1,10 +1,13 @@
 import EventEmitter = require('events')
 import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
-import { DataMessage, Layer2Message } from '../proto/NetworkRpc'
+import { DataMessage, HandshakeRequest, HandshakeResponse, Layer2Message } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
 import { range } from 'lodash'
 import { NetworkRpcClient } from '../proto/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
+import { INetworkRpc } from '../proto/NetworkRpc.server'
+import { Empty } from '../proto/google/protobuf/empty'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -22,7 +25,7 @@ export interface RandomGraphNodeParams {
 
 export type messageListener = (senderDescriptor: PeerDescriptor, msg: Layer2Message) => void
 
-export class RandomGraphNode extends EventEmitter {
+export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly N = 4
     private readonly PEER_VIEW_SIZE = 10
     private readonly randomGraphId: string // StreamPartID
@@ -65,7 +68,6 @@ export class RandomGraphNode extends EventEmitter {
     }
 
     broadcast(_msg: DataMessage): void {
-
     }
 
     setMessageListener(listener: messageListener): void {
@@ -137,5 +139,24 @@ export class RandomGraphNode extends EventEmitter {
 
     getContactPoolIds(): string[] {
         return this.contactPool.getStringIds()
+    }
+
+    // INetworkRpc methods
+    async handshake(request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> {
+        // Add checking for connection handshakes
+        const res: HandshakeResponse = {
+            requestId: request.requestId,
+            accepted: true
+        }
+        return res
+    }
+
+    async sendData(message: DataMessage, _context: ServerCallContext): Promise<Empty> {
+        // Check for duplicate
+        const unseenMessage = true
+        if (unseenMessage) {
+            this.broadcast(message)
+        }
+        return Empty
     }
 }

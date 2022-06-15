@@ -5,6 +5,7 @@ import { DataMessage, HandshakeRequest, HandshakeResponse } from '../../src/prot
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
+import { PeerID } from '@streamr/dht/dist/src'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: RoutingRpcCommunicator
@@ -68,7 +69,13 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('sendData', async  () => {
-        await remoteRandomGraphNode.sendData(clientPeer, {hello: 'WORLD'})
+        const dataMessage: DataMessage = {
+            content: JSON.stringify({hello: 'WORLD'}),
+            senderId: PeerID.fromValue(clientPeer.peerId).toString(),
+            streamPartId: 'test-stream',
+            messageId: 'message'
+        }
+        await remoteRandomGraphNode.sendData(clientPeer, dataMessage)
         await waitForCondition(() => recvCounter === 1)
     })
 

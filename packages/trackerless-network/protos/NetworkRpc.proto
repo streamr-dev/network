@@ -11,6 +11,9 @@ service NetworkRpc {
 
 message DataMessage {
   string content = 1;
+  string senderId = 2;
+  string streamPartId = 3;
+  string messageId = 4;
 }
 
 message Layer2Message {
