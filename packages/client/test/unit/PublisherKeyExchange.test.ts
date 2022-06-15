@@ -92,7 +92,7 @@ describe('PublisherKeyExchange', () => {
         mockStream = await createStream()
         subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
         await startPublisherKeyExchangeSubscription()
-    }, 15 * 1000)
+    })
 
     describe('responds to a group key request', () => {
 
