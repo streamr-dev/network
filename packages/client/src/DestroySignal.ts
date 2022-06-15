@@ -2,7 +2,7 @@
  * Client-wide destroy signal.
  */
 import { scoped, Lifecycle } from 'tsyringe'
-import { instanceId } from './utils'
+import { instanceId } from './utils/utils'
 
 import { Context, ContextError } from './utils/Context'
 import { Signal } from './utils/Signal'

@@ -10,7 +10,7 @@ import {
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { pOnce } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'

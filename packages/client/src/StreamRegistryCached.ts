@@ -1,6 +1,6 @@
 import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { instanceId } from './utils'
+import { instanceId } from './utils/utils'
 import { CacheAsyncFn } from './utils/caches'
 import { Context } from './utils/Context'
 import { CacheConfig, ConfigInjectionToken } from './Config'

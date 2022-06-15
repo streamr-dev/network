@@ -8,7 +8,7 @@ import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 
 export class Decrypt<T> implements Context {
     readonly id

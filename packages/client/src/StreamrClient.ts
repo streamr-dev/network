@@ -3,7 +3,7 @@ import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 
 import { Ethereum } from './Ethereum'
-import { uuid, counterId } from './utils'
+import { uuid, counterId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'

@@ -1,5 +1,5 @@
 import { DependencyContainer, inject, scoped, delay, Lifecycle } from 'tsyringe'
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { allSettledValues } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'

@@ -8,7 +8,7 @@ import { EthereumAddress } from 'streamr-client-protocol'
 import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
-import { instanceId } from './index'
+import { instanceId } from './utils'
 import { wait, withTimeout } from './promises'
 
 /*

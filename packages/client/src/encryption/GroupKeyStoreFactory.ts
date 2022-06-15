@@ -1,6 +1,6 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { CacheAsyncFn } from '../utils/caches'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'

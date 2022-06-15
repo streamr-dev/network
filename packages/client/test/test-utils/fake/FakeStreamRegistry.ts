@@ -16,7 +16,7 @@ import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
 import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
-import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 
 type PublicPermissionTarget = 'public'
 const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'

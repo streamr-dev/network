@@ -1,4 +1,4 @@
-import * as utils from '../../src/utils'
+import * as utils from '../../src/utils/utils'
 import { until } from '../../src/utils/promises'
 import { inspect, format, DEFAULT_INSPECT_OPTS } from '../../src/utils/log'
 

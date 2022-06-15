@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { counterId } from '../../src/utils'
+import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
 import { MessageStream } from '../../src/subscribe/MessageStream'

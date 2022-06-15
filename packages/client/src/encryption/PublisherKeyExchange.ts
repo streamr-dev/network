@@ -13,7 +13,7 @@ import {
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { pOnce } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { Publisher } from '../publish/Publisher'

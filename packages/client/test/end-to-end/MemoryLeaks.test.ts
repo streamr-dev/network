@@ -3,7 +3,7 @@ import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector
 import { StreamrClient, initContainer } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { counterId } from '../../src/utils'
+import { counterId } from '../../src/utils/utils'
 import { Defer } from '../../src/utils/Defer'
 
 import { ConfigTest } from '../../src/ConfigTest'
