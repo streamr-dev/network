@@ -1,7 +1,6 @@
 import { INetworkRpcClient } from '../proto/NetworkRpc.client'
 import { PeerDescriptor, UUID, PeerID } from '@streamr/dht'
 import { DataMessage, HandshakeRequest } from '../proto/NetworkRpc'
-import { CallContext } from '@streamr/proto-rpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
 export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
@@ -16,7 +15,7 @@ export class RemoteRandomGraphNode {
     async handshake(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
         const request: HandshakeRequest = {
             randomGraphId: this.graphId,
-            requestId: 'aaaa',
+            requestId: new UUID().toString(),
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toString()
         }
         const options: DhtRpcOptions = {
@@ -46,5 +45,9 @@ export class RemoteRandomGraphNode {
         } catch (err) {
             console.error(err)
         }
+    }
+
+    getPeerDescriptor(): PeerDescriptor {
+        return this.remotePeerDescriptor
     }
 }

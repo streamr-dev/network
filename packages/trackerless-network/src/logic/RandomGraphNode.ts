@@ -1,8 +1,10 @@
 import EventEmitter = require('events')
-import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer } from '@streamr/dht'
+import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
 import { DataMessage, Layer2Message } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
 import { range } from 'lodash'
+import { NetworkRpcClient } from '../proto/NetworkRpc.client'
+import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -14,7 +16,8 @@ export interface RandomGraphNode {
 
 export interface RandomGraphNodeParams {
     randomGraphId: string,
-    layer1: DhtNode
+    layer1: DhtNode,
+    P2PTransport: ITransport
 }
 
 export type messageListener = (senderDescriptor: PeerDescriptor, msg: Layer2Message) => void
@@ -27,20 +30,23 @@ export class RandomGraphNode extends EventEmitter {
     private messageListener: messageListener | null = null
     private readonly contactPool: NodeNeighbors
     private readonly selectedNeighbors: NodeNeighbors = new NodeNeighbors(4)
-    // private readonly randomNeighbors: PeerDescriptor[] = []
+    private rpcCommunicator: RoutingRpcCommunicator | null = null
+    private readonly P2PTransport: ITransport
 
     constructor(params: RandomGraphNodeParams) {
         super()
         this.randomGraphId = params.randomGraphId
         this.layer1 = params.layer1
+        this.P2PTransport = params.P2PTransport
 
         this.contactPool = new NodeNeighbors(this.PEER_VIEW_SIZE)
         this.selectedNeighbors = new NodeNeighbors(this.N)
     }
 
     start(): void {
+        this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${this.randomGraphId}`, this.P2PTransport)
         this.messageListener = (_sender, _message) => {
-            console.log("onMEssage")
+            console.log("onMessage")
         }
         this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
@@ -68,7 +74,8 @@ export class RandomGraphNode extends EventEmitter {
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         const toReplace: string[] = []
-        this.contactPool.replaceAll(closestTen)
+        this.contactPool.replaceAll(closestTen.map((descriptor) =>
+            new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
         this.selectedNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
@@ -83,7 +90,8 @@ export class RandomGraphNode extends EventEmitter {
             console.log(removedContact)
             toReplace.push(PeerID.fromValue(removedContact.peerId).toMapKey())
         }
-        this.contactPool.replaceAll(closestTen)
+        this.contactPool.replaceAll(closestTen.map((descriptor) =>
+            new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
         this.selectedNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
@@ -96,7 +104,7 @@ export class RandomGraphNode extends EventEmitter {
         const promises = stringIds.map((replace) => {
             const toReplace = this.selectedNeighbors.getNeighborWithId(replace)
             if (toReplace) {
-                this.selectedNeighbors.remove(toReplace)
+                this.selectedNeighbors.remove(toReplace.getPeerDescriptor())
                 this.addRandomContactToNeighbors()
             }
         })

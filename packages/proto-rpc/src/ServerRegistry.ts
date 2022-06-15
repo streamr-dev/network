@@ -73,7 +73,6 @@ export class ServerRegistry extends EventEmitter {
 
         this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext) => {
             const request = ConversionWrappers.parseWrapper(() => requestClass.fromBinary(bytes))
-            //const request = requestClass.fromBinary(bytes)
             const response = await fn(request, callContext)
             return returnClass.toBinary(response)
         })

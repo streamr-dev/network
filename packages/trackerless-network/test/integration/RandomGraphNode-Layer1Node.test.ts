@@ -42,7 +42,8 @@ describe('RandomGraphNode-DhtNode', () => {
 
         graphNodes = range(numOfNodes).map((i) => new RandomGraphNode({
             randomGraphId: streamId,
-            layer1: dhtNodes[i]
+            layer1: dhtNodes[i],
+            P2PTransport: cms[i]
         }))
 
         await dhtEntryPoint.start()

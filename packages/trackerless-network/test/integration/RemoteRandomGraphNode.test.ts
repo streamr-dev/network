@@ -1,0 +1,79 @@
+import { RoutingRpcCommunicator, Simulator, MockConnectionManager, PeerDescriptor } from '@streamr/dht'
+import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
+import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
+import { DataMessage, HandshakeRequest, HandshakeResponse } from '../../src/proto/NetworkRpc'
+import { Empty } from '../../src/proto/google/protobuf/empty'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { waitForCondition } from 'streamr-test-utils'
+
+describe('RemoteRandomGraphNode', () => {
+    let mockServerRpc: RoutingRpcCommunicator
+    let clientRpc: RoutingRpcCommunicator
+    let remoteRandomGraphNode: RemoteRandomGraphNode
+
+    const clientPeer: PeerDescriptor = {
+        peerId: new Uint8Array([1,1,1]),
+        type: 1
+    }
+    const serverPeer: PeerDescriptor = {
+        peerId: new Uint8Array([2,2,2]),
+        type: 1
+    }
+
+    let recvCounter: number
+
+    beforeEach(() => {
+        recvCounter = 0
+        const simulator = new Simulator()
+        const mockConnectionManager1 = new MockConnectionManager(serverPeer, simulator)
+        const mockConnectionManager2 = new MockConnectionManager(clientPeer, simulator)
+        simulator.addConnectionManager(mockConnectionManager1)
+        simulator.addConnectionManager(mockConnectionManager2)
+
+        mockServerRpc = new RoutingRpcCommunicator('test', mockConnectionManager1)
+        clientRpc = new RoutingRpcCommunicator('test', mockConnectionManager2)
+
+        mockServerRpc.registerRpcNotification(
+            DataMessage,
+            'sendData',
+            async (_msg: DataMessage, _context: ServerCallContext): Promise<Empty> => {
+                recvCounter += 1
+                return Empty
+            }
+        )
+
+        mockServerRpc.registerRpcMethod(
+            HandshakeRequest,
+            HandshakeResponse,
+            'handshake',
+            async (msg: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> => {
+                const res: HandshakeResponse = {
+                    requestId: msg.requestId,
+                    accepted: true
+                }
+                return res
+            }
+        )
+
+        remoteRandomGraphNode = new RemoteRandomGraphNode(
+            serverPeer,
+            'test-stream',
+            new NetworkRpcClient(clientRpc.getRpcClientTransport())
+        )
+    })
+
+    afterEach(() => {
+        clientRpc.stop()
+        mockServerRpc.stop()
+    })
+
+    it('sendData', async  () => {
+        await remoteRandomGraphNode.sendData(clientPeer, {hello: 'WORLD'})
+        await waitForCondition(() => recvCounter === 1)
+    })
+
+    it('handshake', async () => {
+        const result = await remoteRandomGraphNode.handshake(clientPeer)
+        expect(result).toEqual(true)
+    })
+})
