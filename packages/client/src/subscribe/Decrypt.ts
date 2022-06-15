@@ -8,13 +8,9 @@ import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamRegistryCached } from '../StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 
-type IDecrypt<T> = {
-    decrypt: (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
-}
-
-export class Decrypt<T> implements IDecrypt<T>, Context {
+export class Decrypt<T> implements Context {
     readonly id
     readonly debug
     private isStopped = false

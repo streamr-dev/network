@@ -2,7 +2,8 @@ import { wait } from 'streamr-test-utils'
 
 import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer, pTimeout } from '../../src/utils'
+import { Defer } from '../../src/utils/Defer'
+import { pTimeout } from '../../src/utils/promises'
 
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'

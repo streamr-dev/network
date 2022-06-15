@@ -10,7 +10,8 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
-import { randomString, CacheFn } from '../utils'
+import { randomString } from '../utils/utils'
+import { CacheFn } from '../utils/caches'
 
 export type MessageChainOptions = {
     publisherId: EthereumAddress

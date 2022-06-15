@@ -4,7 +4,7 @@
 import { StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle } from 'tsyringe'
 
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { CancelableGenerator, ICancelable } from '../utils/iterators'
 

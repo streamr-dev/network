@@ -7,7 +7,8 @@ import {
     publishTestMessagesGenerator,
     createTestStream,
 } from '../test-utils/utils'
-import { Defer, pLimitFn } from '../../src/utils'
+import { Defer } from '../../src/utils/Defer'
+import { pLimitFn } from '../../src/utils/promises'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'

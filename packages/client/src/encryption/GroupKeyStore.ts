@@ -1,4 +1,4 @@
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { PersistentStore } from './PersistentStore'

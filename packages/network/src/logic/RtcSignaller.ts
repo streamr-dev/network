@@ -1,27 +1,27 @@
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
-import { RelayMessage, RtcErrorMessage, RtcSubTypes, TrackerId } from '../identifiers'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { RtcErrorMessage, TrackerId } from '../identifiers'
+import { RelayMessage, Originator } from 'streamr-client-protocol'
 import { Logger } from "../helpers/Logger"
 import { NodeId } from '../identifiers'
 
 export interface OfferOptions {
     routerId: string,
-    originatorInfo: TrackerLayer.Originator,
+    originatorInfo: Originator,
     connectionId: string,
     description: string
 }
 
 export interface AnswerOptions {
     routerId: string,
-    originatorInfo: TrackerLayer.Originator,
+    originatorInfo: Originator,
     connectionId: string,
     description: string
 }
 
 export interface IceCandidateOptions {
     routerId: string,
-    originatorInfo: TrackerLayer.Originator
+    originatorInfo: Originator
     connectionId: string,
     candidate: string,
     mid: string
@@ -30,7 +30,7 @@ export interface IceCandidateOptions {
 export interface ConnectOptions {
     routerId: string
     targetNode: NodeId
-    originatorInfo: TrackerLayer.Originator
+    originatorInfo: Originator
 }
 
 export interface ErrorOptions {
@@ -61,21 +61,21 @@ export class RtcSignaller {
 
         nodeToTracker.on(NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: NodeId) => {
             const { originator, targetNode, subType } = relayMessage
-            if (relayMessage.subType === RtcSubTypes.RTC_OFFER) {
+            if (relayMessage.isRtcOfferMessage()) {
                 this.offerListener!({
                     routerId: source,
                     originatorInfo: originator,
                     connectionId: relayMessage.data.connectionId,
                     description: relayMessage.data.description
                 })
-            } else if (relayMessage.subType === RtcSubTypes.RTC_ANSWER) {
+            } else if (relayMessage.isRtcAnswerMessage()) {
                 this.answerListener!({
                     routerId: source,
                     originatorInfo: originator,
                     connectionId: relayMessage.data.connectionId,
                     description: relayMessage.data.description,
                 })
-            } else if (relayMessage.subType === RtcSubTypes.ICE_CANDIDATE) {
+            } else if (relayMessage.isIceCandidateMessage()) {
                 this.iceCandidateListener!({
                     routerId: source,
                     originatorInfo: originator,
@@ -83,7 +83,7 @@ export class RtcSignaller {
                     candidate: relayMessage.data.candidate,
                     mid: relayMessage.data.mid
                 })
-            } else if (relayMessage.subType === RtcSubTypes.RTC_CONNECT) {
+            } else if (relayMessage.isRtcConnectMessage()) {
                 this.connectListener!({
                     routerId: source,
                     targetNode,

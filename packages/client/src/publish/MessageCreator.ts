@@ -12,7 +12,7 @@ import {
     EncryptionType
 } from 'streamr-client-protocol'
 
-import { LimitAsyncFnByKey } from '../utils'
+import { LimitAsyncFnByKey } from '../utils/promises'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
@@ -28,33 +28,13 @@ export type MessageCreateOptions<T = unknown> = {
     encryptionType?: EncryptionType
 }
 
-export interface IMessageCreator {
-    create: <T>(streamId: StreamID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
-    stop: () => Promise<void> | void
-}
-
-export class MessageCreatorAnonymous implements IMessageCreator {
-    // eslint-disable-next-line class-methods-use-this
-    async create<T>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
-        throw new Error('Anonymous user can not publish.')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    stop(): void {}
-}
-
 /**
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class MessageCreator implements IMessageCreator {
-    // encrypt
+export class MessageCreator {
     private queue: ReturnType<typeof LimitAsyncFnByKey>
     private getMsgChain
-
-    /*
-     * Get function for creating stream messages.
-     */
 
     constructor(
         private streamPartitioner: StreamPartitioner,

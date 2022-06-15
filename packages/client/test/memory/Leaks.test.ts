@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import LeakDetector from 'jest-leak-detector'
 
-import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils'
+import { fakePrivateKey, describeRepeats, getPublishTestMessages, snapshot, LeaksDetector } from '../utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Subscription } from '../../src/subscriber/Subscription'
 import { counterId, Defer } from '../../src/utils'

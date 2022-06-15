@@ -19,7 +19,8 @@ import {
 import LeakDetector from 'jest-leak-detector'
 
 import { StreamrClient } from '../../src/StreamrClient'
-import { counterId, CounterId, AggregatedError, instanceId } from '../../src/utils'
+import { counterId, CounterId, instanceId } from '../../src/utils/utils'
+import { AggregatedError } from '../../src/utils/AggregatedError'
 import { Debug, format } from '../../src/utils/log'
 import { MaybeAsync, StreamDefinition } from '../../src/types'
 import { Stream, StreamProperties } from '../../src/Stream'

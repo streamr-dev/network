@@ -24,12 +24,6 @@ export {
     TrackerId,
     Status,
     StreamPartStatus,
-    RtcIceCandidateMessage,
-    RtcOfferMessage,
-    RtcAnswerMessage,
-    RelayMessage,
-    RtcConnectMessage,
-    RtcSubTypes
 } from './identifiers'
 export {
     COUNTER_LONE_NODE,

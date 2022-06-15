@@ -4,7 +4,8 @@ import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
-import { instanceId, pOnce } from '../utils'
+import { instanceId } from '../utils/utils'
+import { pOnce } from '../utils/promises'
 import { Context } from '../utils/Context'
 
 import { PersistentStore } from './PersistentStore'

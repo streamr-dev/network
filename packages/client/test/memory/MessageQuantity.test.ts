@@ -4,7 +4,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { fakePrivateKey, addAfterFn } from '../utils'
+import { fakePrivateKey, addAfterFn } from '../utils/utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
 

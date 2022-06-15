@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { RelayMessage, RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
-import { RelayMessage, RtcSubTypes, Status, NodeId, TrackerId } from '../identifiers'
+import { Status, NodeId, TrackerId } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
@@ -67,7 +67,7 @@ export class NodeToTracker extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.RTC_OFFER,
+            subType: RelayMessageSubType.RTC_OFFER,
             data: {
                 connectionId,
                 description
@@ -88,7 +88,7 @@ export class NodeToTracker extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.RTC_ANSWER,
+            subType: RelayMessageSubType.RTC_ANSWER,
             data: {
                 connectionId,
                 description
@@ -110,7 +110,7 @@ export class NodeToTracker extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.ICE_CANDIDATE,
+            subType: RelayMessageSubType.ICE_CANDIDATE,
             data: {
                 connectionId,
                 candidate,
@@ -126,8 +126,8 @@ export class NodeToTracker extends EventEmitter {
             requestId,
             originator: originatorInfo,
             targetNode,
-            subType: RtcSubTypes.RTC_CONNECT,
-            data: new Object()
+            subType: RelayMessageSubType.RTC_CONNECT,
+            data: {}
         }))
         return requestId
     }

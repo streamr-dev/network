@@ -9,7 +9,7 @@ import {
     uid,
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { counterId } from '../../src/utils'
+import { counterId } from '../../src/utils/utils'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessage } from 'streamr-client-protocol'
