@@ -10,7 +10,7 @@ import { StreamPermission } from '../../src'
 import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { nextValue } from '../../src/utils/iterators'
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 
 const MOCK_CONTENT = { foo: 'bar' }
 
@@ -22,8 +22,8 @@ describe('Subscriber', () => {
     let dependencyContainer: DependencyContainer
 
     beforeEach(async () => {
-        subscriberWallet = Wallet.createRandom()
-        publisherWallet = Wallet.createRandom()
+        subscriberWallet = fastWallet()
+        publisherWallet = fastWallet()
         dependencyContainer = createFakeContainer({
             auth: {
                 privateKey: subscriberWallet.privateKey

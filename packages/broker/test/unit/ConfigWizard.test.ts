@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import { mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
@@ -17,6 +16,7 @@ import {
 import { readFileSync } from 'fs'
 import { createBroker } from '../../src/broker'
 import { needsMigration } from '../../src/config/migration'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
 
@@ -37,13 +37,13 @@ describe('ConfigWizard', () => {
     describe('importPrivateKey validate', () => {
         it ('happy path, prefixed', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = Wallet.createRandom().privateKey
+            const privateKey = fastPrivateKey()
             expect(validate(privateKey)).toBe(true)
         })
 
         it ('happy path, no prefix', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = Wallet.createRandom().privateKey.substring(2)
+            const privateKey = fastPrivateKey().substring(2)
             expect(validate(privateKey)).toBe(true)
         })
 
@@ -122,7 +122,7 @@ describe('ConfigWizard', () => {
         })
 
         it ('should exercise the `import` path', () => {
-            const importPrivateKey = Wallet.createRandom().privateKey
+            const importPrivateKey = fastPrivateKey()
             const answers: PrivateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
                 importPrivateKey
