@@ -45,7 +45,7 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
+    const createGroupKeyRequest = (groupKeyId: string): Promise<StreamMessage> => {
         return createMockMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
             publisher: subscriberWallet,
@@ -106,7 +106,7 @@ describe('PublisherKeyExchange', () => {
 
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
-            const request = createGroupKeyRequest(key.id)
+            const request = await createGroupKeyRequest(key.id)
             subscriberNode.publishToNode(request)
 
             const response = await nextValue(receivedResponses)
@@ -116,7 +116,7 @@ describe('PublisherKeyExchange', () => {
         it('no group key in store', async () => {
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
-            const request = createGroupKeyRequest(GroupKey.generate().id)
+            const request = await createGroupKeyRequest(GroupKey.generate().id)
             subscriberNode.publishToNode(request)
 
             const response = await nextValue(receivedResponses)
@@ -127,7 +127,7 @@ describe('PublisherKeyExchange', () => {
             const groupKey = GroupKey.generate()
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
-            const request: any = createGroupKeyRequest(groupKey.id)
+            const request: any = await createGroupKeyRequest(groupKey.id)
             delete request.signature
             subscriberNode.publishToNode(request)
 

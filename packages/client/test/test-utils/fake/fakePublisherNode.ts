@@ -39,7 +39,7 @@ const createGroupKeyErrorResponse = (
     errorCode: string,
     requestMessage: StreamMessage<GroupKeyRequestSerialized>,
     publisherWallet: Wallet,
-): StreamMessage<any> => {
+): Promise<StreamMessage<any>> => {
     const request = GroupKeyRequest.fromArray(requestMessage.getParsedContent())
     const { requestId, streamId, groupKeyIds } = request
     return createMockMessage({
@@ -72,7 +72,7 @@ export const addFakePublisherNode = async (
             const errorCode = getError(request)
             const response = (errorCode === undefined)
                 ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet, streamRegistry)
-                : createGroupKeyErrorResponse(errorCode, request, publisherWallet)
+                : await createGroupKeyErrorResponse(errorCode, request, publisherWallet)
             publisherNode.publishToNode(response)
         }
     })

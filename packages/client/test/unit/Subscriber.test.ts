@@ -43,7 +43,7 @@ describe('Subscriber', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publishToNode(await createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT
@@ -65,7 +65,7 @@ describe('Subscriber', () => {
         const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
 
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publishToNode(await createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,
@@ -93,7 +93,7 @@ describe('Subscriber', () => {
         const onError = jest.fn()
         sub.on('error', onError)
 
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publishToNode(await createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,

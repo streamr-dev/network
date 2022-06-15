@@ -684,10 +684,10 @@ type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'me
     encryptionKey?: GroupKey
 }
 
-export const createMockMessage = (  
+export const createMockMessage = async (  
     opts: CreateMockMessageOptionsBase 
     & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
-): StreamMessage<any> => {
+): Promise<StreamMessage<any>> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
@@ -707,6 +707,6 @@ export const createMockMessage = (
     if (opts.encryptionKey !== undefined) {
         EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
     }
-    msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
+    msg.signature = await SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
 }
