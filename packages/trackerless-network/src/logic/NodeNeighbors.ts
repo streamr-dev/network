@@ -1,8 +1,9 @@
 import { PeerDescriptor, PeerID } from '@streamr/dht'
 import { shuffle } from 'lodash'
+import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 
 export class NodeNeighbors {
-    private readonly neighbors: Map<string, PeerDescriptor>
+    private readonly neighbors: Map<string, RemoteRandomGraphNode>
     private readonly limit: number
 
     constructor(limit: number) {
@@ -10,9 +11,9 @@ export class NodeNeighbors {
         this.limit = limit
     }
 
-    add(peerDescriptor: PeerDescriptor): void {
-        const stringId = this.toStringId(peerDescriptor)
-        this.neighbors.set(stringId, peerDescriptor)
+    add(remote: RemoteRandomGraphNode): void {
+        const stringId = this.toStringId(remote.getPeerDescriptor())
+        this.neighbors.set(stringId, remote)
     }
 
     remove(peerDescriptor: PeerDescriptor): void {
@@ -29,11 +30,11 @@ export class NodeNeighbors {
         return this.neighbors.has(stringId)
     }
 
-    replaceAll(neighbors: PeerDescriptor[]): void {
+    replaceAll(neighbors: RemoteRandomGraphNode[]): void {
         this.neighbors.clear()
         const limited = neighbors.splice(0, this.limit)
-        limited.forEach((peerDescriptor) => {
-            this.add(peerDescriptor)
+        limited.forEach((remote) => {
+            this.add(remote)
         })
     }
 
@@ -41,7 +42,7 @@ export class NodeNeighbors {
         return [...this.neighbors.keys()]
     }
 
-    getNeighborWithId(id: string): PeerDescriptor | undefined {
+    getNeighborWithId(id: string): RemoteRandomGraphNode | undefined {
         return this.neighbors.get(id)
     }
 
@@ -53,7 +54,7 @@ export class NodeNeighbors {
         return this.neighbors.size
     }
 
-    getRandom(): PeerDescriptor | undefined {
+    getRandom(): RemoteRandomGraphNode | undefined {
         const keys = [...this.neighbors.keys()]
         const shuffled = shuffle(keys)
         if (shuffled.length) {
