@@ -37,13 +37,13 @@ describe('ConfigWizard', () => {
     describe('importPrivateKey validate', () => {
         it ('happy path, prefixed', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = fastPrivateKey()
+            const privateKey = `0x${fastPrivateKey()}`
             expect(validate(privateKey)).toBe(true)
         })
 
         it ('happy path, no prefix', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = fastPrivateKey().substring(2)
+            const privateKey = fastPrivateKey()
             expect(validate(privateKey)).toBe(true)
         })
 
