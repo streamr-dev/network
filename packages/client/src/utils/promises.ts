@@ -1,34 +1,10 @@
 import { inspect } from 'util'
-import EventEmitter from 'events'
 import pLimit from 'p-limit'
 
 import { MaybeAsync } from '../types'
 
 import { AggregatedError } from './AggregatedError'
 import { Defer } from './Defer'
-
-/**
- * Converts a .once event listener into a promise.
- * Rejects if an 'error' event is received before resolving.
- */
-
-export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['on']>[0]): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-        // eslint-disable-next-line prefer-const
-        let onError: (error: Error) => void
-        const onEvent = (value: any) => {
-            emitter.off('error', onError)
-            resolve(value)
-        }
-        onError = (error) => {
-            emitter.off(event, onEvent)
-            reject(error)
-        }
-
-        emitter.once(event, onEvent)
-        emitter.once('error', onError)
-    })
-}
 
 /**
  * Returns a limit function that limits concurrency per-key.
