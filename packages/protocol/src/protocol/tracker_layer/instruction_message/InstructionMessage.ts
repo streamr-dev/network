@@ -1,7 +1,7 @@
 import {
     validateIsNotEmptyString,
     validateIsNotNegativeInteger,
-    validateIsArray, validateIsInteger
+    validateIsArray
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 import { StreamID } from '../../../utils'
