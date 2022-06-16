@@ -1,8 +1,6 @@
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
-
 import {
-    collect,
     toStreamDefinition,
     createPartitionedTestStream,
     createStreamPartIterator
@@ -10,14 +8,31 @@ import {
 import { getPublishTestMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
-
 import { Subscription } from '../../src/subscribe/Subscription'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { ConfigTest, StreamDefinition } from '../../src'
+import { ConfigTest, MaybeAsync, StreamDefinition } from '../../src'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
 jest.setTimeout(60000)
+
+const collect = async <T>(
+    iterator: AsyncGenerator<StreamMessage<T>>,
+    fn: MaybeAsync<(item: {
+        msg: StreamMessage<T>,
+        iterator: AsyncGenerator<StreamMessage<T>>,
+        received: T[]
+    }) => void> = async () => {}
+): Promise<T[]> => {
+    const received: T[] = []
+    for await (const msg of iterator) {
+        received.push(msg.getParsedContent())
+        await fn({
+            msg, iterator, received,
+        })
+    }
+    return received
+}
 
 describe('Subscriber', () => {
     let expectErrors = 0 // check no errors by default

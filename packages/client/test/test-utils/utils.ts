@@ -64,24 +64,6 @@ describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect<T>(
-    iterator: AsyncGenerator<StreamMessage<T>>,
-    fn: MaybeAsync<(item: {
-        msg: StreamMessage<T>,
-        iterator: AsyncGenerator<StreamMessage<T>>,
-        received: T[]
-    }) => void> = async () => {}
-): Promise<T[]> {
-    const received: T[] = []
-    for await (const msg of iterator) {
-        received.push(msg.getParsedContent())
-        await fn({
-            msg, iterator, received,
-        })
-    }
-    return received
-}
-
 export function addAfterFn(): (fn: any) => void {
     const afterFns: any[] = []
     afterEach(async () => {
