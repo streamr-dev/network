@@ -6,9 +6,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import {
     createTestStream,
     fetchPrivateKeyWithGas,
+} from '../test-utils/utils'
+import {
     getPublishTestStreamMessages,
     getWaitForStorage
-} from '../test-utils/utils'
+} from '../test-utils/publish'
 import { StreamPermission } from '../../src'
 
 const NUM_MESSAGES = 8

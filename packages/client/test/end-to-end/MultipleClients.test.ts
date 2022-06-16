@@ -5,9 +5,11 @@ import {
     createTestStream,
     fetchPrivateKeyWithGas,
     getCreateClient,
-    getPublishTestMessages,
     uid,
 } from '../test-utils/utils'
+import {
+    getPublishTestMessages
+} from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Stream } from '../../src/Stream'

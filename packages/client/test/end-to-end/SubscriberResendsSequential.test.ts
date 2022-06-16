@@ -1,10 +1,12 @@
 import {
     createTestStream,
     fetchPrivateKeyWithGas,
+} from '../test-utils/utils'
+import {
     getPublishTestStreamMessages,
     getWaitForStorage,
     Msg,
-} from '../test-utils/utils'
+} from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'

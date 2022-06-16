@@ -5,15 +5,17 @@ import { MessageLayer, StreamPartID, toStreamID, toStreamPartID } from 'streamr-
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 
 import {
-    Msg,
-    getPublishTestMessages,
     getCreateClient,
-    publishManyGenerator,
     describeRepeats,
     createPartitionedTestStream,
     createStreamPartIterator,
     toStreamDefinition
 } from '../test-utils/utils'
+import {
+    Msg,
+    getPublishTestMessages,
+    publishManyGenerator
+} from '../test-utils/publish'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'

@@ -1,12 +1,14 @@
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
-    Msg,
     Debug,
-    getPublishTestStreamMessages,
-    publishTestMessagesGenerator,
     createTestStream,
 } from '../test-utils/utils'
+import {
+    Msg,
+    getPublishTestStreamMessages,
+    publishTestMessagesGenerator,
+} from '../test-utils/publish'
 import { Defer } from '../../src/utils/Defer'
 import { pLimitFn } from '../../src/utils/promises'
 import { StreamrClient } from '../../src/StreamrClient'

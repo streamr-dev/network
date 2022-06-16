@@ -4,12 +4,14 @@ import { wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import {
-    getPublishTestStreamMessages,
-    getWaitForStorage,
     createTestStream,
     fetchPrivateKeyWithGas,
-    Msg,
 } from '../test-utils/utils'
+import {
+    getPublishTestStreamMessages,
+    getWaitForStorage,
+    Msg,
+} from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Resends } from '../../src/subscribe/Resends'
 

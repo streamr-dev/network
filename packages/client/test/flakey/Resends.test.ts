@@ -1,6 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
-import { getPublishTestMessages, describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { describeRepeats, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { getPublishTestMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import { pTimeout } from '../../src/utils/promises'

@@ -2,12 +2,12 @@ import { StreamPartID } from 'streamr-client-protocol'
 import { fastPrivateKey, wait } from 'streamr-test-utils'
 
 import {
-    getPublishTestMessages,
     collect,
     toStreamDefinition,
     createPartitionedTestStream,
     createStreamPartIterator
 } from '../test-utils/utils'
+import { getPublishTestMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 
