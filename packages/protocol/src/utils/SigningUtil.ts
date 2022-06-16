@@ -25,9 +25,9 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
 }
 
 /**
- * Creates and verifies Ethereum signatures. This is a faster implementation 
- * of standard Ethereum signing, and therefore compatible with 
- * e.g. ether.js's verifyMessage and signMessage functions.
+ * Creates and verifies standard Ethereum signatures. This is a faster 
+ * implementation than found in ether.js library. It is compatible
+ * with e.g. ether.js's verifyMessage and signMessage functions.
  * 
  * In Node environment the performance is significantly better compared 
  * to ether.js v5.5.0.
