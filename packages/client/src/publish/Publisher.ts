@@ -2,7 +2,7 @@
  * Public Publishing API
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { scoped, Lifecycle } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
@@ -29,7 +29,7 @@ export class Publisher implements Context {
 
     constructor(
         context: Context,
-        private pipeline: PublishPipeline
+        @inject(delay(() => PublishPipeline)) private pipeline: PublishPipeline
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
