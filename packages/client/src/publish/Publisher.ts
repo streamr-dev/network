@@ -91,24 +91,6 @@ export class Publisher implements Context {
         }
     }
 
-    async* publishFromMetadata<T>(
-        streamDefinition: StreamDefinition, 
-        seq: AsyncIterable<PublishMetadata<T>>
-    ): AsyncGenerator<StreamMessage<T>, void, unknown> {
-        const items = CancelableGenerator(seq)
-        this.inProgress.add(items)
-        try {
-            for await (const msg of items) {
-                yield await this.publish(streamDefinition, msg.content, {
-                    timestamp: msg.timestamp,
-                    partitionKey: msg.partitionKey
-                })
-            }
-        } finally {
-            this.inProgress.delete(items)
-        }
-    }
-
     async start(): Promise<void> {
         this.pipeline.start()
     }
