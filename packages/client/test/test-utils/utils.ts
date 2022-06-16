@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-
 import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import {
@@ -14,21 +13,18 @@ import {
     MessageID,
     SigningUtil
 } from 'streamr-client-protocol'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
-import { AggregatedError } from '../../src/utils/AggregatedError'
 import { Debug } from '../../src/utils/log'
-import { MaybeAsync } from '../../src/types'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-
 import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { addAfterFn } from './jest-utils'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -43,40 +39,6 @@ export function mockContext(): Context {
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
-
-const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function describeRepeats(msg: string, fn: any, describeFn = describe): void {
-    for (let k = 0; k < TEST_REPEATS; k++) {
-        // eslint-disable-next-line no-loop-func
-        describe(msg, () => {
-            describeFn(`test repeat ${k + 1} of ${TEST_REPEATS}`, fn)
-        })
-    }
-}
-
-describeRepeats.skip = (msg: any, fn: any) => {
-    describe.skip(`${msg} – test repeat ALL of ${TEST_REPEATS}`, fn)
-}
-
-describeRepeats.only = (msg: any, fn: any) => {
-    describeRepeats(msg, fn, describe.only)
-}
-
-export function addAfterFn(): (fn: any) => void {
-    const afterFns: any[] = []
-    afterEach(async () => {
-        const fns = afterFns.slice()
-        afterFns.length = 0
-        // @ts-expect-error invalid parameter
-        AggregatedError.throwAllSettled(await Promise.allSettled(fns.map((fn) => fn())))
-    })
-
-    return (fn: any) => {
-        afterFns.push(fn)
-    }
-}
 
 export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
 
