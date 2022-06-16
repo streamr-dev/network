@@ -1,5 +1,4 @@
 import crypto from 'crypto'
-import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
 import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
@@ -152,17 +151,6 @@ export const getCreateClient = (
 
         return c
     }
-}
-
-/**
- * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
- */
-export function snapshot(): string {
-    if (!process.env.WRITE_SNAPSHOTS) { return '' }
-    testDebugRoot('heap snapshot >>')
-    const value = writeHeapSnapshot()
-    testDebugRoot('heap snapshot <<', value)
-    return value
 }
 
 export const createEthereumAddress = (id: number): string => {
