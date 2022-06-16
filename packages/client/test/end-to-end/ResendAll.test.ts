@@ -1,16 +1,11 @@
 import { range } from 'lodash'
 import { StreamMessage } from 'streamr-client-protocol'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import {
-    createTestStream,
-    fetchPrivateKeyWithGas,
-} from '../test-utils/utils'
-import {
-    getPublishTestStreamMessages,
-    getWaitForStorage
-} from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages,getWaitForStorage } from '../test-utils/publish'
 import { StreamPermission } from '../../src'
 
 const NUM_MESSAGES = 8

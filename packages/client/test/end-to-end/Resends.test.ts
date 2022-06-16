@@ -1,20 +1,11 @@
 import fs from 'fs'
 import path from 'path'
-import { wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
-
-import {
-    createTestStream,
-    fetchPrivateKeyWithGas,
-} from '../test-utils/utils'
-import {
-    getPublishTestStreamMessages,
-    getWaitForStorage,
-    Msg,
-} from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Resends } from '../../src/subscribe/Resends'
-
 import { Stream } from '../../src/Stream'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 

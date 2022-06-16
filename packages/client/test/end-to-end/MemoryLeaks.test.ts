@@ -1,5 +1,5 @@
-import { wait } from 'streamr-test-utils'
-import { fetchPrivateKeyWithGas, snapshot } from '../test-utils/utils'
+import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { snapshot } from '../test-utils/utils'
 import { getPublishTestMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient, initContainer } from '../../src/StreamrClient'

@@ -1,11 +1,11 @@
 import { Wallet } from 'ethers'
 
-import { createRelativeTestStreamId, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { createRelativeTestStreamId } from '../test-utils/utils'
 import { ConfigTest } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { fastWallet, randomEthereumAddress } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
 

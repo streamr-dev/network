@@ -1,9 +1,8 @@
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, wait, waitForCondition } from 'streamr-test-utils'
 
 import {
     addAfterFn,
     createTestStream,
-    fetchPrivateKeyWithGas,
     getCreateClient,
     uid,
 } from '../test-utils/utils'

@@ -2,8 +2,7 @@ import crypto from 'crypto'
 import { writeHeapSnapshot } from 'v8'
 import { DependencyContainer } from 'tsyringe'
 
-import fetch from 'node-fetch'
-import { KeyServer, wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
 import { Wallet } from 'ethers'
 import {
     EthereumAddress,
@@ -45,30 +44,6 @@ export function mockContext(): Context {
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
-
-export async function fetchPrivateKeyWithGas(): Promise<string> {
-    let response
-    try {
-        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
-            timeout: 5 * 1000
-        })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } catch (_e2) {
-        } finally {
-            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 5 * 1000
-            })
-        }
-    }
-
-    if (!response.ok) {
-        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${response.text()}`)
-    }
-
-    return response.text()
-}
 
 const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 

@@ -1,16 +1,10 @@
-import {
-    createTestStream,
-    fetchPrivateKeyWithGas,
-} from '../test-utils/utils'
-import {
-    getPublishTestStreamMessages,
-    getWaitForStorage,
-    Msg,
-} from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5
