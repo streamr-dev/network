@@ -235,17 +235,6 @@ export class StorageNodeRegistry {
         return JSON.stringify({ query })
     }
 
-    private static buildGetNodeQuery(nodeAddress: EthereumAddress): string {
-        const query = `{
-            node (id: "${nodeAddress}") {
-                id,
-                metadata,
-                lastSeen
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
     private static buildStoredStreamQuery(streamId: StreamID): string {
         const query = `{
             stream (id: "${streamId}") {

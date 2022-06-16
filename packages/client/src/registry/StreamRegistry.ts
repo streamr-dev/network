@@ -236,21 +236,6 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    private async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Getting stream %s from theGraph', streamId)
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
-        }
-        const response = await this.graphQLClient.sendQuery(
-            StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)
-        ) as { stream: StreamQueryResult }
-        if (!response.stream) {
-            throw new NotFoundError('Stream not found: id=' + streamId)
-        }
-        return this.parseStream(streamId, response.stream.metadata)
-    }
-
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
         if ((term === undefined) && (permissionFilter === undefined)) {
             throw new Error('Requires a search term or a permission filter')
