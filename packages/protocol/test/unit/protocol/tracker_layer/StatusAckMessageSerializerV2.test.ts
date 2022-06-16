@@ -12,16 +12,14 @@ const message = new StatusAckMessage({
     version: VERSION,
     requestId: 'requestId',
     streamId: toStreamID('streamId'),
-    streamPartition: 10,
-    counter: 100
+    streamPartition: 10
 })
 const serializedMessage = JSON.stringify([
     VERSION,
     TrackerMessage.TYPES.StatusAckMessage,
     'requestId',
     'streamId',
-    10,
-    100
+    10
 ])
 
 describe('StatusAckMessageSerializerV2', () => {

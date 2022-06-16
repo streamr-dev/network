@@ -7,28 +7,18 @@ import StatusAckMessage from '../../../../src/protocol/tracker_layer/status_ack_
 
 describe('StatusAckMessage', () => {
     describe('constructor', () => {
-        it('throws on null counter', () => {
-            assert.throws(() => new StatusAckMessage({
-                requestId: 'requestId',
-                streamId: toStreamID('streamId'),
-                streamPartition: 0,
-                counter: null as any
-            }), ValidationError)
-        })
         it('throws on null streamPartition', () => {
             assert.throws(() => new StatusAckMessage({
                 requestId: 'requestId',
                 streamId: toStreamID('streamId'),
-                streamPartition: null as any,
-                counter: 1
+                streamPartition: null as any
             }), ValidationError)
         })
         it('throws on null streamId', () => {
             assert.throws(() => new StatusAckMessage({
                 requestId: 'requestId',
                 streamId: null as any,
-                streamPartition: 0,
-                counter: 1
+                streamPartition: 0
             }), ValidationError)
         })
         it('throws on null requestId', () => {
@@ -36,22 +26,19 @@ describe('StatusAckMessage', () => {
                 requestId: null as any,
                 streamId: toStreamID('streamId'),
                 streamPartition: 0,
-                counter: 1
             }), ValidationError)
         })
         it('should create the latest version', () => {
             const msg = new StatusAckMessage({
                 requestId: 'requestId',
                 streamId: toStreamID('streamId'),
-                streamPartition: 0,
-                counter: 1
+                streamPartition: 0
             })
             assert(msg instanceof StatusAckMessage)
             assert.strictEqual(msg.version, TrackerMessage.LATEST_VERSION)
             assert.strictEqual(msg.requestId, 'requestId')
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
-            assert.strictEqual(msg.counter, 1)
         })
     })
 })

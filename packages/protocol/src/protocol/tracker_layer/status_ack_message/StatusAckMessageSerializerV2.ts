@@ -14,8 +14,7 @@ export default class StatusAckMessageSerializerV2 extends Serializer<StatusAckMe
             TrackerMessage.TYPES.StatusAckMessage,
             statusAckMessage.requestId,
             statusAckMessage.streamId,
-            statusAckMessage.streamPartition,
-            statusAckMessage.counter
+            statusAckMessage.streamPartition
         ]
     }
 
@@ -25,16 +24,14 @@ export default class StatusAckMessageSerializerV2 extends Serializer<StatusAckMe
             type, // eslint-disable-line @typescript-eslint/no-unused-vars
             requestId,
             streamId,
-            streamPartition,
-            counter
+            streamPartition
         ] = arr
 
         return new StatusAckMessage({
             version,
             requestId,
             streamId: toStreamID(streamId),
-            streamPartition,
-            counter
+            streamPartition
         })
     }
 }

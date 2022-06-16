@@ -68,8 +68,7 @@ export type SendInstructionFn = (
 
 export type SendStatusAckFn = (
     receiverNodeId: NodeId,
-    streamPartId: StreamPartID,
-    counter: number
+    streamPartId: StreamPartID
 ) => Promise<void>
 
 interface Metrics extends MetricsDefinition {
@@ -127,8 +126,8 @@ export class InstructionSender {
                 this.metrics.instructionSent.record(1)
                 try {
                     if (ackOnly) {
-                        await this.sendStatusAck(nodeId, streamPartId, counterValue)
-                        logger.debug('ack sent to node %o', { counterValue, streamPartId, nodeId })
+                        await this.sendStatusAck(nodeId, streamPartId)
+                        logger.debug('statusAck %s sent to node %s', streamPartId, nodeId)
                     } else {
                         await this.sendInstruction(nodeId, streamPartId, newNeighbors, counterValue)
                         logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })

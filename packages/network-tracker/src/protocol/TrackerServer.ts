@@ -68,15 +68,13 @@ export class TrackerServer extends EventEmitter {
 
     async sendStatusAck(
         receiverNodeId: NodeId,
-        streamPartId: StreamPartID,
-        counter: number
+        streamPartId: StreamPartID
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(receiverNodeId, new TrackerLayer.StatusAckMessage({
             requestId: uuidv4(),
             streamId,
-            streamPartition,
-            counter
+            streamPartition
         }))
     }
 
