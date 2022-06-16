@@ -295,11 +295,11 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    static formMetadata(props: StreamProperties): string {
+    private static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
+    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {
             stream (id: "${streamId}") {

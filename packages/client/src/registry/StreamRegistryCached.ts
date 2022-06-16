@@ -23,7 +23,7 @@ export class StreamRegistryCached implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
+    private async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
         return this.streamRegistry.getStream(streamId)
     }
 
@@ -35,7 +35,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
@@ -46,7 +46,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
@@ -57,7 +57,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
+    private async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
         return this.streamRegistry.hasPermission({
             streamId,
             public: true,
