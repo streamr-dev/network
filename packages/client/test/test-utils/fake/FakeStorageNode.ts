@@ -9,7 +9,7 @@ import {
 } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
-import { Multimap } from '../utils'
+import { Multimap } from '../Multimap'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 
