@@ -5,7 +5,7 @@ import express, { Request, Response} from 'express'
 import { Logger } from 'streamr-network'
 import { Tracker } from '@streamr/network-tracker'
 import { Stream, StreamPermission, StreamrClient } from 'streamr-client'
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 
 import { Broker } from '../../../../src/broker'
 import { createClient, createTestStream, startBroker, startTestTracker } from '../../../utils'
@@ -78,7 +78,7 @@ describe('BrubeckMinerPlugin', () => {
         rewardStreamId = rewardStream.id
         claimServer = new MockClaimServer()
         await claimServer.start()
-        brokerWallet = Wallet.createRandom()
+        brokerWallet = fastWallet()
         broker = await startBroker({
             privateKey: brokerWallet.privateKey,
             trackerPort: TRACKER_PORT,

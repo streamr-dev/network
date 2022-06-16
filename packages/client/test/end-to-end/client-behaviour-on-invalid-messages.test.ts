@@ -4,10 +4,9 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createTestStream, fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey, fastWallet, wait } from 'streamr-test-utils'
 import { MessageID, SigningUtil, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { createNetworkNode, NetworkNode } from 'streamr-network'
-import { Wallet } from 'ethers'
 
 const createClient = getCreateClient()
 const TIMEOUT = 20 * 1000
@@ -80,7 +79,7 @@ describe('client behaviour on invalid message', () => {
             ...ConfigTest.network as any,
             id: 'networkNode',
         })
-        const publisherWallet = Wallet.createRandom()
+        const publisherWallet = fastWallet()
         const msg = new StreamMessage({
             messageId: new MessageID(streamId, 0, Date.now(), 0, publisherWallet.address, ''),
             prevMsgRef: null,

@@ -20,6 +20,7 @@ import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnviron
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { createMockMessage } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
+import { fastWallet } from 'streamr-test-utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -80,8 +81,8 @@ describe('PublisherKeyExchange', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = Wallet.createRandom()
-        subscriberWallet = Wallet.createRandom()
+        publisherWallet = fastWallet()
+        subscriberWallet = fastWallet()
         subscriberRsaKeyPair = await RsaKeyPair.create()
         fakeContainer = createFakeContainer({
             auth: {
@@ -91,7 +92,7 @@ describe('PublisherKeyExchange', () => {
         mockStream = await createStream()
         subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
         await startPublisherKeyExchangeSubscription()
-    }, 15 * 1000)
+    })
 
     describe('responds to a group key request', () => {
 

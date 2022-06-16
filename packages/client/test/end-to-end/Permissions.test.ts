@@ -5,7 +5,7 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { fastWallet, randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(40000)
 
@@ -17,7 +17,7 @@ describe('Stream permissions', () => {
 
     beforeAll(async () => {
         const wallet = new Wallet(await fetchPrivateKeyWithGas())
-        otherUser = Wallet.createRandom()
+        otherUser = fastWallet()
         client = new StreamrClient({
             ...ConfigTest,
             auth: {

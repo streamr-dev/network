@@ -1,5 +1,4 @@
-import { Wallet } from 'ethers'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { fastWallet, randomEthereumAddress } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
@@ -20,7 +19,7 @@ describe('SearchStreams', () => {
     let streamWithPublicPermission: Stream
     let streamWithUserAndPublicPermission: Stream
     let streamWithGrantedAndRevokedPermission: Stream
-    const searcher = Wallet.createRandom()
+    const searcher = fastWallet()
 
     const createTestStreams = async (items: {
         streamId: string,
