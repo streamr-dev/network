@@ -1,5 +1,5 @@
 import { DependencyContainer } from 'tsyringe'
-import { StreamRegistry } from '../../../src/StreamRegistry'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { createMockMessage } from '../utils'
 import {

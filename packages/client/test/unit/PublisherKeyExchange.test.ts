@@ -7,7 +7,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'

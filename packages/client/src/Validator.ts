@@ -15,7 +15,7 @@ import { instanceId } from './utils/utils'
 import { pOrderedResolve } from './utils/promises'
 import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
-import { StreamRegistryCached } from './StreamRegistryCached'
+import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 
 export class SignatureRequiredError extends StreamMessageError {

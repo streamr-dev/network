@@ -5,7 +5,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'

@@ -4,7 +4,7 @@ import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-c
 import { URLSearchParams } from 'url'
 
 import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { HttpUtil } from '../../../src/HttpUtil'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }

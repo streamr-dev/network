@@ -4,10 +4,10 @@ import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
-import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { Stream } from '../../../src/Stream'
 import { Multimap } from '../utils'
-import { StreamRegistry } from '../../../src/StreamRegistry'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,

@@ -11,10 +11,10 @@ import {
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
 import { Ethereum } from '../../../src/Ethereum'
-import { StreamRegistry } from '../../../src/StreamRegistry'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../utils'
-import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
+import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 
