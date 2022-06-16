@@ -1,5 +1,6 @@
 import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
+import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot } from '../test-utils/utils'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient, initContainer } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { Subscription } from '../../src/subscribe/Subscription'
