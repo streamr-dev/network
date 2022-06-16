@@ -24,6 +24,17 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
     )
 }
 
+/**
+ * Creates and verifies Ethereum signatures. This is a faster implementation 
+ * of standard Ethereum signing, and therefore compatible with 
+ * e.g. ether.js's verifyMessage and signMessage functions.
+ * 
+ * In Node environment the performance is significantly better compared 
+ * to ether.js v5.5.0.
+ * 
+ * See test/benchmark/SigningUtils.ts and the original PR:
+ * https://github.com/streamr-dev/streamr-client-protocol-js/pull/35
+ */
 export default class SigningUtil {
     static sign(payload: string, privateKey: string): string {
         const payloadBuffer = Buffer.from(payload, 'utf-8')
