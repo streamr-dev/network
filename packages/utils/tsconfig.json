@@ -1,0 +1,15 @@
+{
+    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "composite": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "references": [
+        { "path": "tsconfig.node.json" }
+    ]
+}
