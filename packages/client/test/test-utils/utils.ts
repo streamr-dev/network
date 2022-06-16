@@ -83,17 +83,6 @@ export async function collect<T>(
     return received
 }
 
-export function getTestSetTimeout(): (callback: () => void, ms?: number | undefined) => NodeJS.Timeout {
-    const addAfter = addAfterFn()
-    return (callback: () => void, ms?: number) => {
-        const t = setTimeout(callback, ms)
-        addAfter(() => {
-            clearTimeout(t)
-        })
-        return t
-    }
-}
-
 export function addAfterFn(): (fn: any) => void {
     const afterFns: any[] = []
     afterEach(async () => {
@@ -109,16 +98,6 @@ export function addAfterFn(): (fn: any) => void {
 }
 
 export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
-
-export function getRandomClient(): StreamrClient {
-    const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`)
-    return new StreamrClient({
-        ...ConfigTest,
-        auth: {
-            privateKey: wallet.privateKey
-        }
-    })
-}
 
 // eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule): string => {
