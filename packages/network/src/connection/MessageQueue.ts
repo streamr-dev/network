@@ -1,5 +1,5 @@
 import Heap from 'heap'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 type ErrorInfo = Record<string, unknown>
 

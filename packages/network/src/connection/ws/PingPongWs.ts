@@ -1,6 +1,6 @@
-import { Logger } from "../../helpers/Logger"
 import { Rtts } from "../../identifiers"
 import { AbstractWsConnection } from "./AbstractWsConnection"
+import { Logger } from '@streamr/utils'
 
 export type GetConnections = () => Array<AbstractWsConnection>
 

@@ -11,7 +11,6 @@ import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helper
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
@@ -19,6 +18,7 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
-import { Logger } from '../../helpers/Logger'
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
@@ -19,6 +18,7 @@ import { NameDirectory } from '../../NameDirectory'
 import { NegotiatedProtocolVersions } from '../NegotiatedProtocolVersions'
 import { v4 as uuidv4 } from 'uuid'
 import { getAddressFromIceCandidate, isPrivateIPv4 } from '../../helpers/AddressTools'
+import { Logger } from '@streamr/utils'
 
 class WebRtcError extends Error {
     constructor(msg: string) {

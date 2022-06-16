@@ -16,18 +16,19 @@ const parseBoolean = (value: string|undefined) => {
     }
 }
 
-export class LoggerNode extends LoggerCommon {
+const isBrowser = (): boolean => {
+    // @ts-expect-error TS2304 not available in node.js
+    return typeof window === 'undefined'
+}
+
+export class Logger extends LoggerCommon {
     constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
         const options: pino.LoggerOptions = {
-            name: LoggerNode.createName(module, context),
+            name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
             level: process.env.LOG_LEVEL || 'info',
-            // explicitly pass prettifier, otherwise pino may try to lazy require it,
-            // which can fail when under jest+typescript, due to some CJS/ESM
-            // incompatibility leading to throwing an error like:
-            // "prettyFactory is not a function"
-            prettifier: process.env.NODE_ENV === 'production' ? undefined : pinoPretty,
-            prettyPrint: process.env.NODE_ENV === 'production' ? false : {
+            prettifier: !isBrowser() && process.env.NODE_ENV === 'production' ? undefined : pinoPretty,
+            prettyPrint: !isBrowser() && process.env.NODE_ENV === 'production' ? false : {
                 colorize: parseBoolean(process.env.LOG_COLORS) ?? true,
                 translateTime: 'yyyy-mm-dd"T"HH:MM:ss.l',
                 ignore: 'pid,hostname',
@@ -37,5 +38,3 @@ export class LoggerNode extends LoggerCommon {
         super(options, destinationStream)
     }
 }
-
-export { LoggerNode as Logger }

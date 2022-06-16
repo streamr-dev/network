@@ -1,3 +1,3 @@
-export function foobar(): string {
-    return `foobar`
-}
+import { Logger } from './logger/Logger'
+
+export { Logger }

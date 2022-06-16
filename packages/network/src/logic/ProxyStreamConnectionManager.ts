@@ -11,8 +11,8 @@ import {
     UnsubscribeRequest
 } from 'streamr-client-protocol'
 import { promiseTimeout } from '../helpers/PromiseTools'
-import { Logger } from '../helpers/logger/LoggerNode'
 import { Propagation } from './propagation/Propagation'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

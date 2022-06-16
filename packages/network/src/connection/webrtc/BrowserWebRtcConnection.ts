@@ -1,7 +1,7 @@
 import { ConstructorOptions, WebRtcConnection } from "./WebRtcConnection"
-import { Logger } from "../../helpers/Logger"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
+import { Logger } from '@streamr/utils'
 
 export const webRtcConnectionFactory = new class implements WebRtcConnectionFactory {
     createConnection(opts: ConstructorOptions): WebRtcConnection {

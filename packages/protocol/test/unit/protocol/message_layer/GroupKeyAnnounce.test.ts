@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { foobar } from '@streamr/utils'
 
 import {
     StreamMessage,
@@ -22,7 +21,6 @@ const serializedMessage = JSON.stringify(['streamId', [['groupKeyId1', 'encrypte
 describe('GroupKeyAnnounce', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            console.info(foobar())
             assert.deepStrictEqual(GroupKeyMessage.deserialize(serializedMessage, StreamMessage.MESSAGE_TYPES.GROUP_KEY_ANNOUNCE), message)
         })
     })

@@ -2,8 +2,8 @@ import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
 import { w3cwebsocket } from 'websocket'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
-import { Logger } from '../../helpers/Logger'
 import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
+import { Logger } from '@streamr/utils'
 
 const staticLogger = new Logger(module)
 

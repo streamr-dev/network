@@ -31,6 +31,7 @@
   "dependencies": {
     "@streamr/network-tracker": "1.0.0",
     "@streamr/slackbot": "^1.1.0",
+    "@streamr/utils": "^0.0.1",
     "aedes": "^0.47.0",
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",

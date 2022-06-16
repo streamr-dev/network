@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { Logger } from '../../helpers/Logger'
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { MessageQueue, QueueItem } from '../MessageQueue'
 import { NameDirectory } from '../../NameDirectory'
 import crypto from 'crypto'
+import { Logger } from '@streamr/utils'
 
 export interface ConstructorOptions {
     selfId: PeerId

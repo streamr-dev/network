@@ -2,9 +2,9 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
-import { Logger } from "../../helpers/Logger"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
+import { Logger } from '@streamr/utils'
 
 const loggerLevel = process.env.NODE_DATACHANNEL_LOG_LEVEL || 'Fatal'
 nodeDataChannel.initLogger(loggerLevel as LogLevel)

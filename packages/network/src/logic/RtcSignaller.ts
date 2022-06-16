@@ -2,8 +2,8 @@ import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTr
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { RtcErrorMessage, TrackerId } from '../identifiers'
 import { RelayMessage, Originator } from 'streamr-client-protocol'
-import { Logger } from "../helpers/Logger"
 import { NodeId } from '../identifiers'
+import { Logger } from '@streamr/utils'
 
 export interface OfferOptions {
     routerId: string,

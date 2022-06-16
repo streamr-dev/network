@@ -6,11 +6,11 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { Logger } from '../helpers/Logger'
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts, NodeId } from "../identifiers"
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',

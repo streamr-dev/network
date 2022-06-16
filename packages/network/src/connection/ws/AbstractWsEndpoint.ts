@@ -1,9 +1,9 @@
 import { EventEmitter } from "events"
-import { Logger } from "../../helpers/Logger"
 import { PeerId, PeerInfo } from "../PeerInfo"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"
 import { AbstractWsConnection } from './AbstractWsConnection'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',

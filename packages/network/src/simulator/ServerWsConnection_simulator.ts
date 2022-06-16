@@ -1,9 +1,9 @@
 import { ReadyState, AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { PeerInfo } from '../connection/PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
-import { Logger } from '../helpers/Logger'
 
 import { Simulator } from './Simulator'
+import { Logger } from '@streamr/utils'
 
 export const staticLogger = new Logger(module)
 
