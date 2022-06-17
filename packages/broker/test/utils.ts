@@ -6,11 +6,9 @@ import StreamrClient, {
     StreamProperties,
     StreamrClientConfig
 } from 'streamr-client'
-import fetch from 'node-fetch'
 import _ from 'lodash'
 import { Wallet } from 'ethers'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { KeyServer } from 'streamr-test-utils'
 import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
@@ -100,24 +98,6 @@ export const startTestTracker = async (port: number): Promise<Tracker> => {
             port
         },
     })
-}
-
-export async function fetchPrivateKeyWithGas(): Promise<string> {
-    let response
-    try {
-        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
-            timeout: 9 * 1000
-        })
-    } catch (_e) {
-        try {
-            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
-        } finally {
-            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
-                timeout: 9 * 1000
-            })
-        }
-    }
-    return response.text()
 }
 
 export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {

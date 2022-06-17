@@ -1,11 +1,11 @@
 import { Tracker } from '@streamr/network-tracker'
 import { Wallet } from 'ethers'
 import {
-    fetchPrivateKeyWithGas,
     startStorageNode,
     startTestTracker
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 
 const trackerPort = 12503
 

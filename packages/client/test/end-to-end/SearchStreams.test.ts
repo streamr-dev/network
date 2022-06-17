@@ -1,11 +1,10 @@
-import { fastWallet, randomEthereumAddress } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { SearchStreamsPermissionFilter } from '../../src/searchStreams'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { fetchPrivateKeyWithGas } from '../test-utils/utils'
 
 jest.setTimeout(2 * 60 * 1000)
 
