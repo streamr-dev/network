@@ -31,7 +31,7 @@ interface MessageInfo {
 function duplicateElements<T>(arr: readonly T[], numOfDuplicates: number): T[] {
     const newArr = Array.from(arr)
     for (let i = 0; i < numOfDuplicates; ++i) {
-        newArr.push(arr[i % arr.length])
+        newArr.push(arr[Math.floor(Math.random() * arr.length)])
     }
     return newArr
 }
