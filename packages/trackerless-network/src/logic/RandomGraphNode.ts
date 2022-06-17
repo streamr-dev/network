@@ -9,7 +9,6 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 
-
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
 }
