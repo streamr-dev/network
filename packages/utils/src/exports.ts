@@ -1,3 +1,7 @@
 import { Logger } from './logger/Logger'
+import { withTimeout } from './withTimeout'
 
-export { Logger }
+export {
+    withTimeout,
+    Logger
+}
