@@ -477,8 +477,7 @@ export function publishTestMessagesGenerator(
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
-    // @ts-expect-error private
-    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
+    const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
     }
@@ -710,4 +709,17 @@ export const createMockMessage = (
     }
     msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
+}
+
+export async function* publishFromMetadata<T>(
+    streamDefinition: StreamDefinition, 
+    seq: AsyncIterable<PublishMetadata<T>>,
+    client: StreamrClient
+): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    for await (const msg of seq) {
+        yield await client.publish(streamDefinition, msg.content, {
+            timestamp: msg.timestamp,
+            partitionKey: msg.partitionKey
+        })
+    }
 }
