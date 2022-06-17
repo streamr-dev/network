@@ -11,7 +11,7 @@ import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } fro
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { Ethereum } from './Ethereum'
-import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
+import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {

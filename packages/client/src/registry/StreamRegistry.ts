@@ -1,17 +1,17 @@
 import { Contract, ContractTransaction } from '@ethersproject/contracts'
-import type { StreamRegistryV3 as StreamRegistryContract } from './ethereumArtifacts/StreamRegistryV3'
-import StreamRegistryArtifact from './ethereumArtifacts/StreamRegistryV3Abi.json'
+import type { StreamRegistryV3 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV3'
+import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
-import { BrubeckContainer } from './Container'
-import { Ethereum } from './Ethereum'
-import { instanceId } from './utils/utils'
-import { until } from './utils/promises'
-import { Context } from './utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { Stream, StreamProperties } from './Stream'
-import { ErrorCode, NotFoundError } from './HttpUtil'
+import { BrubeckContainer } from '../Container'
+import { Ethereum } from '../Ethereum'
+import { instanceId } from '../utils/utils'
+import { until } from '../utils/promises'
+import { Context } from '../utils/Context'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { Stream, StreamProperties } from '../Stream'
+import { ErrorCode, NotFoundError } from '../HttpUtil'
 import {
     StreamID,
     EthereumAddress,
@@ -19,12 +19,12 @@ import {
     toStreamID,
     KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
-import { StreamIDBuilder } from './StreamIDBuilder'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
-import { createWriteContract, SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
-import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from './searchStreams'
-import { filter, map } from './utils/GeneratorUtils'
-import { ObservableContract, waitForTx, withErrorHandlingAndLogging } from './utils/contract'
+import { createWriteContract, SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
+import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from '../searchStreams'
+import { filter, map } from '../utils/GeneratorUtils'
+import { ObservableContract, waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
 import {
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -38,7 +38,7 @@ import {
     SingleStreamQueryResult,
     streamPermissionToSolidityType,
     ChainPermissions
-} from './permission'
+} from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 
 export type StreamQueryResult = {
@@ -236,21 +236,6 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    private async getStreamFromGraph(streamIdOrPath: string): Promise<Stream> {
-        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        this.debug('Getting stream %s from theGraph', streamId)
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
-        }
-        const response = await this.graphQLClient.sendQuery(
-            StreamRegistry.buildGetStreamWithPermissionsQuery(streamId)
-        ) as { stream: StreamQueryResult }
-        if (!response.stream) {
-            throw new NotFoundError('Stream not found: id=' + streamId)
-        }
-        return this.parseStream(streamId, response.stream.metadata)
-    }
-
     searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
         if ((term === undefined) && (permissionFilter === undefined)) {
             throw new Error('Requires a search term or a permission filter')
@@ -310,11 +295,11 @@ export class StreamRegistry implements Context {
         return JSON.stringify({ query })
     }
 
-    static formMetadata(props: StreamProperties): string {
+    private static formMetadata(props: StreamProperties): string {
         return JSON.stringify(omit(props, 'id'))
     }
 
-    static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
+    private static buildGetStreamWithPermissionsQuery(streamId: StreamID): string {
         const query = `
         {
             stream (id: "${streamId}") {

@@ -5,7 +5,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
@@ -14,6 +14,7 @@ import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchang
 import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
+import { fastWallet } from 'streamr-test-utils'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 
@@ -69,8 +70,8 @@ describe('SubscriberKeyExchange', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = Wallet.createRandom()
-        subscriberWallet = Wallet.createRandom()
+        publisherWallet = fastWallet()
+        subscriberWallet = fastWallet()
         fakeContainer = createFakeContainer({
             auth: {
                 privateKey: subscriberWallet.privateKey

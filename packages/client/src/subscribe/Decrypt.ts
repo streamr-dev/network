@@ -5,7 +5,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 
 import { EncryptionUtil, UnableToDecryptError } from '../encryption/EncryptionUtil'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 import { instanceId } from '../utils/utils'

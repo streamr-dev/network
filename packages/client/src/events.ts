@@ -1,6 +1,6 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import EventEmitter3 from 'eventemitter3'
-import { StorageNodeAssignmentEvent } from './StorageNodeRegistry'
+import { StorageNodeAssignmentEvent } from './registry/StorageNodeRegistry'
 
 type Events<T> = { [K in keyof T]: (payload: any) => void }
 

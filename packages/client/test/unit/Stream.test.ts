@@ -3,7 +3,7 @@ import { container as rootContainer } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
 import { initContainer } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createStrictConfig } from '../../src/Config'
 
 describe('Stream', () => {

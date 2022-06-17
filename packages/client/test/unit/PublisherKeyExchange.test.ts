@@ -7,7 +7,7 @@ import {
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
@@ -20,6 +20,7 @@ import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnviron
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { createMockMessage } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
+import { fastWallet } from 'streamr-test-utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -38,7 +39,7 @@ describe('PublisherKeyExchange', () => {
     const createStream = async () => {
         const streamRegistry = fakeContainer.resolve(StreamRegistry)
         const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
-        streamRegistry.grantPermissions(stream.id, {
+        await streamRegistry.grantPermissions(stream.id, {
             permissions: [StreamPermission.SUBSCRIBE],
             user: subscriberWallet.address
         })
@@ -80,8 +81,8 @@ describe('PublisherKeyExchange', () => {
     }
 
     beforeEach(async () => {
-        publisherWallet = Wallet.createRandom()
-        subscriberWallet = Wallet.createRandom()
+        publisherWallet = fastWallet()
+        subscriberWallet = fastWallet()
         subscriberRsaKeyPair = await RsaKeyPair.create()
         fakeContainer = createFakeContainer({
             auth: {

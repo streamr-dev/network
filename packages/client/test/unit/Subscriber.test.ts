@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
@@ -10,7 +10,7 @@ import { StreamPermission } from '../../src'
 import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { nextValue } from '../../src/utils/iterators'
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 
 const MOCK_CONTENT = { foo: 'bar' }
 
@@ -22,8 +22,8 @@ describe('Subscriber', () => {
     let dependencyContainer: DependencyContainer
 
     beforeEach(async () => {
-        subscriberWallet = Wallet.createRandom()
-        publisherWallet = Wallet.createRandom()
+        subscriberWallet = fastWallet()
+        publisherWallet = fastWallet()
         dependencyContainer = createFakeContainer({
             auth: {
                 privateKey: subscriberWallet.privateKey
