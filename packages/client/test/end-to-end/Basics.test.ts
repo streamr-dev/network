@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
-import { getCreateClient, publishFromMetadata, uid } from '../test-utils/utils'
-import { Msg, publishManyGenerator } from '../test-utils/publish'
+import { getCreateClient, uid } from '../test-utils/utils'
+import { Msg, publishFromMetadata, publishManyGenerator } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'

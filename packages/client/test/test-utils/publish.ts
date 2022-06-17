@@ -83,8 +83,7 @@ export function publishTestMessagesGenerator(
     if (opts.onSourcePipeline) {
         opts.onSourcePipeline.trigger(source)
     }
-    // @ts-expect-error private
-    const pipeline = new Pipeline<StreamMessage>(client.publisher.publishFromMetadata(streamDefinition, source))
+    const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
     }
@@ -159,6 +158,19 @@ export function getPublishTestMessages(
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())
+    }
+}
+
+export async function* publishFromMetadata<T>(
+    streamDefinition: StreamDefinition, 
+    seq: AsyncIterable<PublishMetadata<T>>,
+    client: StreamrClient
+): AsyncGenerator<StreamMessage<T>, void, unknown> {
+    for await (const msg of seq) {
+        yield await client.publish(streamDefinition, msg.content, {
+            timestamp: msg.timestamp,
+            partitionKey: msg.partitionKey
+        })
     }
 }
 
