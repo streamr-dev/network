@@ -1,7 +1,7 @@
 import { RoutingRpcCommunicator, Simulator, MockConnectionManager, PeerDescriptor } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
-import { DataMessage, HandshakeRequest, HandshakeResponse } from '../../src/proto/NetworkRpc'
+import { DataMessage, HandshakeRequest, HandshakeResponse, MessageRef } from '../../src/proto/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -69,11 +69,15 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('sendData', async  () => {
+        const messageRef: MessageRef = {
+            sequenceNumber: 0,
+            timestamp: 0
+        }
         const dataMessage: DataMessage = {
             content: JSON.stringify({hello: 'WORLD'}),
             senderId: PeerID.fromValue(clientPeer.peerId).toString(),
             streamPartId: 'test-stream',
-            messageId: 'message'
+            messageRef
         }
         await remoteRandomGraphNode.sendData(clientPeer, dataMessage)
         await waitForCondition(() => recvCounter === 1)

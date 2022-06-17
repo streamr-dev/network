@@ -16,7 +16,7 @@ export class RemoteRandomGraphNode {
         const request: HandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toString()
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
@@ -27,6 +27,7 @@ export class RemoteRandomGraphNode {
             const response = await result.response
             return response.accepted
         } catch (err) {
+            console.error(err)
             return false
         }
     }

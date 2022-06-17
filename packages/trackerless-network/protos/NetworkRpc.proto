@@ -9,11 +9,18 @@ service NetworkRpc {
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
 }
 
+message MessageRef {
+  int32 timestamp = 1;
+  int32 sequenceNumber = 2;
+}
+
 message DataMessage {
   string content = 1;
   string senderId = 2;
   string streamPartId = 3;
-  string messageId = 4;
+  MessageRef messageRef = 4;
+  optional MessageRef previousMessageRef = 5;
+  optional string previousPeer = 6;
 }
 
 message Layer2Message {
