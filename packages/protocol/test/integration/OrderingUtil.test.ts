@@ -117,7 +117,6 @@ describe(OrderingUtil, () => {
         }
 
         const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: string) => {
-            //console.info(`gapHandler: ${from.serialize()} -> ${to.serialize()} (${publisherId})`)
             const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from.timestamp && timestamp <= to.timestamp)
             })
