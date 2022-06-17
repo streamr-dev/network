@@ -1,9 +1,9 @@
-import { createTestStream, fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
+import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
 import { ProxyDirection, toStreamPartID } from 'streamr-client-protocol'
 import { until } from '../../src/utils/promises'
 

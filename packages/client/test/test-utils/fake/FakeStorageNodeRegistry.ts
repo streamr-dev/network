@@ -6,7 +6,7 @@ import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { Stream } from '../../../src/Stream'
-import { Multimap } from '../utils'
+import { Multimap } from '../Multimap'
 import { StreamRegistry } from '../../../src/StreamRegistry'
 
 @scoped(Lifecycle.ContainerScoped)

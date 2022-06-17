@@ -1,11 +1,13 @@
-import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
+import 'reflect-metadata'
+import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { getPublishTestMessages } from '../test-utils/publish'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient, initContainer } from '../../src/StreamrClient'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
+import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId } from '../../src/utils/utils'
 import { Defer } from '../../src/utils/Defer'
-
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
@@ -18,6 +20,7 @@ import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { DestroySignal } from '../../src/DestroySignal'
+import { Debug } from '../test-utils/utils'
 
 const Dependencies = {
     Context,
@@ -31,8 +34,22 @@ const Dependencies = {
     DestroySignal
 }
 
+const debug = Debug('test')
+
+/**
+ * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
+ */
+function snapshot(): string {
+    if (!process.env.WRITE_SNAPSHOTS) { return '' }
+    debug('heap snapshot >>')
+    const value = writeHeapSnapshot()
+    debug('heap snapshot <<', value)
+    return value
+}
+
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
+
 describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
 

@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
-import { getPublishTestStreamMessages, createTestStream } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'

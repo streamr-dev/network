@@ -1,10 +1,10 @@
 import { keyToArrayIndex } from 'streamr-client-protocol'
 import { MetricsReport } from 'streamr-network'
-import { waitForCondition } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
+import { getCreateClient } from '../test-utils/utils'
 
 const NUM_OF_PARTITIONS = 10
 
