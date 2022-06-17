@@ -17,7 +17,7 @@ import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,

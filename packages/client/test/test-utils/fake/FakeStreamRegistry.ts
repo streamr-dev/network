@@ -11,10 +11,10 @@ import {
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
 import { Ethereum } from '../../../src/Ethereum'
-import { StreamRegistry } from '../../../src/StreamRegistry'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../Multimap'
-import { StreamRegistryCached } from '../../../src/StreamRegistryCached'
+import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 
@@ -198,11 +198,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
 
     // eslint-disable-next-line class-methods-use-this
     deleteStream(_streamIdOrPath: string): Promise<void> {
-        throw new Error('not implemented')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    getStreamFromGraph(_streamIdOrPath: string): Promise<Stream> {
         throw new Error('not implemented')
     }
 

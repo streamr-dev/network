@@ -7,11 +7,11 @@ import { inspect } from './utils/log'
 
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
-import { StreamRegistry } from './StreamRegistry'
+import { StreamRegistry } from './registry/StreamRegistry'
 import { Ethereum } from './Ethereum'
-import { StorageNodeRegistry } from './StorageNodeRegistry'
+import { StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
-import { StreamRegistryCached } from './StreamRegistryCached'
+import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
     EthereumAddress,
     StreamID,

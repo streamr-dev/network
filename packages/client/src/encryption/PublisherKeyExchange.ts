@@ -23,7 +23,7 @@ import { GroupKey } from './GroupKey'
 import { EncryptionUtil, UnableToDecryptError } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Subscription } from '../subscribe/Subscription'
 import { GroupKeyStore } from './GroupKeyStore'
 import { Debugger } from '../utils/log'
