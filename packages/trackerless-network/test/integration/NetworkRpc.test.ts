@@ -1,7 +1,7 @@
 import { PeerDescriptor } from '@streamr/dht'
 import { RpcCommunicator, CallContext, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
-import { DataMessage } from '../../src/proto/NetworkRpc'
+import { DataMessage, MessageRef } from '../../src/proto/NetworkRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -40,10 +40,14 @@ describe('Network RPC', () => {
     })
 
     it('sends Data', async () => {
+        const messageRef: MessageRef = {
+            sequenceNumber: 0,
+            timestamp: 0
+        }
         const data: DataMessage = {
             content: 'data',
             senderId: 'peer1',
-            messageId: 'test',
+            messageRef,
             streamPartId: 'testStream'
         }
         await client.sendData(data,
