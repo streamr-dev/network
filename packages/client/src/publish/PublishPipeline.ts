@@ -200,6 +200,7 @@ export class PublishPipeline implements Context {
         this.debug('publish >> %o', {
             streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
             timestamp: publishMetadata.timestamp,
+            sequenceNumber: publishMetadata.sequenceNumber,
             partitionKey: publishMetadata.partitionKey,
             msgChainId: publishMetadata.msgChainId
         })
