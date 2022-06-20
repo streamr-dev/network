@@ -92,20 +92,17 @@ describe('Publisher', () => {
 
     it('metadata', async () => {
         const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
-        const SEQUENCE_NUMBER = 123
         const MSG_CHAIN_ID = 'mock-msgChainId'
         await publisher.publish(STREAM_ID, {
             foo: 'bar'
         }, {
             timestamp: TIMESTAMP,
-            sequenceNumber: SEQUENCE_NUMBER,
             msgChainId: MSG_CHAIN_ID
         })
         await publisher.stop()
         expect(brubeckNode.publishToNode).toBeCalledTimes(1)
         const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
         expect(actual.messageId.timestamp).toBe(TIMESTAMP)
-        expect(actual.messageId.sequenceNumber).toBe(SEQUENCE_NUMBER)
         expect(actual.messageId.msgChainId).toBe(MSG_CHAIN_ID)
     })
 

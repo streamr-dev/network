@@ -38,7 +38,6 @@ export class Publisher implements Context {
             streamDefinition,
             content,
             timestamp: parseTimestamp(metadata),
-            sequenceNumber: metadata?.sequenceNumber,
             partitionKey: metadata?.partitionKey,
             msgChainId: metadata?.msgChainId,
             messageType: metadata?.messageType,
