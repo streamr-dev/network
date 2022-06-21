@@ -45,7 +45,6 @@ export class FailedToPublishError extends Error {
 
 export interface MessageMetadata {
     timestamp?: string | number | Date
-    sequenceNumber?: number
     partitionKey?: string | number,
     msgChainId?: string,
     /** @internal */
