@@ -1,4 +1,4 @@
-    import {
+import {
     ClientStreamingCall,
     ServerStreamingCall,
     DuplexStreamingCall,
@@ -13,7 +13,6 @@
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { TODO } from './types'
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
 import { Logger } from './Logger'
