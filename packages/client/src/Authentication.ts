@@ -39,9 +39,7 @@ export interface Authentication {
 }
 
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
-    console.log('DEBUG: createAuthentication.0')
     if (authConfig.privateKey !== undefined) {
-        console.log('DEBUG: createAuthentication.1')
         const key = authConfig.privateKey
         const address = getAddress(computeAddress(key)).toLowerCase()
         return {
@@ -51,7 +49,6 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
         }
     } else if (authConfig.ethereum !== undefined) {
-        console.log('DEBUG: createAuthentication.2')
         const { ethereum } = authConfig
         const metamaskProvider = new Web3Provider(ethereum)
         const signer = metamaskProvider.getSigner()

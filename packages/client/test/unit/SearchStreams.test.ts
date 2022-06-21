@@ -5,6 +5,7 @@ import { SearchStreamsResultItem } from '../../src/searchStreams'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { createMockAddress } from '../test-utils/utils'
+import { ConfigTest } from '../../src'
 
 const MOCK_USER = createMockAddress()
 
@@ -47,12 +48,9 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
         undefined as any,
         undefined as any,
         {
-            streamRegistryChainRPCs: {
-                rpcs: [{
-                    url: 'http://dummy.mock',
-                    timeout: 0
-                }]
-            }
+            // this is not used, but StreamRegistry needs a valid RPC configuration
+            // as it creates a Contract instance in constructor
+            streamRegistryChainRPCs: ConfigTest.streamRegistryChainRPCs!
         }
     )
 }
