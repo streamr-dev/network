@@ -83,9 +83,9 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
-        range(numOfNodes).map((i) => {
-            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(8)
-            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
-        })
+        await Promise.all(graphNodes.map((node) => {
+            waitForCondition(() => node.getContactPoolIds().length >= 8),
+            waitForCondition(() => node.getSelectedNeighborIds().length === 4)
+        }))
     })
 })
