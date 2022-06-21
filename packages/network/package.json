@@ -26,7 +26,6 @@
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json && NODE_ENV=production webpack --mode=production",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",

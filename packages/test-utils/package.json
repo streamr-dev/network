@@ -9,7 +9,6 @@
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run build",
     "build": "tsc --build tsconfig.node.json"
   },
   "keywords": [
