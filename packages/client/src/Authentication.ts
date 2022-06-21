@@ -8,6 +8,7 @@ import type { ExternalProvider } from '@ethersproject/providers'
 import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
 import { XOR } from './types'
 import { pLimitFn, wait } from './utils/promises'
+import pMemoize from 'p-memoize'
 
 export type ProviderConfig = ExternalProvider
 
@@ -54,7 +55,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         const signer = metamaskProvider.getSigner()
         return {
             isAuthenticated: () => true,
-            getAddress: async () => {
+            getAddress: pMemoize(async () => {
                 try {
                     if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
                         throw new Error(`invalid ethereum provider ${ethereumConfig}`)
@@ -65,7 +66,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                 } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }
-            },
+            }),
             createMessagePayloadSignature: pLimitFn(async (payload: string) => {
                 // sign one at a time & wait a moment before asking for next signature
                 // otherwise metamask extension may not show the prompt window
