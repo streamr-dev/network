@@ -56,13 +56,11 @@ export interface DhtNodeConfig {
 const logger = new Logger(module)
 
 export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
-    static objectCounter = 0
-    private objectId = 1
-
     private noProgressCounter = 0
     private readonly PARALLELISM = 3
     private readonly MAX_NEIGHBOR_LIST_SIZE = 100
     private readonly NUMBER_OF_NODES_PER_K_BUCKET = 1
+    private readonly JOIN_NO_PROGRESS_LIMIT = 4
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: RouterDuplicateDetector
@@ -88,21 +86,13 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     constructor(private config: DhtNodeConfig) {
         super()
 
-        this.objectId = DhtNode.objectCounter
-        DhtNode.objectCounter++
-
         this.peers = new Map()
 
-        if (config.appId) {
-            this.appId = config.appId
-        }
-        else {
-            this.appId = DEFAULT_APP_ID
-        }
+        this.appId = config.appId ?? DEFAULT_APP_ID
+
         this.numberOfNodesPerKBucket = config.numberOfNodesPerKBucket || this.NUMBER_OF_NODES_PER_K_BUCKET
         this.ongoingClosestPeersRequests = new Set()
-        // False positives at 0.05% at maximum capacity
-        this.routerDuplicateDetector = new RouterDuplicateDetector(2 ** 15, 16, 1050, 2100)
+        this.routerDuplicateDetector = new RouterDuplicateDetector()
     }
 
     public async start(): Promise<void> {
@@ -135,7 +125,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 })
                 
                 await connectionManager.start()
-                this.ownPeerDescriptor = this.createPeerDescriptor(undefined, this.config.peerIdString)
+                this.ownPeerDescriptor = DhtNode.createPeerDescriptor(undefined, this.config.peerIdString)
             } else {
                 connectionManager = new ConnectionManager({
                     transportLayer: this,
@@ -145,7 +135,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 })
                 
                 const result = await connectionManager.start()
-                this.ownPeerDescriptor = this.createPeerDescriptor(result, this.config.peerIdString)
+                this.ownPeerDescriptor = DhtNode.createPeerDescriptor(result, this.config.peerIdString)
             }
 
             this.ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.peerId)
@@ -161,7 +151,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         this.initKBucket(this.ownPeerId!)
     }
 
-    private createPeerDescriptor = (msg?: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
+    private static createPeerDescriptor = (msg?: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
 
         let peerId: Uint8Array
 
@@ -300,7 +290,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.routeCheck(
                 peer.peerId,
                 PeerID.fromValue(params.sourcePeer!.peerId),
-                PeerID.fromValue(params.previousPeer?.peerId || new Uint8Array())
+                params.previousPeer ? PeerID.fromValue(params.previousPeer?.peerId) : undefined
             )
         )
         const initialLength = closest.length
@@ -353,7 +343,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             if (!this.routeCheck(
                 curr.peerId,
                 PeerID.fromValue(sourcePeer!.peerId),
-                PeerID.fromValue(previousPeer?.peerId || new Uint8Array()))
+                previousPeer ? PeerID.fromValue(previousPeer.peerId) : undefined)
             ) {
                 return acc + 1
             }
@@ -361,10 +351,10 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         }, 0)
     }
 
-    private routeCheck(peerIdToRoute: PeerID, originatorPeerId: PeerID, previousPeerId: PeerID): boolean {
+    private routeCheck(peerIdToRoute: PeerID, originatorPeerId: PeerID, previousPeerId?: PeerID): boolean {
         return !peerIdToRoute.equals(this.ownPeerId!)
             && !peerIdToRoute.equals(originatorPeerId)
-            && !peerIdToRoute.equals(previousPeerId)
+            && (previousPeerId ? !peerIdToRoute.equals(previousPeerId) : true)
     }
 
     private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
@@ -417,7 +407,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
 
     isJoinCompleted(): boolean {
         return (this.neighborList!.getUncontactedContacts(this.PARALLELISM).length < 1
-            || this.noProgressCounter >= 4)
+            || this.noProgressCounter >= this.JOIN_NO_PROGRESS_LIMIT)
     }
 
     joinDht(entryPointDescriptor: PeerDescriptor): Promise<void> {

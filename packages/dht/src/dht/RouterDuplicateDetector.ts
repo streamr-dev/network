@@ -7,11 +7,12 @@ export class RouterDuplicateDetector {
     nextFilter: BloomFilter | null
     counter: number
 
+    // False positives at 0.05% at maximum capacity with default values
     constructor(
-        private numOfBits: number,
-        private numOfHashFunctions: number,
-        private nextFilterFillingLimit: number,
-        private resetLimit: number
+        private numOfBits = 2 ** 15,
+        private numOfHashFunctions = 16,
+        private nextFilterFillingLimit = 1050,
+        private resetLimit = 2100
     ) {
         this.currentFilter = new BloomFilter(numOfBits, numOfHashFunctions)
         this.nextFilter = null
