@@ -45,6 +45,7 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
                 yield* resultItems
             }
         } as any,
+        undefined as any,
         undefined as any
     )
 }

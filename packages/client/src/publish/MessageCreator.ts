@@ -16,8 +16,8 @@ import { LimitAsyncFnByKey } from '../utils/promises'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import { Ethereum } from '../Ethereum'
 import { StreamPartitioner } from './StreamPartitioner'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 export type MessageCreateOptions<T = unknown> = {
     content: T,
@@ -38,8 +38,8 @@ export class MessageCreator {
 
     constructor(
         private streamPartitioner: StreamPartitioner,
-        private ethereum: Ethereum,
-        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
         this.getMsgChain = getCachedMessageChain(this.cacheOptions)
 
@@ -59,7 +59,7 @@ export class MessageCreator {
             // load cached stream + publisher details
             const [streamPartition, publisherIdChecksumCase] = await Promise.all([
                 this.streamPartitioner.compute(streamId, partitionKey),
-                this.ethereum.getAddress(),
+                this.authentication.getAddress(),
             ])
 
             const streamPartId = toStreamPartID(streamId, streamPartition)

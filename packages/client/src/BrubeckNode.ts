@@ -12,6 +12,7 @@ import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-prot
 import { DestroySignal } from './DestroySignal'
 import { Ethereum } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -55,6 +56,7 @@ export class BrubeckNode implements Context {
         context: Context,
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Network) options: NetworkConfig
     ) {
         this.options = options
@@ -91,10 +93,10 @@ export class BrubeckNode implements Context {
         // generate id if none supplied
         if (id == null || id === '') {
             id = await this.generateId()
-        } else if (!this.ethereum.isAuthenticated()) {
+        } else if (!this.authentication.isAuthenticated()) {
             throw new Error(`cannot set explicit nodeId ${id} without authentication`)
         } else {
-            const ethereumAddress = await this.ethereum.getAddress()
+            const ethereumAddress = await this.authentication.getAddress()
             if (!id.toLowerCase().startsWith(ethereumAddress.toLowerCase())) {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
@@ -117,8 +119,8 @@ export class BrubeckNode implements Context {
     }
 
     private async generateId(): Promise<string> {
-        if (this.ethereum.isAuthenticated()) {
-            const address = await this.ethereum.getAddress()
+        if (this.authentication.isAuthenticated()) {
+            const address = await this.authentication.getAddress()
             return `${address}#${uuid()}`
             // eslint-disable-next-line no-else-return
         } else {

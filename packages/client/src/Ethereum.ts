@@ -3,12 +3,9 @@
  */
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
 import type { ExternalProvider, Provider } from '@ethersproject/providers'
-import type { Signer } from '@ethersproject/abstract-signer'
 import type { BigNumber } from '@ethersproject/bignumber'
-import { computeAddress } from '@ethersproject/transactions'
-import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 
@@ -22,6 +19,8 @@ export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, na
 export type ProviderConfig = ExternalProvider
 
 // Auth Config
+
+// TODO move all these AuthConfig types to Authentication
 
 export type ProviderAuthConfig = {
     ethereum: ProviderConfig
@@ -70,76 +69,12 @@ export class Ethereum {
         }
     }
 
-    private _getAddress?: () => Promise<string>
-    private _getStreamRegistryChainSigner?: () => Promise<Signer>
+    private ethereumConfig: EthereumConfig
 
     constructor(
-        @inject(ConfigInjectionToken.Auth) authConfig: AuthConfig,
-        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
     ) {
-        if ('privateKey' in authConfig && authConfig.privateKey) {
-            const key = authConfig.privateKey
-            const address = getAddress(computeAddress(key))
-            this._getAddress = async () => address
-            this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
-        } else if ('ethereum' in authConfig && authConfig.ethereum) {
-            const { ethereum } = authConfig
-            this._getAddress = async () => {
-                try {
-                    if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereumConfig}`)
-                    }
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    const account = getAddress(accounts[0]) // convert to checksum case
-                    return account
-                } catch {
-                    throw new Error('no addresses connected+selected in Metamask')
-                }
-            }
-            this._getStreamRegistryChainSigner = async () => {
-                if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
-                    throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
-                }
-
-                const metamaskProvider = new Web3Provider(ethereum)
-                const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.streamRegistryChainRPCs.chainId) {
-                    const sideChainId = ethereumConfig.streamRegistryChainRPCs.chainId
-                    throw new Error(
-                        `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
-                    )
-                }
-                const metamaskSigner = metamaskProvider.getSigner()
-                return metamaskSigner
-            }
-
-            // TODO: handle events
-            // ethereum.on('accountsChanged', (accounts) => { })
-            // https://docs.metamask.io/guide/ethereum-provider.html#events says:
-            //   "We recommend reloading the page unless you have a very good reason not to"
-            //   Of course we can't and won't do that, but if we need something chain-dependent...
-            // ethereum.on('chainChanged', (chainId) => { window.location.reload() });
-        }
-    }
-
-    isAuthenticated(): boolean {
-        return (this._getAddress !== undefined)
-    }
-
-    async getAddress(): Promise<EthereumAddress> {
-        if (!this._getAddress) {
-            // _getAddress is assigned in constructor
-            throw new Error('StreamrClient is not authenticated with private key')
-        }
-
-        return (await this._getAddress()).toLowerCase()
-    }
-
-    async getStreamRegistryChainSigner(): Promise<Signer> {
-        if (!this._getStreamRegistryChainSigner) {
-            throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
-        }
-        return this._getStreamRegistryChainSigner()
+        this.ethereumConfig = ethereumConfig
     }
 
     /**

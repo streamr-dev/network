@@ -27,6 +27,7 @@ import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from './index-exports'
 import { initContainer } from './Container'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 /**
  * @category Important
@@ -41,7 +42,7 @@ export class StreamrClient implements Context {
 
     private container: DependencyContainer
     private node: BrubeckNode
-    private ethereum: Ethereum
+    private authentication: Authentication
     private resends: Resends
     private publisher: Publisher
     private subscriber: Subscriber
@@ -60,7 +61,7 @@ export class StreamrClient implements Context {
 
         this.container = container
         this.node = container.resolve<BrubeckNode>(BrubeckNode)
-        this.ethereum = container.resolve<Ethereum>(Ethereum)
+        this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -329,7 +330,7 @@ export class StreamrClient implements Context {
     // --------------------------------------------------------------------------------------------
 
     getAddress(): Promise<EthereumAddress> {
-        return this.ethereum.getAddress()
+        return this.authentication.getAddress()
     }
 
     // --------------------------------------------------------------------------------------------

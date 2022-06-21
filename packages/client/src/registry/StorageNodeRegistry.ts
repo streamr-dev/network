@@ -16,6 +16,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
 import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
 import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -76,7 +77,8 @@ export class StorageNodeRegistry {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig,
-        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter
+        @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
     ) {
         this.clientConfig = clientConfig
         const chainProvider = this.ethereum.getStreamRegistryChainProvider()
@@ -124,7 +126,7 @@ export class StorageNodeRegistry {
 
     private async connectToNodeRegistryContract() {
         if (!this.nodeRegistryContract) {
-            const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.nodeRegistryContract = createWriteContract<NodeRegistryContract>(
                 this.clientConfig.storageNodeRegistryChainAddress,
                 NodeRegistryArtifact,

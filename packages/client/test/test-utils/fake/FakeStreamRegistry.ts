@@ -10,13 +10,13 @@ import {
 } from '../../../src/permission'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { BrubeckContainer } from '../../../src/Container'
-import { Ethereum } from '../../../src/Ethereum'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { Multimap } from '../Multimap'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 
 type PublicPermissionTarget = 'public'
 const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
@@ -34,18 +34,18 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
 
     private readonly registryItems: Map<StreamID, RegistryItem> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly ethereum: Ethereum
+    private readonly authentication: Authentication
     private readonly container: DependencyContainer
     private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(Ethereum) ethereum: Ethereum,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(BrubeckContainer) container: DependencyContainer,
         @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
     ) {
         this.streamIdBuilder = streamIdBuilder
-        this.ethereum = ethereum
+        this.authentication = authentication
         this.container = container
         this.streamRegistryCached = streamRegistryCached
         const storageNodeAssignmentStreamPermissions = new Multimap<string,StreamPermission>()
@@ -57,7 +57,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
-        if (!this.ethereum.isAuthenticated()) {
+        if (!this.authentication.isAuthenticated()) {
             throw new Error('Not authenticated')
         }
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
@@ -66,7 +66,7 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
         if (this.registryItems.has(streamId)) {
             throw new Error('Stream already exists')
         }
-        const authenticatedUser: EthereumAddress = (await this.ethereum.getAddress())!.toLowerCase()
+        const authenticatedUser: EthereumAddress = (await this.authentication.getAddress())!.toLowerCase()
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
         const registryItem: RegistryItem = {

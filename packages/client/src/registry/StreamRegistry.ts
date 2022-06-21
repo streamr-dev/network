@@ -40,6 +40,7 @@ import {
     ChainPermissions
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 export type StreamQueryResult = {
     id: string,
@@ -77,7 +78,8 @@ export class StreamRegistry implements Context {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -102,7 +104,7 @@ export class StreamRegistry implements Context {
 
     private async connectToStreamRegistryContract(): Promise<void> {
         if (!this.streamRegistryContract) {
-            const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
                 this.config.streamRegistryChainAddress,
                 StreamRegistryArtifact,
@@ -177,7 +179,7 @@ export class StreamRegistry implements Context {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = await this.ethereum.getAddress()
+        const userAddress = await this.authentication.getAddress()
         if (address.toLowerCase() !== userAddress.toLowerCase()) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }

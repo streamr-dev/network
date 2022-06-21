@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 import { StreamIDBuilder } from '../../src/StreamIDBuilder'
-import { Ethereum } from '../../src/Ethereum'
 import { KeyExchangeStreamIDUtils, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamDefinition } from '../../src'
+import { Authentication } from '../../src/Authentication'
 
 const address = '0xf5B45CC4cc510C31Cd6B64B8F4f341C283894086'
 const normalizedAddress = address.toLowerCase()
@@ -18,7 +18,7 @@ describe('StreamIDBuilder', () => {
         streamIdBuilder = new StreamIDBuilder({
             isAuthenticated,
             getAddress
-        } as unknown as Ethereum)
+        } as unknown as Authentication)
     })
 
     describe('toStreamID', () => {

@@ -6,6 +6,7 @@ import { counterId } from './utils/utils'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
+import { AuthenticationInjectionToken, createAuthentication } from './Authentication'
 
 /**
  * DI Token for injecting the Client container.
@@ -52,6 +53,10 @@ export function initContainer(
 
     c.register(BrubeckContainer, {
         useValue: c
+    })
+
+    c.register(AuthenticationInjectionToken, {
+        useValue: createAuthentication(config.auth, config)
     })
 
     // associate values to config tokens

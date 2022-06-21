@@ -5,12 +5,12 @@ import { CacheAsyncFn } from '../utils/caches'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import { Ethereum } from '../Ethereum'
 
 import { EncryptionConfig, GroupKeysSerialized, parseGroupKeys } from './KeyExchangeStream'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 // In the client API we use the term EncryptionKey instead of GroupKey.
 // The GroupKey name comes from the protocol. TODO: we could rename all classes
@@ -32,7 +32,7 @@ export class GroupKeyStoreFactory implements Context {
 
     constructor(
         context: Context,
-        private ethereum: Ethereum,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
         @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig
     ) {
@@ -53,7 +53,7 @@ export class GroupKeyStoreFactory implements Context {
             throw new ContextError(this, `invalid streamId for store: ${inspect(streamId)}`)
         }
 
-        const clientId = await this.ethereum.getAddress()
+        const clientId = await this.authentication.getAddress()
         const store = new GroupKeyStore({
             context: this,
             clientId,
