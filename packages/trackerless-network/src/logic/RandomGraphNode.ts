@@ -25,6 +25,7 @@ export interface RandomGraphNodeParams {
 
 export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private stopped = false
+    private started = false
     private readonly N = 4
     private readonly PEER_VIEW_SIZE = 10
     private readonly randomGraphId: string // StreamPartID
@@ -48,6 +49,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     start(): void {
+        this.started = true
         this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${this.randomGraphId}`, this.P2PTransport)
         this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
@@ -57,7 +59,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         }
         this.registerDefaultServerMethods()
         this.bootstrapIntervalRef = setInterval(() => {
-            if (this.selectedNeighbors.size() === 0 && this.layer1.getNeighborList().getSize() > 1) {
+            if (this.selectedNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() > 1) {
                 this.newContact(
                     {peerId: new Uint8Array(), type: 0},
                     this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((peer) => peer.getPeerDescriptor())
@@ -67,8 +69,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     stop(): void {
+        if (!this.started) {
+            return
+        }
         this.stopped = true
-        // this.rpcCommunicator!.stop()
+        this.rpcCommunicator!.stop()
         this.removeAllListeners()
         this.layer1.off(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.off(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
