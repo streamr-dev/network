@@ -1,16 +1,10 @@
 import 'reflect-metadata'
-import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
-
 import { Ethereum } from './Ethereum'
-import { uuid } from './utils/uuid'
-import { counterId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, createStrictConfig } from './Config'
-import { BrubeckContainer } from './Container'
-
+import { StreamrClientConfig, createStrictConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
@@ -32,13 +26,7 @@ import { SearchStreamsPermissionFilter } from './searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from './index-exports'
-
-let uid: string = process.pid != null
-    // Use process id in node uid.
-    ? `${process.pid}`
-    // Fall back to `uuid()` later (see initContainer). Doing it here will break browser projects
-    // that utilize server-side rendering (no `window` while build's target is `web`).
-    : ''
+import { initContainer } from './Container'
 
 /**
  * @category Important
@@ -422,58 +410,3 @@ export class StreamrClient implements Context {
     }
 }
 
-/**
- * @internal
- */
-export function initContainer(
-    config: StrictStreamrClientConfig, 
-    c: DependencyContainer
-): Context {
-    uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-    const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
-    const debug = Debug(id)
-    // @ts-expect-error not in types
-    if (!debug.inspectOpts) {
-        // @ts-expect-error not in types
-        debug.inspectOpts = {}
-    }
-    // @ts-expect-error not in types
-    Object.assign(debug.inspectOpts, {
-        // @ts-expect-error not in types
-        ...debug.inspectOpts,
-        ...config.debug.inspectOpts
-    })
-    debug('create')
-
-    const rootContext = {
-        id,
-        debug
-    }
-
-    c.register(Context as any, {
-        useValue: rootContext
-    })
-
-    c.register(BrubeckContainer, {
-        useValue: c
-    })
-
-    // associate values to config tokens
-    const configTokens: [symbol, object][] = [
-        [ConfigInjectionToken.Root, config],
-        [ConfigInjectionToken.Auth, config.auth],
-        [ConfigInjectionToken.Ethereum, config],
-        [ConfigInjectionToken.Network, config.network],
-        [ConfigInjectionToken.Connection, config],
-        [ConfigInjectionToken.Subscribe, config],
-        [ConfigInjectionToken.Publish, config],
-        [ConfigInjectionToken.Encryption, config],
-        [ConfigInjectionToken.Cache, config.cache],
-    ]
-
-    configTokens.forEach(([token, useValue]) => {
-        c.register(token, { useValue })
-    })
-
-    return rootContext
-}
