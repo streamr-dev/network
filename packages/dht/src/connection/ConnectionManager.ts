@@ -40,8 +40,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private connections: { [peerId: string]: IConnection } = {}
 
     private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
-    private webSocketConnector: WebSocketConnector | null
-    private webrtcConnector: WebRtcConnector | null
+    private webSocketConnector: WebSocketConnector
+    private webrtcConnector: WebRtcConnector
 
     private webSocketServer: WebSocketServer | null
 
@@ -186,9 +186,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             ip: 'localhost',
             natType: 'unknown'
         }
-        return new Promise((resolve, _reject) => {
-            resolve(connectivityResponseMessage)
-        })
+        return connectivityResponseMessage
     }
 
     enableConnectivity(ownPeerDescriptor: PeerDescriptor): void {
@@ -263,12 +261,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             clearTimeout(timeout)
         })
         this.disconnectionTimeouts = {}
-        if (this.webSocketConnector) {
-            this.webSocketConnector!.stop()
-        }
-        if (this.webrtcConnector) {
-            this.webrtcConnector!.stop()
-        }
+        this.webSocketConnector.stop()
+        this.webrtcConnector.stop()
+
         Object.values(this.connections).forEach((connection) => connection.close())
         WebRtcCleanUp.cleanUp()
     }

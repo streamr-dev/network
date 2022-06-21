@@ -3,6 +3,11 @@ export enum Event {
     LOCAL_CANDIDATE = 'streamr:dht:webrtcconnection:localcandidate',
 }
 
+export enum RtcDescription {
+    OFFER = 'offer',
+    ANSWER = 'answer'
+}
+
 export interface IWebRtcConnection {
     start(isOffering: boolean): void
 

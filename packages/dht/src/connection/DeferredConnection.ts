@@ -12,7 +12,7 @@ export class DeferredConnection extends EventEmitter implements IConnection {
     public connectionType = ConnectionType.DEFERRED
     private readonly peerDescriptor: PeerDescriptor
 
-    constructor(private targetPeerDescriptor: PeerDescriptor) {
+    constructor(targetPeerDescriptor: PeerDescriptor) {
         super()
         this.connectionId = new ConnectionID()
         this.peerDescriptor = targetPeerDescriptor

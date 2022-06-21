@@ -1,5 +1,5 @@
 import EventEmitter from "events"
-import { Event, IWebRtcConnection } from "./IWebRtcConnection"
+import { Event, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
 import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConnection"
 import { PeerDescriptor } from "../../proto/DhtRpc"
 import { ConnectionID } from "../../types"
@@ -42,8 +42,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         }
 
         this.peerConnection.onicegatheringstatechange = () => {
-            //this.logger.trace('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, this.peerConnection?.iceGatheringState)
-            //this.lastGatheringState = this.peerConnection?.iceGatheringState
+            logger.trace('conn.onGatheringStateChange: %s -> %s', this.peerConnection?.iceGatheringState)
         }
 
         if (isOffering) {
@@ -79,7 +78,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     async setRemoteDescription(description: string, type: string): Promise<void> {
-        const offerCollision = (type.toLowerCase() == "offer") && (this.makingOffer || !this.peerConnection || 
+        const offerCollision = (type.toLowerCase() == RtcDescription.OFFER) && (this.makingOffer || !this.peerConnection ||
             this.peerConnection.signalingState != "stable")
 
         const ignoreOffer = this.isOffering && offerCollision
@@ -92,7 +91,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             logger.warn(err)
         }
 
-        if (type == "Offer" && this.peerConnection) {
+        if (type.toLowerCase() == RtcDescription.OFFER && this.peerConnection) {
             try {
                 await this.peerConnection.setLocalDescription()
             } catch (err) {
