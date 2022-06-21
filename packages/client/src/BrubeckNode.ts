@@ -73,7 +73,7 @@ export class BrubeckNode implements Context {
         if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
                 contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
-                jsonRpcProvider: this.ethereumConfig.getMainnetProvider()
+                jsonRpcProvider: this.ethereum.getMainnetProvider()
             })
             return {
                 ...this.networkConfig,
