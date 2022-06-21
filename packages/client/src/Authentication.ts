@@ -5,7 +5,7 @@ import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { EthereumAddress } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { Ethereum, EthereumConfig } from './Ethereum'
+import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
 import { XOR } from './types'
 
 export type ProviderConfig = ExternalProvider
@@ -43,7 +43,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
-            getStreamRegistryChainSigner: async () => new Wallet(key, new Ethereum(ethereumConfig).getStreamRegistryChainProvider())
+            getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
         }
     } else if (authConfig.ethereum !== undefined) {
         const { ethereum } = authConfig

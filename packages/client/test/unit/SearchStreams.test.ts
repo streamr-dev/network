@@ -31,14 +31,13 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
                 extend: () => debugLog
             }
         } as any,
-        {
-            getAllStreamRegistryChainProviders: () => []
-        } as any,
         undefined as any,
         {
             resolve: () => undefined
         } as any,
-        undefined as any,
+        {
+            streamRegistryChainAddress: ''
+        } as any,
         {
             // eslint-disable-next-line generator-star-spacing
             async *fetchPaginatedResults() {
@@ -46,7 +45,15 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
             }
         } as any,
         undefined as any,
-        undefined as any
+        undefined as any,
+        {
+            streamRegistryChainRPCs: {
+                rpcs: [{
+                    url: 'http://dummy.mock',
+                    timeout: 0
+                }]
+            }
+        }
     )
 }
 

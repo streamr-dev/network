@@ -10,7 +10,7 @@ import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import { Ethereum, EthereumConfig } from './Ethereum'
+import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
@@ -47,6 +47,7 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
 export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private networkConfig: NetworkConfig
+    private ethereumConfig: EthereumConfig
     readonly id
     readonly debug
     private startNodeCalled = false
@@ -55,11 +56,12 @@ export class BrubeckNode implements Context {
     constructor(
         context: Context,
         private destroySignal: DestroySignal,
-        private ethereum: Ethereum,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig
+        @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig,
+        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
     ) {
         this.networkConfig = networkConfig
+        this.ethereumConfig = ethereumConfig
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy.listen(this.destroy)
@@ -73,7 +75,7 @@ export class BrubeckNode implements Context {
         if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
                 contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
-                jsonRpcProvider: this.ethereumConfig.getMainnetProvider()
+                jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
             })
             return {
                 ...this.networkConfig,
@@ -121,7 +123,7 @@ export class BrubeckNode implements Context {
             return `${address}#${uuid()}`
             // eslint-disable-next-line no-else-return
         } else {
-            return Ethereum.generateEthereumAccount().address
+            return generateEthereumAccount().address
         }
     }
 

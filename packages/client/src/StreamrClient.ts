@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
-import { Ethereum } from './Ethereum'
+import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
@@ -33,7 +33,7 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
  * @category Important
  */
 export class StreamrClient implements Context {
-    static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
+    static generateEthereumAccount = _generateEthereumAccount
 
     /** @internal */
     readonly id
