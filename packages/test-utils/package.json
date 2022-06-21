@@ -6,6 +6,7 @@
   "types": "./dist/src/utils.d.ts",
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
