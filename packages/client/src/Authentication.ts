@@ -37,7 +37,7 @@ export interface Authentication {
 }
 
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
-    if ('privateKey' in authConfig && authConfig.privateKey) {
+    if (authConfig.privateKey !== undefined) {
         const key = authConfig.privateKey
         const address = getAddress(computeAddress(key)).toLowerCase()
         return {
@@ -45,7 +45,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             getAddress: async () => address,
             getStreamRegistryChainSigner: async () => new Wallet(key, new Ethereum(ethereumConfig).getStreamRegistryChainProvider())
         }
-    } else if ('ethereum' in authConfig && authConfig.ethereum) {
+    } else if (authConfig.ethereum !== undefined) {
         const { ethereum } = authConfig
         return {
             isAuthenticated: () => true,
