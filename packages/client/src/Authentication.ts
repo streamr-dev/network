@@ -2,7 +2,6 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import { getAddress } from '@ethersproject/address'
 import { EthereumAddress, SigningUtil } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
@@ -61,8 +60,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                         throw new Error(`invalid ethereum provider ${ethereumConfig}`)
                     }
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    const account = getAddress(accounts[0]) // convert to checksum case
-                    return account.toLowerCase()
+                    return accounts[0].toLowerCase()
                 } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }
