@@ -58,7 +58,7 @@ export class Ethereum {
     /**
      * @returns Array of Ethers.js Providers, connections to the Ethereum network (mainnet)
      */
-    getAllMainnetProviders(): Provider[] {
+    private getAllMainnetProviders(): Provider[] {
         if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.rpcs.length) {
             return [getDefaultProvider()]
         }
@@ -86,10 +86,6 @@ export class Ethereum {
         return this.ethereumConfig.streamRegistryChainRPCs.rpcs.map((config: ConnectionInfo) => {
             return new JsonRpcProvider(config)
         })
-    }
-
-    getMainnetOverrides(): Overrides {
-        return this.getOverrides('ethereum', this.getMainnetProvider())
     }
 
     getStreamRegistryOverrides(): Overrides {
