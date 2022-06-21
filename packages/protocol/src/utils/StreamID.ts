@@ -1,3 +1,4 @@
+import { KeyExchangeStreamIDUtils } from './KeyExchangeStreamID'
 import { EthereumAddress, ENSName } from './types'
 
 export type StreamID = string & { readonly __brand: 'streamID' } // Nominal typing
@@ -20,7 +21,7 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
     const firstSlashIdx = streamIdOrPath.indexOf('/')
     if (firstSlashIdx === -1) { // legacy format
         return streamIdOrPath as StreamID
-    } else if (StreamIDUtils.isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
+    } else if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
         return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
         if (domain === undefined) {
@@ -36,20 +37,10 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
 
 export class StreamIDUtils {
 
-    static readonly KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
-
-    static formKeyExchangeStreamID(recipient: EthereumAddress): StreamID {
-        return (StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX + recipient.toLowerCase()) as StreamID
-    }
-    
     static isPathOnlyFormat(streamIdOrPath: string): boolean {
         return streamIdOrPath.startsWith('/')
     }
-    
-    static isKeyExchangeStream(streamId: StreamID | string): boolean {
-        return streamId.startsWith(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX)
-    }
-    
+
     static getDomain(streamId: StreamID): EthereumAddress | ENSName | undefined {
         const domainAndPath = StreamIDUtils.getDomainAndPath(streamId)
         return domainAndPath?.[0]
@@ -70,18 +61,11 @@ export class StreamIDUtils {
     
     static getDomainAndPath(streamId: StreamID): [EthereumAddress | ENSName, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
-        if (firstSlashIdx !== -1 && !StreamIDUtils.isKeyExchangeStream(streamId)) {
+        if (firstSlashIdx !== -1 && !KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
             return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]
         } else {
             return undefined
         }
     }
-    
-    static getRecipient(streamId: StreamID): EthereumAddress | undefined {
-        if (StreamIDUtils.isKeyExchangeStream(streamId)) {
-            return streamId.substring(StreamIDUtils.KEY_EXCHANGE_STREAM_PREFIX.length)
-        }
-        return undefined
-    }
-    
+
 }

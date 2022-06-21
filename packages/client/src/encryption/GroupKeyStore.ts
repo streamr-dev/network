@@ -1,4 +1,4 @@
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { PersistentStore } from './PersistentStore'
@@ -16,7 +16,8 @@ type GroupKeyStoreOptions = {
 }
 
 export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
-    store: PersistentStore<string, string>
+    private store: PersistentStore<string, string>
+
     constructor(options: ServerPersistentStoreOptions) {
         this.store = new ServerPersistentStore(options)
     }
@@ -72,9 +73,9 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    store
-    currentGroupKeyId: GroupKeyId | undefined // current key id if any
-    nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
+    private store: GroupKeyPersistence
+    private currentGroupKeyId: GroupKeyId | undefined // current key id if any
+    private nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
     constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
         this.id = instanceId(this)

@@ -1,21 +1,21 @@
 import { Contract } from '@ethersproject/contracts'
 import debug from 'debug'
-import type { NodeRegistry as NodeRegistryContract } from './ethereumArtifacts/NodeRegistry'
-import type { StreamStorageRegistry as StreamStorageRegistryContract } from './ethereumArtifacts/StreamStorageRegistry'
-import NodeRegistryArtifact from './ethereumArtifacts/NodeRegistryAbi.json'
-import StreamStorageRegistryArtifact from './ethereumArtifacts/StreamStorageRegistry.json'
+import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
+import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
+import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
+import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
-import { BrubeckContainer } from './Container'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from './Config'
-import { Stream, StreamProperties } from './Stream'
-import { Ethereum } from './Ethereum'
-import { NotFoundError } from './HttpUtil'
+import { BrubeckContainer } from '../Container'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { Stream, StreamProperties } from '../Stream'
+import { Ethereum } from '../Ethereum'
+import { NotFoundError } from '../HttpUtil'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
-import { StreamIDBuilder } from './StreamIDBuilder'
-import { waitForTx, withErrorHandlingAndLogging } from './utils/contract'
-import { SynchronizedGraphQLClient, createWriteContract } from './utils/SynchronizedGraphQLClient'
-import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from './events'
+import { StreamIDBuilder } from '../StreamIDBuilder'
+import { waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
+import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
+import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
 
 const log = debug('StreamrClient:StorageNodeRegistry')
 
@@ -227,17 +227,6 @@ export class StorageNodeRegistry {
     private static buildAllNodesQuery(): string {
         const query = `{
             nodes {
-                id,
-                metadata,
-                lastSeen
-            }
-        }`
-        return JSON.stringify({ query })
-    }
-
-    private static buildGetNodeQuery(nodeAddress: EthereumAddress): string {
-        const query = `{
-            node (id: "${nodeAddress}") {
                 id,
                 metadata,
                 lastSeen

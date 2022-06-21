@@ -1,6 +1,6 @@
 /* eslint-disable padding-line-between-statements */
 import { EthereumAddress } from 'streamr-client-protocol'
-import { StreamQueryResult } from './StreamRegistry'
+import { StreamQueryResult } from './registry/StreamRegistry'
 import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from './permission'
 import { GraphQLClient } from './utils/GraphQLClient'
 import { filter, unique } from './utils/GeneratorUtils'

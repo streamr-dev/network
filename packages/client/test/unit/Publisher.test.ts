@@ -1,10 +1,10 @@
 import 'reflect-metadata'
-import { container } from 'tsyringe'
+import { container as rootContainer } from 'tsyringe'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { BrubeckNode, NetworkNodeStub } from '../../src/BrubeckNode'
 import { Publisher } from '../../src/publish/Publisher'
 import { initContainer } from '../../src'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
 import { createStrictConfig } from '../../src/Config'
@@ -31,7 +31,8 @@ const createMockContainer = async (
             }
         }
     }
-    const { childContainer } = initContainer(config, container)
+    const childContainer = rootContainer.createChildContainer()
+    initContainer(config, childContainer)
     return childContainer
         .registerSingleton(StreamRegistry, FakeStreamRegistry as any)
         .register(BrubeckNode, { useValue: brubeckNode as any })

@@ -2,8 +2,9 @@ import { DependencyContainer, inject } from 'tsyringe'
 
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 
-import { Scaffold, instanceId, until } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
+import { Scaffold } from '../utils/Scaffold'
+import { instanceId } from '../utils/utils'
+import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
@@ -18,18 +19,18 @@ import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export class SubscriptionSession<T> implements Context, Stoppable {
+export class SubscriptionSession<T> implements Context {
     readonly id
     readonly debug
     public readonly streamPartId: StreamPartID
     /** active subs */
-    subscriptions: Set<Subscription<T>> = new Set()
-    pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    isRetired: boolean = false
-    isStopped = false
-    pipeline
-    node
-    onRetired = Signal.once()
+    private subscriptions: Set<Subscription<T>> = new Set()
+    private pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    private isRetired: boolean = false
+    private isStopped = false
+    private pipeline
+    private node
+    public readonly onRetired = Signal.once()
 
     constructor(
         context: Context,

@@ -1,15 +1,16 @@
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, wait, waitForCondition } from 'streamr-test-utils'
 
 import {
-    addAfterFn,
     createTestStream,
-    fetchPrivateKeyWithGas,
     getCreateClient,
-    getPublishTestMessages,
     uid,
 } from '../test-utils/utils'
+import {
+    getPublishTestMessages
+} from '../test-utils/publish'
+import { addAfterFn } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { counterId } from '../../src/utils'
+import { counterId } from '../../src/utils/utils'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessage } from 'streamr-client-protocol'

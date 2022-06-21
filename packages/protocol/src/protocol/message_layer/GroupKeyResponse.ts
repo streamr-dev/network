@@ -12,7 +12,7 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-type GroupKeyResponseSerialized = [string, string,EncryptedGroupKeySerialized[]]
+export type GroupKeyResponseSerialized = [string, string,EncryptedGroupKeySerialized[]]
 
 export default class GroupKeyResponse extends GroupKeyMessage {
 

@@ -3,13 +3,15 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
-import { pOnce, uuid, instanceId } from './utils'
+import { uuid } from './utils/uuid'
+import { instanceId } from './utils/utils'
+import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { Ethereum } from './Ethereum'
-import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
+import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {

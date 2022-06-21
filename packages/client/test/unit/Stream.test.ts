@@ -1,16 +1,17 @@
 import 'reflect-metadata'
-import { container } from 'tsyringe'
+import { container as rootContainer } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
 import { initContainer } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createStrictConfig } from '../../src/Config'
 
 describe('Stream', () => {
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const config = createStrictConfig({})
-            const { childContainer: mockContainer } = initContainer(config, container)
+            const mockContainer = rootContainer.createChildContainer()
+            initContainer(config, mockContainer)
             mockContainer.registerInstance(StreamRegistry, {
                 updateStream: jest.fn().mockRejectedValue(new Error('mock-error'))
             } as any)

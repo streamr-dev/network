@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { RelayMessage } from '../../../../src'
+import { RelayMessage, RelayMessageSubType } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
 const VERSION = 2
@@ -16,7 +16,7 @@ const message = new RelayMessage({
         location: 'mock-location'
     },
     targetNode: 'targetNode',
-    subType: 'offer',
+    subType: RelayMessageSubType.RTC_CONNECT,
     data: {
         hello: 'world'
     }
@@ -33,7 +33,7 @@ const serializedMessage = JSON.stringify([
         location: 'mock-location'
     },
     'targetNode',
-    'offer',
+    RelayMessageSubType.RTC_CONNECT,
     {
         hello: 'world'
     }
