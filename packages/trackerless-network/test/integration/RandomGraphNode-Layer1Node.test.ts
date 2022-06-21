@@ -1,6 +1,7 @@
 import { DhtNode, Simulator, MockConnectionManager, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
+import { waitForCondition } from 'streamr-test-utils'
 
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 128
@@ -69,6 +70,8 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
+
+        await waitForCondition(() => graphNodes[3].getSelectedNeighborIds().length >= 2)
         range(4).map((i) => {
             expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(2)
             expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
@@ -80,9 +83,9 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(range(numOfNodes).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
-        range(numOfNodes).map((i) => {
-            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(8)
-            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
-        })
+        await Promise.all(graphNodes.map((node) => {
+            waitForCondition(() => node.getContactPoolIds().length >= 8),
+            waitForCondition(() => node.getSelectedNeighborIds().length === 4)
+        }))
     })
 })
