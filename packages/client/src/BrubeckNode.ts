@@ -10,7 +10,7 @@ import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import { Ethereum } from './Ethereum'
+import { Ethereum, EthereumConfig } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
@@ -46,7 +46,7 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
 @scoped(Lifecycle.ContainerScoped)
 export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
-    private options
+    private networkConfig: NetworkConfig
     readonly id
     readonly debug
     private startNodeCalled = false
@@ -57,9 +57,9 @@ export class BrubeckNode implements Context {
         private destroySignal: DestroySignal,
         private ethereum: Ethereum,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Network) options: NetworkConfig
+        @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig
     ) {
-        this.options = options
+        this.networkConfig = networkConfig
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy.listen(this.destroy)
@@ -70,27 +70,24 @@ export class BrubeckNode implements Context {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        if ((this.options.trackers as TrackerRegistrySmartContract).contractAddress) {
+        if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: (this.options.trackers as TrackerRegistrySmartContract).contractAddress,
-                jsonRpcProvider: this.ethereum.getMainnetProvider()
+                contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
+                jsonRpcProvider: this.ethereumConfig.getMainnetProvider()
             })
             return {
-                ...this.options,
+                ...this.networkConfig,
                 trackers: trackerRegistry.getAllTrackers()
             }
         }
-        return this.options as NetworkNodeOptions
+        return this.networkConfig as NetworkNodeOptions
     }
 
     private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
-        const { options } = this
-        let { id } = options
-
-        // generate id if none supplied
+        let id = this.networkConfig.id
         if (id == null || id === '') {
             id = await this.generateId()
         } else if (!this.authentication.isAuthenticated()) {
