@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID, SigningUtil } from 'streamr-client-protocol'
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { Signer } from '../../src/publish/Signer'
+import { createAuthentication } from '../../src/Authentication'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -12,9 +13,9 @@ we are testing the Signer which is internal, we use private keys with the '0x' p
 describe('Signer', () => {
     describe('construction', () => {
         it('Should return a Signer when set with private key', () => {
-            const signer = new Signer({
+            const signer = new Signer(createAuthentication({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
-            })
+            }, undefined as any))
             expect(signer).toBeInstanceOf(Signer)
         })
     })
@@ -26,24 +27,16 @@ describe('Signer', () => {
             field: 'some-data',
         }
         const timestamp = 1529549961116
-        const options = {
-            privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
-        }
+        const privateKey = '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709'
 
         beforeEach(() => {
-            signer = new Signer(options)
-        })
-
-        it('should return correct signature', async () => {
-            const payload = 'data-to-sign'
-            // @ts-expect-error private
-            const signature = await signer.signData(payload)
-            expect(signature).toEqual('0x084b3ac0f2ad17d387ca5bbf5d72d8f1dfd1b372e399ce6b0bfc60793e'
-                + 'b717d2431e498294f202d8dfd9f56158391d453c018470aea92ed6a80a23c20ab6f7ac1b')
+            signer = new Signer(createAuthentication({
+                privateKey
+            }, undefined as any))
         })
 
         it('should sign with null previous ref correctly', async () => {
-            const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
+            const address = getAddress(computeAddress(privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: null,
@@ -56,8 +49,7 @@ describe('Signer', () => {
                 + streamMessage.messageId.sequenceNumber + address.toLowerCase() + streamMessage.messageId.msgChainId
                 + streamMessage.getSerializedContent()
 
-            // @ts-expect-error private
-            const expectedSignature = await signer.signData(payload)
+            const expectedSignature = SigningUtil.sign(payload, privateKey)
             await signer.sign(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
             expect(streamMessage.getPublisherId()).toBe(address)
@@ -65,7 +57,7 @@ describe('Signer', () => {
         })
 
         it('should sign with non-null previous ref correctly', async () => {
-            const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
+            const address = getAddress(computeAddress(privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
@@ -79,19 +71,17 @@ describe('Signer', () => {
                 streamMessage.messageId.sequenceNumber, address.toLowerCase(), streamMessage.messageId.msgChainId,
                 streamMessage.prevMsgRef!.timestamp, streamMessage.prevMsgRef!.sequenceNumber, streamMessage.getSerializedContent()
             ]
-            // @ts-expect-error private
-            const expectedSignature = await signer.signData(payload.join(''))
+            const expectedSignature = SigningUtil.sign(payload.join(''), privateKey)
             expect(payload.join('')).toEqual(streamMessage.getPayloadToSign())
-            // @ts-expect-error private
-            expect(expectedSignature).toEqual(await signer.signData(streamMessage.getPayloadToSign()))
             await signer.sign(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
             expect(streamMessage.getPublisherId()).toBe(address)
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
+
         it('signing should throw when constructed with no auth', async () => {
-            signer = new Signer({} as any)
-            const address = getAddress(computeAddress(options.privateKey)).toLowerCase()
+            signer = new Signer(createAuthentication({}, undefined as any))
+            const address = getAddress(computeAddress(privateKey)).toLowerCase()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
@@ -100,16 +90,6 @@ describe('Signer', () => {
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: null
             })
-            const payload = [
-                streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp(),
-                streamMessage.messageId.sequenceNumber, address.toLowerCase(), streamMessage.messageId.msgChainId,
-                streamMessage.prevMsgRef!.timestamp, streamMessage.prevMsgRef!.sequenceNumber, streamMessage.getSerializedContent()
-            ]
-
-            await expect(async () => {
-                // @ts-expect-error private
-                await signer.signData(payload.join(''))
-            }).rejects.toThrow('privateKey')
             await expect(async () => {
                 await signer.sign(streamMessage)
             }).rejects.toThrow('privateKey')
