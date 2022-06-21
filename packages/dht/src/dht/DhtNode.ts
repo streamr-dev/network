@@ -21,7 +21,7 @@ import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '../helpers/Logger'
 import { v4 } from 'uuid'
-import { nodeFormatPeerDescriptor } from '../helpers/common'
+import { jsFormatPeerDescriptor } from '../helpers/common'
 import { IDhtRpc } from '../proto/DhtRpc.server'
 
 export interface RouteMessageParams {
@@ -193,11 +193,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             }
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
-            //if (this.appId === DEFAULT_APP_ID) {
-            if (this.cleanUpHandleForConnectionManager) {
-                const connectionManager = this.cleanUpHandleForConnectionManager!
-                connectionManager.disconnect(contact.getPeerDescriptor())
-            }
+            this.cleanUpHandleForConnectionManager?.disconnect(contact.getPeerDescriptor())
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
             this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
         })
@@ -583,15 +579,13 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         this.rpcCommunicator?.stop()
         this.bucket!.removeAllListeners()
         this.removeAllListeners()
-        if (this.cleanUpHandleForConnectionManager) {
-            await this.cleanUpHandleForConnectionManager.stop()
-        }
+        await this.cleanUpHandleForConnectionManager?.stop()
     }
 
     // IDHTRpc implementation
 
     async getClosestPeers(request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
-        const peerDescriptor = nodeFormatPeerDescriptor(request.peerDescriptor!)
+        const peerDescriptor = jsFormatPeerDescriptor(request.peerDescriptor!)
         const closestPeers = this.onGetClosestPeers(peerDescriptor)
         const peerDescriptors = closestPeers.map((dhtPeer: DhtPeer) => dhtPeer.getPeerDescriptor())
         const response = {
@@ -611,8 +605,8 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const converted = {
             ...routed,
-            destinationPeer: nodeFormatPeerDescriptor(routed.destinationPeer!),
-            sourcePeer: nodeFormatPeerDescriptor(routed.sourcePeer!)
+            destinationPeer: jsFormatPeerDescriptor(routed.destinationPeer!),
+            sourcePeer: jsFormatPeerDescriptor(routed.sourcePeer!)
         }
         const routable = this.canRoute(converted)
 

@@ -2,7 +2,7 @@ import { IDhtRpcClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
-import { nodeFormatPeerDescriptor } from '../helpers/common'
+import { jsFormatPeerDescriptor } from '../helpers/common'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { RouteMessageParams } from './DhtNode'
 import { Logger } from '../helpers/Logger'
@@ -46,7 +46,7 @@ export class DhtPeer {
         try {
             const response = await this.dhtClient.getClosestPeers(request, options)
             const peers = await response.response
-            const formatted = peers.peers.map((peer) => nodeFormatPeerDescriptor(peer))
+            const formatted = peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
             return formatted
         } catch (err) {
             logger.debug(err)

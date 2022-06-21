@@ -1,6 +1,6 @@
 import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../../src/helpers/common'
+import { generateId } from '../utils'
 import {
     PeerDescriptor,
     WebSocketConnectionRequest,

@@ -10,8 +10,11 @@ import {
 import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpc, IWebSocketConnector } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { generateId } from '../src/helpers/common'
 import { Simulator } from '../src/connection/Simulator'
+
+export const generateId = (stringId: string): Uint8Array => {
+    return PeerID.fromString(stringId).value
+}
 
 export const createMockConnectionDhtNode = async (stringId: string, simulator: Simulator, binaryId?: Uint8Array, K?: number): Promise<DhtNode> => {
     let id: PeerID
@@ -159,3 +162,4 @@ export const getMockPeers = (): PeerDescriptor[] => {
         n1, n2, n3, n4
     ]
 }
+
