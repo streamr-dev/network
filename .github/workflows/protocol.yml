@@ -36,6 +36,7 @@ jobs:
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client-protocol
+          npm run build --workspace=streamr-client-protocol
 
       - name: eslint
         run: npm run eslint
