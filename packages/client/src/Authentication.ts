@@ -4,7 +4,29 @@ import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { EthereumAddress } from 'streamr-client-protocol'
-import { AuthConfig, Ethereum, EthereumConfig } from './Ethereum'
+import type { ExternalProvider } from '@ethersproject/providers'
+import { Ethereum, EthereumConfig } from './Ethereum'
+import { XOR } from './types'
+
+export type ProviderConfig = ExternalProvider
+
+export type ProviderAuthConfig = {
+    ethereum: ProviderConfig
+}
+
+export type PrivateKeyAuthConfig = {
+    privateKey: string,
+    // The address property is not used. It is included to make the object
+    // compatible with StreamrClient.generateEthereumAccount(), as we typically
+    // use that method to generate the client "auth" option.
+    address?: EthereumAddress
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
+
+export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
+export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
 
 export const AuthenticationInjectionToken = Symbol('Authentication')
 

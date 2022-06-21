@@ -4,43 +4,14 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
-import type { ExternalProvider, Provider } from '@ethersproject/providers'
+import type { Provider } from '@ethersproject/providers'
 import type { BigNumber } from '@ethersproject/bignumber'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 
 import { ConfigInjectionToken } from './Config'
-import { EthereumAddress } from 'streamr-client-protocol'
 
-export type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
-export type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
 export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
-
-export type ProviderConfig = ExternalProvider
-
-// Auth Config
-
-// TODO move all these AuthConfig types to Authentication
-
-export type ProviderAuthConfig = {
-    ethereum: ProviderConfig
-}
-
-export type PrivateKeyAuthConfig = {
-    privateKey: string,
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: EthereumAddress
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
-
-export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
-export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
-
-// Ethereum Config
 
 // these should come from ETH-184 config package when it's ready
 export type EthereumNetworkConfig = {

@@ -38,15 +38,15 @@ export {
 export {
     AuthConfig,
     AuthenticatedConfig,
-    EthereumConfig,
-    ChainConnectionInfo,
-    EthereumNetworkConfig,
     UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
-    PrivateKeyAuthConfig,
-    XOR,
-    Without
+    PrivateKeyAuthConfig
+} from './Authentication'
+export {
+    EthereumConfig,
+    ChainConnectionInfo,
+    EthereumNetworkConfig,
 } from './Ethereum'
 export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'

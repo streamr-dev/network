@@ -7,7 +7,7 @@ import { Web3Provider } from '@ethersproject/providers'
 import { Bytes } from '@ethersproject/bytes'
 
 import { pLimitFn, wait } from '../utils/promises'
-import type { AuthenticatedConfig } from '../Ethereum'
+import type { AuthenticatedConfig } from '../Authentication'
 import { ConfigInjectionToken } from '../Config'
 
 @scoped(Lifecycle.ContainerScoped)
