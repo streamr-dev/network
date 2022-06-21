@@ -42,7 +42,7 @@ export interface Authentication {
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
     if (authConfig.privateKey !== undefined) {
         const key = authConfig.privateKey
-        const address = getAddress(computeAddress(key)).toLowerCase()
+        const address = computeAddress(key).toLowerCase()
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
