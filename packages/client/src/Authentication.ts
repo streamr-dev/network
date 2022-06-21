@@ -3,11 +3,10 @@ import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-import { EthereumAddress, SigningUtil } from 'streamr-client-protocol'
+import { EthereumAddress } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
-import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
+import { Ethereum, EthereumConfig } from './Ethereum'
 import { XOR } from './types'
-import { pLimitFn, wait } from './utils/promises'
 
 export type ProviderConfig = ExternalProvider
 
@@ -34,8 +33,7 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 export interface Authentication {
     isAuthenticated: () => boolean
     getAddress: () => Promise<EthereumAddress>
-    createMessagePayloadSignature: (payload: string) => Promise<string>
-    getStreamRegistryChainSigner: () => Promise<Signer>
+    getStreamRegistryChainSigner(): Promise<Signer>
 }
 
 export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: EthereumConfig): Authentication => {
@@ -45,13 +43,10 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
-            createMessagePayloadSignature: async (payload: string) => SigningUtil.sign(payload, key),
-            getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
+            getStreamRegistryChainSigner: async () => new Wallet(key, new Ethereum(ethereumConfig).getStreamRegistryChainProvider())
         }
     } else if (authConfig.ethereum !== undefined) {
         const { ethereum } = authConfig
-        const metamaskProvider = new Web3Provider(ethereum)
-        const signer = metamaskProvider.getSigner()
         return {
             isAuthenticated: () => true,
             getAddress: async () => {
@@ -66,17 +61,11 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                     throw new Error('no addresses connected+selected in Metamask')
                 }
             },
-            createMessagePayloadSignature: pLimitFn(async (payload: string) => {
-                // sign one at a time & wait a moment before asking for next signature
-                // otherwise metamask extension may not show the prompt window
-                const sig = await signer.signMessage(payload)
-                await wait(50)
-                return sig
-            }, 1),
             getStreamRegistryChainSigner: async () => {
                 if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
                     throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
                 }
+                const metamaskProvider = new Web3Provider(ethereum)
                 const { chainId } = await metamaskProvider.getNetwork()
                 if (chainId !== ethereumConfig.streamRegistryChainRPCs.chainId) {
                     const sideChainId = ethereumConfig.streamRegistryChainRPCs.chainId
@@ -84,7 +73,8 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
                         `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
                     )
                 }
-                return signer
+                const metamaskSigner = metamaskProvider.getSigner()
+                return metamaskSigner
                 // TODO: handle events
                 // ethereum.on('accountsChanged', (accounts) => { })
                 // https://docs.metamask.io/guide/ethereum-provider.html#events says:
@@ -98,9 +88,6 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
             isAuthenticated: () => false,
             getAddress: async () => { 
                 throw new Error('StreamrClient is not authenticated with private key')
-            },
-            createMessagePayloadSignature: async () => {
-                throw new Error('Need either "privateKey" or "ethereum"')
             },
             getStreamRegistryChainSigner: async () => {
                 throw new Error('StreamrClient not authenticated! Can\'t send transactions or sign messages')

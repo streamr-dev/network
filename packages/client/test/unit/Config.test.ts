@@ -2,7 +2,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { createStrictConfig, STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { ConfigTest } from '../../src/ConfigTest'
 import { SmartContractRecord } from 'streamr-client-protocol'
-import { generateEthereumAccount } from '../../src/Ethereum'
 
 describe('Config', () => {
     describe('validate', () => {
@@ -81,7 +80,7 @@ describe('Config', () => {
     describe('ignorable properties', () => {
         it('auth address', () => {
             expect(() => {
-                const wallet = generateEthereumAccount()
+                const wallet = StreamrClient.generateEthereumAccount()
                 return new StreamrClient({ auth: wallet })
             }).not.toThrow()
         })
