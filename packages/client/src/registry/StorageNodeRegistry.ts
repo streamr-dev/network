@@ -9,7 +9,7 @@ import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from '../Container'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
-import { Ethereum } from '../Ethereum'
+import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
@@ -73,15 +73,15 @@ export class StorageNodeRegistry {
 
     constructor(
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
         this.clientConfig = clientConfig
-        const chainProvider = this.ethereum.getStreamRegistryChainProvider()
+        const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
         this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
             new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
             'storageNodeRegistry'
@@ -147,7 +147,7 @@ export class StorageNodeRegistry {
     async setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         log('setStorageNodeMetadata %j', metadata)
         await this.connectToNodeRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         if (metadata !== undefined) {
             await waitForTx(this.nodeRegistryContract!.createOrUpdateNodeSelf(JSON.stringify(metadata), ethersOverrides))
         } else {
@@ -169,7 +169,7 @@ export class StorageNodeRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Adding stream %s to node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamStorageRegistryContract!.addStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 
@@ -177,7 +177,7 @@ export class StorageNodeRegistry {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Removing stream %s from node %s', streamId, nodeAddress)
         await this.connectToNodeRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamStorageRegistryContract!.removeStorageNode(streamId, nodeAddress, ethersOverrides))
     }
 

@@ -63,7 +63,8 @@ module.exports = {
         '@typescript-eslint/no-useless-constructor': ['error'],
         'no-empty-function': 'off',
         '@typescript-eslint/ban-ts-comment': 'warn',
-        '@typescript-eslint/explicit-module-boundary-types': 'warn'
+        '@typescript-eslint/explicit-module-boundary-types': 'warn',
+        'no-console': 'off'
     },
     settings: {
         'import/resolver': {
