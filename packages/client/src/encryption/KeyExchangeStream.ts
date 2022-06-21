@@ -18,10 +18,10 @@ import { DestroySignal } from '../DestroySignal'
 import { Subscriber } from '../subscribe/Subscriber'
 import { Publisher } from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
-import { Ethereum } from '../Ethereum'
 
 import { GroupKey, GroupKeyish } from './GroupKey'
 import { publishAndWaitForResponseMessage } from '../utils/waitForMessage'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
@@ -47,7 +47,7 @@ export class KeyExchangeStream implements Context {
     
     constructor(
         context: Context,
-        private ethereum: Ethereum,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
         private subscriber: Subscriber,
         private destroySignal: DestroySignal,
         @inject(delay(() => Publisher)) private publisher: Publisher
@@ -59,7 +59,7 @@ export class KeyExchangeStream implements Context {
 
     private async createSubscription(): Promise<Subscription<unknown>> {
         // subscribing to own keyexchange stream
-        const publisherId = await this.ethereum.getAddress()
+        const publisherId = await this.authentication.getAddress()
         const streamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherId)
         const sub = await this.subscriber.subscribe(streamPartId)
         const onDestroy = () => {

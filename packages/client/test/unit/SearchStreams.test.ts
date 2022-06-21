@@ -5,6 +5,7 @@ import { SearchStreamsResultItem } from '../../src/searchStreams'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { createMockAddress } from '../test-utils/utils'
+import { ConfigTest } from '../../src'
 
 const MOCK_USER = createMockAddress()
 
@@ -31,21 +32,26 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
                 extend: () => debugLog
             }
         } as any,
-        {
-            getAllStreamRegistryChainProviders: () => []
-        } as any,
         undefined as any,
         {
             resolve: () => undefined
         } as any,
-        undefined as any,
+        {
+            streamRegistryChainAddress: ''
+        } as any,
         {
             // eslint-disable-next-line generator-star-spacing
             async *fetchPaginatedResults() {
                 yield* resultItems
             }
         } as any,
-        undefined as any
+        undefined as any,
+        undefined as any,
+        {
+            // this is not used, but StreamRegistry needs a valid RPC configuration
+            // as it creates a Contract instance in constructor
+            streamRegistryChainRPCs: ConfigTest.streamRegistryChainRPCs!
+        }
     )
 }
 
