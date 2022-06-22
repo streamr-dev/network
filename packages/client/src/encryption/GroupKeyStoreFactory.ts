@@ -28,7 +28,7 @@ export class GroupKeyStoreFactory implements Context {
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
     private initialGroupKeys: Record<string, GroupKeysSerialized>
-    public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>) & { clear(): void }
+    public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>)
 
     constructor(
         context: Context,
@@ -72,7 +72,6 @@ export class GroupKeyStoreFactory implements Context {
     }
 
     async stop(): Promise<void> {
-        this.getStore.clear()
         const { cleanupFns } = this
         this.cleanupFns = []
         await Promise.allSettled(cleanupFns)
