@@ -21,10 +21,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "moduleResolution": "node",
-        "types": [
-            "jest",
-            "node"
-        ],
+        "types": ["node", "jest"],
         "sourceMap": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,

@@ -5,20 +5,12 @@
     "compilerOptions": {
         "allowJs": true,
         "declaration": true,
-        "module": "commonjs",
-        "target": "es2019",
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "useUnknownInCatchVariables": false,
-        "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "types": [
-            "node"
-        ],
+        "types": ["node"],
         "incremental": true,
         "sourceMap": true,
-        "stripInternal": true
+        "stripInternal": true,
+        "useUnknownInCatchVariables": false
     }
 }
