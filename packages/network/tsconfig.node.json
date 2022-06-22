@@ -1,7 +1,6 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
-        "composite": true,
         "outDir": "dist"
     },
     "include": [

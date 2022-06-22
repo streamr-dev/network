@@ -1,8 +1,6 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
     "compilerOptions": {
-        "noEmit": true,
-        "composite": true,
         "outDir": "dist"
     },
     "include": [
@@ -15,6 +13,6 @@
       "test/**/IntegrationBrowserWebRtcConnection.test.ts"
     ],
     "references": [
-        { "path": "./tsconfig.node.json"}
+        { "path": "tsconfig.node.json"}
     ]
 }
