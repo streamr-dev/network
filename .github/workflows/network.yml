@@ -33,6 +33,11 @@ jobs:
         run: |
           npm run bootstrap-pkg streamr-network
           npm run build --workspace=streamr-network
+      - name: bootstrap and build network-tracker # we can't reference in tsconfig due to circular dep, see NET-868
+        working-directory: './'
+        run: |
+          npm run bootstrap-pkg @streamr/network-tracker
+          npm run build --workspace=@streamr/network-tracker
       - run: npm run eslint
       - run: npm run test-unit
         env:
