@@ -84,6 +84,5 @@ export class MessageCreator {
 
     async stop(): Promise<void> {
         this.queue.clear()
-        this.getMsgChain.clear()
     }
 }
