@@ -1,5 +1,5 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.node.json",
+    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
     "compilerOptions": {
         "outDir": "dist",
         "declarationDir": "dist/types",
@@ -14,12 +14,16 @@
         "src/**/*.json",
         "vendor/**/*",
         "contracts/**/*.json",
-        "src/config.schema.json"
+        "src/config.schema.json",
+        "test/**/*"
     ],
-    "exclude": ["src/index-esm.mjs"],
+    "exclude": [
+        "test/legacy/*",
+        "test/memory/*",
+        "test/exports/*",
+        "src/index-esm.mjs"
+    ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../network/tsconfig.node.json" }
+        { "path": "tsconfig.node.json" }
     ]
 }

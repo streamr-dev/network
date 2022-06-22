@@ -12,6 +12,7 @@
         "incremental": true,
         "sourceMap": true,
         "stripInternal": true,
-        "useUnknownInCatchVariables": false
+        "useUnknownInCatchVariables": false,
+        "strictBindCallApply": true
     }
 }
