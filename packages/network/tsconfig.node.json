@@ -8,10 +8,10 @@
         "src/**/*"
     ],
     "exclude": [
-        "dist",
         "src/**/BrowserWebRtcConnection.ts"
     ],
     "references": [
-        { "path": "../protocol/tsconfig.node.json" }
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../test-utils/tsconfig.node.json" }
     ]
 }
