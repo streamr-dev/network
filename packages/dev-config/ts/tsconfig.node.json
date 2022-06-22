@@ -4,6 +4,7 @@
     "extends": "@tsconfig/node16/tsconfig.json",
     "compilerOptions": {
         "allowJs": true,
+        "composite": true,
         "declaration": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,

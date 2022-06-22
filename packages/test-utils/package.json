@@ -5,7 +5,7 @@
   "main": "./dist/src/utils.js",
   "types": "./dist/src/utils.d.ts",
   "scripts": {
-    "check": "tsc -p ./tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "test-unit": "npm run test",
