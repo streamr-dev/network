@@ -84,14 +84,4 @@ export class StreamRegistryCached implements Context {
         this.isStreamPublisher.clearMatching(matchTarget)
         this.isStreamSubscriber.clearMatching(matchTarget)
     }
-
-    /**
-     * Clear all cached data
-     */
-    clear(): void {
-        this.debug('clear')
-        this.getStream.clear()
-        this.isStreamPublisher.clear()
-        this.isStreamSubscriber.clear()
-    }
 }

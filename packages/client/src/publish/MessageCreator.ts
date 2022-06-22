@@ -83,8 +83,6 @@ export class MessageCreator {
     }
 
     async stop(): Promise<void> {
-        this.streamPartitioner.clear()
         this.queue.clear()
-        this.getMsgChain.clear()
     }
 }
