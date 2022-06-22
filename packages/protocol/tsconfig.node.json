@@ -5,8 +5,7 @@
         "outDir": "dist"
     },
     "include": [
-        "src/**/*",
-        "contracts/*.json"
+        "src/**/*"
     ],
     "references": [
         { "path": "../test-utils/tsconfig.node.json" }

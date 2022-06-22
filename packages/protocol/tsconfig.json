@@ -10,7 +10,6 @@
         "test/**/*"
     ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
         { "path": "./tsconfig.node.json" }
     ]
 }
