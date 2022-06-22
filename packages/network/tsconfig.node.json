@@ -11,6 +11,7 @@
     ],
     "references": [
         { "path": "../protocol/tsconfig.node.json" },
-        { "path": "../test-utils/tsconfig.node.json" }
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path":  "../network-tracker/tsconfig.node.json" }
     ]
 }
