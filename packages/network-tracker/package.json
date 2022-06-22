@@ -16,15 +16,12 @@
   "types": "dist/src/composition.d.ts",
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
-    "check": "tsc -p ./tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
-    "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "network": "node $NODE_DEBUG_OPTION bin/network.js",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest",
     "test-integration": "jest test/integration/",
-    "test-types": "npm run check",
     "test-unit": "jest test/unit",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },
