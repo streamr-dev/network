@@ -38,25 +38,22 @@ describe('Partition', () => {
 
     it('publishing to different streams should get different random partitions', async () => {
         const NUM_PARTITIONS = 3
-        const partitionStream = await createStream({
+        const stream1 = await createStream({
             partitions: NUM_PARTITIONS
         })
-        const partitionStream2 = await createStream({
-            partitions: NUM_PARTITIONS
-        })
-
-        const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
-        const publishTestStreamMessages2 = getPublishTestStreamMessages(client, partitionStream2)
+        const publishTestStreamMessages = getPublishTestStreamMessages(client, stream1)
+        const published1 = await publishTestStreamMessages(1)
+        const foundPartition1 = published1[0].getStreamPartition()
 
         // publishing to different streams should get different random partitions
         let gotDifferentPartitions = false
         for (let i = 0; i < 100; i++) {
+            const stream2 = await createStream({
+                partitions: NUM_PARTITIONS
+            })
+            const publishTestStreamMessages2 = getPublishTestStreamMessages(client, stream2)
             // eslint-disable-next-line no-await-in-loop
-            const [published1, published2] = await Promise.all([
-                publishTestStreamMessages(1),
-                publishTestStreamMessages2(1)
-            ])
-            const foundPartition1 = published1[0].getStreamPartition()
+            const published2 = await publishTestStreamMessages2(1)
             const foundPartition2 = published2[0].getStreamPartition()
             if (foundPartition1 !== foundPartition2) {
                 gotDifferentPartitions = true
