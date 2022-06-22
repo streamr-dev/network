@@ -32,10 +32,6 @@ export class StreamPartitioner {
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 
-    public clear(): void {
-        this.computeStreamPartition.clear()
-    }
-
     protected computeStreamPartition = CacheFn((_streamId: StreamID, partitionCount: number, partitionKey: PartitionKey) => {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)

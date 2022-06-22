@@ -13,7 +13,7 @@ const MOCK_USER_ADDRESS = '0xAbcdeabCDE123456789012345678901234567890'
 describe('MessageCreator', () => {
 
     let creator: MessageCreator
-    let streamPartitioner: Pick<StreamPartitioner, 'compute' | 'clear'>
+    let streamPartitioner: Pick<StreamPartitioner, 'compute'>
 
     const createMockMessage = async (
         opts: Omit<MessageCreateOptions<any>, 'content' | 'timestamp'> = {}
@@ -27,8 +27,7 @@ describe('MessageCreator', () => {
 
     beforeEach(() => {
         streamPartitioner = {
-            compute: jest.fn().mockResolvedValue(MOCK_STREAM_PARTITION),
-            clear: () => {}
+            compute: jest.fn().mockResolvedValue(MOCK_STREAM_PARTITION)
         }
         const authentication: Pick<Authentication, 'getAddress'> = {
             getAddress: async (): Promise<EthereumAddress> => {
