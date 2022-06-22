@@ -70,13 +70,6 @@ export class EncryptionUtil {
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
         streamMessage.groupKeyId = groupKey.id
-
-        if (nextGroupKey) {
-            GroupKey.validate(nextGroupKey)
-            // @ts-expect-error expecting EncryptedGroupKey
-            streamMessage.newGroupKey = nextGroupKey
-        }
-
         streamMessage.serializedContent = this.encrypt(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey)
         if (nextGroupKey) {
             GroupKey.validate(nextGroupKey)
