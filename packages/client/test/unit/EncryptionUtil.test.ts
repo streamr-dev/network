@@ -7,6 +7,12 @@ const { StreamMessage, MessageID } = MessageLayer
 
 const STREAM_ID = toStreamID('streamId')
 
+const createInvalidGroupKey = () => {
+    const key = GroupKey.generate()
+    key.data = Buffer.from('invalid-data')
+    return key
+}
+
 describe('EncryptionUtil', () => {
     it('aes decryption after encryption equals the initial plaintext', () => {
         const key = GroupKey.generate()
@@ -71,5 +77,33 @@ describe('EncryptionUtil', () => {
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
+    })
+
+    describe('StreamMessage is not modified if group key is invalid', () => {
+        it.each([
+            ['current'],
+            ['next']
+        ])('%s key is invalid', (invalidKey: string) => {
+            const CONTENT =  {
+                foo: 'bar',
+            }
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
+                content: CONTENT,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE
+            })
+            expect(() => {
+                EncryptionUtil.encryptStreamMessage(streamMessage,
+                    (invalidKey === 'current') ? GroupKey.generate() : createInvalidGroupKey(),
+                    (invalidKey === 'next') ? GroupKey.generate() : createInvalidGroupKey()
+                )
+            }).toThrow()
+            expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
+            expect(streamMessage.groupKeyId).toBe(null)
+            expect(streamMessage.newGroupKey).toBe(null)
+            expect(streamMessage.serializedContent).toEqual(JSON.stringify(CONTENT))
+            expect(streamMessage.getParsedContent()).toEqual(CONTENT)
+        })
+    
     })
 })

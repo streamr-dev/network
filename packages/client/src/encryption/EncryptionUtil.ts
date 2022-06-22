@@ -67,12 +67,14 @@ export class EncryptionUtil {
      */
     static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
         GroupKey.validate(groupKey)
+        if (nextGroupKey) {
+            GroupKey.validate(nextGroupKey)
+        }
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
         streamMessage.groupKeyId = groupKey.id
         streamMessage.serializedContent = this.encrypt(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey)
         if (nextGroupKey) {
-            GroupKey.validate(nextGroupKey)
             streamMessage.newGroupKey = new EncryptedGroupKey(nextGroupKey.id, this.encrypt(nextGroupKey.data, groupKey))
         }
         streamMessage.parsedContent = undefined
