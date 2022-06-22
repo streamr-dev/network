@@ -32,7 +32,7 @@ jobs:
           node-version-file: '.nvmrc'
           check-latest: true
 
-      - name: bootstrap-pkg
+      - name: bootstrap and build
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client-protocol

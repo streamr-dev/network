@@ -29,10 +29,11 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap-pkg
+      - name: bootstrap and build
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-network
+          npm run build --workspace=streamr-network
           sudo apt-get install xvfb
       - run: xvfb-run --auto-servernum npm run test-browser
         env:
