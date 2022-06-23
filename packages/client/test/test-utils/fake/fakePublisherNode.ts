@@ -66,7 +66,7 @@ export const addFakePublisherNode = async (
 ): Promise<FakeBrubeckNode> => {
     const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
     const streamRegistry = dependencyContainer.resolve(StreamRegistry)
-    const requests = publisherNode.addSubscriber<GroupKeyRequestSerialized>(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+    const requests = await publisherNode.addSubscriber<GroupKeyRequestSerialized>(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {
             const errorCode = getError(request)

@@ -45,6 +45,8 @@ export class GroupKeyStoreFactory implements Context {
             }
         })
         // TODO the streamIds in encryptionConfig.encryptionKeys should support path-format?
+        // TODO we should maybe add these keys to store? (if the keys are not 
+        // there yet), see Publisher.test.ts which stores the keys explicitly
         this.initialGroupKeys = encryptionConfig.encryptionKeys
     }
 
