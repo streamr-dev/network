@@ -5,7 +5,7 @@ import { NotFoundError } from '../../src/HttpUtil'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { toStreamID } from 'streamr-client-protocol'
+import { KeyExchangeStreamIDUtils, toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
 
@@ -169,6 +169,11 @@ describe('StreamRegistry', () => {
             const address = await client.getAddress()
             return expect(publishers).toEqual([address])
         })
+        it('throws for key exchange stream', () => {
+            expect(async () => {
+                await collect(client.getStreamPublishers(KeyExchangeStreamIDUtils.formStreamPartID(randomEthereumAddress())))
+            }).rejects.toThrow('Query not supported')
+        })
     })
 
     describe('isStreamPublisher', () => {
@@ -177,12 +182,18 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamPublisher(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid useraddress', async () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
             const valid = await client.isStreamPublisher(createdStream.id, randomEthereumAddress())
             return expect(valid).toBe(false)
+        })
+        describe('key exchange stream', () => {
+            it('returns true for random user', async () => {
+                const valid = await client.isStreamSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(createdStream.id), randomEthereumAddress())
+                return expect(valid).toBe(false)
+            })
         })
     })
 
@@ -192,6 +203,11 @@ describe('StreamRegistry', () => {
             const address = await client.getAddress()
             return expect(subscribers).toEqual([address])
         })
+        it('throws for key exchange stream', () => {
+            expect(async () => {
+                await collect(client.getStreamSubscribers(KeyExchangeStreamIDUtils.formStreamPartID(randomEthereumAddress())))
+            }).rejects.toThrow('Query not supported')
+        })
     })
 
     describe('isStreamSubscriber', () => {
@@ -200,12 +216,22 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamSubscriber(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid useraddress', async () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
             const valid = await client.isStreamSubscriber(createdStream.id, randomEthereumAddress())
             return expect(valid).toBe(false)
+        })
+        describe('key exchange stream', () => {
+            it('returns true for owner', async () => {
+                const valid = await client.isStreamSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(createdStream.id), wallet.address)
+                return expect(valid).toBe(false)
+            })
+            it('returns false for random user', async () => {
+                const valid = await client.isStreamSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(createdStream.id), randomEthereumAddress())
+                return expect(valid).toBe(false)
+            })
         })
     })
 

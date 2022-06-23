@@ -260,6 +260,9 @@ export class StreamRegistry implements Context {
 
     private async* getStreamPublishersOrSubscribersList(streamIdOrPath: string, fieldName: string): AsyncGenerator<EthereumAddress> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+            throw new Error('Query not supported for key exchange streams')
+        }
         this.debug(`Get stream ${fieldName}s for stream id ${streamId}`)
         const backendResults = this.graphQLClient.fetchPaginatedResults<StreamPublisherOrSubscriberItem>(
             (lastId: string, pageSize: number) => StreamRegistry.buildStreamPublishersOrSubscribersQuery(streamId, fieldName, lastId, pageSize)
@@ -440,6 +443,9 @@ export class StreamRegistry implements Context {
 
     async isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+            return true
+        }
         try {
             return await this.queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.PUBLISH))
@@ -451,6 +457,10 @@ export class StreamRegistry implements Context {
 
     async isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+            const recipient = KeyExchangeStreamIDUtils.getRecipient(streamId)
+            return userAddress.toLowerCase() === recipient!.toLowerCase()
+        }
         try {
             return await this.queryAllReadonlyContracts((contract) => {
                 return contract.hasPermission(streamId, userAddress, streamPermissionToSolidityType(StreamPermission.SUBSCRIBE))

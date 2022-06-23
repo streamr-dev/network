@@ -184,10 +184,19 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+            return true
+        }
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.PUBLISH, allowPublic: true })
     }
 
     async isStreamSubscriber(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+            const recipient = KeyExchangeStreamIDUtils.getRecipient(streamId)
+            return user.toLowerCase() === recipient!.toLowerCase()
+        }
         return this.hasPermission({ streamId: streamIdOrPath, user, permission: StreamPermission.SUBSCRIBE, allowPublic: true })
     }
 
