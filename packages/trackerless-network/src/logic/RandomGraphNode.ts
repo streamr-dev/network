@@ -59,7 +59,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         }
         this.registerDefaultServerMethods()
         this.bootstrapIntervalRef = setInterval(() => {
-            if (this.selectedNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() > 1) {
+            if (this.selectedNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() >= 1) {
                 this.newContact(
                     {peerId: new Uint8Array(), type: 0},
                     this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((peer) => peer.getPeerDescriptor())
