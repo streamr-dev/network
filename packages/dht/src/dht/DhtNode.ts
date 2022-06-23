@@ -491,7 +491,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         }
     }
 
-    private removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
+    removeContact(contact: PeerDescriptor, removeFromOpenInternetPeers = false): void {
         if (!this.started || this.stopped) {
             return
         }

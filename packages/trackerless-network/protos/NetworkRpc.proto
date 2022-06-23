@@ -7,6 +7,7 @@ import "google/protobuf/empty.proto";
 service NetworkRpc {
   rpc sendData (DataMessage) returns (google.protobuf.Empty);
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
+  rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
 }
 
 message MessageRef {
@@ -40,4 +41,9 @@ message HandshakeRequest {
 message HandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
+}
+
+message LeaveNotice {
+  string randomGraphId = 1;
+  string senderId = 2;
 }

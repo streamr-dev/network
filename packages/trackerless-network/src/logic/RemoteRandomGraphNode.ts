@@ -1,6 +1,6 @@
 import { INetworkRpcClient } from '../proto/NetworkRpc.client'
 import { PeerDescriptor, UUID, PeerID } from '@streamr/dht'
-import { DataMessage, HandshakeRequest } from '../proto/NetworkRpc'
+import { DataMessage, HandshakeRequest, LeaveNotice } from '../proto/NetworkRpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
 export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
@@ -40,6 +40,23 @@ export class RemoteRandomGraphNode {
         }
         try {
             await this.client.sendData(dataMessage, options)
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    async leaveNotice(ownPeerDescriptor: PeerDescriptor): Promise<void> {
+        const options: DhtRpcOptions = {
+            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            notification: true
+        }
+        const notification: LeaveNotice = {
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            randomGraphId: this.graphId
+        }
+        try {
+            await this.client.leaveNotice(notification, options)
         } catch (err) {
             console.error(err)
         }

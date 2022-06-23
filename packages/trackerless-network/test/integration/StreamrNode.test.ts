@@ -126,6 +126,13 @@ describe('StreamrNode', () => {
         ])
     })
 
+    it('leaving streams', async () => {
+        await node1.joinStream(STREAM_ID, peer1)
+        await node2.joinStream(STREAM_ID, peer2)
+        node1.leaveStream(STREAM_ID)
+        node2.leaveStream(STREAM_ID)
+    })
+
     // TODO: make this work
     // it('Publishing and subscribing to streams without join awaits', async () => {
     //     node1.subscribeToStream(STREAM_ID, peer1)

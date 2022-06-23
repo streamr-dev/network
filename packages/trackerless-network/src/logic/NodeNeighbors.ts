@@ -21,6 +21,10 @@ export class NodeNeighbors {
         this.neighbors.delete(stringId)
     }
 
+    removeById(stringId: string): void {
+        this.neighbors.delete(stringId)
+    }
+
     hasNeighbor(peerDescriptor: PeerDescriptor): boolean {
         const stringId = this.toStringId(peerDescriptor)
         return this.neighbors.has(stringId)

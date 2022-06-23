@@ -1,7 +1,7 @@
 import { RoutingRpcCommunicator, Simulator, MockConnectionManager, PeerDescriptor } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
-import { DataMessage, HandshakeRequest, HandshakeResponse, MessageRef } from '../../src/proto/NetworkRpc'
+import { DataMessage, HandshakeRequest, HandshakeResponse, LeaveNotice, MessageRef } from '../../src/proto/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -56,6 +56,15 @@ describe('RemoteRandomGraphNode', () => {
             }
         )
 
+        mockServerRpc.registerRpcNotification(
+            LeaveNotice,
+            'leaveNotice',
+            async (_msg: LeaveNotice, _context: ServerCallContext): Promise<Empty> => {
+                recvCounter += 1
+                return Empty
+            }
+        )
+
         remoteRandomGraphNode = new RemoteRandomGraphNode(
             serverPeer,
             'test-stream',
@@ -86,5 +95,10 @@ describe('RemoteRandomGraphNode', () => {
     it('handshake', async () => {
         const result = await remoteRandomGraphNode.handshake(clientPeer)
         expect(result).toEqual(true)
+    })
+
+    it('leaveNotice', async () => {
+        await remoteRandomGraphNode.leaveNotice(clientPeer)
+        await waitForCondition(() => recvCounter === 1)
     })
 })

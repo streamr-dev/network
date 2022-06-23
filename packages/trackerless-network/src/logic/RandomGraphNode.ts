@@ -1,6 +1,6 @@
 import EventEmitter = require('events')
 import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
-import { DataMessage, HandshakeRequest, HandshakeResponse, MessageRef } from '../proto/NetworkRpc'
+import { DataMessage, HandshakeRequest, HandshakeResponse, LeaveNotice, MessageRef } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
 import { NetworkRpcClient } from '../proto/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
@@ -185,15 +185,6 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         return this.contactPool.getStringIds()
     }
 
-    // INetworkRpc methods
-    async handshake(request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> {
-        // Add checking for connection handshakes
-        const res: HandshakeResponse = {
-            requestId: request.requestId,
-            accepted: true
-        }
-        return res
-    }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
         const previousNumberPair = previousMessageRef ?
@@ -203,7 +194,26 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         return this.duplicateDetector.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
-    // Called when server receives data
+    getOwnStringId(): string {
+        return PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toMapKey()
+    }
+
+    registerDefaultServerMethods(): void {
+        this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
+        this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData.bind(this))
+    }
+
+    // INetworkRpc server method
+    async handshake(request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> {
+        // Add checking for connection handshakes
+        const res: HandshakeResponse = {
+            requestId: request.requestId,
+            accepted: true
+        }
+        return res
+    }
+
+    // INetworkRpc server method
     async sendData(message: DataMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
@@ -214,12 +224,16 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         return Empty
     }
 
-    getOwnStringId(): string {
-        return PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toMapKey()
-    }
-
-    registerDefaultServerMethods(): void {
-        this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
-        this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData.bind(this))
+    // INetworkRpc server method
+    async leaveNotice(message: LeaveNotice, _context: ServerCallContext): Promise<Empty> {
+        if (message.randomGraphId === this.randomGraphId) {
+            const contact = this.contactPool.getNeighborWithId(message.randomGraphId)
+            if (contact) {
+                this.selectedNeighbors.remove(contact.getPeerDescriptor())
+                this.contactPool.remove(contact.getPeerDescriptor())
+                this.layer1!.removeContact(contact.getPeerDescriptor(), true)
+            }
+        }
+        return Empty
     }
 }
