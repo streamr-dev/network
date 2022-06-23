@@ -184,8 +184,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     getContactPoolIds(): string[] {
         return this.contactPool.getStringIds()
     }
-
-
+    
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
         const previousNumberPair = previousMessageRef ?
             new NumberPair(previousMessageRef!.timestamp, previousMessageRef!.sequenceNumber)
