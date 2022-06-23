@@ -126,11 +126,15 @@ describe('StreamrNode', () => {
         ])
     })
 
-    it('leaving streams', async () => {
+    it.only('leaving streams', async () => {
         await node1.joinStream(STREAM_ID, peer1)
-        await node2.joinStream(STREAM_ID, peer2)
-        node1.leaveStream(STREAM_ID)
+        await node2.joinStream(STREAM_ID, peer1)
+        await Promise.all([
+            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1),
+            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
+        ])
         node2.leaveStream(STREAM_ID)
+        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 0)
     })
 
     // TODO: make this work

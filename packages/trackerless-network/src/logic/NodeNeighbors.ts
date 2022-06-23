@@ -70,4 +70,8 @@ export class NodeNeighbors {
     clear(): void {
         this.neighbors.clear()
     }
+
+    values(): RemoteRandomGraphNode[] {
+        return [...this.neighbors.values()]
+    }
 }

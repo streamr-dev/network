@@ -45,7 +45,7 @@ export class RemoteRandomGraphNode {
         }
     }
 
-    async leaveNotice(ownPeerDescriptor: PeerDescriptor): Promise<void> {
+    leaveNotice(ownPeerDescriptor: PeerDescriptor): void {
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
@@ -55,11 +55,7 @@ export class RemoteRandomGraphNode {
             senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
             randomGraphId: this.graphId
         }
-        try {
-            await this.client.leaveNotice(notification, options)
-        } catch (err) {
-            console.error(err)
-        }
+        this.client.leaveNotice(notification, options)
     }
 
     getPeerDescriptor(): PeerDescriptor {

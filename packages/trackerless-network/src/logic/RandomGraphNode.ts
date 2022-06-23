@@ -73,6 +73,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         this.stopped = true
+        this.selectedNeighbors.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
         this.layer1.off(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
@@ -184,7 +185,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     getContactPoolIds(): string[] {
         return this.contactPool.getStringIds()
     }
-    
+
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
         const previousNumberPair = previousMessageRef ?
             new NumberPair(previousMessageRef!.timestamp, previousMessageRef!.sequenceNumber)
@@ -200,6 +201,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     registerDefaultServerMethods(): void {
         this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
         this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData.bind(this))
+        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice.bind(this))
     }
 
     // INetworkRpc server method
@@ -226,11 +228,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     // INetworkRpc server method
     async leaveNotice(message: LeaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.randomGraphId) {
-            const contact = this.contactPool.getNeighborWithId(message.randomGraphId)
+            const contact = this.contactPool.getNeighborWithId(message.senderId)
+            // TODO: check integrity of notifier?
             if (contact) {
+                this.layer1!.removeContact(contact.getPeerDescriptor(), true)
                 this.selectedNeighbors.remove(contact.getPeerDescriptor())
                 this.contactPool.remove(contact.getPeerDescriptor())
-                this.layer1!.removeContact(contact.getPeerDescriptor(), true)
             }
         }
         return Empty
