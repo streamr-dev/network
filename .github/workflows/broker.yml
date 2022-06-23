@@ -38,6 +38,7 @@ jobs:
       - name: bootstrap and build
         working-directory: './'
         run: |
+          npm run bootstrap-pkg streamr-client
           npm run vendor --workspace=streamr-client
           npm run bootstrap-pkg streamr-broker
           npm run build --workspace=streamr-broker
@@ -57,6 +58,7 @@ jobs:
       - name: bootstrap and build
         working-directory: './'
         run: |
+          npm run bootstrap-pkg streamr-client
           npm run vendor --workspace=streamr-client
           npm run bootstrap-pkg streamr-broker
           npm run build --workspace=streamr-broker
