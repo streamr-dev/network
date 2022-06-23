@@ -1,7 +1,7 @@
 import fetch, { Response } from 'node-fetch'
 import { Debug, Debugger, inspect } from './utils/log'
 
-import { getVersionString, counterId } from './utils'
+import { getVersionString, counterId } from './utils/utils'
 import { Readable } from 'stream'
 import { WebStreamToNodeStream } from './utils/WebStreamToNodeStream'
 import split2 from 'split2'
@@ -18,11 +18,11 @@ export const DEFAULT_HEADERS = {
     'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
 }
 
-export class AuthFetchError extends Error {
-    response?: Response
-    body?: any
-    code: ErrorCode
-    errorCode: ErrorCode
+export class HttpError extends Error {
+    public response?: Response
+    public body?: any
+    public code: ErrorCode
+    public errorCode: ErrorCode
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
@@ -41,24 +41,24 @@ export class AuthFetchError extends Error {
     }
 }
 
-export class ValidationError extends AuthFetchError {
+export class ValidationError extends HttpError {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.VALIDATION_ERROR)
     }
 }
 
-export class NotFoundError extends AuthFetchError {
+export class NotFoundError extends HttpError {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, response?: Response, body?: any) {
         super(message, response, body, ErrorCode.NOT_FOUND)
     }
 }
 
-const ERROR_TYPES = new Map<ErrorCode, typeof AuthFetchError>()
+const ERROR_TYPES = new Map<ErrorCode, typeof HttpError>()
 ERROR_TYPES.set(ErrorCode.VALIDATION_ERROR, ValidationError)
 ERROR_TYPES.set(ErrorCode.NOT_FOUND, NotFoundError)
-ERROR_TYPES.set(ErrorCode.UNKNOWN, AuthFetchError)
+ERROR_TYPES.set(ErrorCode.UNKNOWN, HttpError)
 
 const parseErrorCode = (body: string) => {
     let json
@@ -80,7 +80,7 @@ export class HttpUtil {
         abortController = new AbortController()
     ): Promise<Readable> {
         const startTime = Date.now()
-        const response = await authRequest(url, {
+        const response = await fetchResponse(url, {
             signal: abortController.signal,
             ...opts,
         })
@@ -115,14 +115,14 @@ export class HttpUtil {
     }
 }
 
-async function authRequest(
+async function fetchResponse(
     url: string,
     opts?: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     debug?: Debugger,
     fetchFn: typeof fetch = fetch
 ): Promise<Response> {
     if (!debug) {
-        const id = counterId('authResponse')
+        const id = counterId('httpResponse')
         debug = Debug('utils').extend(id) // eslint-disable-line no-param-reassign
     }
 

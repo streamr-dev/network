@@ -1,7 +1,7 @@
 import { Err, ErrorCode } from './errors'
 import {
     ClientTransport,
-    DeferredPromises,
+    ResultParts,
     ProtoRpcOptions,
     Event as DhtTransportClientEvent
 } from './ClientTransport'
@@ -15,6 +15,13 @@ import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from './Logger'
+
+export enum StatusCodes {
+    OK = 'OK',
+    STOPPED = 'STOPPED',
+    DEADLINE_EXCEEDED = 'DEADLINE_EXCEEDED',
+    SERVER_ERROR = 'SERVER_ERROR'
+}
 
 export enum RpcCommunicatorEvents {
     OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
@@ -30,7 +37,7 @@ interface IRpcIo {
 }
 
 interface OngoingRequest {
-    deferredPromises: DeferredPromises,
+    deferredPromises: ResultParts,
     timeoutRef: NodeJS.Timeout
 }
 
@@ -59,7 +66,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.ongoingRequests = new Map()
         
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
-            deferredPromises: DeferredPromises,
+            deferredPromises: ResultParts,
             rpcMessage: RpcMessage,
             options: ProtoRpcOptions
         ) => {
@@ -75,7 +82,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         return this.onIncomingMessage(rpcCall, callContext)
     }
 
-    public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: DeferredPromises, callContext?: CallContext): void {
+    public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: CallContext): void {
         if (this.stopped) {
             return
         }
@@ -168,7 +175,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         } catch (err) { }
     }
 
-    private registerRequest(requestId: string, deferredPromises: DeferredPromises, timeout = this.defaultRpcRequestTimeout): void {
+    private registerRequest(requestId: string, deferredPromises: ResultParts, timeout = this.defaultRpcRequestTimeout): void {
         if (this.stopped) {
             return
         }
@@ -209,16 +216,16 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             error = new Err.RpcRequest('Server error on request')
         }
         const deferredPromises = ongoingRequest!.deferredPromises
-        this.rejectDeferredPromises(deferredPromises, error, 'SERVER_ERROR')
+        this.rejectDeferredPromises(deferredPromises, error, StatusCodes.SERVER_ERROR)
         this.ongoingRequests.delete(response.requestId)
     }
 
-    private requestTimeoutFn(deferredPromises: DeferredPromises): void {
+    private requestTimeoutFn(deferredPromises: ResultParts): void {
         const error = new Err.RpcTimeout('Rpc request timed out', new Error())
-        this.rejectDeferredPromises(deferredPromises, error, 'DEADLINE_EXCEEDED')
+        this.rejectDeferredPromises(deferredPromises, error, StatusCodes.DEADLINE_EXCEEDED)
     }
 
-    private rejectDeferredPromises(deferredPromises: DeferredPromises, error: Error, code: string): void {
+    private rejectDeferredPromises(deferredPromises: ResultParts, error: Error, code: string): void {
         if (!this.stopped && deferredPromises.message.state === DeferredState.PENDING) {
             deferredPromises.message.reject(error)
             deferredPromises.header.reject(error)
@@ -227,12 +234,12 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
     }
 
-    private resolveDeferredPromises(deferredPromises: DeferredPromises, response: RpcMessage): void {
+    private resolveDeferredPromises(deferredPromises: ResultParts, response: RpcMessage): void {
         if (!this.stopped && deferredPromises.message.state === DeferredState.PENDING) {
             const parsedResponse = deferredPromises.messageParser(response.body)
             deferredPromises.message.resolve(parsedResponse)
             deferredPromises.header.resolve({})
-            deferredPromises.status.resolve({ code: 'OK', detail: '' })
+            deferredPromises.status.resolve({ code: StatusCodes.OK, detail: '' })
             deferredPromises.trailer.resolve({})
         }
     }
@@ -266,7 +273,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.stopped = true
         this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
             clearTimeout(ongoingRequest.timeoutRef)
-            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), 'STOPPED')
+            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), StatusCodes.STOPPED)
         })
         this.removeAllListeners()
         this.ongoingRequests.clear()

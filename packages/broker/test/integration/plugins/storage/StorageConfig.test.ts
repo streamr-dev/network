@@ -4,13 +4,12 @@ import { Protocol } from 'streamr-network'
 import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
-import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
 import {
     startBroker,
     createClient,
     STREAMR_DOCKER_DEV_HOST,
     createTestStream,
-    fetchPrivateKeyWithGas,
     startTestTracker,
     startStorageNode
 } from '../../../utils'

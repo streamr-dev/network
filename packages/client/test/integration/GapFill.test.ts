@@ -7,7 +7,8 @@ import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
 
-import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { StreamPermission } from '../../src'
@@ -18,6 +19,7 @@ jest.setTimeout(50000)
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
     let count = 0
     // eslint-disable-next-line no-param-reassign
+    // @ts-expect-error private
     sub.context.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
             const result = fn(msg, count)

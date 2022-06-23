@@ -4,18 +4,19 @@
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
-import { instanceId, counterId, wait } from '../utils'
+import { instanceId, counterId } from '../utils/utils'
+import { wait } from '../utils/promises'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
 import { SubscribePipeline } from './SubscribePipeline'
 
-import { StorageNodeRegistry } from '../StorageNodeRegistry'
+import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'

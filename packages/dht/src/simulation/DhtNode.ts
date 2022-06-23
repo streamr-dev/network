@@ -97,12 +97,6 @@ export class DhtNode {
             }
 
             this.findMoreContacts(uncontacted, this.neighborList)
-
-            /*
-            if (this.neighborList.getActiveContacts().length >= this.K) {
-                return
-            }
-            */
             
             if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)

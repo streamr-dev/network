@@ -6,13 +6,12 @@ import { promiseTimeout } from './common'
 import { Err } from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from './Logger'
-import { ConversionWrappers } from './ConversionWrappers'
 import { ProtoRpcOptions } from './ClientTransport'
 import { Empty } from './proto/google/protobuf/empty'
 
 export enum ServerRegistryEvent {
-    RPC_RESPONSE = 'streamr:dht-transport:server:response-new',
-    RPC_REQUEST = 'streamr:dht-transport:server:request-new',
+    RPC_RESPONSE = 'rpcResponse',
+    RPC_REQUEST = 'rpcRequest',
 }
 
 export interface ServerRegistry {
@@ -23,10 +22,29 @@ export interface ServerRegistry {
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
-export type RegisteredMethod = (request: Uint8Array, callContext: CallContext) => Promise<Uint8Array>
-export type RegisteredNotification = (request: Uint8Array, callContext: CallContext) => Promise<Empty>
+type RegisteredMethod = (request: Uint8Array, callContext: CallContext) => Promise<Uint8Array>
+type RegisteredNotification = (request: Uint8Array, callContext: CallContext) => Promise<Empty>
 
 const logger = new Logger(module)
+
+export class ConversionWrappers {
+
+    static parseWrapper<T>(parseFn: () => T): T | never {
+        try {
+            return parseFn()
+        } catch (err) {
+            throw new Err.FailedToParse(`Could not parse binary to JSON-object`, err)
+        }
+    }
+
+    static serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | never {
+        try {
+            return serializerFn()
+        } catch (err) {
+            throw new Err.FailedToSerialize(`Could not serialize message to binary`, err)
+        }
+    }
+}
 
 export class ServerRegistry extends EventEmitter {
     methods: Map<string, RegisteredMethod | RegisteredNotification>
@@ -42,6 +60,9 @@ export class ServerRegistry extends EventEmitter {
         }
         logger.trace(`Server processing request ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
+        if (methodName === undefined) {
+            throw new UnknownRpcMethod('Header "method" missing from RPC message')
+        }
         const fn = this.methods.get(methodName) as RegisteredMethod
         if (!fn) {
             throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
@@ -56,6 +77,9 @@ export class ServerRegistry extends EventEmitter {
         }
         logger.trace(`Server processing notification ${rpcMessage.requestId}`)
         const methodName = rpcMessage.header.method
+        if (methodName === undefined) {
+            throw new UnknownRpcMethod('Header "method" missing from RPC message')
+        }
         const fn = this.methods.get(methodName) as RegisteredNotification
         if (!fn) {
             throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
@@ -63,14 +87,12 @@ export class ServerRegistry extends EventEmitter {
         return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new CallContext()))
     }
 
-    public removeMethod(name: string): void {
-        this.methods.delete(name)
-    }
-
-    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
-    (requestClass: RequestClass, returnClass: ReturnClass,
-        name: string, fn: (rq: RequestType, _context: CallContext) => Promise<ReturnType>): void {
-
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
+        requestClass: RequestClass,
+        returnClass: ReturnClass,
+        name: string,
+        fn: (rq: RequestType, _context: CallContext) => Promise<ReturnType>
+    ): void {
         this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext) => {
             const request = ConversionWrappers.parseWrapper(() => requestClass.fromBinary(bytes))
             const response = await fn(request, callContext)
@@ -79,12 +101,12 @@ export class ServerRegistry extends EventEmitter {
     }
 
     public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
-        requestClass: RequestClass, name: string,
+        requestClass: RequestClass,
+        name: string,
         fn: (rq: RequestType, _context: CallContext) => Promise<Empty>
     ): void {
         this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext): Promise<Empty> => {
             const request = ConversionWrappers.parseWrapper(() => requestClass.fromBinary(bytes))
-            //const request = requestClass.fromBinary(bytes)
             const response = await fn(request, callContext)
             return Empty.toBinary(response)
         })

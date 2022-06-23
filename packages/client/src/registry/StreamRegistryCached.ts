@@ -1,11 +1,12 @@
 import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-import { CacheAsyncFn, instanceId } from './utils'
-import { Context } from './utils/Context'
-import { CacheConfig, ConfigInjectionToken } from './Config'
+import { instanceId } from '../utils/utils'
+import { CacheAsyncFn } from '../utils/caches'
+import { Context } from '../utils/Context'
+import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { StreamRegistry } from './StreamRegistry'
-import { StreamPermission } from './permission'
-import { Stream } from './Stream'
+import { StreamPermission } from '../permission'
+import { Stream } from '../Stream'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 
@@ -22,7 +23,7 @@ export class StreamRegistryCached implements Context {
         this.debug = context.debug.extend(this.id)
     }
 
-    async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
+    private async getStreamPreloaded(streamId: StreamID): Promise<Stream> {
         return this.streamRegistry.getStream(streamId)
     }
 
@@ -34,7 +35,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamPublisherPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamId, ethAddress)
     }
 
@@ -45,7 +46,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
+    private async isStreamSubscriberPreloaded(streamId: StreamID, ethAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamId, ethAddress)
     }
 
@@ -56,7 +57,7 @@ export class StreamRegistryCached implements Context {
         }
     })
 
-    async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
+    private async isPublicSubscriptionStream(streamId: StreamID): Promise<boolean> {
         return this.streamRegistry.hasPermission({
             streamId,
             public: true,

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { ValidationError } from 'streamr-client-protocol'
-import { uuid } from '../utils'
+import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
 
 class InvalidGroupKeyError extends ValidationError {
@@ -75,8 +75,11 @@ export class GroupKey {
 
     }
 
+    /** @internal */
     id: string
+    /** @internal */
     hex: string
+    /** @internal */
     data: Uint8Array
 
     constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {

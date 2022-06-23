@@ -10,7 +10,7 @@ import {
     RpcMessage
 } from '../../src/proto/DhtRpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../../src/helpers/common'
+import { generateId } from '../utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('DhtPeer', () => {

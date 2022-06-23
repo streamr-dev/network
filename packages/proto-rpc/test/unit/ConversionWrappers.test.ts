@@ -1,4 +1,4 @@
-import { ConversionWrappers } from '../../src/ConversionWrappers'
+import { ConversionWrappers } from '../../src/ServerRegistry'
 import { RpcMessage } from '../../src/proto/ProtoRpc'
 
 describe('ConversionWrappers', () => {

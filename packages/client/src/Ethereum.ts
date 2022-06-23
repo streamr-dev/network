@@ -71,7 +71,6 @@ export class Ethereum {
     }
 
     private _getAddress?: () => Promise<string>
-    private _getSigner?: () => Signer
     private _getStreamRegistryChainSigner?: () => Promise<Signer>
 
     constructor(
@@ -82,7 +81,6 @@ export class Ethereum {
             const key = authConfig.privateKey
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
-            this._getSigner = () => new Wallet(key, this.getMainnetProvider())
             this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
         } else if ('ethereum' in authConfig && authConfig.ethereum) {
             const { ethereum } = authConfig
@@ -97,11 +95,6 @@ export class Ethereum {
                 } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }
-            }
-            this._getSigner = () => {
-                const metamaskProvider = new Web3Provider(ethereum)
-                const metamaskSigner = metamaskProvider.getSigner()
-                return metamaskSigner
             }
             this._getStreamRegistryChainSigner = async () => {
                 if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
@@ -133,10 +126,6 @@ export class Ethereum {
         return (this._getAddress !== undefined)
     }
 
-    canEncrypt(): boolean {
-        return !!(this._getAddress && this._getSigner)
-    }
-
     async getAddress(): Promise<EthereumAddress> {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor
@@ -144,15 +133,6 @@ export class Ethereum {
         }
 
         return (await this._getAddress()).toLowerCase()
-    }
-
-    getSigner(): Signer {
-        if (!this._getSigner) {
-            // _getSigner is assigned in constructor
-            throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
-        }
-
-        return this._getSigner()
     }
 
     async getStreamRegistryChainSigner(): Promise<Signer> {

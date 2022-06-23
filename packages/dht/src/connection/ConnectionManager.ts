@@ -40,8 +40,8 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private connections: { [peerId: string]: IConnection } = {}
 
     private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
-    private webSocketConnector: WebSocketConnector | null
-    private webrtcConnector: WebRtcConnector | null
+    private webSocketConnector: WebSocketConnector
+    private webrtcConnector: WebRtcConnector
 
     private webSocketServer: WebSocketServer | null
 
@@ -186,9 +186,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             ip: 'localhost',
             natType: 'unknown'
         }
-        return new Promise((resolve, _reject) => {
-            resolve(connectivityResponseMessage)
-        })
+        return connectivityResponseMessage
     }
 
     enableConnectivity(ownPeerDescriptor: PeerDescriptor): void {
@@ -263,18 +261,12 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             clearTimeout(timeout)
         })
         this.disconnectionTimeouts = {}
-        if (this.webSocketConnector) {
-            this.webSocketConnector!.stop()
-        }
-        if (this.webrtcConnector) {
-            this.webrtcConnector!.stop()
-        }
+        this.webSocketConnector.stop()
+        this.webrtcConnector.stop()
+
         Object.values(this.connections).forEach((connection) => connection.close())
         WebRtcCleanUp.cleanUp()
     }
-
-    // ToDo: This method needs some thought, establishing the connection might take tens of seconds,
-    // or it might fail completely! Where should we buffer the outgoing data?
 
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
         if (!this.started || this.stopped) {
@@ -370,14 +362,11 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return false
     }
 
-    //private createWsConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
     private createWsConnector(): WebSocketConnector {
         logger.trace(`Creating WebSocket Connector`)
         return new WebSocketConnector(this.config.transportLayer, this.canConnect.bind(this))
     }
 
-    //private createWebRtcConnector(transport: ITransport, rpcCommunicator?: RpcCommunicator): void {
-    
     private createWebRtcConnector(): WebRtcConnector {
         logger.trace(`Creating WebRTC Connector`)
         return  new WebRtcConnector({

@@ -1,5 +1,5 @@
-import { waitForCondition } from 'streamr-test-utils'
-import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { fastWallet, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { createTestStream } from '../test-utils/utils'
 import { ConfigTest, PermissionAssignment, Stream, StreamPermission, StreamrClient } from '../../src'
 import { createNetworkNode } from 'streamr-network'
 import { StreamID, toStreamPartID } from 'streamr-client-protocol'
@@ -56,7 +56,7 @@ describe('publish-subscribe', () => {
     let subscriberClient: StreamrClient
 
     beforeAll(async () => {
-        subscriberWallet = Wallet.createRandom()
+        subscriberWallet = fastWallet()
         publisherPk = await fetchPrivateKeyWithGas()
     })
 

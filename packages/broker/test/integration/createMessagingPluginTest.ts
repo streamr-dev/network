@@ -1,9 +1,10 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
+import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, Queue, fetchPrivateKeyWithGas, startTestTracker } from '../utils'
+import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
 import { wait } from 'streamr-test-utils'
 
 interface MessagingPluginApi<T> {

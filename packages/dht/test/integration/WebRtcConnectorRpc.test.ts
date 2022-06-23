@@ -8,7 +8,7 @@ import {
     WebRtcConnectionRequest
 } from '../../src/proto/DhtRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
-import { generateId } from '../../src/helpers/common'
+import { generateId } from '../utils'
 import { waitForCondition } from 'streamr-test-utils'
 import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'

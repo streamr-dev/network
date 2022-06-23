@@ -1,5 +1,6 @@
 import { Err } from './errors'
 
+// TODO: Replace with streamr-utils library import
 export function promiseTimeout<T>(ms: number, givenPromise: Promise<T>): Promise<T> {
     const timeoutPromise = new Promise((resolve, reject) => {
         const timeoutRef = setTimeout(() => {

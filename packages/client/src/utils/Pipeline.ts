@@ -1,4 +1,5 @@
-import { instanceId, pOnce } from './index'
+import { instanceId } from './utils'
+import { pOnce } from './promises'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
 import { ContextError, Context } from './Context'
@@ -92,7 +93,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     /** @internal */
-    isCleaningUp = false
+    public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
 
     /** @internal */

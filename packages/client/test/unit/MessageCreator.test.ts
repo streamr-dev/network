@@ -1,78 +1,105 @@
-/**
- eslint-disable array-bracket-spacing
-import { MessageCreator } from '../../src/publish/MessageCreator'
-import { StreamIDish } from '../../src/publish/utils'
-import { createMockAddress } from '../utils'
+import 'reflect-metadata'
+import { EthereumAddress, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { Ethereum } from '../../src/Ethereum'
+import { MessageCreateOptions, MessageCreator } from '../../src/publish/MessageCreator'
+import { StreamPartitioner } from '../../src/publish/StreamPartitioner'
 
-const MOCK_STREAM_ID = 'mock-stream-id'
-const MOCK_STREAM_PARTITION = 123
-const MOCK_PARTITION_KEY = 'mock-partition-key'
+const MOCK_STREAM_ID = toStreamID('mock-stream-id')
+const MOCK_STREAM_PARTITION = 50
 const MOCK_CONTENT = { foo: 'bar' }
 const MOCK_TIMESTAMP = 1234567890
-const DEFAULT_STREAM_PARTITION = 0
-
-const createMockMessageCreator = () => {
-    const userAddress = createMockAddress()
-    const cachedStream = {
-        id: MOCK_STREAM_ID,
-        partitions: 456
-    }
-    const client = {
-        options: {},
-        cached: {
-            getStream: jest.fn().mockResolvedValueOnce(cachedStream),
-            getUserId: jest.fn().mockResolvedValueOnce(undefined)
-        },
-        canEncrypt: jest.fn().mockReturnValue(true),
-        getAddress: jest.fn().mockResolvedValue(userAddress)
-    }
-    return new MessageCreator(client as any)
-}
-
-const createMockMessage = async (streamObjectOrId: StreamIDish, partitionKey?: string) => {
-    const creator = createMockMessageCreator()
-    return creator.create(streamObjectOrId, {
-        content: MOCK_CONTENT,
-        timestamp: MOCK_TIMESTAMP,
-        partitionKey
-    })
-}
+const MOCK_USER_ADDRESS = '0xAbcdeabCDE123456789012345678901234567890'
 
 describe('MessageCreator', () => {
 
-    describe('parse partition', () => {
+    let creator: MessageCreator
+    let streamPartitioner: Pick<StreamPartitioner, 'compute' | 'clear'>
 
-        describe.each([
-            // See NET-344 for possible specification change for the first three assertions
-            [ MOCK_STREAM_ID, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { id: MOCK_STREAM_ID }, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { streamId: MOCK_STREAM_ID }, undefined, DEFAULT_STREAM_PARTITION ],
-            [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
-            [ { streamId: MOCK_STREAM_ID, streamPartition: MOCK_STREAM_PARTITION }, undefined, MOCK_STREAM_PARTITION ],
-            [ MOCK_STREAM_ID, MOCK_PARTITION_KEY, 85 ]
-        ])('valid', (definition: StreamIDish, partitionKey: string|undefined, expectedPartition: number) => {
-            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, async () => {
-                const msg = await createMockMessage(definition, partitionKey)
-                expect(msg.getParsedContent()).toBe(MOCK_CONTENT)
-                expect(msg.messageId.streamId).toBe(MOCK_STREAM_ID)
-                expect(msg.messageId.streamPartition).toBe(expectedPartition)
-                expect(msg.messageId.timestamp).toBe(MOCK_TIMESTAMP)
-            })
+    const createMockMessage = async (
+        opts: Omit<MessageCreateOptions<any>, 'content' | 'timestamp'> = {}
+    ) => {
+        return await creator.create(MOCK_STREAM_ID, {
+            content: MOCK_CONTENT,
+            timestamp: MOCK_TIMESTAMP,
+            ...opts
         })
+    }
 
-        describe.each([
-            [ { partition: MOCK_STREAM_PARTITION }, undefined, 'First argument must be a Stream object or the stream id!'],
-            [ { streamPartition: MOCK_STREAM_PARTITION }, undefined, 'First argument must be a Stream object or the stream id!'],
-            [ {}, undefined, 'First argument must be a Stream object or the stream id!' ],
-            [ { id: MOCK_STREAM_ID, partition: MOCK_STREAM_PARTITION }, MOCK_PARTITION_KEY, 'Invalid combination of "partition" and "partitionKey"']
-        ])('invalid', (definition: StreamIDish, partitionKey: string|undefined, expectedErrorMessage: string) => {
-            it(`definition=${JSON.stringify(definition)}, partitionKey=${partitionKey}`, () => {
-                return expect(() => createMockMessage(definition, partitionKey)).rejects.toThrow(expectedErrorMessage)
-            })
+    beforeEach(() => {
+        streamPartitioner = {
+            compute: jest.fn().mockResolvedValue(MOCK_STREAM_PARTITION),
+            clear: () => {}
+        }
+        const ethereum: Pick<Ethereum, 'getAddress'> = {
+            getAddress: async (): Promise<EthereumAddress> => {
+                return MOCK_USER_ADDRESS
+            }
+        }
+        creator = new MessageCreator(
+            streamPartitioner as any, 
+            ethereum as any,
+            {
+                maxSize: 1,
+                maxAge: 0
+            }
+        )
+    })
+
+    afterEach(async () => {
+        await creator.stop()
+    })
+
+    it('happy path', async () => {
+        const msg = await createMockMessage()
+        expect(msg).toEqual({
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            groupKeyId: null,
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: MOCK_USER_ADDRESS.toLowerCase(),
+                sequenceNumber: 0,
+                streamId: MOCK_STREAM_ID,
+                streamPartition: MOCK_STREAM_PARTITION,
+                timestamp: MOCK_TIMESTAMP,
+            },
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            newGroupKey: null,
+            parsedContent: MOCK_CONTENT,
+            prevMsgRef: null,
+            serializedContent: JSON.stringify(MOCK_CONTENT),
+            signature: null,
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         })
+        expect(streamPartitioner.compute).toHaveBeenCalledWith(MOCK_STREAM_ID, undefined)
+    })
 
+    it('options', async () => {
+        const partitionKey = 'mock-partition-key'
+        const msgChainId = 'mock-msg-chain-id'
+        const messageType = StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        const encryptionType = StreamMessage.ENCRYPTION_TYPES.RSA
+        const msg = await createMockMessage({
+            partitionKey,
+            msgChainId,
+            messageType,
+            encryptionType
+        })
+        expect(msg).toMatchObject({
+            encryptionType,
+            messageId: {
+                msgChainId,
+                streamPartition: MOCK_STREAM_PARTITION
+            },
+            messageType
+        })
+        expect(streamPartitioner.compute).toHaveBeenCalledWith(MOCK_STREAM_ID, partitionKey)
+    })
+
+    it('chaining', async () => {
+        const msg1 = await createMockMessage()
+        const msg2 = await createMockMessage()
+        expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
+        expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
     })
 })
-*/
-
-it.skip('is skipped', () => {})

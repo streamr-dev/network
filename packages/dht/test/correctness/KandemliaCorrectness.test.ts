@@ -58,14 +58,6 @@ describe('Kademlia correctness', () => {
             nodes.map((node) => node.joinDht(entrypointDescriptor))
         )
 
-        /*
-        nodes.forEach((node) => {
-            expect(node.getBucketSize()).toBeGreaterThanOrEqual(node.getK())
-            expect(node.getNeighborList().getSize()).toBeGreaterThanOrEqual(node.getK() * 2)
-        })
-        expect(entryPoint.getBucketSize()).toBeGreaterThanOrEqual(entryPoint.getK())
-        */
-
         let minimumCorrectNeighbors = Number.MAX_SAFE_INTEGER
         let maxOutgoingRpcCalls = 0
         let sumCorrectNeighbors = 0
@@ -73,14 +65,6 @@ describe('Kademlia correctness', () => {
         let sumOutgoingRpcCalls = 0
 
         for (let i = nodes.length - 1; i >= 0; i--) {
-
-            // console.log('-----------')
-            // console.log('Node: ' + i)
-            /*
-            console.log('Kbucket size: '+ nodes[i].getKBucketSize())
-            console.log('Num incoming RPC calls: '+ nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: ' + nodes[i].getNumberOfOutgoingClosestPeersRequests())
-            */
 
             const outgoingCalls = nodes[i].getNumberOfOutgoingClosestPeersRequests()
 
@@ -95,16 +79,12 @@ describe('Kademlia correctness', () => {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
 
-            // console.log(groundTruthString)
-
             const kademliaNeighbors = nodes[i].getNeighborList().getContactIds()
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
                 kadString += nodeIndicesById[neighbor.toMapKey()] + ','
             })
-
-            // console.log(kadString)
 
             let correctNeighbors = 0
             try {
@@ -126,8 +106,6 @@ describe('Kademlia correctness', () => {
                 console.log("NEW MIN", i, correctNeighbors)
                 minimumCorrectNeighbors = correctNeighbors
             }
-
-            // console.log('Correct neighbors: ' + correctNeighbors)
 
             if (i > 0) {
                 sumKbucketSize += nodes[i].getBucketSize()

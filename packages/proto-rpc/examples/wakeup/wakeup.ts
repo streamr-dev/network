@@ -32,7 +32,12 @@ class Node {
 
     public wakeUpOtherNode(targetNodeId: string, reason: string) {
         // pass targetNodeId in CallContext
-        this.client.wakeUp({reason: reason}, {targetNodeId: targetNodeId})
+        this.client.wakeUp({reason: reason}, {
+            targetNodeId: targetNodeId,
+            // By setting the notification flag the client will not wait for a response from the server
+            // and the server will know not to send a response.
+            notification: true
+        })
     }
 }
 const run = async () => {

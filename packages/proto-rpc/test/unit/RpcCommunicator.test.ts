@@ -5,7 +5,7 @@ import {
 } from '../../src/proto/ProtoRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
-import { DeferredPromises } from '../../src/ClientTransport'
+import { ResultParts } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
 import { Err } from '../../src/errors'
 import { waitForCondition } from 'streamr-test-utils'
@@ -15,7 +15,7 @@ import { CallContext } from '../../src/ServerRegistry'
 describe('RpcCommunicator', () => {
     let rpcCommunicator: RpcCommunicator
 
-    let promises: DeferredPromises
+    let promises: ResultParts
     let request: RpcMessage
     let responseRpcMessage: RpcMessage
 

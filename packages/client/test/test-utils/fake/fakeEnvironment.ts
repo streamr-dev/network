@@ -1,12 +1,12 @@
 import { fastPrivateKey } from 'streamr-test-utils'
 import { container, DependencyContainer } from 'tsyringe'
 import { BrubeckNode } from '../../../src/BrubeckNode'
-import { ConfigInjectionToken, StreamrClientConfig, StrictStreamrClientConfig } from '../../../src/Config'
+import { ConfigInjectionToken, createStrictConfig, StreamrClientConfig, StrictStreamrClientConfig } from '../../../src/Config'
 import { DestroySignal } from '../../../src/DestroySignal'
 import { AuthConfig } from '../../../src/Ethereum'
-import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
-import { StreamrClient } from '../../../src/StreamrClient'
-import { StreamRegistry } from '../../../src/StreamRegistry'
+import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
+import { initContainer, StreamrClient } from '../../../src/StreamrClient'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { createEthereumAddressCache } from '../utils'
@@ -14,13 +14,21 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeHttpUtil } from './FakeHttpUtil'
 import { HttpUtil } from '../../../src/HttpUtil'
+import { EthereumAddress } from 'streamr-client-protocol'
+
+export const DEFAULT_CLIENT_OPTIONS = {
+    metrics: false
+}
 
 export interface ClientFactory {
     createClient: (opts?: StreamrClientConfig) => StreamrClient
 }
 
-export const createClientFactory = (): ClientFactory => {
+export const createFakeContainer = (config: StreamrClientConfig | undefined): DependencyContainer => {
     const mockContainer = container.createChildContainer()
+    if (config !== undefined) {
+        initContainer(createStrictConfig(config), mockContainer)
+    }
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
     mockContainer.registerSingleton(HttpUtil, FakeHttpUtil)
@@ -40,7 +48,7 @@ export const createClientFactory = (): ClientFactory => {
          */
         const { privateKey } = c.resolve(ConfigInjectionToken.Auth) as AuthConfig
         const activeNodes = c.resolve(ActiveNodes)
-        const address = ethereumAddressCache.getAddress(privateKey!)
+        const address = ethereumAddressCache.getAddress(privateKey ?? fastPrivateKey())
         let node = activeNodes.getNode(address)
         if (node === undefined) {
             const { id } = c.resolve(ConfigInjectionToken.Root) as StrictStreamrClientConfig
@@ -50,7 +58,11 @@ export const createClientFactory = (): ClientFactory => {
         }
         return node as any
     } })
+    return mockContainer
+}
 
+export const createClientFactory = (): ClientFactory => {
+    const mockContainer = createFakeContainer(undefined) // config is initialized in StreamrClient constructor (no need to call initContainer here)
     return {
         createClient: (opts?: StreamrClientConfig) => {
             let authOpts
@@ -62,11 +74,22 @@ export const createClientFactory = (): ClientFactory => {
                 }
             }
             const config = {
-                metrics: false,
+                ...DEFAULT_CLIENT_OPTIONS,
                 ...authOpts,
                 ...opts
             }
             return new StreamrClient(config, mockContainer)
         }
     }
+}
+
+export const addFakeNode = (
+    nodeId: EthereumAddress,
+    mockContainer: DependencyContainer
+): FakeBrubeckNode => {
+    const activeNodes = mockContainer.resolve(ActiveNodes)
+    const destroySignal = mockContainer.resolve(DestroySignal)
+    const node = new FakeBrubeckNode(nodeId, activeNodes, destroySignal)
+    activeNodes.addNode(node)
+    return node
 }

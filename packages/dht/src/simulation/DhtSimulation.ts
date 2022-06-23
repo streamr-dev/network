@@ -59,25 +59,9 @@ export class DhtSimulation {
             if (maxOutgoingRpcCalls < numberOfOutgoingRpcCalls) {
                 maxOutgoingRpcCalls = numberOfOutgoingRpcCalls
             }
-    
-            /*
-            let groundTruthString = 'groundTruthNeighb: '
-            for (let j=0; j < this.groundTruth[i+''].length; j++) {
-                groundTruthString += this.groundTruth[i+''][j].name + ','
-            }
-             
-            console.log(groundTruthString)
-            */
-            
+
             const kademliaNeighbors = this.nodes[i].getNeightborList().getContactIds()
-            /*
-            let kadString = 'kademliaNeighbors: '
-            kademliaNeighbors.forEach((neighbor) => {
-                kadString += this.nodeNamesById[JSON.stringify(neighbor)] + ','
-            })
-            
-            console.log(kadString)
-            */
+
             let correctNeighbors = 0
             for (let j=0; j < this.groundTruth[i+''].length; j++) {
                 if (this.groundTruth[i+''][j].name !=  (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])]+'')) {

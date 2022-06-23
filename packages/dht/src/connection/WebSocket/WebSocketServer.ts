@@ -89,7 +89,6 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     bindListeners(connectivityRequestHandler: TODO, incomingMessageHandler: TODO): void {
         this.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
-            //this.newConnections[connection.connectionId.toString()] = connection
             logger.trace('server received new connection')
 
             connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {

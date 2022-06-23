@@ -2,7 +2,7 @@ import { Contract } from '@ethersproject/contracts'
 import type { Provider } from '@ethersproject/providers'
 
 import { createTrackerRegistry, EthereumAddress, SmartContractRecord, TrackerRegistry } from 'streamr-client-protocol'
-import * as trackerRegistryConfig from '../contracts/TrackerRegistry.json'
+import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 
 async function fetchTrackers(contractAddress: EthereumAddress, jsonRpcProvider: Provider) {
     // check that provider is connected and has some valid blockNumber

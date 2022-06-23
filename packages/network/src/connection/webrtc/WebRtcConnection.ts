@@ -12,12 +12,12 @@ export interface ConstructorOptions {
     targetPeerId: PeerId
     routerId: string
     stunUrls: string[]
+    pingInterval: number
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
     maxMessageSize?: number
     newConnectionTimeout?: number
     maxPingPongAttempts?: number
-    pingInterval?: number
     flushRetryTimeout?: number
     messageQueue: MessageQueue<string>
     deferredConnectionAttempt: DeferredConnectionAttempt
@@ -117,11 +117,11 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         stunUrls,
         messageQueue,
         deferredConnectionAttempt,
+        pingInterval,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
-        pingInterval = 5 * 1000,
         flushRetryTimeout = 500,
         maxMessageSize = 1048576,
     }: ConstructorOptions) {

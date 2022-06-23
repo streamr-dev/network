@@ -13,20 +13,19 @@ import {
     mergeRpcOptions
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
-import { TODO } from './types'
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
 import { Logger } from './Logger'
 
 export enum Event {
-    RPC_REQUEST = 'streamr:dht-transport:request-new'
+    RPC_REQUEST = 'rpcRequest'
 }
 
 export interface ClientTransport {
-    on(event: Event.RPC_REQUEST, listener: (deferredPromises: DeferredPromises, rpcMessage: RpcMessage, options: ProtoRpcOptions) => void): this
+    on(event: Event.RPC_REQUEST, listener: (results: ResultParts, rpcMessage: RpcMessage, options: ProtoRpcOptions) => void): this
 }
 
-export interface DeferredPromises {
+export interface ResultParts {
     header: Deferred<RpcMetadata>,
     message: Deferred<object>,
     status: Deferred<RpcStatus>,
@@ -41,27 +40,29 @@ export interface ProtoRpcOptions extends RpcOptions {
 const logger = new Logger(module)
 
 export class ClientTransport extends EventEmitter implements RpcTransport {
-    static objectCount = 0
-    private objectId = 1
+    private static objectCount = 0
+    private readonly objectId: number
     private stopped = false
-    protected readonly defaultOptions: TODO
+    protected readonly defaultOptions: ProtoRpcOptions
 
-    constructor(defaultTimeout?: number) {
+    constructor(defaultTimeout = 5000) {
         super()
-        this.objectId = ClientTransport.objectCount
-        ClientTransport.objectCount++
-        
+        this.objectId = ClientTransport.objectCount++
         this.defaultOptions = {
-            timeout: defaultTimeout || 5000,
+            timeout: defaultTimeout,
             clientId: this.objectId
         }
     }
 
-    mergeOptions(options?: Partial<ProtoRpcOptions>): RpcOptions {
+    mergeOptions(options?: Partial<ProtoRpcOptions>): ProtoRpcOptions {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
-    createRequestHeaders(method: MethodInfo, notification?: boolean): any {
+    private createRequestHeaders(method: MethodInfo, notification?: boolean): {
+        method: string,
+        request: string,
+        notification?: string
+    } {
         return {
             method: method.localName,
             request: 'request',
@@ -70,12 +71,11 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
-        const
-            requestBody = method.I.toBinary(input),
-            defHeader = new Deferred<RpcMetadata>(),
-            defMessage = new Deferred<O>(),
-            defStatus = new Deferred<RpcStatus>(),
-            defTrailer = new Deferred<RpcMetadata>()
+        const requestBody = method.I.toBinary(input)
+        const defHeader = new Deferred<RpcMetadata>()
+        const defMessage = new Deferred<O>()
+        const defStatus = new Deferred<RpcStatus>()
+        const defTrailer = new Deferred<RpcMetadata>()
 
         const request: RpcMessage = {
             header: this.createRequestHeaders(method, options.notification),
@@ -93,12 +93,8 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
             defTrailer.promise,
         )
 
-        if (this.stopped) {
-            return unary
-        }
-
         const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
-        const deferred: DeferredPromises = {
+        const deferred: ResultParts = {
             message: defMessage,
             header: defHeader,
             trailer: defTrailer,

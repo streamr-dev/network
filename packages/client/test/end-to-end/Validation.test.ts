@@ -1,4 +1,5 @@
-import { createTestStream, getCreateClient, getPublishTestMessages } from '../test-utils/utils'
+import { createTestStream, getCreateClient } from '../test-utils/utils'
+import { getPublishTestMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -67,6 +68,7 @@ describe('Validation', () => {
             sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
+            // @ts-expect-error private 
             sub.context.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     // eslint-disable-next-line no-param-reassign
@@ -135,6 +137,7 @@ describe('Validation', () => {
             sub.onError.listen(onSubError)
 
             const BAD_INDEX = 2
+            // @ts-expect-error private 
             sub.context.pipeline.mapBefore(async (streamMessage: StreamMessage, index: number) => {
                 if (index === BAD_INDEX) {
                     const msg = streamMessage.clone()

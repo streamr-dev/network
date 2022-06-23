@@ -1,7 +1,8 @@
 import 'reflect-metadata'
 import StreamrClient from '../../src'
 import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
-import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 
 describe('Partition', () => {
 

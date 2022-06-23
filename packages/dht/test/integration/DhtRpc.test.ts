@@ -1,7 +1,7 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
 import { RpcCommunicator, RpcCommunicatorEvents, RpcError } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
-import { generateId } from '../../src/helpers/common'
+import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { wait } from 'streamr-test-utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
