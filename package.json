@@ -24,7 +24,6 @@
         "packages/protocol",
         "packages/proto-rpc",
         "packages/dht",
-        "packages/protocol",
         "packages/trackerless-network",
         "packages/network",
         "packages/network-tracker",
