@@ -114,7 +114,7 @@ describe('ConnectionManager', () => {
             body: arr
         }
 
-        const promise = new Promise<void>((resolve, reject) => {
+        const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
@@ -160,7 +160,7 @@ describe('ConnectionManager', () => {
             body: arr
         }
 
-        const promise = new Promise<void>((resolve, reject) => {
+        const promise = new Promise<void>((resolve, _reject) => {
             connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()

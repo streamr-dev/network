@@ -47,12 +47,11 @@ export class ConversionWrappers {
 }
 
 export class ServerRegistry extends EventEmitter {
-    methods: Map<string, RegisteredMethod | RegisteredNotification>
-    private stopped = false
     constructor() {
         super()
-        this.methods = new Map()
     }
+    private methods = new Map<string, RegisteredMethod | RegisteredNotification>()
+    private stopped = false
 
     public async onRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Uint8Array> {
         if (this.stopped) {
