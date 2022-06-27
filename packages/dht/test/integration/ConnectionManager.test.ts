@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
@@ -10,15 +8,9 @@ import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
-import { appendFile } from "fs"
 
 describe('ConnectionManager', () => {
     const appId = 'demo'
-    
-    const mockPeerDescriptor0: PeerDescriptor = {
-        peerId: PeerID.fromString("tester0").value,
-        type: NodeType.NODEJS
-    }
 
     const mockPeerDescriptor1: PeerDescriptor = {
         peerId: PeerID.fromString("tester1").value,

@@ -15,7 +15,7 @@ import { PeerID } from '../helpers/PeerID'
 import { Event, ITransport } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
-import { Err } from '../helpers/errors'
+import * as Err from '../helpers/errors'
 import { WebRtcCleanUp } from './WebRTC/NodeWebRtcConnection'
 import { v4 } from 'uuid'
 

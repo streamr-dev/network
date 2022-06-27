@@ -15,7 +15,7 @@ import {
     RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { RouterDuplicateDetector } from './RouterDuplicateDetector'
-import { Err } from '../helpers/errors'
+import * as Err from '../helpers/errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'

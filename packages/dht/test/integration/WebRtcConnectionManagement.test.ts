@@ -7,7 +7,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import { NodeWebRtcConnection } from '../../src/connection/WebRTC/NodeWebRtcConnection'
-import { Err } from '../../src/helpers/errors'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebRTC Connection Management', () => {
 

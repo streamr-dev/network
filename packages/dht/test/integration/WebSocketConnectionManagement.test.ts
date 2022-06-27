@@ -6,7 +6,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import { Err } from '../../src/helpers/errors'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 

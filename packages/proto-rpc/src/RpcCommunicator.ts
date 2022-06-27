@@ -1,4 +1,5 @@
-import { Err, ErrorCode } from './errors'
+import * as Err from './errors'
+import { ErrorCode } from './errors'
 import {
     ClientTransport,
     ResultParts,

@@ -3,7 +3,7 @@ import EventEmitter = require('events')
 import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
-import { Err } from './errors'
+import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from './Logger'
 import { ProtoRpcOptions } from './ClientTransport'

@@ -2,7 +2,7 @@ import { MockConnectionManager } from '../../src/connection/MockConnectionManage
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
-import { Err } from '../../src/helpers/errors'
+import * as Err from '../../src/helpers/errors'
 
 describe('DhtNode', () => {
     let node: DhtNode
