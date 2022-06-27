@@ -70,7 +70,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         return this.remotePeerDescriptor
     }
 
-    public get remoteAddress(): string {
+    public getRemoteAddress(): string {
         return this.socket.remoteAddress
     }
 

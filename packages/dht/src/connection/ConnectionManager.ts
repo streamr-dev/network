@@ -64,7 +64,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         let connectivityResponseMessage: ConnectivityResponseMessage | null = null
         try {
             outgoingConnection = await this.webSocketConnector!.connectAsync({
-                host: (connection as ServerWebSocket).remoteAddress,
+                host: (connection as ServerWebSocket).getRemoteAddress(),
                 port: connectivityRequest.port, timeoutMs: 1000
             })
         }
@@ -74,7 +74,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             connectivityResponseMessage = {
                 openInternet: false,
-                ip: (connection as ServerWebSocket).remoteAddress,
+                ip: (connection as ServerWebSocket).getRemoteAddress(),
                 natType: 'unknown'
             }
         }
@@ -86,9 +86,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             connectivityResponseMessage = {
                 openInternet: true,
-                ip: (connection as ServerWebSocket).remoteAddress,
+                ip: (connection as ServerWebSocket).getRemoteAddress(),
                 natType: 'open_internet',
-                websocket: { ip: (connection as ServerWebSocket).remoteAddress, port: connectivityRequest.port }
+                websocket: { ip: (connection as ServerWebSocket).getRemoteAddress(), port: connectivityRequest.port }
             }
         }
 

@@ -34,5 +34,4 @@ export class RoutingRpcCommunicator extends RpcCommunicator{
         })
 
     }
-
 }

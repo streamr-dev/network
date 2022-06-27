@@ -114,10 +114,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     isOpen(): boolean {
-        if (this.lastState == ConnectionState.OPEN) {
-            return true
-        }
-        return false
+        return this.lastState === ConnectionState.OPEN
     }
 
     // IConnection implementation

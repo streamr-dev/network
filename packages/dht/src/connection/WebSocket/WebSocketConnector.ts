@@ -98,7 +98,6 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             }
 
             const errorHandler = () => {
-                //console.log('errorHandler of WebSocketConnector::connectAsync()')
                 clearTimeout(timeout)
                 reject()
             }

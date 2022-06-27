@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-len */
 
 export enum ErrorCode {
