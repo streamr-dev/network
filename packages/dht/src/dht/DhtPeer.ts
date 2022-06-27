@@ -44,8 +44,8 @@ export class DhtPeer {
         }
 
         try {
-            const response = await this.dhtClient.getClosestPeers(request, options)
-            const peers = await response.response
+            const results = this.dhtClient.getClosestPeers(request, options)
+            const peers = await results.response
             const formatted = peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
             return formatted
         } catch (err) {
@@ -64,8 +64,8 @@ export class DhtPeer {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.dhtClient.ping(request, options)
-            const pong = await response.response
+            const results = this.dhtClient.ping(request, options)
+            const pong = await results.response
             if (pong.nonce === request.nonce) {
                 return true
             }
@@ -88,8 +88,8 @@ export class DhtPeer {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.dhtClient.routeMessage(message, options)
-            const ack = await response.response
+            const results = this.dhtClient.routeMessage(message, options)
+            const ack = await results.response
             if (ack.error!.length > 0) {
                 return false
             }

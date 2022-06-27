@@ -63,8 +63,8 @@ const run = async () => {
     nodes["3"] = new Node("3")
     nodes["3"].communicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, emulateNetwork)
 
-    await nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
-    await nodes["3"].wakeUpOtherNode("1", "Notification from node 3")
+    nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
+    nodes["3"].wakeUpOtherNode("1", "Notification from node 3")
 
     nodes["1"].communicator.stop()
     nodes["2"].communicator.stop()

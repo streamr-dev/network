@@ -28,8 +28,8 @@ export class RemoteWebSocketConnector {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.client.requestConnection(request, options)
-            const res = await response.response
+            const results = this.client.requestConnection(request, options)
+            const res = await results.response
             if (res.reason) {
                 // Log warning?
             }

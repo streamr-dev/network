@@ -14,9 +14,7 @@ import { Logger } from '../../helpers/Logger'
 const logger = new Logger(module)
 
 export class RemoteWebrtcConnector {
-    private peerId: PeerID
     constructor(private peerDescriptor: PeerDescriptor, private client: IWebRtcConnectorClient) {
-        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
     }
 
     async requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): Promise<boolean> {
@@ -31,8 +29,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const result = await this.client.requestConnection(request, options)
-            return !!result.response
+            const result = this.client.requestConnection(request, options)
+            return !!await result.response
         } catch (err) {
             logger.debug(err)
             return false
@@ -52,8 +50,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const result = await this.client.rtcOffer(request, options)
-            return !!result.response
+            const results = this.client.rtcOffer(request, options)
+            return !!await results.response
         } catch (err) {
             logger.debug(err)
             return false
@@ -73,8 +71,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const result = await this.client.rtcAnswer(request, options)
-            return !!result.response
+            const results = this.client.rtcAnswer(request, options)
+            return !!await results.response
         } catch (err) {
             logger.debug(err)
             return false
@@ -95,8 +93,8 @@ export class RemoteWebrtcConnector {
             notification: true
         }
         try {
-            const result = await this.client.iceCandidate(request, options)
-            return !!result.response
+            const results = this.client.iceCandidate(request, options)
+            return !!await results.response
         } catch (err) {
             console.error(err)
             return false

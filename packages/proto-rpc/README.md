@@ -87,7 +87,7 @@ communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _
 - make the RPC call and print the result
   
 ```typescript
-const result = await helloClient.sayHello({ myName: 'Alice' })
+const result = helloClient.sayHello({ myName: 'Alice' })
 const response = await result.response
 console.log(response.greeting)
 ```
@@ -163,5 +163,6 @@ Client side timeouts can be set along side requests via the options parameter. B
 
 Example:
 ```typescript
-await helloClient.sayHello({ myName: 'Alice' }, { timeout: 15000 })
+const results = helloClient.sayHello({ myName: 'Alice' }, { timeout: 15000 })
+await results.response // This will eventually timeout after 15000ms
 ```

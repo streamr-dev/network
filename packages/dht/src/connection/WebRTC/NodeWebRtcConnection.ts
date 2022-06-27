@@ -25,7 +25,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private stunUrls = []
     private isOffering = false
     private maxMessageSize = 1048576
-    private _bufferThresholdHigh = 2 ** 17
+    private _bufferThresholdHigh = 2 ** 17 // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow = 2 ** 15
     private lastState = ''
     private buffer: Uint8Array[] = []

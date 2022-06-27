@@ -286,7 +286,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.routeCheck(
                 peer.peerId,
                 PeerID.fromValue(params.sourcePeer!.peerId),
-                params.previousPeer ? PeerID.fromValue(params.previousPeer?.peerId) : undefined
+                params.previousPeer ? PeerID.fromValue(params.previousPeer.peerId) : undefined
             )
         )
         const initialLength = closest.length
