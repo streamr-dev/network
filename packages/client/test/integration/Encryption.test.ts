@@ -31,6 +31,16 @@ const getPublishPipeline = (client: StreamrClient): PublishPipeline => {
     return client.container.resolve(PublishPipeline)
 }
 
+const testMessageEncryptionType = (streamMessage: StreamMessage) => {
+    if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
+        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
+    } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
+        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
+    } else {
+        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
+    }
+}
+
 describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let expectErrors = 0 // check no errors by default
@@ -47,14 +57,7 @@ describe('decryption', () => {
         const onSendTest = Defer()
         // @ts-expect-error private
         getPublishPipeline(testClient).publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
-            // check encryption is as expected
-            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-            } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
-            } else {
-                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-            }
+            testMessageEncryptionType(streamMessage)
         })).onFinally.listen(() => {
             onSendTest.resolve(undefined)
         })
@@ -263,14 +266,7 @@ describe('decryption', () => {
                             expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
                             return
                         }
-
-                        if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-                            expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-                        } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-                            expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
-                        } else {
-                            expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-                        }
+                        testMessageEncryptionType(streamMessage)
                     })).onFinally.listen(() => {
                         onSendTest.resolve(undefined)
                     })
@@ -730,14 +726,7 @@ describe('decryption', () => {
                     if (streamMessage.getStreamId() === stream.id) {
                         expect(streamMessage.groupKeyId).toEqual(groupKey.id)
                     }
-
-                    if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-                        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-                    } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-                        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
-                    } else {
-                        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-                    }
+                    testMessageEncryptionType(streamMessage)
                 })).onFinally.listen(() => {
                     onSendTest.resolve(undefined)
                 })
