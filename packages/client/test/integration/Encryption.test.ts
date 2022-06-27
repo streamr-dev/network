@@ -10,7 +10,7 @@ import {
     publishTestMessagesGenerator,
 } from '../test-utils/publish'
 import { Defer } from '../../src/utils/Defer'
-import { pLimitFn } from '../../src/utils/promises'
+import { pLimitFn, withTimeout } from '../../src/utils/promises'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
@@ -627,15 +627,16 @@ describe('decryption', () => {
         it('client.subscribe can not decrypt encrypted messages if does not know the group key', async () => {
             const sub = await subscriber.subscribe({
                 stream: stream.id,
-            }, (_msg: any) => {})
+            })
 
             await publishTestMessages(3, {
                 timestamp: 1111111,
             })
 
+            const TIMEOUT_ERROR = 'mock-timeout-error'
             await expect(async () => {
-                await sub.collect(3)
-            }).rejects.toThrow()
+                await withTimeout(sub.collect(3), TIMEOUT, TIMEOUT_ERROR)
+            }).rejects.toThrow(TIMEOUT_ERROR)
         })
 
         it('does encrypt messages in stream that does not require encryption but groupkey is set anyway', async () => {
