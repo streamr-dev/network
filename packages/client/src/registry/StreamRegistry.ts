@@ -41,6 +41,13 @@ import {
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
+/* 
+ * On-chain registry of stream metadata and permissions.
+ *
+ * Does not support system streams (the key exchange stream) or legacy streams (streamIds 
+ * like '7wa7APtlTq6EC5iTCBy6dw')
+ */
+
 export type StreamQueryResult = {
     id: string,
     metadata: string
