@@ -16,8 +16,7 @@ import {
     StreamID,
     EthereumAddress,
     StreamIDUtils, 
-    toStreamID,
-    KeyExchangeStreamIDUtils
+    toStreamID
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
@@ -224,9 +223,6 @@ export class StreamRegistry implements Context {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
-        }
         let metadata
         try {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
