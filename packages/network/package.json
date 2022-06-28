@@ -43,6 +43,7 @@
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },
   "dependencies": {
+    "@streamr/utils": "^0.0.1",
     "cancelable-promise": "^3.2.3",
     "commander": "^8.3.0",
     "heap": "^0.2.6",
