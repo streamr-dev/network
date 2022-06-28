@@ -16,13 +16,12 @@ import {
     StreamID,
     EthereumAddress,
     StreamIDUtils, 
-    toStreamID,
     KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
 import { createWriteContract, SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
-import { fetchSearchStreamsResultFromTheGraph, SearchStreamsPermissionFilter, SearchStreamsResultItem } from '../searchStreams'
+import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
 import { ObservableContract, waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
 import {
@@ -238,16 +237,13 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
-        if ((term === undefined) && (permissionFilter === undefined)) {
-            throw new Error('Requires a search term or a permission filter')
-        }
-        this.debug('Search streams term=%s permissions=%j', term, permissionFilter)
-        return map(
-            fetchSearchStreamsResultFromTheGraph(term, permissionFilter, this.graphQLClient),
-            (item: SearchStreamsResultItem) => this.parseStream(toStreamID(item.stream.id), item.stream.metadata),
-            (err: Error, item: SearchStreamsResultItem) => this.debug('Omitting stream %s from result because %s', item.stream.id, err.message)
-        )
+    async* searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        yield* _searchStreams(
+            term, 
+            permissionFilter,
+            this.graphQLClient,
+            (id: StreamID, metadata: string) => this.parseStream(id, metadata),
+            this.debug)
     }
 
     getStreamPublishers(streamIdOrPath: string): AsyncGenerator<EthereumAddress> {
