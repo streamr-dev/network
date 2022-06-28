@@ -14,6 +14,7 @@ import { StreamPermission } from '../../src'
 import { nextValue } from '../../src/utils/iterators'
 import { FakeBrubeckNode } from '../test-utils/fake/FakeBrubeckNode'
 import { random } from 'lodash'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 
 const PARTITION_COUNT = 100
 const GROUP_KEY = GroupKey.generate()
@@ -201,6 +202,29 @@ describe('Publisher', () => {
             })
             const msg = await nextValue(receivedMessages)
             expect(msg!.messageId.streamPartition).toBe(partitionOffset)
+        })
+    })
+
+    describe('group key', () => {
+        it('rotating group key injects group key into next stream message', async () => {
+            const originalKey = GROUP_KEY
+            await stream.publish({})
+            const msg1 = await nextValue(receivedMessages)
+            expect(msg1!.groupKeyId).toEqual(originalKey.id)
+            expect(msg1!.newGroupKey).toBeNull()
+            
+            const rotatedKey = GroupKey.generate()
+            const groupKeyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
+            await groupKeyStore.setNextGroupKey(rotatedKey)
+            await stream.publish({})
+            const msg2 = await nextValue(receivedMessages)
+            expect(msg2!.groupKeyId).toEqual(originalKey.id)
+            expect(EncryptionUtil.decryptGroupKey(msg2!.newGroupKey!, originalKey)).toEqual(rotatedKey)
+
+            await stream.publish({})
+            const msg3 = await nextValue(receivedMessages)
+            expect(msg3!.groupKeyId).toEqual(rotatedKey.id)
+            expect(msg3!.newGroupKey).toBeNull()
         })
     })
 })

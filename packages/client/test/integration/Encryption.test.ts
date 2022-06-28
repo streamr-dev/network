@@ -205,50 +205,6 @@ describe('decryption', () => {
                 await onEncryptionMessageErr2
             }, TIMEOUT * 2)
 
-            it('changing group key injects group key into next stream message', async () => {
-                const msgs = [Msg(), Msg(), Msg()]
-                // subscribe without knowing the group key to decrypt stream messages
-                const sub = await subscriber.subscribe({
-                    stream: stream.id,
-                })
-
-                const onEncryptionMessageErr = checkEncryptionMessages(publisher)
-                // id | groupKeyId | newGroupKey (encrypted by groupKeyId)
-                // msg1 gk2 -
-                // msg2 gk2 gk3
-                // msg3 gk3 -
-                const groupKey1 = GroupKey.generate()
-                const groupKey2 = GroupKey.generate()
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    key: groupKey1,
-                    distributionMethod: 'rotate'
-                })
-                await publisher.publish(stream.id, msgs[0])
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    key: groupKey2,
-                    distributionMethod: 'rotate'
-                })
-                await publisher.publish(stream.id, msgs[1])
-                await publisher.publish(stream.id, msgs[2])
-                const received = await sub.collect(msgs.length)
-                onEncryptionMessageErr.resolve(undefined)
-                received.forEach((streamMessage) => {
-                    expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
-                    expect(streamMessage.getPublisherId()).toBeTruthy()
-                    expect(streamMessage.signature).toBeTruthy()
-                })
-                expect(received[0].newGroupKey).toEqual(null)
-                expect(received[0].groupKeyId).toEqual(groupKey1.id)
-                expect(received[1].newGroupKey).toEqual(groupKey2)
-                expect(received[1].groupKeyId).toEqual(groupKey1.id)
-                expect(received[2].newGroupKey).toEqual(null)
-                expect(received[2].groupKeyId).toEqual(groupKey2.id)
-                expect(received.map((m) => m.getParsedContent())).toEqual(msgs)
-                await onEncryptionMessageErr
-            }, TIMEOUT * 2)
-
             it('does not encrypt messages for public streams', async () => {
                 const stream2 = await createTestStream(publisher, module)
                 await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
