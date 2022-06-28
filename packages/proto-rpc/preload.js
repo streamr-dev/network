@@ -4,6 +4,4 @@ process.once("loaded", () => {
     window.HTTP = require('http')
     window.HTTPS = require('https')
     window.NodeJsBuffer = Buffer
-    // eslint-disable-next-line no-underscore-dangle
-    window._streamr_electron_test = true
 })

@@ -42,7 +42,6 @@ const logger = new Logger(module)
 export class ClientTransport extends EventEmitter implements RpcTransport {
     private static objectCount = 0
     private readonly objectId: number
-    private stopped = false
     protected readonly defaultOptions: ProtoRpcOptions
 
     constructor(defaultTimeout = 5000) {
@@ -128,7 +127,6 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     stop(): void {
-        this.stopped = true
         this.removeAllListeners()
     }
 }

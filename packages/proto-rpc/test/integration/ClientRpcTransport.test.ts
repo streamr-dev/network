@@ -6,11 +6,6 @@ import { getMockPeers } from '../utils'
 import { CallContext } from '../../src/ServerRegistry'
 
 describe('DhtClientRpcTransport', () => {
-
-    beforeAll(() => {
-
-    })
-
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
         rpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {

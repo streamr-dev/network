@@ -94,7 +94,7 @@ export class DhtPeer {
                 return false
             }
         } catch (err) {
-            // logger.debug(err)
+            logger.debug(err)
             return false
         }
         return true

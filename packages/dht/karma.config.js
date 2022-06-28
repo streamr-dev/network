@@ -26,7 +26,7 @@ module.exports = function (config) {
         ],
         preprocessors: {
             './karma-setup.js': ['webpack'],
-            './test/**/!(NodeWebRtcConnection*|tracker*|nodeMessageBuffering*|UnixSocketWsServer*|message-duplication*).ts/': ['webpack','sourcemap'],
+            './test/**/*.ts': ['webpack','sourcemap'],
          
         },
         customLaunchers: {
