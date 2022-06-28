@@ -133,12 +133,29 @@ describe('decryption', () => {
         return [p2]
     })
 
+    const collectMessages = async (
+        testStream: Stream
+    ): Promise<{ done: Promise<any>, received: any[] }> => {
+        const done = Defer()
+        const received: any = []
+        await grantSubscriberPermissions({ stream: testStream })
+        await subscriber.subscribe({
+            streamId: testStream.id,
+        }, (parsedContent) => {
+            received.push(parsedContent)
+            if (received.length === NUM_MESSAGES) {
+                done.resolve(undefined)
+            }
+        })
+        return {
+            done,
+            received
+        }
+    }
+
     describe('using default config', () => {
         beforeEach(async () => {
             await setupPublisherSubscriberClients()
-        })
-
-        beforeEach(async () => {
             await setupStream()
         }, 60000)
 
@@ -551,17 +568,7 @@ describe('decryption', () => {
             }
 
             async function testSub(testStream: Stream) {
-                const done = Defer()
-                const received: any = []
-                await grantSubscriberPermissions({ stream: testStream })
-                await subscriber.subscribe({
-                    streamId: testStream.id,
-                }, (parsedContent) => {
-                    received.push(parsedContent)
-                    if (received.length === NUM_MESSAGES) {
-                        done.resolve(undefined)
-                    }
-                })
+                const { done, received } = await collectMessages(testStream)
 
                 await publisher.updateEncryptionKey({
                     streamId: testStream.id,
@@ -626,17 +633,7 @@ describe('decryption', () => {
             }
 
             async function testSub(testStream: Stream) {
-                const done = Defer()
-                const received: any = []
-                await grantSubscriberPermissions({ stream: testStream })
-                await subscriber.subscribe({
-                    streamId: testStream.id,
-                }, (parsedContent) => {
-                    received.push(parsedContent)
-                    if (received.length === NUM_MESSAGES) {
-                        done.resolve(undefined)
-                    }
-                })
+                const { done, received } = await collectMessages(testStream)
 
                 const contentClear: any[] = []
                 // @ts-expect-error private
