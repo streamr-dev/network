@@ -26,10 +26,15 @@
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "pino": "^6.11.3",
+    "pino-pretty": "^5.0.2"
+  },
   "devDependencies": {
     "@streamr/dev-config": "^1.0.0",
     "@types/jest": "^27.0.2",
+    "@types/pino": "^6.3.8",
+    "@types/pino-pretty": "^4.7.0",
     "jest": "^27.2.5",
     "ts-jest": "^27.0.5",
     "ts-node": "^9.1.1",

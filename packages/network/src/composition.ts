@@ -32,7 +32,7 @@ export {
 } from './constants'
 export { NetworkNode } from './logic/NetworkNode'
 export { Event as NodeEvent } from './logic/Node'
-export { Logger } from './helpers/Logger'
+export { Logger } from '@streamr/utils'
 export { NameDirectory } from './NameDirectory'
 export { createNetworkNode, NetworkNodeOptions } from './createNetworkNode'
 export { PeerId, PeerInfo } from './connection/PeerInfo'

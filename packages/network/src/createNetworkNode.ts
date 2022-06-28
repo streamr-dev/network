@@ -11,7 +11,6 @@ import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
-import { HELLO_WORLD } from '@streamr/utils'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: TrackerInfo[],
@@ -48,7 +47,6 @@ export const createNetworkNode = ({
     const endpoint = new NodeClientWsEndpoint(peerInfo, trackerPingInterval)
     const nodeToTracker = new NodeToTracker(endpoint)
 
-    const foobar = HELLO_WORLD + 'sdgdsg'
     const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)
     const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
     const nodeToNode = new NodeToNode(new WebRtcEndpoint(

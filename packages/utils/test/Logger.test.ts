@@ -1,5 +1,5 @@
 import path from 'path'
-import { Logger } from "../../src/helpers/Logger"
+import { LoggerNode as Logger } from '../src/LoggerNode'
 import Mock = jest.Mock
 
 // eslint-disable-next-line no-underscore-dangle

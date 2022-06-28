@@ -11,7 +11,7 @@ import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helper
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
