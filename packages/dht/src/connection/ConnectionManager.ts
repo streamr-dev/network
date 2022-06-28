@@ -56,7 +56,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         this.webrtcConnector = this.createWebRtcConnector()
     }
 
-    private async handleIncomingConnectivityRequest(connection: IConnection, connectivityRequest: ConnectivityRequestMessage) {
+    private async handleIncomingConnectivityRequest(
+        connection: IConnection,
+        connectivityRequest: ConnectivityRequestMessage
+    ): Promise<void> {
         if (!this.started || this.stopped) {
             return
         }
