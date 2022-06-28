@@ -16,7 +16,6 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "watch": "tsc --watch",
     "benchmark": "jest test/benchmarks --detectOpenHandles",
-    "prepare": "npm run build",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-unit": "jest test/unit --detectOpenHandles",
