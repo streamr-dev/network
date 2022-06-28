@@ -46,6 +46,7 @@ describe('EncryptionUtil', () => {
 
     it('StreamMessage gets encrypted', () => {
         const key = GroupKey.generate()
+        const nextKey = GroupKey.generate()
         const streamMessage = new StreamMessage({
             messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
             content: {
@@ -56,13 +57,19 @@ describe('EncryptionUtil', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
             signature: null,
         })
-        EncryptionUtil.encryptStreamMessage(streamMessage, key)
+        EncryptionUtil.encryptStreamMessage(streamMessage, key, nextKey)
         expect(streamMessage.getSerializedContent()).not.toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.AES)
+        expect(streamMessage.groupKeyId).toBe(key.id)
+        expect(streamMessage.newGroupKey).toMatchObject({
+            groupKeyId: nextKey.id,
+            encryptedGroupKeyHex: expect.any(String)
+        })
     })
 
     it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
         const key = GroupKey.generate()
+        const nextKey = GroupKey.generate()
         const streamMessage = new StreamMessage({
             messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
             content: {
@@ -73,10 +80,12 @@ describe('EncryptionUtil', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
             signature: null,
         })
-        EncryptionUtil.encryptStreamMessage(streamMessage, key)
+        EncryptionUtil.encryptStreamMessage(streamMessage, key, nextKey)
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
+        expect(streamMessage.groupKeyId).toBe(key.id)
+        expect(streamMessage.newGroupKey).toEqual(nextKey)
     })
 
     describe('StreamMessage is not modified if group key is invalid', () => {
