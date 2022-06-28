@@ -24,8 +24,8 @@ export enum StatusCodes {
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
-export enum RpcCommunicatorEvents {
-    OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
+export enum RpcCommunicatorEvent {
+    OUTGOING_MESSAGE = 'outgoing-message',
 }
 
 export interface RpcCommunicatorConfig {
