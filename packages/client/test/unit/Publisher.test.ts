@@ -227,4 +227,28 @@ describe('Publisher', () => {
             expect(msg3!.newGroupKey).toBeNull()
         })
     })
+
+    describe('encryption', () => {
+        it('does not encrypt messages for public streams', async () => {
+            const streamRegistry = dependencyContainer.resolve(StreamRegistry)
+            const publicStream = await streamRegistry.createStream({
+                id: createRelativeTestStreamId(module), 
+                partitions: PARTITION_COUNT
+            })
+            streamRegistry.grantPermissions(publicStream.id, {
+                public: true,
+                permissions: [StreamPermission.SUBSCRIBE]
+            })
+
+            const CONTENT = {
+                foo: 'not-encrypted'
+            }
+            const publicStreamMessages = await subscriberNode.addSubscriber(...publicStream.getStreamParts())
+            await publicStream.publish(CONTENT)
+
+            const msg = await nextValue(publicStreamMessages)
+            expect(msg!.getParsedContent()).toEqual(CONTENT)
+            expect(msg!.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
+        })
+    })
 })
