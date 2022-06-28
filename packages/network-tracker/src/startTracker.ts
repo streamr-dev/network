@@ -11,6 +11,7 @@ import {
     startHttpServer,
     DEFAULT_MAX_NEIGHBOR_COUNT
 } from 'streamr-network'
+import { HELLO_WORLD } from '@streamr/utils'
 
 export interface TrackerOptions extends AbstractNodeOptions {
     listen: HttpServerConfig
@@ -37,6 +38,7 @@ export const startTracker = async ({
     const httpServer = await startHttpServer(listen, privateKeyFileName, certFileName)
     const endpoint = new ServerWsEndpoint(listen, privateKeyFileName !== undefined, httpServer, peerInfo, trackerPingInterval)
 
+    const foobar = HELLO_WORLD + 'sdgdsg'
     const tracker = new Tracker({
         peerInfo,
         protocols: {
