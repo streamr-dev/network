@@ -10,7 +10,7 @@ jest.setTimeout(2 * 60 * 1000)
 
 const SEARCH_TERM = `mock-search-term-${Date.now()}`
 
-describe('SearchStreams', () => {
+describe('searchStreams', () => {
 
     let client: StreamrClient
     let streamWithoutPermission: Stream

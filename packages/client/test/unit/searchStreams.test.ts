@@ -55,7 +55,7 @@ const createMockStreamRegistry = (resultItems: SearchStreamsResultItem[], debugL
     )
 }
 
-describe('SearchStreams', () => {
+describe('searchStreams', () => {
     it('invalid metadata', async () => {
         const stream1 = toStreamID('/1', MOCK_USER)
         const stream2 = toStreamID('/2', MOCK_USER)
