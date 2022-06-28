@@ -1,5 +1,5 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
 import { createWrappedClosestPeersRequest, getMockPeers, MockDhtRpc } from '../utils'
 import {
     ClosestPeersRequest,
@@ -36,12 +36,12 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
-        clientRpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
        
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 
-        serverRpcCommunicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
