@@ -1,6 +1,6 @@
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
-import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { RpcMetadata, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
