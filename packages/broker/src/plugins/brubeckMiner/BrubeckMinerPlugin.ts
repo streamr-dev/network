@@ -1,5 +1,6 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, scheduleAtInterval } from 'streamr-network'
+import { scheduleAtInterval } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
