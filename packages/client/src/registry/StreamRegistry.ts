@@ -15,8 +15,7 @@ import { ErrorCode, NotFoundError } from '../HttpUtil'
 import {
     StreamID,
     EthereumAddress,
-    StreamIDUtils, 
-    KeyExchangeStreamIDUtils
+    StreamIDUtils
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
@@ -40,6 +39,12 @@ import {
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+
+/* 
+ * On-chain registry of stream metadata and permissions.
+ *
+ * Does not support system streams (the key exchange stream)
+ */
 
 export type StreamQueryResult = {
     id: string,
@@ -223,9 +228,6 @@ export class StreamRegistry implements Context {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
-        }
         let metadata
         try {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {

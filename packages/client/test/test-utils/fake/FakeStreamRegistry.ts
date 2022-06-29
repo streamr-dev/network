@@ -1,5 +1,5 @@
 import { inject, DependencyContainer, scoped, Lifecycle } from 'tsyringe'
-import { EthereumAddress, KeyExchangeStreamIDUtils, StreamID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID } from 'streamr-client-protocol'
 import { Stream, StreamProperties } from '../../../src/Stream'
 import {
     StreamPermission,
@@ -86,9 +86,6 @@ export class FakeStreamRegistry implements Omit<StreamRegistry,
     }
 
     async getStream(id: StreamID): Promise<Stream> {
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(id)) {
-            return new Stream({ id, partitions: 1 }, this.container)
-        }
         const registryItem = this.registryItems.get(id)
         if (registryItem !== undefined) {
             return this.createFakeStream({ ...registryItem.metadata, id })
