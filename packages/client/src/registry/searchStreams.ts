@@ -24,18 +24,18 @@ export type SearchStreamsResultItem = {
     stream: StreamQueryResult
 } & ChainPermissions
 
-export async function* searchStreams(
-    term: string | undefined, 
+export const searchStreams = (
+    term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     graphQLClient: SynchronizedGraphQLClient,
     parseStream: (id: StreamID, metadata: string) => Stream,
     debug: Debugger
-): AsyncGenerator<Stream> {
+): AsyncGenerator<Stream> => {
     if ((term === undefined) && (permissionFilter === undefined)) {
         throw new Error('Requires a search term or a permission filter')
     }
     debug('Search streams term=%s permissions=%j', term, permissionFilter)
-    yield* map(
+    return map(
         fetchSearchStreamsResultFromTheGraph(term, permissionFilter, graphQLClient),
         (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
         (err: Error, item: SearchStreamsResultItem) => debug('Omitting stream %s from result because %s', item.stream.id, err.message)

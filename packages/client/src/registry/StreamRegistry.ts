@@ -237,8 +237,8 @@ export class StreamRegistry implements Context {
         return this.parseStream(streamId, metadata)
     }
 
-    async* searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
-        yield* _searchStreams(
+    searchStreams(term: string | undefined, permissionFilter: SearchStreamsPermissionFilter | undefined): AsyncGenerator<Stream> {
+        return _searchStreams(
             term, 
             permissionFilter,
             this.graphQLClient,
