@@ -8,7 +8,7 @@ import {
     getStreamPartSizes,
     getNodesWithLocationData
 } from './trackerSummaryUtils'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { Tracker } from './Tracker'
 import http from 'http'
 import https from 'https'

@@ -1,4 +1,4 @@
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { Location, NodeId } from 'streamr-network/dist/src/identifiers'
 
 function isValidNodeLocation(location: Location | null) {
