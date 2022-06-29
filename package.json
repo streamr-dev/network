@@ -18,7 +18,6 @@
         "clean-package-locks": "npx --workspaces --include-workspace-root -c 'rm -f package-lock.json || true'"
     },
     "workspaces": [
-        "packages/dev-config",
         "packages/eslint-config-monorepo",
         "packages/test-utils",
         "packages/protocol",
@@ -32,6 +31,7 @@
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
+        "@tsconfig/node16": "^1.0.2",
         "cli-table": "^0.3.6",
         "husky": "^6.0.0",
         "lerna": "^4.0.0",

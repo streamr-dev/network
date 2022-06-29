@@ -1,5 +1,5 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
+    "extends": "../../ts/tsconfig.jest.json",
     "compilerOptions": {
         "outDir": "dist"
     },
