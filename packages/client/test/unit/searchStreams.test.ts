@@ -27,7 +27,6 @@ const createMockResultItem = (streamId: StreamID, metadata: string): SearchStrea
 
 const createMockGraphQLClient = (resultItems: SearchStreamsResultItem[]): Pick<SynchronizedGraphQLClient, 'fetchPaginatedResults'> => {
     return {
-        // eslint-disable-next-line generator-star-spacing
         fetchPaginatedResults: async function* () {
             yield* resultItems
         } as any
