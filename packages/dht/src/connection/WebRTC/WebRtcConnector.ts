@@ -27,33 +27,34 @@ import { Logger } from '../../helpers/Logger'
 import * as Err from '../../helpers/errors'
 import { IWebRtcConnector } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { UUID } from "../../helpers/UUID"
 
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
     rpcTransport: ITransport,
-    fnCanConnect: (peerDescriptor: PeerDescriptor) => boolean,
-    fnGetConnection: (peerDescriptor: PeerDescriptor) => IConnection | null,
-    fnAddConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
+    canConnect: (peerDescriptor: PeerDescriptor) => boolean,
+    getConnection: (peerDescriptor: PeerDescriptor) => IConnection | null,
+    addConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
 }
 
 export class WebRtcConnector extends EventEmitter implements IConnectionSource, IWebRtcConnector {
-    private WEBRTC_CONNECTOR_APP_ID = 'webrtc_connector'
+    private static WEBRTC_CONNECTOR_APP_ID = 'webrtc_connector'
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RoutingRpcCommunicator
     private rpcTransport: ITransport
     private getManagerConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     private addManagerConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
-    constructor(private config: WebRtcConnectorConfig) {
+    constructor(config: WebRtcConnectorConfig) {
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.WEBRTC_CONNECTOR_APP_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_APP_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
-        this.getManagerConnection = config.fnGetConnection
-        this.addManagerConnection = config.fnAddConnection
+        this.getManagerConnection = config.getConnection
+        this.addManagerConnection = config.addConnection
 
         this.rtcOffer = this.rtcOffer.bind(this)
         this.rtcAnswer = this.rtcAnswer.bind(this)
@@ -71,7 +72,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
             logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.peerId.toString()}`)
             const existingConnection = this.getWebRtcConnection(targetPeerDescriptor)
             if (existingConnection) {
-                return existingConnection as unknown as IConnection
+                return existingConnection
             }
             setImmediate(() => {
                 const newConnection = this.createConnection(targetPeerDescriptor)
@@ -104,19 +105,19 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
     }
 
     private onRtcOffer(
-        remotePeerDescriptor: PeerDescriptor,
-        targetPeerDescriptor: PeerDescriptor,
+        remotePeer: PeerDescriptor,
+        targetPeer: PeerDescriptor,
         description: string,
         connectionId: string
     ): void {
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
             return
         }
-        let connection = this.getWebRtcConnection(remotePeerDescriptor)
+        let connection = this.getWebRtcConnection(remotePeer)
         if (!connection) {
-            this.addManagerConnection(remotePeerDescriptor, new DeferredConnection(remotePeerDescriptor))
-            connection = this.createConnection(remotePeerDescriptor, false)
-            const added = this.addManagerConnection(remotePeerDescriptor, connection)
+            this.addManagerConnection(remotePeer, new DeferredConnection(remotePeer))
+            connection = this.createConnection(remotePeer, false)
+            const added = this.addManagerConnection(remotePeer, connection)
             if (!added) {
                 connection.close()
             }
@@ -235,8 +236,9 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
                 }
 
                 const msg: Message = {
-                    appId: this.WEBRTC_CONNECTOR_APP_ID,
-                    messageType: MessageType.HANDSHAKE, messageId: 'xyz',
+                    appId: WebRtcConnector.WEBRTC_CONNECTOR_APP_ID,
+                    messageType: MessageType.HANDSHAKE,
+                    messageId: new UUID().toString(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
                 }
 
@@ -250,25 +252,21 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
 
     async requestConnection(request: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onConnectionRequest(request.requester!))
-        const res: Empty = {}
-        return res
+        return {}
     }
 
     async rtcOffer(request: RtcOffer, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRtcOffer(request.requester!, request.target!, request.description, request.connectionId))
-        const res: Empty = {}
-        return res
+        return {}
     }
 
     async rtcAnswer(request: RtcAnswer, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRtcAnswer(request.requester!, request.target!, request.description, request.connectionId))
-        const res: Empty = {}
-        return res
+        return {}
     }
 
     async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<Empty> {
         setImmediate(() => this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId))
-        const res: Empty = {}
-        return res
+        return {}
     }
 }

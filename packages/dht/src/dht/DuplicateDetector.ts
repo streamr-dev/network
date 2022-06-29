@@ -2,7 +2,7 @@ import { BloomFilter } from 'bloomfilter'
 
 // Link for calculating false positive probabilities
 // https://www.di-mgt.com.au/bloom-calculator.html
-export class RouterDuplicateDetector {
+export class DuplicateDetector {
     currentFilter: BloomFilter
     nextFilter: BloomFilter | null
     counter: number
@@ -37,7 +37,7 @@ export class RouterDuplicateDetector {
         this.counter += 1
     }
 
-    test(value: string): boolean {
+    isMostLikelyDuplicate(value: string): boolean {
         return this.currentFilter.test(value)
     }
 

@@ -57,10 +57,10 @@ describe('ConnectionManager', () => {
     })
 
     it('Can probe connectivity in open internet', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
 
-        const result = await connectionManager.start()
-        connectionManager.enableConnectivity(createPeerDescriptor(result))
+        const result = await connectionManager1.start()
+        connectionManager1.enableConnectivity(createPeerDescriptor(result))
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -78,16 +78,16 @@ describe('ConnectionManager', () => {
         expect(result2.ip).toEqual('127.0.0.1')
         expect(result2.openInternet).toEqual(true)
 
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 
     it('Can send data to other connectionmanager over websocket', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager1.start()
         const peerDescriptor = createPeerDescriptor(result)
-        connectionManager.enableConnectivity(peerDescriptor)
+        connectionManager1.enableConnectivity(peerDescriptor)
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -120,20 +120,20 @@ describe('ConnectionManager', () => {
                 resolve()
             })
         })
-        connectionManager.send(peerDescriptor2, msg)
+        connectionManager1.send(peerDescriptor2, msg)
         
         await promise
         
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 
     it('Can disconnect', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager1.start()
         const peerDescriptor = createPeerDescriptor(result)
-        connectionManager.enableConnectivity(peerDescriptor)
+        connectionManager1.enableConnectivity(peerDescriptor)
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -166,14 +166,14 @@ describe('ConnectionManager', () => {
                 resolve()
             })
         })
-        connectionManager.send(peerDescriptor2, msg)
+        connectionManager1.send(peerDescriptor2, msg)
 
         await promise
         await Promise.all([
             waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
-            connectionManager.disconnect(peerDescriptor2, undefined, 100)
+            connectionManager1.disconnect(peerDescriptor2, undefined, 100)
         ])
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 

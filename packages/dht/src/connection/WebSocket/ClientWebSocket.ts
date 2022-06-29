@@ -7,9 +7,11 @@ import { Logger } from '../../helpers/Logger'
 
 const logger = new Logger(module)
 
+const BINARY_TYPE = 'arraybuffer'
+
 export class ClientWebSocket extends EventEmitter implements IConnection {
     public readonly connectionId: ConnectionID
-    private remotePeerDescriptor: PeerDescriptor|null = null
+    private remotePeerDescriptor?: PeerDescriptor
     private buffer: Uint8Array[] = []
     private socket: WebSocket | null = null
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
@@ -21,7 +23,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
 
     connect(address: string): void {
         this.socket = new WebSocket(address)
-        this.socket.binaryType = 'arraybuffer'
+        this.socket.binaryType = BINARY_TYPE
         this.socket.onerror = (error: Error) => {
             logger.trace('WebSocket Client error: ' + error)
             this.emit(ConnectionEvent.ERROR, error.name)
@@ -53,10 +55,10 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
     send(data: Uint8Array): void {
         if (this.socket && this.socket.readyState === this.socket.OPEN) {
             logger.trace(`Sending data with size ${data.byteLength}`)
-            this.doSend(data)
+            this.socket?.send(data.buffer)
         }
         else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
-            this.addToBuffer(data)
+            this.buffer.push(data)
         }
     }
 
@@ -76,16 +78,8 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    getPeerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
-    }
-
-    private doSend(data: Uint8Array): void {
-        this.socket?.send(data.buffer)
-    }
-
-    private addToBuffer(msg: Uint8Array): void {
-        this.buffer.push(msg)
     }
 
     getBufferedMessages(): Uint8Array[] {

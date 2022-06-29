@@ -16,7 +16,7 @@ import { Event, ITransport } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '../helpers/Logger'
 import * as Err from '../helpers/errors'
-import { WebRtcCleanUp } from './WebRTC/NodeWebRtcConnection'
+import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { v4 } from 'uuid'
 
 export interface ConnectionManagerConfig {
@@ -26,13 +26,18 @@ export interface ConnectionManagerConfig {
     entryPoints?: PeerDescriptor[],
 }
 
+export enum NatType {
+    OPEN_INTERNET = 'open_internet',
+    UNKNOWN =  'unknown'
+}
+
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
 
 const logger = new Logger(module)
 
 export class ConnectionManager extends EventEmitter implements ITransport {
-    public PROTOCOL_VERSION = '1.0'
-    private CONNECTION_MANAGER_APP_ID = 'connectionmanager'
+    public static PROTOCOL_VERSION = '1.0'
+    private static CONNECTION_MANAGER_APP_ID = 'connectionmanager'
     private stopped = false
     private started = false
 
@@ -47,11 +52,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     constructor(private config: ConnectionManagerConfig) {
         super()
-        if (config.webSocketPort) {
-            this.webSocketServer = new WebSocketServer()
-        } else {
-            this.webSocketServer = null
-        }
+        this.webSocketServer = (config.webSocketPort !== undefined) ? new WebSocketServer() : null
         this.webSocketConnector = this.createWsConnector()
         this.webrtcConnector = this.createWebRtcConnector()
     }
@@ -78,7 +79,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             connectivityResponseMessage = {
                 openInternet: false,
                 ip: (connection as ServerWebSocket).getRemoteAddress(),
-                natType: 'unknown'
+                natType: NatType.UNKNOWN
             }
         }
 
@@ -90,13 +91,13 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             connectivityResponseMessage = {
                 openInternet: true,
                 ip: (connection as ServerWebSocket).getRemoteAddress(),
-                natType: 'open_internet',
+                natType: NatType.OPEN_INTERNET,
                 websocket: { ip: (connection as ServerWebSocket).getRemoteAddress(), port: connectivityRequest.port }
             }
         }
 
         const msg: Message = {
-            appId: this.CONNECTION_MANAGER_APP_ID,
+            appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
             messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: v4(),
             body: ConnectivityResponseMessage.toBinary(connectivityResponseMessage!)
         }
@@ -133,7 +134,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 // send connectivity request
                 const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort! }
                 const msg: Message = {
-                    appId: this.CONNECTION_MANAGER_APP_ID,
+                    appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
                     messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
                     body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
                 }
@@ -177,7 +178,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     const connectivityResponseMessage: ConnectivityResponseMessage = {
                         openInternet: true,
                         ip: this.config.webSocketHost!,
-                        natType: 'open_internet',
+                        natType: NatType.OPEN_INTERNET,
                         websocket: { ip: this.config.webSocketHost!, port: this.config.webSocketPort! }
                     }
                     resolve(connectivityResponseMessage)
@@ -187,7 +188,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         const connectivityResponseMessage: ConnectivityResponseMessage = {
             openInternet: false,
             ip: 'localhost',
-            natType: 'unknown'
+            natType: NatType.UNKNOWN
         }
         return connectivityResponseMessage
     }
@@ -203,10 +204,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
         if (this.webrtcConnector) {
             this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
-            this.webrtcConnector.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
+            this.webrtcConnector.bindListeners(this.onIncomingMessage.bind(this), ConnectionManager.PROTOCOL_VERSION)
         }
 
-        this.webSocketConnector!.bindListeners(this.onIncomingMessage.bind(this), this.PROTOCOL_VERSION)
+        this.webSocketConnector!.bindListeners(this.onIncomingMessage.bind(this), ConnectionManager.PROTOCOL_VERSION)
     }
 
     onIncomingMessage = (connection: IConnection, message: Message): void => {
@@ -217,21 +218,21 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             const handshake = HandshakeMessage.fromBinary(message.body)
             const hexId = PeerID.fromValue(handshake.sourceId).toMapKey()
             connection.setPeerDescriptor(handshake.peerDescriptor as PeerDescriptor)
-            if (!this.connections.hasOwnProperty(hexId)
-                || (this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)) {
+            const isDeferredConnection = (this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)
+            if (!this.connections.hasOwnProperty(hexId) || isDeferredConnection) {
                 let oldConnection
-                if ((this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)) {
+                if (isDeferredConnection) {
                     oldConnection = this.connections[hexId]
                 }
                 this.connections[hexId] = connection
 
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
-                    protocolVersion: this.PROTOCOL_VERSION,
+                    protocolVersion: ConnectionManager.PROTOCOL_VERSION,
                     peerDescriptor: this.ownPeerDescriptor
                 }
                 const msg: Message = {
-                    appId: this.CONNECTION_MANAGER_APP_ID,
+                    appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
                     messageType: MessageType.HANDSHAKE, 
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
@@ -268,7 +269,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         this.webrtcConnector.stop()
 
         Object.values(this.connections).forEach((connection) => connection.close())
-        WebRtcCleanUp.cleanUp()
+        WEB_RTC_CLEANUP.cleanUp()
     }
 
     async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
@@ -374,9 +375,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         logger.trace(`Creating WebRTC Connector`)
         return  new WebRtcConnector({
             rpcTransport: this.config.transportLayer,
-            fnCanConnect: () => true,
-            fnGetConnection: this.getConnection.bind(this),
-            fnAddConnection: this.addConnection.bind(this)
+            canConnect: () => true,
+            getConnection: this.getConnection.bind(this),
+            addConnection: this.addConnection.bind(this)
         })
     }
 }

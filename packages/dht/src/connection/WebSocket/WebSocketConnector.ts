@@ -29,7 +29,7 @@ import { v4 } from 'uuid'
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
-    private WESOCKET_CONNECTOR_APP_ID = "websocketconnector"
+    private static WEBSOCKET_CONNECTOR_APP_ID = 'websocketconnector'
     private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -41,7 +41,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         super()
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.WESOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
@@ -164,7 +164,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 }
 
                 const msg: Message = {
-                    appId: this.WESOCKET_CONNECTOR_APP_ID,
+                    appId: WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID,
                     messageType: MessageType.HANDSHAKE,
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)

@@ -9,11 +9,16 @@ const logger = new Logger(module)
 
 declare let NodeJsBuffer: BufferConstructor
 
+enum MessageType {
+    UTF8 = 'utf8',
+    BINARY = 'binary'
+}
+
 export class ServerWebSocket extends EventEmitter implements IConnection {
    
     public connectionId: ConnectionID
     private socket: WsConnection
-    private remotePeerDescriptor: PeerDescriptor|null = null
+    private remotePeerDescriptor?: PeerDescriptor
     connectionType = ConnectionType.WEBSOCKET_SERVER
 
     constructor(socket: WsConnection) {
@@ -23,10 +28,10 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
 
         socket.on('message', (message) => {
             logger.trace('ServerWebSocket::onMessage')
-            if (message.type === 'utf8') {
+            if (message.type === MessageType.UTF8) {
                 logger.debug('Received string Message: ' + message.utf8Data)
             }
-            else if (message.type === 'binary') {
+            else if (message.type === MessageType.BINARY) {
                 logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
                 this.emit(ConnectionEvent.DATA,
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
@@ -66,7 +71,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    getPeerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
     }
 

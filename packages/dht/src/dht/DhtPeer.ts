@@ -46,8 +46,7 @@ export class DhtPeer {
         try {
             const results = this.dhtClient.getClosestPeers(request, options)
             const peers = await results.response
-            const formatted = peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
-            return formatted
+            return peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
         } catch (err) {
             logger.debug(err)
             return []

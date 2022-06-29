@@ -30,7 +30,7 @@ export interface IConnection {
     once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void
-    getPeerDescriptor(): PeerDescriptor | null
+    getPeerDescriptor(): PeerDescriptor | undefined
 
     send(data: Uint8Array): void
     sendBufferedMessages(): void
