@@ -5,7 +5,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/providers'
 import { scoped, Lifecycle, inject, delay, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from '../Container'
-import { Ethereum } from '../Ethereum'
+import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOverrides } from '../Ethereum'
 import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
@@ -16,8 +16,7 @@ import {
     StreamID,
     EthereumAddress,
     StreamIDUtils, 
-    toStreamID,
-    KeyExchangeStreamIDUtils
+    toStreamID
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
@@ -40,6 +39,13 @@ import {
     ChainPermissions
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+
+/* 
+ * On-chain registry of stream metadata and permissions.
+ *
+ * Does not support system streams (the key exchange stream)
+ */
 
 export type StreamQueryResult = {
     id: string,
@@ -72,17 +78,18 @@ export class StreamRegistry implements Context {
 
     constructor(
         context: Context,
-        @inject(Ethereum) private ethereum: Ethereum,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached
+        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.debug('create')
-        const chainProviders = this.ethereum.getAllStreamRegistryChainProviders()
+        const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return withErrorHandlingAndLogging<StreamRegistryContract>(
                 new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, provider),
@@ -102,7 +109,7 @@ export class StreamRegistry implements Context {
 
     private async connectToStreamRegistryContract(): Promise<void> {
         if (!this.streamRegistryContract) {
-            const chainSigner = await this.ethereum.getStreamRegistryChainSigner()
+            const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
                 this.config.streamRegistryChainAddress,
                 StreamRegistryArtifact,
@@ -134,7 +141,7 @@ export class StreamRegistry implements Context {
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
 
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
 
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         const metadata = StreamRegistry.formMetadata(props)
@@ -177,7 +184,7 @@ export class StreamRegistry implements Context {
     }
 
     private async ensureStreamIdInNamespaceOfAuthenticatedUser(address: EthereumAddress, streamId: StreamID): Promise<void> {
-        const userAddress = await this.ethereum.getAddress()
+        const userAddress = await this.authentication.getAddress()
         if (address.toLowerCase() !== userAddress.toLowerCase()) {
             throw new Error(`stream id "${streamId}" not in namespace of authenticated user "${userAddress}"`)
         }
@@ -186,7 +193,7 @@ export class StreamRegistry implements Context {
     async updateStream(props: StreamProperties): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
         await this.connectToStreamRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
             StreamRegistry.formMetadata(props),
@@ -202,7 +209,7 @@ export class StreamRegistry implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Deleting stream %s', streamId)
         await this.connectToStreamRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.deleteStream(
             streamId,
             ethersOverrides
@@ -222,9 +229,6 @@ export class StreamRegistry implements Context {
     async getStream(streamIdOrPath: string): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Getting stream %s', streamId)
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            return new Stream({ id: streamId, partitions: 1 }, this.container)
-        }
         let metadata
         try {
             metadata = await this.queryAllReadonlyContracts((contract: StreamRegistryContract) => {
@@ -374,16 +378,16 @@ export class StreamRegistry implements Context {
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress|undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, this.ethereum.getStreamRegistryOverrides())
-                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, this.ethereum.getStreamRegistryOverrides())
+                ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
+                : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
         }, ...assignments)
     }
 
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
         return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress|undefined, solidityType: BigNumber) => {
             return (user === undefined)
-                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, this.ethereum.getStreamRegistryOverrides())
-                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, this.ethereum.getStreamRegistryOverrides())
+                ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
+                : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
         }, ...assignments)
     }
 
@@ -426,7 +430,7 @@ export class StreamRegistry implements Context {
             }))
         }
         await this.connectToStreamRegistryContract()
-        const ethersOverrides = this.ethereum.getStreamRegistryOverrides()
+        const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreans(
             streamIds,
             targets,

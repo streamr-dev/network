@@ -154,17 +154,16 @@ describe('CacheAsyncFn', () => {
         expect(fn).toHaveBeenCalledTimes(2)
         await cachedFn(2)
         expect(fn).toHaveBeenCalledTimes(3)
-        cachedFn.clear()
+        await cachedFn(1)
+        expect(fn).toHaveBeenCalledTimes(3)
+        await cachedFn(2)
+        expect(fn).toHaveBeenCalledTimes(3)
+        cachedFn.clearMatching((v) => v === 1)
         await cachedFn(1)
         expect(fn).toHaveBeenCalledTimes(4)
-        await cachedFn(2)
+        cachedFn.clearMatching((v) => v === 1)
+        await cachedFn(1)
         expect(fn).toHaveBeenCalledTimes(5)
-        cachedFn.clearMatching((v) => v === 1)
-        await cachedFn(1)
-        expect(fn).toHaveBeenCalledTimes(6)
-        cachedFn.clearMatching((v) => v === 1)
-        await cachedFn(1)
-        expect(fn).toHaveBeenCalledTimes(7)
     })
 
     it('adopts type of wrapped function', async () => {
@@ -188,8 +187,6 @@ describe('CacheAsyncFn', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await cachedFn('abc')
         expect(c).toEqual(3)
-        const d = cachedFn.clear()
-        expect(d).toBe(undefined)
         cachedFn.clearMatching((_d: string) => true)
         // @ts-expect-error wrong match argument type
         cachedFn.clearMatching((_d: number) => true)
@@ -302,8 +299,6 @@ describe('cacheFn', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = cachedFn('abc')
         expect(c).toEqual(3)
-        const d = cachedFn.clear()
-        expect(d).toBe(undefined)
         cachedFn.clearMatching((_d: string) => true)
         // @ts-expect-error wrong match argument type
         cachedFn.clearMatching((_d: number) => true)

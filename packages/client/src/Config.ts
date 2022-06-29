@@ -5,7 +5,8 @@ import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import merge from 'lodash/merge'
 
-import type { AuthConfig, EthereumConfig } from './Ethereum'
+import type { AuthConfig } from './Authentication'
+import type { EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeStream'
 
 import CONFIG_SCHEMA from './config.schema.json'
