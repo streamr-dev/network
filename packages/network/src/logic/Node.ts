@@ -73,7 +73,6 @@ export interface Node {
 }
 
 export class Node extends EventEmitter {
-    /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
     private readonly nodeConnectTimeout: number
