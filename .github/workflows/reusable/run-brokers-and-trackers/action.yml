@@ -4,7 +4,7 @@ description: "Run Brokers and Trackers from monorepo"
 runs:
   using: "composite"
   steps:
-    - name: run brokers and trackers
+    - name: run brokers and trackers # client needs to be built separately due to NET-870
       run: |
         npm run bootstrap-pkg streamr-client
         npm run build --workspace=streamr-client

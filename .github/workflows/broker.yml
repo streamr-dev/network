@@ -35,7 +35,7 @@ jobs:
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
 
-      - name: bootstrap and build
+      - name: bootstrap and build # client needs to be built separately due to NET-870
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client
@@ -55,7 +55,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap and build # client needs to be built separately due to NET-870
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client
