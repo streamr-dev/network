@@ -76,7 +76,7 @@ module.exports = (env, argv) => {
                     exclude: /(node_modules|streamr-client-protocol)/,
                     use: [{
                         loader: 'ts-loader',
-                        options: { configFile: 'tsconfig.webpack.json' },
+                        options: { configFile: 'tsconfig.browser.json' },
                     }]
                 }
             ],
