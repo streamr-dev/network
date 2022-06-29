@@ -117,7 +117,6 @@ module.exports = (env, argv) => {
                 [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/webrtc/BrowserWebRtcConnection.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
-                [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: require.resolve('streamr-network/src/helpers/logger/LoggerBrowser.ts'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
                 [path.resolve('./src/encryption/ServerPersistentStore')]: (
                     path.resolve('./src/encryption/BrowserPersistentStore.ts')
