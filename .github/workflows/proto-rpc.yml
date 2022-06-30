@@ -31,6 +31,7 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
+          npm run bootstrap-pkg streamr-test-utils
           npm run bootstrap-pkg @streamr/proto-rpc
           sudo apt-get install xvfb
       - name: Eslint
