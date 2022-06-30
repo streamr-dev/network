@@ -46,14 +46,18 @@ describe('PublisherKeyExchange', () => {
         return stream
     }
 
-    const createGroupKeyRequest = (groupKeyId: string): StreamMessage => {
+    const createGroupKeyRequest = (
+        groupKeyId: string,
+        publisher = subscriberWallet,
+        rsaPublicKey = subscriberRsaKeyPair.getPublicKey()
+    ): StreamMessage => {
         return createMockMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
-            publisher: subscriberWallet,
+            publisher,
             content: JSON.stringify([
                 uuid(),
                 mockStream.id,
-                subscriberRsaKeyPair.getPublicKey(),
+                rsaPublicKey,
                 [groupKeyId]
             ]),
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
@@ -78,6 +82,32 @@ describe('PublisherKeyExchange', () => {
         })
         const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRsaKeyPair.getPrivateKey())
         expect(actualKeys).toEqual(expectedGroupKeys)
+    }
+
+    const testErrorResponse = async (
+        actualResponse: StreamMessage, 
+        expectedGroupKeyIds: string[],
+        expectedRecipientAddress = subscriberWallet.address
+    ): Promise<void> => {
+        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(expectedRecipientAddress)
+        expect(actualResponse).toMatchObject({
+            messageId: {
+                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
+                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                publisherId: publisherWallet.address.toLowerCase(),
+            },
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            signature: expect.any(String)
+        })
+        expect(GroupKeyErrorResponse.fromArray(actualResponse!.getParsedContent() as any)).toMatchObject({
+            requestId: expect.any(String),
+            errorCode: expect.any(String),
+            errorMessage: expect.any(String),
+            groupKeyIds: expectedGroupKeyIds
+        })
     }
 
     beforeEach(async () => {
@@ -124,6 +154,19 @@ describe('PublisherKeyExchange', () => {
             await testSuccessResponse(response!, [])
         })
 
+        it('request from non-subscriber', async () => {
+            const groupKey = GroupKey.generate()
+            const otherWallet = fastWallet()
+            const otherNode = addFakeNode(otherWallet.address, fakeContainer)
+            const receivedResponses = otherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(otherWallet.address))
+
+            const request = createGroupKeyRequest(groupKey.id, otherWallet, (await RsaKeyPair.create()).getPublicKey())
+            otherNode.publishToNode(request)
+
+            const response = await nextValue(receivedResponses)
+            await testErrorResponse(response!, [ groupKey.id ], otherWallet.address)
+        })
+
         it('invalid request', async () => {
             const groupKey = GroupKey.generate()
             const receivedResponses = await subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
@@ -133,25 +176,7 @@ describe('PublisherKeyExchange', () => {
             subscriberNode.publishToNode(request)
 
             const response = await nextValue(receivedResponses)
-            const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
-            expect(response).toMatchObject({
-                messageId: {
-                    streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                    streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
-                    publisherId: publisherWallet.address.toLowerCase(),
-                },
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
-                contentType: StreamMessage.CONTENT_TYPES.JSON,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-                signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-                signature: expect.any(String)
-            })
-            expect(GroupKeyErrorResponse.fromArray(response!.getParsedContent() as any)).toMatchObject({
-                requestId: expect.any(String),
-                errorCode: expect.any(String),
-                errorMessage: expect.any(String),
-                groupKeyIds: [ groupKey.id ]
-            })
+            await testErrorResponse(response!, [ groupKey.id ])
         })
     })
 })

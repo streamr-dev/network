@@ -3,14 +3,14 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { PermissionAssignment, StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
-import { SearchStreamsPermissionFilter } from '../../src/searchStreams'
+import { SearchStreamsPermissionFilter } from '../../src/registry/searchStreams'
 import { collect } from '../../src/utils/GeneratorUtils'
 
 jest.setTimeout(2 * 60 * 1000)
 
 const SEARCH_TERM = `mock-search-term-${Date.now()}`
 
-describe('SearchStreams', () => {
+describe('searchStreams', () => {
 
     let client: StreamrClient
     let streamWithoutPermission: Stream

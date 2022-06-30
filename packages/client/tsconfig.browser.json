@@ -50,8 +50,8 @@
     ],
     "exclude": ["src/index-esm.mjs"],
     "references": [
-        {
-            "path": "../protocol/tsconfig.node.json"
-        }
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../network/tsconfig.node.json" }
     ]
 }

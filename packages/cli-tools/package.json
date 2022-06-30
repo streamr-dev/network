@@ -8,7 +8,6 @@
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run eslint && npm run build",
     "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

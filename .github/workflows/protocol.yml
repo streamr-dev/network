@@ -32,10 +32,11 @@ jobs:
           node-version-file: '.nvmrc'
           check-latest: true
 
-      - name: bootstrap-pkg
+      - name: bootstrap and build
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client-protocol
+          npm run build --workspace=streamr-client-protocol
 
       - name: eslint
         run: npm run eslint
