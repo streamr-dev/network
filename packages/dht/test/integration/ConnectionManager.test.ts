@@ -115,12 +115,12 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+            connectionManager2.on(ITransportEvent.DATA, async (message: Message, peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager1.send(peerDescriptor2, msg)
+        connectionManager1.send(msg, peerDescriptor2)
         
         await promise
         
@@ -161,12 +161,12 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+            connectionManager2.on(ITransportEvent.DATA, async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager1.send(peerDescriptor2, msg)
+        connectionManager1.send(msg, peerDescriptor2)
 
         await promise
         await Promise.all([

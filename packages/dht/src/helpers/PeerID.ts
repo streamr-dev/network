@@ -117,6 +117,7 @@ export class PeerID {
         })
     }
 
+    // TODO: use this function to convert ip based peerIds back to their ip form
     private int2Ip(value: number) {
         return [
             (value >> 24) & 0xff,

@@ -59,7 +59,7 @@ describe('WebRTC Connection Management', () => {
             messageId: 'mockerer'
         }
         
-        await manager1.send(peerDescriptor2, dummyMessage)
+        await manager1.send(dummyMessage, peerDescriptor2)
         
         await waitForCondition(
             () => {
@@ -86,7 +86,7 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await manager2.send(peerDescriptor1, dummyMessage)
+        await manager2.send(dummyMessage, peerDescriptor1)
         await waitForCondition(
             () => {
                 return (!!manager1.getConnection(peerDescriptor2)
@@ -110,7 +110,7 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(manager1.send(peerDescriptor1, dummyMessage))
+        await expect(manager1.send(dummyMessage, peerDescriptor1))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

@@ -244,7 +244,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         const message = Message.fromBinary(routedMessage.message)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`RouteMessage ${routedMessage.nonce} successfully arrived to destination`)
-            this.emit(ITransportEvent.DATA, routedMessage.sourcePeer, message)
+            this.emit(ITransportEvent.DATA, message, routedMessage.sourcePeer)
         } else {
             await this.doRouteMessage({
                 message: routedMessage.message,
@@ -257,7 +257,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         }
     }
 
-    public send(targetPeerDescriptor: PeerDescriptor, msg: Message): void {
+    public send(msg: Message, targetPeerDescriptor: PeerDescriptor): void {
         if (!this.started || this.stopped) {
             return
         }

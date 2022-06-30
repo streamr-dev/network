@@ -9,7 +9,7 @@ export class MockConnectionManager extends EventEmitter implements ITransport {
         this.simulator.addConnectionManager(this)
     }
 
-    send(peerDescriptor: PeerDescriptor, msg: Message): void {
+    send(msg: Message, peerDescriptor: PeerDescriptor): void {
         this.simulator.send(this.ownPeerDescriptor, peerDescriptor, msg)
     }
 
@@ -20,6 +20,6 @@ export class MockConnectionManager extends EventEmitter implements ITransport {
     }
 
     handleIncomingMessage(peerDescriptor: PeerDescriptor, msg: Message): void {
-        this.emit(Event.DATA, peerDescriptor, msg)
+        this.emit(Event.DATA, msg, peerDescriptor)
     }
 }

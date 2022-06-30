@@ -69,7 +69,7 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await wsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage)
+        await wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -88,7 +88,7 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await noWsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage)
+        await noWsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -107,11 +107,11 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(noWsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage))
+        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
 
-        await expect(wsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage))
+        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

@@ -247,7 +247,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             }
         }
         else {
-            this.emit(Event.DATA, connection.getPeerDescriptor(), message)
+            this.emit(Event.DATA, message, connection.getPeerDescriptor())
         }
     }
 
@@ -272,7 +272,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         WEB_RTC_CLEANUP.cleanUp()
     }
 
-    async send(peerDescriptor: PeerDescriptor, message: Message): Promise<void> {
+    async send(message: Message, peerDescriptor: PeerDescriptor): Promise<void> {
         if (!this.started || this.stopped) {
             return
         }
