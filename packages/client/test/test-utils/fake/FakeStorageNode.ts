@@ -54,7 +54,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
         })
     }
 
-    private storeMessage(msg: StreamMessage): void {
+    storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
         this.streamPartMessages.add(streamPartId, msg)
     }
