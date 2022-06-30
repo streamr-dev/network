@@ -21,7 +21,7 @@ export type CacheConfig = {
     maxAge: number
 }
 
-type TimeoutsConfig = {
+export type TimeoutsConfig = {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -33,7 +33,9 @@ type TimeoutsConfig = {
     jsonRpc: {
         timeout: number
         retryInterval: number
-    }
+    },
+    /** @internal */
+    encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
@@ -279,4 +281,5 @@ export const ConfigInjectionToken = {
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
     Encryption: Symbol('Config.Encryption'),
+    Timeouts: Symbol('Config.Timeouts')
 }
