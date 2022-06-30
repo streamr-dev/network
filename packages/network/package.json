@@ -59,7 +59,6 @@
   },
   "devDependencies": {
     "@jest/fake-timers": "^27.0.5",
-    "@streamr/dev-config": "^1.0.0",
     "@streamr/network-tracker": "1.0.0",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",

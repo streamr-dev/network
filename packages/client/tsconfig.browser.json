@@ -1,5 +1,5 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.browser.json",
+    "extends": "../../tsconfig.browser.json",
     "compilerOptions": {
         "composite": true,
         "noEmit": true,

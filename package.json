@@ -18,8 +18,6 @@
         "clean-package-locks": "npx --workspaces --include-workspace-root -c 'rm -f package-lock.json || true'"
     },
     "workspaces": [
-        "packages/dev-config",
-        "packages/eslint-config-monorepo",
         "packages/test-utils",
         "packages/protocol",
         "packages/proto-rpc",
@@ -34,7 +32,13 @@
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
+        "@tsconfig/node16": "^1.0.2",
+        "@typescript-eslint/eslint-plugin": "^5.0.0",
+        "@typescript-eslint/parser": "^5.0.0",
         "cli-table": "^0.3.6",
+        "eslint": "^7.32.0",
+        "eslint-config-streamr-ts": "^4.0.1",
+        "eslint-plugin-promise": "^5.1.0",
         "husky": "^6.0.0",
         "lerna": "^4.0.0",
         "node-gyp-build": "^4.3.0",
