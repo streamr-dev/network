@@ -345,9 +345,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         return !!this.connections[hexId]
     }
 
-    canConnect(peerDescriptor: PeerDescriptor, _ip: string, port: number): boolean {
+    canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
         // Perhaps the connection's state should be checked here
-        return !this.hasConnection(peerDescriptor) && this.webSocketConnector!.withinPortRange(port)
+        return !this.hasConnection(peerDescriptor) // TODO: Add port range check
     }
 
     addConnection(peerDescriptor: PeerDescriptor, connection: IConnection, replaceDeferred = true): boolean {

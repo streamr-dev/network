@@ -125,12 +125,6 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         })
     }
 
-    // Security check
-    withinPortRange(port: number): boolean {
-        // Check that requested connections is withing acceted range
-        return !!port
-    }
-
     requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): IConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(

@@ -209,10 +209,10 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
         const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId).toMapKey()
         const theirId = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
-        return this.offeringHash(myId + theirId) < this.offeringHash(theirId + myId)
+        return WebRtcConnector.offeringHash(myId + theirId) < WebRtcConnector.offeringHash(theirId + myId)
     }
 
-    private offeringHash(idPair: string): number {
+    private static offeringHash(idPair: string): number {
         const buffer = crypto.createHash('md5').update(idPair).digest()
         return buffer.readInt32LE(0)
     }
