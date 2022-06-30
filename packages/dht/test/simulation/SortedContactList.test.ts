@@ -1,5 +1,5 @@
-import { SortedContactList } from '../../src/simulation/SortedContactList'
-import { DhtNode } from '../../src/simulation/DhtNode'
+import { SortedContactList } from './SortedContactList'
+import { DhtNode } from './DhtNode'
 
 describe('SortedContactList', () => {
 

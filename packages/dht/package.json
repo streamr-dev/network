@@ -23,9 +23,9 @@
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
     "test-end-to-end": "jest test/end-to-end",
-    "test-correctness": "jest test/correctness",
+    "test-kademlia-correctness": "jest test/correctness",
     "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
-    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION src/simulation/DhtSimulation.ts"
+    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION test/simulation/DhtSimulation.ts"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
