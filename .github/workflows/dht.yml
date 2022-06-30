@@ -42,8 +42,8 @@ jobs:
         run: npm run test-integration
       - name: End-to-End Tests
         run: npm run test-end-to-end
-      - name: Correctness Tests
-        run: npm run test-kademlia-correctness
+      - name: Benchmark Tests
+        run: npm run benchmark
 
   test-browser:
     name: Test Browser
