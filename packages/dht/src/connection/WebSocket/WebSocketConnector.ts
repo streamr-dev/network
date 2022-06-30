@@ -25,6 +25,7 @@ import { Logger } from '../../helpers/Logger'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
+import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -99,12 +100,12 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
 
             const errorHandler = () => {
                 clearTimeout(timeout)
-                reject()
+                reject(new Err.ConnectionFailed('Could not open WebSocket connection'))
             }
 
             const timeoutHandler = () => {
                 socket.off(ConnectionEvent.ERROR, errorHandler)
-                reject()
+                reject(new Err.ConnectionFailed('WebSocket connection timed out'))
             }
 
             const timeout = setTimeout(timeoutHandler, timeoutMs)
