@@ -28,10 +28,11 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap and build # build proto-rpc to ensure prebuild stage
         working-directory: './'
         run: |
           npm run bootstrap-pkg @streamr/dht
+          npm run build --workspace=@streamr/proto-rpc
           npm run build --workspace=@streamr/dht
       - name: Eslint
         run: npm run eslint
@@ -54,10 +55,11 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap-pkg
+      - name: bootstrap-pkg # build proto-rpc to ensure prebuild stage
         working-directory: './'
         run: |
           npm run bootstrap-pkg @streamr/dht
+          npm run build --workspace=@streamr/proto-rpc
           npm run build --workspace=@streamr/dht
           sudo apt-get install xvfb
       - name: Browser Tests
