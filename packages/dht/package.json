@@ -16,18 +16,16 @@
     "build-browser": "webpack --mode=development --progress",
     "check": "tsc -p ./tsconfig.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
-    "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "test": "jest",
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
     "test-end-to-end": "jest test/end-to-end",
-    "test-kademlia-correctness": "jest test/correctness",
-    "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.json generatedhtids.ts",
-    "run-dht-simulation": "ts-node $NODE_DEBUG_OPTION src/simulation/DhtSimulation.ts"
+    "test-correctness": "jest test/correctness",
+    "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
+    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION src/simulation/DhtSimulation.ts"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",

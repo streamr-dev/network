@@ -63,7 +63,7 @@ module.exports = (env, argv) => {
                     exclude: /(node_modules|simulation)/,
                     use: [{
                         loader: 'ts-loader',
-                        options: { configFile: 'tsconfig.webpack.json' },
+                        options: { configFile: 'tsconfig.browser.json' },
                     }]
                 }
             ],

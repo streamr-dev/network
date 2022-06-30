@@ -1,7 +1,6 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.node.json",
     "compilerOptions": {
-        "composite": true,
         "outDir": "dist"
     },
     "include": [
@@ -13,6 +12,7 @@
         "src/connection/WebRTC/BrowserWebRtcConnection.ts"
     ],
     "references": [
+        { "path": "../test-utils/tsconfig.node.json" },
         { "path": "../proto-rpc/tsconfig.node.json" }
     ]
 }

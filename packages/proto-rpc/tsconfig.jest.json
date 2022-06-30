@@ -1,8 +1,6 @@
 {
     "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
     "compilerOptions": {
-        "noEmit": true,
-        "composite": true,
         "outDir": "dist"
     },
     "include": [
@@ -10,9 +8,7 @@
         "test/**/*",
         "google/**/*"
     ],
-    "exclude": [],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "./tsconfig.node.json" }
+        { "path": "tsconfig.node.json" }
     ]
 }
