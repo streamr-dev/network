@@ -1,14 +1,14 @@
 import { PeerID } from "../helpers/PeerID"
 import { Message, PeerDescriptor } from "../proto/DhtRpc"
-import { MockConnectionManager } from "./MockConnectionManager"
+import { SimulatorTransport } from "./SimulatorTransport"
 
 export class Simulator {
 
-    private connectionManagers: { [id: string]: MockConnectionManager } = {}
+    private connectionManagers: { [id: string]: SimulatorTransport } = {}
     
     private latenciesEnabled = false
 
-    addConnectionManager(manager: MockConnectionManager): void {
+    addConnectionManager(manager: SimulatorTransport): void {
         this.connectionManagers[PeerID.fromValue(manager.getPeerDescriptor().peerId).toMapKey()] = manager
     }
 

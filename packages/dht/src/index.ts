@@ -1,4 +1,4 @@
-import { MockConnectionManager } from './connection/MockConnectionManager'
+import { SimulatorTransport } from './connection/SimulatorTransport'
 import { Simulator } from './connection/Simulator'
 import { DhtNode } from './dht/DhtNode'
 import { PeerID } from './helpers/PeerID'
@@ -10,7 +10,7 @@ const main = async () => {
         type: 0
     }
     const simulator = new Simulator()
-    const mockConnectionLayer = new MockConnectionManager(mockDescriptor, simulator)
+    const mockConnectionLayer = new SimulatorTransport(mockDescriptor, simulator)
     
     new DhtNode({peerIdString: 'peer', transportLayer: mockConnectionLayer})
 }

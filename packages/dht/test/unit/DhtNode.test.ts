@@ -1,4 +1,4 @@
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -22,7 +22,7 @@ describe('DhtNode', () => {
     }
 
     beforeEach(async () => {
-        node = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new MockConnectionManager(mockDescriptor, simulator) })
+        node = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
         await node.start()
         // @ts-expect-error private
         node.bucket!.on("added", () => {})
@@ -40,7 +40,7 @@ describe('DhtNode', () => {
     })
 
     it('Cannot be stopped before starting', async () => {
-        const notStarted = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new MockConnectionManager(mockDescriptor, simulator) })
+        const notStarted = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
         await expect(notStarted.stop())
             .rejects
             .toEqual(new Err.CouldNotStop('Cannot not stop() before start()'))

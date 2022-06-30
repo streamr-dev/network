@@ -5,7 +5,7 @@ import { createPeerDescriptor } from '../utils'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 
@@ -22,9 +22,9 @@ describe('ConnectionManager', () => {
     }
     const simulator = new Simulator()
 
-    const mockTransport = new MockConnectionManager(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2, simulator)
+    const mockTransport = new SimulatorTransport(mockPeerDescriptor1, simulator)
+    const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
+    const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
     beforeAll(async () => {
 

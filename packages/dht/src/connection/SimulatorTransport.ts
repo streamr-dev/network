@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import { ITransport, Event } from '../transport/ITransport'
 import { Simulator } from './Simulator'
 
-export class MockConnectionManager extends EventEmitter implements ITransport {
+export class SimulatorTransport extends EventEmitter implements ITransport {
     constructor(private ownPeerDescriptor: PeerDescriptor, private simulator: Simulator) {
         super()
         this.simulator.addConnectionManager(this)

@@ -24,8 +24,8 @@
     "test-integration": "jest test/integration",
     "test-end-to-end": "jest test/end-to-end",
     "benchmark": "jest test/benchmark",
-    "prepare-dht-simulation": "cd test/simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
-    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION test/simulation/DhtSimulation.ts"
+    "prepare-dht-simulation": "cd test/kademlia-simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
+    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION test/kademlia-simulation/DhtSimulation.ts"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",

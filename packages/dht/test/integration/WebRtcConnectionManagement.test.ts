@@ -1,6 +1,6 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
@@ -31,10 +31,10 @@ describe('WebRTC Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new MockConnectionManager(peerDescriptor1 , simulator)
+        connectorTransport1 = new SimulatorTransport(peerDescriptor1 , simulator)
         manager1 = new ConnectionManager({transportLayer: connectorTransport1})
         
-        connectorTransport2 = new MockConnectionManager(peerDescriptor2, simulator)
+        connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         manager2 = new ConnectionManager({transportLayer: connectorTransport2})
 
         await manager1.start()

@@ -4,7 +4,7 @@ import { WebSocketConnector } from "../../src/connection/WebSocket/WebSocketConn
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { Simulator } from '../../src/connection/Simulator'
@@ -18,7 +18,7 @@ describe('WebSocket', () => {
     }
     const webSocketServer = new WebSocketServer()
     const simulator = new Simulator()
-    const webSocketConnector = new WebSocketConnector(new MockConnectionManager(peerDescriptor, simulator), () => true)
+    const webSocketConnector = new WebSocketConnector(new SimulatorTransport(peerDescriptor, simulator), () => true)
 
     beforeAll(async () => {
         await webSocketServer.start({port: 9999})

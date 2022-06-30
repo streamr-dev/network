@@ -1,5 +1,5 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { MockConnectionManager } from '../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../src/connection/SimulatorTransport'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
     ConnectivityResponseMessage,
@@ -29,7 +29,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
         type: NodeType.NODEJS
     }
 
-    const mockConnectionLayer = new MockConnectionManager(peerDescriptor, simulator)
+    const mockConnectionLayer = new SimulatorTransport(peerDescriptor, simulator)
 
     const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer, 
         nodeName: stringId, numberOfNodesPerKBucket: K })
