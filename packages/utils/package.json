@@ -5,7 +5,7 @@
   "main": "./dist/src/exports.js",
   "types": "./dist/src/exports.d.ts",
   "scripts": {
-    "check": "tsc -p ./tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
@@ -31,7 +31,6 @@
     "pino-pretty": "^5.0.2"
   },
   "devDependencies": {
-    "@streamr/dev-config": "^1.0.0",
     "@types/jest": "^27.0.2",
     "@types/pino": "^6.3.8",
     "@types/pino-pretty": "^4.7.0",

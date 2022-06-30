@@ -26,7 +26,6 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@ethersproject/wallet": "^5.5.0",
-    "@streamr/dev-config": "^1.0.0",
     "@types/debug": "^4.1.7",
     "@types/heap": "^0.2.28",
     "@types/jest": "^27.0.2",
