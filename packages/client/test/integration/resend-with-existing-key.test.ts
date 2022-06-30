@@ -9,7 +9,6 @@ import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { StreamPermission } from '../../src/permission'
-import { STREAM_CLIENT_DEFAULTS } from '../../src/Config'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -25,15 +24,15 @@ import { ActiveNodes } from '../test-utils/fake/ActiveNodes'
  */
 describe('resend with existing key', () => {
 
+    const subscriberWallet = fastWallet()
+    const publisherWallet = fastWallet()
     let resends: Resends
-    let subscriberWallet = fastWallet()
-    let publisherWallet = fastWallet()
     let stream: Stream
+    let initialKey: GroupKey
+    let rotatedKey: GroupKey
+    let rekeydKey: GroupKey
+    let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
     let dependencyContainer: DependencyContainer
-    let KEY_ORIGINAL: GroupKey
-    let KEY_ROTATED: GroupKey
-    let KEY_REKEYED: GroupKey
-    let ALL_MESSAGES: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
 
     const storeMessage = (timestamp: number, currentGroupKey: GroupKey, nextGroupKey?: GroupKey) => {
         const message = createMockMessage({
@@ -61,8 +60,8 @@ describe('resend with existing key', () => {
     const assertDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
         const messageStream = await resendRange(fromTimestamp, toTimestamp)
         const messages = await collect(messageStream)
-        const expectedTimestamps = ALL_MESSAGES.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
-        expect(messages.map(m => m.getTimestamp())).toEqual(expectedTimestamps)
+        const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
+        expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
     }
 
     const assertNonDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
@@ -76,10 +75,10 @@ describe('resend with existing key', () => {
             auth: {
                 privateKey: subscriberWallet.privateKey
             },
+            // eslint-disable-next-line no-underscore-dangle
             _timeouts: {
-                ...STREAM_CLIENT_DEFAULTS._timeouts,
                 encryptionKeyRequest: 50
-            }
+            } as any
         })
         const streamRegistry = dependencyContainer.resolve(StreamRegistry)
         stream = await streamRegistry.createStream({
@@ -91,18 +90,18 @@ describe('resend with existing key', () => {
         })
         const storageNodeRegistry = dependencyContainer.resolve(StorageNodeRegistry)
         storageNodeRegistry.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
-        KEY_ORIGINAL = GroupKey.generate()
-        KEY_ROTATED = GroupKey.generate()
-        KEY_REKEYED = GroupKey.generate()
-        ALL_MESSAGES = [
-            { timestamp: 1000, groupKey: KEY_ORIGINAL},
-            { timestamp: 2000, groupKey: KEY_ORIGINAL, nextGroupKey: KEY_ROTATED },
-            { timestamp: 3000, groupKey: KEY_ROTATED },
-            { timestamp: 4000, groupKey: KEY_ROTATED },
-            { timestamp: 5000, groupKey: KEY_REKEYED },
-            { timestamp: 6000, groupKey: KEY_REKEYED }
+        initialKey = GroupKey.generate()
+        rotatedKey = GroupKey.generate()
+        rekeydKey = GroupKey.generate()
+        allMessages = [
+            { timestamp: 1000, groupKey: initialKey},
+            { timestamp: 2000, groupKey: initialKey, nextGroupKey: rotatedKey },
+            { timestamp: 3000, groupKey: rotatedKey },
+            { timestamp: 4000, groupKey: rotatedKey },
+            { timestamp: 5000, groupKey: rekeydKey },
+            { timestamp: 6000, groupKey: rekeydKey }
         ]
-        for (const msg of ALL_MESSAGES) {
+        for (const msg of allMessages) {
             storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey)
         }
         resends = dependencyContainer.resolve(Resends)
@@ -114,12 +113,12 @@ describe('resend with existing key', () => {
         })
     })
 
-    describe('original key available', () => {
+    describe('initial key available', () => {
         beforeEach(async () => {
             const keyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
-            await keyStore.add(KEY_ORIGINAL)
+            await keyStore.add(initialKey)
         })
-        it('can decrypt original', async () => {
+        it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
         })
         it('can decrypt rotated, if key rotation message is included', async () => {
@@ -136,9 +135,9 @@ describe('resend with existing key', () => {
     describe('rotated key available', () => {
         beforeEach(async () => {
             const keyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
-            await keyStore.add(KEY_ROTATED)
+            await keyStore.add(rotatedKey)
         })
-        it('can\'t decrypt original', async () => {
+        it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
         })
         it('can decrypt rotated', async () => {
@@ -152,9 +151,9 @@ describe('resend with existing key', () => {
     describe('rekeyed key available', () => {
         beforeEach(async () => {
             const keyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
-            await keyStore.add(KEY_REKEYED)
+            await keyStore.add(rekeydKey)
         })
-        it('can\'t decrypt original', async () => {
+        it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
         })
         it('can\'t decrypt rotated', async () => {

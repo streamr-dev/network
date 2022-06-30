@@ -37,8 +37,8 @@ export class FakeHttpUtil implements HttpUtil {
                         fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
                         toTimestamp: Number(request.query!.get('toTimestamp')),
                         toSequenceNumber: Number(request.query!.get('toSequenceNumber')),
-                        publisherId: request.query!.get('publisherId')!,
-                        msgChainId: request.query!.get('msgChainId')!
+                        publisherId: request.query!.get('publisherId') ?? undefined,
+                        msgChainId: request.query!.get('msgChainId') ?? undefined
                     })
                 } else {
                     throw new Error('not implemented: ' + JSON.stringify(request))
