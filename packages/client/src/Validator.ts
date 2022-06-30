@@ -104,7 +104,6 @@ export class Validator extends StreamMessageValidator implements Context {
 
     stop(): void {
         this.isStopped = true
-        this.cachedVerify.clear()
         this.orderedValidate.clear()
     }
 }

@@ -21,7 +21,7 @@ export {
     PublicPermissionAssignment
 } from './permission'
 export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './registry/StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './searchStreams'
+export { SearchStreamsPermissionFilter } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
@@ -38,15 +38,15 @@ export {
 export {
     AuthConfig,
     AuthenticatedConfig,
-    EthereumConfig,
-    ChainConnectionInfo,
-    EthereumNetworkConfig,
     UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
-    PrivateKeyAuthConfig,
-    XOR,
-    Without
+    PrivateKeyAuthConfig
+} from './Authentication'
+export {
+    EthereumConfig,
+    ChainConnectionInfo,
+    EthereumNetworkConfig,
 } from './Ethereum'
 export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'

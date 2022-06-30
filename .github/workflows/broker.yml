@@ -35,11 +35,13 @@ jobs:
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
 
-      - name: bootstrap-pkg
+      - name: bootstrap and build # client needs to be built separately due to NET-870
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client
+          npm run build --workspace=streamr-client
           npm run bootstrap-pkg streamr-broker
+          npm run build --workspace=streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
 
@@ -53,11 +55,13 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - name: bootstrap-pkg
+      - name: bootstrap and build # client needs to be built separately due to NET-870
         working-directory: './'
         run: |
           npm run bootstrap-pkg streamr-client
+          npm run build --workspace=streamr-client
           npm run bootstrap-pkg streamr-broker
+          npm run build --workspace=streamr-broker
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
