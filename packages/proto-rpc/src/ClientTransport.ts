@@ -57,7 +57,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
-    private createRequestHeaders(method: MethodInfo, notification?: boolean): {
+    private static createRequestHeaders(method: MethodInfo, notification?: boolean): {
         method: string,
         request: string,
         notification?: string
@@ -77,7 +77,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         const defTrailer = new Deferred<RpcMetadata>()
 
         const request: RpcMessage = {
-            header: this.createRequestHeaders(method, options.notification),
+            header: ClientTransport.createRequestHeaders(method, options.notification),
             body: requestBody,
             requestId: v4()
         }

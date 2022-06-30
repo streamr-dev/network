@@ -2,7 +2,7 @@ import KBucket from 'k-bucket'
 import { PeerID } from '../helpers/PeerID'
 import { DhtPeer } from './DhtPeer'
 
-class ContactWrapper {
+class ContactState {
     public contacted = false
     public active = false
     constructor(public contact: DhtPeer) {
@@ -10,7 +10,7 @@ class ContactWrapper {
 }
 
 export class SortedContactList {
-    private contactsById: { [id: string]: ContactWrapper } = {}
+    private contactsById: { [id: string]: ContactState } = {}
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number) {
@@ -32,14 +32,14 @@ export class SortedContactList {
         }
         if (!this.contactsById.hasOwnProperty(contact.peerId.toMapKey())) {
             if (this.contactIds.length < this.maxSize) {
-                this.contactsById[contact.peerId.toMapKey()] = new ContactWrapper(contact)
+                this.contactsById[contact.peerId.toMapKey()] = new ContactState(contact)
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
                 delete this.contactsById[removed!.toMapKey()]
-                this.contactsById[contact.peerId.toMapKey()] = new ContactWrapper(contact)
+                this.contactsById[contact.peerId.toMapKey()] = new ContactState(contact)
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             }
@@ -100,7 +100,7 @@ export class SortedContactList {
         return this.contactIds.length
     }
 
-    public getContact(id: PeerID): ContactWrapper {
+    public getContact(id: PeerID): ContactState {
         return this.contactsById[id.toMapKey()]
     }
 
