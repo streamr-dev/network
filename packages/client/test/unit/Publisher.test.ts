@@ -56,7 +56,7 @@ describe('Publisher', () => {
             permissions: [StreamPermission.SUBSCRIBE]
         })
         subscriberNode = addFakeNode(subscriberWallet.address, dependencyContainer)
-        receivedMessages = await subscriberNode.addSubscriber(...stream.getStreamParts())
+        receivedMessages = subscriberNode.addSubscriber(...stream.getStreamParts())
     })
 
     it('happy path', async () => {
@@ -143,7 +143,7 @@ describe('Publisher', () => {
                     user: subscriberWallet.address,
                     permissions: [StreamPermission.SUBSCRIBE]
                 })
-                const otherStreamMessages = await subscriberNode.addSubscriber(...otherStream.getStreamParts())    
+                const otherStreamMessages = subscriberNode.addSubscriber(...otherStream.getStreamParts())    
                 await publisher.publish(otherStream.id, {
                     foo: 'mock-2'
                 })

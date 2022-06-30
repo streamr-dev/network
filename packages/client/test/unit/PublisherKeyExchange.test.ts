@@ -135,7 +135,7 @@ describe('PublisherKeyExchange', () => {
             const store = await (await fakeContainer.resolve(GroupKeyStoreFactory)).getStore(mockStream.id)
             await store.add(key)
 
-            const receivedResponses = await subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publishToNode(request)
@@ -145,7 +145,7 @@ describe('PublisherKeyExchange', () => {
         })
 
         it('no group key in store', async () => {
-            const receivedResponses = await subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
             const request = createGroupKeyRequest(GroupKey.generate().id)
             subscriberNode.publishToNode(request)
@@ -169,7 +169,7 @@ describe('PublisherKeyExchange', () => {
 
         it('invalid request', async () => {
             const groupKey = GroupKey.generate()
-            const receivedResponses = await subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
+            const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
             const request: any = createGroupKeyRequest(groupKey.id)
             delete request.signature

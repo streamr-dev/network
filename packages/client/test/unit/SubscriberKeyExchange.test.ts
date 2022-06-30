@@ -37,7 +37,7 @@ describe('SubscriberKeyExchange', () => {
 
     const testSuccessRequest = async (requestedKeyId: string): Promise<GroupKey | undefined> => {
         const publisherNode = await addFakePublisherNode(publisherWallet, [AVAILABLE_GROUP_KEY], fakeContainer)
-        const receivedRequests = await publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+        const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
 
         const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
         const receivedKey = subscriberKeyExchange.getGroupKey({
