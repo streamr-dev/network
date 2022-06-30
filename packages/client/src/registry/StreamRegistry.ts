@@ -9,7 +9,7 @@ import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOv
 import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, StrictStreamrClientConfig, TimeoutsConfig } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
 import {
@@ -83,7 +83,8 @@ export class StreamRegistry implements Context {
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
+        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -164,10 +165,8 @@ export class StreamRegistry implements Context {
             try {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
-                    // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.timeout,
-                    // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.retryInterval
+                    this.timeoutsConfig.jsonRpc.timeout,
+                    this.timeoutsConfig.jsonRpc.retryInterval
                 )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)

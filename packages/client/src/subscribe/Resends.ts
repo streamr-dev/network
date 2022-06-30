@@ -18,7 +18,7 @@ import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random, range } from 'lodash'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
@@ -71,8 +71,8 @@ export class Resends implements Context {
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
-        @inject(HttpUtil) private httpUtil: HttpUtil
+        @inject(HttpUtil) private httpUtil: HttpUtil,
+        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -236,10 +236,8 @@ export class Resends implements Context {
     }
 
     async waitForStorage(streamMessage: StreamMessage, {
-        // eslint-disable-next-line no-underscore-dangle
-        interval = this.config._timeouts.storageNode.retryInterval,
-        // eslint-disable-next-line no-underscore-dangle
-        timeout = this.config._timeouts.storageNode.timeout,
+        interval = this.timeoutsConfig.storageNode.retryInterval,
+        timeout = this.timeoutsConfig.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature
