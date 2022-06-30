@@ -31,6 +31,7 @@ const run = async () => {
 
     const results = helloClient.sayHello({ myName: 'Alice' })
     const { greeting } = await results.response
+    // eslint-disable-next-line no-console
     console.log(greeting)
 
     communicator1.stop()

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'

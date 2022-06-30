@@ -44,6 +44,7 @@ const run = async () => {
         const results = helloClient.timeout({ myName: 'Alice' })
         await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 
@@ -51,6 +52,7 @@ const run = async () => {
         const results = helloClient.serverError({ myName: 'Alice' })
         await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 
@@ -59,6 +61,7 @@ const run = async () => {
         const results = helloClient.unknownMethod({ myName: 'Alice' })
         await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 

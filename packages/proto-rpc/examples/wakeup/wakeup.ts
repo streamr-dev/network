@@ -12,6 +12,7 @@ class WakeUpService implements IWakeUpRpc {
     }
     // You always have return google.protobuf.Empty from notifications
     async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
+        // eslint-disable-next-line no-console
         console.log("WakeUp notification of node "+this.nodeId+" called with reason: "+ request.reason)
         const ret: Empty = {}
         return ret

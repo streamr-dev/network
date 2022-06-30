@@ -24,6 +24,7 @@ class HelloService implements IRoutedHelloRpc {
             sourceId = context['sourceId'] as string
         }
 
+        // eslint-disable-next-line no-console
         console.log('sayHello() called on server '+ this.serviceId + " with context parameter sourceId "+ sourceId)
         return { greeting: 'Hello ' + request.myName + '!' }
     }
@@ -118,10 +119,12 @@ const run = async () => {
 
     const result1 = helloClient1.sayHello({ myName: 'Alice' }, {targetServerId: '2'})
     const { greeting: greeting1 } = await result1.response
+    // eslint-disable-next-line no-console
     console.log("Client 1 (Alice) got message from server: " + greeting1)
 
     const result2 = await helloClient2.sayHello({ myName: 'Bob' })
     const { greeting: greeting2 } = await result2.response
+    // eslint-disable-next-line no-console
     console.log("Client 2 (Bob) got message from server: " + greeting2)
 
     communicator1.stop()
