@@ -179,10 +179,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
-        const offering = this.isOffering(
-            PeerID.fromValue(this.ownPeerDescriptor!.peerId).toMapKey(),
-            PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
-        )
+        const offering = this.isOffering(targetPeerDescriptor)
         const remoteConnector = new RemoteWebrtcConnector(
             targetPeerDescriptor,
             new WebRtcConnectorClient(this.rpcCommunicator.getRpcClientTransport())
@@ -209,7 +206,9 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
         }
     }
 
-    public isOffering(myId: string, theirId: string): boolean {
+    public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
+        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId).toMapKey()
+        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
         return this.offeringHash(myId + theirId) < this.offeringHash(theirId + myId)
     }
 
