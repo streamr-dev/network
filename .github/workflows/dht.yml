@@ -43,7 +43,7 @@ jobs:
       - name: End-to-End Tests
         run: npm run test-end-to-end
       - name: Correctness Tests
-        run: npm run test-correctness
+        run: npm run test-kademlia-correctness
 
   test-browser:
     name: Test Browser
