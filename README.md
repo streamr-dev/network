@@ -44,6 +44,13 @@ To install all required dependencies and link sub-packages together:
 npm ci
 ```
 
+### Install git hooks
+To install git hooks (e.g. Husky for conventional commit validation):
+
+```bash
+npm run install-git-hooks
+```
+
 ###  Install dependencies of a sub-package
 
 To only install the dependencies (and link together sub-packages) required by a specific sub-package:
