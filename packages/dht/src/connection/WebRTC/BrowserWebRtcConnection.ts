@@ -10,7 +10,7 @@ enum ConnectionState { CONNECTING = 'connecting', OPEN = 'open', CLOSED = 'close
 
 const logger = new Logger(module)
 
-export const WebRtcCleanUp = new class implements IWebRtcCleanUp {
+export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
     cleanUp(): void {
     }
 }
@@ -22,13 +22,13 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
 
     private lastState: ConnectionState = ConnectionState.CONNECTING
     private stunUrls = ['stun:stun.l.google.com:19302']
-    private peerConnection: RTCPeerConnection | null = null
-    private dataChannel: RTCDataChannel | null = null
+    private peerConnection?: RTCPeerConnection
+    private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
     private buffer: Uint8Array[] = []
 
-    private remotePeerDescriptor: PeerDescriptor | null = null
+    private remotePeerDescriptor?: PeerDescriptor
 
     start(isOffering: boolean): void {
         this.isOffering = isOffering
@@ -114,10 +114,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     isOpen(): boolean {
-        if (this.lastState == ConnectionState.OPEN) {
-            return true
-        }
-        return false
+        return this.lastState === ConnectionState.OPEN
     }
 
     // IConnection implementation
@@ -132,7 +129,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             }
         }
 
-        this.dataChannel = null
+        this.dataChannel = undefined
 
         if (this.peerConnection) {
             try {
@@ -142,14 +139,14 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             }
         }
 
-        this.peerConnection = null
+        this.peerConnection = undefined
     }
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    getPeerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
     }
 

@@ -1,4 +1,4 @@
-export { RpcCommunicator, RpcCommunicatorConfig, RpcCommunicatorEvents, StatusCodes } from './RpcCommunicator'
+export { RpcCommunicator, RpcCommunicatorConfig, RpcCommunicatorEvent, StatusCode } from './RpcCommunicator'
 export { CallContext } from './ServerRegistry'
 export { ProtoRpcOptions } from './ClientTransport'
-export { Err as RpcError } from './errors'
+export * as RpcError from './errors'

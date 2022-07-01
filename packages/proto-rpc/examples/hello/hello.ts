@@ -29,8 +29,10 @@ const run = async () => {
         communicator1.handleIncomingMessage(msgBody)
     })
 
-    const result = await helloClient.sayHello({ myName: 'Alice' })
-    console.log(result.response.greeting)
+    const results = helloClient.sayHello({ myName: 'Alice' })
+    const { greeting } = await results.response
+    // eslint-disable-next-line no-console
+    console.log(greeting)
 
     communicator1.stop()
     communicator2.stop()

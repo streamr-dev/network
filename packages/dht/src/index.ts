@@ -1,6 +1,6 @@
 export { DhtNode, Event as DhtNodeEvent } from './dht/DhtNode'
 export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
-export { MockConnectionManager } from './connection/MockConnectionManager'
+export { SimulatorTransport } from './connection/SimulatorTransport'
 export { Simulator } from './connection/Simulator'
 export { PeerDescriptor, Message } from './proto/DhtRpc'
 export { ITransport } from './transport/ITransport'

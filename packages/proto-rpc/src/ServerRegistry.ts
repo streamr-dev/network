@@ -1,9 +1,9 @@
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
-import { MethodInfo, RpcMetadata, RpcStatus, ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { RpcMetadata, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
-import { Err } from './errors'
+import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
 import { Logger } from './Logger'
 import { ProtoRpcOptions } from './ClientTransport'
@@ -47,12 +47,11 @@ export class ConversionWrappers {
 }
 
 export class ServerRegistry extends EventEmitter {
-    methods: Map<string, RegisteredMethod | RegisteredNotification>
-    private stopped = false
     constructor() {
         super()
-        this.methods = new Map()
     }
+    private methods = new Map<string, RegisteredMethod | RegisteredNotification>()
+    private stopped = false
 
     public async onRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Uint8Array> {
         if (this.stopped) {
@@ -119,37 +118,21 @@ export class ServerRegistry extends EventEmitter {
 }
 
 export class CallContext implements ServerCallContext, ProtoRpcOptions {
-    [extra: string]: unknown
-
-    notification?: boolean
-    method: MethodInfo<any, any> = {
-        // @ts-expect-error TS2322
-        I: undefined,
-        // @ts-expect-error TS2322
-        O: undefined,
-        // @ts-expect-error TS2322
-        service: undefined,
-        name: '',
-        localName: '',
-        idempotency: undefined,
-        serverStreaming: false,
-        clientStreaming: false,
-        options: {}
-    }
-    headers: Readonly<RpcMetadata> = {}
-    deadline: Date = new Date()
-    trailers: RpcMetadata = {}
-    status: RpcStatus = {
-        code: '',
-        detail: ''
-    }
+    method = undefined as unknown as any
+    headers = undefined as unknown as any
+    deadline= undefined as unknown as any
+    trailers = undefined as unknown as any
+    status = undefined as unknown as any
     sendResponseHeaders(_data: RpcMetadata): void {
         throw new Err.NotImplemented('Method not implemented.')
     }
-    cancelled = false
+    cancelled = undefined as unknown as any
     onCancel(_cb: () => void): () => void {
         throw new Err.NotImplemented('Method not implemented.')
     }
 
-    constructor() { }
+    // own extensions
+    [extra: string]: unknown
+    notification?: boolean
+    constructor() {}
 }

@@ -12,6 +12,7 @@ class WakeUpService implements IWakeUpRpc {
     }
     // You always have return google.protobuf.Empty from notifications
     async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
+        // eslint-disable-next-line no-console
         console.log("WakeUp notification of node "+this.nodeId+" called with reason: "+ request.reason)
         const ret: Empty = {}
         return ret
@@ -63,8 +64,8 @@ const run = async () => {
     nodes["3"] = new Node("3")
     nodes["3"].communicator.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, emulateNetwork)
 
-    await nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
-    await nodes["3"].wakeUpOtherNode("1", "Notification from node 3")
+    nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
+    nodes["3"].wakeUpOtherNode("1", "Notification from node 3")
 
     nodes["1"].communicator.stop()
     nodes["2"].communicator.stop()

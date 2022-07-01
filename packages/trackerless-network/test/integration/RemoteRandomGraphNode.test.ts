@@ -1,4 +1,4 @@
-import { RoutingRpcCommunicator, Simulator, MockConnectionManager, PeerDescriptor } from '@streamr/dht'
+import { RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerDescriptor } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
 import { DataMessage, HandshakeRequest, HandshakeResponse, LeaveNotice, MessageRef } from '../../src/proto/NetworkRpc'
@@ -26,8 +26,8 @@ describe('RemoteRandomGraphNode', () => {
     beforeEach(() => {
         recvCounter = 0
         const simulator = new Simulator()
-        const mockConnectionManager1 = new MockConnectionManager(serverPeer, simulator)
-        const mockConnectionManager2 = new MockConnectionManager(clientPeer, simulator)
+        const mockConnectionManager1 = new SimulatorTransport(serverPeer, simulator)
+        const mockConnectionManager2 = new SimulatorTransport(clientPeer, simulator)
         simulator.addConnectionManager(mockConnectionManager1)
         simulator.addConnectionManager(mockConnectionManager2)
 

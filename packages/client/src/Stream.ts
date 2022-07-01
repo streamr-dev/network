@@ -8,7 +8,6 @@ import { inspect } from './utils/log'
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { Ethereum } from './Ethereum'
 import { StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
@@ -22,7 +21,6 @@ import {
 } from 'streamr-client-protocol'
 import { range } from 'lodash'
 import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
-import { HttpFetcher } from './utils/HttpFetcher'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -91,8 +89,6 @@ class StreamrStream implements StreamMetadata {
     protected _streamRegistry: StreamRegistry
     protected _streamRegistryCached: StreamRegistryCached
     protected _nodeRegistry: StorageNodeRegistry
-    protected _ethereuem: Ethereum
-    private readonly _httpFetcher: HttpFetcher
     private _clientConfig: StrictStreamrClientConfig
 
     /** @internal */
@@ -109,8 +105,6 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
-        this._ethereuem = _container.resolve<Ethereum>(Ethereum)
-        this._httpFetcher = _container.resolve<HttpFetcher>(HttpFetcher)
         this._clientConfig = _container.resolve<StrictStreamrClientConfig>(ConfigInjectionToken.Root)
     }
 

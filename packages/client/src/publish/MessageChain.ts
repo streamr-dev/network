@@ -20,7 +20,6 @@ export type MessageChainOptions = {
 
 export function getCachedMessageChain(cacheConfig: CacheConfig):
     ((streamPartId: StreamPartID, msgChainOptions: MessageChainOptions) => MessageChain) & {
-    clear: () => void,
     clearMatching: (matchFn: (key: string) => boolean) => void
 } {
     // one chainer per streamId + streamPartition + publisherId + msgChainId

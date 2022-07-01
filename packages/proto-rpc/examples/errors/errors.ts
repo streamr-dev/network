@@ -41,21 +41,27 @@ const run = async () => {
     })
 
     try {
-        await helloClient.timeout({ myName: 'Alice' })
+        const results = helloClient.timeout({ myName: 'Alice' })
+        await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 
     try {
-        await helloClient.serverError({ myName: 'Alice' })
+        const results = helloClient.serverError({ myName: 'Alice' })
+        await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 
     try {
         // UnknownMethod is not registered at the server!
-        await helloClient.unknownMethod({ myName: 'Alice' })
+        const results = helloClient.unknownMethod({ myName: 'Alice' })
+        await results.response
     } catch (err) {
+        // eslint-disable-next-line no-console
         console.log(err)
     }
 

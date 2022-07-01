@@ -1,4 +1,5 @@
-import { Err, ErrorCode } from './errors'
+import * as Err from './errors'
+import { ErrorCode } from './errors'
 import {
     ClientTransport,
     ResultParts,
@@ -16,15 +17,15 @@ import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from './Logger'
 
-export enum StatusCodes {
+export enum StatusCode {
     OK = 'OK',
     STOPPED = 'STOPPED',
     DEADLINE_EXCEEDED = 'DEADLINE_EXCEEDED',
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
-export enum RpcCommunicatorEvents {
-    OUTGOING_MESSAGE = 'streamr:proto-rpc:rpc-communicator:outgoing-message',
+export enum RpcCommunicatorEvent {
+    OUTGOING_MESSAGE = 'outgoing-message',
 }
 
 export interface RpcCommunicatorConfig {
@@ -33,7 +34,7 @@ export interface RpcCommunicatorConfig {
 
 interface IRpcIo {
     handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> 
-    on(event: RpcCommunicatorEvents.OUTGOING_MESSAGE, listener: (message: Uint8Array, callContext?: CallContext) => void): this
+    on(event: RpcCommunicatorEvent.OUTGOING_MESSAGE, listener: (message: Uint8Array, callContext?: CallContext) => void): this
 }
 
 interface OngoingRequest {
@@ -45,23 +46,16 @@ const logger = new Logger(module)
 
 export class RpcCommunicator extends EventEmitter implements IRpcIo {
     private stopped = false
-    private static objectCounter = 0
-    private objectId = 0
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
     private readonly ongoingRequests: Map<string, OngoingRequest>
-    private defaultRpcRequestTimeout = 5000 
+    private readonly rpcRequestTimeout: number
 
     constructor(params?: RpcCommunicatorConfig) {
         super()
-        this.objectId = RpcCommunicator.objectCounter
-        RpcCommunicator.objectCounter++
 
-        if (params && params.hasOwnProperty('rpcRequestTimeout')) {
-            this.defaultRpcRequestTimeout = params.rpcRequestTimeout!
-        }
-        
-        this.rpcClientTransport = new ClientTransport(this.defaultRpcRequestTimeout)
+        this.rpcRequestTimeout = params?.rpcRequestTimeout ?? 5000
+        this.rpcClientTransport = new ClientTransport(this.rpcRequestTimeout)
         this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
         
@@ -78,6 +72,9 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     }
 
     public async handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> {
+        if (this.stopped) {
+            return
+        }
         const rpcCall = RpcMessage.fromBinary(message)
         return this.onIncomingMessage(rpcCall, callContext)
     }
@@ -88,7 +85,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         const requestOptions = this.rpcClientTransport.mergeOptions(callContext )
         if (deferredPromises && rpcMessage.header.notification) {
-            this.resolveDeferredPromises(deferredPromises, this.notificationResponse(rpcMessage.requestId))
+            this.resolveDeferredPromises(deferredPromises, this.createNotificationResponse(rpcMessage.requestId))
         } else if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
@@ -96,14 +93,10 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
         
-        this.emit(RpcCommunicatorEvents.OUTGOING_MESSAGE, msg, callContext)
+        this.emit(RpcCommunicatorEvent.OUTGOING_MESSAGE, msg, callContext)
     }
 
-    private async onIncomingMessage(rpcMessage: RpcMessage, 
-        callContext?: CallContext): Promise<void> {
-        if (this.stopped) {
-            return
-        }
+    private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {
         logger.trace(`onIncomingMessage, requestId: ${rpcMessage.requestId}`)
         
         if (rpcMessage.header.response && this.ongoingRequests.has(rpcMessage.requestId)) {
@@ -125,13 +118,16 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         return this.rpcClientTransport
     }
 
-    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>
-    (requestClass: RequestClass, returnClass: ReturnClass,
-        name: string, fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>): void {
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
+        requestClass: RequestClass,
+        returnClass: ReturnClass,
+        name: string,
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>
+    ): void {
         this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
     }
 
-    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType >(
+    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
         requestClass: RequestClass,
         name: string,
         fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
@@ -151,11 +147,13 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
                 body: bytes
             })
         } catch (err) {
-            let responseError = RpcResponseError.SERVER_ERROR
+            let responseError
             if (err.code === ErrorCode.UNKNOWN_RPC_METHOD) {
                 responseError = RpcResponseError.UNKNOWN_RPC_METHOD
             } else if (err.code === ErrorCode.RPC_TIMEOUT) {
                 responseError = RpcResponseError.SERVER_TIMOUT
+            } else {
+                responseError = RpcResponseError.SERVER_ERROR
             }
             response = this.createResponseRpcMessage({
                 request: rpcMessage,
@@ -172,16 +170,21 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
         try {
             await this.rpcServerRegistry.onNotification(rpcMessage, callContext)
-        } catch (err) { }
+        } catch (err) {
+            logger.debug(err)
+        }
     }
 
-    private registerRequest(requestId: string, deferredPromises: ResultParts, timeout = this.defaultRpcRequestTimeout): void {
+    private registerRequest(requestId: string, deferredPromises: ResultParts, timeout = this.rpcRequestTimeout): void {
         if (this.stopped) {
             return
         }
         const ongoingRequest: OngoingRequest = {
             deferredPromises,
-            timeoutRef: setTimeout(() => this.requestTimeoutFn(deferredPromises), timeout)
+            timeoutRef: setTimeout(() => {
+                const error = new Err.RpcTimeout('Rpc request timed out', new Error())
+                this.rejectDeferredPromises(deferredPromises, error, StatusCode.DEADLINE_EXCEEDED)
+            }, timeout)
         }
         this.ongoingRequests.set(requestId, ongoingRequest)
     }
@@ -194,8 +197,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         if (ongoingRequest.timeoutRef) {
             clearTimeout(ongoingRequest.timeoutRef)
         }
-        const deferredPromises = ongoingRequest!.deferredPromises
-        this.resolveDeferredPromises(deferredPromises, response)
+        this.resolveDeferredPromises(ongoingRequest!.deferredPromises, response)
         this.ongoingRequests.delete(response.requestId)
     }
 
@@ -215,14 +217,8 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         } else {
             error = new Err.RpcRequest('Server error on request')
         }
-        const deferredPromises = ongoingRequest!.deferredPromises
-        this.rejectDeferredPromises(deferredPromises, error, StatusCodes.SERVER_ERROR)
+        this.rejectDeferredPromises(ongoingRequest!.deferredPromises, error, StatusCode.SERVER_ERROR)
         this.ongoingRequests.delete(response.requestId)
-    }
-
-    private requestTimeoutFn(deferredPromises: ResultParts): void {
-        const error = new Err.RpcTimeout('Rpc request timed out', new Error())
-        this.rejectDeferredPromises(deferredPromises, error, StatusCodes.DEADLINE_EXCEEDED)
     }
 
     private rejectDeferredPromises(deferredPromises: ResultParts, error: Error, code: string): void {
@@ -239,7 +235,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             const parsedResponse = deferredPromises.messageParser(response.body)
             deferredPromises.message.resolve(parsedResponse)
             deferredPromises.header.resolve({})
-            deferredPromises.status.resolve({ code: StatusCodes.OK, detail: '' })
+            deferredPromises.status.resolve({ code: StatusCode.OK, detail: '' })
             deferredPromises.trailer.resolve({})
         }
     }
@@ -258,7 +254,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         }
     }
 
-    private notificationResponse(requestId: string): RpcMessage {
+    private createNotificationResponse(requestId: string): RpcMessage {
         const ret: Empty = {}
 
         const wrapper: RpcMessage = {
@@ -273,7 +269,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.stopped = true
         this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
             clearTimeout(ongoingRequest.timeoutRef)
-            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), StatusCodes.STOPPED)
+            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), StatusCode.STOPPED)
         })
         this.removeAllListeners()
         this.ongoingRequests.clear()

@@ -1,4 +1,4 @@
-import { DhtNode, MockConnectionManager, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
+import { DhtNode, SimulatorTransport, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
@@ -8,8 +8,8 @@ describe('StreamrNode', () => {
 
     let layer01: DhtNode
     let layer02: DhtNode
-    let transport1: MockConnectionManager
-    let transport2: MockConnectionManager
+    let transport1: SimulatorTransport
+    let transport2: SimulatorTransport
     let node1: StreamrNode
     let node2: StreamrNode
 
@@ -43,8 +43,8 @@ describe('StreamrNode', () => {
 
     beforeEach(async () => {
         const simulator = new Simulator()
-        transport1 = new MockConnectionManager(peer1, simulator)
-        transport2 = new MockConnectionManager(peer2, simulator)
+        transport1 = new SimulatorTransport(peer1, simulator)
+        transport2 = new SimulatorTransport(peer2, simulator)
         layer01 = new DhtNode({
             transportLayer: transport1,
             peerDescriptor: peer1
@@ -126,7 +126,7 @@ describe('StreamrNode', () => {
         ])
     })
 
-    it.only('leaving streams', async () => {
+    it('leaving streams', async () => {
         await node1.joinStream(STREAM_ID, peer1)
         await node2.joinStream(STREAM_ID, peer1)
         await Promise.all([

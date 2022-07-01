@@ -41,7 +41,7 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
     cachePromiseRejection?: boolean
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
-} = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
+} = {}): ((...args: ArgsType) => Promise<ReturnType>) & { clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
@@ -54,10 +54,6 @@ export function CacheAsyncFn<ArgsType extends any[], ReturnType, KeyType = ArgsT
         cacheKey,
         ...opts,
     }), {
-        clear: () => {
-            pMemoize.clear(cachedFn as any)
-            cache.clear()
-        },
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 
@@ -89,7 +85,7 @@ export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0
     maxAge?: number
     onEviction?: (...args: any[]) => void
     cacheKey?: (args: ArgsType) => KeyType
-} = {}): ((...args: ArgsType) => ReturnType) & { clear: () => void; clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
+} = {}): ((...args: ArgsType) => ReturnType) & { clearMatching: (matchFn: (key: KeyType) => boolean) => void } {
     const cache = new LRU<KeyType, { data: ReturnType, maxAge: number }>({
         maxSize,
         maxAge,
@@ -101,10 +97,6 @@ export function CacheFn<ArgsType extends any[], ReturnType, KeyType = ArgsType[0
         cacheKey,
         ...opts,
     }), {
-        clear: () => {
-            mem.clear(cachedFn as any)
-            cache.clear()
-        },
         clearMatching: (matchFn: ((key: KeyType) => boolean)) => clearMatching(cache, matchFn),
     })
 

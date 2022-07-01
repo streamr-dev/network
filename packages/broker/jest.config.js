@@ -4,6 +4,11 @@
 module.exports = {
     preset: 'ts-jest/presets/js-with-ts',
     clearMocks: true,
+    globals: {
+        'ts-jest': {
+            tsconfig: 'tsconfig.jest.json',
+        }
+    },
     globalTeardown: './jest.teardown.js',
     testRunner: 'jest-circus/runner',
     testEnvironment: 'node',

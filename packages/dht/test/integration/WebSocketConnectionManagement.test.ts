@@ -1,12 +1,12 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import { Err } from '../../src/helpers/errors'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
@@ -35,8 +35,8 @@ describe('WebSocket Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new MockConnectionManager(wsServerConnectorPeerDescriptor , simulator)
-        connectorTransport2 = new MockConnectionManager(noWsServerConnectorPeerDescriptor, simulator)
+        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor , simulator)
+        connectorTransport2 = new SimulatorTransport(noWsServerConnectorPeerDescriptor, simulator)
 
         const config1 = {
             transportLayer: connectorTransport1,
@@ -69,7 +69,7 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await wsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage)
+        await wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -88,7 +88,7 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await noWsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage)
+        await noWsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
         await waitForCondition(
             () => {
                 return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
@@ -107,11 +107,11 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(noWsServerManager.send(noWsServerConnectorPeerDescriptor, dummyMessage))
+        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
 
-        await expect(wsServerManager.send(wsServerConnectorPeerDescriptor, dummyMessage))
+        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

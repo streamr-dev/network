@@ -1,4 +1,4 @@
-import { Err } from './errors'
+import * as Err from './errors'
 
 // TODO: Replace with streamr-utils library import
 export function promiseTimeout<T>(ms: number, givenPromise: Promise<T>): Promise<T> {

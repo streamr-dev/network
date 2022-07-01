@@ -10,7 +10,7 @@ import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 
 const logger = new Logger(module)
 
-export const WebRtcCleanUp = new class implements IWebRtcCleanUp {
+export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
     cleanUp(): void {
         nodeDatachannel.cleanup()
     }
@@ -20,12 +20,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
 
     public connectionId: ConnectionID
     public connectionType: ConnectionType = ConnectionType.WEBRTC
-    private connection: PeerConnection | null = null
-    private dataChannel: DataChannel | null = null
+    private connection?: PeerConnection
+    private dataChannel?: DataChannel
     private stunUrls = []
-    private isOffering = false
     private maxMessageSize = 1048576
-    private _bufferThresholdHigh = 2 ** 17
+    private _bufferThresholdHigh = 2 ** 17 // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow = 2 ** 15
     private lastState = ''
     private buffer: Uint8Array[] = []
@@ -40,7 +39,6 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     start(isOffering: boolean): void {
         logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
         const hexId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toMapKey()
-        this.isOffering = isOffering
         this.connection = new PeerConnection(hexId, {
             iceServers: [...this.stunUrls],
             maxMessageSize: this.maxMessageSize
@@ -101,7 +99,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         this.remotePeerDescriptor = peerDescriptor
     }
 
-    getPeerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.remotePeerDescriptor
     }
 
@@ -116,7 +114,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
 
     sendBufferedMessages(): void {
         while (this.buffer.length > 0) {
-            this.send(this.buffer.shift() as Uint8Array)
+            this.send(this.buffer.shift()!)
         }
     }
 

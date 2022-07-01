@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
@@ -7,18 +5,12 @@ import { createPeerDescriptor } from '../utils'
 import { waitForEvent } from 'streamr-test-utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
-import { appendFile } from "fs"
 
 describe('ConnectionManager', () => {
     const appId = 'demo'
-    
-    const mockPeerDescriptor0: PeerDescriptor = {
-        peerId: PeerID.fromString("tester0").value,
-        type: NodeType.NODEJS
-    }
 
     const mockPeerDescriptor1: PeerDescriptor = {
         peerId: PeerID.fromString("tester1").value,
@@ -30,13 +22,9 @@ describe('ConnectionManager', () => {
     }
     const simulator = new Simulator()
 
-    const mockTransport = new MockConnectionManager(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport1 = new MockConnectionManager(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport2 = new MockConnectionManager(mockPeerDescriptor2, simulator)
-
-    beforeAll(async () => {
-
-    })
+    const mockTransport = new SimulatorTransport(mockPeerDescriptor1, simulator)
+    const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
+    const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
@@ -65,10 +53,10 @@ describe('ConnectionManager', () => {
     })
 
     it('Can probe connectivity in open internet', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
 
-        const result = await connectionManager.start()
-        connectionManager.enableConnectivity(createPeerDescriptor(result))
+        const result = await connectionManager1.start()
+        connectionManager1.enableConnectivity(createPeerDescriptor(result))
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -86,16 +74,16 @@ describe('ConnectionManager', () => {
         expect(result2.ip).toEqual('127.0.0.1')
         expect(result2.openInternet).toEqual(true)
 
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 
     it('Can send data to other connectionmanager over websocket', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager1.start()
         const peerDescriptor = createPeerDescriptor(result)
-        connectionManager.enableConnectivity(peerDescriptor)
+        connectionManager1.enableConnectivity(peerDescriptor)
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -122,26 +110,26 @@ describe('ConnectionManager', () => {
             body: arr
         }
 
-        const promise = new Promise<void>((resolve, reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+        const promise = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on(ITransportEvent.DATA, async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager.send(peerDescriptor2, msg)
+        connectionManager1.send(msg, peerDescriptor2)
         
         await promise
         
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 
     it('Can disconnect', async () => {
-        const connectionManager = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
+        const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9997 })
 
-        const result = await connectionManager.start()
+        const result = await connectionManager1.start()
         const peerDescriptor = createPeerDescriptor(result)
-        connectionManager.enableConnectivity(peerDescriptor)
+        connectionManager1.enableConnectivity(peerDescriptor)
 
         expect(result.ip).toEqual('localhost')
         expect(result.openInternet).toEqual(true)
@@ -168,20 +156,20 @@ describe('ConnectionManager', () => {
             body: arr
         }
 
-        const promise = new Promise<void>((resolve, reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (peerDescriptor: PeerDescriptor, message: Message) => {
+        const promise = new Promise<void>((resolve, _reject) => {
+            connectionManager2.on(ITransportEvent.DATA, async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
         })
-        connectionManager.send(peerDescriptor2, msg)
+        connectionManager1.send(msg, peerDescriptor2)
 
         await promise
         await Promise.all([
             waitForEvent(connectionManager2.getConnection(peerDescriptor) as ClientWebSocket, ConnectionEvent.DISCONNECTED),
-            connectionManager.disconnect(peerDescriptor2, undefined, 100)
+            connectionManager1.disconnect(peerDescriptor2, undefined, 100)
         ])
-        await connectionManager.stop()
+        await connectionManager1.stop()
         await connectionManager2.stop()
     })
 

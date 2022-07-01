@@ -1,10 +1,12 @@
 /* eslint-disable padding-line-between-statements */
-import { EthereumAddress } from 'streamr-client-protocol'
-import { StreamQueryResult } from './registry/StreamRegistry'
-import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from './permission'
-import { GraphQLClient } from './utils/GraphQLClient'
-import { filter, unique } from './utils/GeneratorUtils'
-import { SynchronizedGraphQLClient } from './utils/SynchronizedGraphQLClient'
+import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamQueryResult } from './StreamRegistry'
+import { StreamPermission, ChainPermissions, convertChainPermissionsToStreamPermissions, PUBLIC_PERMISSION_ADDRESS } from '../permission'
+import { GraphQLClient } from '../utils/GraphQLClient'
+import { filter, map, unique } from '../utils/GeneratorUtils'
+import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
+import { Stream } from '../Stream'
+import { Debugger } from '../utils/log'
 
 export interface SearchStreamsPermissionFilter {
     user: EthereumAddress
@@ -22,10 +24,28 @@ export type SearchStreamsResultItem = {
     stream: StreamQueryResult
 } & ChainPermissions
 
-export async function* fetchSearchStreamsResultFromTheGraph(
+export const searchStreams = (
     term: string | undefined,
     permissionFilter: SearchStreamsPermissionFilter | undefined,
     graphQLClient: SynchronizedGraphQLClient,
+    parseStream: (id: StreamID, metadata: string) => Stream,
+    debug: Debugger
+): AsyncGenerator<Stream> => {
+    if ((term === undefined) && (permissionFilter === undefined)) {
+        throw new Error('Requires a search term or a permission filter')
+    }
+    debug('Search streams term=%s permissions=%j', term, permissionFilter)
+    return map(
+        fetchSearchStreamsResultFromTheGraph(term, permissionFilter, graphQLClient),
+        (item: SearchStreamsResultItem) => parseStream(toStreamID(item.stream.id), item.stream.metadata),
+        (err: Error, item: SearchStreamsResultItem) => debug('Omitting stream %s from result because %s', item.stream.id, err.message)
+    )
+}
+
+async function* fetchSearchStreamsResultFromTheGraph(
+    term: string | undefined,
+    permissionFilter: SearchStreamsPermissionFilter | undefined,
+    graphQLClient: SynchronizedGraphQLClient
 ): AsyncGenerator<SearchStreamsResultItem> {
     const backendResults = graphQLClient.fetchPaginatedResults<SearchStreamsResultItem>(
         (lastId: string, pageSize: number) => buildQuery(term, permissionFilter, lastId, pageSize)

@@ -1,0 +1,29 @@
+{
+    "extends": "../../tsconfig.jest.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "declarationDir": "dist/types",
+        "lib": ["es2021", "dom"],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "resolveJsonModule": true
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "src/**/*.json",
+        "vendor/**/*",
+        "contracts/**/*.json",
+        "src/config.schema.json",
+        "test/**/*"
+    ],
+    "exclude": [
+        "test/legacy/*",
+        "test/memory/*",
+        "test/exports/*",
+        "src/index-esm.mjs"
+    ],
+    "references": [
+        { "path": "tsconfig.node.json" }
+    ]
+}

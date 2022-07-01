@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -14,14 +15,14 @@ describe('Kademlia correctness', () => {
 
     const nodeIndicesById: { [id: string]: number } = {}
 
-    if (!fs.existsSync('test/simulation/data/nodeids.json')) {
+    if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
         execSync("npm run prepare-dht-simulation")
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/simulation/data/nodeids.json').toString())
+    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
     const groundTruth: { [nodeName: string]: Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }> }
-        = JSON.parse(fs.readFileSync('test/simulation/data/orderedneighbors.json').toString())
+        = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
 

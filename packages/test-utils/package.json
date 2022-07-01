@@ -5,11 +5,11 @@
   "main": "./dist/src/utils.js",
   "types": "./dist/src/utils.d.ts",
   "scripts": {
-    "check": "tsc -p ./tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "test": "jest",
     "test-unit": "npm run test",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run build",
     "build": "tsc --build tsconfig.node.json"
   },
   "keywords": [
@@ -34,7 +34,6 @@
     "express": "^4.17.1"
   },
   "devDependencies": {
-    "@streamr/dev-config": "^1.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.2",

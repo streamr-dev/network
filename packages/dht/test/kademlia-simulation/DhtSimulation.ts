@@ -17,11 +17,11 @@ export class DhtSimulation {
 
     constructor() {
         this.nodes = []
-        if (!fs.existsSync('test/simulation/data/nodeids.json')) {
-            throw('Cannot find test/simulation/data/nodeids.json, please run "npm run prepare-dht-simulation first"')
+        if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
+            throw('Cannot find test/kademlia-simulation/data/nodeids.json, please run "npm run prepare-dht-simulation first"')
         }
-        this.dhtIds = JSON.parse(fs.readFileSync('test/simulation/data/nodeids.json').toString())
-        this.groundTruth = JSON.parse(fs.readFileSync('test/simulation/data/orderedneighbors.json').toString())
+        this.dhtIds = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
+        this.groundTruth = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
     }
 
     private generateId(): Uint8Array {

@@ -51,7 +51,7 @@ module.exports = (env, argv) => {
             type: 'filesystem',
         },
         mode: isProduction ? 'production' : 'development',
-        entry: './src/browser.ts',
+        entry: './src/index.ts',
         devtool: "source-map",
         module: {
             rules: [
@@ -60,7 +60,7 @@ module.exports = (env, argv) => {
                     exclude: /(node_modules|simulation)/,
                     use: [{
                         loader: 'ts-loader',
-                        options: { configFile: 'tsconfig.webpack.json' },
+                        options: { configFile: 'tsconfig.browser.json' },
                     }]
                 }
             ],

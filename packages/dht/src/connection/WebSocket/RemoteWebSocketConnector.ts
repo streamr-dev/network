@@ -6,6 +6,7 @@ import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '../../helpers/Logger'
+import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -28,14 +29,15 @@ export class RemoteWebSocketConnector {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.client.requestConnection(request, options)
-            const res = await response.response
+            const results = this.client.requestConnection(request, options)
+            const res = await results.response
             if (res.reason) {
-                // Log warning?
+                // TODO: Log warning?
+                logger.debug('WebSocketConnectionRequest Rejected', new Err.WebSocketConnectionRequestRejected(res.reason).stack)
             }
             return res.accepted
         } catch (err) {
-            logger.debug(err)
+            logger.debug(new Err.WebSocketConnectionRequestRejected('WebSocketConnectionRequest rejected', err).stack!)
             return false
         }
     }

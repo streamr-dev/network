@@ -1,13 +1,13 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { MockConnectionManager } from '../../src/connection/MockConnectionManager'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
 import { NodeWebRtcConnection } from '../../src/connection/WebRTC/NodeWebRtcConnection'
-import { Err } from '../../src/helpers/errors'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebRTC Connection Management', () => {
 
@@ -31,10 +31,10 @@ describe('WebRTC Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new MockConnectionManager(peerDescriptor1 , simulator)
+        connectorTransport1 = new SimulatorTransport(peerDescriptor1 , simulator)
         manager1 = new ConnectionManager({transportLayer: connectorTransport1})
         
-        connectorTransport2 = new MockConnectionManager(peerDescriptor2, simulator)
+        connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         manager2 = new ConnectionManager({transportLayer: connectorTransport2})
 
         await manager1.start()
@@ -59,7 +59,7 @@ describe('WebRTC Connection Management', () => {
             messageId: 'mockerer'
         }
         
-        await manager1.send(peerDescriptor2, dummyMessage)
+        await manager1.send(dummyMessage, peerDescriptor2)
         
         await waitForCondition(
             () => {
@@ -86,7 +86,7 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await manager2.send(peerDescriptor1, dummyMessage)
+        await manager2.send(dummyMessage, peerDescriptor1)
         await waitForCondition(
             () => {
                 return (!!manager1.getConnection(peerDescriptor2)
@@ -110,7 +110,7 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(manager1.send(peerDescriptor1, dummyMessage))
+        await expect(manager1.send(dummyMessage, peerDescriptor1))
             .rejects
             .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })

@@ -32,7 +32,6 @@ export type CreateMessageOpts = {
 type PublishManyOpts = Partial<{
     delay: number,
     timestamp: number | (() => number)
-    sequenceNumber: number | (() => number)
     partitionKey: number | string | (() => number | string)
     createMessage: (content: any) => any
 }>
@@ -41,12 +40,11 @@ export async function* publishManyGenerator(
     total: number = 5,
     opts: PublishManyOpts = {}
 ): AsyncGenerator<PublishMetadata<any>> {
-    const { delay = 10, sequenceNumber, timestamp, partitionKey, createMessage = Msg } = opts
+    const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
     const batchId = counterId('publishMany')
     for (let i = 0; i < total; i++) {
         yield {
             timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
-            sequenceNumber: typeof sequenceNumber === 'function' ? sequenceNumber() : sequenceNumber,
             partitionKey: typeof partitionKey === 'function' ? partitionKey() : partitionKey,
             content: createMessage({
                 batchId,

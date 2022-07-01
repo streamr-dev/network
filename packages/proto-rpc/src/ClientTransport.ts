@@ -42,7 +42,6 @@ const logger = new Logger(module)
 export class ClientTransport extends EventEmitter implements RpcTransport {
     private static objectCount = 0
     private readonly objectId: number
-    private stopped = false
     protected readonly defaultOptions: ProtoRpcOptions
 
     constructor(defaultTimeout = 5000) {
@@ -58,7 +57,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         return mergeRpcOptions(this.defaultOptions, options)
     }
 
-    private createRequestHeaders(method: MethodInfo, notification?: boolean): {
+    private static createRequestHeaders(method: MethodInfo, notification?: boolean): {
         method: string,
         request: string,
         notification?: string
@@ -78,7 +77,7 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         const defTrailer = new Deferred<RpcMetadata>()
 
         const request: RpcMessage = {
-            header: this.createRequestHeaders(method, options.notification),
+            header: ClientTransport.createRequestHeaders(method, options.notification),
             body: requestBody,
             requestId: v4()
         }
@@ -106,21 +105,21 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
         return unary
     }
 
-    clientStreaming<I extends object, O extends object>(method: MethodInfo<I, O>/*, options: RpcOptions*/): ClientStreamingCall<I, O> {
+    clientStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ClientStreamingCall<I, O> {
         const e = new RpcError('Client streaming is not supported by DhtTransport')
         e.methodName = method.name
         e.serviceName  = method.service.typeName
         throw e
     }
 
-    duplex<I extends object, O extends object>(method: MethodInfo<I, O>/*, options: RpcOptions*/): DuplexStreamingCall<I, O> {
+    duplex<I extends object, O extends object>(method: MethodInfo<I, O>): DuplexStreamingCall<I, O> {
         const e = new RpcError('Duplex streaming is not supported by DhtTransport')
         e.methodName = method.name
         e.serviceName  = method.service.typeName
         throw e
     }
 
-    serverStreaming<I extends object, O extends object>(method: MethodInfo<I, O>/*, input: I, options?: RpcOptions*/): ServerStreamingCall<I, O> {
+    serverStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ServerStreamingCall<I, O> {
         const e = new RpcError('Server streaming is not supported by DhtTransport')
         e.methodName = method.name
         e.serviceName  = method.service.typeName
@@ -128,7 +127,6 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     stop(): void {
-        this.stopped = true
         this.removeAllListeners()
     }
 }

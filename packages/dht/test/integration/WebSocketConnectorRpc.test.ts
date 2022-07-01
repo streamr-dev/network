@@ -1,4 +1,4 @@
-import { RpcCommunicator, RpcCommunicatorEvents } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import {
@@ -42,11 +42,11 @@ describe('WebSocketConnectorRpc', () => {
             MockWebSocketConnectorRpc.requestConnection
         )
 
-        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

@@ -9,7 +9,13 @@ import { Logger } from '../helpers/Logger'
 
 const logger = new Logger(module)
 
-export class DhtPeer {
+// Fields required by objects stored in the k-bucket library
+interface KBucketContact {
+    id: Uint8Array
+    vectorClock: number
+}
+
+export class DhtPeer implements KBucketContact {
     private static counter = 0
     
     public readonly peerId: PeerID
@@ -18,14 +24,12 @@ export class DhtPeer {
         return this.peerId.value
     }
 
-    private lastContacted: number
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
     private readonly dhtClient: IDhtRpcClient
     
     constructor(peerDescriptor: PeerDescriptor, client: IDhtRpcClient) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
-        this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client
@@ -44,10 +48,9 @@ export class DhtPeer {
         }
 
         try {
-            const response = await this.dhtClient.getClosestPeers(request, options)
-            const peers = await response.response
-            const formatted = peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
-            return formatted
+            const results = this.dhtClient.getClosestPeers(request, options)
+            const peers = await results.response
+            return peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
         } catch (err) {
             logger.debug(err)
             return []
@@ -64,8 +67,8 @@ export class DhtPeer {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.dhtClient.ping(request, options)
-            const pong = await response.response
+            const results = this.dhtClient.ping(request, options)
+            const pong = await results.response
             if (pong.nonce === request.nonce) {
                 return true
             }
@@ -88,13 +91,13 @@ export class DhtPeer {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const response = await this.dhtClient.routeMessage(message, options)
-            const ack = await response.response
+            const results = this.dhtClient.routeMessage(message, options)
+            const ack = await results.response
             if (ack.error!.length > 0) {
                 return false
             }
         } catch (err) {
-            // logger.debug(err)
+            logger.debug(err)
             return false
         }
         return true

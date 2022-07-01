@@ -1,47 +1,14 @@
 /**
  * Config and utilities for interating with identity & Ethereum chain.
  */
-import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
-import type { ExternalProvider, Provider } from '@ethersproject/providers'
-import type { Signer } from '@ethersproject/abstract-signer'
+import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
+import type { Provider } from '@ethersproject/providers'
 import type { BigNumber } from '@ethersproject/bignumber'
-import { computeAddress } from '@ethersproject/transactions'
-import { getAddress } from '@ethersproject/address'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 
-import { ConfigInjectionToken } from './Config'
-import { EthereumAddress } from 'streamr-client-protocol'
-
-export type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never }
-export type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U
 export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
-
-export type ProviderConfig = ExternalProvider
-
-// Auth Config
-
-export type ProviderAuthConfig = {
-    ethereum: ProviderConfig
-}
-
-export type PrivateKeyAuthConfig = {
-    privateKey: string,
-    // The address property is not used. It is included to make the object
-    // compatible with StreamrClient.generateEthereumAccount(), as we typically
-    // use that method to generate the client "auth" option.
-    address?: EthereumAddress
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type UnauthenticatedAuthConfig = XOR<{}, { unauthenticated: true }>
-
-export type AuthenticatedConfig = XOR<ProviderAuthConfig, PrivateKeyAuthConfig>
-export type AuthConfig = XOR<AuthenticatedConfig, UnauthenticatedAuthConfig>
-
-// Ethereum Config
 
 // these should come from ETH-184 config package when it's ready
 export type EthereumNetworkConfig = {
@@ -53,157 +20,63 @@ export type EthereumNetworkConfig = {
 export type EthereumConfig = {
     mainChainRPCs?: ChainConnectionInfo
     streamRegistryChainRPCs: ChainConnectionInfo
-
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     ethereumNetworks?: {
         [networkName: string]: EthereumNetworkConfig
     }
 }
 
-@scoped(Lifecycle.ContainerScoped)
-export class Ethereum {
-    static generateEthereumAccount(): { address: string; privateKey: string } {
-        const wallet = Wallet.createRandom()
+export const generateEthereumAccount = (): { address: string; privateKey: string } => {
+    const wallet = Wallet.createRandom()
+    return {
+        address: wallet.address,
+        privateKey: wallet.privateKey,
+    }
+}
+
+export const getMainnetProvider = (config: EthereumConfig): Provider => {
+    return getAllMainnetProviders(config)[0]
+}
+
+const getAllMainnetProviders = (config: EthereumConfig): Provider[] => {
+    if (!config.mainChainRPCs || !config.mainChainRPCs.rpcs.length) {
+        return [getDefaultProvider()]
+    }
+    return config.mainChainRPCs.rpcs.map((c: ConnectionInfo) => {
+        return new JsonRpcProvider(c)
+    })
+}
+
+export const getStreamRegistryChainProvider = (config: EthereumConfig): Provider => {
+    return getAllStreamRegistryChainProviders(config)[0]
+}
+
+export const getAllStreamRegistryChainProviders = (config: EthereumConfig): Provider[] => {
+    if (!config.streamRegistryChainRPCs || !config.streamRegistryChainRPCs.rpcs.length) {
+        throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
+    }
+    return config.streamRegistryChainRPCs.rpcs.map((c: ConnectionInfo) => {
+        return new JsonRpcProvider(c)
+    })
+}
+
+export const getStreamRegistryOverrides = (config: EthereumConfig): Overrides => {
+    return getOverrides(config.streamRegistryChainRPCs?.name ?? 'polygon', getStreamRegistryChainProvider(config), config)
+}
+
+/**
+ * Apply the gasPriceStrategy to the estimated gas price, if given
+ * Ethers.js will resolve the gas price promise before sending the tx
+ */
+const getOverrides = (chainName: string, provider: Provider, config: EthereumConfig): Overrides => {
+    const chainConfig = config.ethereumNetworks?.[chainName]
+    if (!chainConfig) { return {} }
+    const overrides = chainConfig?.overrides ?? {}
+    if (chainConfig.gasPriceStrategy) {
         return {
-            address: wallet.address,
-            privateKey: wallet.privateKey,
+            ...overrides,
+            gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)
         }
     }
-
-    private _getAddress?: () => Promise<string>
-    private _getStreamRegistryChainSigner?: () => Promise<Signer>
-
-    constructor(
-        @inject(ConfigInjectionToken.Auth) authConfig: AuthConfig,
-        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
-    ) {
-        if ('privateKey' in authConfig && authConfig.privateKey) {
-            const key = authConfig.privateKey
-            const address = getAddress(computeAddress(key))
-            this._getAddress = async () => address
-            this._getStreamRegistryChainSigner = async () => new Wallet(key, this.getStreamRegistryChainProvider())
-        } else if ('ethereum' in authConfig && authConfig.ethereum) {
-            const { ethereum } = authConfig
-            this._getAddress = async () => {
-                try {
-                    if (!(ethereumConfig && 'request' in ethereum && typeof ethereum.request === 'function')) {
-                        throw new Error(`invalid ethereum provider ${ethereumConfig}`)
-                    }
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-                    const account = getAddress(accounts[0]) // convert to checksum case
-                    return account
-                } catch {
-                    throw new Error('no addresses connected+selected in Metamask')
-                }
-            }
-            this._getStreamRegistryChainSigner = async () => {
-                if (!ethereumConfig.streamRegistryChainRPCs || ethereumConfig.streamRegistryChainRPCs.chainId === undefined) {
-                    throw new Error('Streamr streamRegistryChainRPC not configured (with chainId) in the StreamrClient options!')
-                }
-
-                const metamaskProvider = new Web3Provider(ethereum)
-                const { chainId } = await metamaskProvider.getNetwork()
-                if (chainId !== ethereumConfig.streamRegistryChainRPCs.chainId) {
-                    const sideChainId = ethereumConfig.streamRegistryChainRPCs.chainId
-                    throw new Error(
-                        `Please connect Metamask to Ethereum blockchain with chainId ${sideChainId}: current chainId is ${chainId}`
-                    )
-                }
-                const metamaskSigner = metamaskProvider.getSigner()
-                return metamaskSigner
-            }
-
-            // TODO: handle events
-            // ethereum.on('accountsChanged', (accounts) => { })
-            // https://docs.metamask.io/guide/ethereum-provider.html#events says:
-            //   "We recommend reloading the page unless you have a very good reason not to"
-            //   Of course we can't and won't do that, but if we need something chain-dependent...
-            // ethereum.on('chainChanged', (chainId) => { window.location.reload() });
-        }
-    }
-
-    isAuthenticated(): boolean {
-        return (this._getAddress !== undefined)
-    }
-
-    async getAddress(): Promise<EthereumAddress> {
-        if (!this._getAddress) {
-            // _getAddress is assigned in constructor
-            throw new Error('StreamrClient is not authenticated with private key')
-        }
-
-        return (await this._getAddress()).toLowerCase()
-    }
-
-    async getStreamRegistryChainSigner(): Promise<Signer> {
-        if (!this._getStreamRegistryChainSigner) {
-            throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
-        }
-        return this._getStreamRegistryChainSigner()
-    }
-
-    /**
-     * @returns Ethers.js Provider, a connection to the Ethereum network (mainnet)
-     */
-    getMainnetProvider(): Provider {
-        return this.getAllMainnetProviders()[0]
-    }
-
-    /**
-     * @returns Array of Ethers.js Providers, connections to the Ethereum network (mainnet)
-     */
-    getAllMainnetProviders(): Provider[] {
-        if (!this.ethereumConfig.mainChainRPCs || !this.ethereumConfig.mainChainRPCs.rpcs.length) {
-            return [getDefaultProvider()]
-        }
-
-        return this.ethereumConfig.mainChainRPCs.rpcs.map((config: ConnectionInfo) => {
-            return new JsonRpcProvider(config)
-        })
-    }
-
-    /**
-     * @returns Ethers.js Provider, a connection to the Stream Registry Chain
-     */
-    getStreamRegistryChainProvider(): Provider {
-        return this.getAllStreamRegistryChainProviders()[0]
-    }
-
-    /**
-     * @returns Array of Ethers.js Providers, connections to the Stream Registry Chain
-     */
-    getAllStreamRegistryChainProviders(): Provider[] {
-        if (!this.ethereumConfig.streamRegistryChainRPCs || !this.ethereumConfig.streamRegistryChainRPCs.rpcs.length) {
-            throw new Error('EthereumConfig has no streamRegistryChainRPC configuration.')
-        }
-
-        return this.ethereumConfig.streamRegistryChainRPCs.rpcs.map((config: ConnectionInfo) => {
-            return new JsonRpcProvider(config)
-        })
-    }
-
-    getMainnetOverrides(): Overrides {
-        return this.getOverrides('ethereum', this.getMainnetProvider())
-    }
-
-    getStreamRegistryOverrides(): Overrides {
-        return this.getOverrides(this.ethereumConfig?.streamRegistryChainRPCs?.name ?? 'polygon', this.getStreamRegistryChainProvider())
-    }
-
-    /**
-     * Apply the gasPriceStrategy to the estimated gas price, if given
-     * Ethers.js will resolve the gas price promise before sending the tx
-     */
-    private getOverrides(chainName: string, provider: Provider): Overrides {
-        const chainConfig = this.ethereumConfig?.ethereumNetworks?.[chainName]
-        if (!chainConfig) { return {} }
-        const overrides = chainConfig?.overrides ?? {}
-        if (chainConfig.gasPriceStrategy) {
-            return {
-                ...overrides,
-                gasPrice: provider.getGasPrice().then(chainConfig.gasPriceStrategy)
-            }
-        }
-        return overrides
-    }
+    return overrides
 }

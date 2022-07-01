@@ -15,12 +15,11 @@
   },
   "main": "bin/broker.js",
   "scripts": {
-    "check": "tsc -p ./tsconfig.json --noEmit",
-    "prepare": "npm run build",
-    "test": "jest test/unit test/integration && npm run test-sequential",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "build": "tsc -b tsconfig.node.json",
+    "test": "jest test/unit test/integration && npm run test-sequential",
     "test-unit": "jest test/unit",
     "test-sequential": "jest --forceExit --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
     "test-integration": "jest --forceExit test/integration && npm run test-sequential",
@@ -58,7 +57,6 @@
     "ws": "^7.5.0"
   },
   "devDependencies": {
-    "@streamr/dev-config": "^1.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",

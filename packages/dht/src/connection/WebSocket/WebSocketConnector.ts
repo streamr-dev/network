@@ -25,11 +25,12 @@ import { Logger } from '../../helpers/Logger'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
+import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
-    private WESOCKET_CONNECTOR_APP_ID = "websocketconnector"
+    private static WEBSOCKET_CONNECTOR_APP_ID = 'websocketconnector'
     private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -41,7 +42,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         super()
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.WESOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
@@ -98,14 +99,13 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             }
 
             const errorHandler = () => {
-                //console.log('errorHandler of WebSocketConnector::connectAsync()')
                 clearTimeout(timeout)
-                reject()
+                reject(new Err.ConnectionFailed('Could not open WebSocket connection'))
             }
 
             const timeoutHandler = () => {
                 socket.off(ConnectionEvent.ERROR, errorHandler)
-                reject()
+                reject(new Err.ConnectionFailed('WebSocket connection timed out'))
             }
 
             const timeout = setTimeout(timeoutHandler, timeoutMs)
@@ -123,12 +123,6 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
 
             socket.connect(address)
         })
-    }
-
-    // Security check
-    withinPortRange(port: number): boolean {
-        // Check that requested connections is withing acceted range
-        return !!port
     }
 
     requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): IConnection {
@@ -165,7 +159,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 }
 
                 const msg: Message = {
-                    appId: this.WESOCKET_CONNECTOR_APP_ID,
+                    appId: WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID,
                     messageType: MessageType.HANDSHAKE,
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)

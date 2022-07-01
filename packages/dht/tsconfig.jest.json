@@ -1,12 +1,16 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.jest.json",
+    "extends": "../../tsconfig.jest.json",
     "compilerOptions": {
         "outDir": "dist"
     },
     "include": [
         "src/**/*",
-        "test/**/*"
+        "test/**/*",
+        "google/**/*"
     ],
+    "exclude": [
+        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+    ],  
     "references": [
         { "path": "tsconfig.node.json" }
     ]

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { SortedContactList } from '../../src/dht/SortedContactList'
 import { PeerID } from '../../src/helpers/PeerID'
 import { IDhtRpcClient } from '../../src/proto/DhtRpc.client'
@@ -13,14 +11,14 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
 
 class MockRpcClient implements IDhtRpcClient {
-    getClosestPeers(input: ClosestPeersRequest, options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
+    getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
         return {} as  UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
     }
-    ping(input: PingRequest, options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
+    ping(_input: PingRequest, _options?: RpcOptions): UnaryCall <PingRequest, PingResponse> {
         return {} as UnaryCall<PingRequest, PingResponse>
     }
 
-    routeMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+    routeMessage(_input: RouteMessageWrapper, _options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         return {} as UnaryCall<RouteMessageWrapper, RouteMessageAck>
     }
 }

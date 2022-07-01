@@ -97,7 +97,6 @@ message RouteMessageAck {
 
 message ConnectivityRequestMessage {
   uint32 port = 1;
-  //string nonce = 2; // requestId
 }
 
 message ConnectivityResponseMessage {
@@ -105,7 +104,6 @@ message ConnectivityResponseMessage {
   string ip = 2;
   string natType = 3;
   ConnectivityMethod websocket = 4;
-  //string nonce = 4; // requestId
 }
 
 message HandshakeMessage {

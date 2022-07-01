@@ -21,12 +21,11 @@
   "scripts": {
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
-    "check": "tsc -p ./tsconfig.json --noEmit",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json && NODE_ENV=production webpack --mode=production",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
@@ -39,7 +38,6 @@
     "test-flakey": "jest test/flakey",
     "test-integration": "jest test/integration/",
     "test-simulator": "jest --projects simulator.jest.config.js -- test/",
-    "test-types": "npm run check",
     "test-unit": "jest test/unit",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js"
   },
@@ -61,7 +59,6 @@
   },
   "devDependencies": {
     "@jest/fake-timers": "^27.0.5",
-    "@streamr/dev-config": "^1.0.0",
     "@streamr/network-tracker": "1.0.0",
     "@types/express": "^4.17.13",
     "@types/heap": "^0.2.28",

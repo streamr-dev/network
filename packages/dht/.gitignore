@@ -1,13 +1,8 @@
 .DS_Store
 node_modules
-lerna-debug.log
-*.tsbuildinfo
-*.heapprofile
-*.heapsnapshot
-oldsrc
 dist
 google
 src/proto
 coverage
-test/simulation/data/nodeids.json
-test/simulation/data/orderedneighbors.json
+test/kademlia-simulation/data/nodeids.json
+test/kademlia-simulation/data/orderedneighbors.json

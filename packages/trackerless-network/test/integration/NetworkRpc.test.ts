@@ -1,5 +1,5 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { RpcCommunicator, CallContext, RpcCommunicatorEvents } from '@streamr/proto-rpc'
+import { RpcCommunicator, CallContext, RpcCommunicatorEvent } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
 import { DataMessage, MessageRef } from '../../src/proto/NetworkRpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -20,7 +20,7 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
         client = new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport())

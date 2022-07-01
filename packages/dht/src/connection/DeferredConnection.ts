@@ -3,6 +3,7 @@ import { EventEmitter } from 'events'
 import { ConnectionID } from '../types'
 import { PeerDescriptor } from '../proto/DhtRpc'
 import { Logger } from '../helpers/Logger'
+import * as Err from '../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -24,7 +25,7 @@ export class DeferredConnection extends EventEmitter implements IConnection {
         this.removeAllListeners()
     }
 
-    getPeerDescriptor(): PeerDescriptor | null {
+    getPeerDescriptor(): PeerDescriptor | undefined {
         return this.peerDescriptor
     }
 
@@ -33,6 +34,7 @@ export class DeferredConnection extends EventEmitter implements IConnection {
     }
 
     sendBufferedMessages(): void {
+        throw new Err.NotImplemented('DeferredConnection does not implement sendBufferedMessages')
     }
 
     getBufferedMessages(): Uint8Array[] {
@@ -40,5 +42,6 @@ export class DeferredConnection extends EventEmitter implements IConnection {
     }
 
     setPeerDescriptor(_peerDescriptor: PeerDescriptor): void {
+        throw new Err.NotImplemented('DeferredConnection does not implement setPeerDescriptor')
     }
 }
