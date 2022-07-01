@@ -19,10 +19,9 @@ export type EthereumNetworkConfig = {
 }
 
 export type EthereumConfig = {
-    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    streamStorageRegistryChainAddress: EthereumAddress, // this uses the streamregistry and
-    // noderegistry contracts and saves what streams are stored by which storagenodes
-    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
+    streamRegistryChainAddress: EthereumAddress
+    streamStorageRegistryChainAddress: EthereumAddress
+    storageNodeRegistryChainAddress: EthereumAddress,
     ensCacheChainAddress: EthereumAddress,
     mainChainRPCs?: ChainConnectionInfo
     streamRegistryChainRPCs: ChainConnectionInfo

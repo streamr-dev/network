@@ -18,6 +18,12 @@ import { SynchronizedGraphQLClient, createWriteContract } from '../utils/Synchro
 import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
+/**
+ * Uses two contracts:
+ * - streamStorageRegistry to store storage node assignments (mapping of streamIds <-> storage nodes addresses)
+ * - nodeRegistry to store a mapping of storage node addresses <-> storage node URLs
+ */
+
 const log = debug('StreamrClient:StorageNodeRegistry')
 
 export type StorageNodeAssignmentEvent = {
