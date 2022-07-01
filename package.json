@@ -5,7 +5,6 @@
         "install-git-hooks": "husky install",
         "bootstrap": "npm ci --no-audit",
         "bootstrap-pkg": "npm ci --no-audit --include-workspace-root --workspace",
-        "bootstrap-root": "npm ci --no-audit --no-workspaces # install only packages needed by root package.json",
         "prune-pkg": "npm prune --no-audit --include-workspace-root --production --workspace",
         "versions": "zx ./show-versions.mjs && manypkg check",
         "build": "npm run --workspaces --if-present build",
