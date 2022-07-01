@@ -9,7 +9,13 @@ import { Logger } from '../helpers/Logger'
 
 const logger = new Logger(module)
 
-export class DhtPeer {
+// Fields required by objects stored in the k-bucket library
+interface KBucketContact {
+    id: Uint8Array
+    vectorClock: number
+}
+
+export class DhtPeer implements KBucketContact {
     private static counter = 0
     
     public readonly peerId: PeerID
@@ -18,14 +24,12 @@ export class DhtPeer {
         return this.peerId.value
     }
 
-    private lastContacted: number
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
     private readonly dhtClient: IDhtRpcClient
     
     constructor(peerDescriptor: PeerDescriptor, client: IDhtRpcClient) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
-        this.lastContacted = 0
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
         this.dhtClient = client

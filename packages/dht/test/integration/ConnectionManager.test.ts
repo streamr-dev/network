@@ -26,10 +26,6 @@ describe('ConnectionManager', () => {
     const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
     const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
 
-    beforeAll(async () => {
-
-    })
-
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
 
