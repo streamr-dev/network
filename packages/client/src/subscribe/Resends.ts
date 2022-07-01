@@ -20,6 +20,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random, range } from 'lodash'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
@@ -67,6 +68,7 @@ export class Resends implements Context {
 
     constructor(
         context: Context,
+        @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
@@ -148,7 +150,7 @@ export class Resends implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAddresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAddresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'

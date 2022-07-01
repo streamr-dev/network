@@ -12,8 +12,8 @@
       "test/**/BrowserWebRtcConnection.test.ts",
       "test/**/IntegrationBrowserWebRtcConnection.test.ts"
     ],
-    "references": [
-      { "path": "tsconfig.node.json" },
-      { "path":  "../network-tracker/tsconfig.jest.json"}
-    ]
+  "references": [
+    { "path": "../protocol/tsconfig.node.json" },
+    { "path": "../test-utils/tsconfig.node.json" }
+  ]
 }

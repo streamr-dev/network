@@ -8,7 +8,6 @@ import { inspect } from './utils/log'
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
-import { StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
@@ -28,6 +27,7 @@ import { withTimeout } from './utils/promises'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { InspectOptions } from 'util'
 import { MessageMetadata } from './index-exports'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 
 export interface StreamProperties {
     id: string
@@ -88,7 +88,7 @@ class StreamrStream implements StreamMetadata {
     protected _subscriber: Subscriber
     protected _streamRegistry: StreamRegistry
     protected _streamRegistryCached: StreamRegistryCached
-    protected _nodeRegistry: StorageNodeRegistry
+    protected _streamStorageRegistry: StreamStorageRegistry
     private _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
@@ -104,7 +104,7 @@ class StreamrStream implements StreamMetadata {
         this._subscriber = _container.resolve<Subscriber>(Subscriber)
         this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
-        this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
+        this._streamStorageRegistry = _container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this._timeoutsConfig = _container.resolve<TimeoutsConfig>(ConfigInjectionToken.Timeouts)
     }
 
@@ -186,7 +186,7 @@ class StreamrStream implements StreamMetadata {
         try {
             assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
-            await this._nodeRegistry.addStreamToStorageNode(this.id, nodeAddress)
+            await this._streamStorageRegistry.addStreamToStorageNode(this.id, nodeAddress)
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
@@ -204,14 +204,14 @@ class StreamrStream implements StreamMetadata {
      */
     async removeFromStorageNode(nodeAddress: EthereumAddress): Promise<void> {
         try {
-            return this._nodeRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
+            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }
     }
 
     async getStorageNodes(): Promise<string[]> {
-        return this._nodeRegistry.getStorageNodes(this.id)
+        return this._streamStorageRegistry.getStorageNodes(this.id)
     }
 
     /**
