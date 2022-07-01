@@ -441,43 +441,6 @@ describe('decryption', () => {
                 expect(received.map((s) => s.getParsedContent())).toEqual(contentClear)
             }, TIMEOUT * 2)
 
-            it('client.resend last can get the historical keys for previous encrypted messages', async () => {
-                // Publish encrypted messages with different keys
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    distributionMethod: 'rotate'
-                })
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.forEach(async () => {
-                    await publisher.updateEncryptionKey({
-                        streamId: stream.id,
-                        distributionMethod: 'rotate'
-                    })
-                })
-                const published: any[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.forEach(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    published.push(streamMessage.getParsedContent())
-                })
-                await publishTestMessages(NUM_MESSAGES, {
-                    waitForLast: true,
-                })
-
-                // resend without knowing the historical keys
-                await grantSubscriberPermissions()
-                const sub = await subscriber.resend(
-                    stream.id,
-                    {
-                        last: 2,
-                    }
-                )
-
-                const received = await sub.collect()
-
-                expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(-2))
-            }, TIMEOUT * 2)
-
             it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
                 // Publish encrypted messages with different keys
                 await publisher.updateEncryptionKey({

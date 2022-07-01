@@ -87,11 +87,9 @@ describe('SynchronizedGraphQLClient', () => {
                 getIndexBlockNumber
             } as any,
             {
-                _timeouts: {
-                    theGraph: {
-                        timeout: 10 * INDEXING_INTERVAL,
-                        retryInterval: POLL_INTERVAL
-                    }
+                theGraph: {
+                    timeout: 10 * INDEXING_INTERVAL,
+                    retryInterval: POLL_INTERVAL
                 }
             } as any
         )

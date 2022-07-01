@@ -22,6 +22,7 @@ import { Subscription } from '../subscribe/Subscription'
 import { GroupKey, GroupKeyish } from './GroupKey'
 import { publishAndWaitForResponseMessage } from '../utils/waitForMessage'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
@@ -50,7 +51,8 @@ export class KeyExchangeStream implements Context {
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         private subscriber: Subscriber,
         private destroySignal: DestroySignal,
-        @inject(delay(() => Publisher)) private publisher: Publisher
+        @inject(delay(() => Publisher)) private publisher: Publisher,
+        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -93,6 +95,7 @@ export class KeyExchangeStream implements Context {
             () => this.createSubscription(),
             () => this.subscribe.reset(),
             this.destroySignal,
+            this.timeoutsConfig.encryptionKeyRequest
         )
     }
 

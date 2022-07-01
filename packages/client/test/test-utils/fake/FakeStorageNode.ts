@@ -54,7 +54,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
         })
     }
 
-    private storeMessage(msg: StreamMessage): void {
+    storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
         this.streamPartMessages.add(streamPartId, msg)
     }
@@ -81,14 +81,14 @@ export class FakeStorageNode extends FakeBrubeckNode {
         fromSequenceNumber: number,
         toTimestamp: number,
         toSequenceNumber: number,
-        publisherId: string,
-        msgChainId: string
+        publisherId?: string,
+        msgChainId?: string
     }): Promise<StreamMessage[]> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
             return messages.filter((msg) => {
-                return (msg.getPublisherId() === opts.publisherId)
-                    && (msg.getMsgChainId() === opts.msgChainId)
+                return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
+                    && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
                     && (
                         ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))
                         || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= opts.fromSequenceNumber))

@@ -2,7 +2,7 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { ObservableContract, withErrorHandlingAndLogging } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
 import { Gate } from './Gate'
@@ -131,15 +131,13 @@ export class SynchronizedGraphQLClient {
     constructor(
         context: Context,
         @inject(GraphQLClient) delegate: GraphQLClient,
-        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
         this.delegate = delegate
         this.indexingState = new IndexingState(
             () => this.delegate.getIndexBlockNumber(),
-            // eslint-disable-next-line no-underscore-dangle
-            clientConfig._timeouts.theGraph.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            clientConfig._timeouts.theGraph.retryInterval,
+            timeoutsConfig.theGraph.timeout,
+            timeoutsConfig.theGraph.retryInterval,
             context.debug.extend(instanceId(this))
         )
     }

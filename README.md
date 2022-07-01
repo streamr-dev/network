@@ -46,6 +46,13 @@ To install all required dependencies and link sub-packages together:
 npm ci
 ```
 
+### Install git hooks
+To install git hooks (e.g. Husky for conventional commit validation):
+
+```bash
+npm run install-git-hooks
+```
+
 ###  Install dependencies of a sub-package
 
 To only install the dependencies (and link together sub-packages) required by a specific sub-package:
@@ -83,14 +90,6 @@ To clear all caches and remove the `dist` directory from each sub-package:
 # from top level
 npm run clean-dist
 ```
-
-To just clear caches:
-
-```bash
-# from top level
-npm run clean-cache
-```
-
 
 ### Clean all
 

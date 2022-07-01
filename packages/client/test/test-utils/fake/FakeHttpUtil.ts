@@ -2,23 +2,22 @@ import { Readable } from 'stream'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { URLSearchParams } from 'url'
-
-import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { HttpUtil } from '../../../src/HttpUtil'
+import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
+import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
 type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeHttpUtil implements HttpUtil {
     private readonly realHttpUtil: HttpUtil
-    private readonly storageNodeRegistry: FakeStorageNodeRegistry
+    private readonly streamStorageRegistry: FakeStreamStorageRegistry
 
     constructor(
-        @inject(StorageNodeRegistry) storageNodeRegistry: StorageNodeRegistry
+        @inject(StreamStorageRegistry) streamStorageRegistry: StreamStorageRegistry
     ) {
         this.realHttpUtil = new HttpUtil()
-        this.storageNodeRegistry = storageNodeRegistry as unknown as FakeStorageNodeRegistry
+        this.streamStorageRegistry = streamStorageRegistry as unknown as FakeStreamStorageRegistry
     }
 
     async fetchHttpStream(url: string): Promise<Readable> {
@@ -27,7 +26,7 @@ export class FakeHttpUtil implements HttpUtil {
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                const storageNode = await this.storageNodeRegistry.getRandomStorageNodeFor(request.streamPartId)
+                const storageNode = await this.streamStorageRegistry.getRandomStorageNodeFor(request.streamPartId)
                 let msgs: StreamMessage<unknown>[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
@@ -37,8 +36,8 @@ export class FakeHttpUtil implements HttpUtil {
                         fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
                         toTimestamp: Number(request.query!.get('toTimestamp')),
                         toSequenceNumber: Number(request.query!.get('toSequenceNumber')),
-                        publisherId: request.query!.get('publisherId')!,
-                        msgChainId: request.query!.get('msgChainId')!
+                        publisherId: request.query!.get('publisherId') ?? undefined,
+                        msgChainId: request.query!.get('msgChainId') ?? undefined
                     })
                 } else {
                     throw new Error('not implemented: ' + JSON.stringify(request))
