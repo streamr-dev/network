@@ -58,7 +58,9 @@ export class StreamrNode extends EventEmitter {
                 (message: DataMessage) =>
                     this.emit(Event.NEW_MESSAGE, message, message.senderId))
             )
-            .catch((err) => {console.log(err)})
+            .catch((_err) => {
+                // console.log(err)
+            })
     }
 
     publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: DataMessage): void {
@@ -67,7 +69,9 @@ export class StreamrNode extends EventEmitter {
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.broadcast(msg))
-                .catch((err) => {console.log(err)})
+                .catch((_err) => {
+                    // console.log(err)
+                })
         }
     }
 
