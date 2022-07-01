@@ -1,4 +1,4 @@
-import { LoggerNode as Logger } from './LoggerNode'
+import { Logger } from './Logger'
 import { withTimeout, TimeoutError } from './withTimeout'
 
 export {
