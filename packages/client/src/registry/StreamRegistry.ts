@@ -9,7 +9,7 @@ import { EthereumConfig, getAllStreamRegistryChainProviders, getStreamRegistryOv
 import { instanceId } from '../utils/utils'
 import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { ErrorCode, NotFoundError } from '../HttpUtil'
 import {
@@ -79,11 +79,11 @@ export class StreamRegistry implements Context {
         context: Context,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
+        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -91,7 +91,7 @@ export class StreamRegistry implements Context {
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
             return withErrorHandlingAndLogging<StreamRegistryContract>(
-                new Contract(this.config.streamRegistryChainAddress, StreamRegistryArtifact, provider),
+                new Contract(this.ethereumConfig.streamRegistryChainAddress, StreamRegistryArtifact, provider),
                 'streamRegistry'
             )
         })
@@ -110,7 +110,7 @@ export class StreamRegistry implements Context {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
-                this.config.streamRegistryChainAddress,
+                this.ethereumConfig.streamRegistryChainAddress,
                 StreamRegistryArtifact,
                 chainSigner,
                 'streamRegistry',
@@ -164,10 +164,8 @@ export class StreamRegistry implements Context {
             try {
                 await until(
                     async () => this.streamExistsOnChain(streamId),
-                    // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.timeout,
-                    // eslint-disable-next-line no-underscore-dangle
-                    this.config._timeouts.jsonRpc.retryInterval
+                    this.timeoutsConfig.jsonRpc.timeout,
+                    this.timeoutsConfig.jsonRpc.retryInterval
                 )
             } catch (e) {
                 throw new Error(`unable to create stream "${streamId}"`)

@@ -21,7 +21,7 @@ export type CacheConfig = {
     maxAge: number
 }
 
-type TimeoutsConfig = {
+export type TimeoutsConfig = {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -33,7 +33,9 @@ type TimeoutsConfig = {
     jsonRpc: {
         timeout: number
         retryInterval: number
-    }
+    },
+    /** @internal */
+    encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
@@ -82,11 +84,6 @@ export type StrictStreamrClientConfig = {
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
-    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
-    // noderegistry contracts and saves what streams are stored by which storagenodes
-    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
-    ensCacheChainAddress: EthereumAddress,
     network: NetworkConfig
     cache: CacheConfig,
     /** @internal */
@@ -279,4 +276,5 @@ export const ConfigInjectionToken = {
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
     Encryption: Symbol('Config.Encryption'),
+    Timeouts: Symbol('Config.Timeouts')
 }
