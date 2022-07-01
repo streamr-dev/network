@@ -102,11 +102,7 @@ export class StreamRegistry implements Context {
         return new Stream({ ...props, id }, this.container)
     }
 
-    // --------------------------------------------------------------------------------------------
-    // Send transactions to the StreamRegistry contract
-    // --------------------------------------------------------------------------------------------
-
-    private async connectToStreamRegistryContract(): Promise<void> {
+    private async connectToContract(): Promise<void> {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
@@ -151,7 +147,7 @@ export class StreamRegistry implements Context {
         }
         const [domain, path] = domainAndPath
 
-        await this.connectToStreamRegistryContract()
+        await this.connectToContract()
         if (StreamIDUtils.isENSAddress(domain)) {
             /*
                 The call to createStreamWithENS delegates the ENS ownership check, and therefore the
@@ -189,7 +185,7 @@ export class StreamRegistry implements Context {
 
     async updateStream(props: StreamProperties): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        await this.connectToStreamRegistryContract()
+        await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.updateStreamMetadata(
             streamId,
@@ -205,7 +201,7 @@ export class StreamRegistry implements Context {
     async deleteStream(streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.debug('Deleting stream %s', streamId)
-        await this.connectToStreamRegistryContract()
+        await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         await waitForTx(this.streamRegistryContract!.deleteStream(
             streamId,
@@ -392,7 +388,7 @@ export class StreamRegistry implements Context {
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.streamRegistryCached.clearStream(streamId)
-        await this.connectToStreamRegistryContract()
+        await this.connectToContract()
         for (const assignment of assignments) {
             for (const permission of assignment.permissions) {
                 const solidityType = streamPermissionToSolidityType(permission)
@@ -423,7 +419,7 @@ export class StreamRegistry implements Context {
                 return convertStreamPermissionsToChainPermission(assignment.permissions)
             }))
         }
-        await this.connectToStreamRegistryContract()
+        await this.connectToContract()
         const ethersOverrides = getStreamRegistryOverrides(this.ethereumConfig)
         const txToSubmit = this.streamRegistryContract!.setPermissionsMultipleStreans(
             streamIds,

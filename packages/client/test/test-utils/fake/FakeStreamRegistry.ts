@@ -17,6 +17,7 @@ import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
+import { Methods } from '../types'
 
 type PublicPermissionTarget = 'public'
 const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
@@ -27,10 +28,7 @@ interface RegistryItem {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStreamRegistry implements Omit<StreamRegistry,
-    'id' | 'debug' |
-    'streamRegistryContract' | 'streamRegistryContractReadonly' |
-    'chainProvider' |'chainSigner'> {
+export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
 
     private readonly registryItems: Map<StreamID, RegistryItem> = new Map()
     private readonly streamIdBuilder: StreamIDBuilder
