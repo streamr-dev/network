@@ -30,7 +30,7 @@ describe('resend with existing key', () => {
     let stream: Stream
     let initialKey: GroupKey
     let rotatedKey: GroupKey
-    let rekeydKey: GroupKey
+    let rekeyedKey: GroupKey
     let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
     let dependencyContainer: DependencyContainer
 
@@ -92,14 +92,14 @@ describe('resend with existing key', () => {
         storageNodeRegistry.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()
-        rekeydKey = GroupKey.generate()
+        rekeyedKey = GroupKey.generate()
         allMessages = [
             { timestamp: 1000, groupKey: initialKey},
             { timestamp: 2000, groupKey: initialKey, nextGroupKey: rotatedKey },
             { timestamp: 3000, groupKey: rotatedKey },
             { timestamp: 4000, groupKey: rotatedKey },
-            { timestamp: 5000, groupKey: rekeydKey },
-            { timestamp: 6000, groupKey: rekeydKey }
+            { timestamp: 5000, groupKey: rekeyedKey },
+            { timestamp: 6000, groupKey: rekeyedKey }
         ]
         for (const msg of allMessages) {
             storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey)
@@ -151,7 +151,7 @@ describe('resend with existing key', () => {
     describe('rekeyed key available', () => {
         beforeEach(async () => {
             const keyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
-            await keyStore.add(rekeydKey)
+            await keyStore.add(rekeyedKey)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

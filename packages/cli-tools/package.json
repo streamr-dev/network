@@ -7,6 +7,7 @@
   },
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,7 +34,7 @@
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "^6.0.0",
+    "streamr-client": "^6.0.1",
     "streamr-client-protocol": "^12.0.0",
     "streamr-test-utils": "^2.0.0"
   },
