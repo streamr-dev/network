@@ -39,7 +39,11 @@ jobs:
           protoc --version
       - name: bootstrap-pkg
         working-directory: './'
-        run: npm run bootstrap-pkg @streamr/trackerless-network
+        run: |
+          npm run bootstrap-pkg @streamr/trackerless-network
+          npm run build --workspace=@streamr/proto-rpc
+          npm run build --workspace=@streamr/dht
+          npm run build --workspace=@streamr/trackerless-network
       - name: Eslint
         run: npm run eslint
       - name: Tests
