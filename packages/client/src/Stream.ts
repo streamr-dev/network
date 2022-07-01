@@ -20,7 +20,7 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 import { range } from 'lodash'
-import { StrictStreamrClientConfig, ConfigInjectionToken } from './Config'
+import { ConfigInjectionToken, TimeoutsConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
@@ -89,7 +89,7 @@ class StreamrStream implements StreamMetadata {
     protected _streamRegistry: StreamRegistry
     protected _streamRegistryCached: StreamRegistryCached
     protected _nodeRegistry: StorageNodeRegistry
-    private _clientConfig: StrictStreamrClientConfig
+    private _timeoutsConfig: TimeoutsConfig
 
     /** @internal */
     constructor(
@@ -105,7 +105,7 @@ class StreamrStream implements StreamMetadata {
         this._streamRegistryCached = _container.resolve<StreamRegistryCached>(StreamRegistryCached)
         this._streamRegistry = _container.resolve<StreamRegistry>(StreamRegistry)
         this._nodeRegistry = _container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
-        this._clientConfig = _container.resolve<StrictStreamrClientConfig>(ConfigInjectionToken.Root)
+        this._timeoutsConfig = _container.resolve<TimeoutsConfig>(ConfigInjectionToken.Timeouts)
     }
 
     /**
@@ -190,7 +190,7 @@ class StreamrStream implements StreamMetadata {
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
-                waitOptions.timeout ?? this._clientConfig._timeouts.storageNode.timeout,
+                waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
                 'timed out waiting for storage nodes to respond'
             )
         } finally {
