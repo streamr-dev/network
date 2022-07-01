@@ -20,7 +20,8 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './registry/StorageNodeRegistry'
+export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
+export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
 export { SearchStreamsPermissionFilter } from './registry/searchStreams'
 export {
     StreamrClientConfig,

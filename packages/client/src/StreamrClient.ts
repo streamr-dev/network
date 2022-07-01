@@ -28,6 +28,7 @@ import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from './index-exports'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 
 /**
  * @category Important
@@ -50,6 +51,7 @@ export class StreamrClient implements Context {
     private groupKeyStoreFactory: GroupKeyStoreFactory
     private destroySignal: DestroySignal
     private streamRegistry: StreamRegistry
+    private streamStorageRegistry: StreamStorageRegistry
     private storageNodeRegistry: StorageNodeRegistry
     private streamIdBuilder: StreamIDBuilder
     private eventEmitter: StreamrClientEventEmitter
@@ -69,6 +71,7 @@ export class StreamrClient implements Context {
         this.groupKeyStoreFactory = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
+        this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -296,6 +299,26 @@ export class StreamrClient implements Context {
     // --------------------------------------------------------------------------------------------
     // Storage
     // --------------------------------------------------------------------------------------------
+    
+    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
+        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, nodeAddress)
+    }
+    
+    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+        return this.streamStorageRegistry.getStoredStreams(nodeAddress)
+    }
+    
+    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
+    }
 
     setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
@@ -303,26 +326,6 @@ export class StreamrClient implements Context {
 
     getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)
-    }
-    
-    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.storageNodeRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
-    }
-    
-    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.storageNodeRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
-    }
-    
-    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        return this.storageNodeRegistry.isStoredStream(streamIdOrPath, nodeAddress)
-    }
-    
-    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.storageNodeRegistry.getStoredStreams(nodeAddress)
-    }
-    
-    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
-        return this.storageNodeRegistry.getStorageNodes(streamIdOrPath)
     }
 
     // --------------------------------------------------------------------------------------------
