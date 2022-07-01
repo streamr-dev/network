@@ -89,14 +89,6 @@ To clear all caches and remove the `dist` directory from each sub-package:
 npm run clean-dist
 ```
 
-To just clear caches:
-
-```bash
-# from top level
-npm run clean-cache
-```
-
-
 ### Clean all
 
 To removes all caches, built files, and **`node_modules`** of each sub-package, and the

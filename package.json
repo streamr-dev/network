@@ -13,8 +13,7 @@
         "fix": "manypkg fix; npm run eslint -- --fix",
         "bootstrap-root": "npm ci --no-audit --no-workspaces # install only packages needed by root package.json",
         "clean": "npm run clean-dist && npx --workspaces --include-workspace-root -c 'rm -rf node_modules || true'",
-        "clean-dist": "npx --workspaces -c 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' && npm run clean-cache # remove built files",
-        "clean-cache": "npx --workspaces --include-workspace-root -c 'rm -rf node_modules/.cache || true'"
+        "clean-dist": "npx --workspaces -c 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true'"
     },
     "workspaces": [
         "packages/test-utils",
