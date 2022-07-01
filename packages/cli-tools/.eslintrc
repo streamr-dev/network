@@ -1,5 +1,5 @@
 {
-  "extends": "eslint-config-monorepo",
+  "extends": "../../.eslintrc.js",
   "rules": {
     "no-console": "off"
   }
