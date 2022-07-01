@@ -28,6 +28,7 @@
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "lodash": "^4.17.21",
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.2"
   },
