@@ -13,6 +13,7 @@
     "sandbox": "ts-node src/index.ts",
     "build": "tsc -b tsconfig.node.json",
     "prebuild": "./proto.sh",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
