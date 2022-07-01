@@ -7,7 +7,7 @@ import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageReg
 import { StreamQueryResult } from './StreamRegistry'
 import { scoped, Lifecycle, inject, DependencyContainer } from 'tsyringe'
 import { BrubeckContainer } from '../Container'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
@@ -65,7 +65,6 @@ export interface StorageNodeMetadata {
 @scoped(Lifecycle.ContainerScoped)
 export class StorageNodeRegistry {
 
-    private clientConfig: StrictStreamrClientConfig
     private nodeRegistryContract?: NodeRegistryContract
     private nodeRegistryContractReadonly: NodeRegistryContract
     private streamStorageRegistryContract?: StreamStorageRegistryContract
@@ -75,19 +74,17 @@ export class StorageNodeRegistry {
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
-        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
-        this.clientConfig = clientConfig
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
         this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
-            new Contract(this.clientConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
+            new Contract(this.ethereumConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
             'storageNodeRegistry'
         ) as NodeRegistryContract
         this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
-            new Contract(this.clientConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
+            new Contract(this.ethereumConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
         this.initStreamAssignmentEventListener('addToStorageNode', 'Added', eventEmitter)
@@ -128,14 +125,14 @@ export class StorageNodeRegistry {
         if (!this.nodeRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.nodeRegistryContract = createWriteContract<NodeRegistryContract>(
-                this.clientConfig.storageNodeRegistryChainAddress,
+                this.ethereumConfig.storageNodeRegistryChainAddress,
                 NodeRegistryArtifact,
                 chainSigner,
                 'storageNodeRegistry',
                 this.graphQLClient
             )
             this.streamStorageRegistryContract = createWriteContract<StreamStorageRegistryContract>(
-                this.clientConfig.streamStorageRegistryChainAddress,
+                this.ethereumConfig.streamStorageRegistryChainAddress,
                 StreamStorageRegistryArtifact,
                 chainSigner,
                 'streamStorageRegistry',

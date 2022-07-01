@@ -7,6 +7,7 @@ import type { Provider } from '@ethersproject/providers'
 import type { BigNumber } from '@ethersproject/bignumber'
 import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
+import { EthereumAddress } from 'streamr-client-protocol'
 
 export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
 
@@ -18,6 +19,11 @@ export type EthereumNetworkConfig = {
 }
 
 export type EthereumConfig = {
+    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
+    streamStorageRegistryChainAddress: EthereumAddress, // this uses the streamregistry and
+    // noderegistry contracts and saves what streams are stored by which storagenodes
+    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
+    ensCacheChainAddress: EthereumAddress,
     mainChainRPCs?: ChainConnectionInfo
     streamRegistryChainRPCs: ChainConnectionInfo
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready

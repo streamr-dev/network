@@ -84,11 +84,6 @@ export type StrictStreamrClientConfig = {
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
-    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
-    // noderegistry contracts and saves what streams are stored by which storagenodes
-    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
-    ensCacheChainAddress: EthereumAddress,
     network: NetworkConfig
     cache: CacheConfig,
     /** @internal */
