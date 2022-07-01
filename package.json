@@ -6,7 +6,7 @@
         "bootstrap": "npm ci --no-audit",
         "bootstrap-pkg": "npm ci --no-audit --include-workspace-root --workspace",
         "prune-pkg": "npm prune --no-audit --include-workspace-root --production --workspace",
-        "versions": "zx ./show-versions.mjs && manypkg check",
+        "versions": "manypkg check && zx ./show-versions.mjs",
         "build": "npm run --workspaces --if-present build",
         "check": "npm run --workspaces --if-present check",
         "eslint": "npm run eslint --workspaces --if-present && manypkg check",
