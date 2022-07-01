@@ -50,7 +50,6 @@
         "test-end-to-end": "jest --verbose --useStderr --forceExit --testTimeout=40000 --runInBand test/end-to-end/*.test.*",
         "test-exports": "cd test/exports && npm run link && tsc --noEmit --project ./tsconfig.json && npm test",
         "test-memory": "node --gc-global --predictable-gc-schedule node_modules/.bin/jest test/memory",
-        "test-flakey": "jest --verbose --useStderr --forceExit test/flakey/*",
         "presetup-browser": "npm run teardown-browser",
         "setup-browser": "node ./test/browser/server.js",
         "teardown-browser": "node -e 'http.request(\"http://localhost:8880/stop\").on(\"error\", () => {}).end()' || true",
