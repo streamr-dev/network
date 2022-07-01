@@ -99,7 +99,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
     }
 
     private createConnection(targetPeerDescriptor: PeerDescriptor, sendRequest = true): NodeWebRtcConnection {
-        const connection = new NodeWebRtcConnection(targetPeerDescriptor)
+        const connection = new NodeWebRtcConnection({ remotePeerDescriptor: targetPeerDescriptor })
         this.bindListenersAndStartConnection(targetPeerDescriptor, connection, sendRequest)
         return connection
     }
