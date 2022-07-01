@@ -10,10 +10,20 @@ import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 
 const logger = new Logger(module)
 
+const MAX_MESSAGE_SIZE = 1048576
+
 export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
     cleanUp(): void {
         nodeDatachannel.cleanup()
     }
+}
+
+export interface Params {
+    remotePeerDescriptor: PeerDescriptor,
+    bufferThresholdHigh?: number,
+    bufferThresholdLow?: number,
+    connectingTimeout?: number,
+    stunUrls?: string[]
 }
 
 export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
@@ -22,18 +32,23 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     public connectionType: ConnectionType = ConnectionType.WEBRTC
     private connection?: PeerConnection
     private dataChannel?: DataChannel
-    private stunUrls = []
-    private maxMessageSize = 1048576
-    private _bufferThresholdHigh = 2 ** 17 // TODO: buffer handling must be implemented before production use
-    private bufferThresholdLow = 2 ** 15
+    private stunUrls: string[]
+    private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
+    private bufferThresholdLow: number
     private lastState = ''
     private buffer: Uint8Array[] = []
     private remoteDescriptionSet = false
     private connectingTimeoutRef: NodeJS.Timeout | null = null
-    private connectingTimeout = 10000
-    constructor(private remotePeerDescriptor: PeerDescriptor) {
+    private connectingTimeout: number
+    private remotePeerDescriptor: PeerDescriptor
+    constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
+        this.stunUrls = params.stunUrls || []
+        this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
+        this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
+        this.connectingTimeout = params.connectingTimeout || 10000
+        this.remotePeerDescriptor = params.remotePeerDescriptor
     }
 
     start(isOffering: boolean): void {
@@ -41,7 +56,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         const hexId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toMapKey()
         this.connection = new PeerConnection(hexId, {
             iceServers: [...this.stunUrls],
-            maxMessageSize: this.maxMessageSize
+            maxMessageSize: MAX_MESSAGE_SIZE
         })
 
         this.connectingTimeoutRef = setTimeout(() => {
