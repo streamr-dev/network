@@ -41,8 +41,8 @@ jobs:
         working-directory: './'
         run: |
           npm run bootstrap-pkg @streamr/proto-rpc
-          npm run bootstrap-pkg @streamr/trackerless-network
           npm run build --workspace=@streamr/proto-rpc
+          npm run bootstrap-pkg @streamr/trackerless-network
           npm run build --workspace=@streamr/dht
           npm run build --workspace=@streamr/trackerless-network
       - name: Eslint
