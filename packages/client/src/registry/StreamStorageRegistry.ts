@@ -145,7 +145,8 @@ export class StreamStorageRegistry {
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         log('Getting stored streams of node %s', nodeAddress)
-        const res = await this.graphQLClient.sendQuery(StreamStorageRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())) as StorageNodeQueryResult
+        const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())
+        const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
             const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
             return new Stream({ ...props, id: toStreamID(stream.id) }, this.container) // toStreamID() not strictly necessary
@@ -161,7 +162,8 @@ export class StreamStorageRegistry {
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             log('Getting storage nodes of stream %s', streamId)
-            const res = await this.graphQLClient.sendQuery(StreamStorageRegistry.buildStoredStreamQuery(streamId)) as StoredStreamQueryResult
+            const query = StreamStorageRegistry.buildStoredStreamQuery(streamId)
+            const res = await this.graphQLClient.sendQuery(query) as StoredStreamQueryResult
             if (res.stream === null) {
                 return []
             }
@@ -169,7 +171,8 @@ export class StreamStorageRegistry {
             // eslint-disable-next-line no-else-return
         } else {
             log('Getting all storage nodes')
-            const res = await this.graphQLClient.sendQuery(StreamStorageRegistry.buildAllNodesQuery()) as AllNodesQueryResult
+            const query = StreamStorageRegistry.buildAllNodesQuery()
+            const res = await this.graphQLClient.sendQuery(query) as AllNodesQueryResult
             return res.nodes.map((node) => node.id)
         }
     }
