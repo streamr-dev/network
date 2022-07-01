@@ -8,10 +8,10 @@ import { Stream } from '../../../src/Stream'
 import { Multimap } from '../Multimap'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
+import { Methods } from '../types'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStreamStorageRegistry implements Omit<StreamStorageRegistry,
-    'streamStorageRegistryContract' | 'streamStorageRegistryContractReadonly'> {
+export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
 
     private readonly assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     private readonly streamIdBuilder: StreamIDBuilder

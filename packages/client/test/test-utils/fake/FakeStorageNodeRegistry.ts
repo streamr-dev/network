@@ -1,9 +1,9 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import { StorageNodeMetadata, StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
+import { Methods } from '../types'
 
 @scoped(Lifecycle.ContainerScoped)
-export class FakeStorageNodeRegistry implements Omit<StorageNodeRegistry,
-    'nodeRegistryContract' | 'nodeRegistryContractReadonly'> {
+export class FakeStorageNodeRegistry implements Methods<StorageNodeRegistry> {
 
     // eslint-disable-next-line class-methods-use-this
     async setStorageNodeMetadata(_metadata: StorageNodeMetadata | undefined): Promise<void> {
