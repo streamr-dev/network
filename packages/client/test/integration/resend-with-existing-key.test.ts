@@ -10,12 +10,12 @@ import { fastWallet } from 'streamr-test-utils'
 import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { StreamPermission } from '../../src/permission'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Resends } from '../../src/subscribe/Resends'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { ActiveNodes } from '../test-utils/fake/ActiveNodes'
+import { StreamStorageRegistry } from '../../src/registry/StreamStorageRegistry'
 
 /*
  * A subscriber has some GroupKeys in the local store and reads historical data 
@@ -88,7 +88,7 @@ describe('resend with existing key', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        const storageNodeRegistry = dependencyContainer.resolve(StorageNodeRegistry)
+        const storageNodeRegistry = dependencyContainer.resolve(StreamStorageRegistry)
         storageNodeRegistry.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()
