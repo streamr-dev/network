@@ -12,7 +12,7 @@ on:
     branches:
       - '*'
 concurrency:
-  group: test-utils-build-${{ github.head_ref }}
+  group: utils-build-${{ github.head_ref }}
   cancel-in-progress: true
 defaults:
   run:
