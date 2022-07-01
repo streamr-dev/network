@@ -1,10 +1,9 @@
 import fetchNatType from 'nat-type-identifier'
 import { scheduleAtInterval } from 'streamr-network'
-import { Logger } from '@streamr/utils'
+import { Logger, withTimeout } from '@streamr/utils'
 import { wait } from 'streamr-test-utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { withTimeout } from '../../helpers/withTimeout'
 import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
@@ -15,8 +14,7 @@ const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
 const NAT_ANALYSIS_SAMPLE_COUNT = 5
 const NAT_ANALYSIS_TIMEOUT = {
-    maxWaitTime: 60 * 1000,
-    errorCode: 'NAT_ANALYSIS_TIMEOUT'
+    maxWaitTime: 60 * 1000
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
 
@@ -165,7 +163,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logsEnabled: false,
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
-            }), NAT_ANALYSIS_TIMEOUT.maxWaitTime, NAT_ANALYSIS_TIMEOUT.errorCode)
+            }), NAT_ANALYSIS_TIMEOUT.maxWaitTime)
             logger.info(`NAT type: ${result}`)
             return result
         } catch (e) {
