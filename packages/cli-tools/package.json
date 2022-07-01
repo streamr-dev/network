@@ -7,6 +7,7 @@
   },
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
