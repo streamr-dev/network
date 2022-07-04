@@ -46,7 +46,6 @@ export class EncryptionUtil {
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
     private static encrypt(data: Uint8Array, groupKey: GroupKey): string {
-        GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
         return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
@@ -56,7 +55,6 @@ export class EncryptionUtil {
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
     private static decrypt(ciphertext: string, groupKey: GroupKey): Buffer {
-        GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
         return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
@@ -66,10 +64,6 @@ export class EncryptionUtil {
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
     static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
-        GroupKey.validate(groupKey)
-        if (nextGroupKey) {
-            GroupKey.validate(nextGroupKey)
-        }
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
         streamMessage.groupKeyId = groupKey.id
@@ -84,12 +78,6 @@ export class EncryptionUtil {
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
             return
-        }
-
-        try {
-            GroupKey.validate(groupKey)
-        } catch (err) {
-            throw new UnableToDecryptError(`${err.message}`, streamMessage)
         }
 
         /* eslint-disable no-param-reassign */
