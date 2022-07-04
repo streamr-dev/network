@@ -1,17 +1,13 @@
+import { fastWallet } from 'streamr-test-utils'
 import { ethers } from 'ethers'
-import { MessageLayer, toStreamID } from 'streamr-client-protocol'
+import { EncryptedGroupKey, MessageLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { createMockMessage } from '../test-utils/utils'
 
 const { StreamMessage, MessageID } = MessageLayer
 
 const STREAM_ID = toStreamID('streamId')
-
-const createInvalidGroupKey = () => {
-    const key = GroupKey.generate()
-    key.data = Buffer.from('invalid-data')
-    return key
-}
 
 describe('EncryptionUtil', () => {
     it('aes decryption after encryption equals the initial plaintext', () => {
@@ -88,31 +84,18 @@ describe('EncryptionUtil', () => {
         expect(streamMessage.newGroupKey).toEqual(nextKey)
     })
 
-    describe('StreamMessage is not modified if group key is invalid', () => {
-        it.each([
-            ['current'],
-            ['next']
-        ])('%s key is invalid', (invalidKey: string) => {
-            const CONTENT =  {
-                foo: 'bar',
-            }
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
-                content: CONTENT,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE
-            })
-            expect(() => {
-                EncryptionUtil.encryptStreamMessage(streamMessage,
-                    (invalidKey === 'current') ? GroupKey.generate() : createInvalidGroupKey(),
-                    (invalidKey === 'next') ? GroupKey.generate() : createInvalidGroupKey()
-                )
-            }).toThrow()
-            expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
-            expect(streamMessage.groupKeyId).toBe(null)
-            expect(streamMessage.newGroupKey).toBe(null)
-            expect(streamMessage.serializedContent).toEqual(JSON.stringify(CONTENT))
-            expect(streamMessage.getParsedContent()).toEqual(CONTENT)
+    it('StreamMessage decryption throws if newGroupKey invalid', () => {
+        const key = GroupKey.generate()
+        const msg = createMockMessage({
+            publisher: fastWallet(),
+            streamPartId: toStreamPartID(STREAM_ID, 0),
+            encryptionKey: key
         })
-    
+        msg.newGroupKey = {
+            groupKeyId: 'mockId',
+            encryptedGroupKeyHex: '0x1234',
+            serialized: ''
+        } as EncryptedGroupKey
+        expect(() => EncryptionUtil.decryptStreamMessage(msg, key)).toThrow('Could not decrypt new group key')
     })
 })
