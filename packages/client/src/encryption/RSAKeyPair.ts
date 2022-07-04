@@ -42,19 +42,19 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
     return `-----BEGIN ${TYPE} KEY-----\n${exportedAsBase64}\n-----END ${TYPE} KEY-----\n`
 }
 
-// after RsaKeyPair is ready
-type InitializedRsaKeyPair = O.Overwrite<RsaKeyPair, {
+// after RSAKeyPair is ready
+type InitializedRSAKeyPair = O.Overwrite<RSAKeyPair, {
     privateKey: string,
     publicKey: string,
 }>
 
-export class RsaKeyPair {
+export class RSAKeyPair {
     /**
      * Creates a new instance + waits for ready.
      * Convenience.
      */
-    static async create(): Promise<RsaKeyPair> {
-        const pair = new RsaKeyPair()
+    static async create(): Promise<RSAKeyPair> {
+        const pair = new RSAKeyPair()
         await pair.onReady()
         return pair
     }
@@ -68,19 +68,19 @@ export class RsaKeyPair {
         return this.generateKeyPair()
     }
 
-    isReady(this: RsaKeyPair): this is InitializedRsaKeyPair {
+    isReady(this: RSAKeyPair): this is InitializedRSAKeyPair {
         return (this.privateKey !== undefined && this.publicKey !== undefined)
     }
 
     // Returns a String (base64 encoding)
     getPublicKey(): string {
-        if (!this.isReady()) { throw new Error('RsaKeyPair not ready.') }
+        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.publicKey
     }
 
     // Returns a String (base64 encoding)
     getPrivateKey(): string {
-        if (!this.isReady()) { throw new Error('RsaKeyPair not ready.') }
+        if (!this.isReady()) { throw new Error('RSAKeyPair not ready.') }
         return this.privateKey
     }
 
