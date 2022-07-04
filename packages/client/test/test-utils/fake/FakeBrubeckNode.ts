@@ -140,16 +140,16 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
     }
 
-    async* addSubscriber<T>(streamPartId: StreamPartID): AsyncGenerator<StreamMessage<T>, any, undefined> {
+    addSubscriber<T>(...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> {
         const messages = new TransformStream()
         const messageWriter = messages.writable.getWriter()
         this.networkNodeStub.addMessageListener((msg: StreamMessage) => {
-            if (msg.getStreamPartID() === streamPartId) {
+            if (streamPartIds.includes(msg.getStreamPartID())) {
                 messageWriter.write(msg)
             }
         })
-        this.networkNodeStub.subscribe(streamPartId)
-        yield* messages.readable
+        streamPartIds.forEach((id) => this.networkNodeStub.subscribe(id))
+        return messages.readable[Symbol.asyncIterator]()
     }
 
     async getNodeId(): Promise<EthereumAddress> {
