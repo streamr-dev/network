@@ -36,6 +36,15 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKey
 
 export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
+/**
+ * GroupKeys are AES cipher keys, which are used to encrypt/decrypt StreamMessages (when encryptionType is AES).
+ * Each group key contains 256 random bits of key data and an UUID.
+ *
+ * A group key stores the same key data in two fields: the bytes as hex-encoded string, and as a raw Uint8Array.
+ * TODO: If this data duplication doesn't give us any performance improvement we could store the key data only
+ * in one field.
+ */
+
 // eslint-disable-next-line no-redeclare
 export class GroupKey {
     /** @internal */
