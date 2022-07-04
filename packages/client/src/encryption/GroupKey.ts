@@ -74,7 +74,7 @@ export class GroupKey {
             this.hex = Buffer.from(this.data).toString('hex')
         }
 
-        (this.constructor as typeof GroupKey).validate(this)
+        GroupKey.validate(this)
     }
 
     private static validate(maybeGroupKey: GroupKey): void | never {
