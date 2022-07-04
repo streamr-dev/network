@@ -1,7 +1,8 @@
 import _ from 'lodash'
 import { StreamrClient, Subscription } from 'streamr-client'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { Logger, Protocol } from 'streamr-network'
+import { Protocol } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { MqttServer, MqttServerListener } from './MqttServer'
 

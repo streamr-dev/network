@@ -1,4 +1,4 @@
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { keyToArrayIndex, StreamPartID } from 'streamr-client-protocol'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Diff, SetMembershipSynchronizer } from './SetMembershipSynchronizer'

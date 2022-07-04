@@ -6,7 +6,7 @@ import {
     StreamPartID,
     StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'

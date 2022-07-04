@@ -10,8 +10,7 @@ import {
     StreamPartID,
     UnsubscribeRequest
 } from 'streamr-client-protocol'
-import { promiseTimeout } from '../helpers/PromiseTools'
-import { Logger } from '../helpers/logger/LoggerNode'
+import { Logger, withTimeout } from "@streamr/utils"
 import { Propagation } from './propagation/Propagation'
 
 const logger = new Logger(module)
@@ -136,7 +135,7 @@ export class ProxyStreamConnectionManager {
         const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
 
         await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-        await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
+        await withTimeout(this.nodeToNode.connectToNode(targetNodeId, trackerId, false), this.nodeConnectTimeout)
         await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction)
 
     }
