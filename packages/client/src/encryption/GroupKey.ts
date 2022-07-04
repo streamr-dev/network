@@ -50,11 +50,11 @@ export class GroupKey {
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     /** @internal */
-    id: string
+    readonly id: string
     /** @internal */
-    hex: string
+    readonly hex: string
     /** @internal */
-    data: Uint8Array
+    readonly data: Uint8Array
 
     constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
