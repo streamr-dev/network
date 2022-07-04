@@ -69,7 +69,7 @@ export class GroupKey {
         (this.constructor as typeof GroupKey).validate(this)
     }
 
-    static validate(maybeGroupKey: GroupKey): void | never {
+    private static validate(maybeGroupKey: GroupKey): void | never {
         if (!maybeGroupKey) {
             throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
