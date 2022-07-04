@@ -1,6 +1,6 @@
-import { fastWallet } from 'streamr-test-utils'
 import { ethers } from 'ethers'
 import { EncryptedGroupKey, MessageLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
@@ -13,18 +13,15 @@ describe('EncryptionUtil', () => {
     it('aes decryption after encryption equals the initial plaintext', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
-        // @ts-expect-error private
-        const ciphertext = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
-        // @ts-expect-error private
-        expect(EncryptionUtil.decrypt(ciphertext, key).toString('utf8')).toStrictEqual(plaintext)
+        const ciphertext = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        expect(EncryptionUtil.decryptWithAES(ciphertext, key.data).toString('utf8')).toStrictEqual(plaintext)
     })
 
     it('aes encryption preserves size (plus iv)', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
         const plaintextBuffer = Buffer.from(plaintext, 'utf8')
-        // @ts-expect-error private
-        const ciphertext = EncryptionUtil.encrypt(plaintextBuffer, key)
+        const ciphertext = EncryptionUtil.encryptWithAES(plaintextBuffer, key.data)
         const ciphertextBuffer = ethers.utils.arrayify(`0x${ciphertext}`)
         expect(ciphertextBuffer.length).toStrictEqual(plaintextBuffer.length + 16)
     })
@@ -32,10 +29,8 @@ describe('EncryptionUtil', () => {
     it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
         const key = GroupKey.generate()
         const plaintext = 'some random text'
-        // @ts-expect-error private
-        const ciphertext1 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
-        // @ts-expect-error private
-        const ciphertext2 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
+        const ciphertext1 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
+        const ciphertext2 = EncryptionUtil.encryptWithAES(Buffer.from(plaintext, 'utf8'), key.data)
         expect(ciphertext1.slice(0, 32)).not.toStrictEqual(ciphertext2.slice(0, 32))
         expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))
     })

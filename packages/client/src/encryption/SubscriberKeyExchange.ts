@@ -14,7 +14,7 @@ import {
 
 import { GroupKey } from './GroupKey'
 import { EncryptionUtil } from './EncryptionUtil'
-import { RsaKeyPair } from './RsaKeyPair'
+import { RSAKeyPair } from './RSAKeyPair'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
@@ -31,7 +31,7 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
     const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
-            EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
         )
     ))
     await Promise.allSettled(tasks)
@@ -42,7 +42,7 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
 export class SubscriberKeyExchange implements Context {
     readonly id
     readonly debug
-    private rsaKeyPair: RsaKeyPair
+    private RSAKeyPair: RSAKeyPair
 
     constructor(
         private subscriber: Subscriber,
@@ -51,7 +51,7 @@ export class SubscriberKeyExchange implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = this.subscriber.debug.extend(this.id)
-        this.rsaKeyPair = new RsaKeyPair()
+        this.RSAKeyPair = new RSAKeyPair()
     }
 
     private async requestKeys({ streamId, publisherId, groupKeyIds }: {
@@ -60,7 +60,7 @@ export class SubscriberKeyExchange implements Context {
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {
         const requestId = uuid('GroupKeyRequest')
-        const rsaPublicKey = this.rsaKeyPair.getPublicKey()
+        const rsaPublicKey = this.RSAKeyPair.getPublicKey()
         const msg = new GroupKeyRequest({
             streamId,
             requestId,
@@ -68,7 +68,7 @@ export class SubscriberKeyExchange implements Context {
             groupKeyIds,
         })
         const response = await this.keyExchangeStream.request(publisherId, msg)
-        return response ? getGroupKeysFromStreamMessage(response, this.rsaKeyPair.getPrivateKey()) : []
+        return response ? getGroupKeysFromStreamMessage(response, this.RSAKeyPair.getPrivateKey()) : []
     }
 
     private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
@@ -106,7 +106,7 @@ export class SubscriberKeyExchange implements Context {
 
     async getGroupKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
         if (!streamMessage.groupKeyId) { return undefined }
-        await this.rsaKeyPair.onReady()
+        await this.RSAKeyPair.onReady()
         return this.getKey(streamMessage)
     }
 
