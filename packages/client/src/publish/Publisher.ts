@@ -1,7 +1,7 @@
 /**
  * Public Publishing API
  */
-import { KeyExchangeStreamIDUtils, StreamID, StreamMessage, StreamPartID, Utils } from 'streamr-client-protocol'
+import { KeyExchangeStreamIDUtils, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, delay, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
 import { instanceId } from '../utils/utils'
@@ -16,8 +16,6 @@ import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
-import { CacheFn } from '../utils/caches'
-import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
 
 export type { PublishMetadata }
 
@@ -79,8 +77,6 @@ export class Publisher implements Context {
                 1,
                 true,
                 authenticatedUser.toLowerCase(),
-                undefined as any,
-                (streamPartId: StreamPartID, opts: MessageChainOptions) => new MessageChain(streamPartId, opts),
                 (payload: string) => this.authentication.createMessagePayloadSignature(payload),
                 async () => [undefined, undefined]
             )
@@ -94,21 +90,14 @@ export class Publisher implements Context {
             throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
         }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
-        const getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
-            return Utils.keyToArrayIndex(stream.partitions, partitionKey)
-        }, {
-            ...this.cacheConfig,
-            cacheKey: ([partitionKey]) => partitionKey
-        })
         return new MessageFactory(
             streamId,
             stream.partitions,
             isPublicStream,
             authenticatedUser.toLowerCase(),
-            getStreamPartitionForKey,
-            getCachedMessageChain(this.cacheConfig), // TODO would it ok to just use pMemoize (we don't have many chains)
             (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            () => this.keyExchange.useGroupKey(streamId)
+            () => this.keyExchange.useGroupKey(streamId),
+            this.cacheConfig
         )
     }
 

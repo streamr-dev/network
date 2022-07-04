@@ -1,8 +1,10 @@
 import { random } from 'lodash'
-import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID, Utils } from 'streamr-client-protocol'
+import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
-import { MessageChain, MessageChainOptions } from './MessageChain'
+import { CacheFn } from '../utils/caches'
+import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
 import { MessageMetadata } from './PublishPipeline'
 
 export class MessageFactory {
@@ -12,30 +14,34 @@ export class MessageFactory {
     private selectedDefaultPartition: number
     private isPublicStream: boolean
     private publisherId: EthereumAddress
-    private getStreamPartitionForKey: (partitionKey: string | number) => number
-    private getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain
     private createSignature: (payload: string) => Promise<string>
     private useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+    private getStreamPartitionForKey: (partitionKey: string | number) => number
+    private getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain
 
     constructor(
         streamId: StreamID,
         partitionCount: number,
         isPublicStream: boolean,
         publisherId: EthereumAddress,
-        getStreamPartitionForKey: (partitionKey: string | number) => number,
-        getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain,
         createSignature: (payload: string) => Promise<string>,
-        useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+        useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>,
+        cacheConfig?: CacheConfig
     ) {
         this.streamId = streamId
         this.partitionCount = partitionCount
         this.selectedDefaultPartition = random(partitionCount - 1)
         this.isPublicStream = isPublicStream
         this.publisherId = publisherId
-        this.getStreamPartitionForKey = getStreamPartitionForKey
-        this.getMsgChain = getMsgChain
         this.createSignature = createSignature
         this.useGroupKey = useGroupKey
+        this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
+            return Utils.keyToArrayIndex(partitionCount, partitionKey)
+        }, {
+            ...cacheConfig,
+            cacheKey: ([partitionKey]) => partitionKey
+        })
+        this.getMsgChain = getCachedMessageChain(cacheConfig) // TODO would it ok to just use pMemoize (we don't have many chains) 
     }
 
     async createMessage<T>(
