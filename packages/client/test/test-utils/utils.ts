@@ -160,6 +160,7 @@ export const createMockMessage = (
     opts: CreateMockMessageOptionsBase
     & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 ): StreamMessage<any> => {
+    const DEFAULT_CONTENT = {}
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
@@ -173,7 +174,7 @@ export const createMockMessage = (
             opts.msgChainId ?? 'msgChainId'
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content: {},
+        content: DEFAULT_CONTENT,
         ...opts
     })
     if (opts.encryptionKey !== undefined) {
