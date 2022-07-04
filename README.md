@@ -15,6 +15,7 @@ Monorepo for Streamr Network packages.
 * [network](packages/network/README.md) (streamr-network)
 * [protocol](packages/protocol/README.md) (streamr-client-protocol)
 * [test-utils](packages/test-utils/README.md) (streamr-test-utils)
+* [utils](packages/utils/README.md) (@streamr/utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 * [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
 

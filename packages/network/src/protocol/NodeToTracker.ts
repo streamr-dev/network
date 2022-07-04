@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import { RelayMessage, RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { decode } from './utils'
 import { Status, NodeId, TrackerId } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'

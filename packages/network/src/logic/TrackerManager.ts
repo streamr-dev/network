@@ -4,7 +4,7 @@ import { COUNTER_LONE_NODE } from '../constants'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamPartManager } from './StreamPartManager'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { NameDirectory } from '../NameDirectory'

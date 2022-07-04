@@ -16,6 +16,7 @@
     },
     "workspaces": [
         "packages/test-utils",
+        "packages/utils",
         "packages/protocol",
         "packages/network",
         "packages/network-tracker",

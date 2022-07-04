@@ -1,7 +1,7 @@
 import { StreamPartID } from 'streamr-client-protocol'
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
 import { TrackerLayer } from 'streamr-client-protocol'
-import { Logger } from "../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { TrackerId } from '../identifiers'
 
 type Queue = Record<StreamPartID, {

@@ -1,0 +1,45 @@
+---
+#Lint, Test and Publish
+name: Utils
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+concurrency:
+  group: utils-build-${{ github.head_ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: packages/utils
+
+jobs:
+  test-unit:
+    name: Lint & Unit Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          check-latest: true
+
+      - name: bootstrap and build
+        working-directory: './'
+        run: |
+          npm run bootstrap-pkg @streamr/utils
+          npm run build --workspace=@streamr/utils
+
+      - name: eslint
+        run: npm run eslint
+
+      - name: test
+        run: npm run test

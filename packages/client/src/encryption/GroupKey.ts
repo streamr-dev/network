@@ -50,11 +50,11 @@ export class GroupKey {
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     /** @internal */
-    id: string
+    readonly id: string
     /** @internal */
-    hex: string
+    readonly hex: string
     /** @internal */
-    data: Uint8Array
+    readonly data: Uint8Array
 
     constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
@@ -74,7 +74,7 @@ export class GroupKey {
             this.hex = Buffer.from(this.data).toString('hex')
         }
 
-        (this.constructor as typeof GroupKey).validate(this)
+        GroupKey.validate(this)
     }
 
     private static validate(maybeGroupKey: GroupKey): void | never {

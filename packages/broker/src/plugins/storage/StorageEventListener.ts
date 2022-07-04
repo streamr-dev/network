@@ -1,5 +1,5 @@
 import { Stream, StreamrClient, StorageNodeAssignmentEvent } from 'streamr-client'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

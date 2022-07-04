@@ -1,6 +1,6 @@
 import { NodeId } from '../identifiers'
 import { NameDirectory } from '../NameDirectory'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
 type HasSharedStreamPartsFn = (nodeId: NodeId) => boolean
