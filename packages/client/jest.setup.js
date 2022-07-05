@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
+const { GitRevisionPlugin } =  require('git-revision-webpack-plugin')
 
 const pkg = require('./package.json')
 
