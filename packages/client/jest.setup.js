@@ -1,9 +1,9 @@
-import 'reflect-metadata'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { GitRevisionPlugin } from 'git-revision-webpack-plugin'
 
 const pkg = require('./package.json')
 
-export default async () => {
+module.exports = async () => {
     // eslint-disable-next-line
     require('reflect-metadata')
     if (!process.env.GIT_VERSION) {
