@@ -1,8 +1,10 @@
 import { Logger } from './Logger'
-import { withTimeout, TimeoutError } from './withTimeout'
+import { Multimap } from './Multimap'
+import { TimeoutError, withTimeout } from './withTimeout'
 
 export {
-    withTimeout,
+    Logger,
+    Multimap,
     TimeoutError,
-    Logger
+    withTimeout,
 }
