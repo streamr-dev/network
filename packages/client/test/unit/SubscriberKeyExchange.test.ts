@@ -102,7 +102,7 @@ describe('SubscriberKeyExchange', () => {
                 publisherWallet,
                 [],
                 fakeContainer,
-                () => 'mock-error-code'
+                async () => 'mock-error-code'
             )
 
             const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
