@@ -11,8 +11,7 @@ import {
     MAX_PARTITION_COUNT,
     StreamMessageOptions,
     MessageID,
-    SigningUtil,
-    MessageRef
+    SigningUtil
 } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
