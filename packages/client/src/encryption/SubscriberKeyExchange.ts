@@ -17,6 +17,9 @@ import { RSAKeyPair } from './RSAKeyPair'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
+import { pLimitFn } from '../utils/promises'
+
+const MAX_PARALLEL_REQUEST_COUNT = 20 // TODO we can tweak the value if needed, could be configurable
 
 export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
@@ -42,6 +45,7 @@ export class SubscriberKeyExchange implements Context {
     readonly id
     readonly debug
     private RSAKeyPair: RSAKeyPair
+    private requestKeys: (opts: { streamId: StreamID, publisherId: string, groupKeyIds: GroupKeyId[] }) => Promise<GroupKey[]>
 
     constructor(
         context: Context,
@@ -51,9 +55,10 @@ export class SubscriberKeyExchange implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.RSAKeyPair = new RSAKeyPair()
+        this.requestKeys = pLimitFn(this.doRequestKeys.bind(this), MAX_PARALLEL_REQUEST_COUNT)
     }
 
-    private async requestKeys({ streamId, publisherId, groupKeyIds }: {
+    private async doRequestKeys({ streamId, publisherId, groupKeyIds }: {
         streamId: StreamID,
         publisherId: string,
         groupKeyIds: GroupKeyId[]
