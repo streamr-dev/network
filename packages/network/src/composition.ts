@@ -1,7 +1,6 @@
 import 'setimmediate'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 export { NodeClientWsEndpoint }
-export * as Protocol from 'streamr-client-protocol'
 export { 
     Metric, 
     MetricsDefinition, 
