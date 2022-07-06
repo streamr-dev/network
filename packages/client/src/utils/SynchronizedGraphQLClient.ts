@@ -9,7 +9,8 @@ import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
 import { instanceId } from './utils'
-import { wait, withTimeout } from './promises'
+import { wait } from './promises'
+import { TimeoutError, withTimeout } from '@streamr/utils'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -77,12 +78,18 @@ class IndexingState {
     async waitUntilIndexed(blockNumber: number): Promise<void> {
         this.debug(`wait until The Graph is synchronized to block ${blockNumber}`)
         const gate = this.getOrCreateGate(blockNumber)
-        await withTimeout(
-            gate.check(),
-            this.pollTimeout,
-            `timed out while waiting for The Graph to synchronized to block ${blockNumber}`,
-            () => this.gates.delete(gate)
-        )
+        try {
+            await withTimeout(
+                gate.check(),
+                this.pollTimeout,
+                `The Graph did not synchronize to block ${blockNumber}`
+            )
+        } catch (e) {
+            if (e instanceof TimeoutError) {
+                this.gates.delete(gate)
+            }
+            throw e
+        }
     }
 
     private getOrCreateGate(blockNumber: number): BlockNumberGate {
