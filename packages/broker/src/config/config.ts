@@ -1,14 +1,6 @@
 import { StreamrClientConfig } from 'streamr-client'
-import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import path from 'path'
 import * as os from 'os'
-
-export interface NetworkSmartContract {
-    contractAddress: EthereumAddress
-    jsonRpcProvider: string
-}
-
-export type TrackerRegistryItem = SmartContractRecord
 
 export interface HttpServerConfig {
     port: number,
