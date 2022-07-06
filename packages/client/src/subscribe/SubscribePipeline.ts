@@ -1,7 +1,7 @@
 /**
  * Subscription message processing pipeline
  */
-import { 
+import {
     StreamMessage,
     StreamMessageError,
     GroupKeyErrorResponse,
@@ -18,6 +18,7 @@ import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { MsgChainUtil } from './MsgChainUtil'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -60,7 +61,9 @@ export function SubscribePipeline<T = unknown>(
         container.resolve(DestroySignal),
     )
 
-    // collect messages that fail validation/parsing, do not push out of pipeline
+    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg))
+
+    // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
@@ -83,7 +86,15 @@ export function SubscribePipeline<T = unknown>(
             await validate.validate(streamMessage)
         })
         // decrypt
-        .map(decrypt.decrypt)
+        .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
+            setImmediate(async () => {
+                for await (const msg of src) {
+                    msgChainUtil.addMessage(msg)
+                }
+                msgChainUtil.outputBuffer.endWrite()
+            })
+            yield* msgChainUtil
+        })
         // parse content
         .forEach(async (streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
@@ -93,6 +104,7 @@ export function SubscribePipeline<T = unknown>(
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally.listen(async () => {
+            // TODO should we have a stop method in MsgChainUtil which closes the msgChainUtil.outBuffer?
             const tasks = [
                 gapFillMessages.stop(),
                 decrypt.stop(),
