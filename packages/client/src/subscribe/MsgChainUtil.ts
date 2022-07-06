@@ -1,5 +1,5 @@
-import { PushBuffer } from './../utils/PushBuffer';
-import { StreamMessage } from 'streamr-client-protocol';
+import { PushBuffer } from './../utils/PushBuffer'
+import { StreamMessage } from 'streamr-client-protocol'
 
 type ProcessMessageFn<T> = (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
 
@@ -26,6 +26,7 @@ class MsgChainProcessor<T> {
                     this.outputBuffer.push(processedMessage)
                 } catch (e) {
                     // TODO
+                    // eslint-disable-next-line no-console
                     console.log(e)
                 }
             }
