@@ -12,9 +12,11 @@ import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
+import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 
 // currently if PUBLISHER_COUNT*GROUP_KEY_FETCH_DELAY > jest test timeout (5000s), the test fails as parallel key exchange has not been implemented yet
-const PUBLISHER_COUNT = 100
+const PUBLISHER_COUNT = 50
+const MESSAGE_COUNT_PER_PUBLISHER = 3
 const GROUP_KEY_FETCH_DELAY = 1000
 
 interface PublisherInfo {
@@ -60,17 +62,27 @@ describe('parallel key exchange', () => {
         const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
 
-        await wait(1000)
-
         for (const publisher of PUBLISHERS) {
-            publisher.node?.publishToNode(createMockMessage({
-                stream,
-                publisher: publisher.wallet,
-                encryptionKey: publisher.groupKey
-            }))
+            let prevMessage: StreamMessage | undefined
+            for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {
+                const msg = createMockMessage({
+                    content: {
+                        foo: 'bar'
+                    },
+                    stream,
+                    publisher: publisher.wallet,
+                    encryptionKey: publisher.groupKey,
+                    prevMsgRef: (prevMessage !== undefined) ? new MessageRef(prevMessage.getTimestamp(), prevMessage.getSequenceNumber()) : null
+                })
+                publisher.node!.publishToNode(msg)
+                await wait(10)
+                prevMessage = msg
+            }
         }
 
-        const messages = await sub.collect(PUBLISHER_COUNT)
-        expect(messages).toHaveLength(PUBLISHER_COUNT)
-    })
+        const expectedMessageCount = PUBLISHER_COUNT * MESSAGE_COUNT_PER_PUBLISHER
+        const messages = await sub.collect(expectedMessageCount)
+        expect(messages).toHaveLength(expectedMessageCount)
+        expect(messages.filter((msg) => !((msg.getParsedContent() as any).foo === 'bar'))).toEqual([])
+    }, 30 * 1000)
 })

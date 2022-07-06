@@ -11,7 +11,8 @@ import {
     MAX_PARTITION_COUNT,
     StreamMessageOptions,
     MessageID,
-    SigningUtil
+    SigningUtil,
+    MessageRef
 } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
@@ -174,6 +175,7 @@ export const createMockMessage = (
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         content: {},
+        prevMsgRef: opts.prevMsgRef,
         ...opts
     })
     if (opts.encryptionKey !== undefined) {
