@@ -45,12 +45,12 @@ export class SubscriberKeyExchange implements Context {
     private RSAKeyPair: RSAKeyPair
 
     constructor(
-        private subscriber: Subscriber,
+        context: Context,
         private keyExchangeStream: KeyExchangeStream,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
     ) {
         this.id = instanceId(this)
-        this.debug = this.subscriber.debug.extend(this.id)
+        this.debug = context.debug.extend(this.id)
         this.RSAKeyPair = new RSAKeyPair()
     }
 
