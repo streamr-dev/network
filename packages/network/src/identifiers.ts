@@ -36,8 +36,6 @@ export interface RtcErrorMessage {
     errorCode: string
 }
 
-export type TrackerInfo = SmartContractRecord
-
 export interface AbstractNodeOptions {
     id?: NodeId
     location?: Location
