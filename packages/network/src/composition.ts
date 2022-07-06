@@ -15,7 +15,6 @@ export {
 } from './helpers/Metric'
 export {
     scheduleAtFixedRate,
-    scheduleAtInterval
 } from './helpers/scheduler'
 export {
     Location,
