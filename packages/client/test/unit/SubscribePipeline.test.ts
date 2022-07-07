@@ -101,7 +101,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: group key request failed', async () => {
-        await addFakePublisherNode(publisher, [], dependencyContainer, () => 'mock-error')
+        await addFakePublisherNode(publisher, [], dependencyContainer, async () => 'mock-error')
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,
