@@ -93,10 +93,17 @@ jobs:
       - name: test-integration
         working-directory: 'packages/client'
         run: npm run test-integration
+  client-end-to-end:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
       - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: run brokers and trackers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: test-end-to-end
+        working-directory: 'packages/client'
         run: npm run test-end-to-end
