@@ -9,17 +9,26 @@ export const scheduleAtFixedRate = (
     task: (now: number) => Promise<void>,
     interval: number
 ): { stop: () => void }  => {
-    let timer: NodeJS.Timer|undefined
-    let stopRequested = false
-    const scheduleNext = () => {
+    return repeatScheduleTask((doneCb) => {
         const now = Date.now()
         const next = now - (now % interval) + interval
-        timer = setTimeout(async () => {
+        return setTimeout(async () => {
             await task(next)
-            if (!stopRequested) {
-                scheduleNext()
-            }
+            doneCb()
         }, (next - now))
+    })
+}
+
+/** @internal */
+export const repeatScheduleTask = (
+    scheduleNextTask: (doneCb: () => void) => NodeJS.Timer
+): { stop: () => void } => {
+    let timer: NodeJS.Timer | undefined
+    let stopRequested = false
+    const scheduleNext = () => {
+        if (!stopRequested) {
+            timer = scheduleNextTask(scheduleNext)
+        }
     }
     scheduleNext()
     return {
