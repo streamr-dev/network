@@ -1,6 +1,4 @@
----
-# Lint, Test and Publish
-name: Protocol
+name: build
 
 on:
   push:
@@ -12,32 +10,21 @@ on:
     branches:
       - '*'
 concurrency:
-  group: protocol-build-${{ github.head_ref }}
+  group: build-${{ github.head_ref }}
   cancel-in-progress: true
-defaults:
-  run:
-    working-directory: packages/protocol
-
 jobs:
-  test-unit:
-    name: Lint & Unit Test
+  build:
+    name: build
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-          node-version-file: '.nvmrc'
           check-latest: true
-
       - name: bootstrap
-        working-directory: './'
-        run: npm run bootstrap-pkg --package=streamr-client-protocol
-
+        run: npm run bootstrap
       - name: eslint
         run: npm run eslint
-
-      - name: test
-        run: npm run test
