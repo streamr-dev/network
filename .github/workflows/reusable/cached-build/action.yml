@@ -1,0 +1,37 @@
+name: "cached build"
+description: "build monorepo and cache result, or restore from cache if present"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+        check-latest: true
+    - name: cache node_modules
+      id: cache-node-modules
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-build
+      with:
+        key: cache-node-modules-${{ hashFiles('package-lock.json') }}
+        path: |
+          node_modules
+          packages/*/node_modules
+    - name: cache build
+      id: cache-build
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-build
+      with:
+        key: cache-build-${{ github.sha }}
+        path: packages/*/dist
+    - name: ci
+      if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      run: npm ci --no-audit
+    - name: build
+      if: steps.cache-build.outputs.cache-hit != 'true'
+      run: npm run build

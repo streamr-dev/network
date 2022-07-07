@@ -16,35 +16,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          check-latest: true
-      - name: cache node_modules
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-build
-        with:
-          key: cache-node-modules-${{ hashFiles('package-lock.json') }}
-          path: |
-            node_modules
-            packages/*/node_modules
-      - name: cache build
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-build
-        with:
-          key: cache-build-${{ github.sha }}
-          path: packages/*/dist
-      - name: ci
-        run: npm ci --no-audit
+      - name: build
+        uses: ./.github/workflows/reusable/cached-build
       - name: versions
         run: npm run versions
-      - name: build
-        run: npm run build
       - name: check
         run: npm run check
       - name: eslint
@@ -53,29 +28,8 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          check-latest: true
-      - name: cache node_modules
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-build
-        with:
-          key: cache-node-modules-${{ hashFiles('package-lock.json') }}
-          path: |
-            node_modules
-            packages/*/node_modules
-      - name: cache build
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-build
-        with:
-          key: cache-build-${{ github.sha }}
-          path: packages/*/dist
+      - name: build
+        uses: ./.github/workflows/reusable/cached-build
       - name: test
         working-directory: 'packages/test-utils'
         run: npm run test
