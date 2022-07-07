@@ -420,31 +420,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
                     })
                 })
 
-                it('ignores message if onError does not rethrow', async () => {
-                    const onSubError = jest.fn()
-                    sub.onError.listen(onSubError)
-                    // Publish after subscribed
-                    await publishTestMessages(MAX_MESSAGES_MORE, {
-                        timestamp: 1111111,
-                    })
-
-                    const received: any[] = []
-                    for await (const m of sub) {
-                        received.push(m.getParsedContent())
-                        if (received.length === MAX_MESSAGES_MORE - 1) {
-                            break
-                        }
-                    }
-
-                    expect(received).toEqual([
-                        ...contentClear.slice(0, BAD_INDEX),
-                        ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
-                    ])
-
-                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
-                    expect(onSubError).toHaveBeenCalledTimes(1)
-                })
-
                 it('throws if onError does rethrow', async () => {
                     const onSubError = jest.fn((err) => {
                         sub.debug('ON SUB ERROR', err)

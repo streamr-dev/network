@@ -9,7 +9,7 @@ import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { StreamPermission } from '../../src'
 import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { nextValue } from '../../src/utils/iterators'
+import { collect, nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
 
 const MOCK_CONTENT = { foo: 'bar' }
@@ -102,5 +102,34 @@ describe('Subscriber', () => {
 
         await waitForCondition(() => onError.mock.calls.length > 0)
         expect(onError.mock.calls[0][0].message).toInclude('GroupKeyErrorResponse')
+    })
+
+    it('skip invalid messages', async () => {
+        await stream.grantPermissions({
+            permissions: [StreamPermission.PUBLISH],
+            user: publisherWallet.address
+        })
+        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
+        const subscriber = dependencyContainer.resolve(Subscriber)
+        const sub = await subscriber.subscribe(stream.id)
+        const onError = jest.fn()
+        sub.on('error', onError)
+
+        const publishedMessages = [1000, 2000, 3000].map((timestamp) => {
+            return createMockMessage({
+                timestamp,
+                stream,
+                publisher: publisherWallet
+            })
+        })
+        publishedMessages[1].signature = 'invalid-signature'
+        publishedMessages.forEach((m) => publisherNode.publishToNode(m))
+
+        const receivedMessages = await collect(sub, 2)
+        expect(receivedMessages).toHaveLength(2)
+        expect(receivedMessages[0].getTimestamp()).toBe(1000)
+        expect(receivedMessages[1].getTimestamp()).toBe(3000)
+        expect(onError).toBeCalled()
+        expect(onError.mock.calls[0][0].message).toInclude('Signature validation failed')
     })
 })
