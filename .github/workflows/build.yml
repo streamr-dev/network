@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,3 +29,35 @@ jobs:
         run: npm run check
       - name: eslint
         run: npm run eslint
+      - name: cache build
+        uses: action/cache@v3
+        env:
+          cache-name: cache-build
+        with:
+          path: |
+            node_modules
+            packages/broker/node_modules
+            packages/cli-tools/node_modules
+            packages/client/node_modules
+            packages/network/node_modules
+            packages/network-tracker/node_modules
+            packages/protocol/node_modules
+            packages/test-utils/node_modules
+            packages/utils/node_modules
+            packages/broker/dist
+            packages/cli-tools/dist
+            packages/client/dist
+            packages/network/dist
+            packages/network-tracker/dist
+            packages/protocol/dist
+            packages/test-utils/dist
+            packages/utils/dist
+          key: cache-build-${{ github.head_ref }}
+  test-utils:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: test-utils
+    steps:
+      - name: test
+        run: npm run test
