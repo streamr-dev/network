@@ -99,6 +99,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
       - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
