@@ -105,7 +105,6 @@ export function SubscribePipeline<T = unknown>(
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally.listen(async () => {
-            // TODO should we have a stop method in MsgChainUtil which closes the msgChainUtil.outBuffer?
             const tasks = [
                 gapFillMessages.stop(),
                 decrypt.stop(),

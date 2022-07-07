@@ -19,7 +19,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
 import { pLimitFn } from '../utils/promises'
 
-const MAX_PARALLEL_REQUEST_COUNT = 20 // TODO we can tweak the value if needed, could be configurable
+const MAX_PARALLEL_REQUEST_COUNT = 20 // we can tweak the value if needed, TODO make this configurable?
 
 export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
