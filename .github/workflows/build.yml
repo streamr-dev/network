@@ -80,3 +80,23 @@ jobs:
       - name: test
         working-directory: 'packages/network-tracker'
         run: npm run test
+  client:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test-unit
+        working-directory: 'packages/client'
+        run: npm run test-unit
+      - name: test-integration
+        working-directory: 'packages/client'
+        run: npm run test-integration
+      - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
+        with:
+          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
+      - name: run brokers and trackers
+        uses: ./.github/workflows/reusable/run-brokers-and-trackers
+      - name: test-end-to-end
+        run: npm run test-end-to-end
