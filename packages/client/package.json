@@ -99,6 +99,7 @@
         "node-polyfill-webpack-plugin": "^1.1.4",
         "pretty-bytes": "^5.6.0",
         "process": "^0.11.10",
+        "streamr-test-utils": "^2.0.0",
         "terser-webpack-plugin": "^5.2.5",
         "ts-loader": "^9.2.6",
         "typedoc": "^0.22.5",
@@ -145,7 +146,6 @@
         "sqlite3": "^5.0.3",
         "streamr-client-protocol": "^12.0.0",
         "streamr-network": "^35.0.0",
-        "streamr-test-utils": "^2.0.0",
         "ts-toolbelt": "^9.6.0",
         "tsyringe": "^4.6.0",
         "uuid": "^8.3.2"
