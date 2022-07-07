@@ -20,6 +20,7 @@ runs:
         path: |
           node_modules
           packages/*/node_modules
+          packages/client/vendor
     - name: cache build
       id: cache-build
       uses: actions/cache@v3
