@@ -35,11 +35,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - run: npm run eslint
 
   test:
@@ -55,13 +53,10 @@ jobs:
           cache: 'npm'
           node-version-file: '.nvmrc'
           check-latest: true
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: test-unit
-        timeout-minutes: 7
         run: npm run test-unit
 
   integration:
@@ -75,11 +70,9 @@ jobs:
           cache: 'npm'
           node-version-file: '.nvmrc'
           check-latest: true
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Run tests
         run: npm run test-integration
 
@@ -94,11 +87,9 @@ jobs:
           cache: 'npm'
           check-latest: true
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:

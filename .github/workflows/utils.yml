@@ -32,11 +32,9 @@ jobs:
           cache-dependency-path: package-lock.json
           check-latest: true
 
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/utils
-          npm run build --workspace=@streamr/utils
+        run: npm run bootstrap-pkg --package=@streamr/utils
 
       - name: eslint
         run: npm run eslint

@@ -28,11 +28,9 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/network-tracker
-          npm run build --workspace=@streamr/network-tracker
+        run: npm run bootstrap-pkg --package=@streamr/network-tracker
       - run: npm run eslint
       - run: npm run test-unit
         env:
