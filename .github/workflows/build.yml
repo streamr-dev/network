@@ -30,7 +30,7 @@ jobs:
       - name: eslint
         run: npm run eslint
       - name: cache build
-        uses: action/cache@v3
+        uses: actions/cache@v3
         env:
           cache-name: cache-build
         with:
