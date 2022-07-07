@@ -103,9 +103,25 @@ jobs:
       - name: test-unit
         working-directory: 'packages/broker'
         run: npm run test-unit
-  client-e2e:
+  client-e2e-chunkify:
     needs: [ build ]
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-test-chunks
+        name: Set Chunks
+        run: echo "::set-output name=test-chunks::$(npx jest --listTests --json test/end-to-end | jq -cM '[_nwise(length / 2 | ceil)]')"
+      - id: set-test-chunk-ids
+        name: Set Chunk IDs
+        run: echo "::set-output name=test-chunk-ids::$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')"
+        env:
+          CHUNKS: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
+  client-e2e:
+    needs: [ build, client-e2e-chunkify ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chunk: ${{ fromJson(needs.setup.outputs['test-chunk-ids']) }}
     steps:
       - uses: actions/checkout@v3
       - name: build (cached)
@@ -117,7 +133,9 @@ jobs:
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: test
         working-directory: 'packages/client'
-        run: npm run test-end-to-end
+        run: echo $CHUNKS | jq '.[${{ matrix.chunk }}] | .[] | @text' | xargs npx jest
+        env:
+          CHUNKS: ${{ needs.setup.outputs['test-chunks'] }}
   broker-e2e:
     needs: [ build ]
     runs-on: ubuntu-latest
