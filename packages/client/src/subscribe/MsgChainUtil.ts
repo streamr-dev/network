@@ -1,3 +1,4 @@
+import { Gate } from './../utils/Gate';
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { PushBuffer } from './../utils/PushBuffer'
@@ -9,7 +10,7 @@ type OnError<T> = Signal<[Error, StreamMessage<T>?, number?]>
 
 class MsgChainProcessor<T> {
 
-    busy = false
+    busy: Gate = new Gate()
     inputBuffer: StreamMessage<T>[] = []
     outputBuffer: PushBuffer<StreamMessage<T>>
     processMessageFn: ProcessMessageFn<T>
@@ -23,8 +24,8 @@ class MsgChainProcessor<T> {
 
     async addMessage(message: StreamMessage<T>): Promise<void> {
         this.inputBuffer.push(message)
-        if (!this.busy) {
-            this.busy = true
+        if (this.busy.isOpen()) {
+            this.busy.close()
             while (this.inputBuffer.length > 0) {
                 const nextMessage = this.inputBuffer.shift()!
                 try {
@@ -34,7 +35,7 @@ class MsgChainProcessor<T> {
                     this.onError.trigger(e)
                 }
             }
-            this.busy = false
+            this.busy.open()
         }
     }
 }
@@ -61,11 +62,8 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
         processor.addMessage(message) // add a task, but don't wait for it to complete
     }
 
-    flush(): Promise<void> {
-        // TODO implement better wait logic
-        return waitForCondition(() => {
-            return Array.from(this.processors.values()).every((processor) => !processor.busy && processor.inputBuffer.length === 0)
-        }, Number.MAX_VALUE)
+    async flush(): Promise<void> {
+        await Promise.all(Array.from(this.processors.values()).map((p) => p.busy.check()))
     }
 
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
