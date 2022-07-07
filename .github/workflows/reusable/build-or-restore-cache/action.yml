@@ -1,0 +1,16 @@
+name: "build and cache"
+description: "build monorepo and cache result"
+
+runs:
+  using: "composite"
+  steps:
+    - name: cache build
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-build
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+          packages/*/dist
+        key: cache-build-${{ github.sha }}

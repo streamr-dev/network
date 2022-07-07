@@ -47,6 +47,13 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          check-latest: true
       - name: cache build
         uses: actions/cache@v3
         env:
@@ -63,6 +70,13 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+          check-latest: true
       - name: cache build
         uses: actions/cache@v3
         env:
