@@ -103,7 +103,7 @@ jobs:
       - name: test-unit
         working-directory: 'packages/broker'
         run: npm run test-unit
-  client-end-to-end:
+  client-e2e:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
@@ -118,7 +118,7 @@ jobs:
       - name: test
         working-directory: 'packages/client'
         run: npm run test-end-to-end
-  broker-end-to-end:
+  broker-e2e:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
