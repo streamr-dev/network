@@ -28,7 +28,7 @@ describe('SubscriberKeyExchange', () => {
     const createStream = async (): Promise<Stream> => {
         const streamRegistry = fakeContainer.resolve(StreamRegistry)
         const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
-        streamRegistry.grantPermissions(stream.id, {
+        await streamRegistry.grantPermissions(stream.id, {
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
