@@ -115,7 +115,7 @@ jobs:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: run brokers and trackers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: client
+      - name: test
         working-directory: 'packages/client'
         run: npm run test-end-to-end
   broker-end-to-end:
@@ -128,6 +128,6 @@ jobs:
       - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-      - name: broker
+      - name: test
         working-directory: 'packages/broker'
         run: npm run test-integration
