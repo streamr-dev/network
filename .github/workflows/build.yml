@@ -111,6 +111,8 @@ jobs:
       test-chunk-ids: ${{ steps['set-test-chunk-ids'].outputs['test-chunk-ids'] }}
     steps:
       - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
       - id: set-test-chunks
         name: Set Chunks
         working-directory: 'packages/client'
