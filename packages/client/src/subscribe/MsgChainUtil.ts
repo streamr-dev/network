@@ -4,15 +4,17 @@ import { Signal } from './../utils/Signal'
 
 type ProcessMessageFn<T> = (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
 
+type OnError<T> = Signal<[Error, StreamMessage<T>?, number?]>
+
 class MsgChainProcessor<T> {
 
     busy = false
     inputBuffer: StreamMessage<T>[] = []
     outputBuffer: PushBuffer<StreamMessage<T>>
     processMessageFn: ProcessMessageFn<T>
-    onError: Signal<any>
+    onError: OnError<T>
 
-    constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: Signal<any>) {
+    constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
         this.outputBuffer = outputBuffer
         this.processMessageFn = processMessageFn
         this.onError = onError
@@ -27,7 +29,7 @@ class MsgChainProcessor<T> {
                 try {
                     const processedMessage = await this.processMessageFn(nextMessage)
                     this.outputBuffer.push(processedMessage)
-                } catch (e) {
+                } catch (e: any) {
                     this.onError.trigger(e)
                 }
             }
@@ -41,9 +43,9 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
     outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
     processors: Map<string,MsgChainProcessor<T>> = new Map()
     processMessageFn: ProcessMessageFn<T>
-    onError: Signal<any> // TODO better type for Signal
+    onError: OnError<T>
 
-    constructor(processMessageFn: ProcessMessageFn<T>, onError: Signal<any>) {
+    constructor(processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
         this.processMessageFn = processMessageFn
         this.onError = onError
     }
