@@ -26,5 +26,7 @@ jobs:
           check-latest: true
       - name: bootstrap
         run: npm run bootstrap
+      - name: check
+        run: npm run check
       - name: eslint
         run: npm run eslint
