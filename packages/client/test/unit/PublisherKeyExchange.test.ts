@@ -122,7 +122,7 @@ describe('PublisherKeyExchange', () => {
         mockStream = await createStream()
         subscriberNode = addFakeNode(subscriberWallet.address, fakeContainer)
         await startPublisherKeyExchangeSubscription()
-    }, 10 * 1000)
+    })
 
     describe('responds to a group key request', () => {
 
@@ -142,7 +142,7 @@ describe('PublisherKeyExchange', () => {
 
             const response = await nextValue(receivedResponses)
             await testSuccessResponse(response!, [key])
-        }, 10 * 1000)
+        })
 
         it('no group key in store', async () => {
             const receivedResponses = subscriberNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
@@ -165,7 +165,7 @@ describe('PublisherKeyExchange', () => {
 
             const response = await nextValue(receivedResponses)
             await testErrorResponse(response!, [ groupKey.id ], otherWallet.address)
-        }, 10 * 1000)
+        })
 
         it('invalid request', async () => {
             const groupKey = GroupKey.generate()
