@@ -113,9 +113,11 @@ jobs:
       - uses: actions/checkout@v3
       - id: set-test-chunks
         name: Set Chunks
+        working-directory: 'packages/client'
         run: echo "::set-output name=test-chunks::$(npx jest --listTests --json test/end-to-end | jq -cM '[_nwise(length / 2 | ceil)]')"
       - id: set-test-chunk-ids
         name: Set Chunk IDs
+        working-directory: 'packages/client'
         run: echo "::set-output name=test-chunk-ids::$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')"
         env:
           CHUNKS: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
