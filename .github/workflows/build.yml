@@ -16,7 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: build
+      - uses: actions/checkout@v3
+      - name: build (cache miss)
         uses: ./.github/workflows/reusable/cached-build
       - name: versions
         run: npm run versions
@@ -28,7 +29,8 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - name: build
+      - uses: actions/checkout@v3
+      - name: build (cache hit)
         uses: ./.github/workflows/reusable/cached-build
       - name: test
         working-directory: 'packages/test-utils'

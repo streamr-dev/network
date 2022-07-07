@@ -4,7 +4,6 @@ description: "build monorepo and cache result, or restore from cache if present"
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version-file: '.nvmrc'
