@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: build (cache miss)
+      - name: build
         uses: ./.github/workflows/reusable/cached-build
       - name: versions
         run: npm run versions
@@ -30,8 +30,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: build (cache hit)
+      - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - name: test
         working-directory: 'packages/test-utils'
+        run: npm run test
+  utils:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/utils'
+        run: npm run test
+  protocol:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/protocol'
+        run: npm run test
+  network:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/network'
+        run: npm run test
+  tracker:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/network-tracker'
         run: npm run test
