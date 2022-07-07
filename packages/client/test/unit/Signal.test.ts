@@ -1,5 +1,5 @@
 import { Signal } from '../../src/utils/Signal'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 describe('Signal', () => {
     it('can trigger', async () => {

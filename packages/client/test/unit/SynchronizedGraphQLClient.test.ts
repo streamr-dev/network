@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockContext } from '../test-utils/utils'
 

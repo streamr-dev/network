@@ -1,5 +1,6 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import {
     toStreamDefinition,
     createPartitionedTestStream,

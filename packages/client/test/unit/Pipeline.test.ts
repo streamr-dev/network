@@ -1,5 +1,5 @@
 import { expected, MAX_ITEMS, IteratorTest } from './IteratorTest'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PushPipeline } from '../../src/utils/PushPipeline'

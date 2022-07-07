@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import { MessageLayer, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import {
     getCreateClient,
     createPartitionedTestStream,

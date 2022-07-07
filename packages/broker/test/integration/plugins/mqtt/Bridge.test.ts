@@ -4,7 +4,7 @@ import mqtt from 'async-mqtt'
 import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../../../src/broker'
 import { createClient, startBroker, createTestStream, startTestTracker } from '../../../utils'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { Wallet } from '@ethersproject/wallet'
 
 const MQTT_PLUGIN_PORT = 12470

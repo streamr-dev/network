@@ -1,4 +1,5 @@
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { uid, createTestStream } from '../test-utils/utils'
 import { getWaitForStorage } from '../test-utils/publish'

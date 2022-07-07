@@ -1,5 +1,5 @@
 import { scheduleAtInterval } from '../src/scheduleAtInterval'
-import { wait } from 'streamr-test-utils'
+import { wait } from '../src/wait'
 
 const INTERVAL = 40
 const FIVE_REPEATS_TIME = INTERVAL * 5 + INTERVAL/2

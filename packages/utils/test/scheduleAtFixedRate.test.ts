@@ -1,5 +1,5 @@
 import { scheduleAtFixedRate } from '../src/scheduleAtFixedRate'
-import { wait } from 'streamr-test-utils'
+import { wait } from '../src/wait'
 
 const INTERVAL = 100
 

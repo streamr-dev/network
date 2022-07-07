@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 
 import { StreamrClient } from '../../src/StreamrClient'

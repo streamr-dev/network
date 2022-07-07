@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils/Defer'

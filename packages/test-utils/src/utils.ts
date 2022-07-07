@@ -198,13 +198,6 @@ export const runAndWaitForConditions = async (
 }
 
 /**
- * Wait for a specific time
- * @param ms time to wait for in milliseconds
- * @returns {Promise<void>} resolves when time has passed
- */
-export const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-
-/**
  * Collect events emitted by an emitter into an array.
  *
  * @param emitter emitter of event(s)

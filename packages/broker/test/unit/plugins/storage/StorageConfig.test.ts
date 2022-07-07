@@ -1,7 +1,7 @@
 import { StorageConfig } from '../../../../src/plugins/storage/StorageConfig'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
 import { EthereumAddress, StreamPartID, StreamPartIDUtils, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { range } from 'lodash'
 
 const { parse } = StreamPartIDUtils

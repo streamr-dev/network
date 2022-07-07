@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { pOrderedResolve, pOnce, pLimitFn, pOne, until } from '../../src/utils/promises'
 import { CacheAsyncFn, CacheFn} from '../../src/utils/caches'
 

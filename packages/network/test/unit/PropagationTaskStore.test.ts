@@ -1,6 +1,6 @@
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { NodeId } from '../../src/identifiers'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import {
     PropagationTaskStore,
     PropagationTask
