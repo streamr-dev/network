@@ -93,7 +93,17 @@ jobs:
       - name: test-integration
         working-directory: 'packages/client'
         run: npm run test-integration
-  client-end-to-end:
+  broker:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test-unit
+        working-directory: 'packages/broker'
+        run: npm run test-unit
+  end-to-end:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
@@ -105,6 +115,9 @@ jobs:
           services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
       - name: run brokers and trackers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: test-end-to-end
+      - name: client
         working-directory: 'packages/client'
         run: npm run test-end-to-end
+      - name: broker
+        working-directory: 'packages/broker'
+        run: npm run test-integration
