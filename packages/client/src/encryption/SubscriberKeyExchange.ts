@@ -44,7 +44,7 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
 export class SubscriberKeyExchange implements Context {
     readonly id
     readonly debug
-    private RSAKeyPair: RSAKeyPair
+    private rsaKeyPair: RSAKeyPair
     private requestKeys: (opts: { streamId: StreamID, publisherId: string, groupKeyIds: GroupKeyId[] }) => Promise<GroupKey[]>
 
     constructor(
@@ -54,7 +54,7 @@ export class SubscriberKeyExchange implements Context {
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        this.RSAKeyPair = new RSAKeyPair()
+        this.rsaKeyPair = new RSAKeyPair()
         this.requestKeys = pLimitFn(this.doRequestKeys.bind(this), MAX_PARALLEL_REQUEST_COUNT)
     }
 
@@ -64,7 +64,7 @@ export class SubscriberKeyExchange implements Context {
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {
         const requestId = uuid('GroupKeyRequest')
-        const rsaPublicKey = this.RSAKeyPair.getPublicKey()
+        const rsaPublicKey = this.rsaKeyPair.getPublicKey()
         const msg = new GroupKeyRequest({
             streamId,
             requestId,
@@ -72,7 +72,7 @@ export class SubscriberKeyExchange implements Context {
             groupKeyIds,
         })
         const response = await this.keyExchangeStream.request(publisherId, msg)
-        return response ? getGroupKeysFromStreamMessage(response, this.RSAKeyPair.getPrivateKey()) : []
+        return response ? getGroupKeysFromStreamMessage(response, this.rsaKeyPair.getPrivateKey()) : []
     }
 
     private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
@@ -110,7 +110,7 @@ export class SubscriberKeyExchange implements Context {
 
     async getGroupKey(streamMessage: StreamMessage): Promise<GroupKey | undefined> {
         if (!streamMessage.groupKeyId) { return undefined }
-        await this.RSAKeyPair.onReady()
+        await this.rsaKeyPair.onReady()
         return this.getKey(streamMessage)
     }
 
