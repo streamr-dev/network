@@ -16,6 +16,7 @@ import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
+import { pLimitFn } from '../utils/promises'
 
 export type { PublishMetadata }
 
@@ -60,11 +61,11 @@ export class Publisher implements Context {
         this.keyExchange = keyExchange
         this.node = node
         this.cacheConfig = cacheConfig
-        this.getMessageFactory = pMemoize((streamId: StreamID) => {  // TODO is it better to use pMemoize or CacheAsyncFn (e.g. after revoked publish permissions?)
+        this.getMessageFactory = pLimitFn(pMemoize(async (streamId: StreamID) => {  // TODO is it better to use pMemoize or CacheAsyncFn (e.g. after revoked publish permissions?)
             return this.createMessageFactory(streamId)
         }, {
             cacheKey: ([streamId]) => streamId
-        })
+        }))
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
@@ -96,7 +97,7 @@ export class Publisher implements Context {
             isPublicStream,
             authenticatedUser.toLowerCase(),
             (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            () => this.keyExchange.useGroupKey(streamId),
+            pLimitFn(() => this.keyExchange.useGroupKey(streamId), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
             this.cacheConfig
         )
     }
