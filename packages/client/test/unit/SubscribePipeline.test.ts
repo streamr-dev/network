@@ -98,7 +98,7 @@ describe('SubscribePipeline', () => {
         const error = onError.mock.calls[0][0]
         expect(error.message).toContain('Unable to decrypt')
         expect(output).toEqual([])
-    })
+    }, 10 * 1000)
 
     it('error: group key request failed', async () => {
         await addFakePublisherNode(publisher, [], dependencyContainer, async () => 'mock-error')
