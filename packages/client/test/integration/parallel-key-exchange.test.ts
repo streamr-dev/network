@@ -14,7 +14,6 @@ import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
 import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 
-// currently if PUBLISHER_COUNT*GROUP_KEY_FETCH_DELAY > jest test timeout (5000s), the test fails as parallel key exchange has not been implemented yet
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
 const GROUP_KEY_FETCH_DELAY = 1000
