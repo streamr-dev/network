@@ -50,14 +50,14 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
         this.onError = onError
     }
 
-    addMessage(message: StreamMessage<T>): Promise<void> {
+    addMessage(message: StreamMessage<T>): void {
         const id = `${message.getPublisherId()}-${message.getMsgChainId()}`
         let processor = this.processors.get(id)
         if (processor === undefined) {
             processor = new MsgChainProcessor(this.outputBuffer, this.processMessageFn, this.onError)
             this.processors.set(id, processor)
         }
-        return processor.addMessage(message)
+        processor.addMessage(message) // add a task, but don't wait for it to complete
     }
 
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {

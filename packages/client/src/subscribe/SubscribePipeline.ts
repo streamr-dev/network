@@ -89,7 +89,7 @@ export function SubscribePipeline<T = unknown>(
         .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
             setImmediate(async () => {
                 for await (const msg of src) {
-                    await msgChainUtil.addMessage(msg)
+                    msgChainUtil.addMessage(msg)
                 }
                 msgChainUtil.outputBuffer.endWrite()
             })
