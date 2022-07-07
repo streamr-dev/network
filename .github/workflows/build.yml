@@ -25,16 +25,58 @@ jobs:
         run: npm run check
       - name: eslint
         run: npm run eslint
-  test:
+  test-utils:
     needs: [build]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [test-utils, utils, protocol, network, tracker]
     steps:
       - uses: actions/checkout@v3
       - name: build (cached)
         uses: ./.github/workflows/reusable/cached-build
       - name: test
-        working-directory: 'packages/${{matrix.package}}'
+        working-directory: 'packages/test-utils'
+        run: npm run test
+  utils:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/utils'
+        run: npm run test
+  protocol:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/protocol'
+        run: npm run test
+  network:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test nodejs
+        working-directory: 'packages/network'
+        run: npm run test
+      - name: test browser
+        working-directory: 'packages/network'
+        run: |
+          sudo apt-get install xvfb
+          xvfb-run --auto-servernum npm run test-browser
+  tracker:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/network-tracker'
         run: npm run test
