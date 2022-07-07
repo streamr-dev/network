@@ -31,6 +31,8 @@ runs:
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: npm ci --no-audit
+      shell: bash
     - name: build
       if: steps.cache-build.outputs.cache-hit != 'true'
       run: npm run build
+      shell: bash
