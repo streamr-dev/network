@@ -1,3 +1,4 @@
+import { waitForCondition } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { PushBuffer } from './../utils/PushBuffer'
 import { Signal } from './../utils/Signal'
@@ -58,6 +59,13 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
             this.processors.set(id, processor)
         }
         processor.addMessage(message) // add a task, but don't wait for it to complete
+    }
+
+    flush(): Promise<void> {
+        // TODO implement better wait logic
+        return waitForCondition(() => {
+            return Array.from(this.processors.values()).every((processor) => !processor.busy && processor.inputBuffer.length === 0)
+        }, Number.MAX_VALUE)
     }
 
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {

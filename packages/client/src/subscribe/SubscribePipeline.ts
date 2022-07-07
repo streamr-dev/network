@@ -91,6 +91,7 @@ export function SubscribePipeline<T = unknown>(
                 for await (const msg of src) {
                     msgChainUtil.addMessage(msg)
                 }
+                await msgChainUtil.flush()
                 msgChainUtil.outputBuffer.endWrite()
             })
             yield* msgChainUtil
