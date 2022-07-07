@@ -1,9 +1,2 @@
-module.exports = {
-    preset: 'ts-jest',
-    testEnvironment: 'node',
-    globals: {
-        'ts-jest': {
-            tsconfig: 'tsconfig.jest.json',
-        }
-    }
-}
+const rootConfig = require('../../jest.config')
+module.exports = rootConfig

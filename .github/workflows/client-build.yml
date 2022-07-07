@@ -38,11 +38,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: npm run build
         run: npm run build-production
       - uses: actions/upload-artifact@v3
@@ -66,11 +64,9 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: test-types
         run: npm run test-types
       - name: npm run test-exports
@@ -91,11 +87,9 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
@@ -127,11 +121,9 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
@@ -173,11 +165,9 @@ jobs:
           services-to-start: "parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
       - name: start trackers and brokers
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt

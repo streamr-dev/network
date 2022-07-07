@@ -18,8 +18,8 @@ import { ActiveNodes } from '../test-utils/fake/ActiveNodes'
 import { StreamStorageRegistry } from '../../src/registry/StreamStorageRegistry'
 
 /*
- * A subscriber has some GroupKeys in the local store and reads historical data 
- * which is encrypted with those keys (or rotated keys). The publisher is offline 
+ * A subscriber has some GroupKeys in the local store and reads historical data
+ * which is encrypted with those keys (or rotated keys). The publisher is offline
  * and therefore the subscriber can't get keys from it (all GroupKeyRequests timeout).
  */
 describe('resend with existing key', () => {
@@ -66,7 +66,12 @@ describe('resend with existing key', () => {
 
     const assertNonDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
         const messageStream = await resendRange(fromTimestamp, toTimestamp)
-        await expect(() => collect(messageStream)).rejects.toThrowError('Unable to decrypt')
+        const onError = jest.fn()
+        messageStream.onError.listen(onError)
+        await collect(messageStream)
+        expect(onError).toBeCalled()
+        const error = onError.mock.calls[0][0]
+        expect(error.message).toContain('Unable to decrypt')
     }
 
     beforeEach(async () => {

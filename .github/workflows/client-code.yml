@@ -35,11 +35,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - run: npm run eslint
 
   test:
@@ -55,13 +53,10 @@ jobs:
           cache: 'npm'
           node-version-file: '.nvmrc'
           check-latest: true
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: test-unit
-        timeout-minutes: 7
         run: npm run test-unit
 
   integration:
@@ -75,11 +70,9 @@ jobs:
           cache: 'npm'
           node-version-file: '.nvmrc'
           check-latest: true
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Run tests
         run: npm run test-integration
 
@@ -94,11 +87,9 @@ jobs:
           cache: 'npm'
           check-latest: true
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
+        run: npm run bootstrap-pkg --package=streamr-client
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
         with:
@@ -118,42 +109,6 @@ jobs:
         with:
           name: docker-logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
-      - name: Stop Streamr Docker Stack
-        if: always()
-        run: |
-          docker kill $(docker ps -q)
-          docker rm $(docker ps -a -q)
-
-  memory:
-    if: ${{ false }}
-    name: Test Memory
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          cache-dependency-path: package-lock.json
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          check-latest: true
-      - name: bootstrap and build
-        working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run build --workspace=streamr-client
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
-        with:
-          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-      - name: start trackers and brokers
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - uses: nick-invision/retry@v2
-        name: Run Test
-        with:
-          max_attempts: 2
-          timeout_minutes: 20
-          retry_on: error
-          command: cd packages/client && npm run test-memory
       - name: Stop Streamr Docker Stack
         if: always()
         run: |
