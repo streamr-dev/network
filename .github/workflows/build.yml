@@ -23,12 +23,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
-      - name: bootstrap
-        run: npm run bootstrap
-      - name: check
-        run: npm run check
-      - name: eslint
-        run: npm run eslint
       - name: cache build
         uses: actions/cache@v3
         env:
@@ -36,23 +30,17 @@ jobs:
         with:
           path: |
             node_modules
-            packages/broker/node_modules
-            packages/cli-tools/node_modules
-            packages/client/node_modules
-            packages/network/node_modules
-            packages/network-tracker/node_modules
-            packages/protocol/node_modules
-            packages/test-utils/node_modules
-            packages/utils/node_modules
-            packages/broker/dist
-            packages/cli-tools/dist
-            packages/client/dist
-            packages/network/dist
-            packages/network-tracker/dist
-            packages/protocol/dist
-            packages/test-utils/dist
-            packages/utils/dist
+            packages/*/node_modules
+            packages/*/dist
           key: cache-build-${{ github.head_ref }}
+      - name: ci
+        run: npm ci --no-audit
+      - name: build
+        run: npm run build
+      - name: check
+        run: npm run check
+      - name: eslint
+        run: npm run eslint
   test-utils:
     needs: [build]
     runs-on: ubuntu-latest
@@ -60,5 +48,15 @@ jobs:
       run:
         working-directory: test-utils
     steps:
+      - name: cache build
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-build
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/*/dist
+          key: cache-build-${{ github.head_ref }}
       - name: test
         run: npm run test
