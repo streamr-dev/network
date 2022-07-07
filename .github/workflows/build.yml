@@ -23,16 +23,22 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
+      - name: cache node_modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-build
+        with:
+          key: cache-node-modules-${{ hashFiles('package-lock.json') }}
+          path: |
+            node_modules
+            packages/*/node_modules
       - name: cache build
         uses: actions/cache@v3
         env:
           cache-name: cache-build
         with:
-          path: |
-            node_modules
-            packages/*/node_modules
-            packages/*/dist
           key: cache-build-${{ github.sha }}
+          path: packages/*/dist
       - name: ci
         run: npm ci --no-audit
       - name: versions
@@ -54,38 +60,22 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
+      - name: cache node_modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-build
+        with:
+          key: cache-node-modules-${{ hashFiles('package-lock.json') }}
+          path: |
+            node_modules
+            packages/*/node_modules
       - name: cache build
         uses: actions/cache@v3
         env:
           cache-name: cache-build
         with:
-          path: |
-            node_modules
-            packages/*/node_modules
-            packages/*/dist
           key: cache-build-${{ github.sha }}
+          path: packages/*/dist
       - name: test
-        run: npm run test --workspace=test-utils
-  utils:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          check-latest: true
-      - name: cache build
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-build
-        with:
-          path: |
-            node_modules
-            packages/*/node_modules
-            packages/*/dist
-          key: cache-build-${{ github.sha }}
-      - name: test
-        run: npm run test --workspace=utils
+        working-directory: 'packages/test-utils'
+        run: npm run test
