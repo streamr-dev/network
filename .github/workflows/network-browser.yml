@@ -29,17 +29,12 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
         run: |
-          npm run bootstrap-pkg streamr-network
-          npm run build --workspace=streamr-network
+          npm run bootstrap-pkg --package=streamr-network
+          npm run bootstrap-pkg --package=@streamr/network-tracker
           sudo apt-get install xvfb
-      - name: bootstrap and build network-tracker # we can't reference in tsconfig due to circular dep, see NET-868
-        working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/network-tracker
-          npm run build --workspace=@streamr/network-tracker
       - run: xvfb-run --auto-servernum npm run test-browser
         env:
           CI: true

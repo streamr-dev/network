@@ -28,16 +28,11 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
-      - name: bootstrap and build
+      - name: bootstrap
         working-directory: './'
         run: |
-          npm run bootstrap-pkg streamr-network
-          npm run build --workspace=streamr-network
-      - name: bootstrap and build network-tracker # we can't reference in tsconfig due to circular dep, see NET-868
-        working-directory: './'
-        run: |
-          npm run bootstrap-pkg @streamr/network-tracker
-          npm run build --workspace=@streamr/network-tracker
+          npm run bootstrap-pkg --package=streamr-network
+          npm run bootstrap-pkg --package=@streamr/network-tracker
       - run: npm run eslint
       - run: npm run test-unit
         env:
