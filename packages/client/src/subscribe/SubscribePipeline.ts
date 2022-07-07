@@ -92,7 +92,7 @@ export function SubscribePipeline<T = unknown>(
                     msgChainUtil.addMessage(msg)
                 }
                 await msgChainUtil.flush()
-                msgChainUtil.outputBuffer.endWrite()
+                msgChainUtil.stop()
             })
             yield* msgChainUtil
         })

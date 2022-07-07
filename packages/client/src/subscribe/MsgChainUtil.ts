@@ -10,10 +10,10 @@ type OnError<T> = Signal<[Error, StreamMessage<T>?, number?]>
 class MsgChainProcessor<T> {
 
     busy: Gate = new Gate()
-    inputBuffer: StreamMessage<T>[] = []
-    outputBuffer: PushBuffer<StreamMessage<T>>
-    processMessageFn: ProcessMessageFn<T>
-    onError: OnError<T>
+    private inputBuffer: StreamMessage<T>[] = []
+    private outputBuffer: PushBuffer<StreamMessage<T>>
+    private processMessageFn: ProcessMessageFn<T>
+    private onError: OnError<T>
 
     constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
         this.outputBuffer = outputBuffer
@@ -41,10 +41,10 @@ class MsgChainProcessor<T> {
 
 export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
 
-    outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
-    processors: Map<string,MsgChainProcessor<T>> = new Map()
-    processMessageFn: ProcessMessageFn<T>
-    onError: OnError<T>
+    private outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
+    private processors: Map<string,MsgChainProcessor<T>> = new Map()
+    private processMessageFn: ProcessMessageFn<T>
+    private onError: OnError<T>
 
     constructor(processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
         this.processMessageFn = processMessageFn
@@ -63,6 +63,10 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
 
     async flush(): Promise<void> {
         await Promise.all(Array.from(this.processors.values()).map((p) => p.busy.check()))
+    }
+
+    stop(): void {
+        this.outputBuffer.endWrite()
     }
 
     [Symbol.asyncIterator](): AsyncIterator<StreamMessage<T>> {
