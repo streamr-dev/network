@@ -9,7 +9,6 @@ runs:
         node-version-file: '.nvmrc'
         cache: 'npm'
         cache-dependency-path: package-lock.json
-        check-latest: true
     - name: cache node_modules
       id: cache-node-modules
       uses: actions/cache@v3
