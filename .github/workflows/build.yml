@@ -54,6 +54,7 @@ jobs:
             packages/utils/dist
           key: cache-build-${{ github.head_ref }}
   test-utils:
+    needs: [build]
     runs-on: ubuntu-latest
     defaults:
       run:
