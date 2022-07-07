@@ -1,5 +1,4 @@
-import { Gate } from './../utils/Gate';
-import { waitForCondition } from 'streamr-test-utils'
+import { Gate } from './../utils/Gate'
 import { StreamMessage } from 'streamr-client-protocol'
 import { PushBuffer } from './../utils/PushBuffer'
 import { Signal } from './../utils/Signal'
