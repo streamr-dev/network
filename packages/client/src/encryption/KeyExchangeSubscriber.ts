@@ -14,6 +14,9 @@ import {
 import EncryptionUtil, { GroupKey } from './Encryption'
 import GroupKeyStoreFactory from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
+import { pLimitFn } from '../utils/promises'
+
+const MAX_PARALLEL_REQUEST_COUNT = 20 // we can tweak the value if needed, TODO make this configurable?
 
 async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
@@ -49,9 +52,10 @@ export class SubscriberKeyExchange implements Context {
         this.id = instanceId(this)
         this.debug = this.subscriber.debug.extend(this.id)
         this.encryptionUtil = new EncryptionUtil()
+        this.requestKeys = pLimitFn(this.doRequestKeys.bind(this), MAX_PARALLEL_REQUEST_COUNT)
     }
 
-    async requestKeys({ streamId, publisherId, groupKeyIds }: {
+    async doRequestKeys({ streamId, publisherId, groupKeyIds }: {
         streamId: StreamID,
         publisherId: string,
         groupKeyIds: GroupKeyId[]

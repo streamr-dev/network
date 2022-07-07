@@ -16,6 +16,7 @@ import Resends from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamEndpointsCached } from '../StreamEndpointsCached'
+import { MsgChainUtil } from './MsgChainUtil'
 
 export default function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -68,7 +69,9 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(DestroySignal),
     )
 
-    // collect messages that fail validation/parsing, do not push out of pipeline
+    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)
+
+    // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
@@ -91,7 +94,16 @@ export default function SubscribePipeline<T = unknown>(
             await validate.validate(streamMessage)
         })
         // decrypt
-        .map(decrypt.decrypt)
+        .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
+            setImmediate(async () => {
+                for await (const msg of src) {
+                    msgChainUtil.addMessage(msg)
+                }
+                await msgChainUtil.flush()
+                msgChainUtil.stop()
+            })
+            yield* msgChainUtil
+        })
         // parse content
         .forEach(async (streamMessage) => {
             streamMessage.getParsedContent()
