@@ -118,9 +118,6 @@ jobs:
       - name: client
         working-directory: 'packages/client'
         run: npm run test-end-to-end
-      - name: broker
-        working-directory: 'packages/broker'
-        run: npm run test-integration
   broker-end-to-end:
     needs: [ build ]
     runs-on: ubuntu-latest
