@@ -1,10 +1,10 @@
-name: "Run Brokers & Trackers"
-description: "Run Brokers and Trackers from monorepo"
+name: "run brokers and trackers"
+description: "run brokers and trackers directly from the monorepo codebase"
 
 runs:
   using: "composite"
   steps:
-    - name: run brokers and trackers  # client needs to be built separately due to NET-870
+    - name: run brokers and trackers
       run: |
         mkdir -p logs
         (cd packages/broker/bin && node run-all.js) >logs/broker-tracker-logs.txt 2>&1 &
