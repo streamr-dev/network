@@ -29,27 +29,27 @@ jobs:
         run: npm run eslint
   test-utils:
     needs: [build]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: test-utils
   utils:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: utils
   protocol:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: protocol
   network:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: network
   network-browser:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: network
       command: |
@@ -57,12 +57,12 @@ jobs:
         xvfb-run --auto-servernum npm run test-browser
   tracker:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: network-tracker
   client:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: client
       command: |
@@ -70,7 +70,7 @@ jobs:
         npm run test-integration
   broker:
     needs: [ build ]
-    uses: ./.github/workflows/simple-test.yml
+    uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
       command: npm run test-unit
@@ -116,14 +116,8 @@ jobs:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
   broker-e2e:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
-        with:
-          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-      - name: test
-        working-directory: 'packages/broker'
-        run: npm run test-integration
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: broker
+      command: npm run test-integration
+      docker-services: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"

@@ -1,0 +1,31 @@
+name: test setup
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      command:
+        required: false
+        type: string
+        default: npm run test
+      docker-services:
+        required: false
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build'
+      - name: start docker services
+        if: ${{ inputs.docker-services != '' }}
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
+        with:
+          services-to-start: ${{ inputs.docker-services }}
+      - name: test
+        working-directory: 'packages/${{ inputs.package }}'
+        run: ${{ inputs.command }}
