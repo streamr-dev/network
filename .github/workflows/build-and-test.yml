@@ -47,36 +47,27 @@ jobs:
     uses: ./.github/workflows/simple-test.yml
     with:
       package: network
+  network-browser:
+    needs: [ build ]
+    uses: ./.github/workflows/simple-test.yml
+    with:
+      package: network
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
   tracker:
     needs: [ build ]
     uses: ./.github/workflows/simple-test.yml
     with:
       package: network-tracker
-  network-browser:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/network'
-        run: |
-          sudo apt-get install xvfb
-          xvfb-run --auto-servernum npm run test-browser
   client:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test-unit
-        working-directory: 'packages/client'
-        run: npm run test-unit
-      - name: test-integration
-        working-directory: 'packages/client'
-        run: npm run test-integration
+    uses: ./.github/workflows/simple-test.yml
+    with:
+      package: client
+      command: |
+        npm run test-unit
+        npm run test-integration
   broker:
     needs: [ build ]
     uses: ./.github/workflows/simple-test.yml
