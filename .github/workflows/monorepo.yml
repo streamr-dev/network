@@ -143,7 +143,7 @@ jobs:
         done;
         exit 1
   tracker-docker-image-push:
-    needs: [ tracker, test-docker-image-test ]
+    needs: [ tracker, tracker-docker-image-test ]
     # only push for nightly runs and manual triggers
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
