@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build'
+        uses: ./.github/workflows/reusable/cached-build
       - name: start docker services
         if: ${{ inputs.docker-services != '' }}
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0
