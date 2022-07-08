@@ -74,6 +74,14 @@ jobs:
     with:
       package: broker
       command: npm run test-unit
+  broker-e2e:
+    needs: [ build ]
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: broker
+      command: npm run test-integration
+      docker-services: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
+
   client-e2e-chunkify:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -114,10 +122,3 @@ jobs:
         run: echo $CHUNKS | jq '.[${{ matrix.chunk }}] | .[] | @text' | xargs npx jest --forceExit
         env:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
-  broker-e2e:
-    needs: [ build ]
-    uses: ./.github/workflows/test-setup.yml
-    with:
-      package: broker
-      command: npm run test-integration
-      docker-services: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
