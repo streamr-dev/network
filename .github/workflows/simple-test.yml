@@ -1,0 +1,23 @@
+name: reusable simple node.js test
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        required: true
+        type: string
+      command:
+        required: false
+        type: string
+        default: npm run test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build (cached)
+        uses: ./.github/workflows/reusable/cached-build
+      - name: test
+        working-directory: 'packages/${{ package }}'
+        run: ${{ command }}

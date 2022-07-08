@@ -1,4 +1,4 @@
-name: build
+name: build-and-test
 
 on:
   push:
@@ -9,9 +9,11 @@ on:
   pull_request:
     branches:
       - '*'
+
 concurrency:
   group: build-${{ github.head_ref }}
   cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,44 +29,29 @@ jobs:
         run: npm run eslint
   test-utils:
     needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/test-utils'
-        run: npm run test
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: test-utils
   utils:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/utils'
-        run: npm run test
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: utils
   protocol:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/protocol'
-        run: npm run test
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: protocol
   network:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/network'
-        run: npm run test
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: network
+  tracker:
+    needs: [ build ]
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: network-tracker
   network-browser:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -77,16 +64,6 @@ jobs:
         run: |
           sudo apt-get install xvfb
           xvfb-run --auto-servernum npm run test-browser
-  tracker:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test
-        working-directory: 'packages/network-tracker'
-        run: npm run test
   client:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -102,14 +79,10 @@ jobs:
         run: npm run test-integration
   broker:
     needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - name: test-unit
-        working-directory: 'packages/broker'
-        run: npm run test-unit
+    uses: './.github/workflows/simple-test.yml'
+    with:
+      package: broker
+      command: npm run test-unit
   client-e2e-chunkify:
     needs: [ build ]
     runs-on: ubuntu-latest
