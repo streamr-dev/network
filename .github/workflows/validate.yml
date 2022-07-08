@@ -127,9 +127,9 @@ jobs:
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: ./Dockerfile.tracker
+      image_name: streamr/tracker
       test_services_to_start: tracker-1
       build_platforms: linux/amd64
-      image_name: streamr/tracker
       test_script: |
         bash ./.github/curl-healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
   broker-docker-image:
@@ -140,4 +140,4 @@ jobs:
       test_services_to_start: "parity-node0 broker-node-no-storage-1"
       build_platforms: linux/amd64
       test_script: |
-        bash ./.github/curl-healthcheck.sh http://localhost:8791/info broker-node-no-storage-1
+        bash ./.github/curl-healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
