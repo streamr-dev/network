@@ -1,4 +1,4 @@
-name: monorepo
+name: validate
 
 on:
   push:
@@ -123,3 +123,45 @@ jobs:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
       - name: upload logs
         uses: ./.github/workflows/reusable/collect-and-upload-logs
+  tracker-docker-image:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      test_services_to_start: tracker-1
+      build_platforms: linux/amd64
+      image_name: streamr/tracker
+      test_script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            docker inspect --format '{{json .State.Health }}' streamr-dev-tracker-1
+            curl -s http://localhost:30301/topology;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to tracker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1
+
+  broker-docker-image:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.broker
+      image_name: streamr/broker-node
+      test_services_to_start: "parity-node0 broker-node-no-storage-1"
+      build_platforms: linux/amd64
+      test_script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            curl -s http://localhost:8791/info;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to broker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1

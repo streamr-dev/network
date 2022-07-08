@@ -1,0 +1,33 @@
+name: release
+on:
+  workflow_run:
+    workflows: [validate]
+    types:
+      - completed
+jobs:
+  tracker-docker-image:
+    # only push for nightly runs and manual triggers
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      image_name: streamr/tracker
+      build_platforms: linux/amd64
+      push_image: true
+      test_success: ${{ github.event.workflow_run.conclusion == 'success' }}
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
+  broker-docker-image:
+    # only push for nightly runs and manual triggers
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.broker
+      image_name: streamr/broker-node
+      build_platforms: linux/amd64,linux/arm64
+      push_image: true
+      test_success: ${{ github.event.workflow_run.conclusion == 'success' }}
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
