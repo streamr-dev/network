@@ -1,0 +1,17 @@
+name: "collect and upload logs"
+description: "collect and upload logs (e.g. Docker services, brokers, trackers) on test failure"
+
+runs:
+  using: "composite"
+  steps:
+    - name: collect docker service logs
+      if: failure()
+      uses: jwalton/gh-docker-logs@v2.2.0
+      with:
+        dest: 'logs'
+    - name: upload logs to GitHub
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: logs-${{ matrix.test-name }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+        path: 'logs'

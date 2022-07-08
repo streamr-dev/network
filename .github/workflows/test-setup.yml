@@ -29,3 +29,6 @@ jobs:
       - name: test
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
+      - name: upload logs
+        if: ${{ inputs.docker-services != '' }}
+        uses: ./.github/workflows/reusable/collect-and-upload-logs
