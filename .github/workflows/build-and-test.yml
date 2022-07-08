@@ -29,27 +29,27 @@ jobs:
         run: npm run eslint
   test-utils:
     needs: [build]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: test-utils
   utils:
     needs: [ build ]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: utils
   protocol:
     needs: [ build ]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: protocol
   network:
     needs: [ build ]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: network
   tracker:
     needs: [ build ]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: network-tracker
   network-browser:
@@ -79,7 +79,7 @@ jobs:
         run: npm run test-integration
   broker:
     needs: [ build ]
-    uses: './.github/workflows/simple-test.yml'
+    uses: ./.github/workflows/simple-test.yml
     with:
       package: broker
       command: npm run test-unit
