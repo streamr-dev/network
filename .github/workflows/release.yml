@@ -1,14 +1,13 @@
 name: release
 on:
   workflow_run:
-    workflows:
-      - validate
+    workflows: [validate]
     types:
       - completed
 jobs:
   tracker-docker-image:
     # only push for nightly runs and manual triggers
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    #if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: ./Dockerfile.tracker
@@ -21,7 +20,7 @@ jobs:
       dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
   broker-docker-image:
     # only push for nightly runs and manual triggers
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    #if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
     with:
       docker_file: ./Dockerfile.broker
