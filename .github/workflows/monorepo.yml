@@ -81,7 +81,6 @@ jobs:
       package: broker
       command: npm run test-integration
       docker-services: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-
   client-e2e-chunkify:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -122,3 +121,38 @@ jobs:
         run: echo $CHUNKS | jq '.[${{ matrix.chunk }}] | .[] | @text' | xargs npx jest --forceExit
         env:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
+  tracker-docker-image-test:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      test_services_to_start: tracker-1
+      build_platforms: linux/amd64
+      image_name: streamr/tracker
+      test_script: |
+        for (( i=0; i < 5; i=i+1 )); do
+            docker inspect --format '{{json .State.Health }}' streamr-dev-tracker-1
+            curl -s http://localhost:30301/topology;
+            res=$?;
+            if test "$res" != "0"; then
+                echo "Attempting to connect to tracker retrying in $wait_time seconds";
+                sleep $wait_time;
+                wait_time=$(( 2*wait_time )) ;
+            else
+                exit 0
+            fi;
+        done;
+        exit 1
+  tracker-docker-image-push:
+    needs: [ tracker, test-docker-image-test ]
+    # only push for nightly runs and manual triggers
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: ./Dockerfile.tracker
+      image_name: streamr/tracker
+      build_platforms: linux/amd64
+      push_image: true
+      test_success: ${{ !(needs.tracker.result == 'failure' || needs.test-docker-image.result == 'failure') }}
+    secrets:
+      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
+      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
