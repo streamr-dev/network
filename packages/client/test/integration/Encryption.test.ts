@@ -15,7 +15,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
@@ -374,81 +373,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
 
                 expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
             }, TIMEOUT * 3)
-
-            describe('error handling', () => {
-                let sub: Subscription<any>
-                const MAX_MESSAGES_MORE = 10
-                const BAD_INDEX = 6
-                let contentClear: any[] = []
-
-                beforeEach(async () => {
-                    const groupKey = GroupKey.generate()
-
-                    await publisher.updateEncryptionKey({
-                        streamId: stream.id,
-                        key: groupKey,
-                        distributionMethod: 'rotate'
-                    })
-                    contentClear = []
-
-                    // @ts-expect-error private
-                    getPublishPipeline(publisher).streamMessageQueue.forEach(([streamMessage]) => {
-                        if (streamMessage.getStreamId() !== stream.id) { return }
-                        contentClear.push(streamMessage.getParsedContent())
-                    })
-
-                    // @ts-expect-error private
-                    getPublishPipeline(publisher).publishQueue.forEach(async () => {
-                        await publisher.updateEncryptionKey({
-                            streamId: stream.id,
-                            distributionMethod: 'rotate'
-                        })
-                    })
-
-                    sub = await subscriber.subscribe({
-                        stream: stream.id
-                    })
-                    // @ts-expect-error private
-                    const subSession = subscriber.subscriber.getSubscriptionSession(sub.streamPartId)
-                    if (!subSession) { throw new Error('no subsession?') }
-                    // @ts-expect-error private
-                    subSession.pipeline.forEachBefore((streamMessage: StreamMessage, index: number) => {
-                        if (index === BAD_INDEX) {
-                            // eslint-disable-next-line no-param-reassign
-                            streamMessage.groupKeyId = 'badgroupkey'
-                        }
-                    })
-                })
-
-                it('throws if onError does rethrow', async () => {
-                    const onSubError = jest.fn((err) => {
-                        sub.debug('ON SUB ERROR', err)
-                        throw err
-                    })
-                    sub.onError.listen(onSubError)
-                    // Publish after subscribed
-                    await publishTestMessages(MAX_MESSAGES_MORE, {
-                        timestamp: 1111111,
-                    })
-
-                    const received: any[] = []
-                    await expect(async () => {
-                        for await (const m of sub) {
-                            received.push(m.getParsedContent())
-                            if (received.length === MAX_MESSAGES_MORE - 1) {
-                                break
-                            }
-                        }
-                    }).rejects.toThrow('decrypt')
-
-                    expect(received).toEqual([
-                        ...contentClear.slice(0, BAD_INDEX),
-                    ])
-                    expect(await subscriber.getSubscriptions()).toHaveLength(0)
-
-                    expect(onSubError).toHaveBeenCalledTimes(1)
-                })
-            })
         })
 
         it('errors if rotating group key for no stream', async () => {

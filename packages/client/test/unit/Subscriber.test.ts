@@ -109,12 +109,12 @@ describe('Subscriber', () => {
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
-        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
         const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
         const onError = jest.fn()
         sub.on('error', onError)
 
+        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
         const publishedMessages = [1000, 2000, 3000].map((timestamp) => {
             return createMockMessage({
                 timestamp,
@@ -131,5 +131,26 @@ describe('Subscriber', () => {
         expect(receivedMessages[1].getTimestamp()).toBe(3000)
         expect(onError).toBeCalled()
         expect(onError.mock.calls[0][0].message).toInclude('Signature validation failed')
+    })
+
+    it('custom error handler throws', async () => {
+        const subscriber = dependencyContainer.resolve(Subscriber)
+        const sub = await subscriber.subscribe(stream.id)
+        const onError = jest.fn().mockImplementation(() => {
+            throw new Error('mock-error')
+        })
+        sub.on('error', onError)
+
+        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
+        const msg = createMockMessage({
+            stream,
+            publisher: publisherWallet
+        })
+        msg.signature = 'invalid-signature'
+        publisherNode.publishToNode(msg)
+
+        // TODO would it make sense, if we custom error handler doesn't stop the pipepline
+        // and we just continue normally (could e.g. write an error to console.log)
+        await expect(() => collect(sub)).rejects.toThrow('mock-error')
     })
 })
