@@ -1,7 +1,8 @@
 name: release
 on:
   workflow_run:
-    workflows: [validate]
+    workflows:
+      - validate
     types:
       - completed
 jobs:
