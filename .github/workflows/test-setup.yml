@@ -31,11 +31,11 @@ jobs:
         with:
           services-to-start: ${{ inputs.docker-services }}
       - name: run brokers and trackers
-        if: ${{ inputs.run-brokers-and-trackers == 'true' }}
+        if: ${{ inputs.run-brokers-and-trackers }}
         uses: ./.github/workflows/reusable/run-brokers-and-trackers
       - name: test
         working-directory: 'packages/${{ inputs.package }}'
         run: ${{ inputs.command }}
       - name: upload logs
-        if: ${{ inputs.docker-services != '' || inputs.run-brokers-and-trackers == 'true' }}
+        if: ${{ inputs.docker-services != '' || inputs.run-brokers-and-trackers }}
         uses: ./.github/workflows/reusable/collect-and-upload-logs
