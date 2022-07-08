@@ -121,6 +121,8 @@ jobs:
         run: echo $CHUNKS | jq '.[${{ matrix.chunk }}] | .[] | @text' | xargs npx jest --forceExit
         env:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
+      - name: upload logs
+        uses: ./.github/workflows/reusable/collect-and-upload-logs
   tracker-docker-image-test:
     uses: ./.github/workflows/docker-build.yml
     with:
