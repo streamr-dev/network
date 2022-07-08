@@ -21,34 +21,31 @@ jobs:
       - uses: actions/checkout@v3
       - name: build
         uses: ./.github/workflows/reusable/cached-build
-      - name: versions
-        run: npm run versions
-      - name: check
-        run: npm run check
-      - name: eslint
-        run: npm run eslint
+      - run: npm run versions
+      - run: npm run check
+      - run: npm run eslint
   test-utils:
-    needs: [build]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: test-utils
   utils:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: utils
   protocol:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: protocol
   network:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: network
   network-browser:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: network
@@ -56,106 +53,68 @@ jobs:
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
   tracker:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: network-tracker
   client:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
       command: |
         npm run test-unit
         npm run test-integration
+  client-e2e:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end
   broker:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
       command: npm run test-unit
   broker-e2e:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: broker
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       command: npm run test-integration
-      docker-services: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-  client-e2e-chunkify:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    outputs:
-      test-chunks: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
-      test-chunk-ids: ${{ steps['set-test-chunk-ids'].outputs['test-chunk-ids'] }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - id: set-test-chunks
-        name: Set Chunks
-        working-directory: 'packages/client'
-        run: echo "::set-output name=test-chunks::$(npx jest --listTests --json test/end-to-end | jq -cM '[_nwise(length / 2 | ceil)]')"
-      - id: set-test-chunk-ids
-        name: Set Chunk IDs
-        working-directory: 'packages/client'
-        run: echo "::set-output name=test-chunk-ids::$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')"
-        env:
-          CHUNKS: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
-  client-e2e:
-    needs: [ client-e2e-chunkify ]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        chunk: ${{ fromJson(needs['client-e2e-chunkify'].outputs['test-chunk-ids']) }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: build (cached)
-        uses: ./.github/workflows/reusable/cached-build
-      - uses: streamr-dev/streamr-docker-dev-action@v1.0.0
-        with:
-          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink"
-      - name: run brokers and trackers
-        uses: ./.github/workflows/reusable/run-brokers-and-trackers
-      - name: test
-        working-directory: 'packages/client'
-        run: echo $CHUNKS | jq '.[${{ matrix.chunk }}] | .[] | @text' | xargs npx jest --forceExit
-        env:
-          CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
-      - name: upload logs
-        uses: ./.github/workflows/reusable/collect-and-upload-logs
   client-browser-realtime:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
-      command: |
-        npm run test-browser-realtime
+      command: npm run test-browser-realtime
   client-browser-resend:
-    needs: [ build ]
+    needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
       docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
       run-brokers-and-trackers: true
-      command: |
-        npm run test-browser-resend
+      command: npm run test-browser-resend
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: ./Dockerfile.tracker
+      docker_file: Dockerfile.tracker
       image_name: streamr/tracker
       test_services_to_start: tracker-1
       build_platforms: linux/amd64
-      test_script: |
-        bash ./.github/curl-healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
+      test_script: bash ./.github/healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
   broker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: ./Dockerfile.broker
+      docker_file: Dockerfile.broker
       image_name: streamr/broker-node
-      test_services_to_start: "parity-node0 broker-node-no-storage-1"
+      test_services_to_start: parity-node0 broker-node-no-storage-1
       build_platforms: linux/amd64
-      test_script: |
-        bash ./.github/curl-healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
+      test_script: bash ./.github/healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1

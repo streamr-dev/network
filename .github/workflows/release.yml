@@ -10,7 +10,7 @@ jobs:
     #if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: ./Dockerfile.tracker
+      docker_file: Dockerfile.tracker
       image_name: streamr/tracker
       build_platforms: linux/amd64
       push_image: true
@@ -23,7 +23,7 @@ jobs:
     #if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker-build.yml
     with:
-      docker_file: ./Dockerfile.broker
+      docker_file: Dockerfile.broker
       image_name: streamr/broker-node
       build_platforms: linux/amd64,linux/arm64
       push_image: true
