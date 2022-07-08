@@ -123,6 +123,24 @@ jobs:
           CHUNKS: ${{ needs['client-e2e-chunkify'].outputs['test-chunks'] }}
       - name: upload logs
         uses: ./.github/workflows/reusable/collect-and-upload-logs
+  client-browser-realtime:
+    needs: [ build ]
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
+      command: |
+        npm run test-browser-realtime
+  client-browser-resend:
+    needs: [ build ]
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
+      command: |
+        npm run test-browser-resend
   tracker-docker-image:
     uses: ./.github/workflows/docker-build.yml
     with:
