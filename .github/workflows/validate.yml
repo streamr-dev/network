@@ -65,14 +65,30 @@ jobs:
       command: |
         npm run test-unit
         npm run test-integration
-  client-e2e:
+  client-e2e-shard-1:
     needs: build
     uses: ./.github/workflows/test-setup.yml
     with:
       package: client
       docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
       run-brokers-and-trackers: true
-      command: npm run test-end-to-end
+      command: npm run test-end-to-end --shard=1/3
+  client-e2e-shard-2:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end --shard=2/3
+  client-e2e-shard-3:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end --shard=3/3
   broker:
     needs: build
     uses: ./.github/workflows/test-setup.yml
