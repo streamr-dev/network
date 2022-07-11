@@ -1,5 +1,4 @@
 import { fastPrivateKey, wait } from 'streamr-test-utils'
-import { StreamMessage } from 'streamr-client-protocol'
 import {
     Debug,
     createTestStream,
@@ -8,35 +7,15 @@ import {
     getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { Defer } from '../../src/utils/Defer'
-import { pLimitFn } from '../../src/utils/promises'
 import { StreamrClient } from '../../src/StreamrClient'
-import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
-import { PublishPipeline } from '../../src/publish/PublishPipeline'
 
 const debug = Debug('StreamrClient::test')
-const TIMEOUT = 15 * 1000
-const NUM_MESSAGES = 5
 
 jest.setTimeout(30000)
-
-const getPublishPipeline = (client: StreamrClient): PublishPipeline => {
-    // @ts-expect-error private
-    return client.container.resolve(PublishPipeline)
-}
-
-const testMessageEncryptionType = (streamMessage: StreamMessage) => {
-    if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-    } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
-    } else {
-        expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-    }
-}
 
 describe.skip('decryption', () => { // TODO enable the test when it doesn't depend on PublishPipeline
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -108,103 +87,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
             })
         ])
     }
-
-    // run these in sequence (i.e. pLimitFn(fn, 1)) because core-api can't handle concurrency here
-    const grantSubscriberPermissions = pLimitFn(async ({
-        stream: s = stream,
-        client: c = subscriber,
-    }: { stream?: Stream, client?: StreamrClient } = {}) => {
-        const p2 = await s.grantPermissions({ user: await c.getAddress(), permissions: [StreamPermission.SUBSCRIBE] })
-        return [p2]
-    })
-
-    const collectMessages = async (
-        testStream: Stream
-    ): Promise<{ done: Promise<any>, received: any[] }> => {
-        const done = Defer()
-        const received: any = []
-        await grantSubscriberPermissions({ stream: testStream })
-        await subscriber.subscribe({
-            streamId: testStream.id,
-        }, (parsedContent) => {
-            received.push(parsedContent)
-            if (received.length === NUM_MESSAGES) {
-                done.resolve(undefined)
-            }
-        })
-        return {
-            done,
-            received
-        }
-    }
-
-    describe('using default config', () => {
-        beforeEach(async () => {
-            await setupPublisherSubscriberClients()
-            await setupStream()
-        }, 60000)
-
-        it('sets group key per-stream', async () => {
-            const stream2 = await createTestStream(publisher, module)
-
-            function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
-                const onSendTest = Defer()
-                // @ts-expect-error private
-                getPublishPipeline(testClient).publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
-                    testClient.debug({ streamMessage })
-
-                    if (streamMessage.getStreamId() === stream2.id) {
-                        expect(streamMessage.groupKeyId).toEqual(groupKey2.id)
-                    }
-
-                    if (streamMessage.getStreamId() === stream.id) {
-                        expect(streamMessage.groupKeyId).toEqual(groupKey.id)
-                    }
-                    testMessageEncryptionType(streamMessage)
-                })).onFinally.listen(() => {
-                    onSendTest.resolve(undefined)
-                })
-
-                return onSendTest
-            }
-
-            async function testSub(testStream: Stream) {
-                const { done, received } = await collectMessages(testStream)
-
-                const contentClear: any[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.onMessage.listen(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== testStream.id) { return }
-                    contentClear.push(streamMessage.getParsedContent())
-                })
-                await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
-
-                await done
-
-                expect(received).toEqual(contentClear)
-            }
-
-            const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
-
-            const groupKey = GroupKey.generate()
-            await publisher.updateEncryptionKey({
-                streamId: stream.id,
-                key: groupKey,
-                distributionMethod: 'rotate'
-            })
-            const groupKey2 = GroupKey.generate()
-            await publisher.updateEncryptionKey({
-                streamId: stream2.id,
-                key: groupKey2,
-                distributionMethod: 'rotate'
-            })
-
-            await testSub(stream)
-            await testSub(stream2)
-            onEncryptionMessageErr.resolve(undefined)
-            await onEncryptionMessageErr
-        }, TIMEOUT * 2)
-    })
 
     describe('revoking permissions', () => {
         async function testRevokeDuringSubscribe({
