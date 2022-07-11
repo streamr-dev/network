@@ -1,7 +1,8 @@
 import { random } from 'lodash'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { MessageFactory } from '../../src/publish/MessageFactory'
+import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { createMockAddress } from '../test-utils/utils'
 
 const AUTHENTICATED_USER = createMockAddress()
@@ -12,15 +13,19 @@ const PARTITION_COUNT = 50
 const SIGNATURE = 'mock-signature'
 const GROUP_KEY = GroupKey.generate()
 
-const createMessageFactory = (isPublicStream: boolean = false) => {
-    return new MessageFactory(
-        STREAM_ID,
-        PARTITION_COUNT,
-        isPublicStream,
-        AUTHENTICATED_USER.toLowerCase(),
-        async () => SIGNATURE,
-        async () => [GROUP_KEY, undefined]
-    )
+const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) => {
+    const defaultOpts = {
+        streamId: STREAM_ID,
+        partitionCount: PARTITION_COUNT,
+        isPublicStream: false,
+        publisherId: AUTHENTICATED_USER.toLowerCase(),
+        createSignature: async () => SIGNATURE,
+        useGroupKey: async () => [GROUP_KEY, undefined]
+    }
+    return new MessageFactory({
+        ...defaultOpts as any, // TODO refactor PublisherKeyExchange#useGroupKey so that it doesn't return "never" type
+        ...overridenOpts
+    })
 }
 
 describe('MessageFactory', () => {
@@ -29,28 +34,31 @@ describe('MessageFactory', () => {
         const messageFactory = createMessageFactory()
         const msg = await messageFactory.createMessage(undefined, CONTENT, { timestamp: TIMESTAMP })
         expect(msg).toMatchObject({
-            contentType: 0,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
-            groupKeyId: GROUP_KEY.id,
             messageId: {
-                msgChainId: expect.anything(),
+                msgChainId: expect.any(String),
                 publisherId: AUTHENTICATED_USER.toLowerCase(),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
                 timestamp: TIMESTAMP
             },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
-            newGroupKey: null,
             prevMsgRef: null,
-            serializedContent: expect.anything(),
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            groupKeyId: GROUP_KEY.id,
+            newGroupKey: null,
             signature: SIGNATURE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            contentType: 0,
+            serializedContent: expect.anything(),
         })
     })
 
     it('public stream', async () => {
-        const messageFactory = createMessageFactory(true)
+        const messageFactory = createMessageFactory({
+            isPublicStream: true,
+            useGroupKey: () => Promise.reject()
+        })
         const msg = await messageFactory.createMessage(undefined, CONTENT, { timestamp: TIMESTAMP })
         expect(msg).toMatchObject({
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -67,6 +75,18 @@ describe('MessageFactory', () => {
             msgChainId: MSG_CHAIN_ID
         })
         expect(msg.messageId.msgChainId).toBe(MSG_CHAIN_ID)
+    })
+
+    it('next group key', async () => {
+        const nextGroupKey = GroupKey.generate()
+        const messageFactory = createMessageFactory({
+            useGroupKey: async () => [GROUP_KEY, nextGroupKey]
+        })
+        const msg = await messageFactory.createMessage(undefined, CONTENT, {
+            timestamp: TIMESTAMP
+        })
+        expect(msg.groupKeyId).toBe(GROUP_KEY.id)
+        expect(EncryptionUtil.decryptGroupKey(msg.newGroupKey!, GROUP_KEY)).toEqual(nextGroupKey)
     })
 
     describe('partitions', () => {

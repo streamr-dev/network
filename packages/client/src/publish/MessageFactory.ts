@@ -7,6 +7,16 @@ import { CacheFn } from '../utils/caches'
 import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
 import { MessageMetadata } from './PublishPipeline'
 
+export interface MessageFactoryOptions {
+    streamId: StreamID
+    partitionCount: number
+    isPublicStream: boolean
+    publisherId: EthereumAddress
+    createSignature: (payload: string) => Promise<string>
+    useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+    cacheConfig?: CacheConfig
+}
+
 export class MessageFactory {
 
     private streamId: StreamID
@@ -19,29 +29,21 @@ export class MessageFactory {
     private getStreamPartitionForKey: (partitionKey: string | number) => number
     private getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain
 
-    constructor(
-        streamId: StreamID,
-        partitionCount: number,
-        isPublicStream: boolean,
-        publisherId: EthereumAddress,
-        createSignature: (payload: string) => Promise<string>,
-        useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>,
-        cacheConfig?: CacheConfig
-    ) {
-        this.streamId = streamId
-        this.partitionCount = partitionCount
-        this.selectedDefaultPartition = random(partitionCount - 1)
-        this.isPublicStream = isPublicStream
-        this.publisherId = publisherId
-        this.createSignature = createSignature
-        this.useGroupKey = useGroupKey
+    constructor(opts: MessageFactoryOptions) {
+        this.streamId = opts.streamId
+        this.partitionCount = opts.partitionCount
+        this.selectedDefaultPartition = random(opts.partitionCount - 1)
+        this.isPublicStream = opts.isPublicStream
+        this.publisherId = opts.publisherId
+        this.createSignature = opts.createSignature
+        this.useGroupKey = opts.useGroupKey
         this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
-            return Utils.keyToArrayIndex(partitionCount, partitionKey)
+            return Utils.keyToArrayIndex(opts.partitionCount, partitionKey)
         }, {
-            ...cacheConfig,
+            ...opts.cacheConfig,
             cacheKey: ([partitionKey]) => partitionKey
         })
-        this.getMsgChain = getCachedMessageChain(cacheConfig) // TODO would it ok to just use pMemoize (we don't have many chains) 
+        this.getMsgChain = getCachedMessageChain(opts.cacheConfig) // TODO would it ok to just use pMemoize (we don't have many chains)
     }
 
     async createMessage<T>(

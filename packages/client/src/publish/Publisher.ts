@@ -73,14 +73,14 @@ export class Publisher implements Context {
         // In that case we can also remove the 2 internal fields of MessageMetadata as there is no need to support those in normal publishing
         if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
             const authenticatedUser = await this.authentication.getAddress()
-            return new MessageFactory(
-                streamId,
-                1,
-                true,
-                authenticatedUser.toLowerCase(),
-                (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-                async () => [undefined, undefined]
-            )
+            return new MessageFactory({
+                streamId: streamId,
+                partitionCount: 1,
+                isPublicStream: true,
+                publisherId: authenticatedUser.toLowerCase(),
+                createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
+                useGroupKey: () => Promise.reject()
+            })
         }
         const [ stream, authenticatedUser ] = await Promise.all([
             this.streamRegistryCached.getStream(streamId),
@@ -91,15 +91,15 @@ export class Publisher implements Context {
             throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
         }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
-        return new MessageFactory(
+        return new MessageFactory({
             streamId,
-            stream.partitions,
+            partitionCount: stream.partitions,
             isPublicStream,
-            authenticatedUser.toLowerCase(),
-            (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            pLimitFn(() => this.keyExchange.useGroupKey(streamId), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
-            this.cacheConfig
-        )
+            publisherId: authenticatedUser.toLowerCase(),
+            createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
+            useGroupKey: pLimitFn(() => this.keyExchange.useGroupKey(streamId), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
+            cacheConfig: this.cacheConfig
+        })
     }
 
     async publish<T>(
