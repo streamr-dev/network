@@ -1,3 +1,4 @@
+import { Subscription } from './../../src/subscribe/Subscription';
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
@@ -18,6 +19,7 @@ const MOCK_CONTENT = { foo: 'bar' }
 
 describe('Subscriber', () => {
 
+    let sub: Subscription
     let stream: Stream
     let subscriberWallet: Wallet
     let publisherWallet: Wallet
@@ -33,17 +35,15 @@ describe('Subscriber', () => {
         })
         const streamRegistry = dependencyContainer.resolve(StreamRegistry)
         stream = await streamRegistry.createStream('/path')
+        await stream.grantPermissions({
+            permissions: [StreamPermission.PUBLISH],
+            user: publisherWallet.address
+        })
+        const subscriber = dependencyContainer.resolve(Subscriber)
+        sub = await subscriber.subscribe(stream.id)
     })
 
     it('without encryption', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            public: true
-        })
-
-        const subscriber = dependencyContainer.resolve(Subscriber)
-        const sub = await subscriber.subscribe(stream.id)
-
         const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
         publisherNode.publishToNode(createMockMessage({
             stream,
@@ -75,17 +75,9 @@ describe('Subscriber', () => {
     })
 
     it('with encryption', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
-        })
-
         const groupKey = GroupKey.generate()
         const nextGroupKey = GroupKey.generate()
         const publisherNode = await addFakePublisherNode(publisherWallet, [groupKey], dependencyContainer)
-
-        const subscriber = dependencyContainer.resolve(Subscriber)
-        const sub = await subscriber.subscribe(stream.id)
 
         publisherNode.publishToNode(createMockMessage({
             stream,
@@ -125,22 +117,15 @@ describe('Subscriber', () => {
     })
 
     it('group key response error', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
-        })
+        const onError = jest.fn()
+        sub.on('error', onError)
+
         const publisherNode = await addFakePublisherNode(
             publisherWallet,
             [],
             dependencyContainer,
             async () => 'mock-error-code'
         )
-
-        const subscriber = dependencyContainer.resolve(Subscriber)
-        const sub = await subscriber.subscribe(stream.id)
-        const onError = jest.fn()
-        sub.on('error', onError)
-
         publisherNode.publishToNode(createMockMessage({
             stream,
             publisher: publisherWallet,
@@ -153,12 +138,6 @@ describe('Subscriber', () => {
     })
 
     it('skip invalid messages', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
-        })
-        const subscriber = dependencyContainer.resolve(Subscriber)
-        const sub = await subscriber.subscribe(stream.id)
         const onError = jest.fn()
         sub.on('error', onError)
 
@@ -182,8 +161,6 @@ describe('Subscriber', () => {
     })
 
     it('custom error handler throws', async () => {
-        const subscriber = dependencyContainer.resolve(Subscriber)
-        const sub = await subscriber.subscribe(stream.id)
         const onError = jest.fn().mockImplementation(() => {
             throw new Error('mock-error')
         })
