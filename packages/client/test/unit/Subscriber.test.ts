@@ -1,10 +1,10 @@
-import { Subscription } from './../../src/subscribe/Subscription';
 import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { Subscriber } from '../../src/subscribe/Subscriber'
+import { Subscription } from './../../src/subscribe/Subscription'
 import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { StreamPermission } from '../../src'
