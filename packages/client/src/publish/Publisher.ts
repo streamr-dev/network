@@ -84,6 +84,7 @@ export class Publisher implements Context {
                 publisherId: authenticatedUser.toLowerCase(),
                 createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
                 useGroupKey: () => Promise.reject(),
+                cacheConfig: this.cacheConfig,
                 validator: this.validator
             })
         }
