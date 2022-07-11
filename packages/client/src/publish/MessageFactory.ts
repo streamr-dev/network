@@ -119,7 +119,7 @@ export class MessageFactory {
         // TODO are most of validation checks testing something we already know that is true? E.g. that the message contains a signature
         // -> those checks are needed in SubscribePipeline, but why the same checks were in PublishPipeline (if there is no
         // need to check any of the aspects of a message, we can remove this validation step)
-        this.validator.validate(message)
+        await this.validator.validate(message)
         return message
     }
 }
