@@ -1,0 +1,140 @@
+name: validate
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  schedule:
+    # run every day at 00:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        uses: ./.github/workflows/reusable/cached-build
+      - run: npm run versions
+      - run: npm run check
+      - run: npm run eslint
+  test-utils:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: test-utils
+  utils:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: utils
+  protocol:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: protocol
+  network:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: network
+  network-browser:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: network
+      command: |
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
+  tracker:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: network-tracker
+  client:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      command: |
+        npm run test-unit
+        npm run test-integration
+  client-e2e-shard-1:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end -- --shard=1/3
+  client-e2e-shard-2:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end -- --shard=2/3
+  client-e2e-shard-3:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph chainlink
+      run-brokers-and-trackers: true
+      command: npm run test-end-to-end -- --shard=3/3
+  broker:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: broker
+      command: npm run test-unit
+  broker-e2e:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: broker
+      docker-services: cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      command: npm run test-integration
+  client-browser-realtime:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
+      command: npm run test-browser-realtime
+  client-browser-resend:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: client
+      docker-services: init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph
+      run-brokers-and-trackers: true
+      command: npm run test-browser-resend
+  tracker-docker-image:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: Dockerfile.tracker
+      image_name: streamr/tracker
+      test_services_to_start: tracker-1
+      build_platforms: linux/amd64
+      test_script: bash ./.github/healthcheck.sh http://localhost:30301/topology streamr-dev-tracker-1
+  broker-docker-image:
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      docker_file: Dockerfile.broker
+      image_name: streamr/broker-node
+      test_services_to_start: parity-node0 broker-node-no-storage-1
+      build_platforms: linux/amd64
+      test_script: bash ./.github/healthcheck.sh http://localhost:8791/info streamr-dev-broker-node-no-storage-1
