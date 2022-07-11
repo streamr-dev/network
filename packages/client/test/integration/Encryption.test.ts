@@ -9,7 +9,7 @@ import {
     publishTestMessagesGenerator,
 } from '../test-utils/publish'
 import { Defer } from '../../src/utils/Defer'
-import { pLimitFn, withTimeout } from '../../src/utils/promises'
+import { pLimitFn } from '../../src/utils/promises'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
@@ -229,21 +229,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
                     distributionMethod: 'rotate'
                 })
             }).rejects.toThrow('streamId')
-        })
-
-        it('client.subscribe can not decrypt encrypted messages if does not know the group key', async () => {
-            const sub = await subscriber.subscribe({
-                stream: stream.id,
-            })
-
-            await publishTestMessages(3, {
-                timestamp: 1111111,
-            })
-
-            const TIMEOUT_ERROR = 'mock-timeout-error'
-            await expect(async () => {
-                await withTimeout(sub.collect(3), TIMEOUT, TIMEOUT_ERROR)
-            }).rejects.toThrow(TIMEOUT_ERROR)
         })
 
         it('sets group key per-stream', async () => {

@@ -116,6 +116,25 @@ describe('Subscriber', () => {
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
+    it('no permission', async () => {
+        await stream.revokePermissions({
+            permissions: [StreamPermission.SUBSCRIBE],
+            user: subscriberWallet.address
+        })
+        const onError = jest.fn()
+        sub.on('error', onError)
+
+        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
+        publisherNode.publishToNode(createMockMessage({
+            stream,
+            publisher: publisherWallet,
+            encryptionKey: GroupKey.generate()
+        }))
+
+        await waitForCondition(() => onError.mock.calls.length > 0)
+        expect(onError.mock.calls[0][0].message).toInclude('not a subscriber')
+    })
+
     it('group key response error', async () => {
         const onError = jest.fn()
         sub.on('error', onError)
