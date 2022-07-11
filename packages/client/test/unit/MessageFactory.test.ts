@@ -20,7 +20,10 @@ const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) =>
         isPublicStream: false,
         publisherId: AUTHENTICATED_USER.toLowerCase(),
         createSignature: async () => SIGNATURE,
-        useGroupKey: async () => [GROUP_KEY, undefined]
+        useGroupKey: async () => [GROUP_KEY, undefined],
+        validator: {
+            validate: async () => {}
+        } as any
     }
     return new MessageFactory({
         ...defaultOpts as any, // TODO refactor PublisherKeyExchange#useGroupKey so that it doesn't return "never" type
