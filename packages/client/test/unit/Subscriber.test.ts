@@ -11,6 +11,8 @@ import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { collect, nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 
 const MOCK_CONTENT = { foo: 'bar' }
 
@@ -50,6 +52,25 @@ describe('Subscriber', () => {
         }))
 
         const receivedMessage = await nextValue(sub)
+        expect(receivedMessage).toMatchObject({
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: expect.toEqualCaseInsensitive(publisherWallet.address),
+                sequenceNumber: 0,
+                streamId: stream.id,
+                streamPartition: 0,
+                timestamp: expect.any(Number)
+            },
+            prevMsgRef: null,
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            groupKeyId: null,
+            newGroupKey: null,
+            signature: expect.any(String),
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            contentType: 0,
+            serializedContent: JSON.stringify(MOCK_CONTENT),
+        })
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
@@ -60,6 +81,7 @@ describe('Subscriber', () => {
         })
 
         const groupKey = GroupKey.generate()
+        const nextGroupKey = GroupKey.generate()
         const publisherNode = await addFakePublisherNode(publisherWallet, [groupKey], dependencyContainer)
 
         const subscriber = dependencyContainer.resolve(Subscriber)
@@ -69,10 +91,36 @@ describe('Subscriber', () => {
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,
-            encryptionKey: groupKey
+            encryptionKey: groupKey,
+            newGroupKey: EncryptionUtil.encryptGroupKey(nextGroupKey, groupKey)
         }))
 
         const receivedMessage = await nextValue(sub)
+        // TODO Currently the decryption process modifies many fields of a message. It would maybe make sense
+        // if it only updated the parsedContent field, and not other fields of StreamMessage. This test
+        // reflects the current behavior, and therefore Subscriber receives a message which has:
+        // - encryptionType NONE insteaof of AES
+        // - newGroupKey in decrypted format instead of encrypted format
+        // - serializedContent decrypted
+        expect(receivedMessage).toMatchObject({
+            messageId: {
+                msgChainId: expect.any(String),
+                publisherId: expect.toEqualCaseInsensitive(publisherWallet.address),
+                sequenceNumber: 0,
+                streamId: stream.id,
+                streamPartition: 0,
+                timestamp: expect.any(Number)
+            },
+            prevMsgRef: null,
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            groupKeyId: groupKey.id,
+            newGroupKey: nextGroupKey,
+            signature: expect.any(String),
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+            contentType: 0,
+            serializedContent: JSON.stringify(MOCK_CONTENT),
+        })
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
