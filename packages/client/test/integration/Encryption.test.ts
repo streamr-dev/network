@@ -5,8 +5,7 @@ import {
     createTestStream,
 } from '../test-utils/utils'
 import {
-    getPublishTestStreamMessages,
-    publishTestMessagesGenerator,
+    getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { Defer } from '../../src/utils/Defer'
 import { pLimitFn } from '../../src/utils/promises'
@@ -144,74 +143,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
             await setupPublisherSubscriberClients()
             await setupStream()
         }, 60000)
-
-        describe('subscriber has permissions', () => {
-            beforeEach(async () => {
-                await grantSubscriberPermissions()
-            })
-
-            it('can rotate when publisher + subscriber initialised with groupkey', async () => {
-                await publisher.destroy()
-                await subscriber.destroy()
-
-                const groupKey = GroupKey.generate()
-                const groupKeys = {
-                    [stream.id]: {
-                        [groupKey.id]: {
-                            groupKeyId: groupKey.id,
-                            groupKeyHex: groupKey.hex,
-                        }
-                    }
-                }
-                // eslint-disable-next-line require-atomic-updates
-                publisher = await setupClient({
-                    auth: {
-                        privateKey: publisherPrivateKey
-                    },
-                    encryptionKeys: groupKeys
-                })
-
-                // eslint-disable-next-line require-atomic-updates
-                subscriber = await setupClient({
-                    auth: {
-                        privateKey: subscriberPrivateKey
-                    },
-                    encryptionKeys: groupKeys
-                })
-
-                const contentClear: any[] = []
-                const streamMessagesPublished: StreamMessage<any>[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.forEach(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    contentClear.push(streamMessage.getParsedContent())
-                })
-                // @ts-expect-error private
-                getPublishPipeline(publisher).publishQueue.forEach(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    streamMessagesPublished.push(streamMessage)
-                })
-
-                const publishStream = publishTestMessagesGenerator(publisher, stream, NUM_MESSAGES)
-                await publisher.connect()
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    distributionMethod: 'rotate'
-                })
-                const sub = (await subscriber.subscribe({
-                    stream: stream.id,
-                }))
-                await publishStream.collect(NUM_MESSAGES)
-
-                // published with encryption
-                expect(streamMessagesPublished.map((streamMessage) => streamMessage.encryptionType))
-                    .toEqual(streamMessagesPublished.map(() => StreamMessage.ENCRYPTION_TYPES.AES))
-
-                const received = await sub.collect(NUM_MESSAGES)
-
-                expect(received.map((s) => s.getParsedContent())).toEqual(contentClear)
-            }, TIMEOUT * 2)
-        })
 
         it('errors if rotating group key for no stream', async () => {
             await expect(async () => (
