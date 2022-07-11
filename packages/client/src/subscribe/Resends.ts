@@ -5,7 +5,6 @@ import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
-import { wait } from '../utils/promises'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
@@ -21,6 +20,7 @@ import { random, range } from 'lodash'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { wait } from '@streamr/utils'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

@@ -9,8 +9,8 @@ import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
 import { instanceId } from './utils'
-import { wait } from './promises'
 import { TimeoutError, withTimeout } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
