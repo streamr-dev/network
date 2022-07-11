@@ -144,24 +144,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
             await setupStream()
         }, 60000)
 
-        it('errors if rotating group key for no stream', async () => {
-            await expect(async () => (
-                // @ts-expect-error invalid argument
-                publisher.updateEncryptionKey()
-            )).rejects.toThrow('streamId')
-        })
-
-        it('errors if setting group key for no stream', async () => {
-            await expect(async () => {
-                await publisher.updateEncryptionKey({
-                    // @ts-expect-error invalid argument
-                    streamId: undefined,
-                    key: GroupKey.generate(),
-                    distributionMethod: 'rotate'
-                })
-            }).rejects.toThrow('streamId')
-        })
-
         it('sets group key per-stream', async () => {
             const stream2 = await createTestStream(publisher, module)
 
