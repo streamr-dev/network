@@ -211,37 +211,6 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
 
                 expect(received.map((s) => s.getParsedContent())).toEqual(contentClear)
             }, TIMEOUT * 2)
-
-            it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
-                // Publish encrypted messages with different keys
-                await publisher.updateEncryptionKey({
-                    streamId: stream.id,
-                    distributionMethod: 'rotate'
-                })
-                // @ts-expect-error private
-                getPublishPipeline(publisher).publishQueue.forEach(async () => {
-                    await publisher.updateEncryptionKey({
-                        streamId: stream.id,
-                        distributionMethod: 'rotate'
-                    })
-                })
-                const published = await publishTestMessages(5, {
-                    waitForLast: true,
-                })
-
-                await grantSubscriberPermissions()
-                // subscribe with resend without knowing the historical keys
-                const sub = await subscriber.subscribe({
-                    stream: stream.id,
-                    resend: {
-                        last: 2,
-                    },
-                }, (_msg: any) => {})
-
-                const received = await sub.collectContent(2)
-
-                expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
-            }, TIMEOUT * 3)
         })
 
         it('errors if rotating group key for no stream', async () => {
