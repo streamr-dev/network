@@ -5,9 +5,9 @@ import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
-import { Logger } from './Logger'
 import { ProtoRpcOptions } from './ClientTransport'
 import { Empty } from './proto/google/protobuf/empty'
+import { Logger } from '@streamr/utils'
 
 export enum ServerRegistryEvent {
     RPC_RESPONSE = 'rpcResponse',

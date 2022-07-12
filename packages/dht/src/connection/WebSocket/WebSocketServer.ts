@@ -9,7 +9,7 @@ import {
 import { TODO } from '../../types'
 import { Event as ConnectionEvents, IConnection } from '../IConnection'
 import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

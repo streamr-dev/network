@@ -23,7 +23,7 @@ import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { TODO } from '../../types'
 import { DeferredConnection } from '../DeferredConnection'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { IWebRtcConnector } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'

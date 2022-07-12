@@ -3,7 +3,7 @@ import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConne
 import { connection as WsConnection } from 'websocket'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

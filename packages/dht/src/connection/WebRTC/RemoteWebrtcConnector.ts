@@ -8,7 +8,7 @@ import {
 } from '../../proto/DhtRpc'
 import { IWebRtcConnectorClient } from '../../proto/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

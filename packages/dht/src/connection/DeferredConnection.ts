@@ -2,7 +2,7 @@ import { ConnectionType, IConnection } from './IConnection'
 import { EventEmitter } from 'events'
 import { ConnectionID } from '../types'
 import { PeerDescriptor } from '../proto/DhtRpc'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 
 const logger = new Logger(module)

@@ -5,8 +5,8 @@ import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter = require('events')
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
-import { Logger } from '../../helpers/Logger'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

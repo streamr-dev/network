@@ -15,7 +15,7 @@ import {
 import { v4 } from 'uuid'
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter = require('events')
-import { Logger } from './Logger'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     RPC_REQUEST = 'rpcRequest'

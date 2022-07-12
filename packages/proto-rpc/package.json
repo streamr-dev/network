@@ -29,14 +29,12 @@
     "@protobuf-ts/plugin": "^2.4.0",
     "@streamr/utils": "^0.0.1",
     "lodash": "^4.17.21",
-    "pino": "^6.11.3",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.175",
     "@types/node": "^16.10.6",
-    "@types/pino": "^6.3.8",
     "@types/uuid": "^8.3.1",
     "browserify-fs": "^1.0.0",
     "console-browserify": "^1.2.0",
@@ -67,7 +65,6 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
-    "pino-pretty": "^5.0.2",
     "utf-8-validate": "^5.0.7"
   }
 }

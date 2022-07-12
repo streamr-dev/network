@@ -3,7 +3,7 @@ import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
 import { EventEmitter } from 'events'
 import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

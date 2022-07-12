@@ -15,7 +15,7 @@ import { CallContext, ServerRegistryEvent as ServerRegistryEvent, Parser, Serial
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from './Logger'
+import { Logger } from '@streamr/utils'
 
 export enum StatusCode {
     OK = 'OK',
