@@ -5,10 +5,8 @@ RUN npm config set \
 	python="$(which python3)"
 COPY . .
 RUN --mount=type=cache,target=/root/.npm \
-	npm run bootstrap-pkg -- streamr-client && \
-	npm run build --workspace=streamr-client && \
-	npm run bootstrap-pkg -- streamr-broker && \
-	npm run build --workspace=streamr-broker && \
+	npm run bootstrap-pkg --package=streamr-client && \
+	npm run bootstrap-pkg --package=streamr-broker && \
 	npm run prune-pkg -- streamr-broker
 
 FROM --platform=$BUILDPLATFORM node:16.13.1-bullseye-slim

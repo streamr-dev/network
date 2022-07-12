@@ -1,6 +1,6 @@
 import Emitter from 'events'
 
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { Defer } from '../../src/utils/Defer'
 import { Scaffold } from '../../src/utils/Scaffold'

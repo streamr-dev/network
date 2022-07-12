@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { toStreamID, StreamPartID, TrackerLayer } from 'streamr-client-protocol'
 
 import { InstructionRetryManager } from '../../src/logic/InstructionRetryManager'

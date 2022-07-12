@@ -10,7 +10,6 @@ import {
     decode,
     DisconnectionCode,
     DisconnectionReason,
-    Logger,
     NameDirectory,
     NodeId,
     PeerId,
@@ -18,6 +17,7 @@ import {
     ServerWsEndpoint,
     WsEndpointEvent
 } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',

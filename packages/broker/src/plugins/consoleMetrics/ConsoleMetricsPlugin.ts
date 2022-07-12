@@ -1,7 +1,8 @@
 import { Schema } from 'ajv'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Logger, MetricsReport } from 'streamr-network'
+import { MetricsReport } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { omit } from 'lodash'
 
 const logger = new Logger(module)

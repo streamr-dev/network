@@ -1,5 +1,6 @@
 import { inspect } from 'util'
 import pLimit from 'p-limit'
+import { wait } from '@streamr/utils'
 
 import { MaybeAsync } from '../types'
 
@@ -321,24 +322,4 @@ export async function until(
     } finally {
         clearTimeout(t)
     }
-}
-
-// TODO import this from a library (e.g. streamr-test-utils if that is no longer a test-only dependency)
-export const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-
-export const withTimeout = async <T>(
-    task: Promise<T>,
-    waitTimeMs: number,
-    errorMessage: string,
-    onTimeout?: () => void
-): Promise<void> => {
-    let timeoutRef: ReturnType<typeof setTimeout>
-    const timeoutPromise = new Promise((resolve, reject) => {
-        timeoutRef = setTimeout(() => {
-            onTimeout?.()
-            reject(new Error(errorMessage))
-        }, waitTimeMs)
-    })
-    await Promise.race([task, timeoutPromise])
-    clearTimeout(timeoutRef!)
 }

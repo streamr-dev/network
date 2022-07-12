@@ -1,6 +1,6 @@
 import { StreamPartID, Utils } from 'streamr-client-protocol'
 import { TrackerInfo, TrackerId } from '../identifiers'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 

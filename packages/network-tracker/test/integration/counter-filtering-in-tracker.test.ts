@@ -1,5 +1,6 @@
 import { Status, NodeId } from 'streamr-network/dist/src/identifiers'
-import { runAndWaitForEvents, wait } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
 

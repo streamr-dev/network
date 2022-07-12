@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { ConstructorOptions, WebRtcConnection } from './WebRtcConnection'
-import { Logger } from "../../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../../NameDirectory"
 import { WebRtcConnectionFactory } from "./WebRtcEndpoint"
 

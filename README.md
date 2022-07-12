@@ -15,6 +15,7 @@ Monorepo for Streamr Network packages.
 * [network](packages/network/README.md) (streamr-network)
 * [protocol](packages/protocol/README.md) (streamr-client-protocol)
 * [test-utils](packages/test-utils/README.md) (streamr-test-utils)
+* [utils](packages/utils/README.md) (@streamr/utils)
 * [cli-tools](packages/cli-tools/README.md) (@streamr/cli-tools)
 * [tracker](packages/network-tracker/README.md)(@streamr/network-tracker)
 
@@ -37,35 +38,32 @@ Installation on an M1 Mac requires additional steps, see [install-on-m1.md](/ins
 
 **Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
 
-### Install dependencies
+### Bootstrap all sub-packages
+The go to command for most use cases.
 
-To install all required dependencies and link sub-packages together:
+To install all required dependencies and build all sub-packages (linking sub-packages together as needed):
+
+```bash
+# from top level
+npm run bootstrap
+```
+
+###  Bootstrap a single sub-package
+
+To install the required dependencies and build a specific sub-package:
+
+```bash
+# from top level
+npm run bootstrap-pkg --package=$PACKAGE_NAME
+```
+
+### Install dependencies only
+
+To only install required dependencies and link sub-packages together (and skip build phase):
 
 ```bash
 # from top level
 npm ci
-```
-
-### Install git hooks
-To install git hooks (e.g. Husky for conventional commit validation):
-
-```bash
-npm run install-git-hooks
-```
-
-###  Install dependencies of a sub-package
-
-To only install the dependencies (and link together sub-packages) required by a specific sub-package:
-```bash
-# from top level
-npm run bootstrap-pkg $PACKAGE_NAME
-```
-
-Examples:
-```bash
-# from top level
-npm run bootstrap-pkg streamr-client
-npm run bootstrap-pkg streamr-network
 ```
 
 ### Build
@@ -99,6 +97,13 @@ top-level **`node_modules`**:
 ```bash
 # from top level
 npm run clean
+```
+
+### Install git hooks
+To install git hooks (e.g. Husky for conventional commit validation):
+
+```bash
+npm run install-git-hooks
 ```
 
 ### Add a dependency into a sub-package

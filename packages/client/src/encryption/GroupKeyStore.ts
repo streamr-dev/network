@@ -41,7 +41,6 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     }
 
     async set(groupKeyId: string, value: GroupKey): Promise<boolean> {
-        GroupKey.validate(value)
         return this.store.set(groupKeyId, value.hex)
     }
 
@@ -86,7 +85,6 @@ export class GroupKeyStore implements Context {
         this.store = new GroupKeyPersistence({ context: this, clientId, streamId, initialData })
 
         groupKeys.forEach(([groupKeyId, groupKey]) => {
-            GroupKey.validate(groupKey)
             if (groupKeyId !== groupKey.id) {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
             }
@@ -96,7 +94,6 @@ export class GroupKeyStore implements Context {
     }
 
     private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
-        GroupKey.validate(groupKey)
         const existingKey = await this.store.get(groupKey.id)
         if (existingKey) {
             if (!existingKey.equals(groupKey)) {
@@ -189,7 +186,6 @@ export class GroupKeyStore implements Context {
     }
 
     async setNextGroupKey(newKey: GroupKey): Promise<void> {
-        GroupKey.validate(newKey)
         this.nextGroupKeys.unshift(newKey)
         this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
         await this.storeKey(newKey)

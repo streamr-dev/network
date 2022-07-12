@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'

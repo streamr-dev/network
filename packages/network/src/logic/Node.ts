@@ -8,10 +8,9 @@ import {
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
-import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger } from '../helpers/Logger'
+import { Logger, withTimeout } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
@@ -233,7 +232,7 @@ export class Node extends EventEmitter {
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
+            await withTimeout(this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt), this.nodeConnectTimeout)
             this.disconnectionManager.cancelScheduledDisconnection(nodeId)
             this.subscribeToStreamPartOnNode(nodeId, streamPartId, false)
             return nodeId
@@ -386,7 +385,7 @@ export class Node extends EventEmitter {
         let resolveHandler: any
         let rejectHandler: any
         const res = await Promise.all([
-            promiseTimeout(timeout, new Promise<number>((resolve, reject) => {
+            withTimeout(new Promise<number>((resolve, reject) => {
                 resolveHandler = (stream: StreamPartID, numOfNeighbors: number) => {
                     if (stream === streamPartId) {
                         resolve(numOfNeighbors)
@@ -399,7 +398,7 @@ export class Node extends EventEmitter {
                 }
                 this.on(Event.JOIN_COMPLETED, resolveHandler)
                 this.on(Event.JOIN_FAILED, rejectHandler)
-            })),
+            }), timeout),
             this.subscribeToStreamIfHaveNotYet(streamPartId)
         ]).finally(() => {
             this.off(Event.JOIN_COMPLETED, resolveHandler)

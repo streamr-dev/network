@@ -1,5 +1,5 @@
 import { EventEmitter } from "events"
-import { Logger } from "../../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from "../PeerInfo"
 import { Rtts } from "../../identifiers"
 import { PingPongWs } from "./PingPongWs"

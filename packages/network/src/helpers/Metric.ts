@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { set } from 'lodash'
-import { scheduleAtFixedRate } from './scheduler'
+import { scheduleAtFixedRate } from '@streamr/utils'
 
 export type MetricsDefinition = Record<string,Metric>
 

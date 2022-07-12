@@ -16,13 +16,13 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     MetricsContext,
-    Logger,
     COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
     RateMetric
 } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { InstructionSender } from './InstructionSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 

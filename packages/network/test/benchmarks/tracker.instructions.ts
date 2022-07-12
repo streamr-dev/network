@@ -2,7 +2,7 @@
 import path from 'path'
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 async function runNetwork(currentBenchmark: number, numberOfNodes: number, startingPort: number, timeout = 60 * 1000, trackerPort = 27777) {
     const productionEnv = Object.create(process.env)

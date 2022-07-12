@@ -2,7 +2,7 @@ import * as aedes from 'aedes'
 import * as net from 'net'
 import util from 'util'
 import { ISubscription, IPublishPacket } from 'mqtt-packet'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { ApiAuthenticator } from '../../apiAuthenticator'
 
 const logger = new Logger(module)

@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { StreamPartID, StreamPartIDUtils, Utils } from 'streamr-client-protocol'
 import { TrackerConnector } from '../../src/logic/TrackerConnector'
 import { TrackerInfo } from '../../src/identifiers'

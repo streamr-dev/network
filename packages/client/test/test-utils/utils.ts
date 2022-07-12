@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
     EthereumAddress,
@@ -170,10 +171,11 @@ export const createMockMessage = (
             opts.timestamp ?? Date.now(),
             opts.sequenceNumber ?? 0,
             opts.publisher.address,
-            opts.msgChainId ?? 'msgChainId'
+            opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         content: {},
+        prevMsgRef: opts.prevMsgRef,
         ...opts
     })
     if (opts.encryptionKey !== undefined) {

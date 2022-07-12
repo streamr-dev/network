@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { MessageQueue, QueueItem } from '../MessageQueue'
 import { NameDirectory } from '../../NameDirectory'

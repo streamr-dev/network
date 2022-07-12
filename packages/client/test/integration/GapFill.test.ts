@@ -1,5 +1,5 @@
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'

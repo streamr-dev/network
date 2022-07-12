@@ -12,7 +12,7 @@ import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { Wallet } from 'ethers'
-import { RsaKeyPair } from '../../src/encryption/RsaKeyPair'
+import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
@@ -26,7 +26,7 @@ describe('PublisherKeyExchange', () => {
 
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
-    let subscriberRsaKeyPair: RsaKeyPair
+    let subscriberRSAKeyPair: RSAKeyPair
     let subscriberNode: FakeBrubeckNode
     let mockStream: Stream
     let fakeContainer: DependencyContainer
@@ -49,7 +49,7 @@ describe('PublisherKeyExchange', () => {
     const createGroupKeyRequest = (
         groupKeyId: string,
         publisher = subscriberWallet,
-        rsaPublicKey = subscriberRsaKeyPair.getPublicKey()
+        rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
     ): StreamMessage => {
         return createMockMessage({
             streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
@@ -80,12 +80,12 @@ describe('PublisherKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
-        const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRsaKeyPair.getPrivateKey())
+        const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRSAKeyPair.getPrivateKey())
         expect(actualKeys).toEqual(expectedGroupKeys)
     }
 
     const testErrorResponse = async (
-        actualResponse: StreamMessage, 
+        actualResponse: StreamMessage,
         expectedGroupKeyIds: string[],
         expectedRecipientAddress = subscriberWallet.address
     ): Promise<void> => {
@@ -113,7 +113,7 @@ describe('PublisherKeyExchange', () => {
     beforeEach(async () => {
         publisherWallet = fastWallet()
         subscriberWallet = fastWallet()
-        subscriberRsaKeyPair = await RsaKeyPair.create()
+        subscriberRSAKeyPair = await RSAKeyPair.create()
         fakeContainer = createFakeContainer({
             auth: {
                 privateKey: publisherWallet.privateKey
@@ -160,7 +160,7 @@ describe('PublisherKeyExchange', () => {
             const otherNode = addFakeNode(otherWallet.address, fakeContainer)
             const receivedResponses = otherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(otherWallet.address))
 
-            const request = createGroupKeyRequest(groupKey.id, otherWallet, (await RsaKeyPair.create()).getPublicKey())
+            const request = createGroupKeyRequest(groupKey.id, otherWallet, (await RSAKeyPair.create()).getPublicKey())
             otherNode.publishToNode(request)
 
             const response = await nextValue(receivedResponses)

@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 export const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 

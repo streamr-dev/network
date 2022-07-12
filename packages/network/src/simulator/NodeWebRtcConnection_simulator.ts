@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
-import { Logger } from "../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../NameDirectory"
 import { WebRtcConnectionFactory } from "../connection/webrtc/WebRtcEndpoint"
 import { Simulator } from "./Simulator"

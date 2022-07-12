@@ -1,4 +1,5 @@
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {
     Debug,

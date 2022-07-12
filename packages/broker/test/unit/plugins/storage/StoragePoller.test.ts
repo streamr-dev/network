@@ -1,6 +1,6 @@
 import { StoragePoller } from '../../../../src/plugins/storage/StoragePoller'
 import { Stream, StreamrClient } from 'streamr-client'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { EthereumAddress } from 'streamr-client-protocol'
 
 const POLL_TIME = 5

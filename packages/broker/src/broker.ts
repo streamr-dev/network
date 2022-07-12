@@ -1,4 +1,4 @@
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
 import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
