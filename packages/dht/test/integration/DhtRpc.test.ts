@@ -3,7 +3,7 @@ import { RpcCommunicator, RpcCommunicatorEvent, RpcError } from '@streamr/proto-
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
