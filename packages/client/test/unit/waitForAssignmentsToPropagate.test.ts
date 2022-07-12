@@ -2,7 +2,7 @@ import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignment
 import { MessageID, StreamID, StreamMessage, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { range, shuffle } from 'lodash'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 function makeMsg<T>(ts: number, content: T): StreamMessage<T> {
     return new StreamMessage({

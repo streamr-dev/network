@@ -14,10 +14,6 @@ export {
     MetricsReport
 } from './helpers/Metric'
 export {
-    scheduleAtFixedRate,
-    scheduleAtInterval
-} from './helpers/scheduler'
-export {
     Location,
     AbstractNodeOptions,
     NodeId,

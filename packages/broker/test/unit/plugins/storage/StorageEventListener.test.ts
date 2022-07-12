@@ -1,7 +1,7 @@
 import { StorageEventListener } from '../../../../src/plugins/storage/StorageEventListener'
 import { StorageNodeAssignmentEvent, Stream, StreamrClient, StreamrClientEvents } from 'streamr-client'
 import { afterEach } from 'jest-circus'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 describe(StorageEventListener, () => {
     let stubClient: Pick<StreamrClient, 'getStream' | 'on' | 'off'>

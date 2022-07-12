@@ -1,5 +1,5 @@
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 describe(MessageQueue, () => {
     let messageQueue: MessageQueue<string>

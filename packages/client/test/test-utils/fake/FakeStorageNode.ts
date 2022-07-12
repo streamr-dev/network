@@ -9,9 +9,9 @@ import {
 } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
-import { Multimap } from '../Multimap'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import { Multimap } from '@streamr/utils'
 
 const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
 

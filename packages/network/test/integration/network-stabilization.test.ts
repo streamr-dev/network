@@ -2,7 +2,7 @@ import { Tracker, startTracker, getTopology } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import assert from 'assert'
 
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { StreamPartIDUtils } from 'streamr-client-protocol'

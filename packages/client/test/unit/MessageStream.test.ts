@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug } from '../test-utils/utils'

@@ -1,5 +1,5 @@
 import LeakDetector from 'jest-leak-detector'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { CounterId, instanceId } from '../../src/utils/utils'
 import { format } from '../../src/utils/log'
 import { Debug } from './utils'

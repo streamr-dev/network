@@ -1,8 +1,16 @@
 import { Logger } from './Logger'
-import { withTimeout, TimeoutError } from './withTimeout'
+import { Multimap } from './Multimap'
+import { scheduleAtFixedRate } from './scheduleAtFixedRate'
+import { scheduleAtInterval } from './scheduleAtInterval'
+import { wait } from './wait'
+import { TimeoutError, withTimeout } from './withTimeout'
 
 export {
-    withTimeout,
+    Logger,
+    Multimap,
     TimeoutError,
-    Logger
+    scheduleAtFixedRate,
+    scheduleAtInterval,
+    wait,
+    withTimeout,
 }

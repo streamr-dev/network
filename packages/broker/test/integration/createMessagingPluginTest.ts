@@ -5,7 +5,7 @@ import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
 import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
     createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
