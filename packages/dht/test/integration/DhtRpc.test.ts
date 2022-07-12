@@ -77,7 +77,7 @@ describe('DhtRpc', () => {
         await expect(response2.response).rejects.toEqual(
             new RpcError.RpcTimeout('Rpc request timed out')
         )
-    })
+    }, 15000)
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
