@@ -69,7 +69,7 @@ export default function SubscribePipeline<T = unknown>(
         container.resolve(DestroySignal),
     )
 
-    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)
+    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError as any)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't

@@ -2,7 +2,7 @@ import {
     StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce, StreamID
 } from 'streamr-client-protocol'
 
-import { uuid, instanceId } from '../utils'
+import { uuid, instanceId, pLimitFn } from '../utils'
 import { Context } from '../utils/Context'
 import Subscriber from '../subscribe/Subscriber'
 
@@ -14,7 +14,6 @@ import {
 import EncryptionUtil, { GroupKey } from './Encryption'
 import GroupKeyStoreFactory from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
-import { pLimitFn } from '../utils/promises'
 
 const MAX_PARALLEL_REQUEST_COUNT = 20 // we can tweak the value if needed, TODO make this configurable?
 
@@ -43,6 +42,7 @@ export class SubscriberKeyExchange implements Context {
     debug
     encryptionUtil
     isStopped = false
+    requestKeys
 
     constructor(
         private subscriber: Subscriber,

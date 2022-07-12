@@ -1,11 +1,11 @@
-import { Gate } from './../utils/Gate'
 import { StreamMessage } from 'streamr-client-protocol'
-import { PushBuffer } from './../utils/PushBuffer'
-import { Signal } from './../utils/Signal'
+import { ErrorSignal } from '../utils/Signal'
+import Gate from '../utils/Gate'
+import { PushBuffer } from '../utils/PushBuffer'
 
 type ProcessMessageFn<T> = (streamMessage: StreamMessage<T>) => Promise<StreamMessage<T>>
 
-type OnError<T> = Signal<[Error, StreamMessage<T>?, number?]>
+type OnError = ErrorSignal<[Error]>
 
 class MsgChainProcessor<T> {
 
@@ -13,9 +13,9 @@ class MsgChainProcessor<T> {
     private inputBuffer: StreamMessage<T>[] = []
     private outputBuffer: PushBuffer<StreamMessage<T>>
     private processMessageFn: ProcessMessageFn<T>
-    private onError: OnError<T>
+    private onError: OnError
 
-    constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
+    constructor(outputBuffer: PushBuffer<StreamMessage<T>>, processMessageFn: ProcessMessageFn<T>, onError: OnError) {
         this.outputBuffer = outputBuffer
         this.processMessageFn = processMessageFn
         this.onError = onError
@@ -44,9 +44,9 @@ export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
     private outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
     private processors: Map<string,MsgChainProcessor<T>> = new Map()
     private processMessageFn: ProcessMessageFn<T>
-    private onError: OnError<T>
+    private onError: OnError
 
-    constructor(processMessageFn: ProcessMessageFn<T>, onError: OnError<T>) {
+    constructor(processMessageFn: ProcessMessageFn<T>, onError: OnError) {
         this.processMessageFn = processMessageFn
         this.onError = onError
     }
