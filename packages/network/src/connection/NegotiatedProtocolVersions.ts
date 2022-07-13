@@ -1,8 +1,8 @@
 import { PeerId, PeerInfo } from "./PeerInfo"
-import { ControlLayer, MessageLayer } from "streamr-client-protocol"
+import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
-const defaultControlLayerVersions = ControlLayer.ControlMessage.getSupportedVersions()
-const defaultMessageLayerVersions = MessageLayer.StreamMessage.getSupportedVersions()
+const defaultControlLayerVersions = ControlMessage.getSupportedVersions()
+const defaultMessageLayerVersions = StreamMessage.getSupportedVersions()
 
 type NegotiatedProtocolVersion = { controlLayerVersion: number, messageLayerVersion: number }
 

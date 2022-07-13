@@ -1,7 +1,7 @@
 import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { toStreamID, TrackerLayer, toStreamPartID } from 'streamr-client-protocol'
+import { InstructionMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
@@ -84,7 +84,7 @@ describe('Check tracker instructions to node', () => {
                 // @ts-expect-error private field
                 tracker.trackerServer.endpoint.send(
                     'node-1',
-                    new TrackerLayer.InstructionMessage({
+                    new InstructionMessage({
                         requestId: 'requestId',
                         streamId,
                         streamPartition: 0,

@@ -1,9 +1,10 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import {
-    MessageLayer,
+    MessageID,
     ProxyDirection,
     SmartContractRecord,
+    StreamMessage,
     StreamPartIDUtils,
     toStreamID
 } from 'streamr-client-protocol'
@@ -11,8 +12,6 @@ import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-
-const { StreamMessage, MessageID } = MessageLayer
 
 const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 

@@ -1,15 +1,14 @@
-import { StreamPartID } from 'streamr-client-protocol'
+import { InstructionMessage, StreamPartID } from 'streamr-client-protocol'
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
-import { TrackerLayer } from 'streamr-client-protocol'
 import { Logger } from "@streamr/utils"
 import { TrackerId } from '../identifiers'
 
 type Queue = Record<StreamPartID, {
-    instructionMessage: TrackerLayer.InstructionMessage
+    instructionMessage: InstructionMessage
     trackerId: TrackerId
 }>
 
-type HandleFn = (instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId) => Promise<void>
+type HandleFn = (instructionMessage: InstructionMessage, trackerId: TrackerId) => Promise<void>
 
 /**
  * InstructionThrottler makes sure that
@@ -35,7 +34,7 @@ export class InstructionThrottler {
         this.stopped = false
     }
 
-    add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId): void {
+    add(instructionMessage: InstructionMessage, trackerId: TrackerId): void {
         if (this.stopped) {
             return
         }

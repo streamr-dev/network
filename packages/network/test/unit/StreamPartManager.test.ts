@@ -1,7 +1,5 @@
-import { MessageLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { StreamPartManager } from '../../src/logic/StreamPartManager'
-
-const { MessageID, MessageRef } = MessageLayer
 
 const streamOne = toStreamID('stream-1')
 const streamTwo = toStreamID('stream-2')
