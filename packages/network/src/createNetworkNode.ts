@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { MetricsContext } from './helpers/Metric'
 
-import { TrackerInfo, AbstractNodeOptions } from './identifiers'
+import { AbstractNodeOptions } from './identifiers'
 import { NodeToTracker } from './protocol/NodeToTracker'
 import { NodeToNode } from './protocol/NodeToNode'
 import { RtcSignaller } from './logic/RtcSignaller'
@@ -11,9 +11,10 @@ import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
+import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: TrackerInfo[],
+    trackers: SmartContractRecord[],
     disconnectionWaitTime?: number,
     peerPingInterval?: number
     newWebrtcConnectionTimeout?: number,

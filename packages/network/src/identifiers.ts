@@ -1,4 +1,4 @@
-import { SmartContractRecord, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/Metric'
 
 export type NodeId = string
@@ -35,8 +35,6 @@ export interface RtcErrorMessage {
     targetNode: NodeId
     errorCode: string
 }
-
-export type TrackerInfo = SmartContractRecord
 
 export interface AbstractNodeOptions {
     id?: NodeId

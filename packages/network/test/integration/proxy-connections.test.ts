@@ -1,11 +1,16 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageLayer, ProxyDirection, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import {
+    MessageLayer,
+    ProxyDirection,
+    SmartContractRecord,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
 import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { TrackerInfo } from '../../src/identifiers'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -16,7 +21,7 @@ describe('Proxy connection tests', () => {
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
     let onewayNode: NetworkNode
-    let trackerInfo: TrackerInfo
+    let trackerInfo: SmartContractRecord
 
     beforeEach(async () => {
         tracker = await startTracker({

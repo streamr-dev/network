@@ -1,12 +1,10 @@
 import { Client } from 'cassandra-driver'
-import { Protocol } from 'streamr-network'
 import { waitForCondition, waitForEvent, waitForStreamToEnd } from 'streamr-test-utils'
 import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { toStreamID } from "streamr-client-protocol"
-const { StreamMessage, MessageID } = Protocol.MessageLayer
+import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -31,7 +29,7 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: Protocol.StreamMessage<{value: any}>[] = (await waitForStreamToEnd(resultStream)) as Protocol.StreamMessage<{value: any}>[]
+    const messages: StreamMessage<{value: any}>[] = (await waitForStreamToEnd(resultStream)) as StreamMessage<{value: any}>[]
     return messages.map((message) => message.getParsedContent().value)
 }
 
