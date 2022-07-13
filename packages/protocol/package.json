@@ -29,8 +29,7 @@
     "@types/secp256k1": "^4.0.3",
     "@types/sinon": "^10.0.4",
     "sinon": "^11.1.2",
-    "streamr-test-utils": "^2.0.0",
-    "typedoc": "^0.22.5"
+    "streamr-test-utils": "^2.0.0"
   },
   "dependencies": {
     "@streamr/utils": "^0.0.1",
