@@ -9,6 +9,11 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+### Fixed
+
+- Parallel group key requests per stream partition
+- 45 second timeout to  group key responses
+
 ## [6.0.9] - 2022-06-20
 
 ### Fixed
