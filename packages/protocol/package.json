@@ -36,7 +36,6 @@
     "typedoc": "^0.22.5"
   },
   "dependencies": {
-    "@ethersproject/hdnode": "^5.4.0",
     "@streamr/utils": "^0.0.1",
     "debug": "^4.3.2",
     "heap": "^0.2.6",
