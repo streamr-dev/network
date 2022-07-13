@@ -28,6 +28,7 @@ class MsgChainProcessor<T> {
             while (this.inputBuffer.length > 0) {
                 const nextMessage = this.inputBuffer.shift()!
                 try {
+                    // eslint-disable-next-line no-await-in-loop
                     const processedMessage = await this.processMessageFn(nextMessage)
                     this.outputBuffer.push(processedMessage)
                 } catch (e: any) {
@@ -42,7 +43,7 @@ class MsgChainProcessor<T> {
 export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
 
     private outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
-    private processors: Map<string,MsgChainProcessor<T>> = new Map()
+    private processors: Map<string, MsgChainProcessor<T>> = new Map()
     private processMessageFn: ProcessMessageFn<T>
     private onError: OnError
 
