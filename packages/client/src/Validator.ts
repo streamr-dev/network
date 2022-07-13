@@ -4,7 +4,6 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
-    StreamMessageValidator,
     SigningUtil,
     StreamMessageError,
     StreamID,
@@ -17,6 +16,7 @@ import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
+import StreamMessageValidator from './StreamMessageValidator'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {

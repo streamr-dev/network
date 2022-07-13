@@ -1,4 +1,3 @@
-import StreamMessageValidator, { StreamMetadata } from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
 import { createTrackerRegistry, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
 import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
@@ -7,8 +6,6 @@ import { KeyExchangeStreamIDUtils } from "./KeyExchangeStreamID"
 import { EthereumAddress, ENSName, ProxyDirection } from "./types"
 
 export {
-    StreamMessageValidator,
-    StreamMetadata,
     SigningUtil,
     SmartContractRecord,
     TrackerRegistry,

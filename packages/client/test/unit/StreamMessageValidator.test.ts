@@ -1,19 +1,17 @@
 import assert from 'assert'
 
-import sinon from 'sinon'
-
-import { StreamMessageValidator, SigningUtil, toStreamID, EthereumAddress } from '../../../src'
-import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
-import MessageID from '../../../src/protocol/message_layer/MessageID'
-import GroupKeyMessage from '../../../src/protocol/message_layer/GroupKeyMessage'
-import GroupKeyRequest from '../../../src/protocol/message_layer/GroupKeyRequest'
-import GroupKeyResponse from '../../../src/protocol/message_layer/GroupKeyResponse'
-import GroupKeyAnnounce from '../../../src/protocol/message_layer/GroupKeyAnnounce'
-import MessageRef from '../../../src/protocol/message_layer/MessageRef'
-import GroupKeyErrorResponse from '../../../src/protocol/message_layer/GroupKeyErrorResponse'
-import EncryptedGroupKey from '../../../src/protocol/message_layer/EncryptedGroupKey'
-import ValidationError from '../../../src/errors/ValidationError'
-import { StreamMetadata } from '../../../src/utils/StreamMessageValidator'
+import { SigningUtil, toStreamID, EthereumAddress } from 'streamr-client-protocol'
+import StreamMessage from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+import MessageID from 'streamr-client-protocol/dist/src/protocol/message_layer/MessageID'
+import GroupKeyMessage from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyMessage'
+import GroupKeyRequest from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyRequest'
+import GroupKeyResponse from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyResponse'
+import GroupKeyAnnounce from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyAnnounce'
+import MessageRef from 'streamr-client-protocol/dist/src/protocol/message_layer/MessageRef'
+import GroupKeyErrorResponse from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyErrorResponse'
+import EncryptedGroupKey from 'streamr-client-protocol/dist/src/protocol/message_layer/EncryptedGroupKey'
+import ValidationError from 'streamr-client-protocol/dist/src/errors/ValidationError'
+import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
 
 const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
     return new StreamMessage({
@@ -64,7 +62,7 @@ describe('StreamMessageValidator', () => {
 
     beforeEach(async () => {
         // Default stubs
-        getStream = sinon.stub().resolves(defaultGetStreamResponse)
+        getStream = jest.fn().mockResolvedValue(defaultGetStreamResponse)
         isPublisher = async (address: EthereumAddress, streamId: string) => {
             return address === publisher && streamId === 'streamId'
         }
@@ -150,8 +148,7 @@ describe('StreamMessageValidator', () => {
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((getStream as any).calledOnce, 'getStream not called once!')
-                assert((getStream as any).calledWith(msg.getStreamId()), `getStream called with wrong args: ${(getStream as any).getCall(0).args}`)
+                expect(getStream).toHaveBeenCalledWith(msg.getStreamId())
                 return true
             })
         })
@@ -184,15 +181,11 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects messages from unpermitted publishers', async () => {
-            isPublisher = sinon.stub().resolves(false)
+            isPublisher = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert(
-                    (isPublisher as any).calledWith(msg.getPublisherId(), msg.getStreamId()),
-                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
-                )
+                expect(isPublisher).toHaveBeenCalledWith(msg.getPublisherId(), msg.getStreamId())
                 return true
             })
         })
@@ -206,7 +199,7 @@ describe('StreamMessageValidator', () => {
             msg.signature = null
             msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
             const testError = new Error('test error')
-            getStream = sinon.stub().rejects(testError)
+            getStream = jest.fn().mockRejectedValue(testError)
 
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
@@ -216,7 +209,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
-            isPublisher = sinon.stub().rejects(testError)
+            isPublisher = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -225,7 +218,9 @@ describe('StreamMessageValidator', () => {
 
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            verify = sinon.stub().throws(testError)
+            verify = jest.fn().mockImplementation(() => {
+                throw testError
+            })
             await assert.rejects(getValidator().validate(msg), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -249,7 +244,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects group key requests on unexpected streams', async () => {
-            groupKeyRequest.getStreamId = sinon.stub().returns('foo')
+            groupKeyRequest.getStreamId = jest.fn().mockReturnValue('foo')
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -267,36 +262,28 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects messages to invalid publishers', async () => {
-            isPublisher = sinon.stub().resolves(false)
+            isPublisher = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert(
-                    (isPublisher as any).calledWith(publisher, 'streamId'),
-                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
-                )
+                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
                 return true
             })
         })
 
         it('rejects messages from unpermitted subscribers', async () => {
-            isSubscriber = sinon.stub().resolves(false)
+            isSubscriber = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert(
-                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
-                    `isPublisher called with wrong args: ${(isSubscriber as any).getCall(0).args}`
-                )
+                expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
                 return true
             })
         })
 
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
-            isPublisher = sinon.stub().rejects(testError)
+            isPublisher = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -305,7 +292,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
-            isSubscriber = sinon.stub().rejects(testError)
+            isSubscriber = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -314,7 +301,9 @@ describe('StreamMessageValidator', () => {
 
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            verify = sinon.stub().throws(testError)
+            verify = jest.fn().mockImplementation(() => {
+                throw testError
+            })
             await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -347,7 +336,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects group key responses on unexpected streams', async () => {
-            groupKeyResponse.getStreamId = sinon.stub().returns('foo')
+            groupKeyResponse.getStreamId = jest.fn().mockReturnValue('foo')
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -356,36 +345,28 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects messages from invalid publishers', async () => {
-            isPublisher = sinon.stub().resolves(false)
+            isPublisher = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert(
-                    (isPublisher as any).calledWith(publisher, 'streamId'),
-                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
-                )
+                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
                 return true
             })
         })
 
         it('rejects messages to unpermitted subscribers', async () => {
-            isSubscriber = sinon.stub().resolves(false)
+            isSubscriber = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert(
-                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
-                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`
-                )
+                expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
                 return true
             })
         })
 
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
-            isPublisher = sinon.stub().rejects(testError)
+            isPublisher = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -394,7 +375,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
-            isSubscriber = sinon.stub().rejects(testError)
+            isSubscriber = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -403,7 +384,9 @@ describe('StreamMessageValidator', () => {
 
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            verify = sinon.stub().throws(testError)
+            verify = jest.fn().mockImplementation(() => {
+                throw testError
+            })
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -436,36 +419,28 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects messages from invalid publishers', async () => {
-            isPublisher = sinon.stub().resolves(false)
+            isPublisher = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert(
-                    (isPublisher as any).calledWith(publisher, 'streamId'),
-                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`
-                )
+                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
                 return true
             })
         })
 
         it('rejects messages to unpermitted subscribers', async () => {
-            isSubscriber = sinon.stub().resolves(false)
+            isSubscriber = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isSubscriber as any).calledOnce, 'isSubscriber not called!')
-                assert(
-                    (isSubscriber as any).calledWith(subscriber, 'streamId'),
-                    `isSubscriber called with wrong args: ${(isSubscriber as any).getCall(0).args}`
-                )
+                expect(isSubscriber).toHaveBeenCalledWith(subscriber, 'streamId')
                 return true
             })
         })
 
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
-            isPublisher = sinon.stub().rejects(testError)
+            isPublisher = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err === testError)
                 return true
@@ -474,7 +449,7 @@ describe('StreamMessageValidator', () => {
 
         it('rejects if isSubscriber rejects', async () => {
             const testError = new Error('test error')
-            isSubscriber = sinon.stub().rejects(testError)
+            isSubscriber = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err === testError, `Unexpected error thrown: ${err}`)
                 return true
@@ -483,7 +458,9 @@ describe('StreamMessageValidator', () => {
 
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            verify = sinon.stub().throws(testError)
+            verify = jest.fn().mockImplementation(() => {
+                throw testError
+            })
             await assert.rejects(getValidator().validate(groupKeyAnnounce), (err: Error) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -516,7 +493,7 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects group key error responses on unexpected streams', async () => {
-            groupKeyErrorResponse.getStreamId = sinon.stub().returns('foo')
+            groupKeyErrorResponse.getStreamId = jest.fn().mockReturnValue('foo')
 
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
@@ -525,22 +502,18 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects messages from invalid publishers', async () => {
-            isPublisher = sinon.stub().resolves(false)
+            isPublisher = jest.fn().mockResolvedValue(false)
 
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                assert((isPublisher as any).calledOnce, 'isPublisher not called!')
-                assert(
-                    (isPublisher as any).calledWith(publisher, 'streamId'),
-                    `isPublisher called with wrong args: ${(isPublisher as any).getCall(0).args}`,
-                )
+                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
                 return true
             })
         })
 
         it('rejects if isPublisher rejects', async () => {
             const testError = new Error('test error')
-            isPublisher = sinon.stub().rejects(testError)
+            isPublisher = jest.fn().mockRejectedValue(testError)
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err === testError)
                 return true
@@ -549,13 +522,15 @@ describe('StreamMessageValidator', () => {
 
         it('does not reject if isSubscriber rejects', async () => {
             const testError = new Error('test error')
-            isSubscriber = sinon.stub().rejects(testError)
+            isSubscriber = jest.fn().mockRejectedValue(testError)
             await getValidator().validate(groupKeyErrorResponse)
         })
 
         it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            verify = sinon.stub().throws(testError)
+            verify = jest.fn().mockImplementation(() => {
+                throw testError
+            })
             await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true

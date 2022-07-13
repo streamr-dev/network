@@ -13,6 +13,7 @@ export * from './StreamMessage'
 
 // Serializers are imported because of their side effects: they statically register themselves to the factory class
 import './StreamMessageSerializerV32'
+import GroupKeyMessage from "./GroupKeyMessage"
 
 export {
     MessageID,
