@@ -1,10 +1,9 @@
 import { Client, types as cassandraTypes } from 'cassandra-driver'
-import { Protocol } from 'streamr-network'
 import { waitForCondition } from 'streamr-test-utils'
 import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
-import { toStreamID } from "streamr-client-protocol"
+import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
@@ -20,8 +19,8 @@ function buildMsg(
     msgChainId = '1',
     content: any = {}
 ) {
-    return new Protocol.StreamMessage({
-        messageId: new Protocol.MessageID(
+    return new StreamMessage({
+        messageId: new MessageID(
             toStreamID(streamId),
             streamPartition,
             timestamp,
