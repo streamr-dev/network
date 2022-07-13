@@ -12,16 +12,3 @@ export const generateMnemonicFromAddress = (address: EthereumAddress): string =>
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ')
 }
-
-/**
- * @param id - node id
- */
-export const parseAddressFromNodeId = (id: string): string => {
-    const hashPos = id.indexOf('#')
-
-    if (hashPos < 0) {
-        return id
-    }
-
-    return id.slice(0, hashPos)
-}

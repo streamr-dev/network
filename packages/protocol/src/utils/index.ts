@@ -2,7 +2,7 @@ import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator, { StreamMetadata } from "./StreamMessageValidator"
 import SigningUtil from "./SigningUtil"
 import { createTrackerRegistry, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
-import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
+import { generateMnemonicFromAddress } from './NodeUtil'
 import { StreamID, toStreamID, StreamIDUtils } from "./StreamID"
 import { StreamPartID, toStreamPartID, StreamPartIDUtils, MAX_PARTITION_COUNT } from "./StreamPartID"
 import { KeyExchangeStreamIDUtils } from "./KeyExchangeStreamID"
@@ -17,7 +17,6 @@ export {
     TrackerRegistry,
     createTrackerRegistry,
     generateMnemonicFromAddress,
-    parseAddressFromNodeId,
     toStreamID,
     toStreamPartID,
     StreamID,

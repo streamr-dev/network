@@ -33,18 +33,4 @@ describe('NodeUtil', () => {
             expect(NodeUtil.generateMnemonicFromAddress('0xC983de43c5d22186F1e051c6da419c5a17F19544')).toEqual('Sister Bus Movie')
         })
     })
-
-    describe('parseAddressFromNodeId', () => {
-        it('strips hash and returns the address', () => {
-            expect(
-                NodeUtil.parseAddressFromNodeId('0xC983de43c5d22186F1e051c6da419c5a17F19544#4caa44ec-c26d-4cb2-9056-c54e60eceafe')
-            ).toBe('0xC983de43c5d22186F1e051c6da419c5a17F19544')
-        })
-
-        it('returns address as is', () => {
-            expect(
-                NodeUtil.parseAddressFromNodeId('0xC983de43c5d22186F1e051c6da419c5a17F19544')
-            ).toBe('0xC983de43c5d22186F1e051c6da419c5a17F19544')
-        })
-    })
 })
