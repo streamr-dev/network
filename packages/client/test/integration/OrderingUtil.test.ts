@@ -1,9 +1,8 @@
-import { MessageID, OrderingUtil, toStreamID } from '../../src'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import shuffle from 'array-shuffle'
-import StreamMessage from '../../src/protocol/message_layer/StreamMessage'
-import MessageRef from '../../src/protocol/message_layer/MessageRef'
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
+import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500

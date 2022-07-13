@@ -1,4 +1,4 @@
-import MessageRef from '../protocol/message_layer/MessageRef'
+import MessageRef from 'streamr-client-protocol/dist/src/protocol/message_layer/MessageRef'
 
 export default class GapFillFailedError extends Error {
 

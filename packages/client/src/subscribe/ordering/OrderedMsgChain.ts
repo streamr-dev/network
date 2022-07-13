@@ -4,10 +4,8 @@ import Debug from 'debug'
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import GapFillFailedError from '../errors/GapFillFailedError'
-import MessageRef from '../protocol/message_layer/MessageRef'
-
-import StreamMessage from '../protocol/message_layer/StreamMessage'
+import { StreamMessage, MessageRef } from 'streamr-client-protocol'
+import GapFillFailedError from './GapFillFailedError'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -310,6 +308,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         const { prevMsgRef } = streamMessage
         // is first message
         if (this.lastOrderedMsgRef === null) { return true }
+
         if (prevMsgRef !== null) {
             // if has prev, message is chained: ensure prev points at last ordered message
             return prevMsgRef.compareTo(this.lastOrderedMsgRef) === 0
