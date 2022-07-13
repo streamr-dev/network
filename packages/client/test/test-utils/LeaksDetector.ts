@@ -1,4 +1,4 @@
-import LeakDetector from 'jest-leak-detector'
+import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { wait } from '@streamr/utils'
 import { CounterId, instanceId } from '../../src/utils/utils'
 import { format } from '../../src/utils/log'

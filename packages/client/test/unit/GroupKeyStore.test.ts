@@ -1,4 +1,4 @@
-import LeakDetector from 'jest-leak-detector'
+import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
