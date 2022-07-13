@@ -35,11 +35,21 @@ export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKe
 
 type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
 
+const GROUP_KEY_RESPONSE_TIMEOUT = 45 * 1000
+
 function waitForSubMessage(
     sub: Subscription<unknown>,
-    matchFn: MessageMatch
+    matchFn: MessageMatch,
+    timeoutMs?: number
 ): Deferred<StreamMessage> {
     const task = Defer<StreamMessage>()
+    let timeoutRef: ReturnType<typeof setTimeout>
+    if (timeoutMs !== undefined) {
+        const error = new Error('waitForSubMessage: timeout')
+        timeoutRef = setTimeout(() => {
+            task.reject(error)
+        }, timeoutMs)
+    }
     const onMessage = (streamMessage: StreamMessage) => {
         try {
             if (matchFn(streamMessage.getContent(), streamMessage)) {
@@ -50,6 +60,7 @@ function waitForSubMessage(
         }
     }
     task.finally(async () => {
+        clearTimeout(timeoutRef)
         await sub.unsubscribe()
     }).catch(() => {}) // important: prevent unchained finally cleanup causing unhandled rejection
     sub.consume(onMessage).catch((err) => task.reject(err))
@@ -121,7 +132,7 @@ export class KeyExchangeStream implements Context, Stoppable {
                 }
 
                 return GroupKeyResponse.fromArray(content).requestId === request.requestId
-            })
+            }, GROUP_KEY_RESPONSE_TIMEOUT)
 
             if (this.isStopped) { return undefined }
 
