@@ -1,4 +1,4 @@
-import { MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamPartStatus } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from '../identifiers'
@@ -14,7 +14,7 @@ interface StreamPartState {
     isBehindProxy: boolean
 }
 
-function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
+function keyForDetector({ publisherId, msgChainId }: MessageID) {
     return `${publisherId}-${msgChainId}`
 }
 
@@ -36,8 +36,8 @@ export class StreamPartManager {
     }
 
     markNumbersAndCheckThatIsNotDuplicate(
-        messageId: MessageLayer.MessageID,
-        previousMessageReference: MessageLayer.MessageRef | null
+        messageId: MessageID,
+        previousMessageReference: MessageRef | null
     ): boolean | never {
         const streamPartId = messageId.getStreamPartID()
         this.ensureThatIsSetUp(streamPartId)

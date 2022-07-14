@@ -1,5 +1,5 @@
-import { keyToArrayIndex } from './HashUtil'
 import { StreamPartID } from "./StreamPartID"
+import { keyToArrayIndex } from '@streamr/utils'
 
 export type SmartContractRecord = {
     id: string

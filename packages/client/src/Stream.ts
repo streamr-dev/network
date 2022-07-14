@@ -14,7 +14,6 @@ import {
     EthereumAddress,
     StreamID,
     StreamMessage,
-    StreamMetadata,
     StreamPartID,
     toStreamPartID
 } from 'streamr-client-protocol'
@@ -28,6 +27,7 @@ import { InspectOptions } from 'util'
 import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { withTimeout } from '@streamr/utils'
+import { StreamMetadata } from './StreamMessageValidator'
 
 export interface StreamProperties {
     id: string

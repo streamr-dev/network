@@ -4,13 +4,13 @@ import path from 'path'
 import { writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs'
 import chalk from 'chalk'
 import { v4 as uuid } from 'uuid'
-import * as Protocol from 'streamr-client-protocol'
 
 import * as WebsocketConfigSchema from '../plugins/websocket/config.schema.json'
 import * as MqttConfigSchema from '../plugins/mqtt/config.schema.json'
 import * as BrokerConfigSchema from './config.schema.json'
 import { getDefaultFile } from './config'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migration'
+import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 
 export interface PrivateKeyAnswers extends Answers {
     generateOrImportPrivateKey: 'Import' | 'Generate',
@@ -237,7 +237,7 @@ export const getNodeIdentity = (privateKey: string): {
     networkExplorerUrl: string
 } => {
     const nodeAddress = new Wallet(privateKey).address
-    const mnemonic = Protocol.generateMnemonicFromAddress(nodeAddress)
+    const mnemonic = generateMnemonicFromAddress(nodeAddress)
     const networkExplorerUrl = `https://streamr.network/network-explorer/nodes/${nodeAddress}`
     return {
         mnemonic,

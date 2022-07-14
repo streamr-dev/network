@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
@@ -185,7 +185,7 @@ export class Tracker extends EventEmitter {
         this.removeNode(node)
     }
 
-    processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+    processNodeStatus(statusMessage: StatusMessage, source: NodeId): void {
         if (this.stopped) {
             return
         }

@@ -1,4 +1,4 @@
-import StreamMessage from '../protocol/message_layer/StreamMessage'
+import { StreamMessage } from 'streamr-client-protocol'
 import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
 
 export default class OrderingUtil extends MsgChainEmitter {

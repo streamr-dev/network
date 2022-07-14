@@ -2,7 +2,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { waitForEvent, eventsWithArgsToArray } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { TrackerLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { InstructionMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
@@ -179,7 +179,7 @@ describe('multi trackers', () => {
     })
 
     test('node ignores instructions from unexpected tracker', async () => {
-        const unexpectedInstruction = new TrackerLayer.InstructionMessage({
+        const unexpectedInstruction = new InstructionMessage({
             requestId: 'requestId',
             streamId: toStreamID('stream-2'),
             streamPartition: 0,

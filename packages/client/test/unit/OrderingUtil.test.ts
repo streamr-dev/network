@@ -1,11 +1,8 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-
-import { MessageID, toStreamID } from '../../../src'
-import OrderingUtil from '../../../src/utils/OrderingUtil'
-import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
-import MessageRef from '../../../src/protocol/message_layer/MessageRef'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp: number | null = null,

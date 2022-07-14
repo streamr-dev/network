@@ -1,12 +1,10 @@
 import { Tracker, startTracker, TrackerServerEvent } from '@streamr/network-tracker'
 import { runAndWaitForEvents } from 'streamr-test-utils'
-import { RelayMessageSubType, TrackerLayer } from 'streamr-client-protocol'
+import { ErrorMessage, RelayMessage, RelayMessageSubType } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../../src/protocol/NodeToTracker'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
-
-const { RelayMessage, ErrorMessage } = TrackerLayer
 
 /**
  * Validate the relaying logic of tracker's WebRTC signalling messages.

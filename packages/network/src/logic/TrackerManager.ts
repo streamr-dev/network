@@ -1,8 +1,7 @@
 import {
-    createTrackerRegistry,
+    createTrackerRegistry, InstructionMessage,
     SmartContractRecord,
     StreamPartID,
-    TrackerLayer,
     TrackerRegistry
 } from 'streamr-client-protocol'
 import { Location, Rtts, NodeId, TrackerId } from '../identifiers'
@@ -178,7 +177,7 @@ export class TrackerManager {
     }
 
     private async handleTrackerInstruction(
-        instructionMessage: TrackerLayer.InstructionMessage,
+        instructionMessage: InstructionMessage,
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {
