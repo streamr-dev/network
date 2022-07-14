@@ -13,7 +13,7 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-declare class NodeJsWsServer extends WsServer {}
+declare class NodeJsWsServer extends WsServer { }
 
 export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
@@ -100,8 +100,10 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                     connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
                 }
 
-                else if (this.ownPeerDescriptor) {
-                    incomingMessageHandler(connection, message)
+                else {
+                    if (this.isInitialized()) {
+                        incomingMessageHandler(connection, message)
+                    }
                 }
             })
         })
@@ -109,6 +111,13 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = peerDescriptor
+    }
+
+    private isInitialized(): boolean {
+        if (this.ownPeerDescriptor) {
+            return true
+        }
+        return false
     }
 
     stop(): Promise<void> {
