@@ -7,6 +7,7 @@ import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'n
 import { PeerID } from '../../helpers/PeerID'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 import { Logger } from '@streamr/utils'
+import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -26,6 +27,12 @@ export interface Params {
     stunUrls?: string[]
 }
 
+// Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
+// because importing single dom definitions in not possible
+
+enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
+type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum  
+
 export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
 
     public connectionId: ConnectionID
@@ -35,12 +42,13 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private stunUrls: string[]
     private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow: number
-    private lastState = ''
+    private lastState: RTCPeerConnectionState = 'connecting'
     private buffer: Uint8Array[] = []
     private remoteDescriptionSet = false
     private connectingTimeoutRef: NodeJS.Timeout | null = null
     private connectingTimeout: number
     private remotePeerDescriptor: PeerDescriptor
+    
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
@@ -201,7 +209,12 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     private onStateChange(state: string): void {
-        this.lastState = state
+        if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
+            throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: '+ state)
+        }
+        else {
+            this.lastState = state as RTCPeerConnectionState
+        }
     }
 
     isOpen(): boolean {
