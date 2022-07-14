@@ -78,7 +78,7 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode1 = new NodeToNode(wrtcEndpoint1)
         nodeToNode2 = new NodeToNode(wrtcEndpoint2)
 
-        trackerServer = new TrackerServer(wsEndpoint3)
+        trackerServer = new TrackerServer(wsEndpoint3 as any) // cast: get around weird circular dependency private property issue
 
         // Connect nodeToTracker <-> trackerServer
         await nodeToTracker.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)

@@ -2,7 +2,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
 import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
 
-import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import BrowserClientWsEndpoint from '../../src/connection/ws/BrowserClientWsEndpoint'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'

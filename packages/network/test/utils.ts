@@ -1,9 +1,8 @@
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { Tracker } from '@streamr/network-tracker'
-import { PeerInfo } from '../dist/src/connection/PeerInfo'
-import { startHttpServer } from '../dist/src/connection/ws/ServerWsEndpoint'
+import { PeerInfo } from '../src/connection/PeerInfo'
+import { startHttpServer, ServerWsEndpoint } from '../src/connection/ws/ServerWsEndpoint'
 import { Node } from '../src/logic/Node'
-import { ServerWsEndpoint } from '../dist/src/connection/ws/ServerWsEndpoint'
 
 export const startServerWsEndpoint = async (
     host: string,
