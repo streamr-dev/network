@@ -13,7 +13,7 @@ export enum RelayMessageSubType {
     ICE_CANDIDATE = 'iceCandidate',
 }
 
-export type RtcOfferMessage = {
+export interface RtcOfferMessage {
     subType: RelayMessageSubType.RTC_OFFER
     data: {
         connectionId: string,
@@ -21,7 +21,7 @@ export type RtcOfferMessage = {
     }
 }
 
-export type RtcAnswerMessage = {
+export interface RtcAnswerMessage {
     subType: RelayMessageSubType.RTC_ANSWER
     data: {
         connectionId: string,
@@ -29,11 +29,11 @@ export type RtcAnswerMessage = {
     }
 }
 
-export type RtcConnectMessage = {
+export interface RtcConnectMessage {
     subType: RelayMessageSubType.RTC_CONNECT
 }
 
-export type RtcIceCandidateMessage = {
+export interface RtcIceCandidateMessage {
     subType: RelayMessageSubType.ICE_CANDIDATE
     data: {
         connectionId: string,

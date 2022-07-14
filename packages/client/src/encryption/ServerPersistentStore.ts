@@ -14,7 +14,7 @@ import { StreamID } from 'streamr-client-protocol'
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
 
-export type ServerPersistentStoreOptions = {
+export interface ServerPersistentStoreOptions {
     context: Context,
     clientId: string
     streamId: StreamID

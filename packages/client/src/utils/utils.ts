@@ -64,7 +64,7 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
 
 export const counterId = CounterId()
 
-export type AnyInstance = {
+export interface AnyInstance {
     constructor: {
         name: string
         prototype: null | AnyInstance

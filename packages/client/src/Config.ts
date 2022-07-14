@@ -16,12 +16,12 @@ import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 
-export type CacheConfig = {
+export interface CacheConfig {
     maxSize: number,
     maxAge: number
 }
 
-export type TimeoutsConfig = {
+export interface TimeoutsConfig {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -39,7 +39,7 @@ export type TimeoutsConfig = {
     httpFetchTimeout: number
 }
 
-export type SubscribeConfig = {
+export interface SubscribeConfig {
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
@@ -49,18 +49,18 @@ export type SubscribeConfig = {
     gapFillTimeout: number
 }
 
-export type ConnectionConfig = {
+export interface ConnectionConfig {
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
 }
 
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
+export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
 }
 
-export type DebugConfig = {
+export interface DebugConfig {
     inspectOpts: InspectOptions
 }
 

@@ -10,13 +10,13 @@ class InvalidGroupKeyError extends ValidationError {
     }
 }
 
-export type GroupKeyObject = {
+export interface GroupKeyObject {
     id: string,
     hex: string,
     data: Uint8Array,
 }
 
-type GroupKeyProps = {
+interface GroupKeyProps {
     groupKeyId: string,
     groupKeyHex: string,
     groupKeyData: Uint8Array,

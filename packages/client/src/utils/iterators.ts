@@ -9,7 +9,7 @@ import { Debug } from './log'
 
 export const debug = Debug('iterators')
 
-export type ICancelable = {
+export interface ICancelable {
     cancel(err?: Error): Promise<void>
     isCancelled: () => boolean
 }

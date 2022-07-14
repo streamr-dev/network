@@ -7,7 +7,7 @@ import { v4 } from 'uuid'
 
 export type ServerUrl = string
 //export type SupportedWs = WebSocket | w3cwebsocket
-export type HandshakeValues = { uuid: string, peerId: PeerId }
+export interface HandshakeValues { uuid: string, peerId: PeerId }
 
 /*
 export interface WebSocketConnectionFactory<C extends AbstractWsConnection> {

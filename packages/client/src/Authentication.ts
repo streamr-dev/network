@@ -12,11 +12,11 @@ import { wait } from '@streamr/utils'
 
 export type ProviderConfig = ExternalProvider
 
-export type ProviderAuthConfig = {
+export interface ProviderAuthConfig {
     ethereum: ProviderConfig
 }
 
-export type PrivateKeyAuthConfig = {
+export interface PrivateKeyAuthConfig {
     privateKey: string,
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically

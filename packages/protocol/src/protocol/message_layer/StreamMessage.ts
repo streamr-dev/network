@@ -38,7 +38,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-export type StreamMessageOptions<T> = {
+export interface StreamMessageOptions<T> {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: T | string

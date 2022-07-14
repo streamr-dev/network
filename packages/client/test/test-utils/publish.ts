@@ -18,7 +18,7 @@ export function Msg<T extends object = object>(opts?: T): any {
     }
 }
 
-export type CreateMessageOpts = {
+export interface CreateMessageOpts {
     /** index of message in total */
     index: number,
     /** batch number */

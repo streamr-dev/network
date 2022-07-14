@@ -21,19 +21,19 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 const log = debug('StreamrClient:StreamStorageRegistry')
 
-export type StorageNodeAssignmentEvent = {
+export interface StorageNodeAssignmentEvent {
     streamId: string,
     nodeAddress: EthereumAddress,
     blockNumber: number
 }
 
-type NodeQueryResult = {
+interface NodeQueryResult {
     id: string,
     metadata: string,
     lastseen: string,
 }
 
-type StoredStreamQueryResult = {
+interface StoredStreamQueryResult {
     stream: {
         id: string,
         metadata: string,
@@ -41,11 +41,11 @@ type StoredStreamQueryResult = {
     } | null,
 }
 
-type AllNodesQueryResult = {
+interface AllNodesQueryResult {
     nodes: NodeQueryResult[],
 }
 
-type StorageNodeQueryResult = {
+interface StorageNodeQueryResult {
     node: {
         id: string,
         metadata: string,

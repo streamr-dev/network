@@ -11,7 +11,7 @@ import { v4 } from 'uuid'
 import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
 
-type HostPort = {
+interface HostPort {
     hostname: string,
     port: number
 }

@@ -9,16 +9,16 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 import { EthereumAddress } from 'streamr-client-protocol'
 
-export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
+export interface ChainConnectionInfo { rpcs: ConnectionInfo[], chainId?: number, name?: string }
 
 // these should come from ETH-184 config package when it's ready
-export type EthereumNetworkConfig = {
+export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
-export type EthereumConfig = {
+export interface EthereumConfig {
     streamRegistryChainAddress: EthereumAddress
     streamStorageRegistryChainAddress: EthereumAddress
     storageNodeRegistryChainAddress: EthereumAddress,

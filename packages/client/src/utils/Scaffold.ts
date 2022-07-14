@@ -17,7 +17,7 @@ type Step = StepUp | MaybeAsync<() => void> // possibly no StepDown
 type StepUp = MaybeAsync<() => StepDown>
 type StepDown = MaybeAsync<() => void>
 
-type ScaffoldOptions = {
+interface ScaffoldOptions {
  onError?: (error: Error) => void
  onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
  onChange?: MaybeAsync<(shouldUp: boolean) => void>

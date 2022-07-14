@@ -46,12 +46,12 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
  * Does not support system streams (the key exchange stream)
  */
 
-export type StreamQueryResult = {
+export interface StreamQueryResult {
     id: string,
     metadata: string
 }
 
-type StreamPublisherOrSubscriberItem = {
+interface StreamPublisherOrSubscriberItem {
     id: string
     userAddress: EthereumAddress
 }

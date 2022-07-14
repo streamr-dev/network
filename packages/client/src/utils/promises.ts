@@ -19,7 +19,7 @@ import { Defer } from './Defer'
  */
 type LimitFn = ReturnType<typeof pLimit>
 
-export type LimitAsyncFnByKeyReturnType<KeyType> = {
+export interface LimitAsyncFnByKeyReturnType<KeyType> {
     (id: KeyType, fn: () => Promise<any>): Promise<any> 
     getActiveCount(id: KeyType): number
     getPendingCount(id: KeyType): number
@@ -208,7 +208,7 @@ export class TimeoutError extends Error {
  * message and rejectOnTimeout are optional.
  */
 
-type pTimeoutOpts = {
+interface pTimeoutOpts {
     timeout?: number,
     message?: string,
     rejectOnTimeout?: boolean,

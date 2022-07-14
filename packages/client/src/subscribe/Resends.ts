@@ -31,16 +31,16 @@ export type ResendRef = MessageRef | {
     sequenceNumber?: number,
 }
 
-export type ResendLastOptions = {
+export interface ResendLastOptions {
     last: number
 }
 
-export type ResendFromOptions = {
+export interface ResendFromOptions {
     from: ResendRef
     publisherId?: EthereumAddress
 }
 
-export type ResendRangeOptions = {
+export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string

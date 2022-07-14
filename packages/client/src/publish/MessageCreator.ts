@@ -19,7 +19,7 @@ import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { StreamPartitioner } from './StreamPartitioner'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
-export type MessageCreateOptions<T = unknown> = {
+export interface MessageCreateOptions<T = unknown> {
     content: T,
     timestamp: number,
     partitionKey?: string | number

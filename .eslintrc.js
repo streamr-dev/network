@@ -8,7 +8,8 @@ module.exports = {
         }],
         '@typescript-eslint/no-inferrable-types': 'off',
         '@typescript-eslint/consistent-indexed-object-style': ['error'],
-        '@typescript-eslint/consistent-type-assertions': ['error']
+        '@typescript-eslint/consistent-type-assertions': ['error'],
+        '@typescript-eslint/consistent-type-definitions': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

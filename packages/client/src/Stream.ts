@@ -47,7 +47,7 @@ export interface StreamrStreamConstructorOptions extends StreamProperties {
 
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-export type Field = {
+export interface Field {
     name: string;
     type: typeof VALID_FIELD_TYPES[number];
 }

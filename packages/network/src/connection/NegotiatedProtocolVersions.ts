@@ -4,7 +4,7 @@ import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 const defaultControlLayerVersions = ControlMessage.getSupportedVersions()
 const defaultMessageLayerVersions = StreamMessage.getSupportedVersions()
 
-type NegotiatedProtocolVersion = { controlLayerVersion: number, messageLayerVersion: number }
+interface NegotiatedProtocolVersion { controlLayerVersion: number, messageLayerVersion: number }
 
 export class NegotiatedProtocolVersions {
 
