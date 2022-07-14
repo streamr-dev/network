@@ -1,5 +1,6 @@
 import { waitForEvent } from '../src/waitForEvent'
 import { EventEmitter } from 'events'
+import { TimeoutError } from '../src/withTimeout'
 
 describe(waitForEvent, () => {
     it("waits for correct event and records the arguments of invocation", async () => {
@@ -26,10 +27,10 @@ describe(waitForEvent, () => {
         expect(recordedArgs).toEqual([])
     })
 
-    it("rejects if not event occurs within timeout", async () => {
+    it("rejects if not event occurs within timeout", () => {
         const emitter = new EventEmitter()
-        await waitForEvent(emitter, "correctEvent", 20).catch((err) => {
-            expect(err.message).toEqual("Promise timed out after 20 milliseconds")
-        })
+        return expect(waitForEvent(emitter, "correctEvent", 20))
+            .rejects
+            .toEqual(new TimeoutError(20, 'waitForEvent'))
     })
 })

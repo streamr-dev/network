@@ -1,4 +1,5 @@
-import { EventEmitter } from 'events'
+import { EventEmitter, once } from 'events'
+import { withTimeout } from './withTimeout'
 
 /**
  * Wait for an event to be emitted on emitter within timeout.
@@ -9,18 +10,13 @@ import { EventEmitter } from 'events'
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
  * within timeout else rejects
  */
-export const waitForEvent = (emitter: EventEmitter, event: string | symbol, timeout = 5000): Promise<unknown[]> => {
-    // create error beforehand to capture more usable stack
-    const err = new Error(`Promise timed out after ${timeout} milliseconds`)
-    return new Promise((resolve, reject) => {
-        const eventListenerFn = (...args: unknown[]) => {
-            clearTimeout(timeOut)
-            resolve(args)
-        }
-        const timeOut = setTimeout(() => {
-            emitter.removeListener(event, eventListenerFn)
-            reject(err)
-        }, timeout)
-        emitter.once(event, eventListenerFn)
+export function waitForEvent(emitter: EventEmitter, event: string | symbol, timeout = 5000): Promise<unknown[]> {
+    const abortController = new AbortController()
+    return withTimeout(
+        once(emitter, event, { signal: abortController.signal }),
+        timeout,
+        'waitForEvent'
+    ).finally(() => {
+        abortController.abort()
     })
 }
