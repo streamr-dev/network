@@ -4,10 +4,12 @@ import { Multimap } from './Multimap'
 import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 import { scheduleAtInterval } from './scheduleAtInterval'
+import { BrandedString } from './types'
 import { wait } from './wait'
 import { TimeoutError, withTimeout } from './withTimeout'
 
 export {
+    BrandedString,
     Logger,
     Multimap,
     TimeoutError,

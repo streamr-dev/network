@@ -1,9 +1,10 @@
 import { StreamID, toStreamID } from "./StreamID"
+import { BrandedString } from '@streamr/utils'
 
 const DELIMITER = '#'
 export const MAX_PARTITION_COUNT = 100
 
-export type StreamPartID = string & { readonly __brand: 'streamPartID' } // Nominal typing
+export type StreamPartID = BrandedString<'StreamPartID'>
 
 function ensureValidStreamPartition(streamPartition: number): void | never {
     if (!Number.isSafeInteger(streamPartition) || streamPartition < 0 || streamPartition >= MAX_PARTITION_COUNT) {
