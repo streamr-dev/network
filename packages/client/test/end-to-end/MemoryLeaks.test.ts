@@ -76,9 +76,10 @@ describe('MemoryLeaks', () => {
         let createContainer: (opts?: any) => Promise<any>
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
-                config: StrictStreamrClientConfig;
-                childContainer: DependencyContainer;
-                rootContext: any;}> => {
+                config: StrictStreamrClientConfig
+                childContainer: DependencyContainer
+                rootContext: any
+            }> => {
                 const config = createStrictConfig({
                     ...ConfigTest,
                     auth: {

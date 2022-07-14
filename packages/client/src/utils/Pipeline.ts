@@ -12,7 +12,7 @@ export type FinallyFn = ((err?: Error) => void | Promise<void>)
 class PipelineError extends ContextError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
-    id: string,
+    id: string
 }
 
 /**

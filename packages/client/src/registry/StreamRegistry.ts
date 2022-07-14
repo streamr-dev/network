@@ -47,7 +47,7 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
  */
 
 export interface StreamQueryResult {
-    id: string,
+    id: string
     metadata: string
 }
 
@@ -401,7 +401,7 @@ export class StreamRegistry implements Context {
     }
 
     async setPermissions(...items: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []

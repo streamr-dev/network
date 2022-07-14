@@ -44,8 +44,8 @@ async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}): Prom
 
 // after RSAKeyPair is ready
 type InitializedRSAKeyPair = O.Overwrite<RSAKeyPair, {
-    privateKey: string,
-    publicKey: string,
+    privateKey: string
+    publicKey: string
 }>
 
 export class RSAKeyPair {

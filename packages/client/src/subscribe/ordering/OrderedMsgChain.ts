@@ -133,15 +133,15 @@ interface Events {
      * Message was marked and is being skipped.
      * Does not fire if maxGapRequests = 0
      */
-    skip: MessageHandler;
+    skip: MessageHandler
     /**
      * Queue was drained after something was in it.
      */
-    drain: (numMessages: number) => void;
+    drain: (numMessages: number) => void
     /**
      * Probably a GapFillFailedError.
      */
-    error: (error: Error) => void;
+    error: (error: Error) => void
 }
 
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }

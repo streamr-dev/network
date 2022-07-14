@@ -23,7 +23,7 @@ export async function getTrackerRegistryFromContract({
     contractAddress,
     jsonRpcProvider
 }: {
-    contractAddress: EthereumAddress,
+    contractAddress: EthereumAddress
     jsonRpcProvider: Provider
 }): Promise<TrackerRegistry<SmartContractRecord>> {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)

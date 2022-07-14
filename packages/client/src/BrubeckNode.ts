@@ -16,14 +16,14 @@ import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
-    getNodeId: () => string,
-    addMessageListener: (listener: (msg: StreamMessage) => void) => void,
+    getNodeId: () => string
+    addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => void,
+    publish: (streamMessage: StreamMessage) => void
     getStreamParts: () => Iterable<StreamPartID>
     getNeighbors: () => ReadonlyArray<string>
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>

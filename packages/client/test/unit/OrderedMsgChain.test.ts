@@ -36,12 +36,12 @@ const createMsg = ({
     publisherId = 'publisherId',
     msgChainId = 'msgChainId'
 }: {
-    timestamp?: number;
-    sequenceNumber?: number;
-    prevTimestamp?: number | null;
-    prevSequenceNumber?: number;
-    content?: Record<string, unknown>;
-    publisherId?: string;
+    timestamp?: number
+    sequenceNumber?: number
+    prevTimestamp?: number | null
+    prevSequenceNumber?: number
+    content?: Record<string, unknown>
+    publisherId?: string
     msgChainId?: string
 } = {}) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null

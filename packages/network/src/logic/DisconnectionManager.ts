@@ -9,10 +9,10 @@ type DisconnectFn = (nodeId: NodeId, reason: string) => void
 const logger = new Logger(module)
 
 export interface DisconnectionManagerOptions {
-    getAllNodes: GetAllNodesFn,
-    hasSharedStreamParts: HasSharedStreamPartsFn,
-    disconnect: DisconnectFn,
-    disconnectionDelayInMs: number,
+    getAllNodes: GetAllNodesFn
+    hasSharedStreamParts: HasSharedStreamPartsFn
+    disconnect: DisconnectFn
+    disconnectionDelayInMs: number
     cleanUpIntervalInMs: number
 }
 

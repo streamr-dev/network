@@ -17,7 +17,7 @@ interface StreamPartState {
 }
 
 export interface BucketManagerOptions {
-    checkFullBucketsTimeout: number,
+    checkFullBucketsTimeout: number
     storeBucketsTimeout: number
     maxBucketSize: number
     maxBucketRecords: number

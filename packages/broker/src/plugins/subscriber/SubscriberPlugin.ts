@@ -3,12 +3,12 @@ import { Logger } from '@streamr/utils'
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
 interface ConfigStream {
-    streamId: string,
+    streamId: string
     streamPartition: number
 }
 
 export interface SubscriberPluginConfig {
-    streams: ConfigStream[],
+    streams: ConfigStream[]
     subscriptionRetryInterval: number
 }
 

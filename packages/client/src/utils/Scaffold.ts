@@ -21,7 +21,7 @@ interface ScaffoldOptions {
  onError?: (error: Error) => void
  onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
  onChange?: MaybeAsync<(shouldUp: boolean) => void>
- id?: string,
+ id?: string
 }
 
 const noop = () => {}

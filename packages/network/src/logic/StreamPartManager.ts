@@ -8,9 +8,9 @@ import _ from 'lodash'
 interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
     neighbors: Set<NodeId>
-    counter: number,
-    inOnly: Set<NodeId>,
-    outOnly: Set<NodeId>,
+    counter: number
+    inOnly: Set<NodeId>
+    outOnly: Set<NodeId>
     isBehindProxy: boolean
 }
 

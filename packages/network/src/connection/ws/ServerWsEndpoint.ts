@@ -11,7 +11,7 @@ import { v4 } from 'uuid'
 import { Duplex } from "stream"
 
 interface HostPort {
-    hostname: string,
+    hostname: string
     port: number
 }
 type UnixSocket = string

@@ -43,7 +43,7 @@ export interface TrackerOptions {
     protocols: {
         trackerServer: TrackerServer
     }
-    metricsContext?: MetricsContext,
+    metricsContext?: MetricsContext
     topologyStabilization?: TopologyStabilizationOptions
 }
 

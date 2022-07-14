@@ -11,14 +11,14 @@ export enum StreamPermission {
 }
 
 export interface UserPermissionQuery {
-    streamId: string,
+    streamId: string
     permission: StreamPermission
     user: EthereumAddress
     allowPublic: boolean
 }
 
 export interface PublicPermissionQuery {
-    streamId: string,
+    streamId: string
     permission: StreamPermission
     public: true
 }

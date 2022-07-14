@@ -17,7 +17,7 @@ import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 
 export interface CacheConfig {
-    maxSize: number,
+    maxSize: number
     maxAge: number
 }
 
@@ -33,7 +33,7 @@ export interface TimeoutsConfig {
     jsonRpc: {
         timeout: number
         retryInterval: number
-    },
+    }
     /** @internal */
     encryptionKeyRequest?: number
     httpFetchTimeout: number
@@ -78,14 +78,14 @@ export type MetricsConfig = {
  */
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
-    id?: string,
+    id?: string
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
     network: NetworkConfig
-    cache: CacheConfig,
+    cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
     /** @internal */

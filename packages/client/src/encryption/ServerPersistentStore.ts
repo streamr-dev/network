@@ -15,12 +15,12 @@ import { StreamID } from 'streamr-client-protocol'
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
 
 export interface ServerPersistentStoreOptions {
-    context: Context,
+    context: Context
     clientId: string
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
-    rootPath?: string,
-    migrationsPath?: string,
+    rootPath?: string
+    migrationsPath?: string
 }
 
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {

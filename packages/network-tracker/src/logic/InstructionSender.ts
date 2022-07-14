@@ -28,9 +28,9 @@ const DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS: TopologyStabilizationOptions = {
 const logger = new Logger(module)
 
 export interface Instruction {
-    nodeId: NodeId,
-    streamPartId: StreamPartID,
-    newNeighbors: NodeId[],
+    nodeId: NodeId
+    streamPartId: StreamPartID
+    newNeighbors: NodeId[]
     counterValue: number
 }
 

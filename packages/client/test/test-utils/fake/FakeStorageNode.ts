@@ -77,11 +77,11 @@ export class FakeStorageNode extends FakeBrubeckNode {
     }
 
     async getRange(streamPartId: StreamPartID, opts: {
-        fromTimestamp: number,
-        fromSequenceNumber: number,
-        toTimestamp: number,
-        toSequenceNumber: number,
-        publisherId?: string,
+        fromTimestamp: number
+        fromSequenceNumber: number
+        toTimestamp: number
+        toSequenceNumber: number
+        publisherId?: string
         msgChainId?: string
     }): Promise<StreamMessage[]> {
         const messages = this.streamPartMessages.get(streamPartId)

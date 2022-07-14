@@ -20,10 +20,10 @@ import { StreamPartitioner } from './StreamPartitioner'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
 export interface MessageCreateOptions<T = unknown> {
-    content: T,
-    timestamp: number,
+    content: T
+    timestamp: number
     partitionKey?: string | number
-    msgChainId?: string,
+    msgChainId?: string
     messageType?: StreamMessageType
     encryptionType?: EncryptionType
 }

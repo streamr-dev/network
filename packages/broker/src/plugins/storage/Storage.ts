@@ -32,14 +32,14 @@ const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => buck
 
 // NET-329
 interface ResendDebugInfo {
-    streamId: string,
-    partition?: number,
-    limit?: number,
-    fromTimestamp?: number,
-    toTimestamp?: number,
-    fromSequenceNo?: number | null,
-    toSequenceNo?: number | null,
-    publisherId?: string | null,
+    streamId: string
+    partition?: number
+    limit?: number
+    fromTimestamp?: number
+    toTimestamp?: number
+    fromSequenceNo?: number | null
+    toSequenceNo?: number | null
+    publisherId?: string | null
     msgChainId?: string | null
 }
 

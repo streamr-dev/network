@@ -172,7 +172,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
 
     // eslint-disable-next-line class-methods-use-this
     async setPermissions(..._streams: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         throw new Error('not implemented')

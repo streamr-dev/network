@@ -27,8 +27,8 @@ const MIN_SEQUENCE_NUMBER_VALUE = 0
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
 export type ResendRef = MessageRef | {
-    timestamp: number | Date | string,
-    sequenceNumber?: number,
+    timestamp: number | Date | string
+    sequenceNumber?: number
 }
 
 export interface ResendLastOptions {
@@ -201,8 +201,8 @@ export class Resends implements Context {
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
     }: {
-        fromTimestamp: number,
-        fromSequenceNumber?: number,
+        fromTimestamp: number
+        fromSequenceNumber?: number
         publisherId?: EthereumAddress
     }): Promise<MessageStream<T>> {
         return this.fetchStream('from', streamPartId, {
@@ -220,11 +220,11 @@ export class Resends implements Context {
         publisherId,
         msgChainId
     }: {
-        fromTimestamp: number,
-        fromSequenceNumber?: number,
-        toTimestamp: number,
-        toSequenceNumber?: number,
-        publisherId?: EthereumAddress,
+        fromTimestamp: number
+        fromSequenceNumber?: number
+        toTimestamp: number
+        toSequenceNumber?: number
+        publisherId?: EthereumAddress
         msgChainId?: string
     }): Promise<MessageStream<T>> {
         return this.fetchStream('range', streamPartId, {

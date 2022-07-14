@@ -17,7 +17,7 @@ export interface ProviderAuthConfig {
 }
 
 export interface PrivateKeyAuthConfig {
-    privateKey: string,
+    privateKey: string
     // The address property is not used. It is included to make the object
     // compatible with StreamrClient.generateEthereumAccount(), as we typically
     // use that method to generate the client "auth" option.

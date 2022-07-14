@@ -20,17 +20,17 @@ export function Msg<T extends object = object>(opts?: T): any {
 
 export interface CreateMessageOpts {
     /** index of message in total */
-    index: number,
+    index: number
     /** batch number */
-    batch: number,
+    batch: number
     /** index of message in batch */
-    batchIndex: number,
+    batchIndex: number
     /** total messages */
     total: number
 }
 
 type PublishManyOpts = Partial<{
-    delay: number,
+    delay: number
     timestamp: number | (() => number)
     partitionKey: number | string | (() => number | string)
     createMessage: (content: any) => any
@@ -64,7 +64,7 @@ export async function* publishManyGenerator(
 type PublishTestMessageOptions = PublishManyOpts & {
     waitForLast?: boolean
     waitForLastCount?: number
-    waitForLastTimeout?: number,
+    waitForLastTimeout?: number
     retainMessages?: boolean
     onSourcePipeline?: Signal<[Pipeline<PublishMetadata<any>>]>
     onPublishPipeline?: Signal<[Pipeline<StreamMessage>]>

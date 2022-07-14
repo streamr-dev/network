@@ -63,7 +63,7 @@ export interface ObjectType<T> {
     encryptionType: EncryptionType
     groupKeyId: string|null
     content: string|T
-    signatureType: SignatureType;
+    signatureType: SignatureType
     signature: string|null
 }
 

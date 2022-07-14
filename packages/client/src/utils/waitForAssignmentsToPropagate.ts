@@ -6,7 +6,7 @@ import { PushPipeline } from './PushPipeline'
 export function waitForAssignmentsToPropagate(
     pushPipeline: PushPipeline<any>,
     targetStream: {
-        id: StreamID,
+        id: StreamID
         partitions: number
     }
 ): Promise<string[]> {

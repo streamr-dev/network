@@ -209,9 +209,9 @@ export class TimeoutError extends Error {
  */
 
 interface pTimeoutOpts {
-    timeout?: number,
-    message?: string,
-    rejectOnTimeout?: boolean,
+    timeout?: number
+    message?: string
+    rejectOnTimeout?: boolean
 }
 
 type pTimeoutArgs = [timeout?: number, message?: string] | [pTimeoutOpts]

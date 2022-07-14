@@ -12,7 +12,7 @@ import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
 
 interface HostPort {
-    hostname: string,
+    hostname: string
     port: number
 }
 type UnixSocket = string

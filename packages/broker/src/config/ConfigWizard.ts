@@ -13,12 +13,12 @@ import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migratio
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 
 export interface PrivateKeyAnswers extends Answers {
-    generateOrImportPrivateKey: 'Import' | 'Generate',
+    generateOrImportPrivateKey: 'Import' | 'Generate'
     importPrivateKey?: string
 }
 
 export interface PluginAnswers extends Answers  {
-    enabledApiPlugins: string[],
+    enabledApiPlugins: string[]
     websocketPort?: string
     mqttPort?: string
     httpPort?: string

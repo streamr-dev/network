@@ -15,7 +15,7 @@ export interface Location {
 
 export interface StreamPartStatus {
     id: StreamID
-    partition: number,
+    partition: number
     neighbors: NodeId[]
     counter: number
 }

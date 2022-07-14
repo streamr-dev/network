@@ -15,10 +15,10 @@ const logger = new Logger(module)
 
 export interface StoragePluginConfig {
     cassandra: {
-        hosts: string[],
+        hosts: string[]
         username: string
         password: string
-        keyspace: string,
+        keyspace: string
         datacenter: string
     }
     storageConfig: {
@@ -26,8 +26,8 @@ export interface StoragePluginConfig {
     }
     cluster: {
         // If clusterAddress is null, the broker's address will be used
-        clusterAddress: EthereumAddress | null,
-        clusterSize: number,
+        clusterAddress: EthereumAddress | null
+        clusterSize: number
         myIndexInCluster: number
     }
 }

@@ -17,8 +17,8 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 // and methods to use the term EncryptionKey (except protocol-classes, which
 // should use the protocol level term GroupKey)
 export interface UpdateEncryptionKeyOptions {
-    streamId: string,
-    distributionMethod: 'rotate' | 'rekey',
+    streamId: string
+    distributionMethod: 'rotate' | 'rekey'
     key?: GroupKey
 }
 

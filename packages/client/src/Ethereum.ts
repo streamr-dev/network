@@ -21,15 +21,15 @@ export interface EthereumNetworkConfig {
 export interface EthereumConfig {
     streamRegistryChainAddress: EthereumAddress
     streamStorageRegistryChainAddress: EthereumAddress
-    storageNodeRegistryChainAddress: EthereumAddress,
-    ensCacheChainAddress: EthereumAddress,
+    storageNodeRegistryChainAddress: EthereumAddress
+    ensCacheChainAddress: EthereumAddress
     mainChainRPCs?: ChainConnectionInfo
     streamRegistryChainRPCs: ChainConnectionInfo
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
     ethereumNetworks?: Record<string, EthereumNetworkConfig>
 }
 
-export const generateEthereumAccount = (): { address: string; privateKey: string } => {
+export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
     return {
         address: wallet.address,

@@ -8,7 +8,7 @@ import { MqttServer, MqttServerListener } from './MqttServer'
 const logger = new Logger(module)
 
 interface StreamSubscription {
-    streamrClientSubscription: Subscription,
+    streamrClientSubscription: Subscription
     clientIds: string[]
 }
 

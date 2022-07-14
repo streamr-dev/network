@@ -5,7 +5,7 @@ import { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
 type Events<T> = { [K in keyof T]: (payload: any) => void }
 
 export interface StreamrClientEvents {
-    addToStorageNode: (payload: StorageNodeAssignmentEvent) => void,
+    addToStorageNode: (payload: StorageNodeAssignmentEvent) => void
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
 }
 

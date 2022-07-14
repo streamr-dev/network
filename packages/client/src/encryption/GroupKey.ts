@@ -11,15 +11,15 @@ class InvalidGroupKeyError extends ValidationError {
 }
 
 export interface GroupKeyObject {
-    id: string,
-    hex: string,
-    data: Uint8Array,
+    id: string
+    hex: string
+    data: Uint8Array
 }
 
 interface GroupKeyProps {
-    groupKeyId: string,
-    groupKeyHex: string,
-    groupKeyData: Uint8Array,
+    groupKeyId: string
+    groupKeyHex: string
+    groupKeyData: Uint8Array
 }
 
 function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {

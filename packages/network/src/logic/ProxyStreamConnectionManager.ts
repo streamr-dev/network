@@ -16,12 +16,12 @@ import { Propagation } from './propagation/Propagation'
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
-    trackerManager: TrackerManager,
-    streamPartManager: StreamPartManager,
-    nodeToNode: NodeToNode,
-    propagation: Propagation,
-    node: Node,
-    nodeConnectTimeout: number,
+    trackerManager: TrackerManager
+    streamPartManager: StreamPartManager
+    nodeToNode: NodeToNode
+    propagation: Propagation
+    node: Node
+    nodeConnectTimeout: number
     acceptProxyConnections: boolean
 }
 
@@ -32,8 +32,8 @@ enum State {
 }
 
 interface ProxyConnection {
-    state?: State,
-    reconnectionTimer?: NodeJS.Timeout,
+    state?: State
+    reconnectionTimer?: NodeJS.Timeout
     direction: ProxyDirection
 }
 

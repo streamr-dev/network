@@ -10,7 +10,7 @@ const totalSizeOfBuckets = (buckets: BucketInfo[]) => buckets.reduce((mem, { siz
 const totalNumOfRecords = (buckets: BucketInfo[]) => buckets.reduce((mem, { records }) => mem + records, 0)
 
 interface StreamPart {
-    streamId: string,
+    streamId: string
     partition: number
 }
 
@@ -20,22 +20,22 @@ interface StreamPartInfo extends StreamPart {
 
 interface BucketInfo {
     bucketId: string
-    dateCreate: number,
-    streamId: string,
-    partition: number,
-    records: number,
-    size: number,
+    dateCreate: number
+    streamId: string
+    partition: number
+    records: number
+    size: number
     storageDays: number
 }
 
 interface Options {
-    streamrBaseUrl: string,
-    cassandraUsername: string,
-    cassandraPassword: string,
-    cassandraHosts: string[],
-    cassandraDatacenter: string,
-    cassandraKeyspace: string,
-    bucketLimit?: number,
+    streamrBaseUrl: string
+    cassandraUsername: string
+    cassandraPassword: string
+    cassandraHosts: string[]
+    cassandraDatacenter: string
+    cassandraKeyspace: string
+    bucketLimit?: number
     dryRun?: boolean
 }
 
