@@ -40,11 +40,11 @@ export class Simulator implements IWsSimulator {
     
     private static singleton: Simulator
 
-    private nodes: { [id: string]: SimulatedNode } = {}
-    private wsEndpoints: { [address: string]: ServerWsEndpoint | NodeClientWsEndpoint} = {}
+    private nodes: Record<string, SimulatedNode> = {}
+    private wsEndpoints: Record<string, ServerWsEndpoint | NodeClientWsEndpoint> = {}
     //private webRtcEndpoints: { [address: string]: SimulatedWebRtcEndpoint } = {}
 
-    private webRtcConnections: {[peerId: string]: {[targetId: string]: NodeWebRtcConnection} } = {}
+    private webRtcConnections: Record<string, Record<string, NodeWebRtcConnection>> = {}
 
     private constructor() {}
 

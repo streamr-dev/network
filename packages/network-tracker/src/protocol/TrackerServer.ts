@@ -29,7 +29,7 @@ export enum Event {
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received'
 }
 
-const eventPerType: { [key: number]: string } = {}
+const eventPerType: Record<number, string> = {}
 eventPerType[TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
 eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 

@@ -4,7 +4,7 @@ import { Location, NodeId } from 'streamr-network'
 
 type OverLayWithRtts = Record<StreamPartID, Record<NodeId, { neighborId: NodeId, rtt: number | null }[] >>
 type OverlaySizes = { streamId: string, partition: number, nodeCount: number }[]
-type NodesWithLocations = { [key: string]: Location }
+type NodesWithLocations = Record<string, Location>
 
 export function getTopology(
     overlayPerStreamPart: OverlayPerStreamPart,
@@ -75,7 +75,7 @@ export function addRttsToNodeConnections(
     }
 }
 
-export function getNodesWithLocationData(nodes: ReadonlyArray<string>, locations: Readonly<{[key: string]: Location}>): NodesWithLocations {
+export function getNodesWithLocationData(nodes: ReadonlyArray<string>, locations: Readonly<Record<string, Location>>): NodesWithLocations {
     return Object.assign({}, ...nodes.map((nodeId: string) => {
         return {
             [nodeId]: locations[nodeId] || {

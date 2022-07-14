@@ -11,7 +11,7 @@ import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
 
-const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
+const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
 const BYE_KEY = '_bye'
 const LATEST_VERSION = 32
 

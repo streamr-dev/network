@@ -23,7 +23,7 @@ export const debug = Debug('utils')
 // TODO convert to a class?
 type  CounterIdType = ((prefix: string, separator?: string) => string) & { clear: (...args: [string] | []) => void }
 export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}): CounterIdType => {
-    let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
+    let counts: Record<string, number> = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
         // pedantic: wrap around if count grows too large

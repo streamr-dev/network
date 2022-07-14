@@ -23,7 +23,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server | null
     private readonly ownAddress: string
-    private handshakeListeners: { [fromAddress: string]: { [uuid: string]: (data: string) => Promise<void> } } = {}
+    private handshakeListeners: Record<string, Record<string, (data: string) => Promise<void>>> = {}
 
     constructor(
         listen: HttpServerConfig,

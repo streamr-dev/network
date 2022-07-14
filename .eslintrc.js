@@ -6,6 +6,8 @@ module.exports = {
         'no-restricted-imports': ['error', {
             "patterns": ["*/dist"]
         }],
-        '@typescript-eslint/no-inferrable-types': 'off'
+        '@typescript-eslint/no-inferrable-types': 'off',
+        '@typescript-eslint/consistent-indexed-object-style': ['error']
+        //'@typescript-eslint/no-empty-function': 'error',
     }
 }

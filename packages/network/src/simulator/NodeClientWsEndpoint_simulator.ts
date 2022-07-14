@@ -7,10 +7,8 @@ import { Simulator } from './Simulator'
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> implements ISimulatedWsEndpoint {
 
-    private pendingHandshakes: {
-        [peerId: string]: [resolve: (value: PeerId | PromiseLike<string>) => void,
-            reject: (value: PeerId | PromiseLike<string>) => void, serverPeerInfo: PeerInfo]
-    } = {}
+    private pendingHandshakes: Record<string, [resolve: (value: PeerId | PromiseLike<string>) => void,
+            reject: (value: PeerId | PromiseLike<string>) => void, serverPeerInfo: PeerInfo]> = {}
 
     constructor(
         peerInfo: PeerInfo,

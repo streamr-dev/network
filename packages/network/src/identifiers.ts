@@ -4,9 +4,7 @@ import { MetricsContext } from './helpers/Metric'
 export type NodeId = string
 export type TrackerId = string
 
-export interface Rtts {
-    [key: string]: number
-}
+export type Rtts = Record<string, number>
 
 export interface Location {
     latitude?: number

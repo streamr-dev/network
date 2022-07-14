@@ -49,8 +49,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly rtcSignaller: RtcSignaller
     private readonly negotiatedProtocolVersions: NegotiatedProtocolVersions
     private readonly connectionFactory: WebRtcConnectionFactory
-    private connections: { [key: string]: WebRtcConnection }
-    private messageQueues: { [key: string]: MessageQueue<string> }
+    private connections: Record<string, WebRtcConnection>
+    private messageQueues: Record<string, MessageQueue<string>>
     private readonly newConnectionTimeout: number
     private readonly pingInterval: number
     private readonly logger: Logger

@@ -25,7 +25,7 @@ export enum Event {
     RTC_ERROR_RECEIVED = 'streamr:tracker-node:rtc-error-received',
 }
 
-const eventPerType: { [key: number]: string } = {}
+const eventPerType: Record<number, string> = {}
 eventPerType[TrackerMessage.TYPES.InstructionMessage] = Event.TRACKER_INSTRUCTION_RECEIVED
 eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED

@@ -45,13 +45,13 @@ const generateApiKey = (): string => {
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
-export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
+export const DEFAULT_CONFIG_PORTS: Record<string, number> = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
     HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
 }
 
-const PLUGIN_NAMES: {[pluginName: string]: string} = {
+const PLUGIN_NAMES: Record<string, string> = {
     WS: 'websocket',
     MQTT: 'mqtt',
     HTTP: 'http'
