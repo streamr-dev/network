@@ -1,5 +1,5 @@
 import KBucket from 'k-bucket'
-import { PeerID } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { DhtPeer } from './DhtPeer'
 
 class ContactState {
@@ -10,7 +10,7 @@ class ContactState {
 }
 
 export class SortedContactList {
-    private contactsById: { [id: string]: ContactState } = {}
+    private contactsById: Map<PeerIDKey, ContactState> = new Map()
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number) {
@@ -30,16 +30,16 @@ export class SortedContactList {
         if (this.ownId.equals(contact.peerId)) {
             return
         }
-        if (!this.contactsById.hasOwnProperty(contact.peerId.toMapKey())) {
+        if (!this.contactsById.has(contact.peerId.toMapKey())) {
             if (this.contactIds.length < this.maxSize) {
-                this.contactsById[contact.peerId.toMapKey()] = new ContactState(contact)
+                this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
-                delete this.contactsById[removed!.toMapKey()]
-                this.contactsById[contact.peerId.toMapKey()] = new ContactState(contact)
+                this.contactsById.delete(removed!.toMapKey())
+                this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             }
@@ -51,14 +51,14 @@ export class SortedContactList {
     }
 
     public setContacted(contactId: PeerID): void {
-        if (this.contactsById.hasOwnProperty(contactId.toMapKey())) {
-            this.contactsById[contactId.toMapKey()].contacted = true
+        if (this.contactsById.has(contactId.toMapKey())) {
+            this.contactsById.get(contactId.toMapKey())!.contacted = true
         }
     }
 
     public setActive(contactId: PeerID): void {
-        if (this.contactsById.hasOwnProperty(contactId.toMapKey())) {
-            this.contactsById[contactId.toMapKey()].active = true
+        if (this.contactsById.has(contactId.toMapKey())) {
+            this.contactsById.get(contactId.toMapKey())!.active = true
         }
     }
 
@@ -66,8 +66,8 @@ export class SortedContactList {
         const ret: DhtPeer[] = []
         for (let i = 0; i < this.contactIds.length; i++) {
             const contactId = this.contactIds[i]
-            if (this.contactsById[contactId.toMapKey()] && !this.contactsById[contactId.toMapKey()].contacted) {
-                ret.push(this.contactsById[contactId.toMapKey()].contact)
+            if (this.contactsById.has(contactId.toMapKey()) && !this.contactsById.get(contactId.toMapKey())!.contacted) {
+                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
                 if (ret.length >= num) {
                     return ret
                 }
@@ -80,7 +80,7 @@ export class SortedContactList {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
             if (this.isActive(contactId)) {
-                ret.push(this.contactsById[contactId.toMapKey()].contact)
+                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
             }
         })
         return ret
@@ -101,29 +101,29 @@ export class SortedContactList {
     }
 
     public getContact(id: PeerID): ContactState {
-        return this.contactsById[id.toMapKey()]
+        return this.contactsById.get(id.toMapKey())!
     }
 
     public removeContact(id: PeerID): boolean {
-        if (this.contactsById[id.toMapKey()]) {
+        if (this.contactsById.has(id.toMapKey())) {
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
-            delete this.contactsById[id.toMapKey()]
+            this.contactsById.delete(id.toMapKey())
             return true
         }
         return false
     }
 
     public hasContact(id: PeerID): boolean {
-        return !!this.contactsById[id.toMapKey()]
+        return this.contactsById.has(id.toMapKey())
     }
 
     public isActive(id: PeerID): boolean {
-        return this.contactsById[id.toMapKey()] ? this.contactsById[id.toMapKey()].active : false
+        return this.contactsById.has(id.toMapKey()) ? this.contactsById.get(id.toMapKey())!.active : false
     }
 
     public getAllContacts(): DhtPeer[] {
-        return Object.values(this.contactsById).map((contact) => contact.contact)
+        return [...this.contactsById.values()].map((contact) => contact.contact)
     }
 
     public getMaxSize(): number {

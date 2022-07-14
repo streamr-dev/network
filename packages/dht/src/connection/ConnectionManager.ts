@@ -44,7 +44,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private ownPeerDescriptor: PeerDescriptor | null = null
     private connections: Map<PeerIDKey, IConnection> = new Map()
 
-    private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
+    private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
 
@@ -261,14 +261,14 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (this.webSocketServer) {
             await this.webSocketServer.stop()
         }
-        Object.values(this.disconnectionTimeouts).map(async (timeout) => {
+        [...this.disconnectionTimeouts.values()].map(async (timeout) => {
             clearTimeout(timeout)
         })
-        this.disconnectionTimeouts = {}
+        this.disconnectionTimeouts.clear()
         this.webSocketConnector.stop()
         this.webrtcConnector.stop()
 
-        Object.values(this.connections).forEach((connection) => connection.close())
+        this.connections.forEach((connection) => connection.close())
         WEB_RTC_CLEANUP.cleanUp()
     }
 
@@ -316,9 +316,10 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             return
         }
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        this.disconnectionTimeouts[hexId] = setTimeout(() => {
+        this.disconnectionTimeouts.set(hexId, setTimeout(() => {
             this.closeConnection(hexId, reason)
-        }, timeout)
+            this.disconnectionTimeouts.delete(hexId)
+        }, timeout))
     }
 
     private closeConnection(id: PeerIDKey, reason?: string): void {
