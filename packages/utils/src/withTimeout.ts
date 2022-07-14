@@ -2,8 +2,8 @@ export class TimeoutError extends Error {
     readonly code = 'TimeoutError'
     constructor(timeoutInMs: number, customErrorContext?: string) {
         super(customErrorContext === undefined
-            ? `timed out in ${timeoutInMs} ms`
-            : `${customErrorContext} (timed out in ${timeoutInMs} ms)`)
+            ? `timed out after ${timeoutInMs} ms`
+            : `${customErrorContext} (timed out after ${timeoutInMs} ms)`)
         Error.captureStackTrace(this, TimeoutError)
     }
 }
