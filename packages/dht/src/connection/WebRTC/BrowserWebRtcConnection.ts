@@ -1,8 +1,7 @@
 import EventEmitter from "events"
 import { Event, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
-import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConnection"
+import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from "../IConnection"
 import { PeerDescriptor } from "../../proto/DhtRpc"
-import { ConnectionID } from "../../types"
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 import { Logger } from '@streamr/utils'
 

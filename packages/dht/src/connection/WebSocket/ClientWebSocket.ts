@@ -1,7 +1,6 @@
-import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
+import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
 import { EventEmitter } from 'events'
-import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 import { Logger } from '@streamr/utils'
 

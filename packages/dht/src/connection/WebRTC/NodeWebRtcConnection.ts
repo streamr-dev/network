@@ -1,6 +1,5 @@
 import { IWebRtcConnection, Event as IWebRtcEvent } from './IWebRtcConnection'
-import { ConnectionType, IConnection, Event as ConnectionEvent, } from '../IConnection'
-import { ConnectionID } from '../../types'
+import { ConnectionType, IConnection, ConnectionID, Event as ConnectionEvent, } from '../IConnection'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter = require('events')
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'

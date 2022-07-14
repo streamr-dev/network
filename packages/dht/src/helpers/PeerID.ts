@@ -76,6 +76,8 @@ function hex(buff: Uint8Array) {
     return hexOctets.join("")
 }
 
+export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
+
 export class PeerID {
     private data!: Uint8Array;
 
@@ -136,8 +138,8 @@ export class PeerID {
         
     }
 
-    toMapKey(): string {
-        return hex(this.data)
+    toMapKey(): PeerIDKey {
+        return hex(this.data) as PeerIDKey
     }
 
     get value(): Uint8Array {
