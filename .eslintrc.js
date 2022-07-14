@@ -17,7 +17,8 @@ module.exports = {
             'multiline': {
                 'delimiter': 'none'
             }
-        }]
+        }],
+        '@typescript-eslint/no-confusing-non-null-assertion': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
