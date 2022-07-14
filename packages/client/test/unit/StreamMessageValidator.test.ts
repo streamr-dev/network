@@ -1,16 +1,20 @@
 import assert from 'assert'
 
-import { SigningUtil, toStreamID, EthereumAddress } from 'streamr-client-protocol'
-import StreamMessage from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
-import MessageID from 'streamr-client-protocol/dist/src/protocol/message_layer/MessageID'
-import GroupKeyMessage from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyMessage'
-import GroupKeyRequest from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyRequest'
-import GroupKeyResponse from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyResponse'
-import GroupKeyAnnounce from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyAnnounce'
-import MessageRef from 'streamr-client-protocol/dist/src/protocol/message_layer/MessageRef'
-import GroupKeyErrorResponse from 'streamr-client-protocol/dist/src/protocol/message_layer/GroupKeyErrorResponse'
-import EncryptedGroupKey from 'streamr-client-protocol/dist/src/protocol/message_layer/EncryptedGroupKey'
-import ValidationError from 'streamr-client-protocol/dist/src/errors/ValidationError'
+import {
+    SigningUtil,
+    toStreamID,
+    EthereumAddress,
+    StreamMessage,
+    MessageID,
+    GroupKeyMessage,
+    MessageRef,
+    EncryptedGroupKey,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    GroupKeyAnnounce,
+    GroupKeyErrorResponse,
+    ValidationError
+} from 'streamr-client-protocol'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
 
 const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
