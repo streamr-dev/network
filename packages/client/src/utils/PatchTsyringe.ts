@@ -8,8 +8,11 @@
 // See: https://github.com/microsoft/tsyringe/issues/177
 // @ts-nocheck
 import { container } from 'tsyringe'
-// eslint-disable-next-line import/no-unresolved
-import { isTokenDescriptor, isTransformDescriptor, formatErrorCtor } from 'tsyringe'
+// `dist` import below are intentional. Will not work properly if imported directly.
+// eslint-disable-next-line import/no-unresolved,no-restricted-imports
+import { isTokenDescriptor, isTransformDescriptor } from 'tsyringe/dist/cjs/providers/injection-token'
+// eslint-disable-next-line no-restricted-imports
+import { formatErrorCtor } from 'tsyringe/dist/cjs/error-helpers'
 
 // Should be identical to original resolveParams, but replaces new Error with err.message = formatErrorCtor
 // See: https://github.com/microsoft/tsyringe/blob/0cb911b799ccd0b3079629865f1a8fb04cc49658/src/dependency-container.ts#L495-L525
