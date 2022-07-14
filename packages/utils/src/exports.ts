@@ -1,6 +1,7 @@
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger } from './Logger'
 import { Multimap } from './Multimap'
+import { randomString } from './randomString'
 import { scheduleAtFixedRate } from './scheduleAtFixedRate'
 import { scheduleAtInterval } from './scheduleAtInterval'
 import { wait } from './wait'
@@ -11,6 +12,7 @@ export {
     Multimap,
     TimeoutError,
     keyToArrayIndex,
+    randomString,
     scheduleAtFixedRate,
     scheduleAtInterval,
     wait,

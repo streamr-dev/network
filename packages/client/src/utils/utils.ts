@@ -7,11 +7,6 @@ import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
 
-export function randomString(length = 20): string {
-    // eslint-disable-next-line no-bitwise
-    return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('')
-}
-
 /**
  * Generates counter-based ids.
  * Basically lodash.uniqueid but per-prefix.
