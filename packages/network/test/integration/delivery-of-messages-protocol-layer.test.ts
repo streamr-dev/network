@@ -78,6 +78,7 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode1 = new NodeToNode(wrtcEndpoint1)
         nodeToNode2 = new NodeToNode(wrtcEndpoint2)
 
+        // @ts-expect-error get around weird circular dependency private property issue
         trackerServer = new TrackerServer(wsEndpoint3)
 
         // Connect nodeToTracker <-> trackerServer
