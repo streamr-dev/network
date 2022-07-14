@@ -1,5 +1,6 @@
 import { Client } from 'cassandra-driver'
-import { waitForCondition, waitForEvent, waitForStreamToEnd } from 'streamr-test-utils'
+import { waitForCondition, waitForStreamToEnd } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Readable, PassThrough } from 'stream'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'

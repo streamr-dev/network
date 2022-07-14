@@ -15,8 +15,8 @@
         "install-git-hooks": "husky install"
     },
     "workspaces": [
-        "packages/test-utils",
         "packages/utils",
+        "packages/test-utils",
         "packages/protocol",
         "packages/network",
         "packages/network-tracker",

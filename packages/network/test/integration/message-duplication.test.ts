@@ -1,7 +1,8 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'

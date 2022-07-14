@@ -1,4 +1,4 @@
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'

@@ -1,6 +1,7 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
-import { waitForEvent, waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
+import { waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 
 import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
