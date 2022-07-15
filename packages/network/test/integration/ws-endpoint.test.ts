@@ -123,7 +123,7 @@ describe('ws-endpoint', () => {
                 await client1.stop()
                 await client2.stop()
                 await server.stop()
-            } catch(_ue) {
+            } catch (_ue) {
             }
         })
     }) 

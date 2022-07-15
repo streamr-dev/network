@@ -217,7 +217,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
         try {
             this.doClose(err)
-        } catch(e) {
+        } catch (e) {
             this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
         }
 

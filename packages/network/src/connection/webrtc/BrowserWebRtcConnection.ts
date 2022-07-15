@@ -55,7 +55,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
                             this.emitLocalDescription(this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
-                } catch(err) {
+                } catch (err) {
                     console.error(err)
                 } finally {
                     this.makingOffer = false

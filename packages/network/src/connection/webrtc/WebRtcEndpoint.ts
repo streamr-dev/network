@@ -239,7 +239,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
 
             try {
                 connection.connect()
-            } catch(e) {
+            } catch (e) {
                 this.logger.warn(e)
             }
             this.connections[peerId] = connection
@@ -334,7 +334,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         try {
             connection.connect()
-        } catch(e) {
+        } catch (e) {
             this.logger.warn(e)
         }
         this.connections[peerId] = connection

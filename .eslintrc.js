@@ -1,5 +1,7 @@
 module.exports = {
-    extends: 'eslint-config-streamr-ts',
+    extends: [
+        'eslint-config-streamr-ts'
+    ],
     rules: {
         'eol-last': ['error'],
         'no-console': ['error', {allow: ['warn', 'error', 'info']}],
@@ -33,7 +35,8 @@ module.exports = {
             'allowSingleLine': true
         }],
         '@typescript-eslint/default-param-last': ['error'],
-        '@typescript-eslint/func-call-spacing': ['error']
+        '@typescript-eslint/func-call-spacing': ['error'],
+        '@typescript-eslint/keyword-spacing': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

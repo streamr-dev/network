@@ -309,7 +309,7 @@ describe('OrderedMsgChain', () => {
                     // should have seen messages 1, 3, 5
                     expect(msgs).toEqual([msg1, msg3, msg5])
                     done()
-                } catch(err) {
+                } catch (err) {
                     done(err)
                 }
             }
@@ -335,7 +335,7 @@ describe('OrderedMsgChain', () => {
                     // should have seen messages 1, 3, 5
                     expect(msgs).toEqual([msg1, msg3, msg5])
                     done()
-                } catch(err) {
+                } catch (err) {
                     done(err)
                 }
             }
