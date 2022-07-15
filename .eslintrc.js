@@ -24,7 +24,8 @@ module.exports = {
         '@typescript-eslint/no-invalid-void-type': ['error'],
         '@typescript-eslint/no-non-null-asserted-nullish-coalescing': ['error'],
         '@typescript-eslint/no-require-imports': ['error'],
-        '@typescript-eslint/no-useless-empty-export': ['error']
+        '@typescript-eslint/no-useless-empty-export': ['error'],
+        '@typescript-eslint/prefer-for-of': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

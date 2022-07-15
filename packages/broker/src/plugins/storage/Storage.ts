@@ -518,8 +518,8 @@ export class Storage extends EventEmitter {
                 prepare: true
             })
 
-            for (let i = 0; i < res.rows.length; i++) {
-                count += res.rows[i].size
+            for (const row of res.rows) {
+                count += row.size
             }
         }
 

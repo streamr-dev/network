@@ -128,9 +128,9 @@ export class BucketManager {
                     // remove latest
                     currentBuckets.shift()
 
-                    for (let i = 0; i < currentBuckets.length; i++) {
-                        if (currentBuckets[i].dateCreate <= new Date(timestamp)) {
-                            bucketId = currentBuckets[i].getId()
+                    for (const currentBucket of currentBuckets) {
+                        if (currentBucket.dateCreate <= new Date(timestamp)) {
+                            bucketId = currentBucket.getId()
                             break
                         }
                     }
@@ -146,8 +146,8 @@ export class BucketManager {
     private async checkFullBuckets(): Promise<void> {
         const streamIds = Object.keys(this.streamParts)
 
-        for (let i = 0; i < streamIds.length; i++) {
-            const stream = this.streamParts[streamIds[i]]
+        for (const streamIdKey of streamIds) {
+            const stream = this.streamParts[streamIdKey]
             const { streamId, partition } = stream
             const { minTimestamp } = stream
 
