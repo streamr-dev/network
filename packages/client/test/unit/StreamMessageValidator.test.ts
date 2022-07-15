@@ -49,7 +49,7 @@ describe('StreamMessageValidator', () => {
     }
 
     const getValidator = (customConfig?: any) => {
-        if (customConfig){
+        if (customConfig) {
             return new StreamMessageValidator(customConfig)
         } else {
             return new StreamMessageValidator({

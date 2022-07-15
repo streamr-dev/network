@@ -182,10 +182,10 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
     pluginKeys.forEach((pluginKey) => {
         const pluginName = PLUGIN_NAMES[pluginKey]
         const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)){
+        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)) {
             let pluginConfig = {}
             const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            if (portNumber !== defaultPort){
+            if (portNumber !== defaultPort) {
                 const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.HTTP) {
                     // the http plugin is special, it needs to be added to the config after the other plugins

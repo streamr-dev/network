@@ -45,7 +45,8 @@ module.exports = {
         '@typescript-eslint/no-invalid-this': ['error'],
         '@typescript-eslint/no-unused-expressions': ['error'],
         '@typescript-eslint/no-useless-constructor': ['error'],
-        '@typescript-eslint/object-curly-spacing': ['error', 'always']
+        '@typescript-eslint/object-curly-spacing': ['error', 'always'],
+        '@typescript-eslint/space-before-blocks': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
