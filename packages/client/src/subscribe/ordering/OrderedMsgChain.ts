@@ -144,6 +144,7 @@ interface Events {
     error: (error: Error) => void
 }
 
+// eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
 // The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
