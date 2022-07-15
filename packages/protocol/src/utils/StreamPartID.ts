@@ -17,6 +17,7 @@ export function toStreamPartID(streamId: StreamID, streamPartition: number): Str
     return `${streamId}${DELIMITER}${streamPartition}` as StreamPartID
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamPartIDUtils {
     static parse(streamPartIdAsStr: string): StreamPartID | never {
         const [streamId, streamPartition] = StreamPartIDUtils.parseRawElements(streamPartIdAsStr)

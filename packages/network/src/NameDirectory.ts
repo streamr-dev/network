@@ -22,6 +22,7 @@ const NAMES: Record<EthereumAddress,string> = {
     '0x231b810d98702782963472e1d60a25496999e75d': 'DOCKER_DEV_STORAGE_NODE_REGISTRY'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class NameDirectory {
 
     static MAX_FALLBACK_NAME_LENGTH = 8

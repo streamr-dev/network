@@ -19,7 +19,8 @@ module.exports = {
             }
         }],
         '@typescript-eslint/no-confusing-non-null-assertion': ['error'],
-        '@typescript-eslint/no-duplicate-enum-values': ['error']
+        '@typescript-eslint/no-duplicate-enum-values': ['error'],
+        '@typescript-eslint/no-extraneous-class': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
