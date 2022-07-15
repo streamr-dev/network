@@ -42,7 +42,8 @@ module.exports = {
         '@typescript-eslint/default-param-last': ['error'],
         '@typescript-eslint/func-call-spacing': ['error'],
         '@typescript-eslint/keyword-spacing': ['error'],
-        '@typescript-eslint/no-invalid-this': ['error']
+        '@typescript-eslint/no-invalid-this': ['error'],
+        '@typescript-eslint/no-unused-expressions': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
