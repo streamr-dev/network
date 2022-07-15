@@ -404,7 +404,7 @@ export default class StreamMessage<T = unknown> {
         return streamMessageVersion >= 31
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null}): void {
+    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }

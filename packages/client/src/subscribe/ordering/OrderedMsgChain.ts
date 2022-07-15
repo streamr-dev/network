@@ -13,7 +13,7 @@ function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
 
 type MsgRefId = string
 
-type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']>}
+type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']> }
 
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.

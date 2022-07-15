@@ -27,7 +27,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
     protected doConnect(): void {
 
-        const urls: RTCIceServer[] = this.stunUrls.map((url) => ({ urls: [url]}))
+        const urls: RTCIceServer[] = this.stunUrls.map((url) => ({ urls: [url] }))
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {

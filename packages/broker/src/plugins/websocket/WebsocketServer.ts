@@ -105,7 +105,7 @@ export class WebsocketServer {
             return {
                 streamId: decodeURIComponent(groups[1]),
                 action: groups[2] as Action,
-                queryParams: qs.parse(groups[3], { ignoreQueryPrefix: true})
+                queryParams: qs.parse(groups[3], { ignoreQueryPrefix: true })
             }
         } else {
             throw new Error('Malformed path')

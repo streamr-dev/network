@@ -91,7 +91,7 @@ export function getNodesWithLocationData(nodes: ReadonlyArray<string>, locations
 export function findStreamsPartsForNode(
     overlayPerStreamPart: OverlayPerStreamPart,
     nodeId: NodeId
-): Array<{ streamId: string, partition: number, topologySize: number}> {
+): Array<{ streamId: string, partition: number, topologySize: number }> {
     return Object.entries(overlayPerStreamPart)
         .filter(([_, overlayTopology]) => overlayTopology.hasNode(nodeId))
         .map(([streamPartId, overlayTopology]) => {

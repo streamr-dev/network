@@ -78,7 +78,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         })
     }
 
-    private createFakeStream = (props: StreamProperties & { id: StreamID}) => {
+    private createFakeStream = (props: StreamProperties & { id: StreamID }) => {
         const s = new Stream(props, this.container)
         return s
     }

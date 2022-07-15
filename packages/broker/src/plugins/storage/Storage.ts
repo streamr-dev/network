@@ -130,7 +130,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream({streamId, partition, limit})
+        const resultStream = this.createResultStream({ streamId, partition, limit })
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {

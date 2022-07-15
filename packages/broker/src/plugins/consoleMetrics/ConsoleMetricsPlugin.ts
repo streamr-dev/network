@@ -16,7 +16,7 @@ export interface ConsoleMetricsPluginConfig {
 }
 
 export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
-    private producer?: { stop: () => void}
+    private producer?: { stop: () => void }
 
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()

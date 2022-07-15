@@ -1,6 +1,6 @@
 import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
-import { MessageQueue} from "../../src/connection/MessageQueue"
+import { MessageQueue } from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
 import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
 

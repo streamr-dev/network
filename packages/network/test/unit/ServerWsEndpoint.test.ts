@@ -73,7 +73,7 @@ describe('ServerWsEndpoint', () => {
         webSocketClient.onmessage = async (message) => {
             const { uuid, peerId } = JSON.parse(message.data.toString())
             if (uuid && peerId) {
-                webSocketClient.send(JSON.stringify({uuid, peerId: 'peerId'}))
+                webSocketClient.send(JSON.stringify({ uuid, peerId: 'peerId' }))
                 await waitForCondition(() => webSocketClient.readyState === webSocketClient.OPEN)
                 webSocketClient.close()
             }

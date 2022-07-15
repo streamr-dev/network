@@ -262,7 +262,7 @@ export const start = async (
         const storageAnswers = await getStorageAnswers()
         const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
-        const {mnemonic, networkExplorerUrl} = getNodeIdentity(privateKey)
+        const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
         logger.info(networkExplorerUrl)
