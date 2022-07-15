@@ -31,7 +31,8 @@ module.exports = {
         '@typescript-eslint/comma-spacing': ['error'],
         '@typescript-eslint/brace-style': ['error', '1tbs', {
             'allowSingleLine': true
-        }]
+        }],
+        '@typescript-eslint/default-param-last': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

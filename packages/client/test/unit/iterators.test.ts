@@ -17,6 +17,7 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
+// eslint-disable-next-line @typescript-eslint/default-param-last
 async function* generateThrow(items = expected, { max = MAX_ITEMS, err = new Error('expected') }) {
     let index = 0
     await wait(WAIT * 0.1)

@@ -4,7 +4,7 @@ import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-cl
 import { GroupKey } from './GroupKey'
 
 export class UnableToDecryptError extends StreamMessageError {
-    constructor(message = '', streamMessage: StreamMessage) {
+    constructor(streamMessage: StreamMessage, message = '') {
         super(`Unable to decrypt. ${message}`, streamMessage)
     }
 }
@@ -89,7 +89,7 @@ export class EncryptionUtil {
             streamMessage.serializedContent = serializedContent
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError(err.stack, streamMessage)
+            throw new UnableToDecryptError(streamMessage, err.stack)
         }
 
         try {
@@ -101,7 +101,7 @@ export class EncryptionUtil {
             }
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
+            throw new UnableToDecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
         }
         /* eslint-enable no-param-reassign */
     }

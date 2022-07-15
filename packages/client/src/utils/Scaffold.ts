@@ -39,6 +39,7 @@ type ScaffoldReturnType = (() => Promise<void>) &
 }
 
 export function Scaffold(
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     sequence: Step[] = [],
     _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}

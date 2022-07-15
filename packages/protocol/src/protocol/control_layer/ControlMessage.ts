@@ -30,6 +30,7 @@ export default class ControlMessage {
     type: ControlMessageType
     requestId: string
 
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     constructor(version = LATEST_VERSION, type: ControlMessageType, requestId: string) {
         if (new.target === ControlMessage) {
             throw new TypeError('ControlMessage is abstract.')

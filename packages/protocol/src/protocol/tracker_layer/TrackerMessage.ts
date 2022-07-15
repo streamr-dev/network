@@ -29,6 +29,7 @@ export default class TrackerMessage {
     type: TrackerMessageType
     requestId: string
 
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     constructor(version = LATEST_VERSION, type: TrackerMessageType, requestId: string) {
         if (new.target === TrackerMessage) {
             throw new TypeError('TrackerMessage is abstract.')
