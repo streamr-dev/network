@@ -46,7 +46,12 @@ module.exports = {
         '@typescript-eslint/no-unused-expressions': ['error'],
         '@typescript-eslint/no-useless-constructor': ['error'],
         '@typescript-eslint/object-curly-spacing': ['error', 'always'],
-        '@typescript-eslint/space-before-blocks': ['error']
+        '@typescript-eslint/space-before-blocks': ['error'],
+        '@typescript-eslint/space-before-function-paren': ['error', {
+            'anonymous': 'never',
+            'named': 'never',
+            'asyncArrow': 'always'
+        }]
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
