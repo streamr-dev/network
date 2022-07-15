@@ -23,11 +23,9 @@ export function cleanAddress(addr: string): string {
     let ret = ''
     if (addr.startsWith('ws://')) {
         ret = addr.substr(5)
-    }
-    else if (addr.startsWith('wss://')) {
+    } else if (addr.startsWith('wss://')) {
         ret = addr.substr(6) 
-    }
-    else {
+    } else {
         ret = addr
     }
     if (ret.endsWith('/ws')) {
@@ -58,8 +56,7 @@ export class Simulator implements IWsSimulator {
     public addServerWsEndpoint(peerInfo: PeerInfo, host: string, port: number, endpoint: ServerWsEndpoint): void {
         if (!this.nodes.hasOwnProperty(peerInfo.peerId)) {
             this.nodes[peerInfo.peerId] = new SimulatedNode(endpoint, null)
-        }    
-        else {
+        } else {
             this.nodes[peerInfo.peerId].wsServerEndpoint = endpoint
         }
 
@@ -70,8 +67,7 @@ export class Simulator implements IWsSimulator {
     public addClientWsEndpoint(peerInfo: PeerInfo, ownAddress: string, endpoint: NodeClientWsEndpoint): void {
         if (!this.nodes.hasOwnProperty(peerInfo.peerId)) {
             this.nodes[peerInfo.peerId] = new SimulatedNode(null, endpoint)
-        }    
-        else {
+        } else {
             this.nodes[peerInfo.peerId].wsClientEndpoint = endpoint
         }
 

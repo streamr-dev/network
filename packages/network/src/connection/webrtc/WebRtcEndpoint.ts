@@ -396,8 +396,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } 
-        else { 
+        } else { 
             throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }

@@ -143,8 +143,7 @@ export class ProxyStreamConnectionManager {
     async closeProxyConnection(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection): Promise<void> {
         if (this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
-            && this.getConnection(targetNodeId, streamPartId)?.direction === direction)
-        {
+            && this.getConnection(targetNodeId, streamPartId)?.direction === direction) {
             clearTimeout(this.getConnection(targetNodeId, streamPartId)!.reconnectionTimer!)
             this.removeConnection(streamPartId, targetNodeId)
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)

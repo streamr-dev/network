@@ -27,7 +27,7 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
     }
     protected doConnect(): void {
 
-        const urls: RTCIceServer[] = this.stunUrls.map((url) => { return { urls: [url]} } )
+        const urls: RTCIceServer[] = this.stunUrls.map((url) => ({ urls: [url]}))
         this.peerConnection = new RTCPeerConnection({ iceServers: urls })
 
         this.peerConnection.onicecandidate = (event) => {
@@ -129,9 +129,12 @@ export class BrowserWebRtcConnection extends WebRtcConnection {
 
     addRemoteCandidate(candidate: string, mid: string): void {
         try {
-            this.peerConnection?.addIceCandidate( { candidate: candidate, sdpMid: mid }).then(() => { return }).catch((err: any) => {
-                this.logger.warn(err)    
-            })
+            this.peerConnection?.addIceCandidate( { candidate: candidate, sdpMid: mid })
+                .then(() => {
+                    return
+                }).catch((err: any) => {
+                    this.logger.warn(err)
+                })
         } catch (e) {
             this.logger.warn(e)
         }

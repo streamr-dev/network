@@ -207,8 +207,7 @@ export class StreamPartManager {
         try {
             this.ensureThatIsSetUp(streamPartId)
             return this.streamParts.get(streamPartId)!.isBehindProxy
-        }
-        catch (err) {
+        } catch (err) {
             return false
         }
     }

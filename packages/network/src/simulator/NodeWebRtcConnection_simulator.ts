@@ -60,8 +60,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     addRemoteCandidate(_ucandidate: string, _umid: string): void {
         if (this.remoteDescriptionSet) {
             Simulator.instance().webRtcConnect(this.selfId, this.getPeerId())
-        }
-        else {
+        } else {
             this.logger.warn("Tried setting remoteCandidate before remote description, closing")
             this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
         }

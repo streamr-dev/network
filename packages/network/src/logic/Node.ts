@@ -278,8 +278,7 @@ export class Node extends EventEmitter {
         if (source
             && this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
-            && !this.streamPartManager.hasInboundConnection(streamPartId, source))
-        {
+            && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
             logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return

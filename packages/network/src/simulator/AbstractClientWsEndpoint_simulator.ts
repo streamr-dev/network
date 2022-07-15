@@ -83,8 +83,7 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
             if (this.connectionsByServerUrl.get(serverUrl)) {
                 this.onNewConnection(this.connectionsByServerUrl.get(serverUrl)!)
                 return peerId
-            }
-            else {
+            } else {
                 return peerId
                 //throw new Error('Connection failed')
             }

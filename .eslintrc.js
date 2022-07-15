@@ -28,7 +28,10 @@ module.exports = {
         '@typescript-eslint/prefer-for-of': ['error'],
         '@typescript-eslint/prefer-function-type': ['error'],
         '@typescript-eslint/prefer-literal-enum-member': ['error'],
-        '@typescript-eslint/comma-spacing': ['error']
+        '@typescript-eslint/comma-spacing': ['error'],
+        '@typescript-eslint/brace-style': ['error', '1tbs', {
+            'allowSingleLine': true
+        }]
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

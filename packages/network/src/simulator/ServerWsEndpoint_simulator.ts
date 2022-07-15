@@ -110,22 +110,16 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
     public async handleIncomingMessage(fromAddress: string, fromInfo: PeerInfo, data: string): Promise<void> {
         if (data === 'ping') {
             await this.send(fromInfo.peerId, 'pong')
-        }
-
-        else if (data === 'pong') {
+        } else if (data === 'pong') {
             const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
             connection.onPong()
-        }
-
-        else if (this.handshakeListeners.hasOwnProperty(fromAddress) && Object.keys(this.handshakeListeners[fromAddress]).length > 0) {
+        } else if (this.handshakeListeners.hasOwnProperty(fromAddress) && Object.keys(this.handshakeListeners[fromAddress]).length > 0) {
             try {
                 const { uuid, peerId } = JSON.parse(data)
 
                 if (uuid && peerId && this.handshakeListeners[fromAddress].hasOwnProperty(uuid)) {
                     this.handshakeListeners[fromAddress][uuid](data)
-                }
-
-                else {
+                } else {
                     const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
                     this.onReceive(connection, data.toString())
                 }
@@ -135,8 +129,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                 this.logger.trace(err)
                 this.onReceive(connection, data.toString())
             }
-        }
-        else {
+        } else {
             const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
             this.onReceive(connection, data)
         }

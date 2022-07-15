@@ -86,7 +86,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
                     'connectionid',
                     PeerInfo.newNode('originator'),
                     'description'
-                )}, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
+                )
+            }, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
 
         const requestId = await requestIdPromise
         expect(rtcOffers[0]).toEqual(new RelayMessage({
@@ -112,7 +113,8 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
                     PeerInfo.newNode('originator'),
                     'candidate',
                     'mid'
-                )}, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
+                )
+            }, [targetNodeToTracker, NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED])
 
         const requestId = await requestIdPromise
         expect(rtcOffers[0]).toEqual(new RelayMessage({
