@@ -108,7 +108,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo|void)[]> {
+    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo|undefined)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 try {
@@ -125,7 +125,7 @@ export class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|void)[]): Promise<BucketInfo[]> {
+    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|undefined)[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
@@ -189,7 +189,7 @@ export class DeleteExpiredCmd {
         return result
     }
 
-    private async deleteExpired(expiredBuckets: BucketInfo[]): Promise<void[]> {
+    private async deleteExpired(expiredBuckets: BucketInfo[]): Promise<undefined[]> {
         const tasks = expiredBuckets.filter(Boolean).map((stream) => {
             const { bucketId, dateCreate, streamId, partition } = stream
             const queries = [
@@ -209,6 +209,7 @@ export class DeleteExpiredCmd {
                 await this.cassandraClient.batch(queries, {
                     prepare: true
                 }).catch((err) => logger.error(err))
+                return undefined
             })
         })
 

@@ -325,7 +325,7 @@ export function CancelableGenerator<T>(
     return cancelableGenerator as Cancelable<typeof cancelableGenerator>
 }
 
-export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | void> => {
+export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefined> => {
     const item = source.next()
     return (await item).value
 }

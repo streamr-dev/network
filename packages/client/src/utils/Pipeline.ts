@@ -154,7 +154,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      * Usage: `pipeline.onFinally(callback)`
      * @internal
      */
-    onFinally = Signal.once<[Error | void]>()
+    onFinally = Signal.once<[Error | undefined]>()
 
     /**
      * Triggers once when pipeline is about to end.

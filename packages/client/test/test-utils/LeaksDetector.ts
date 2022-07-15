@@ -97,7 +97,7 @@ export class LeaksDetector {
     protected walk(
         path: string[],
         obj: object,
-        fn: (path: string[], obj: object, depth: number) => false | void,
+        fn: (path: string[], obj: object, depth: number) => false | undefined,
         depth = 0
     ): void {
         if (!obj || typeof obj !== 'object') { return }
