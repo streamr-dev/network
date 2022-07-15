@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { fork } = require('child_process')
 const chalk = require('chalk')
 const { Transform } = require('stream')

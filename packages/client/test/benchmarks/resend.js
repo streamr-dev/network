@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { format } = require('util')
 const { Benchmark } = require('benchmark')
 const { randomBytes } = require('crypto')
