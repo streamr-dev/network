@@ -23,6 +23,7 @@ describe('ServerWsEndpoint', () => {
             await serverWsEndpoint?.stop()
             await clientWsEndpoint?.stop()
         } catch (err) {
+            // no-op
         }
     })
 

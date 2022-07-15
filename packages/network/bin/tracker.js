@@ -80,7 +80,7 @@ async function main() {
             }, program.opts().metricsInterval)
         }
     } catch (err) {
-        pino.final(logger).error(err, 'tracker bin catch')
+        console.error(err)
         process.exit(1)
     }
 }

@@ -255,7 +255,7 @@ export const start = async (
         const privateKeyAnswers = await getPrivateKeyAnswers()
         const privateKey = getPrivateKey(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
-            logger.info(`This is your node\'s private key: ${privateKey}`)
+            logger.info(`This is your node's private key: ${privateKey}`)
         }
         const pluginsAnswers = await getPluginAnswers()
         const config = getConfig(privateKey, pluginsAnswers)

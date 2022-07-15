@@ -345,6 +345,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         try {
             await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
         } catch (_e2) {
+            // no-op
         } finally {
             response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
                 timeout: 5 * 1000

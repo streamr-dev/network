@@ -102,7 +102,9 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 onStreamPartAdded: async (streamPart) => {
                     try {
                         await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
-                    } catch (_e) {}
+                    } catch (_e) {
+                        // no-op
+                    }
                     try {
                         await assignmentStream.publish({
                             streamPart

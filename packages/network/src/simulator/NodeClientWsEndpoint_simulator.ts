@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
 import { NodeClientWsConnection } from './NodeClientWsConnection_simulator'

@@ -1,7 +1,12 @@
 module.exports = {
     extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
         'eslint-config-streamr-ts'
     ],
+    env: {
+        node: true
+    },
     rules: {
         'eol-last': ['error'],
         'no-console': ['error', {allow: ['warn', 'error', 'info']}],

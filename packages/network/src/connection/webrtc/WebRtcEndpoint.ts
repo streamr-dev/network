@@ -406,11 +406,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             throw new WebRtcError(`Not connected to ${targetPeerId}.`)
         }
 
-        try {
-            await this.connections[targetPeerId].send(message)
-        } catch (err) {
-            throw err
-        }
+        await this.connections[targetPeerId].send(message)
 
         this.metrics.sendMessagesPerSecond.record(1)
         this.metrics.sendBytesPerSecond.record(message.length)

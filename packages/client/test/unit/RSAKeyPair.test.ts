@@ -5,7 +5,7 @@ describe('RSAKeyPair', () => {
     let rsaKeyPair: RSAKeyPair
 
     beforeEach(async () => {
-        rsaKeyPair = await RSAKeyPair.create()
+        rsaKeyPair = await RSAKeyPair.create()
     }, 10000)
 
     it('rsa decryption after encryption equals the initial plaintext', () => {

@@ -21,14 +21,10 @@ export class NegotiatedProtocolVersions {
     }
 
     negotiateProtocolVersion(peerId: PeerId, controlLayerVersions: number[], messageLayerVersions: number[]): void | never {
-        try {
-            const [controlLayerVersion, messageLayerVersion] = this.validateProtocolVersions(controlLayerVersions, messageLayerVersions)
-            this.negotiatedProtocolVersions[peerId] = {
-                controlLayerVersion,
-                messageLayerVersion
-            }
-        } catch (err) {
-            throw err
+        const [controlLayerVersion, messageLayerVersion] = this.validateProtocolVersions(controlLayerVersions, messageLayerVersions)
+        this.negotiatedProtocolVersions[peerId] = {
+            controlLayerVersion,
+            messageLayerVersion
         }
     }
 

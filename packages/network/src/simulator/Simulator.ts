@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import { ServerWsEndpoint } from './ServerWsEndpoint_simulator'
 import NodeClientWsEndpoint from './NodeClientWsEndpoint_simulator'
 import { PeerInfo } from '../connection/PeerInfo'
