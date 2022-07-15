@@ -35,7 +35,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     }
 
     terminate(): void {
-        Simulator.instance().wsDisconnect(this.ownAddress,this.ownPeerInfo, this.remoteAddress, 
+        Simulator.instance().wsDisconnect(this.ownAddress, this.ownPeerInfo, this.remoteAddress, 
             DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         this.readyState = 3
         this.endpoint.doOnClose(this, DisconnectionCode.DEAD_CONNECTION, '')

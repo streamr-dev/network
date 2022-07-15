@@ -9,7 +9,7 @@ interface NegotiatedProtocolVersion { controlLayerVersion: number, messageLayerV
 export class NegotiatedProtocolVersions {
 
     private readonly peerInfo: PeerInfo
-    private readonly negotiatedProtocolVersions: Record<PeerId,NegotiatedProtocolVersion>
+    private readonly negotiatedProtocolVersions: Record<PeerId, NegotiatedProtocolVersion>
     private readonly defaultProtocolVersions: NegotiatedProtocolVersion
     constructor(peerInfo: PeerInfo) {
         this.negotiatedProtocolVersions = Object.create(null)

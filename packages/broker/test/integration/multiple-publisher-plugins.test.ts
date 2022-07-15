@@ -68,7 +68,7 @@ class HttpPluginPublisher implements PluginPublisher {
 }
 
 const publishMessages = async (streamId: string): Promise<any[]> => {
-    const publishers: Record<string,PluginPublisher> = {
+    const publishers: Record<string, PluginPublisher> = {
         mqtt1: new MqttPluginPublisher(),
         mqtt2: new MqttPluginPublisher(),
         websocket1: new WebsocketPluginPublisher(),

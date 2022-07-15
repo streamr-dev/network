@@ -80,7 +80,7 @@ export class Node extends EventEmitter {
     private readonly disconnectionManager: DisconnectionManager
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
-    private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
+    private readonly consecutiveDeliveryFailures: Record<NodeId, number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}

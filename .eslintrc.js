@@ -27,7 +27,8 @@ module.exports = {
         '@typescript-eslint/no-useless-empty-export': ['error'],
         '@typescript-eslint/prefer-for-of': ['error'],
         '@typescript-eslint/prefer-function-type': ['error'],
-        '@typescript-eslint/prefer-literal-enum-member': ['error']
+        '@typescript-eslint/prefer-literal-enum-member': ['error'],
+        '@typescript-eslint/comma-spacing': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

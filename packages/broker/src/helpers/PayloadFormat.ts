@@ -1,10 +1,10 @@
 export interface PayloadFormat {
     createMessage: (payload: string) => Message|never
-    createPayload: (content: Record<string,unknown>, metadata?: Metadata) => string|never
+    createPayload: (content: Record<string, unknown>, metadata?: Metadata) => string|never
 }
 
 export interface Message {
-    content: Record<string,unknown>
+    content: Record<string, unknown>
     metadata: Metadata
 }
 
@@ -17,7 +17,7 @@ export interface Metadata {
 
 const METADATA_FIELDS = [ 'timestamp', 'sequenceNumber', 'publisherId', 'msgChainId' ]
 
-const pickProperties = (fields: string[], from: Record<string,unknown>): Record<string,unknown> => {
+const pickProperties = (fields: string[], from: Record<string, unknown>): Record<string, unknown> => {
     const result: any = {}
     fields.forEach((field) => result[field] = from[field])
     return result
@@ -63,7 +63,7 @@ export class PlainPayloadFormat implements PayloadFormat {
         }
     }
 
-    createPayload(content: Record<string,unknown>): string|never {
+    createPayload(content: Record<string, unknown>): string|never {
         assertContent(content)
         return JSON.stringify(content)
     }
@@ -85,14 +85,14 @@ export class MetadataPayloadFormat implements PayloadFormat {
         return { content, metadata }
     }
 
-    createPayload(content: Record<string,unknown>, metadata?: Metadata): string|never {
+    createPayload(content: Record<string, unknown>, metadata?: Metadata): string|never {
         assertContent(content)
         const payload: any = {
             content
         }
         if (metadata !== undefined) {
             assertMetadata(metadata)
-            payload.metadata = pickProperties(METADATA_FIELDS, metadata as Record<string,unknown>)
+            payload.metadata = pickProperties(METADATA_FIELDS, metadata as Record<string, unknown>)
         }
         return JSON.stringify(payload)
     }

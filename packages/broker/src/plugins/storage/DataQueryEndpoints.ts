@@ -106,7 +106,7 @@ const createEndpointRoute = (
     })
 }
 
-type BaseRequest<Q> = Request<Record<string,any>,any,any,Q,Record<string,any>>
+type BaseRequest<Q> = Request<Record<string, any>, any, any, Q, Record<string, any>>
 
 type LastRequest = BaseRequest<{
     count?: string

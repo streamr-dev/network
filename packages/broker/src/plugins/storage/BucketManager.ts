@@ -34,8 +34,8 @@ const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
 export class BucketManager {
 
     opts: BucketManagerOptions
-    streamParts: Record<StreamPartKey,StreamPartState>
-    buckets: Record<BucketId,Bucket>
+    streamParts: Record<StreamPartKey, StreamPartState>
+    buckets: Record<BucketId, Bucket>
     cassandraClient: Client
     private checkFullBucketsTimeout?: NodeJS.Timeout
     private storeBucketsTimeout?: NodeJS.Timeout

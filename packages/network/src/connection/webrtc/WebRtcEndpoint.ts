@@ -235,7 +235,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         let connection: WebRtcConnection
 
         if (!this.connections[peerId]) {
-            connection = this.createConnection(peerId, routerId,null)
+            connection = this.createConnection(peerId, routerId, null)
 
             try {
                 connection.connect()

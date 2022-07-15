@@ -16,7 +16,7 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         type() { return true },
     }))
     router.post('/streams/:streamId/', async (req: Request, res: Response) => {
-        let content: Record<string,unknown>
+        let content: Record<string, unknown>
         let timestamp: number|undefined
         let partition: number|undefined
         let partitionKey: string|undefined

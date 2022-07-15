@@ -54,7 +54,7 @@ export class Storage extends EventEmitter {
     cassandraClient: Client
     bucketManager: BucketManager
     batchManager: BatchManager
-    pendingStores: Map<string,NodeJS.Timeout>
+    pendingStores: Map<string, NodeJS.Timeout>
 
     constructor(cassandraClient: Client, opts: StorageOptions) {
         super()

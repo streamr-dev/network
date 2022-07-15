@@ -97,8 +97,8 @@ describe('Node-to-Node protocol version negotiation', () => {
     })
     
     it('protocol versions are correctly negotiated',  () => {
-        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2,32])
-        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2,32])
+        expect(nodeToNode1.getNegotiatedProtocolVersionsOnNode('node-endpoint2')).toEqual([2, 32])
+        expect(nodeToNode2.getNegotiatedProtocolVersionsOnNode('node-endpoint1')).toEqual([2, 32])
     })
 
     it('messages are sent with the negotiated protocol version', (done) => {

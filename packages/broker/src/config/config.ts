@@ -14,7 +14,7 @@ export interface Config {
     $schema: string
     client: StreamrClientConfig
     httpServer: HttpServerConfig
-    plugins: Record<string,any>
+    plugins: Record<string, any>
     apiAuthentication: ApiAuthenticationConfig
 }
 

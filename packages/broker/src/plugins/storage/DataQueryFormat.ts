@@ -28,7 +28,7 @@ const createPlainTextFormat = (getMessageAsString: (streamMessage: StreamMessage
     }
 }
 
-const FORMATS: Record<string,Format> = {
+const FORMATS: Record<string, Format> = {
     // TODO could we deprecate protocol format?
     // eslint-disable-next-line max-len
     'protocol': createJsonFormat((streamMessage: StreamMessage, version: number|undefined) => JSON.stringify(streamMessage.serialize(version))),

@@ -19,7 +19,7 @@ function keyForDetector({ publisherId, msgChainId }: MessageID) {
 }
 
 export class StreamPartManager {
-    private readonly streamParts = new Map<StreamPartID,StreamPartState>()
+    private readonly streamParts = new Map<StreamPartID, StreamPartState>()
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
