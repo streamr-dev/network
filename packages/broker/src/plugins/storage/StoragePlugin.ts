@@ -2,7 +2,7 @@ import type { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
@@ -36,10 +36,6 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
     private cassandra?: Storage
     private storageConfig?: StorageConfig
     private messageListener?: (msg: StreamMessage) => void
-
-    constructor(options: PluginOptions) {
-        super(options)
-    }
 
     async start(): Promise<void> {
         const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
