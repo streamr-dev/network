@@ -2,7 +2,7 @@ import { scheduleAtInterval } from '../src/scheduleAtInterval'
 import { wait } from '../src/wait'
 
 const INTERVAL = 40
-const FIVE_REPEATS_TIME = INTERVAL * 5 + INTERVAL/2
+const FIVE_REPEATS_TIME = INTERVAL * 5 + INTERVAL / 2
 
 describe(scheduleAtInterval, () => {
     let task: jest.Mock<Promise<void>, []>

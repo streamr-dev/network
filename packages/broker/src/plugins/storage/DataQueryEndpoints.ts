@@ -18,10 +18,10 @@ export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 class ResponseTransform extends Transform {
 
     format: Format
-    version: number|undefined
+    version: number | undefined
     firstMessage = true
 
-    constructor(format: Format, version: number|undefined) {
+    constructor(format: Format, version: number | undefined) {
         super({
             writableObjectMode: true
         })

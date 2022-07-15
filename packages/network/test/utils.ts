@@ -22,6 +22,6 @@ export const createStreamPartId = (streamIdAsStr: string, streamPartition: numbe
     return toStreamPartID(toStreamID(streamIdAsStr), streamPartition)
 }
 
-export const getStreamParts = (nodeOrTracker: Node|Tracker): StreamPartID[] => {
+export const getStreamParts = (nodeOrTracker: Node | Tracker): StreamPartID[] => {
     return Array.from(nodeOrTracker.getStreamParts())
 }

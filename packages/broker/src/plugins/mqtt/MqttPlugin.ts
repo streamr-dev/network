@@ -7,7 +7,7 @@ import { Schema } from 'ajv'
 
 export interface MqttPluginConfig {
     port: number
-    streamIdDomain: string|null
+    streamIdDomain: string | null
     payloadMetadata: boolean
 }
 

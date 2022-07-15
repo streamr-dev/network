@@ -30,7 +30,7 @@ const createRequest = async (headers?: Record<string, string>) => {
 
 describe('HttpServer', () => {
 
-    let server: Server|undefined
+    let server: Server | undefined
 
     afterEach(async () => {
         if (server !== undefined) {

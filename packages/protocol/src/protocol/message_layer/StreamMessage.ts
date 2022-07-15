@@ -61,10 +61,10 @@ export interface ObjectType<T> {
     messageType: StreamMessageType
     contentType: ContentType
     encryptionType: EncryptionType
-    groupKeyId: string|null
-    content: string|T
+    groupKeyId: string | null
+    content: string | T
     signatureType: SignatureType
-    signature: string|null
+    signature: string | null
 }
 
 /**

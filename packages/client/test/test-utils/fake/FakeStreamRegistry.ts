@@ -24,7 +24,7 @@ const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>
-    permissions: Multimap<EthereumAddress|PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
 }
 
 @scoped(Lifecycle.ContainerScoped)

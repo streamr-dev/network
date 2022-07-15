@@ -50,7 +50,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('Offer messages are delivered', async () => {
-        let requestIdPromise: Promise<string>|undefined
+        let requestIdPromise: Promise<string> | undefined
         const [rtcOffers]: any[] = await runAndWaitForEvents(
             () => {
                 requestIdPromise = originatorNodeToTracker.sendRtcOffer(
@@ -77,7 +77,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
 
     it('Answer messages are delivered', async () => {
-        let requestIdPromise: Promise<string>|undefined
+        let requestIdPromise: Promise<string> | undefined
         const [rtcOffers]: any[] = await runAndWaitForEvents(
             () => {
                 requestIdPromise = originatorNodeToTracker.sendRtcAnswer(
@@ -103,7 +103,7 @@ describe('RTC signalling messages are routed to destination via tracker', () => 
     })
     
     it('LocalCandidate messages are delivered', async () => {
-        let requestIdPromise: Promise<string>|undefined
+        let requestIdPromise: Promise<string> | undefined
         const [rtcOffers]: any[] = await runAndWaitForEvents(
             () => {
                 requestIdPromise = originatorNodeToTracker.sendRtcIceCandidate(

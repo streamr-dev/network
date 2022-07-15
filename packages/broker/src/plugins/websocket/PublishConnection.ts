@@ -19,8 +19,8 @@ export class PublishConnection implements Connection {
     constructor(streamId: string, queryParams: ParsedQs) {
         this.streamId = streamId
         this.partition = parseQueryParameter<number>('partition', queryParams, parsePositiveInteger)
-        this.partitionKey = queryParams['partitionKey'] as string|undefined
-        this.partitionKeyField = queryParams['partitionKeyField'] as string|undefined
+        this.partitionKey = queryParams['partitionKey'] as string | undefined
+        this.partitionKeyField = queryParams['partitionKeyField'] as string | undefined
         const partitionDefinitions = [this.partition, this.partitionKey, this.partitionKeyField].filter((d) => d !== undefined)
         if (partitionDefinitions.length > 1) {
             throw new Error('Invalid combination of "partition", "partitionKey" and "partitionKeyField"')

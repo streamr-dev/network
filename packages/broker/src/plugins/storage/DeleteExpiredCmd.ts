@@ -108,7 +108,7 @@ export class DeleteExpiredCmd {
         }))
     }
 
-    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo|undefined)[]> {
+    private async fetchStreamsInfo(streams: StreamPart[], client: StreamrClient): Promise<(StreamPartInfo | undefined)[]> {
         const tasks = streams.filter(Boolean).map((stream: StreamPart) => {
             return this.limit(async () => {
                 try {
@@ -125,7 +125,7 @@ export class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo|undefined)[]): Promise<BucketInfo[]> {
+    private async getPotentiallyExpiredBuckets(streamsInfo: (StreamPartInfo | undefined)[]): Promise<BucketInfo[]> {
         const result: BucketInfo[] = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'

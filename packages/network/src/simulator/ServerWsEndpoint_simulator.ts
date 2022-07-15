@@ -77,7 +77,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                         Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
                             failedMessage)
 
-                        this.logger.warn(failedMessage + " "+data)
+                        this.logger.warn(failedMessage + " " + data)
                     }
                 } else {
                     this.logger.trace('Expected a handshake message got: ' + data.toString())

@@ -149,7 +149,7 @@ describe('check status message flow between tracker and two nodes', () => {
                     receivedTotal += 1
                 }
 
-                if (receivedTotal===2) {
+                if (receivedTotal === 2) {
                     expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
                     expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
                     resolve(true)

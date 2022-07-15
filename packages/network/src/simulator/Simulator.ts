@@ -9,7 +9,7 @@ import { NodeWebRtcConnection } from './NodeWebRtcConnection_simulator'
 export class SimulatedNode {
     constructor(
         public wsServerEndpoint: ServerWsEndpoint | null,
-        public wsClientEndpoint: NodeClientWsEndpoint |null, 
+        public wsClientEndpoint: NodeClientWsEndpoint | null, 
         //public webRtcEnpoint: SimulatedWebRtcEndpoint | null
     ) {
     }

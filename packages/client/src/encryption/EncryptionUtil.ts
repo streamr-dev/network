@@ -11,7 +11,7 @@ export class UnableToDecryptError extends StreamMessageError {
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
-    private static validateRSAPublicKey(publicKey: crypto.KeyLike): void|never {
+    private static validateRSAPublicKey(publicKey: crypto.KeyLike): void | never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {

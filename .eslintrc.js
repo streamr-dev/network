@@ -51,7 +51,8 @@ module.exports = {
             'anonymous': 'never',
             'named': 'never',
             'asyncArrow': 'always'
-        }]
+        }],
+        '@typescript-eslint/space-infix-ops': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

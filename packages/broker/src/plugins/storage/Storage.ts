@@ -215,8 +215,8 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number,
         toTimestamp: number,
         toSequenceNo: number,
-        publisherId: string|undefined,
-        msgChainId: string|undefined
+        publisherId: string | undefined,
+        msgChainId: string | undefined
     ): Readable {
         logger.trace('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
 

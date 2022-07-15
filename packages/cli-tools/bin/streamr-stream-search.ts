@@ -12,7 +12,7 @@ const createPermissionFilter = async (
     allOf: StreamPermission[] | undefined,
     anyOf: StreamPermission[] | undefined,
     client: StreamrClient
-): Promise<SearchStreamsPermissionFilter| undefined> => {
+): Promise<SearchStreamsPermissionFilter | undefined> => {
     if (user !== undefined) {
         return {
             user: (getOptionType(user) === OptionType.ARGUMENT) ? user as string : await client.getAddress(),

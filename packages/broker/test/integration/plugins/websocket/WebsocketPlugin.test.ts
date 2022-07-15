@@ -11,7 +11,7 @@ const TRACKER_PORT = 12402
 
 createMessagingPluginTest('websocket', 
     {
-        createClient: async (action: 'publish'|'subscribe', streamId: string, apiKey: string): Promise<WebSocket> => {
+        createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey: string): Promise<WebSocket> => {
             const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}?apiKey=${apiKey}`)
             await waitForEvent(client, 'open')
             return client

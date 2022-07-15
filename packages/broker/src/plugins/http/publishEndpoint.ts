@@ -17,9 +17,9 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
     }))
     router.post('/streams/:streamId/', async (req: Request, res: Response) => {
         let content: Record<string, unknown>
-        let timestamp: number|undefined
-        let partition: number|undefined
-        let partitionKey: string|undefined
+        let timestamp: number | undefined
+        let partition: number | undefined
+        let partitionKey: string | undefined
         try {
             content = PAYLOAD_FORMAT.createMessage(req.body.toString()).content
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)
