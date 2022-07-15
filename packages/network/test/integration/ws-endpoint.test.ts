@@ -86,6 +86,7 @@ describe('ws-endpoint', () => {
                     port: trackerPort
                 }
             })
+            // @ts-expect-error private access
             tracker.trackerServer.endpoint.handshakeTimer = 3000
         })
 

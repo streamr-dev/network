@@ -176,11 +176,13 @@ describe('check status message flow between tracker and two nodes', () => {
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === nodeOne.getNodeId()) {
                 nodeOneStatus = statusMessage.status
+                // @ts-expect-error private access
                 expect(tracker.locationManager.nodeLocations['node-1']).toBeUndefined()
             }
 
             if (nodeId === nodeTwo.getNodeId()) {
                 nodeTwoStatus = statusMessage.status
+                // @ts-expect-error private access
                 expect(tracker.locationManager.nodeLocations['node-2'].country).toBe('FI')
             }
             receivedTotal += 1
