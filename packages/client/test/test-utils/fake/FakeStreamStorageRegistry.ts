@@ -84,7 +84,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
+    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         throw new Error('not implemented')
     }
 }

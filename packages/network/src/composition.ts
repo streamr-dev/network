@@ -1,7 +1,6 @@
 import 'setimmediate'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 export { NodeClientWsEndpoint }
-export * as Protocol from 'streamr-client-protocol'
 export { 
     Metric, 
     MetricsDefinition, 
@@ -40,7 +39,7 @@ export {
     Event as WsEndpointEvent,
     AbstractWsEndpoint
 } from './connection/ws/AbstractWsEndpoint'
-export { Event as NodeToTrackerEvent, NodeToTracker} from './protocol/NodeToTracker'
+export { Event as NodeToTrackerEvent, NodeToTracker } from './protocol/NodeToTracker'
 export {
     HttpServerConfig,
     ServerWsEndpoint,

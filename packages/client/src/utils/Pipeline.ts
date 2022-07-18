@@ -12,7 +12,7 @@ export type FinallyFn = ((err?: Error) => void | Promise<void>)
 class PipelineError extends ContextError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
-    id: string,
+    id: string
 }
 
 /**
@@ -154,7 +154,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      * Usage: `pipeline.onFinally(callback)`
      * @internal
      */
-    onFinally = Signal.once<[Error | void]>()
+    onFinally = Signal.once<[Error | undefined]>()
 
     /**
      * Triggers once when pipeline is about to end.

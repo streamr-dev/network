@@ -46,12 +46,12 @@ import { Authentication, AuthenticationInjectionToken } from '../Authentication'
  * Does not support system streams (the key exchange stream)
  */
 
-export type StreamQueryResult = {
-    id: string,
+export interface StreamQueryResult {
+    id: string
     metadata: string
 }
 
-type StreamPublisherOrSubscriberItem = {
+interface StreamPublisherOrSubscriberItem {
     id: string
     userAddress: EthereumAddress
 }
@@ -366,7 +366,7 @@ export class StreamRegistry implements Context {
     }
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress|undefined, solidityType: BigNumber) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.grantPublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
                 : this.streamRegistryContract!.grantPermission(streamId, user, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
@@ -374,7 +374,7 @@ export class StreamRegistry implements Context {
     }
 
     async revokePermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
-        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress|undefined, solidityType: BigNumber) => {
+        return this.updatePermissions(streamIdOrPath, (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => {
             return (user === undefined)
                 ? this.streamRegistryContract!.revokePublicPermission(streamId, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
                 : this.streamRegistryContract!.revokePermission(streamId, user, solidityType, getStreamRegistryOverrides(this.ethereumConfig))
@@ -383,7 +383,7 @@ export class StreamRegistry implements Context {
 
     private async updatePermissions(
         streamIdOrPath: string,
-        createTransaction: (streamId: StreamID, user: EthereumAddress|undefined, solidityType: BigNumber) => Promise<ContractTransaction>,
+        createTransaction: (streamId: StreamID, user: EthereumAddress | undefined, solidityType: BigNumber) => Promise<ContractTransaction>,
         ...assignments: PermissionAssignment[]
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
@@ -401,7 +401,7 @@ export class StreamRegistry implements Context {
     }
 
     async setPermissions(...items: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         const streamIds: StreamID[] = []

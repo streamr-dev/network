@@ -6,24 +6,24 @@ import { Logger } from "@streamr/utils"
 import { NodeId } from '../identifiers'
 
 export interface OfferOptions {
-    routerId: string,
-    originatorInfo: Originator,
-    connectionId: string,
+    routerId: string
+    originatorInfo: Originator
+    connectionId: string
     description: string
 }
 
 export interface AnswerOptions {
-    routerId: string,
-    originatorInfo: Originator,
-    connectionId: string,
+    routerId: string
+    originatorInfo: Originator
+    connectionId: string
     description: string
 }
 
 export interface IceCandidateOptions {
-    routerId: string,
+    routerId: string
     originatorInfo: Originator
-    connectionId: string,
-    candidate: string,
+    connectionId: string
+    candidate: string
     mid: string
 }
 

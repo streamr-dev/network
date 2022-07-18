@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 const program = require('commander')
 
 const { Logger } = require('../dist/src/helpers/Logger')
@@ -79,7 +80,7 @@ async function main() {
             }, program.opts().metricsInterval)
         }
     } catch (err) {
-        pino.final(logger).error(err, 'tracker bin catch')
+        console.error(err)
         process.exit(1)
     }
 }

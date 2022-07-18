@@ -1,4 +1,4 @@
-import LeakDetector from 'jest-leak-detector'
+import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { wait } from '@streamr/utils'
 import { CounterId, instanceId } from '../../src/utils/utils'
 import { format } from '../../src/utils/log'
@@ -97,7 +97,7 @@ export class LeaksDetector {
     protected walk(
         path: string[],
         obj: object,
-        fn: (path: string[], obj: object, depth: number) => false | void,
+        fn: (path: string[], obj: object, depth: number) => false | undefined,
         depth = 0
     ): void {
         if (!obj || typeof obj !== 'object') { return }

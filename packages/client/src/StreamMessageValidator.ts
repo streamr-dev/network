@@ -1,13 +1,14 @@
-import StreamMessage from '../protocol/message_layer/StreamMessage'
-import StreamMessageError from '../errors/StreamMessageError'
-import ValidationError from '../errors/ValidationError'
-import GroupKeyRequest from '../protocol/message_layer/GroupKeyRequest'
-import GroupKeyMessage from '../protocol/message_layer/GroupKeyMessage'
-
-import SigningUtil from './SigningUtil'
-import { StreamID } from './StreamID'
-import { EthereumAddress } from '.'
-import { KeyExchangeStreamIDUtils } from './KeyExchangeStreamID'
+import {
+    EthereumAddress,
+    GroupKeyRequest,
+    GroupKeyMessage,
+    KeyExchangeStreamIDUtils,
+    StreamID,
+    StreamMessage,
+    StreamMessageError,
+    ValidationError
+} from "streamr-client-protocol"
+import { verify as verifyImpl } from './utils/signingUtils'
 
 export interface StreamMetadata {
     partitions: number
@@ -46,7 +47,7 @@ export default class StreamMessageValidator {
      * @param verify function(address, payload, signature): returns true if the address and payload match the signature.
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
-    constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify }: Options) {
+    constructor({ getStream, isPublisher, isSubscriber, verify = verifyImpl }: Options) {
         StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
         this.getStream = getStream
         this.isPublisher = isPublisher
@@ -63,12 +64,15 @@ export default class StreamMessageValidator {
         if (typeof getStream !== 'function') {
             throw new Error('getStream must be: async function(streamId): returns the validation metadata object for streamId')
         }
+
         if (typeof isPublisher !== 'function') {
             throw new Error('isPublisher must be: async function(address, streamId): returns true if address is a permitted publisher on streamId')
         }
+
         if (typeof isSubscriber !== 'function') {
             throw new Error('isSubscriber must be: async function(address, streamId): returns true if address is a permitted subscriber on streamId')
         }
+
         if (typeof verify !== 'function') {
             throw new Error('verify must be: function(address, payload, signature): returns true if the address and payload match the signature')
         }
@@ -165,6 +169,7 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
         }
+
         if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
                 `Group key requests can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,
@@ -195,6 +200,7 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
+
         if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new StreamMessageError(
                 `${streamMessage.messageType} can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,

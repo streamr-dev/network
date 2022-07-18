@@ -1,7 +1,8 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
-import { runAndWaitForEvents, waitForCondition, waitForEvent } from 'streamr-test-utils'
-import { toStreamID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
+import { runAndWaitForEvents, waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
+import { InstructionMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { NetworkNode, createNetworkNode, NodeEvent } from 'streamr-network'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
@@ -60,7 +61,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
 
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
-        const trackerInstruction1 = new TrackerLayer.InstructionMessage({
+        const trackerInstruction1 = new InstructionMessage({
             requestId: 'requestId',
             streamId: streamOne,
             streamPartition: 0,
@@ -68,7 +69,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             counter: 0
         })
 
-        const trackerInstruction2 = new TrackerLayer.InstructionMessage({
+        const trackerInstruction2 = new InstructionMessage({
             requestId: 'requestId',
             streamId: streamOne,
             streamPartition: 0,

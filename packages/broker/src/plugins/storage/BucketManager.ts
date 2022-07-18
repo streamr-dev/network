@@ -17,7 +17,7 @@ interface StreamPartState {
 }
 
 export interface BucketManagerOptions {
-    checkFullBucketsTimeout: number,
+    checkFullBucketsTimeout: number
     storeBucketsTimeout: number
     maxBucketSize: number
     maxBucketRecords: number
@@ -34,8 +34,8 @@ const instantiateNewHeap = () => new Heap((a: Bucket, b: Bucket) => {
 export class BucketManager {
 
     opts: BucketManagerOptions
-    streamParts: Record<StreamPartKey,StreamPartState>
-    buckets: Record<BucketId,Bucket>
+    streamParts: Record<StreamPartKey, StreamPartState>
+    buckets: Record<BucketId, Bucket>
     cassandraClient: Client
     private checkFullBucketsTimeout?: NodeJS.Timeout
     private storeBucketsTimeout?: NodeJS.Timeout
@@ -66,7 +66,7 @@ export class BucketManager {
         this.storeBuckets()
     }
 
-    getBucketId(streamId: string, partition: number, timestamp: number): string|undefined {
+    getBucketId(streamId: string, partition: number, timestamp: number): string | undefined {
         let bucketId
 
         const key = toKey(streamId, partition)
@@ -102,7 +102,7 @@ export class BucketManager {
         }
     }
 
-    private getLatestInMemoryBucket(key: StreamPartKey): Bucket|undefined {
+    private getLatestInMemoryBucket(key: StreamPartKey): Bucket | undefined {
         const stream = this.streamParts[key]
         if (stream) {
             return stream.buckets.peek()
@@ -110,7 +110,7 @@ export class BucketManager {
         return undefined
     }
 
-    private findBucketId(key: StreamPartKey, timestamp: number): string|undefined {
+    private findBucketId(key: StreamPartKey, timestamp: number): string | undefined {
         let bucketId
         logger.trace(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
 
@@ -128,9 +128,9 @@ export class BucketManager {
                     // remove latest
                     currentBuckets.shift()
 
-                    for (let i = 0; i < currentBuckets.length; i++) {
-                        if (currentBuckets[i].dateCreate <= new Date(timestamp)) {
-                            bucketId = currentBuckets[i].getId()
+                    for (const currentBucket of currentBuckets) {
+                        if (currentBucket.dateCreate <= new Date(timestamp)) {
+                            bucketId = currentBucket.getId()
                             break
                         }
                     }
@@ -146,8 +146,8 @@ export class BucketManager {
     private async checkFullBuckets(): Promise<void> {
         const streamIds = Object.keys(this.streamParts)
 
-        for (let i = 0; i < streamIds.length; i++) {
-            const stream = this.streamParts[streamIds[i]]
+        for (const streamIdKey of streamIds) {
+            const stream = this.streamParts[streamIdKey]
             const { streamId, partition } = stream
             const { minTimestamp } = stream
 
@@ -225,8 +225,8 @@ export class BucketManager {
     async getBucketsByTimestamp(
         streamId: string,
         partition: number,
-        fromTimestamp: number|undefined = undefined,
-        toTimestamp: number|undefined = undefined
+        fromTimestamp: number | undefined = undefined,
+        toTimestamp: number | undefined = undefined
     ): Promise<Bucket[]> {
         const getExplicitFirst = () => {
             // if fromTimestamp is defined, the first data point are in a some earlier bucket
@@ -275,7 +275,7 @@ export class BucketManager {
      * @param timestamp
      * @returns {Promise<[]>}
      */
-    async getLastBuckets(streamId: string, partition: number, limit = 1, timestamp: number|undefined = undefined): Promise<Bucket[]> {
+    async getLastBuckets(streamId: string, partition: number, limit = 1, timestamp: number | undefined = undefined): Promise<Bucket[]> {
         const GET_LAST_BUCKETS = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ?  ORDER BY date_create DESC LIMIT ?'
         const GET_LAST_BUCKETS_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create <= ? ORDER BY date_create DESC LIMIT ?'
 

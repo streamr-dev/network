@@ -6,7 +6,7 @@ import { HttpUtil } from '../../../src/HttpUtil'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
-type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
+interface ResendRequest { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeHttpUtil implements HttpUtil {

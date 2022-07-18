@@ -5,6 +5,7 @@ import express from 'express'
 import cors from 'cors'
 import crypto from 'crypto'
 import { Wallet } from '@ethersproject/wallet'
+import { waitForEvent } from '@streamr/utils'
 import fetch from 'node-fetch'
 
 export type Event = string | symbol
@@ -25,31 +26,6 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
             .on('data', arr.push.bind(arr))
             .on('error', reject)
             .on('end', () => resolve(arr))
-    })
-}
-
-/**
- * Wait for an event to be emitted on emitter within timeout.
- *
- * @param emitter emitter of event
- * @param event event to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
- * within timeout. Otherwise rejected.
- */
-export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000): Promise<unknown[]> => {
-    // create error beforehand to capture more usable stack
-    const err = new Error(`Promise timed out after ${timeout} milliseconds`)
-    return new Promise((resolve, reject) => {
-        const eventListenerFn = (...args: unknown[]) => {
-            clearTimeout(timeOut)
-            resolve(args)
-        }
-        const timeOut = setTimeout(() => {
-            emitter.removeListener(event, eventListenerFn)
-            reject(err)
-        }, timeout)
-        emitter.once(event, eventListenerFn)
     })
 }
 
@@ -369,6 +345,7 @@ export async function fetchPrivateKeyWithGas(): Promise<string> {
         try {
             await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
         } catch (_e2) {
+            // no-op
         } finally {
             response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
                 timeout: 5 * 1000

@@ -16,12 +16,12 @@ import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 
-export type CacheConfig = {
-    maxSize: number,
+export interface CacheConfig {
+    maxSize: number
     maxAge: number
 }
 
-export type TimeoutsConfig = {
+export interface TimeoutsConfig {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -33,13 +33,13 @@ export type TimeoutsConfig = {
     jsonRpc: {
         timeout: number
         retryInterval: number
-    },
+    }
     /** @internal */
     encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
-export type SubscribeConfig = {
+export interface SubscribeConfig {
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
@@ -49,18 +49,18 @@ export type SubscribeConfig = {
     gapFillTimeout: number
 }
 
-export type ConnectionConfig = {
+export interface ConnectionConfig {
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
 }
 
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
+export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
 }
 
-export type DebugConfig = {
+export interface DebugConfig {
     inspectOpts: InspectOptions
 }
 
@@ -78,14 +78,14 @@ export type MetricsConfig = {
  */
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
-    id?: string,
+    id?: string
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
     network: NetworkConfig
-    cache: CacheConfig,
+    cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
     /** @internal */

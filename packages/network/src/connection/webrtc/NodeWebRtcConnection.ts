@@ -156,8 +156,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
                     this.logger.warn('addRemoteCandidate failed, reason: %s', err)
                     this.close(new Error('addRemoteCandidate failed, closing'))
                 }
-            }
-            else {
+            } else {
                 this.logger.warn("Tried setting remoteCandidate before remote description, closing")
                 this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
             }

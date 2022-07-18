@@ -44,7 +44,7 @@ export class MetricsPublisher {
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
     private periodConfigs: MetricsPeriodConfig[]
-    private producers: { stop: () => void}[] = []
+    private producers: { stop: () => void }[] = []
 
     constructor(
         @inject(Publisher) publisher: Publisher,

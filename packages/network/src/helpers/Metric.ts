@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { set } from 'lodash'
 import { scheduleAtFixedRate } from '@streamr/utils'
 
-export type MetricsDefinition = Record<string,Metric>
+export type MetricsDefinition = Record<string, Metric>
 
 interface MetricEvents {
     record: (value: number) => void
@@ -127,7 +127,7 @@ export class AverageMetric extends Metric {
  * E.g. average count of currently active connections
  */
 class LevelSampler extends AverageSampler {
-    start(now: number): void {
+    override start(now: number): void {
         super.start(now)
         const latest = this.metric.getLatestValue()
         if (latest !== undefined) {
@@ -152,12 +152,12 @@ class RateSampler extends Sampler {
     private startTimestamp: number | undefined = undefined
     private stopTimestamp: number | undefined = undefined
 
-    start(now: number): void {
+    override start(now: number): void {
         super.start(now)
         this.startTimestamp = now
     }
 
-    stop(now: number): void {
+    override stop(now: number): void {
         super.stop(now)
         this.stopTimestamp = now
     }
@@ -187,10 +187,10 @@ export type MetricsReport = {
         start: number
         end: number
     }
-} & Record<string,any>
+} & Record<string, any>
 
 export class MetricsContext {
-    private readonly metrics: Map<string,Metric> = new Map()
+    private readonly metrics: Map<string, Metric> = new Map()
 
     addMetrics(namespace: string, definitions: MetricsDefinition): void {
         Object.keys(definitions).forEach((key) => {
@@ -211,7 +211,7 @@ export class MetricsContext {
         interval: number,
         formatNumber?: (value: number) => string
     ): { stop: () => void } {
-        const ongoingSamples: Map<string,Sampler> = new Map()
+        const ongoingSamples: Map<string, Sampler> = new Map()
         return scheduleAtFixedRate(async (now: number) => {
             if (ongoingSamples.size > 0) {
                 const report = {

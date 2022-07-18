@@ -1,11 +1,9 @@
 import { ethers } from 'ethers'
-import { EncryptedGroupKey, MessageLayer, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { EncryptedGroupKey, MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
-
-const { StreamMessage, MessageID } = MessageLayer
 
 const STREAM_ID = toStreamID('streamId')
 

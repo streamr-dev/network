@@ -35,7 +35,6 @@
   "devDependencies": {
     "@types/lodash": "^4.14.175",
     "@types/pino": "^6.3.8",
-    "@types/pino-pretty": "^4.7.0",
-    "ts-node": "^9.1.1"
+    "@types/pino-pretty": "^4.7.0"
   }
 }

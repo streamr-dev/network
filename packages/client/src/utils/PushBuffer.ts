@@ -22,7 +22,7 @@ function isError(err: any): err is Error {
     )
 }
 
-export type PushBufferOptions = {
+export interface PushBufferOptions {
     name?: string
 }
 
@@ -281,7 +281,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     }
 }
 
-export type PullOptions = {
+export interface PullOptions {
     /** end dest when src ends */
     endDest: boolean
 }

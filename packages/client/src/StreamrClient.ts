@@ -282,7 +282,7 @@ export class StreamrClient implements Context {
     }
 
     setPermissions(...items: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         return this.streamRegistry.setPermissions(...items)

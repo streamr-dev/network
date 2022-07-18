@@ -1,4 +1,4 @@
-import { MessageLayer, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamPartStatus } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from '../identifiers'
@@ -8,18 +8,18 @@ import _ from 'lodash'
 interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
     neighbors: Set<NodeId>
-    counter: number,
-    inOnly: Set<NodeId>,
-    outOnly: Set<NodeId>,
+    counter: number
+    inOnly: Set<NodeId>
+    outOnly: Set<NodeId>
     isBehindProxy: boolean
 }
 
-function keyForDetector({ publisherId, msgChainId }: MessageLayer.MessageID) {
+function keyForDetector({ publisherId, msgChainId }: MessageID) {
     return `${publisherId}-${msgChainId}`
 }
 
 export class StreamPartManager {
-    private readonly streamParts = new Map<StreamPartID,StreamPartState>()
+    private readonly streamParts = new Map<StreamPartID, StreamPartState>()
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
@@ -36,8 +36,8 @@ export class StreamPartManager {
     }
 
     markNumbersAndCheckThatIsNotDuplicate(
-        messageId: MessageLayer.MessageID,
-        previousMessageReference: MessageLayer.MessageRef | null
+        messageId: MessageID,
+        previousMessageReference: MessageRef | null
     ): boolean | never {
         const streamPartId = messageId.getStreamPartID()
         this.ensureThatIsSetUp(streamPartId)
@@ -207,8 +207,7 @@ export class StreamPartManager {
         try {
             this.ensureThatIsSetUp(streamPartId)
             return this.streamParts.get(streamPartId)!.isBehindProxy
-        }
-        catch (err) {
+        } catch (err) {
             return false
         }
     }

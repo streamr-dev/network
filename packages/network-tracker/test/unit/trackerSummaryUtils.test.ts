@@ -1,7 +1,7 @@
 import { getNodeConnections } from '../../src/logic/trackerSummaryUtils'
 import { OverlayTopology } from '../../src/logic/OverlayTopology'
 
-const createOverlayTopology = (mapping: { [key: string]: string[] }) => {
+const createOverlayTopology = (mapping: Record<string, string[]>) => {
     const overlayTopology = new OverlayTopology(4)
     Object.entries(mapping).forEach(([nodeId, neighbors]) => {
         // Inform tracker of existence of neighbor

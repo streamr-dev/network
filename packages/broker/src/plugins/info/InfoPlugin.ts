@@ -1,12 +1,7 @@
 import express, { Request, Response } from 'express'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin } from '../../Plugin'
 
 export class InfoPlugin extends Plugin<void> {
-
-    constructor(options: PluginOptions) {
-        super(options)
-    }
-
     async start(): Promise<void> {
         this.addHttpServerRouter(this.createEndpoint())
     }

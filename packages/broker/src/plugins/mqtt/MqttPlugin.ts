@@ -1,4 +1,4 @@
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin } from '../../Plugin'
 import { getPayloadFormat } from '../../helpers/PayloadFormat'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { MqttServer } from './MqttServer'
@@ -7,17 +7,12 @@ import { Schema } from 'ajv'
 
 export interface MqttPluginConfig {
     port: number
-    streamIdDomain: string|null
+    streamIdDomain: string | null
     payloadMetadata: boolean
 }
 
 export class MqttPlugin extends Plugin<MqttPluginConfig> {
-
     private server?: MqttServer
-
-    constructor(options: PluginOptions) {
-        super(options)
-    }
 
     async start(): Promise<void> {
         this.server = new MqttServer(this.pluginConfig.port, this.apiAuthenticator)
@@ -35,7 +30,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         await this.server!.stop()
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

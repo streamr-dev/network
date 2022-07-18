@@ -1,7 +1,7 @@
 import Ajv, { Schema, ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 
-export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): void|never => {
+export const validateConfig = (data: unknown, schema: Schema, contextName?: string, useDefaults = true): void | never => {
     const ajv = new Ajv({
         useDefaults
     })

@@ -9,9 +9,7 @@ type GroupKeyMessageType = Omit<typeof GroupKeyMessage, 'new'> // remove new, do
 
 export default abstract class GroupKeyMessage {
     // messageType -> class mapping
-    static classByMessageType: {
-        [key: number]: GroupKeyMessageType
-    } = {}
+    static classByMessageType: Record<number, GroupKeyMessageType> = {}
 
     streamId: StreamID
     messageType: StreamMessageType

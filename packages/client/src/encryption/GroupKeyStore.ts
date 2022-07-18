@@ -8,10 +8,10 @@ import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string
 
-type GroupKeyStoreOptions = {
-    context: Context,
-    clientId: string,
-    streamId: StreamID,
+interface GroupKeyStoreOptions {
+    context: Context
+    clientId: string
+    streamId: StreamID
     groupKeys: [GroupKeyId, GroupKey][]
 }
 

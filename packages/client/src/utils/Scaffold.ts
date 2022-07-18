@@ -17,11 +17,11 @@ type Step = StepUp | MaybeAsync<() => void> // possibly no StepDown
 type StepUp = MaybeAsync<() => StepDown>
 type StepDown = MaybeAsync<() => void>
 
-type ScaffoldOptions = {
+interface ScaffoldOptions {
  onError?: (error: Error) => void
  onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
  onChange?: MaybeAsync<(shouldUp: boolean) => void>
- id?: string,
+ id?: string
 }
 
 const noop = () => {}
@@ -39,6 +39,7 @@ type ScaffoldReturnType = (() => Promise<void>) &
 }
 
 export function Scaffold(
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     sequence: Step[] = [],
     _checkFn: (() => Promise<boolean>) | (() => boolean),
     { id = '', onError, onDone, onChange }: ScaffoldOptions = {}

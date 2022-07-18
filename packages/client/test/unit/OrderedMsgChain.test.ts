@@ -1,13 +1,9 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-
-import OrderedMsgChain from '../../../src/utils/OrderedMsgChain'
-import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
-import GapFillFailedError from '../../../src/errors/GapFillFailedError'
-import MessageID from '../../../src/protocol/message_layer/MessageID'
-import MessageRef from '../../../src/protocol/message_layer/MessageRef'
-import { toStreamID } from '../../../src'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import OrderedMsgChain from '../../src/subscribe/ordering/OrderedMsgChain'
+import GapFillFailedError from '../../src/subscribe/ordering/GapFillFailedError'
 
 /**
  * Split an array into numChunks chunks.
@@ -40,12 +36,12 @@ const createMsg = ({
     publisherId = 'publisherId',
     msgChainId = 'msgChainId'
 }: {
-    timestamp?: number;
-    sequenceNumber?: number;
-    prevTimestamp?: number | null;
-    prevSequenceNumber?: number;
-    content?: Record<string, unknown>;
-    publisherId?: string;
+    timestamp?: number
+    sequenceNumber?: number
+    prevTimestamp?: number | null
+    prevSequenceNumber?: number
+    content?: Record<string, unknown>
+    publisherId?: string
     msgChainId?: string
 } = {}) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
@@ -313,7 +309,7 @@ describe('OrderedMsgChain', () => {
                     // should have seen messages 1, 3, 5
                     expect(msgs).toEqual([msg1, msg3, msg5])
                     done()
-                } catch(err) {
+                } catch (err) {
                     done(err)
                 }
             }
@@ -339,7 +335,7 @@ describe('OrderedMsgChain', () => {
                     // should have seen messages 1, 3, 5
                     expect(msgs).toEqual([msg1, msg3, msg5])
                     done()
-                } catch(err) {
+                } catch (err) {
                     done(err)
                 }
             }
@@ -366,6 +362,7 @@ describe('OrderedMsgChain', () => {
                     util.add(msg2)
                 }, 25)
             }
+
             if (to.timestamp === 4) {
                 util.add(msg4)
             }
@@ -388,6 +385,7 @@ describe('OrderedMsgChain', () => {
                         util.markMessageExplicitly(msg2)
                     }, 35)
                 }
+
                 if (to.timestamp === 4) {
                     setTimeout(() => {
                         util.markMessageExplicitly(msg4)

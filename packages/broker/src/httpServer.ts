@@ -38,7 +38,7 @@ export const startServer = async (
     routers: express.Router[],
     config: HttpServerConfig,
     apiAuthenticator: ApiAuthenticator
-): Promise<HttpServer|https.Server> => {
+): Promise<HttpServer | https.Server> => {
     const app = express()
     app.use(cors({
         origin: true, // Access-Control-Allow-Origin: request origin. The default '*' is invalid if credentials included.
@@ -46,7 +46,7 @@ export const startServer = async (
     }))
     app.use(createAuthenticatorMiddleware(apiAuthenticator))
     routers.forEach((router) => app.use(router))
-    let serverFactory: { listen: (port: number) => HttpServer|HttpsServer }
+    let serverFactory: { listen: (port: number) => HttpServer | HttpsServer }
     if (config.privateKeyFileName && config.certFileName) {
         serverFactory = https.createServer({
             cert: fs.readFileSync(config.certFileName),
@@ -61,7 +61,7 @@ export const startServer = async (
     return server
 }
 
-export const stopServer = async (httpServer: HttpServer|HttpsServer): Promise<void> => {
+export const stopServer = async (httpServer: HttpServer | HttpsServer): Promise<void> => {
     if (httpServer.listening) {
         httpServer.close()
         await once(httpServer, 'close')

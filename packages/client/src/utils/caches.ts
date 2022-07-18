@@ -2,7 +2,7 @@ import pMemoize from 'p-memoize'
 import mem from 'mem'
 import LRU from '../../vendor/quick-lru'
 
-type Collection<K, V> = {
+interface Collection<K, V> {
     keys: Map<K, V>['keys']
     delete: Map<K, V>['delete']
 }

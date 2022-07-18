@@ -9,29 +9,27 @@ import type { ConnectionInfo } from '@ethersproject/web'
 import type { Overrides } from '@ethersproject/contracts'
 import { EthereumAddress } from 'streamr-client-protocol'
 
-export type ChainConnectionInfo = { rpcs: ConnectionInfo[], chainId?: number, name?: string }
+export interface ChainConnectionInfo { rpcs: ConnectionInfo[], chainId?: number, name?: string }
 
 // these should come from ETH-184 config package when it's ready
-export type EthereumNetworkConfig = {
+export interface EthereumNetworkConfig {
     chainId: number
     overrides?: Overrides
     gasPriceStrategy?: (estimatedGasPrice: BigNumber) => BigNumber
 }
 
-export type EthereumConfig = {
+export interface EthereumConfig {
     streamRegistryChainAddress: EthereumAddress
     streamStorageRegistryChainAddress: EthereumAddress
-    storageNodeRegistryChainAddress: EthereumAddress,
-    ensCacheChainAddress: EthereumAddress,
+    storageNodeRegistryChainAddress: EthereumAddress
+    ensCacheChainAddress: EthereumAddress
     mainChainRPCs?: ChainConnectionInfo
     streamRegistryChainRPCs: ChainConnectionInfo
     // most of the above should go into ethereumNetworks configs once ETH-184 is ready
-    ethereumNetworks?: {
-        [networkName: string]: EthereumNetworkConfig
-    }
+    ethereumNetworks?: Record<string, EthereumNetworkConfig>
 }
 
-export const generateEthereumAccount = (): { address: string; privateKey: string } => {
+export const generateEthereumAccount = (): { address: string, privateKey: string } => {
     const wallet = Wallet.createRandom()
     return {
         address: wallet.address,

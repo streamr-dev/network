@@ -1,7 +1,6 @@
 import {
     EthereumAddress,
     MessageID,
-    SigningUtil,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -11,6 +10,7 @@ import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import { sign } from '../../../src/utils/signingUtils'
 import { Multimap } from '@streamr/utils'
 
 const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
@@ -48,7 +48,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
                     }
                 })
                 const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = await SigningUtil.sign(payload, PRIVATE_KEY)
+                assignmentMessage.signature = await sign(payload, PRIVATE_KEY)
                 this.publishToNode(assignmentMessage)
             }
         })
@@ -77,11 +77,11 @@ export class FakeStorageNode extends FakeBrubeckNode {
     }
 
     async getRange(streamPartId: StreamPartID, opts: {
-        fromTimestamp: number,
-        fromSequenceNumber: number,
-        toTimestamp: number,
-        toSequenceNumber: number,
-        publisherId?: string,
+        fromTimestamp: number
+        fromSequenceNumber: number
+        toTimestamp: number
+        toSequenceNumber: number
+        publisherId?: string
         msgChainId?: string
     }): Promise<StreamMessage[]> {
         const messages = this.streamPartMessages.get(streamPartId)
