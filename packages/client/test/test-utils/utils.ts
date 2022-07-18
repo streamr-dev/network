@@ -13,7 +13,7 @@ import {
     StreamMessageOptions,
     MessageID
 } from 'streamr-client-protocol'
-import SigningUtil from '../../src/utils/SigningUtil'
+import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
@@ -181,6 +181,6 @@ export const createMockMessage = (
     if (opts.encryptionKey !== undefined) {
         EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
     }
-    msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
+    msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
 }

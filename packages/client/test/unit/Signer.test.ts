@@ -5,7 +5,7 @@ import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { Signer } from '../../src/publish/Signer'
 import { createAuthentication } from '../../src/Authentication'
-import SigningUtil from '../../src/utils/SigningUtil'
+import { sign } from '../../src/utils/signingUtils'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -50,7 +50,7 @@ describe('Signer', () => {
                 + streamMessage.messageId.sequenceNumber + address.toLowerCase() + streamMessage.messageId.msgChainId
                 + streamMessage.getSerializedContent()
 
-            const expectedSignature = SigningUtil.sign(payload, privateKey)
+            const expectedSignature = sign(payload, privateKey)
             await signer.sign(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
             expect(streamMessage.getPublisherId()).toBe(address)
@@ -72,7 +72,7 @@ describe('Signer', () => {
                 streamMessage.messageId.sequenceNumber, address.toLowerCase(), streamMessage.messageId.msgChainId,
                 streamMessage.prevMsgRef!.timestamp, streamMessage.prevMsgRef!.sequenceNumber, streamMessage.getSerializedContent()
             ]
-            const expectedSignature = SigningUtil.sign(payload.join(''), privateKey)
+            const expectedSignature = sign(payload.join(''), privateKey)
             expect(payload.join('')).toEqual(streamMessage.getPayloadToSign())
             await signer.sign(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)

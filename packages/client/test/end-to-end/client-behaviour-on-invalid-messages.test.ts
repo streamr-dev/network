@@ -3,7 +3,7 @@ import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import SigningUtil from '../../src/utils/SigningUtil'
+import { sign } from '../../src/utils/signingUtils'
 import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
@@ -88,7 +88,7 @@ describe('client behaviour on invalid message', () => {
             content: { not: 'allowed' }
         })
         EncryptionUtil.encryptStreamMessage(msg, GroupKey.generate())
-        msg.signature = await SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey.substring(2))
+        msg.signature = await sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisherWallet.privateKey.substring(2))
         networkNode.publish(msg)
         await wait(PROPAGATION_WAIT_TIME)
         expect(true).toEqual(true) // we never get here if subscriberClient crashes

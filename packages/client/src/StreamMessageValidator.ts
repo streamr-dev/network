@@ -8,7 +8,7 @@ import {
     StreamMessageError,
     ValidationError
 } from "streamr-client-protocol"
-import SigningUtil from './utils/SigningUtil'
+import { verify as verifyImpl } from './utils/signingUtils'
 
 export interface StreamMetadata {
     partitions: number
@@ -47,7 +47,7 @@ export default class StreamMessageValidator {
      * @param verify function(address, payload, signature): returns true if the address and payload match the signature.
      * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
-    constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify }: Options) {
+    constructor({ getStream, isPublisher, isSubscriber, verify = verifyImpl }: Options) {
         StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
         this.getStream = getStream
         this.isPublisher = isPublisher

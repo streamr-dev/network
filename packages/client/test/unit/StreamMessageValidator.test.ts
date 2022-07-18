@@ -15,7 +15,7 @@ import {
     ValidationError
 } from 'streamr-client-protocol'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
-import SigningUtil from '../../src/utils/SigningUtil'
+import { sign as nonWrappedSign } from '../../src/utils/signingUtils'
 
 const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
     return new StreamMessage({
@@ -60,7 +60,7 @@ describe('StreamMessageValidator', () => {
 
     /* eslint-disable */
     const sign = (msgToSign: StreamMessage, privateKey: string) => {
-        msgToSign.signature = SigningUtil.sign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
+        msgToSign.signature = nonWrappedSign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
     }
     /* eslint-enable */
 
