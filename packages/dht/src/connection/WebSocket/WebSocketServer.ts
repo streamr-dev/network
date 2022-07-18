@@ -21,7 +21,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
     private wsServer: WsServer | null = null
     private ownPeerDescriptor: PeerDescriptor | null = null
 
-    start({ host, port }: { host?: string; port?: number } = {}): Promise<void> {
+    start({ host, port }: { host?: string, port?: number } = {}): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace((new Date()) + ' Received request for ' + request.url)
@@ -34,16 +34,12 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                     logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
-            }
-
-            else if (port) {
+            } else if (port) {
                 this.httpServer.listen(port, () => {
                     logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
-            }
-
-            else {
+            } else {
                 reject('Listen port for WebSocket server not given')
             }
 
@@ -52,8 +48,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                     httpServer: this.httpServer,
                     autoAcceptConnections: false
                 })
-            }
-            else {
+            } else {
                 this.wsServer = new WsServer({
                     httpServer: this.httpServer,
                     // You should not use autoAcceptConnections for production
@@ -98,9 +93,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
                     logger.trace('received connectivity request')
                     connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
-                }
-
-                else {
+                } else {
                     if (this.isInitialized()) {
                         incomingMessageHandler(connection, message)
                     }

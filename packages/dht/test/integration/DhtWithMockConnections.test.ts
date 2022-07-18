@@ -34,7 +34,7 @@ describe('Mock IConnection DHT Joining', () => {
         ])
     })
 
-    it ('Happy path', async () => {
+    it('Happy path', async () => {
         await entryPoint.joinDht(entrypointDescriptor)
         await Promise.allSettled(
             nodes.map((node) => node.joinDht(entrypointDescriptor))

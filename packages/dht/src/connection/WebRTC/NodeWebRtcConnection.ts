@@ -1,7 +1,7 @@
 import { IWebRtcConnection, Event as IWebRtcEvent } from './IWebRtcConnection'
 import { ConnectionType, IConnection, ConnectionID, Event as ConnectionEvent, } from '../IConnection'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import EventEmitter = require('events')
+import EventEmitter from 'events'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
@@ -19,10 +19,10 @@ export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
 }
 
 export interface Params {
-    remotePeerDescriptor: PeerDescriptor,
-    bufferThresholdHigh?: number,
-    bufferThresholdLow?: number,
-    connectingTimeout?: number,
+    remotePeerDescriptor: PeerDescriptor
+    bufferThresholdHigh?: number
+    bufferThresholdLow?: number
+    connectingTimeout?: number
     stunUrls?: string[]
 }
 
@@ -128,8 +128,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     send(data: Uint8Array): void {
         if (this.isOpen()) {
             this.doSend(data)
-        }
-        else {
+        } else {
             this.addToBuffer(data)
         }
     }
@@ -209,9 +208,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
 
     private onStateChange(state: string): void {
         if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
-            throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: '+ state)
-        }
-        else {
+            throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
+        } else {
             this.lastState = state as RTCPeerConnectionState
         }
     }

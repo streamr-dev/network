@@ -1,4 +1,4 @@
-import {ProtoRpcOptions} from '@streamr/proto-rpc'
+import { ProtoRpcOptions } from '@streamr/proto-rpc'
 import { PeerDescriptor } from '../proto/DhtRpc'
 
 export interface DhtRpcOptions extends ProtoRpcOptions {

@@ -4,7 +4,7 @@ describe('Route Message With Mock Connections', () => {
     let detector: DuplicateDetector
     const maxLimit = 10
     beforeEach(async () => {
-        detector = new DuplicateDetector(2**15, 16, 5, maxLimit)
+        detector = new DuplicateDetector(2 ** 15, 16, 5, maxLimit)
     })
 
     it('detects duplicates', async () => {

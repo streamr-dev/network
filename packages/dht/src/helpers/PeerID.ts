@@ -6,18 +6,14 @@ function toUTF8Array(str: string): Uint8Array {
         let charcode = str.charCodeAt(i)
         if (charcode < 0x80) {
             utf8.push(charcode)
-        }
-        else if (charcode < 0x800) {
+        } else if (charcode < 0x800) {
             utf8.push(0xc0 | (charcode >> 6),
                 0x80 | (charcode & 0x3f))
-        }
-        else if (charcode < 0xd800 || charcode >= 0xe000) {
+        } else if (charcode < 0xd800 || charcode >= 0xe000) {
             utf8.push(0xe0 | (charcode >> 12),
                 0x80 | ((charcode >> 6) & 0x3f),
                 0x80 | (charcode & 0x3f))
-        }
-        // surrogate pair
-        else {
+        } else { // surrogate pair
             i++
             // UTF-16 encodes 0x10000-0x10FFFF by
             // subtracting 0x10000 and splitting the
@@ -70,8 +66,8 @@ for (let n = 0; n <= 0xff; ++n) {
 function hex(buff: Uint8Array) {
     const hexOctets = [] // new Array(buff.length) is even faster (preallocates necessary array size), then use hexOctets[i] instead of .push()
 
-    for (let i = 0; i < buff.length; ++i) {
-        hexOctets.push(byteToHex[buff[i]])
+    for (const byte of buff) {
+        hexOctets.push(byteToHex[byte])
     }
     return hexOctets.join("")
 }
@@ -79,9 +75,9 @@ function hex(buff: Uint8Array) {
 export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
 
 export class PeerID {
-    private data!: Uint8Array;
+    private data!: Uint8Array
 
-    protected constructor({ ip, value, stringValue }: { ip?: string; value?: Uint8Array; stringValue?: string } = {}) {
+    protected constructor({ ip, value, stringValue }: { ip?: string, value?: Uint8Array, stringValue?: string } = {}) {
         if (ip) {
             this.data = new Uint8Array(20)
             const ipNum = this.ip2Int(ip)
@@ -89,11 +85,9 @@ export class PeerID {
             view.setInt32(0, ipNum)
 
             this.data.set((new UUID()).value, 4)
-        }
-        else if (value) {
+        } else if (value) {
             this.data = new Uint8Array(value.slice(0))
-        }
-        else if (stringValue) {
+        } else if (stringValue) {
             const ab = toUTF8Array(stringValue)
             this.data = ab
         }

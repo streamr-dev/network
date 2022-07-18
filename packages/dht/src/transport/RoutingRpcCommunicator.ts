@@ -4,7 +4,7 @@ import { v4 } from "uuid"
 import { RpcCommunicator, RpcCommunicatorConfig, RpcCommunicatorEvent } from "@streamr/proto-rpc"
 import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
 
-export class RoutingRpcCommunicator extends RpcCommunicator{
+export class RoutingRpcCommunicator extends RpcCommunicator {
     
     constructor(private ownAppId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
@@ -23,13 +23,11 @@ export class RoutingRpcCommunicator extends RpcCommunicator{
             
             if (callContext!.targetDescriptor) {
                 targetDescriptor = callContext!.targetDescriptor!
-            }
-            // rpc reply message
-            else {
+            } else { // rpc reply message
                 targetDescriptor = callContext!.incomingSourceDescriptor!
             }
 
-            const message: Message = {messageId: v4(), appId: this.ownAppId, body: msgBody, messageType: MessageType.RPC}
+            const message: Message = { messageId: v4(), appId: this.ownAppId, body: msgBody, messageType: MessageType.RPC }
             this.transport.send(message, targetDescriptor!)
         })
 

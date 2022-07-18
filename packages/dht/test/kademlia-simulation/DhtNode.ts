@@ -89,6 +89,7 @@ export class DhtNode {
 
         this.neighborList.addContacts(closest)
 
+        /* eslint-disable no-constant-condition */
         while (true) {
             let oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

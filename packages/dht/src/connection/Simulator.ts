@@ -18,8 +18,7 @@ export class Simulator {
                 this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
             }
             , Math.random() * (250 - 5) + 5)
-        }
-        else {
+        } else {
             this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
         }
     }

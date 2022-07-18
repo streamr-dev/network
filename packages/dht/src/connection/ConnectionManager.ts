@@ -20,10 +20,10 @@ import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { v4 } from 'uuid'
 
 export interface ConnectionManagerConfig {
-    transportLayer: ITransport,
-    webSocketHost?: string,
-    webSocketPort?: number,
-    entryPoints?: PeerDescriptor[],
+    transportLayer: ITransport
+    webSocketHost?: string
+    webSocketPort?: number
+    entryPoints?: PeerDescriptor[]
 }
 
 export enum NatType {
@@ -71,8 +71,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 host: (connection as ServerWebSocket).getRemoteAddress(),
                 port: connectivityRequest.port, timeoutMs: 1000
             })
-        }
-        catch (e) {
+        } catch (e) {
             logger.trace("Connectivity test produced negative result, communicating reply to the requester")
             logger.debug(e)
 
@@ -105,6 +104,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     private async sendConnectivityRequest(): Promise<ConnectivityResponseMessage> {
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const entryPoint = this.config.entryPoints![0]
 
@@ -114,8 +114,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 outgoingConnection = await this.webSocketConnector!.connectAsync({
                     host: entryPoint.websocket?.ip, port: entryPoint.websocket?.port, timeoutMs: 1000
                 })
-            }
-            catch (e) {
+            } catch (e) {
                 logger.error("Failed to connect to the entrypoints")
 
                 reject(new Error('Failed to connect to the entrypoints'))
@@ -165,14 +164,13 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
 
+            // eslint-disable-next-line no-async-promise-executor
             return new Promise(async (resolve, reject) => {
                 // Open websocket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
 
                 if (this.config.entryPoints && this.config.entryPoints.length > 0) {
                     this.sendConnectivityRequest().then((response) => resolve(response)).catch((err) => reject(err))
-                }
-
-                else {
+                } else {
                     // return connectivity info given in config to be used for id generation
 
                     const connectivityResponseMessage: ConnectivityResponseMessage = {
@@ -245,8 +243,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     oldConnection.close()
                 }
             }
-        }
-        else {
+        } else {
             this.emit(Event.DATA, message, connection.getPeerDescriptor())
         }
     }
@@ -284,9 +281,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
         if (this.connections.has(hexId)) {
             this.connections.get(hexId)!.send(Message.toBinary(message))
-        }
-
-        else if (peerDescriptor.websocket) {
+        } else if (peerDescriptor.websocket) {
             const connection = this.webSocketConnector!.connect({
                 host: peerDescriptor.websocket.ip,
                 port: peerDescriptor.websocket.port
@@ -294,17 +289,14 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             connection.setPeerDescriptor(peerDescriptor)
             this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))
-        }
-
-        else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
+        } else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
             const connection = this.webSocketConnector!.connect({
                 ownPeerDescriptor: this.ownPeerDescriptor!,
                 targetPeerDescriptor: peerDescriptor
             })
             this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))
-        }
-        else if (this.webrtcConnector) {
+        } else if (this.webrtcConnector) {
             const connection = this.webrtcConnector.connect(peerDescriptor)
             this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))

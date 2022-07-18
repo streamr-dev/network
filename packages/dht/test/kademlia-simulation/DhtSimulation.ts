@@ -9,16 +9,16 @@ export class DhtSimulation {
     private NUM_NODES = 1000
     private ID_LENGTH = 8
 
-    private nodeNamesById: { [id: string]: number } = {} 
+    private nodeNamesById: Record<string, number> = {} 
     private nodes: DhtNode[]
 
-    private dhtIds: Array<{type: string, data: Array<number>}>
-    private groundTruth:  {[nodeName: string]: Array<{name: string, distance: number, id: {type: string, data: Array<number>}}>}
+    private dhtIds: Array<{ type: string, data: Array<number> }>
+    private groundTruth:  Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
 
     constructor() {
         this.nodes = []
         if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
-            throw('Cannot find test/kademlia-simulation/data/nodeids.json, please run "npm run prepare-dht-simulation first"')
+            throw ('Cannot find test/kademlia-simulation/data/nodeids.json, please run "npm run prepare-dht-simulation first"')
         }
         this.dhtIds = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
         this.groundTruth = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
@@ -45,14 +45,14 @@ export class DhtSimulation {
         let sumOutgoingRpcCalls = 0
         let maxOutgoingRpcCalls = 0
 
-        for (let i = this.nodes.length-1; i >= 0; i--) {
+        for (let i = this.nodes.length - 1; i >= 0; i--) {
             
             const numberOfOutgoingRpcCalls = this.nodes[i].getNumberOfOutgoingRpcCalls()
             console.log('-----------')
             console.log('Node: ' + i)
-            console.log('Kbucket size: '+ this.nodes[i].getKBucketSize())
-            console.log('Num incoming RPC calls: '+ this.nodes[i].getNumberOfIncomingRpcCalls())
-            console.log('Num outgoing RPC calls: '+ numberOfOutgoingRpcCalls)
+            console.log('Kbucket size: ' + this.nodes[i].getKBucketSize())
+            console.log('Num incoming RPC calls: ' + this.nodes[i].getNumberOfIncomingRpcCalls())
+            console.log('Num outgoing RPC calls: ' + numberOfOutgoingRpcCalls)
     
             sumOutgoingRpcCalls += numberOfOutgoingRpcCalls
     
@@ -63,8 +63,8 @@ export class DhtSimulation {
             const kademliaNeighbors = this.nodes[i].getNeightborList().getContactIds()
 
             let correctNeighbors = 0
-            for (let j=0; j < this.groundTruth[i+''].length; j++) {
-                if (this.groundTruth[i+''][j].name !=  (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])]+'')) {
+            for (let j = 0; j < this.groundTruth[i + ''].length; j++) {
+                if (this.groundTruth[i + ''][j].name !=  (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])] + '')) {
                     break
                 }
                 correctNeighbors++
@@ -76,15 +76,15 @@ export class DhtSimulation {
 
             console.log('Correct neighbors: ' + correctNeighbors)
 
-            if (i>0) {                
+            if (i > 0) {                
                 sumKbucketSize += this.nodes[i].getKBucketSize()
                 sumCorrectNeighbors += correctNeighbors
             }
         }
 
-        const avgCorrectNeighbors = sumCorrectNeighbors / (this.NUM_NODES-1)
-        const avgKbucketSize = sumKbucketSize / (this.NUM_NODES-1)
-        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (this.NUM_NODES-1)
+        const avgCorrectNeighbors = sumCorrectNeighbors / (this.NUM_NODES - 1)
+        const avgKbucketSize = sumKbucketSize / (this.NUM_NODES - 1)
+        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (this.NUM_NODES - 1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)

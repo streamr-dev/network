@@ -12,7 +12,7 @@ const main = async () => {
     const simulator = new Simulator()
     const mockConnectionLayer = new SimulatorTransport(mockDescriptor, simulator)
     
-    new DhtNode({peerIdString: 'peer', transportLayer: mockConnectionLayer})
+    new DhtNode({ peerIdString: 'peer', transportLayer: mockConnectionLayer })
 }
 
 main()

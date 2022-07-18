@@ -1,4 +1,4 @@
-require('setimmediate')
+import 'setimmediate'
 import {
     IceCandidate,
     PeerDescriptor,

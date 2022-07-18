@@ -8,9 +8,10 @@ class ContactWrapper {
     }
 }
 
+/* eslint-disable no-prototype-builtins */
 export class SortedContactList {
     private ownId: Uint8Array
-    private contactsById: { [id: string]: ContactWrapper } = {}
+    private contactsById: Record<string, ContactWrapper> = {}
     private contactIds: Uint8Array[] = []
 
     constructor(ownId: Uint8Array,
@@ -46,14 +47,14 @@ export class SortedContactList {
     }
     
     public addContactsInBulk(contacts: Uint8Array[]): void {
-        for (let i=0; i<contacts.length; i++) {
-            if (Buffer.compare(contacts[i], this.ownId) == 0) {
+        for (const contact of contacts) {
+            if (Buffer.compare(contact, this.ownId) == 0) {
                 continue
             }
 
-            if (!this.contactsById.hasOwnProperty(JSON.stringify(contacts[i]))) {
-                this.contactsById[JSON.stringify(contacts[i])] = new ContactWrapper(new Contact(contacts[i]))
-                this.contactIds.push(contacts[i])
+            if (!this.contactsById.hasOwnProperty(JSON.stringify(contact))) {
+                this.contactsById[JSON.stringify(contact)] = new ContactWrapper(new Contact(contact))
+                this.contactIds.push(contact)
             }
         }
         this.contactIds.sort(this.compareIds)
@@ -73,8 +74,7 @@ export class SortedContactList {
 
     public getUncontactedContacts(num: number): Contact[] {
         const ret: Contact[] = []
-        for (let i = 0; i < this.contactIds.length; i++) {
-            const contactId = this.contactIds[i]
+        for (const contactId of this.contactIds) {
             if (!this.contactsById[JSON.stringify(contactId)].contacted) {
                 ret.push(this.contactsById[JSON.stringify(contactId)].contact)
                 if (ret.length >= num) {

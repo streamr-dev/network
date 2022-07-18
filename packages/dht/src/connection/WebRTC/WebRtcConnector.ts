@@ -1,4 +1,4 @@
-require('setimmediate')
+import 'setimmediate'
 import { EventEmitter } from "events"
 import { Event as ConnectionSourceEvents, IConnectionSource } from '../IConnectionSource'
 import {
@@ -32,9 +32,9 @@ import { UUID } from "../../helpers/UUID"
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
-    rpcTransport: ITransport,
-    canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-    getConnection: (peerDescriptor: PeerDescriptor) => IConnection | null,
+    rpcTransport: ITransport
+    canConnect: (peerDescriptor: PeerDescriptor) => boolean
+    getConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     addConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
 }
 

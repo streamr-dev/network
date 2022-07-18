@@ -22,7 +22,7 @@ export class CouldNotRoute extends Err { constructor(message?: string, originalE
 export class WebSocketConnectionRequestRejected extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.WEBSOCKET_CONNECTION_REQUEST_REJECTED, message, originalError) } }
 export class CouldNotStart extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_START, message, originalError) } }
 export class CouldNotStop extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.COULD_NOT_STOP, message, originalError) } }
-export class CannotConnectToSelf extends Err { constructor(message?: string, originalError?: Error |string) {super(ErrorCode.CANNOT_CONNECT_TO_SELF, message, originalError) } }
+export class CannotConnectToSelf extends Err { constructor(message?: string, originalError?: Error | string) {super(ErrorCode.CANNOT_CONNECT_TO_SELF, message, originalError) } }
 export class NotImplemented extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.NOT_IMPLEMENTED, message, originalError) } }
 export class IllegalRTCPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
 

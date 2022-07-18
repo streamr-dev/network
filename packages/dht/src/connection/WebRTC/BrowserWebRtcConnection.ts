@@ -154,8 +154,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     send(data: Uint8Array): void {
         if (this.lastState == 'connected') {
             this.doSend(data)
-        }
-        else if (this.lastState == 'connecting') {
+        } else if (this.lastState == 'connecting') {
             this.addToBuffer(data)
         }
     }

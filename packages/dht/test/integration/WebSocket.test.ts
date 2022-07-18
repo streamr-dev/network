@@ -21,7 +21,7 @@ describe('WebSocket', () => {
     const webSocketConnector = new WebSocketConnector(new SimulatorTransport(peerDescriptor, simulator), () => true)
 
     beforeAll(async () => {
-        await webSocketServer.start({port: 9999})
+        await webSocketServer.start({ port: 9999 })
     })
 
     it('Happy path', (done) => {
@@ -29,7 +29,7 @@ describe('WebSocket', () => {
         webSocketServer.on(ConnectionSourceEvent.CONNECTED, (serverConnection: IConnection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
-            serverConnection.send(Uint8Array.from([1,2,3,4]))
+            serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
         
             const time2 = Date.now()
             console.log('server side setting listeners at ' + time2)
@@ -38,7 +38,7 @@ describe('WebSocket', () => {
                 const time = Date.now()
                 console.log('server side receiving message at ' + time)
 
-                console.log("server received:"+ JSON.stringify(bytes))
+                console.log("server received:" + JSON.stringify(bytes))
                
                 expect(bytes.toString()).toBe('1,2,3,4')
                 console.log('calling done()')
@@ -59,11 +59,11 @@ describe('WebSocket', () => {
                 
                 const time2 = Date.now()
                 console.log('client side sendind msg at ' + time2)
-                clientConnection.send(Uint8Array.from([1,2,3,4]))
+                clientConnection.send(Uint8Array.from([1, 2, 3, 4]))
             })
         })
 
-        webSocketConnector.connect({url: 'ws://localhost:9999'})    
+        webSocketConnector.connect({ url: 'ws://localhost:9999' })    
     })
 
     afterAll(async () => {

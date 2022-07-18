@@ -1,4 +1,4 @@
-require('setimmediate')
+import 'setimmediate'
 import { EventEmitter } from 'events'
 import {
     IConnectionSource,
@@ -57,10 +57,10 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     }
 
     connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {
-        host?: string,
-        port?: number,
-        url?: string,
-        ownPeerDescriptor?: PeerDescriptor,
+        host?: string
+        port?: number
+        url?: string
+        ownPeerDescriptor?: PeerDescriptor
         targetPeerDescriptor?: PeerDescriptor
     } = {}
     ): IConnection {
@@ -77,8 +77,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         let address = ''
         if (url) {
             address = url
-        }
-        else if (host && port) {
+        } else if (host && port) {
             address = 'ws://' + host + ':' + port
         }
 
@@ -87,7 +86,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
     }
 
     connectAsync({ host, port, url, timeoutMs }:
-        { host?: string; port?: number; url?: string; timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
+        { host?: string, port?: number, url?: string, timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
 
         return new Promise((resolve, reject) => {
             const socket = new ClientWebSocket()
@@ -116,8 +115,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             let address = ''
             if (url) {
                 address = url
-            }
-            else if (host && port) {
+            } else if (host && port) {
                 address = 'ws://' + host + ':' + port
             }
 

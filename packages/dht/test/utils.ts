@@ -20,8 +20,7 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
     let id: PeerID
     if (binaryId) {
         id = PeerID.fromValue(binaryId)
-    }
-    else {
+    } else {
         id = PeerID.fromString(stringId)
     }
     const peerDescriptor: PeerDescriptor = {

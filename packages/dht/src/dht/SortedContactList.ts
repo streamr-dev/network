@@ -64,8 +64,7 @@ export class SortedContactList {
 
     public getUncontactedContacts(num: number): DhtPeer[] {
         const ret: DhtPeer[] = []
-        for (let i = 0; i < this.contactIds.length; i++) {
-            const contactId = this.contactIds[i]
+        for (const contactId of this.contactIds) {
             if (this.contactsById.has(contactId.toMapKey()) && !this.contactsById.get(contactId.toMapKey())!.contacted) {
                 ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
                 if (ret.length >= num) {

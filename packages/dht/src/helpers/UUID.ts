@@ -7,15 +7,11 @@ export class UUID {
         if (!other) {
             this.buf = new Uint8Array(16)
             v4(null, this.buf)
-        }
-        else if (other.constructor === UUID) {
+        } else if (other.constructor === UUID) {
             this.buf = other.buf
-        }
-
-        else if (typeof other === 'string') {
+        } else if (typeof other === 'string') {
             this.buf = new Uint8Array(parse(other))
-        }
-        else {
+        } else {
             this.buf = other as Uint8Array
         }
     }

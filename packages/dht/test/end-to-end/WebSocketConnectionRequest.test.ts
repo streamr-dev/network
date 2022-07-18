@@ -19,8 +19,8 @@ describe('WebSocket IConnection Requests', () => {
 
         await epDhtNode.joinDht(epPeerDescriptor)
 
-        node1 = new DhtNode({peerIdString: '1', webSocketPort: 10022, entryPoints: [epPeerDescriptor]})
-        node2 = new DhtNode({peerIdString: 'PeerWithoutServer', entryPoints: [epPeerDescriptor]})
+        node1 = new DhtNode({ peerIdString: '1', webSocketPort: 10022, entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: 'PeerWithoutServer', entryPoints: [epPeerDescriptor] })
         await node1.start()
         await node2.start()
 

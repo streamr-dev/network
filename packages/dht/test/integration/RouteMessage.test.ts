@@ -50,7 +50,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it ('Happy path', async () => {
+    it('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -122,7 +122,7 @@ describe('Route Message With Mock Connections', () => {
 
     it('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
-        const numsOfReceivedMessages: {[key: string]: number} = {}
+        const numsOfReceivedMessages: Record<string, number> = {}
         await entryPoint.joinDht(entryPointDescriptor)
         await Promise.all(
             routers.map((node) => {

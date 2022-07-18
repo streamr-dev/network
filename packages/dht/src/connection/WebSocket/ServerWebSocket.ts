@@ -29,8 +29,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
             logger.trace('ServerWebSocket::onMessage')
             if (message.type === MessageType.UTF8) {
                 logger.debug('Received string Message: ' + message.utf8Data)
-            }
-            else if (message.type === MessageType.BINARY) {
+            } else if (message.type === MessageType.BINARY) {
                 logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
                 this.emit(ConnectionEvent.DATA,
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
@@ -51,10 +50,9 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
 
     send(data: Uint8Array): void {
         if (typeof NodeJsBuffer !== 'undefined') {
-            logger.trace('serverwebsocket trying to send '+ JSON.stringify(data))
+            logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
             this.socket.sendBytes(NodeJsBuffer.from(data))
-        }
-        else {
+        } else {
             this.socket.sendBytes(Buffer.from(data))
         }
     }
