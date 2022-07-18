@@ -8,11 +8,12 @@ import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt, SigningUtil } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { AuthConfig, Authentication, AuthenticationInjectionToken } from './Authentication'
+import { sign, verify } from './utils/signingUtils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -46,10 +47,10 @@ const createSigners = (privateKey: string | undefined): Signers | undefined => {
     return {
         claim: {
             sign(claim: Omit<Claim, 'signature'>): string {
-                return SigningUtil.sign(JSON.stringify(claim), privateKey)
+                return sign(JSON.stringify(claim), privateKey)
             },
             validate({ signature, ...claim }: Claim): boolean {
-                return SigningUtil.verify(
+                return verify(
                     getEthereumAddressFromNodeId(claim.sender),
                     JSON.stringify(claim),
                     signature
@@ -58,10 +59,10 @@ const createSigners = (privateKey: string | undefined): Signers | undefined => {
         },
         receipt: {
             sign(receipt: Omit<Receipt, 'signature'>): string {
-                return SigningUtil.sign(JSON.stringify(receipt), privateKey)
+                return sign(JSON.stringify(receipt), privateKey)
             },
             validate({ signature, ...receipt }: Receipt): boolean {
-                return SigningUtil.verify(
+                return verify(
                     getEthereumAddressFromNodeId(receipt.claim.receiver),
                     JSON.stringify(receipt),
                     signature
