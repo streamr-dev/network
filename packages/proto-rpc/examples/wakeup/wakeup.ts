@@ -13,7 +13,7 @@ class WakeUpService implements IWakeUpRpc {
     // You always have return google.protobuf.Empty from notifications
     async wakeUp(request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> {
         // eslint-disable-next-line no-console
-        console.log("WakeUp notification of node "+this.nodeId+" called with reason: "+ request.reason)
+        console.log("WakeUp notification of node " + this.nodeId + " called with reason: " + request.reason)
         const ret: Empty = {}
         return ret
     }
@@ -33,7 +33,7 @@ class Node {
 
     public wakeUpOtherNode(targetNodeId: string, reason: string) {
         // pass targetNodeId in CallContext
-        this.client.wakeUp({reason: reason}, {
+        this.client.wakeUp({ reason: reason }, {
             targetNodeId: targetNodeId,
             // By setting the notification flag the client will not wait for a response from the server
             // and the server will know not to send a response.
@@ -43,7 +43,7 @@ class Node {
 }
 const run = async () => {
 
-    const nodes: { [nodeId: string]: Node } = {}
+    const nodes: Record<string, Node> = {}
 
     const emulateNetwork = (msgBody: Uint8Array, callContext?: CallContext) => {
 

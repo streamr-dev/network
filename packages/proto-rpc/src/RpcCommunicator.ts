@@ -29,7 +29,7 @@ export enum RpcCommunicatorEvent {
 }
 
 export interface RpcCommunicatorConfig {
-    rpcRequestTimeout?: number,
+    rpcRequestTimeout?: number
 }
 
 interface IRpcIo {
@@ -38,7 +38,7 @@ interface IRpcIo {
 }
 
 interface OngoingRequest {
-    deferredPromises: ResultParts,
+    deferredPromises: ResultParts
     timeoutRef: NodeJS.Timeout
 }
 

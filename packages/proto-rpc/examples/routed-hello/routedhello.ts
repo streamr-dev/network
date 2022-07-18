@@ -25,14 +25,14 @@ class HelloService implements IRoutedHelloRpc {
         }
 
         // eslint-disable-next-line no-console
-        console.log('sayHello() called on server '+ this.serviceId + " with context parameter sourceId "+ sourceId)
+        console.log('sayHello() called on server ' + this.serviceId + " with context parameter sourceId " + sourceId)
         return { greeting: 'Hello ' + request.myName + '!' }
     }
 }
 
 const run = async () => {
 
-    const clientCommunicators: { [clientId: string]: RpcCommunicator } = {}
+    const clientCommunicators: Record<string, RpcCommunicator> = {}
 
     // Setup server
     const serverCommunicator1 = new RpcCommunicator()
@@ -79,10 +79,9 @@ const run = async () => {
         // through the RPC stack as client context information
         let server: RpcCommunicator
 
-        if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId']=='2') {
+        if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId'] == '2') {
             server = serverCommunicator2
-        }
-        else {
+        } else {
             server = serverCommunicator1
         }
 
@@ -105,10 +104,9 @@ const run = async () => {
     communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, clientContext?: CallContext) => {
         let server: RpcCommunicator
 
-        if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId']=='2') {
+        if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId'] == '2') {
             server = serverCommunicator2
-        }
-        else {
+        } else {
             server = serverCommunicator1
         }
         const serverContext = new CallContext()
@@ -117,7 +115,7 @@ const run = async () => {
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
-    const result1 = helloClient1.sayHello({ myName: 'Alice' }, {targetServerId: '2'})
+    const result1 = helloClient1.sayHello({ myName: 'Alice' }, { targetServerId: '2' })
     const { greeting: greeting1 } = await result1.response
     // eslint-disable-next-line no-console
     console.log("Client 1 (Alice) got message from server: " + greeting1)

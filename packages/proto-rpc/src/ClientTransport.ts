@@ -14,7 +14,7 @@ import {
 } from '@protobuf-ts/runtime-rpc'
 import { v4 } from 'uuid'
 import { RpcMessage } from './proto/ProtoRpc'
-import EventEmitter = require('events')
+import EventEmitter from 'events'
 import { Logger } from '@streamr/utils'
 
 export enum Event {
@@ -26,10 +26,10 @@ export interface ClientTransport {
 }
 
 export interface ResultParts {
-    header: Deferred<RpcMetadata>,
-    message: Deferred<object>,
-    status: Deferred<RpcStatus>,
-    trailer: Deferred<RpcMetadata>,
+    header: Deferred<RpcMetadata>
+    message: Deferred<object>
+    status: Deferred<RpcStatus>
+    trailer: Deferred<RpcMetadata>
     messageParser: (bytes: Uint8Array) => object
 }
 
@@ -58,8 +58,8 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     private static createRequestHeaders(method: MethodInfo, notification?: boolean): {
-        method: string,
-        request: string,
+        method: string
+        request: string
         notification?: string
     } {
         return {
