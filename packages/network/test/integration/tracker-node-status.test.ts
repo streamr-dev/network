@@ -116,7 +116,8 @@ describe('check status message flow between tracker and two nodes', () => {
 
     })
     
-    it('tracker should receive rtt values from nodes', () => {
+    it('tracker should receive rtt values from nodes', async () => {
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve) => {
             let receivedTotal = 0
             let nodeOneStatus: any = null
@@ -126,14 +127,14 @@ describe('check status message flow between tracker and two nodes', () => {
                 nodeOne.start(),
                 nodeTwo.start()
             ])
-            
+
             await runAndWaitForEvents([
                 () => { nodeOne.subscribe(streamPartIdOne) },
                 () => { nodeTwo.subscribe(streamPartIdOne) } ], [
                 [nodeOne, NodeEvent.NODE_SUBSCRIBED],
                 [nodeTwo, NodeEvent.NODE_SUBSCRIBED],
             ])
-            
+
             await wait(2000)
 
             // @ts-expect-error private field
@@ -148,13 +149,13 @@ describe('check status message flow between tracker and two nodes', () => {
                     receivedTotal += 1
                 }
 
-                if (receivedTotal===2) {
+                if (receivedTotal === 2) {
                     expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
                     expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
                     resolve(true)
                 }
             })
-            
+
             nodeOne.subscribe(streamPartIdTwo)
             nodeTwo.subscribe(streamPartIdTwo)
         })
@@ -175,13 +176,13 @@ describe('check status message flow between tracker and two nodes', () => {
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === nodeOne.getNodeId()) {
                 nodeOneStatus = statusMessage.status
-                // @ts-expect-error private field
+                // @ts-expect-error private access
                 expect(tracker.locationManager.nodeLocations['node-1']).toBeUndefined()
             }
 
             if (nodeId === nodeTwo.getNodeId()) {
                 nodeTwoStatus = statusMessage.status
-                // @ts-expect-error private field
+                // @ts-expect-error private access
                 expect(tracker.locationManager.nodeLocations['node-2'].country).toBe('FI')
             }
             receivedTotal += 1

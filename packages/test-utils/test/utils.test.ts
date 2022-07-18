@@ -198,7 +198,7 @@ describe(callbackToPromise, () => {
         }
     }
 
-    it("converts a typical callback-pattern function to one that returns a promise",(done) => {
+    it("converts a typical callback-pattern function to one that returns a promise", (done) => {
         const convertedFn = callbackToPromise(sumOfPositives, 1, 5, 10)
         convertedFn.then(
             (value) => {
@@ -211,7 +211,7 @@ describe(callbackToPromise, () => {
             })
     })
 
-    it("callback error causes returned promise to reject",(done) => {
+    it("callback error causes returned promise to reject", (done) => {
         const convertedFn = callbackToPromise(sumOfPositives, 1, 5, -666)
         convertedFn.then(
             (_value) => {

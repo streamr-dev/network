@@ -6,7 +6,7 @@ import { randomString } from '@streamr/utils'
 
 function genArray<T>(size: number, elementFn: () => T): T[] {
     const arr = []
-    for (let i=0; i < size; ++i) {
+    for (let i = 0; i < size; ++i) {
         arr.push(elementFn())
     }
     return arr

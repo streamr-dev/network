@@ -35,6 +35,7 @@ function recoverPublicKey(signatureBuffer: Buffer, payloadBuffer: Buffer) {
  * See test/benchmark/SigningUtils.ts and the original PR:
  * https://github.com/streamr-dev/streamr-client-protocol-js/pull/35
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export default class SigningUtil {
     static sign(payload: string, privateKey: string): string {
         const payloadBuffer = Buffer.from(payload, 'utf-8')

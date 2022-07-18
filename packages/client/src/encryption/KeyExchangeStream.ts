@@ -27,7 +27,7 @@ import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
 
-export type EncryptionConfig = {
+export interface EncryptionConfig {
     encryptionKeys: Record<string, GroupKeysSerialized>
 }
 

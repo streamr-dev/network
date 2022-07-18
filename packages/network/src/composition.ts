@@ -39,7 +39,7 @@ export {
     Event as WsEndpointEvent,
     AbstractWsEndpoint
 } from './connection/ws/AbstractWsEndpoint'
-export { Event as NodeToTrackerEvent, NodeToTracker} from './protocol/NodeToTracker'
+export { Event as NodeToTrackerEvent, NodeToTracker } from './protocol/NodeToTracker'
 export {
     HttpServerConfig,
     ServerWsEndpoint,

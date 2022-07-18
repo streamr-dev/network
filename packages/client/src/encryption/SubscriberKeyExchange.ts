@@ -59,8 +59,8 @@ export class SubscriberKeyExchange implements Context {
     }
 
     private async doRequestKeys({ streamId, publisherId, groupKeyIds }: {
-        streamId: StreamID,
-        publisherId: string,
+        streamId: StreamID
+        publisherId: string
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {
         const requestId = uuid('GroupKeyRequest')

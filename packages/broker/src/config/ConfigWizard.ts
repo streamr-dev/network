@@ -13,12 +13,12 @@ import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../config/migratio
 import { generateMnemonicFromAddress } from '../helpers/generateMnemonicFromAddress'
 
 export interface PrivateKeyAnswers extends Answers {
-    generateOrImportPrivateKey: 'Import' | 'Generate',
+    generateOrImportPrivateKey: 'Import' | 'Generate'
     importPrivateKey?: string
 }
 
 export interface PluginAnswers extends Answers  {
-    enabledApiPlugins: string[],
+    enabledApiPlugins: string[]
     websocketPort?: string
     mqttPort?: string
     httpPort?: string
@@ -45,13 +45,13 @@ const generateApiKey = (): string => {
     return Buffer.from(hex).toString('base64').replace(/[^0-9a-z]/gi, '')
 }
 
-export const DEFAULT_CONFIG_PORTS: { [plugin: string]: number } = {
+export const DEFAULT_CONFIG_PORTS: Record<string, number> = {
     WS: WebsocketConfigSchema.properties.port.default,
     MQTT: MqttConfigSchema.properties.port.default,
     HTTP: BrokerConfigSchema.properties.httpServer.properties.port.default
 }
 
-const PLUGIN_NAMES: {[pluginName: string]: string} = {
+const PLUGIN_NAMES: Record<string, string> = {
     WS: 'websocket',
     MQTT: 'mqtt',
     HTTP: 'http'
@@ -182,10 +182,10 @@ export const getConfig = (privateKey: string, pluginsAnswers: PluginAnswers): an
     pluginKeys.forEach((pluginKey) => {
         const pluginName = PLUGIN_NAMES[pluginKey]
         const defaultPort = DEFAULT_CONFIG_PORTS[pluginKey]
-        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)){
+        if (pluginsAnswers.enabledApiPlugins && pluginsAnswers.enabledApiPlugins.includes(pluginName)) {
             let pluginConfig = {}
             const portNumber = parseInt(pluginsAnswers[`${pluginName}Port`])
-            if (portNumber !== defaultPort){
+            if (portNumber !== defaultPort) {
                 const portObject = { port: portNumber }
                 if (pluginName === PLUGIN_NAMES.HTTP) {
                     // the http plugin is special, it needs to be added to the config after the other plugins
@@ -255,14 +255,14 @@ export const start = async (
         const privateKeyAnswers = await getPrivateKeyAnswers()
         const privateKey = getPrivateKey(privateKeyAnswers)
         if (privateKeyAnswers.revealGeneratedPrivateKey) {
-            logger.info(`This is your node\'s private key: ${privateKey}`)
+            logger.info(`This is your node's private key: ${privateKey}`)
         }
         const pluginsAnswers = await getPluginAnswers()
         const config = getConfig(privateKey, pluginsAnswers)
         const storageAnswers = await getStorageAnswers()
         const storagePath = await createStorageFile(config, storageAnswers)
         logger.info('Welcome to the Streamr Network')
-        const {mnemonic, networkExplorerUrl} = getNodeIdentity(privateKey)
+        const { mnemonic, networkExplorerUrl } = getNodeIdentity(privateKey)
         logger.info(`Your node's generated name is ${mnemonic}.`)
         logger.info('View your node in the Network Explorer:')
         logger.info(networkExplorerUrl)

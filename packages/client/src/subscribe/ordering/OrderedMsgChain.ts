@@ -13,7 +13,7 @@ function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
 
 type MsgRefId = string
 
-type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']>}
+type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']> }
 
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
@@ -133,17 +133,18 @@ interface Events {
      * Message was marked and is being skipped.
      * Does not fire if maxGapRequests = 0
      */
-    skip: MessageHandler;
+    skip: MessageHandler
     /**
      * Queue was drained after something was in it.
      */
-    drain: (numMessages: number) => void;
+    drain: (numMessages: number) => void
     /**
      * Probably a GapFillFailedError.
      */
-    error: (error: Error) => void;
+    error: (error: Error) => void
 }
 
+// eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
 // The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing

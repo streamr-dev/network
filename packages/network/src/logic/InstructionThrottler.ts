@@ -20,7 +20,7 @@ export class InstructionThrottler {
     private readonly logger: Logger
     private readonly handleFn: HandleFn
     private queue: Queue = {}
-    private instructionCounter: Record<StreamPartID,number> = {}
+    private instructionCounter: Record<StreamPartID, number> = {}
     private ongoingPromises: Record<StreamPartID, {
         promise: CancelablePromiseType<void> | null
         handling: boolean

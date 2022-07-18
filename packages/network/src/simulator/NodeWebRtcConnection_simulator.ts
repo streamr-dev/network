@@ -45,7 +45,7 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     protected doConnect(): void {
         if (this.isOffering()) {
             this.emitLocalDescription("ICE description from " + this.selfId, "ICE Description")
-            this.emitLocalCandidate("ICE candidate from "+ this.selfId, "abcdefg")
+            this.emitLocalCandidate("ICE candidate from " + this.selfId, "abcdefg")
         }
     }
 
@@ -53,15 +53,14 @@ export class NodeWebRtcConnection extends WebRtcConnection {
         this.remoteDescriptionSet = true
         if (!this.isOffering()) {
             this.emitLocalDescription("ICE description from " + this.selfId, "ICE Description")
-            this.emitLocalCandidate("ICE candidate from "+ this.selfId, "abcdefg")
+            this.emitLocalCandidate("ICE candidate from " + this.selfId, "abcdefg")
         }
     }
 
     addRemoteCandidate(_ucandidate: string, _umid: string): void {
         if (this.remoteDescriptionSet) {
             Simulator.instance().webRtcConnect(this.selfId, this.getPeerId())
-        }
-        else {
+        } else {
             this.logger.warn("Tried setting remoteCandidate before remote description, closing")
             this.close(new Error('Tried setting remoteCandidate before remote description, closing'))
         }

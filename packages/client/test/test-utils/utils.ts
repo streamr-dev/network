@@ -153,7 +153,7 @@ type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'me
     publisher: Wallet
     msgChainId?: string
     timestamp?: number
-    sequenceNumber?: number,
+    sequenceNumber?: number
     encryptionKey?: GroupKey
 }
 

@@ -23,12 +23,12 @@ export interface BrubeckMinerPluginConfig {
     rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
-    stunServerHost: string|null
+    stunServerHost: string | null
 }
 
 interface Peer {
     id: string
-    rtt: number|undefined
+    rtt: number | undefined
 }
 
 export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
@@ -46,7 +46,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
-        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)])
+        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random() * this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
@@ -144,7 +144,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    private async getLatency(): Promise<number|undefined> {
+    private async getLatency(): Promise<number | undefined> {
         const startTime = Date.now()
         try {
             await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)

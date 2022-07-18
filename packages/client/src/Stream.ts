@@ -33,7 +33,7 @@ export interface StreamProperties {
     id: string
     description?: string
     config?: {
-        fields: Field[];
+        fields: Field[]
     }
     partitions?: number
     storageDays?: number
@@ -47,9 +47,9 @@ export interface StreamrStreamConstructorOptions extends StreamProperties {
 
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-export type Field = {
-    name: string;
-    type: typeof VALID_FIELD_TYPES[number];
+export interface Field {
+    name: string
+    type: typeof VALID_FIELD_TYPES[number]
 }
 
 function getFieldType(value: any): (Field['type'] | undefined) {
@@ -78,7 +78,7 @@ class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
     config: {
-        fields: Field[];
+        fields: Field[]
     } = { fields: [] }
     partitions!: number
     storageDays?: number

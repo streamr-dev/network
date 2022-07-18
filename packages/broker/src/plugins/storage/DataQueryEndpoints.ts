@@ -18,10 +18,10 @@ export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 class ResponseTransform extends Transform {
 
     format: Format
-    version: number|undefined
+    version: number | undefined
     firstMessage = true
 
-    constructor(format: Format, version: number|undefined) {
+    constructor(format: Format, version: number | undefined) {
         super({
             writableObjectMode: true
         })
@@ -106,7 +106,7 @@ const createEndpointRoute = (
     })
 }
 
-type BaseRequest<Q> = Request<Record<string,any>,any,any,Q,Record<string,any>>
+type BaseRequest<Q> = Request<Record<string, any>, any, any, Q, Record<string, any>>
 
 type LastRequest = BaseRequest<{
     count?: string

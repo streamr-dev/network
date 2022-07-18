@@ -30,7 +30,7 @@ const REQUEST_TYPE_FROM = 'requestFrom'
 const REQUEST_TYPE_RANGE = 'requestRange'
 
 const streamToContentValues = async (resultStream: Readable) => {
-    const messages: StreamMessage<{value: any}>[] = (await waitForStreamToEnd(resultStream)) as StreamMessage<{value: any}>[]
+    const messages: StreamMessage<{ value: any }>[] = (await waitForStreamToEnd(resultStream)) as StreamMessage<{ value: any }>[]
     return messages.map((message) => message.getParsedContent().value)
 }
 
@@ -39,13 +39,13 @@ class ProxyClient {
     static ERROR = new Error('mock-error')
 
     private realClient: Client
-    private errorQueryId: string|undefined
+    private errorQueryId: string | undefined
 
     constructor(realClient: Client) {
         this.realClient = realClient
     }
 
-    eachRow(query: string, params: any, options: any, rowCallback: any, resultCallback?: (err: Error|undefined, result: any) => void) {
+    eachRow(query: string, params: any, options: any, rowCallback: any, resultCallback?: (err: Error | undefined, result: any) => void) {
         if (this.hasError(query)) {
             resultCallback!(ProxyClient.ERROR, undefined)
         } else {
@@ -169,7 +169,7 @@ describe('cassanda-queries', () => {
         [REQUEST_TYPE_FROM, MOCK_PUBLISHER_ID, undefined],
         [REQUEST_TYPE_RANGE, undefined, undefined],
         [REQUEST_TYPE_RANGE, MOCK_PUBLISHER_ID, MOCK_MSG_CHAIN_ID],
-    ])('%s, publisher: %p', (requestType: string, publisherId: string|undefined, msgChainId: string|undefined) => {
+    ])('%s, publisher: %p', (requestType: string, publisherId: string | undefined, msgChainId: string | undefined) => {
 
         const getResultStream = (streamId: string): Readable => {
             const minMockTimestamp = MOCK_MESSAGES[0].getTimestamp()

@@ -3,18 +3,18 @@ import path from 'path'
 import * as os from 'os'
 
 export interface HttpServerConfig {
-    port: number,
-    privateKeyFileName: string | null,
+    port: number
+    privateKeyFileName: string | null
     certFileName: string | null
 }
 
 export type ApiAuthenticationConfig = { keys: string[] } | null
 
 export interface Config {
-    $schema: string,
+    $schema: string
     client: StreamrClientConfig
     httpServer: HttpServerConfig
-    plugins: Record<string,any>
+    plugins: Record<string, any>
     apiAuthentication: ApiAuthenticationConfig
 }
 

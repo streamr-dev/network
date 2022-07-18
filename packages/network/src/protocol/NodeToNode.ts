@@ -26,7 +26,7 @@ export enum Event {
     LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
 }
 
-const eventPerType: { [key: number]: string } = {}
+const eventPerType: Record<number, string> = {}
 eventPerType[ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTION_REQUEST_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED

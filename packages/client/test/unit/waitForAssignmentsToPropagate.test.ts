@@ -12,7 +12,7 @@ function makeMsg<T>(ts: number, content: T): StreamMessage<T> {
 }
 
 function createAssignmentMessagesFor(stream: {
-    id: StreamID,
+    id: StreamID
     partitions: number
 }): StreamMessage<{ streamPart: StreamPartID }>[] {
     return range(0, stream.partitions).map((partition) => (

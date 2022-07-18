@@ -183,6 +183,7 @@ const formBackupFileName = (originalFileName: string) => {
         return name
     } else {
         let suffix = 1
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const suffixedName = `${name}-${suffix}`
             if (!fs.existsSync(suffixedName)) {

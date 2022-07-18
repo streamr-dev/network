@@ -7,7 +7,7 @@ export default class OrderingUtil extends MsgChainEmitter {
     propagationTimeout?: number
     resendTimeout?: number
     maxGapRequests?: number
-    orderedChains: { [key: string]: OrderedMsgChain}
+    orderedChains: Record<string, OrderedMsgChain>
 
     constructor(
         inOrderHandler: MessageHandler,

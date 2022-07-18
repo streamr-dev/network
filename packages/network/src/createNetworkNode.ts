@@ -10,20 +10,20 @@ import { NegotiatedProtocolVersions } from './connection/NegotiatedProtocolVersi
 import { PeerInfo } from './connection/PeerInfo'
 import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
-import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
+import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { SmartContractRecord } from 'streamr-client-protocol'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
-    trackers: SmartContractRecord[],
-    disconnectionWaitTime?: number,
+    trackers: SmartContractRecord[]
+    disconnectionWaitTime?: number
     peerPingInterval?: number
-    newWebrtcConnectionTimeout?: number,
-    webrtcDatachannelBufferThresholdLow?: number,
-    webrtcDatachannelBufferThresholdHigh?: number,
-    stunUrls?: string[],
-    rttUpdateTimeout?: number,
+    newWebrtcConnectionTimeout?: number
+    webrtcDatachannelBufferThresholdLow?: number
+    webrtcDatachannelBufferThresholdHigh?: number
+    stunUrls?: string[]
+    rttUpdateTimeout?: number
     trackerConnectionMaintenanceInterval?: number
-    webrtcDisallowPrivateAddresses?: boolean,
+    webrtcDisallowPrivateAddresses?: boolean
     acceptProxyConnections?: boolean
 }
 

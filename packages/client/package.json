@@ -87,7 +87,6 @@
         "chromedriver": "^103.0.0",
         "concurrently": "^6.4.0",
         "crypto-browserify": "^3.12.0",
-        "eslint-loader": "^4.0.2",
         "eslint-plugin-import": "^2.25.3",
         "ethers": "^5.4.7",
         "express": "^4.17.1",

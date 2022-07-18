@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { set } from 'lodash'
 import { scheduleAtFixedRate } from '@streamr/utils'
 
-export type MetricsDefinition = Record<string,Metric>
+export type MetricsDefinition = Record<string, Metric>
 
 interface MetricEvents {
     record: (value: number) => void
@@ -187,10 +187,10 @@ export type MetricsReport = {
         start: number
         end: number
     }
-} & Record<string,any>
+} & Record<string, any>
 
 export class MetricsContext {
-    private readonly metrics: Map<string,Metric> = new Map()
+    private readonly metrics: Map<string, Metric> = new Map()
 
     addMetrics(namespace: string, definitions: MetricsDefinition): void {
         Object.keys(definitions).forEach((key) => {
@@ -211,7 +211,7 @@ export class MetricsContext {
         interval: number,
         formatNumber?: (value: number) => string
     ): { stop: () => void } {
-        const ongoingSamples: Map<string,Sampler> = new Map()
+        const ongoingSamples: Map<string, Sampler> = new Map()
         return scheduleAtFixedRate(async (now: number) => {
             if (ongoingSamples.size > 0) {
                 const report = {

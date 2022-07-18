@@ -5,7 +5,7 @@ import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
-import { getPublishTestStreamMessages,getWaitForStorage } from '../test-utils/publish'
+import { getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
 import { StreamPermission } from '../../src'
 
 const NUM_MESSAGES = 8

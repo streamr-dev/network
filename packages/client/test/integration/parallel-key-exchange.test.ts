@@ -20,7 +20,7 @@ const MESSAGE_COUNT_PER_PUBLISHER = 3
 const GROUP_KEY_FETCH_DELAY = 1000
 
 interface PublisherInfo {
-    wallet: Wallet,
+    wallet: Wallet
     groupKey: GroupKey
     node?: FakeBrubeckNode
 }

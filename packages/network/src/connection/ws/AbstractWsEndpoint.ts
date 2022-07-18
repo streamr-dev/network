@@ -44,7 +44,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
     private readonly connectionById: Map<PeerId, C> = new Map<PeerId, C>()
     private stopped = false
 
-    protected handshakeTimeoutRefs: Record<PeerId,NodeJS.Timeout>
+    protected handshakeTimeoutRefs: Record<PeerId, NodeJS.Timeout>
     protected readonly peerInfo: PeerInfo
     protected readonly logger: Logger
     protected readonly handshakeTimer: number

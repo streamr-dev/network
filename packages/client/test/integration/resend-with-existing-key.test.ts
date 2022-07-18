@@ -99,7 +99,7 @@ describe('resend with existing key', () => {
         rotatedKey = GroupKey.generate()
         rekeyedKey = GroupKey.generate()
         allMessages = [
-            { timestamp: 1000, groupKey: initialKey},
+            { timestamp: 1000, groupKey: initialKey },
             { timestamp: 2000, groupKey: initialKey, nextGroupKey: rotatedKey },
             { timestamp: 3000, groupKey: rotatedKey },
             { timestamp: 4000, groupKey: rotatedKey },

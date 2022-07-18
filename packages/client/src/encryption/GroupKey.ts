@@ -10,16 +10,16 @@ class InvalidGroupKeyError extends ValidationError {
     }
 }
 
-export type GroupKeyObject = {
-    id: string,
-    hex: string,
-    data: Uint8Array,
+export interface GroupKeyObject {
+    id: string
+    hex: string
+    data: Uint8Array
 }
 
-type GroupKeyProps = {
-    groupKeyId: string,
-    groupKeyHex: string,
-    groupKeyData: Uint8Array,
+interface GroupKeyProps {
+    groupKeyId: string
+    groupKeyHex: string
+    groupKeyData: Uint8Array
 }
 
 function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {

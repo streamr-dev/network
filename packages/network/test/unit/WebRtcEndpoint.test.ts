@@ -463,7 +463,7 @@ describe('WebRtcEndpoint', () => {
                 2 ** 17,  // webrtcDatachannelBufferThresholdHigh
                 webrtcDisallowPrivateAddresses
             )
-            return {webRtcEndpoint: endpoint, wsEndpoint: ep, nodeToTracker: nodeToTracker}
+            return { webRtcEndpoint: endpoint, wsEndpoint: ep, nodeToTracker: nodeToTracker }
         }
 
         it('does not allow local addresses in ICE candidtates if local address support is disabled', async () => {

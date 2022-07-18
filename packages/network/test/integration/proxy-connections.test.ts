@@ -263,6 +263,7 @@ describe('Proxy connection tests', () => {
         try {
             await onewayNode.openProxyConnection(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node', ProxyDirection.PUBLISH)
         } catch (err) {
+            // no-op
         }
 
         // @ts-expect-error private

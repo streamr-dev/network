@@ -27,8 +27,8 @@ let ID = 0
 export class BatchManager extends EventEmitter {
 
     opts: BatchManagerOptions
-    batches: Record<BucketId,Batch>
-    pendingBatches: Record<BatchId,Batch>
+    batches: Record<BucketId, Batch>
+    pendingBatches: Record<BatchId, Batch>
     cassandraClient: Client
     insertStatement: string
     logger: Logger

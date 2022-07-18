@@ -7,8 +7,8 @@ import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 const MESSAGES_PER_PUBLISHER = 1000
 const NUM_OF_DUPLICATE_MESSAGES = 500
 const MAX_GAP_FILL_MESSAGE_LATENCY = 20 // latency ~ [0, 20]
-const GAP_FILLED_RATE = 1/10
-const UNAVAILABLE_RATE = 1/100
+const GAP_FILLED_RATE = 1 / 10
+const UNAVAILABLE_RATE = 1 / 100
 
 const PROPAGATION_TIMEOUT = 200
 const RESEND_TIMEOUT = 100
@@ -160,7 +160,7 @@ describe.skip(OrderingUtil, () => {
         await Promise.race([
             waitForCondition(() => PUBLISHER_IDS.every((publisherId) => (
                 expected[publisherId].length === actual[publisherId].length
-            )), 60*1000)
+            )), 60 * 1000)
         ])
         expect(errorHandler).toHaveBeenCalledTimes(totalUnfillableGaps)
         expect(actual).toStrictEqual(expected)

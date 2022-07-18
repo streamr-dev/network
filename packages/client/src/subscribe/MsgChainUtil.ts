@@ -42,7 +42,7 @@ class MsgChainProcessor<T> {
 export class MsgChainUtil<T> implements AsyncIterable<StreamMessage<T>> {
 
     private outputBuffer: PushBuffer<StreamMessage<T>> = new PushBuffer()
-    private processors: Map<string,MsgChainProcessor<T>> = new Map()
+    private processors: Map<string, MsgChainProcessor<T>> = new Map()
     private processMessageFn: ProcessMessageFn<T>
     private onError: OnError<T>
 

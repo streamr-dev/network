@@ -8,7 +8,7 @@ import { MqttServer, MqttServerListener } from './MqttServer'
 const logger = new Logger(module)
 
 interface StreamSubscription {
-    streamrClientSubscription: Subscription,
+    streamrClientSubscription: Subscription
     clientIds: string[]
 }
 
@@ -122,7 +122,7 @@ export class Bridge implements MqttServerListener {
         }
     }
 
-    private getSubscription(streamId: string): StreamSubscription|undefined {
+    private getSubscription(streamId: string): StreamSubscription | undefined {
         return this.subscriptions.find((s: StreamSubscription) => {
             // TODO take partition into consideration?
             return StreamPartIDUtils.getStreamID(s.streamrClientSubscription.streamPartId) === streamId

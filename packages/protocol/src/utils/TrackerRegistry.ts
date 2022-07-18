@@ -1,7 +1,7 @@
 import { StreamPartID } from "./StreamPartID"
 import { keyToArrayIndex } from '@streamr/utils'
 
-export type SmartContractRecord = {
+export interface SmartContractRecord {
     id: string
     http: string
     ws: string

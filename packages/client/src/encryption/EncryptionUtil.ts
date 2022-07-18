@@ -4,13 +4,14 @@ import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-cl
 import { GroupKey } from './GroupKey'
 
 export class UnableToDecryptError extends StreamMessageError {
-    constructor(message = '', streamMessage: StreamMessage) {
+    constructor(streamMessage: StreamMessage, message = '') {
         super(`Unable to decrypt. ${message}`, streamMessage)
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EncryptionUtil {
-    private static validateRSAPublicKey(publicKey: crypto.KeyLike): void|never {
+    private static validateRSAPublicKey(publicKey: crypto.KeyLike): void | never {
         const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
         if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
             || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
@@ -88,7 +89,7 @@ export class EncryptionUtil {
             streamMessage.serializedContent = serializedContent
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError(err.stack, streamMessage)
+            throw new UnableToDecryptError(streamMessage, err.stack)
         }
 
         try {
@@ -100,7 +101,7 @@ export class EncryptionUtil {
             }
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
+            throw new UnableToDecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
         }
         /* eslint-enable no-param-reassign */
     }

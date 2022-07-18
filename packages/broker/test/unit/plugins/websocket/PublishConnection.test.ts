@@ -11,7 +11,7 @@ const MOCK_CONTENT2 = {
 }
 
 const createConnection = (streamrClient: Pick<StreamrClient, 'publish'>): (payload: string) => void => {
-    let onWebsocketMessage: (payload: string) => void | undefined
+    let onWebsocketMessage: (payload: string) => void
     const connection = new PublishConnection(MOCK_STREAM_ID, {})
     const mockWebSocket = {
         on: (_event: 'message', listener: (payload: string) => void) => {

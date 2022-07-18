@@ -24,7 +24,7 @@ const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
 
 interface RegistryItem {
     metadata: Omit<StreamProperties, 'id'>
-    permissions: Multimap<EthereumAddress|PublicPermissionTarget, StreamPermission>
+    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
 }
 
 @scoped(Lifecycle.ContainerScoped)
@@ -46,7 +46,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         this.authentication = authentication
         this.container = container
         this.streamRegistryCached = streamRegistryCached
-        const storageNodeAssignmentStreamPermissions = new Multimap<string,StreamPermission>()
+        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
         storageNodeAssignmentStreamPermissions.add(DOCKER_DEV_STORAGE_NODE.toLowerCase(), StreamPermission.PUBLISH)
         this.registryItems.set(formStorageNodeAssignmentStreamId(DOCKER_DEV_STORAGE_NODE), {
             metadata: {},
@@ -78,7 +78,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         })
     }
 
-    private createFakeStream = (props: StreamProperties & { id: StreamID}) => {
+    private createFakeStream = (props: StreamProperties & { id: StreamID }) => {
         const s = new Stream(props, this.container)
         return s
     }
@@ -172,7 +172,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
 
     // eslint-disable-next-line class-methods-use-this
     async setPermissions(..._streams: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         throw new Error('not implemented')

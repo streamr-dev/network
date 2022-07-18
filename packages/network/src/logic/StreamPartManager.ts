@@ -8,9 +8,9 @@ import _ from 'lodash'
 interface StreamPartState {
     detectors: Map<string, DuplicateMessageDetector> // "publisherId-msgChainId" => DuplicateMessageDetector
     neighbors: Set<NodeId>
-    counter: number,
-    inOnly: Set<NodeId>,
-    outOnly: Set<NodeId>,
+    counter: number
+    inOnly: Set<NodeId>
+    outOnly: Set<NodeId>
     isBehindProxy: boolean
 }
 
@@ -19,7 +19,7 @@ function keyForDetector({ publisherId, msgChainId }: MessageID) {
 }
 
 export class StreamPartManager {
-    private readonly streamParts = new Map<StreamPartID,StreamPartState>()
+    private readonly streamParts = new Map<StreamPartID, StreamPartState>()
 
     setUpStreamPart(streamPartId: StreamPartID, isBehindProxy = false): void {
         if (this.isSetUp(streamPartId)) {
@@ -207,8 +207,7 @@ export class StreamPartManager {
         try {
             this.ensureThatIsSetUp(streamPartId)
             return this.streamParts.get(streamPartId)!.isBehindProxy
-        }
-        catch (err) {
+        } catch (err) {
             return false
         }
     }

@@ -13,7 +13,7 @@ import { CacheConfig } from '../Config'
 import { CacheFn } from '../utils/caches'
 import { randomString } from '@streamr/utils'
 
-export type MessageChainOptions = {
+export interface MessageChainOptions {
     publisherId: EthereumAddress
     msgChainId?: string
 }

@@ -30,7 +30,7 @@ interface Subscriber {
         streamPartId: StreamPartID,
         trackerId: TrackerId,
         reattempt: boolean
-    ) => Promise<PromiseSettledResult<NodeId>[]>,
+    ) => Promise<PromiseSettledResult<NodeId>[]>
     unsubscribeFromStreamPartOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
     emitJoinCompleted: (streamPartId: StreamPartID, numOfNeighbors: number) => void
     emitJoinFailed: (streamPartId: StreamPartID, error: string) => void

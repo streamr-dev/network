@@ -36,6 +36,7 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamIDUtils {
 
     static isPathOnlyFormat(streamIdOrPath: string): boolean {

@@ -21,7 +21,7 @@ describe('searchStreams', () => {
     const searcher = fastWallet()
 
     const createTestStreams = async (items: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]) => {
         const streams: Stream[] = []

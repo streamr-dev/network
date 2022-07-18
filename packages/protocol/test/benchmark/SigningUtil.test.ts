@@ -89,7 +89,7 @@ describe.skip('SigningUtil', () => {
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)
     
-            console.info(`Sign payloadSize=${payloadSize} is ${elapsedTimeEthers/elapsedTimeOur}x faster`)
+            console.info(`Sign payloadSize=${payloadSize} is ${elapsedTimeEthers / elapsedTimeOur}x faster`)
     
         })
     
@@ -105,7 +105,7 @@ describe.skip('SigningUtil', () => {
     
             expect(elapsedTimeOur).toBeLessThan(elapsedTimeEthers)
             
-            console.info(`Verify payloadSize=${payloadSize} is ${elapsedTimeEthers/elapsedTimeOur}x faster`)
+            console.info(`Verify payloadSize=${payloadSize} is ${elapsedTimeEthers / elapsedTimeOur}x faster`)
             
         })
     
