@@ -30,7 +30,7 @@ export class MqttPlugin extends Plugin<MqttPluginConfig> {
         await this.server!.stop()
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

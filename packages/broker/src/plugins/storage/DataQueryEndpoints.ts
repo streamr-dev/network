@@ -29,7 +29,7 @@ class ResponseTransform extends Transform {
         this.version = version
     }
 
-    _transform(input: StreamMessage, _encoding: string, done: () => void) {
+    override _transform(input: StreamMessage, _encoding: string, done: () => void) {
         if (this.firstMessage) {
             this.firstMessage = false
             this.push(this.format.header)
@@ -40,7 +40,7 @@ class ResponseTransform extends Transform {
         done()
     }
 
-    _flush(done: () => void) {
+    override _flush(done: () => void) {
         if (this.firstMessage) {
             this.push(this.format.header)
         }
