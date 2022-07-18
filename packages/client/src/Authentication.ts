@@ -2,13 +2,14 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 import type { Signer } from '@ethersproject/abstract-signer'
 import { computeAddress } from '@ethersproject/transactions'
-import { EthereumAddress, SigningUtil } from 'streamr-client-protocol'
+import { EthereumAddress } from 'streamr-client-protocol'
 import type { ExternalProvider } from '@ethersproject/providers'
 import { EthereumConfig, getStreamRegistryChainProvider } from './Ethereum'
 import { XOR } from './types'
 import { pLimitFn } from './utils/promises'
 import pMemoize from 'p-memoize'
 import { wait } from '@streamr/utils'
+import { sign } from './utils/signingUtils'
 
 export type ProviderConfig = ExternalProvider
 
@@ -46,7 +47,7 @@ export const createAuthentication = (authConfig: AuthConfig, ethereumConfig: Eth
         return {
             isAuthenticated: () => true,
             getAddress: async () => address,
-            createMessagePayloadSignature: async (payload: string) => SigningUtil.sign(payload, key),
+            createMessagePayloadSignature: async (payload: string) => sign(payload, key),
             getStreamRegistryChainSigner: async () => new Wallet(key, getStreamRegistryChainProvider(ethereumConfig))
         }
     } else if (authConfig.ethereum !== undefined) {
