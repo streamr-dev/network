@@ -1,6 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, createTestStream } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestMessages } from '../test-utils/publish'
 import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'

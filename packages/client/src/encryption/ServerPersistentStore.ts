@@ -4,7 +4,8 @@ import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
-import { instanceId, pOnce } from '../utils'
+import { instanceId } from '../utils/utils'
+import { pOnce } from '../utils/promises'
 import { Context } from '../utils/Context'
 
 import { PersistentStore } from './PersistentStore'
@@ -13,25 +14,24 @@ import { StreamID } from 'streamr-client-protocol'
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
 
-export type ServerPersistentStoreOptions = {
-    context: Context,
+export interface ServerPersistentStoreOptions {
+    context: Context
     clientId: string
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
-    rootPath?: string,
-    migrationsPath?: string,
+    rootPath?: string
+    migrationsPath?: string
 }
 
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
     readonly id: string
-    readonly clientId: string
-    readonly streamId: string
-    readonly dbFilePath: string
+    private readonly streamId: string
+    private readonly dbFilePath: string
     private store?: Database
     private error?: Error
     private readonly initialData
     private initCalled = false
-    readonly migrationsPath: string
+    private readonly migrationsPath: string
     readonly debug
 
     constructor({
@@ -45,7 +45,6 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.streamId = encodeURIComponent(streamId)
-        this.clientId = encodeURIComponent(clientId)
         this.initialData = initialData
         const paths = envPaths('streamr-client')
         const dbFilePath = resolve(paths.data, join(rootPath, clientId, 'GroupKeys.db'))

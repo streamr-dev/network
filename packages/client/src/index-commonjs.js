@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // CJS entrypoint.
 const StreamrClientExports = require('./index-exports')
 

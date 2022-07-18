@@ -1,6 +1,6 @@
 import { webRtcConnectionFactory } from "../../src/connection/webrtc/BrowserWebRtcConnection"
 import { runAndWaitForEvents } from "streamr-test-utils"
-import { MessageQueue} from "../../src/connection/MessageQueue"
+import { MessageQueue } from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
 import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
 
@@ -9,6 +9,7 @@ const connectionOpts1: ConstructorOptions = {
     targetPeerId: 'peer2',
     routerId: 'tracker',
     stunUrls: [],
+    pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
 }
@@ -18,6 +19,7 @@ const connectionOpts2: ConstructorOptions = {
     targetPeerId: 'peer1',
     routerId: 'tracker',
     stunUrls: [],
+    pingInterval: 5000,
     messageQueue: new MessageQueue<string>(),
     deferredConnectionAttempt: new DeferredConnectionAttempt()
 }

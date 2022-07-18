@@ -1,13 +1,18 @@
 import {
-    ControlLayer,
-    MessageLayer,
+    BroadcastMessage,
+    ErrorMessage,
+    InstructionMessage,
+    MessageID,
+    MessageRef,
     RelayMessage,
     RelayMessageSubType,
+    StatusMessage,
+    StreamMessage,
     StreamPartIDUtils,
-    toStreamID,
-    TrackerLayer
+    toStreamID
 } from 'streamr-client-protocol'
-import { runAndWaitForEvents, waitForEvent } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { startTracker, Tracker, TrackerServer, TrackerServerEvent } from '@streamr/network-tracker'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../src/protocol/NodeToNode'
 import { Event as NodeToTrackerEvent, NodeToTracker } from '../../src/protocol/NodeToTracker'
@@ -19,8 +24,6 @@ import { WebRtcEndpoint } from '../../src/connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { startServerWsEndpoint } from '../utils'
-
-const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const UUID_REGEX = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/
 
@@ -76,7 +79,7 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode1 = new NodeToNode(wrtcEndpoint1)
         nodeToNode2 = new NodeToNode(wrtcEndpoint2)
 
-        trackerServer = new TrackerServer(wsEndpoint3)
+        trackerServer = new TrackerServer(wsEndpoint3 as any) // cast: get around weird circular dependency private property issue
 
         // Connect nodeToTracker <-> trackerServer
         await nodeToTracker.connectToTracker(trackerServer.getUrl(), trackerServerPeerInfo)
@@ -126,7 +129,7 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode2.sendData('node1', streamMessage)
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(ControlLayer.BroadcastMessage)
+        expect(msg).toBeInstanceOf(BroadcastMessage)
         expect(source).toEqual('node2')
         expect(msg.requestId).toEqual('')
         expect(msg.streamMessage.messageId).toEqual(new MessageID(toStreamID('stream'), 10, 666, 0, 'publisherId', 'msgChainId'))
@@ -134,7 +137,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.streamMessage.signatureType).toEqual(MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
+        expect(msg.streamMessage.signatureType).toEqual(StreamMessage.SIGNATURE_TYPES.ETH)
         expect(msg.streamMessage.signature).toEqual('signature')
     })
 
@@ -144,7 +147,7 @@ describe('delivery of messages in protocol layer', () => {
         const [msg, trackerId]: any = await messagePromise
 
         expect(trackerId).toEqual('trackerServer')
-        expect(msg).toBeInstanceOf(TrackerLayer.InstructionMessage)
+        expect(msg).toBeInstanceOf(InstructionMessage)
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
@@ -161,7 +164,7 @@ describe('delivery of messages in protocol layer', () => {
         const [msg, source]: any = await messagePromise
 
         if (typeof _streamr_electron_test === 'undefined') {
-            expect(msg).toBeInstanceOf(TrackerLayer.StatusMessage)
+            expect(msg).toBeInstanceOf(StatusMessage)
         }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
@@ -175,9 +178,9 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer.sendUnknownPeerError('node1', 'requestId', 'unknownTargetNode')
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.ErrorMessage)
+        expect(msg).toBeInstanceOf(ErrorMessage)
         expect(source).toEqual('trackerServer')
-        expect(msg.errorCode).toEqual(TrackerLayer.ErrorMessage.ERROR_CODES.UNKNOWN_PEER)
+        expect(msg.errorCode).toEqual(ErrorMessage.ERROR_CODES.UNKNOWN_PEER)
         expect(msg.targetNode).toEqual('unknownTargetNode')
     })
 
@@ -195,10 +198,10 @@ describe('delivery of messages in protocol layer', () => {
 
         })
         trackerServer.send('node1', sentMessage)
-        
+
         const [msg, source] = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(msg).toBeInstanceOf(RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg).toEqual(sentMessage)
     })
@@ -219,7 +222,7 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer.send('node1', sentMessage)
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(msg).toBeInstanceOf(RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg).toEqual(sentMessage)
     })
@@ -236,7 +239,7 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer.send('node1', sentMessage)
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(msg).toBeInstanceOf(RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg).toEqual(sentMessage)
     })
@@ -257,7 +260,7 @@ describe('delivery of messages in protocol layer', () => {
         trackerServer.send('node1', sentMessage)
         const [msg, source]: any = await messagePromise
 
-        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(msg).toBeInstanceOf(RelayMessage)
         expect(source).toEqual('trackerServer')
         expect(msg).toEqual(sentMessage)
     })
@@ -274,7 +277,7 @@ describe('delivery of messages in protocol layer', () => {
         const [msg, source]: any = await messagePromise
 
         if (typeof _streamr_electron_test === 'undefined') {
-            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+            expect(msg).toBeInstanceOf(RelayMessage)
         }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)
@@ -293,7 +296,7 @@ describe('delivery of messages in protocol layer', () => {
         const [msg, source]: any = await messagePromise
 
         if (typeof _streamr_electron_test === 'undefined') {
-            expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+            expect(msg).toBeInstanceOf(RelayMessage)
         }
         expect(source).toEqual('node1')
         expect(msg.requestId).toMatch(UUID_REGEX)

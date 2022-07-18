@@ -63,7 +63,7 @@ describe('Bucket', () => {
     })
 
     it('ttl is updated on each incrementBucket, if not isAlive switches to false', () => {
-        jest.useFakeTimers('modern').setSystemTime(0)
+        jest.useFakeTimers().setSystemTime(0)
         const bucket = new Bucket('id', 'streamId', 0, 0, 0, new Date(), 3, 9, 1)
 
         expect(bucket.getId()).toEqual('id')

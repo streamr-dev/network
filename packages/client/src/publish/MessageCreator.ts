@@ -7,57 +7,39 @@ import {
     StreamMessageEncrypted,
     StreamMessageSigned,
     StreamID,
-    toStreamPartID
+    toStreamPartID,
+    StreamMessageType,
+    EncryptionType
 } from 'streamr-client-protocol'
 
-import { LimitAsyncFnByKey } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
+import { LimitAsyncFnByKey } from '../utils/promises'
 
 import { getCachedMessageChain } from './MessageChain'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-import { Ethereum } from '../Ethereum'
 import { StreamPartitioner } from './StreamPartitioner'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
-export type MessageCreateOptions<T = unknown> = {
-    content: T,
-    timestamp: number,
+export interface MessageCreateOptions<T = unknown> {
+    content: T
+    timestamp: number
     partitionKey?: string | number
     msgChainId?: string
-}
-
-export interface IMessageCreator {
-    create: <T>(streamId: StreamID, options: MessageCreateOptions<T>) => Promise<StreamMessage<T>>
-    stop: () => Promise<void> | void
-}
-
-export class MessageCreatorAnonymous implements IMessageCreator {
-    // eslint-disable-next-line class-methods-use-this
-    async create<T>(_streamId: string, _options: MessageCreateOptions<T>): Promise<StreamMessage<T>> {
-        throw new Error('Anonymous user can not publish.')
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    stop(): void {}
+    messageType?: StreamMessageType
+    encryptionType?: EncryptionType
 }
 
 /**
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class MessageCreator implements IMessageCreator, Stoppable {
-    isStopped = false
-    // encrypt
-    queue: ReturnType<typeof LimitAsyncFnByKey>
-    getMsgChain
-
-    /*
-     * Get function for creating stream messages.
-     */
+export class MessageCreator {
+    private queue: ReturnType<typeof LimitAsyncFnByKey>
+    private getMsgChain
 
     constructor(
         private streamPartitioner: StreamPartitioner,
-        private ethereum: Ethereum,
-        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig
     ) {
         this.getMsgChain = getCachedMessageChain(this.cacheOptions)
 
@@ -77,7 +59,7 @@ export class MessageCreator implements IMessageCreator, Stoppable {
             // load cached stream + publisher details
             const [streamPartition, publisherIdChecksumCase] = await Promise.all([
                 this.streamPartitioner.compute(streamId, partitionKey),
-                this.ethereum.getAddress(),
+                this.authentication.getAddress(),
             ])
 
             const streamPartId = toStreamPartID(streamId, streamPartition)
@@ -90,29 +72,17 @@ export class MessageCreator implements IMessageCreator, Stoppable {
 
             const [messageId, prevMsgRef] = chain.add(timestamp)
 
-            const streamMessage: StreamMessage<T> = StreamMessage.isStreamMessageContainer(content)
-                // TODO: typing for stream message containers
-                // e.g. transparent handling for StreamMessage<SomeClass> where SomeClass implements toStreamMessage & {de}serialization methods
-                ? (content.toStreamMessage(messageId, prevMsgRef || null)) as StreamMessage<any>
-                : new StreamMessage({
-                    messageId,
-                    prevMsgRef,
-                    content,
-                    ...opts
-                })
-
+            const streamMessage = new StreamMessage({
+                messageId,
+                prevMsgRef,
+                content,
+                ...opts
+            })
             return streamMessage
         })
     }
 
-    async start(): Promise<void> {
-        this.isStopped = false
-    }
-
     async stop(): Promise<void> {
-        this.isStopped = true
-        this.streamPartitioner.clear()
         this.queue.clear()
-        this.getMsgChain.clear()
     }
 }

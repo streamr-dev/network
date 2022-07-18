@@ -3,7 +3,7 @@ import {
     DisconnectionCode,
     DisconnectionReason,
 } from './AbstractWsEndpoint'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 
 export const HIGH_BACK_PRESSURE = 1024 * 1024 * 2
 export const LOW_BACK_PRESSURE = 1024 * 1024

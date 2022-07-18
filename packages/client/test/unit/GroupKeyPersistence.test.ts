@@ -4,8 +4,9 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
-import { uid, addAfterFn, describeRepeats, mockContext } from '../test-utils/utils'
-import LeakDetector from 'jest-leak-detector'
+import { uid, mockContext } from '../test-utils/utils'
+import { addAfterFn, describeRepeats } from '../test-utils/jest-utils'
+import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 
 // this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.

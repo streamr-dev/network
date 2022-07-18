@@ -5,10 +5,10 @@ describe('NegotiatedProtocolVersions', () => {
     let negotiatedProtocolVersions: NegotiatedProtocolVersions
 
     beforeEach(() => {
-        const peerInfo = PeerInfo.newNode('node', [1,2], [30,31,32])
+        const peerInfo = PeerInfo.newNode('node', [1, 2], [30, 31, 32])
         negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
-        negotiatedProtocolVersions.negotiateProtocolVersion('peer2', [1,2,3,4,5], [29,30,31,32,33])
-        negotiatedProtocolVersions.negotiateProtocolVersion('peer3', [1,5], [29,31])
+        negotiatedProtocolVersions.negotiateProtocolVersion('peer2', [1, 2, 3, 4, 5], [29, 30, 31, 32, 33])
+        negotiatedProtocolVersions.negotiateProtocolVersion('peer3', [1, 5], [29, 31])
     })
 
     it('negotiates versions as expected', () => {
@@ -25,7 +25,7 @@ describe('NegotiatedProtocolVersions', () => {
     it('error is thrown if version negotiation is unsuccessful', () => {
         expect(() => negotiatedProtocolVersions.negotiateProtocolVersion(
             'faulty',
-            [8,9],
+            [8, 9],
             [33])
         ).toThrow('Supported ControlLayer versions: [2]. Are you using an outdated library?')
     })

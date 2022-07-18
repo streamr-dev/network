@@ -15,6 +15,7 @@ export interface ResendSubscriptionEvents {
 export class ResendSubscription<T> extends Subscription<T> {
     private orderMessages
     private eventEmitter: EventEmitter<ResendSubscriptionEvents>
+
     /** @internal */
     constructor(
         subSession: SubscriptionSession<T>,

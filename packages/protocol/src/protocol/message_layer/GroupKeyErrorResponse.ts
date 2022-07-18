@@ -15,7 +15,7 @@ export interface Options {
     groupKeyIds: string[]
 }
 
-type GroupKeyErrorResponseSerialized = [string, string, ErrorCode, string, string[]]
+export type GroupKeyErrorResponseSerialized = [string, string, ErrorCode, string, string[]]
 
 export default class GroupKeyErrorResponse extends GroupKeyMessage {
 

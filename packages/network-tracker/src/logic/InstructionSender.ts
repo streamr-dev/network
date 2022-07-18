@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { StreamPartID } from 'streamr-client-protocol'
-import { Logger, NodeId, MetricsContext, MetricsDefinition, Metric, RateMetric } from 'streamr-network'
+import { NodeId, MetricsContext, MetricsDefinition, Metric, RateMetric } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { TopologyStabilizationOptions } from './Tracker'
 
 /**
@@ -27,9 +28,9 @@ const DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS: TopologyStabilizationOptions = {
 const logger = new Logger(module)
 
 export interface Instruction {
-    nodeId: NodeId,
-    streamPartId: StreamPartID,
-    newNeighbors: NodeId[],
+    nodeId: NodeId
+    streamPartId: StreamPartID
+    newNeighbors: NodeId[]
     counterValue: number
 }
 

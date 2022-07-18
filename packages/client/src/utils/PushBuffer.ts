@@ -1,4 +1,4 @@
-import { instanceId } from './index'
+import { instanceId } from './utils'
 import { Gate } from './Gate'
 import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
@@ -22,7 +22,7 @@ function isError(err: any): err is Error {
     )
 }
 
-export type PushBufferOptions = {
+export interface PushBufferOptions {
     name?: string
 }
 
@@ -44,8 +44,9 @@ export type IPushBuffer<InType, OutType = InType> = {
  */
 export class PushBuffer<T> implements IPushBuffer<T>, Context {
     static Error = PushBufferError
-    id
-    debug
+
+    readonly id
+    readonly debug
 
     protected readonly buffer: (T | Error)[] = []
     readonly bufferSize: number
@@ -280,7 +281,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     }
 }
 
-export type PullOptions = {
+export interface PullOptions {
     /** end dest when src ends */
     endDest: boolean
 }

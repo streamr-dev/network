@@ -3,7 +3,7 @@ module.exports = {
         'import'
     ],
     extends: [
-        'eslint-config-monorepo'
+        '../../.eslintrc.js'
     ],
     parserOptions: {
         ecmaVersion: 2020,

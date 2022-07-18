@@ -5,13 +5,6 @@ import { BrowserClientWsConnection, BrowserWebSocketConnectionFactory } from './
 import { AbstractClientWsEndpoint, HandshakeValues } from "./AbstractClientWsEndpoint"
 
 export default class BrowserClientWsEndpoint extends AbstractClientWsEndpoint<BrowserClientWsConnection> {
-    constructor(
-        peerInfo: PeerInfo,
-        pingInterval?: number
-    ) {
-        super(peerInfo, pingInterval)
-    }
-
     protected doConnect(serverUrl: string, serverPeerInfo: PeerInfo): Promise<PeerId> {
         return new Promise<PeerId>((resolve, reject) => {
             try {

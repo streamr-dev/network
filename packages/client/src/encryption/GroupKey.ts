@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { ValidationError } from 'streamr-client-protocol'
-import { uuid } from '../utils'
+import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
 
 class InvalidGroupKeyError extends ValidationError {
@@ -10,16 +10,16 @@ class InvalidGroupKeyError extends ValidationError {
     }
 }
 
-export type GroupKeyObject = {
-    id: string,
-    hex: string,
-    data: Uint8Array,
+export interface GroupKeyObject {
+    id: string
+    hex: string
+    data: Uint8Array
 }
 
-type GroupKeyProps = {
-    groupKeyId: string,
-    groupKeyHex: string,
-    groupKeyData: Uint8Array,
+interface GroupKeyProps {
+    groupKeyId: string
+    groupKeyHex: string
+    groupKeyData: Uint8Array
 }
 
 function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {
@@ -36,12 +36,48 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKey
 
 export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
-// eslint-disable-next-line no-redeclare
+/**
+ * GroupKeys are AES cipher keys, which are used to encrypt/decrypt StreamMessages (when encryptionType is AES).
+ * Each group key contains 256 random bits of key data and an UUID.
+ *
+ * A group key stores the same key data in two fields: the bytes as hex-encoded string, and as a raw Uint8Array.
+ * TODO: If this data duplication doesn't give us any performance improvement we could store the key data only
+ * in one field.
+ */
+
 export class GroupKey {
     /** @internal */
     static InvalidGroupKeyError = InvalidGroupKeyError
 
-    static validate(maybeGroupKey: GroupKey): void | never {
+    /** @internal */
+    readonly id: string
+    /** @internal */
+    readonly hex: string
+    /** @internal */
+    readonly data: Uint8Array
+
+    constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
+        this.id = groupKeyId
+        if (!groupKeyId) {
+            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)
+        }
+
+        if (!groupKeyBufferOrHexString) {
+            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${inspect(groupKeyBufferOrHexString)}`)
+        }
+
+        if (typeof groupKeyBufferOrHexString === 'string') {
+            this.hex = groupKeyBufferOrHexString
+            this.data = Buffer.from(this.hex, 'hex')
+        } else {
+            this.data = groupKeyBufferOrHexString
+            this.hex = Buffer.from(this.data).toString('hex')
+        }
+
+        GroupKey.validate(this)
+    }
+
+    private static validate(maybeGroupKey: GroupKey): void | never {
         if (!maybeGroupKey) {
             throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
@@ -72,32 +108,6 @@ export class GroupKey {
         if (maybeGroupKey.data.length !== 32) {
             throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
         }
-
-    }
-
-    id: string
-    hex: string
-    data: Uint8Array
-
-    constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
-        this.id = groupKeyId
-        if (!groupKeyId) {
-            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)
-        }
-
-        if (!groupKeyBufferOrHexString) {
-            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${inspect(groupKeyBufferOrHexString)}`)
-        }
-
-        if (typeof groupKeyBufferOrHexString === 'string') {
-            this.hex = groupKeyBufferOrHexString
-            this.data = Buffer.from(this.hex, 'hex')
-        } else {
-            this.data = groupKeyBufferOrHexString
-            this.hex = Buffer.from(this.data).toString('hex')
-        }
-
-        (this.constructor as typeof GroupKey).validate(this)
     }
 
     equals(other: GroupKey): boolean {

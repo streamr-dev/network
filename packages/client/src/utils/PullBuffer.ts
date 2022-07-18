@@ -5,7 +5,8 @@ import { pull, PushBuffer } from './PushBuffer'
  * Pull from a source into self.
  */
 export class PullBuffer<InType> extends PushBuffer<InType> {
-    source: AsyncGenerator<InType>
+    private source: AsyncGenerator<InType>
+    
     constructor(source: AsyncGenerator<InType>, ...args: ConstructorParameters<typeof PushBuffer>) {
         super(...args)
         this.source = source

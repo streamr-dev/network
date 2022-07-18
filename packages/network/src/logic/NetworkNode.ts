@@ -89,7 +89,7 @@ export class NetworkNode extends Node {
         }
     }
 
-    getRtt(nodeId: NodeId): number|undefined {
+    getRtt(nodeId: NodeId): number | undefined {
         return this.nodeToNode.getRtts()[nodeId]
     }
 }

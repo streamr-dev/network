@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events'
 import {
-    MessageLayer,
     StreamPartID,
     StreamMessage,
     ProxyDirection, Receipt
@@ -8,10 +7,9 @@ import {
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
-import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamPartManager } from './StreamPartManager'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger } from '../helpers/Logger'
+import { Logger, withTimeout } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'
@@ -63,9 +61,9 @@ interface Metrics extends MetricsDefinition {
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
-    on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
-    on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
-    on<T>(event: Event.DUPLICATE_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.MESSAGE_RECEIVED, listener: (msg: StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: StreamMessage<T>, nodeId: NodeId) => void): this
+    on<T>(event: Event.DUPLICATE_MESSAGE_RECEIVED, listener: (msg: StreamMessage<T>, nodeId: NodeId) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamPartId: StreamPartID) => void): this
     on(event: Event.PROXY_CONNECTION_ACCEPTED, listener: (nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection) => void): this
@@ -79,7 +77,6 @@ export interface Node {
 const logger = new Logger(module)
 
 export class Node extends EventEmitter {
-    /** @internal */
     public readonly peerInfo: PeerInfo
     protected readonly nodeToNode: NodeToNode
     private readonly nodeToTracker: NodeToTracker
@@ -90,7 +87,7 @@ export class Node extends EventEmitter {
     private readonly disconnectionManager: DisconnectionManager
     private readonly propagation: Propagation
     private readonly trackerManager: TrackerManager
-    private readonly consecutiveDeliveryFailures: Record<NodeId,number> // id => counter
+    private readonly consecutiveDeliveryFailures: Record<NodeId, number> // id => counter
     private readonly metricsContext: MetricsContext
     private readonly metrics: Metrics
     protected extraMetadata: Record<string, unknown> = {}
@@ -267,7 +264,7 @@ export class Node extends EventEmitter {
         reattempt: boolean
     ): Promise<PromiseSettledResult<NodeId>[]> {
         const subscribePromises = nodeIds.map(async (nodeId) => {
-            await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt))
+            await withTimeout(this.nodeToNode.connectToNode(nodeId, trackerId, !reattempt), this.nodeConnectTimeout)
             this.disconnectionManager.cancelScheduledDisconnection(nodeId)
             this.subscribeToStreamPartOnNode(nodeId, streamPartId, false)
             return nodeId
@@ -308,14 +305,13 @@ export class Node extends EventEmitter {
     }
 
     // Null source is used when a message is published by the node itself
-    onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
+    onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         const streamPartId = streamMessage.getStreamPartID()
         // Check if the stream is set as one-directional and has inbound connection
         if (source
             && this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
-            && !this.streamPartManager.hasInboundConnection(streamPartId, source))
-        {
+            && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
             logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
             // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
@@ -441,7 +437,7 @@ export class Node extends EventEmitter {
         let resolveHandler: any
         let rejectHandler: any
         const res = await Promise.all([
-            promiseTimeout(timeout, new Promise<number>((resolve, reject) => {
+            withTimeout(new Promise<number>((resolve, reject) => {
                 resolveHandler = (stream: StreamPartID, numOfNeighbors: number) => {
                     if (stream === streamPartId) {
                         resolve(numOfNeighbors)
@@ -454,7 +450,7 @@ export class Node extends EventEmitter {
                 }
                 this.on(Event.JOIN_COMPLETED, resolveHandler)
                 this.on(Event.JOIN_FAILED, rejectHandler)
-            })),
+            }), timeout),
             this.subscribeToStreamIfHaveNotYet(streamPartId)
         ]).finally(() => {
             this.off(Event.JOIN_COMPLETED, resolveHandler)

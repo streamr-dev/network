@@ -1,4 +1,4 @@
-import { getTrackerRegistryFromContract } from '../../src/getTrackerRegistryFromContract'
+import { getTrackerRegistryFromContract } from '../../src/registry/getTrackerRegistryFromContract'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { JsonRpcProvider } from '@ethersproject/providers'
 

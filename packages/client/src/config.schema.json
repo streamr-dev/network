@@ -85,6 +85,9 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
+                },
+                "encryptionKeyRequest": {
+                    "type": "number"
                 }
             }
         },

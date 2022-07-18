@@ -6,7 +6,7 @@ type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 
 type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<void>
 
-type ConstructorOptions = {
+interface ConstructorOptions {
     getNeighbors: GetNeighborsFn
     sendToNeighbor: SendToNeighborFn
     minPropagationTargets: number

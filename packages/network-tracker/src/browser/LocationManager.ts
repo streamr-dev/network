@@ -1,5 +1,5 @@
-import { Logger } from 'streamr-network/dist/src/helpers/Logger'
-import { Location, NodeId } from 'streamr-network/dist/src/identifiers'
+import { Logger } from '@streamr/utils'
+import { Location, NodeId } from 'streamr-network'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)

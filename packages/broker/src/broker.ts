@@ -1,6 +1,5 @@
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import StreamrClient, { validateConfig as validateClientConfig, NetworkNodeStub } from 'streamr-client'
-import * as Protocol from 'streamr-client-protocol'
 import { Wallet } from 'ethers'
 import { Server as HttpServer } from 'http'
 import { Server as HttpsServer } from 'https'
@@ -12,6 +11,7 @@ import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './config/config.schema.json'
 import { createApiAuthenticator } from './apiAuthenticator'
+import { generateMnemonicFromAddress } from './helpers/generateMnemonicFromAddress'
 
 const logger = new Logger(module)
 
@@ -63,7 +63,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
 
             const nodeId = (await streamrClient.getNode()).getNodeId()
 
-            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${Protocol.generateMnemonicFromAddress(brokerAddress)}.`)
+            logger.info(`Welcome to the Streamr Network. Your node's generated name is ${generateMnemonicFromAddress(brokerAddress)}.`)
             logger.info(`View your node in the Network Explorer: https://streamr.network/network-explorer/nodes/${encodeURIComponent(nodeId)}`)
             logger.info(`Network node ${nodeId} running`)
             logger.info(`Ethereum address ${brokerAddress}`)

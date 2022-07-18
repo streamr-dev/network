@@ -3,28 +3,31 @@
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext, Signers } from 'streamr-network'
-import { pOnce, uuid, instanceId } from './utils'
+import { uuid } from './utils/uuid'
+import { instanceId } from './utils/utils'
+import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
 import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt, SigningUtil } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
-import { AuthConfig, Ethereum } from './Ethereum'
-import { getTrackerRegistryFromContract } from './getTrackerRegistryFromContract'
+import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
+import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
-    getNodeId: () => string,
-    addMessageListener: (listener: (msg: StreamMessage) => void) => void,
+    getNodeId: () => string
+    addMessageListener: (listener: (msg: StreamMessage) => void) => void
     removeMessageListener: (listener: (msg: StreamMessage) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
     unsubscribe: (streamPartId: StreamPartID) => void
-    publish: (streamMessage: StreamMessage) => void,
+    publish: (streamMessage: StreamMessage) => void
     getStreamParts: () => Iterable<StreamPartID>
     getNeighbors: () => ReadonlyArray<string>
     getNeighborsForStreamPart: (streamPartId: StreamPartID) => ReadonlyArray<string>
-    getRtt: (nodeId: string) => number|undefined
+    getRtt: (nodeId: string) => number | undefined
     setExtraMetadata: (metadata: Record<string, unknown>) => void
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
@@ -75,7 +78,8 @@ const createSigners = (privateKey: string | undefined): Signers | undefined => {
 @scoped(Lifecycle.ContainerScoped)
 export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
-    private options
+    private networkConfig: NetworkConfig
+    private ethereumConfig: EthereumConfig
     readonly id
     readonly debug
     private startNodeCalled = false
@@ -84,11 +88,12 @@ export class BrubeckNode implements Context {
     constructor(
         context: Context,
         private destroySignal: DestroySignal,
-        private ethereum: Ethereum,
-        @inject(ConfigInjectionToken.Network) options: NetworkConfig,
-        @inject(ConfigInjectionToken.Auth) private authConfig: AuthConfig,
+        @inject(AuthenticationInjectionToken) private authentication: Authentication,
+        @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig,
+        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
     ) {
-        this.options = options
+        this.networkConfig = networkConfig
+        this.ethereumConfig = ethereumConfig
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy.listen(this.destroy)
@@ -99,33 +104,30 @@ export class BrubeckNode implements Context {
     }
 
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
-        if ((this.options.trackers as TrackerRegistrySmartContract).contractAddress) {
+        if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: (this.options.trackers as TrackerRegistrySmartContract).contractAddress,
-                jsonRpcProvider: this.ethereum.getMainnetProvider()
+                contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
+                jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
             })
             return {
-                ...this.options,
+                ...this.networkConfig,
                 trackers: trackerRegistry.getAllTrackers()
             }
         }
-        return this.options as NetworkNodeOptions
+        return this.networkConfig as NetworkNodeOptions
     }
 
     private async initNode(): Promise<NetworkNode> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
-        const { options } = this
-        let { id } = options
-
-        // generate id if none supplied
+        let id = this.networkConfig.id
         if (id == null || id === '') {
             id = await this.generateId()
-        } else if (!this.ethereum.isAuthenticated()) {
+        } else if (!this.authentication.isAuthenticated()) {
             throw new Error(`cannot set explicit nodeId ${id} without authentication`)
         } else {
-            const ethereumAddress = await this.ethereum.getAddress()
+            const ethereumAddress = await this.authentication.getAddress()
             if (!id.toLowerCase().startsWith(ethereumAddress.toLowerCase())) {
                 throw new Error(`given node id ${id} not compatible with authenticated wallet ${ethereumAddress}`)
             }
@@ -149,12 +151,12 @@ export class BrubeckNode implements Context {
     }
 
     private async generateId(): Promise<string> {
-        if (this.ethereum.isAuthenticated()) {
-            const address = await this.ethereum.getAddress()
+        if (this.authentication.isAuthenticated()) {
+            const address = await this.authentication.getAddress()
             return `${address}#${uuid()}`
             // eslint-disable-next-line no-else-return
         } else {
-            return Ethereum.generateEthereumAccount().address
+            return generateEthereumAccount().address
         }
     }
 

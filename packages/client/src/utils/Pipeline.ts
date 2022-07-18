@@ -1,4 +1,5 @@
-import { instanceId, pOnce } from './index'
+import { instanceId } from './utils'
+import { pOnce } from './promises'
 import { Debug } from './log'
 import { iteratorFinally } from './iterators'
 import { ContextError, Context } from './Context'
@@ -11,7 +12,7 @@ export type FinallyFn = ((err?: Error) => void | Promise<void>)
 class PipelineError extends ContextError {}
 
 type AsyncGeneratorWithId<T> = AsyncGenerator<T> & {
-    id: string,
+    id: string
 }
 
 /**
@@ -92,7 +93,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
     protected iterator: AsyncGenerator<OutType>
     private isIterating = false
     /** @internal */
-    isCleaningUp = false
+    public isCleaningUp = false
     private definition: PipelineDefinition<InType, OutType>
 
     /** @internal */
@@ -153,7 +154,7 @@ export class Pipeline<InType, OutType = InType> implements IPipeline<InType, Out
      * Usage: `pipeline.onFinally(callback)`
      * @internal
      */
-    onFinally = Signal.once<[Error | void]>()
+    onFinally = Signal.once<[Error | undefined]>()
 
     /**
      * Triggers once when pipeline is about to end.

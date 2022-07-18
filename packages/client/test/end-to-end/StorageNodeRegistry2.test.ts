@@ -1,10 +1,10 @@
 import { Wallet } from 'ethers'
 import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createEthereumAddress, createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
-
+import { createEthereumAddress, createTestStream } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { EthereumAddress } from 'streamr-client-protocol'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 
 jest.setTimeout(30000)
 

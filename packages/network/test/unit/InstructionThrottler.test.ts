@@ -1,5 +1,5 @@
 import { waitForCondition } from 'streamr-test-utils'
-import { toStreamID, TrackerLayer } from 'streamr-client-protocol'
+import { InstructionMessage, toStreamID } from 'streamr-client-protocol'
 
 import { InstructionThrottler } from '../../src/logic/InstructionThrottler'
 
@@ -13,7 +13,7 @@ describe('InstructionThrottler', () => {
     })
 
     function createInstruction(streamId: string, counter: number) {
-        return new TrackerLayer.InstructionMessage({
+        return new InstructionMessage({
             requestId: 'requestId',
             streamId: toStreamID(streamId),
             streamPartition: 0,

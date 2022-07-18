@@ -6,7 +6,7 @@ function toNumber(value: any): number | undefined {
 
 const sideChainConfig = {
     name: 'streamr',
-    chainId: 8995,
+    chainId: 8997,
     rpcs: [{
         url: process.env.SIDECHAIN_URL || `http://${process.env.STREAMR_DOCKER_DEV_HOST || '10.200.10.1'}:8546`,
         timeout: toNumber(process.env.TEST_TIMEOUT) ?? 30 * 1000,

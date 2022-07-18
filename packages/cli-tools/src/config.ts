@@ -23,7 +23,7 @@ const validateConfig = (config: any, fileName: string): void | never => {
     }
 }
 
-const tryReadConfigFile = (fileName: string): Config|undefined|never => {
+const tryReadConfigFile = (fileName: string): Config | undefined | never => {
     let content
     try {
         content = readFileSync(fileName, 'utf8')
@@ -35,7 +35,7 @@ const tryReadConfigFile = (fileName: string): Config|undefined|never => {
     return json
 }
 
-export const getConfig = (id?: string): Config|undefined => {
+export const getConfig = (id?: string): Config | undefined => {
     const CONFIG_DIRECTORY = path.join(os.homedir(), '.streamr', 'config')
     if (id !== undefined) {
         const fileNames = [

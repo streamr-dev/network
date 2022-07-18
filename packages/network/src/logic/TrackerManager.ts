@@ -1,10 +1,15 @@
-import { StreamPartID, TrackerLayer, Utils } from 'streamr-client-protocol'
-import { Location, Rtts, TrackerInfo, NodeId, TrackerId } from '../identifiers'
+import {
+    createTrackerRegistry, InstructionMessage,
+    SmartContractRecord,
+    StreamPartID,
+    TrackerRegistry
+} from 'streamr-client-protocol'
+import { Location, Rtts, NodeId, TrackerId } from '../identifiers'
 import { COUNTER_LONE_NODE } from '../constants'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamPartManager } from './StreamPartManager'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { NameDirectory } from '../NameDirectory'
@@ -25,7 +30,7 @@ interface Subscriber {
         streamPartId: StreamPartID,
         trackerId: TrackerId,
         reattempt: boolean
-    ) => Promise<PromiseSettledResult<NodeId>[]>,
+    ) => Promise<PromiseSettledResult<NodeId>[]>
     unsubscribeFromStreamPartOnNode: (node: NodeId, streamPartId: StreamPartID, sendStatus?: boolean) => void
     emitJoinCompleted: (streamPartId: StreamPartID, numOfNeighbors: number) => void
     emitJoinFailed: (streamPartId: StreamPartID, error: string) => void
@@ -34,7 +39,7 @@ interface Subscriber {
 type GetNodeDescriptor = (includeRtt: boolean) => NodeDescriptor
 
 export interface TrackerManagerOptions {
-    trackers: Array<TrackerInfo>
+    trackers: Array<SmartContractRecord>
     rttUpdateTimeout?: number
     trackerConnectionMaintenanceInterval?: number
     instructionRetryInterval?: number
@@ -42,7 +47,7 @@ export interface TrackerManagerOptions {
 
 export class TrackerManager {
     private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
-    private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
+    private readonly trackerRegistry: TrackerRegistry<SmartContractRecord>
     private readonly trackerConnector: TrackerConnector
     private readonly nodeToTracker: NodeToTracker
     private readonly streamPartManager: StreamPartManager
@@ -61,7 +66,7 @@ export class TrackerManager {
     ) {
         this.nodeToTracker =  nodeToTracker
         this.streamPartManager = streamPartManager
-        this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
+        this.trackerRegistry = createTrackerRegistry<SmartContractRecord>(opts.trackers)
         this.getNodeDescriptor = getNodeDescriptor
         this.subscriber = subscriber
         this.rttUpdateInterval = opts.rttUpdateTimeout || 15000
@@ -172,7 +177,7 @@ export class TrackerManager {
     }
 
     private async handleTrackerInstruction(
-        instructionMessage: TrackerLayer.InstructionMessage,
+        instructionMessage: InstructionMessage,
         trackerId: TrackerId,
         reattempt = false
     ): Promise<void> {

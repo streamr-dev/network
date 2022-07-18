@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import { Event, IWebRtcEndpoint } from './IWebRtcEndpoint'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
 import { WebRtcConnection, ConstructorOptions, isOffering } from './WebRtcConnection'
@@ -49,8 +49,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     private readonly rtcSignaller: RtcSignaller
     private readonly negotiatedProtocolVersions: NegotiatedProtocolVersions
     private readonly connectionFactory: WebRtcConnectionFactory
-    private connections: { [key: string]: WebRtcConnection }
-    private messageQueues: { [key: string]: MessageQueue<string> }
+    private connections: Record<string, WebRtcConnection>
+    private messageQueues: Record<string, MessageQueue<string>>
     private readonly newConnectionTimeout: number
     private readonly pingInterval: number
     private readonly logger: Logger
@@ -71,7 +71,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         negotiatedProtocolVersions: NegotiatedProtocolVersions,
         connectionFactory: WebRtcConnectionFactory,
         newConnectionTimeout = 15000,
-        pingInterval = 5 * 1000,
+        pingInterval = 30 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
         webrtcDatachannelBufferThresholdHigh = 2 ** 17,
         webrtcDisallowPrivateAddresses = false,
@@ -235,11 +235,11 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         let connection: WebRtcConnection
 
         if (!this.connections[peerId]) {
-            connection = this.createConnection(peerId, routerId,null)
+            connection = this.createConnection(peerId, routerId, null)
 
             try {
                 connection.connect()
-            } catch(e) {
+            } catch (e) {
                 this.logger.warn(e)
             }
             this.connections[peerId] = connection
@@ -334,7 +334,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         try {
             connection.connect()
-        } catch(e) {
+        } catch (e) {
             this.logger.warn(e)
         }
         this.connections[peerId] = connection
@@ -396,8 +396,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
-        } 
-        else { 
+        } else { 
             throw new WebRtcError(`disconnected ${connection.getPeerId()}`)
         }
     }
@@ -407,11 +406,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             throw new WebRtcError(`Not connected to ${targetPeerId}.`)
         }
 
-        try {
-            await this.connections[targetPeerId].send(message)
-        } catch (err) {
-            throw err
-        }
+        await this.connections[targetPeerId].send(message)
 
         this.metrics.sendMessagesPerSecond.record(1)
         this.metrics.sendBytesPerSecond.record(message.length)

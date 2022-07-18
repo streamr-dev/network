@@ -1,4 +1,4 @@
-import { pOnce, pLimitFn, pOne } from './index'
+import { pOnce, pLimitFn, pOne } from './promises'
 
 export type SignalListener<T extends any[]> = (...args: T) => (unknown | Promise<unknown>)
 type SignalListenerWrap<T extends any[]> = SignalListener<T> & {
@@ -78,9 +78,9 @@ export class Signal<ArgsType extends any[] = []> {
         return this.create<ArgsType>(TRIGGER_TYPE.PARALLEL)
     }
 
-    listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
-    isEnded = false
-    triggerCountValue = 0
+    protected listeners: (SignalListener<ArgsType> | SignalListenerWrap<ArgsType>)[] = []
+    protected isEnded = false
+    protected triggerCountValue = 0
 
     constructor(
         protected triggerType: TRIGGER_TYPE = TRIGGER_TYPE.PARALLEL

@@ -9,9 +9,9 @@ import {
 } from 'streamr-client-protocol'
 import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
-import { Multimap } from '../utils'
-import { StreamRegistry } from '../../../src/StreamRegistry'
-import { formStorageNodeAssignmentStreamId } from '../../../src/utils'
+import { StreamRegistry } from '../../../src/registry/StreamRegistry'
+import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import { Multimap } from '@streamr/utils'
 
 const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
 
@@ -54,7 +54,7 @@ export class FakeStorageNode extends FakeBrubeckNode {
         })
     }
 
-    private storeMessage(msg: StreamMessage): void {
+    storeMessage(msg: StreamMessage): void {
         const streamPartId = msg.getStreamPartID()
         this.streamPartMessages.add(streamPartId, msg)
     }
@@ -77,18 +77,18 @@ export class FakeStorageNode extends FakeBrubeckNode {
     }
 
     async getRange(streamPartId: StreamPartID, opts: {
-        fromTimestamp: number,
-        fromSequenceNumber: number,
-        toTimestamp: number,
-        toSequenceNumber: number,
-        publisherId: string,
-        msgChainId: string
+        fromTimestamp: number
+        fromSequenceNumber: number
+        toTimestamp: number
+        toSequenceNumber: number
+        publisherId?: string
+        msgChainId?: string
     }): Promise<StreamMessage[]> {
         const messages = this.streamPartMessages.get(streamPartId)
         if (messages !== undefined) {
             return messages.filter((msg) => {
-                return (msg.getPublisherId() === opts.publisherId)
-                    && (msg.getMsgChainId() === opts.msgChainId)
+                return ((opts.publisherId === undefined) || (msg.getPublisherId() === opts.publisherId))
+                    && ((opts.msgChainId === undefined) || (msg.getMsgChainId() === opts.msgChainId))
                     && (
                         ((msg.getTimestamp() > opts.fromTimestamp) && (msg.getTimestamp() < opts.toTimestamp))
                         || ((msg.getTimestamp() === opts.fromTimestamp) && (msg.getSequenceNumber() >= opts.fromSequenceNumber))

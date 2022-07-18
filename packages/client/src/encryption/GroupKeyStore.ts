@@ -1,4 +1,4 @@
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { PersistentStore } from './PersistentStore'
@@ -8,15 +8,16 @@ import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string
 
-type GroupKeyStoreOptions = {
-    context: Context,
-    clientId: string,
-    streamId: StreamID,
+interface GroupKeyStoreOptions {
+    context: Context
+    clientId: string
+    streamId: StreamID
     groupKeys: [GroupKeyId, GroupKey][]
 }
 
 export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
-    store: PersistentStore<string, string>
+    private store: PersistentStore<string, string>
+
     constructor(options: ServerPersistentStoreOptions) {
         this.store = new ServerPersistentStore(options)
     }
@@ -40,7 +41,6 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     }
 
     async set(groupKeyId: string, value: GroupKey): Promise<boolean> {
-        GroupKey.validate(value)
         return this.store.set(groupKeyId, value.hex)
     }
 
@@ -72,9 +72,9 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    store
-    currentGroupKeyId: GroupKeyId | undefined // current key id if any
-    nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
+    private store: GroupKeyPersistence
+    private currentGroupKeyId: GroupKeyId | undefined // current key id if any
+    private nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
     constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
@@ -85,7 +85,6 @@ export class GroupKeyStore implements Context {
         this.store = new GroupKeyPersistence({ context: this, clientId, streamId, initialData })
 
         groupKeys.forEach(([groupKeyId, groupKey]) => {
-            GroupKey.validate(groupKey)
             if (groupKeyId !== groupKey.id) {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
             }
@@ -95,7 +94,6 @@ export class GroupKeyStore implements Context {
     }
 
     private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
-        GroupKey.validate(groupKey)
         const existingKey = await this.store.get(groupKey.id)
         if (existingKey) {
             if (!existingKey.equals(groupKey)) {
@@ -188,7 +186,6 @@ export class GroupKeyStore implements Context {
     }
 
     async setNextGroupKey(newKey: GroupKey): Promise<void> {
-        GroupKey.validate(newKey)
         this.nextGroupKeys.unshift(newKey)
         this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
         await this.storeKey(newKey)

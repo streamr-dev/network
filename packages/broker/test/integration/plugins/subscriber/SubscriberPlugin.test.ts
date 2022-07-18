@@ -1,11 +1,11 @@
 import { Tracker } from '@streamr/network-tracker'
 import { createClient, startTestTracker } from '../../../utils'
-import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import StreamrClient from 'streamr-client'
+import { fastWallet } from 'streamr-test-utils'
 
 const TRACKER_PORT = 12465
-const wallet = Wallet.createRandom()
+const wallet = fastWallet()
 
 const createMockPlugin = async (streamrClient: StreamrClient) => {
     const brokerConfig: any = {

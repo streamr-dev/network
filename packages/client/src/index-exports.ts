@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export * from './encryption/EncryptionUtil'
+export { UnableToDecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
@@ -20,8 +20,9 @@ export {
     UserPermissionAssignment,
     PublicPermissionAssignment
 } from './permission'
-export { StorageNodeAssignmentEvent, StorageNodeMetadata } from './StorageNodeRegistry'
-export { SearchStreamsPermissionFilter } from './searchStreams'
+export { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
+export { StorageNodeMetadata } from './registry/StorageNodeRegistry'
+export { SearchStreamsPermissionFilter } from './registry/searchStreams'
 export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
@@ -38,15 +39,15 @@ export {
 export {
     AuthConfig,
     AuthenticatedConfig,
-    EthereumConfig,
-    ChainConnectionInfo,
-    EthereumNetworkConfig,
     UnauthenticatedAuthConfig,
     ProviderAuthConfig,
     ProviderConfig,
-    PrivateKeyAuthConfig,
-    XOR,
-    Without
+    PrivateKeyAuthConfig
+} from './Authentication'
+export {
+    EthereumConfig,
+    ChainConnectionInfo,
+    EthereumNetworkConfig,
 } from './Ethereum'
 export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
@@ -56,7 +57,7 @@ export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './BrubeckNode'
 export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
-export { formStorageNodeAssignmentStreamId } from './utils/index'
+export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
 export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
 

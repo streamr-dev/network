@@ -1,13 +1,11 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
-import { MessageLayer, StreamPartID, toStreamID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { waitForEvent } from 'streamr-test-utils'
+import { StreamPartID, toStreamID, StreamPartIDUtils, StreamMessage, MessageID } from 'streamr-client-protocol'
+import { waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-
-const { StreamMessage, MessageID } = MessageLayer
 
 const streamPartOne = StreamPartIDUtils.parse('s#1')
 const streamPartTwo = StreamPartIDUtils.parse('s#2')
