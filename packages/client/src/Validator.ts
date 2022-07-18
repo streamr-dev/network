@@ -4,7 +4,6 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
-    SigningUtil,
     StreamMessageError,
     StreamID,
     EthereumAddress
@@ -17,6 +16,7 @@ import { Context } from './utils/Context'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
+import SigningUtil from './utils/SigningUtil'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {

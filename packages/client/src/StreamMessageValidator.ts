@@ -3,12 +3,12 @@ import {
     GroupKeyRequest,
     GroupKeyMessage,
     KeyExchangeStreamIDUtils,
-    SigningUtil,
     StreamID,
     StreamMessage,
     StreamMessageError,
     ValidationError
 } from "streamr-client-protocol"
+import SigningUtil from './utils/SigningUtil'
 
 export interface StreamMetadata {
     partitions: number

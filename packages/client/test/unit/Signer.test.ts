@@ -1,10 +1,11 @@
 import 'reflect-metadata'
-import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID, SigningUtil } from 'streamr-client-protocol'
+import { StreamMessage, MessageID, MessageRef, StreamID, toStreamID } from 'streamr-client-protocol'
 
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
 import { Signer } from '../../src/publish/Signer'
 import { createAuthentication } from '../../src/Authentication'
+import SigningUtil from '../../src/utils/SigningUtil'
 
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since

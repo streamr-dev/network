@@ -1,7 +1,6 @@
 import {
     EthereumAddress,
     MessageID,
-    SigningUtil,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -11,6 +10,7 @@ import { FakeBrubeckNode } from './FakeBrubeckNode'
 import { ActiveNodes } from './ActiveNodes'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
+import SigningUtil from '../../../src/utils/SigningUtil'
 import { Multimap } from '@streamr/utils'
 
 const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'

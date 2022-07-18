@@ -1,7 +1,6 @@
 import assert from 'assert'
 
 import {
-    SigningUtil,
     toStreamID,
     EthereumAddress,
     StreamMessage,
@@ -16,6 +15,7 @@ import {
     ValidationError
 } from 'streamr-client-protocol'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
+import SigningUtil from '../../src/utils/SigningUtil'
 
 const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
     return new StreamMessage({

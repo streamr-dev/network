@@ -3,10 +3,11 @@ import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import SigningUtil from '../../src/utils/SigningUtil'
 import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { fastPrivateKey, fastWallet, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { MessageID, SigningUtil, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { MessageID, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { createNetworkNode, NetworkNode } from 'streamr-network'
 
 const createClient = getCreateClient()

@@ -1,4 +1,5 @@
 import { verifyMessage, Wallet } from '@ethersproject/wallet'
+import { randomString } from '@streamr/utils'
 import SigningUtil from '../../src/utils/SigningUtil'
 
 /*
@@ -19,23 +20,10 @@ import SigningUtil from '../../src/utils/SigningUtil'
  * - verify: ~150x faster
  */
 
-// From: https://stackoverflow.com/questions/10726909/random-alpha-numeric-string-in-javascript
-function randomString(
-    length: number,
-    chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-): string {
-    let result = ''
-    for (let i = length; i > 0; --i) {
-        result += chars[Math.floor(Math.random() * chars.length)]
-    }
-    return result
-}
-
 const ITERATIONS = 1000
 const PAYLOAD_SIZES = [100, 10000]
 
-describe.skip('SigningUtil', () => {
-    
+describe('SigningUtil', () => {
     describe.each(PAYLOAD_SIZES)('payload size: %s', (payloadSize: number) => {
 
         let wallet: Wallet
@@ -78,7 +66,6 @@ describe.skip('SigningUtil', () => {
         }
         
         it('sign', async () => {
-    
             const elapsedTimeOur = await run(async () => {
                 return SigningUtil.sign(payload, wallet.privateKey)
             }, signature, 'Sign-our')
@@ -94,7 +81,6 @@ describe.skip('SigningUtil', () => {
         })
     
         it('verify', async () => {
-    
             const elapsedTimeOur = await run(async () => {
                 return SigningUtil.verify(wallet.address, payload, signature)
             }, true, 'Verify-our')
