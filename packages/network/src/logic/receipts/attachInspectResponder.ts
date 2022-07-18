@@ -1,7 +1,8 @@
 import { NodeToTracker } from '../../protocol/NodeToTracker'
-import { NodeToTrackerEvent, PeerInfo } from '../../composition'
 import { ReceiptStore } from './ReceiptStore'
 import { Receipt } from 'streamr-client-protocol'
+import { Event as NodeToTrackerEvent } from '../../protocol/NodeToTracker'
+import { PeerInfo } from '../../connection/PeerInfo'
 
 export function attachInspectResponder({ myPeerInfo, receiptStore, nodeToTracker }: {
     myPeerInfo: PeerInfo
