@@ -32,7 +32,7 @@ export class WebsocketPlugin extends Plugin<WebsocketPluginConfig> {
         await this.server!.stop()
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

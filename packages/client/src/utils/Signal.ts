@@ -291,7 +291,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
     protected ignoredErrors = new WeakSet<Error>()
     private minListeners = 1
 
-    protected async execTrigger(
+    protected override async execTrigger(
         ...args: ArgsType
     ): Promise<void> {
         if (this.isEnded) {
@@ -326,7 +326,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
         }, Promise.resolve())
     }
 
-    async trigger(...args: ArgsType): Promise<void> {
+    override async trigger(...args: ArgsType): Promise<void> {
         const err = args[0]
         // don't double-handle errors
         if (this.ignoredErrors.has(err)) {

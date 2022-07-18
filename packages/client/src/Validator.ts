@@ -97,7 +97,7 @@ export class Validator extends StreamMessageValidator implements Context {
         })
     })
 
-    async validate(msg: StreamMessage): Promise<void> {
+    override async validate(msg: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
         await this.orderedValidate(msg)
     }

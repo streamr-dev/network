@@ -33,7 +33,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         this.producer?.stop()
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

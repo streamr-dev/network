@@ -67,7 +67,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         ])
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 
