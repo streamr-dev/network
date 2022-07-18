@@ -179,7 +179,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }
