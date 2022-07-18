@@ -5,6 +5,7 @@ import {
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 import { Originator } from "../Originator"
+import { Receipt } from '../../control_layer'
 
 export enum RelayMessageSubType {
     RTC_OFFER = 'rtcOffer',
@@ -44,14 +45,14 @@ export interface RtcIceCandidateMessage {
     }
 }
 
-export type InspectRequestMessage = {
+export interface InspectRequestMessage {
     subType: RelayMessageSubType.INSPECT_REQUEST
     data: {
         inspectionTarget: string
     }
 }
 
-export type InspectResponsePartMessage = {
+export interface InspectResponsePartMessage {
     subType: RelayMessageSubType.INSPECT_RESPONSE_PART
     data: {
         receipt: Receipt
@@ -60,7 +61,6 @@ export type InspectResponsePartMessage = {
         done: true
     }
 }
-
 
 export interface SharedOptions extends TrackerMessageOptions {
     originator: Originator

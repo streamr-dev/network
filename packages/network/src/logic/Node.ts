@@ -363,6 +363,7 @@ export class Node extends EventEmitter {
     }
 
     protected inspect(nodeId: NodeId, inspectionTarget: NodeId): Promise<Receipt[]> {
+        // eslint-disable-next-line no-async-promise-executor
         return withTimeout(new Promise(async (resolve) => {
             const sharedTrackerId = 'gdsgd'
             const requestId = await this.nodeToTracker.sendInspectRequestMessage(sharedTrackerId, nodeId, this.peerInfo, inspectionTarget)

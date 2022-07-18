@@ -8,12 +8,12 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
-import { Logger } from '../../helpers/Logger'
 import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
 import { Signers } from './SignatureFunctions'
 import { ReceiptStore } from './ReceiptStore'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

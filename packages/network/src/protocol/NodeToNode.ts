@@ -39,9 +39,9 @@ eventPerType[ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTION_REQUEST_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED
 eventPerType[ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ReceiptRequest] = Event.RECEIPT_REQUEST_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ReceiptResponse] = Event.RECEIPT_RESPONSE_RECEIVED
-eventPerType[ControlLayer.ControlMessage.TYPES.ErrorResponse] = Event.ERROR_RESPONSE_RECEIVED
+eventPerType[ControlMessage.TYPES.ReceiptRequest] = Event.RECEIPT_REQUEST_RECEIVED
+eventPerType[ControlMessage.TYPES.ReceiptResponse] = Event.RECEIPT_RESPONSE_RECEIVED
+eventPerType[ControlMessage.TYPES.ErrorResponse] = Event.ERROR_RESPONSE_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this

@@ -1,6 +1,6 @@
 import { BucketCollector } from './BucketCollector'
 import { NodeId } from '../../identifiers'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
 import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'

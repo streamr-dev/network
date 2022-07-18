@@ -6,6 +6,6 @@ export interface SignatureFunctions<T extends { signature: string }> {
 }
 
 export interface Signers {
-    claim: SignatureFunctions<Claim>,
+    claim: SignatureFunctions<Claim>
     receipt: SignatureFunctions<Receipt>
 }

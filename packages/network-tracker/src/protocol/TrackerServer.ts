@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import {
-   ErrorMessage,
+    ErrorMessage,
     InstructionMessage,
     RelayMessage, StatusMessage, StreamPartID,
     StreamPartIDUtils,

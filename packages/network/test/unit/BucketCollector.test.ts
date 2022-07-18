@@ -93,7 +93,7 @@ describe(BucketCollector, () => {
         collector.record(makeFixedMsg(TIMESTAMP + WINDOW_LENGTH + 1000, 20), 'nodeId')
 
         collector.record(makeFixedMsg(TIMESTAMP + 2 * WINDOW_LENGTH + 2000, 15), 'nodeId')
-        collector.record(makeFixedMsg(TIMESTAMP + 2 * WINDOW_LENGTH + WINDOW_LENGTH*(3/4), 20), 'nodeId')
+        collector.record(makeFixedMsg(TIMESTAMP + 2 * WINDOW_LENGTH + WINDOW_LENGTH * (3 / 4), 20), 'nodeId')
 
         collector.record(makeFixedMsg(TIMESTAMP + 6 * WINDOW_LENGTH, 150), 'nodeId')
 

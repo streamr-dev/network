@@ -3,7 +3,7 @@ import {
 } from '../../../utils/validations'
 import ControlMessage, { ControlMessageOptions } from '../ControlMessage'
 import { StreamID } from '../../../utils/StreamID'
-import { EthereumAddress} from "../../../utils"
+import { EthereumAddress } from "../../../utils"
 
 export interface Claim {
     streamId: StreamID

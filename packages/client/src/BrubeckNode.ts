@@ -12,7 +12,7 @@ import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt, SigningUti
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
-import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { AuthConfig, Authentication, AuthenticationInjectionToken } from './Authentication'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -80,6 +80,7 @@ export class BrubeckNode implements Context {
     private cachedNode?: NetworkNode
     private networkConfig: NetworkConfig
     private ethereumConfig: EthereumConfig
+    private readonly authConfig: AuthConfig
     readonly id
     readonly debug
     private startNodeCalled = false
@@ -90,10 +91,12 @@ export class BrubeckNode implements Context {
         private destroySignal: DestroySignal,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig,
-        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
+        @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig,
+        @inject(ConfigInjectionToken.Auth) authConfig: AuthConfig
     ) {
         this.networkConfig = networkConfig
         this.ethereumConfig = ethereumConfig
+        this.authConfig = authConfig
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         destroySignal.onDestroy.listen(this.destroy)

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import {
     ErrorMessage,
     InstructionMessage,
+    Receipt,
     RelayMessage,
     RelayMessageSubType,
     StatusMessage,
@@ -173,7 +174,7 @@ export class NodeToTracker extends EventEmitter {
             originator: originatorInfo,
             targetNode,
             subType: RelayMessageSubType.INSPECT_RESPONSE_PART,
-            data: receipt !== null ? { receipt } : { done: true }
+            data: receipt !== null ? { receipt, done: false } : { done: true }
         }))
         return requestId
     }
