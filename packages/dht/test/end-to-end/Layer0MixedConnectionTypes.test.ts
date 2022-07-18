@@ -1,6 +1,6 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 
 describe('Layer0MixedConnectionTypes', () => {

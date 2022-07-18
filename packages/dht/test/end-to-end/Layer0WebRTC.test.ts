@@ -2,7 +2,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 

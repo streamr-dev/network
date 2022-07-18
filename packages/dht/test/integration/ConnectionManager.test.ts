@@ -2,7 +2,7 @@ import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
 import { createPeerDescriptor } from '../utils'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
