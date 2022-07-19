@@ -3,7 +3,7 @@ import { NodeId } from '../../identifiers'
 import { Logger } from '@streamr/utils'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
-import { Claim, ReceiptRequest, StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { Claim, ReceiptRequest, StreamPartIDUtils } from 'streamr-client-protocol'
 import { v4 as uuidv4 } from 'uuid'
 import { Signers } from './SignatureFunctions'
 import { ReceiptStore } from './ReceiptStore'
@@ -75,6 +75,9 @@ export class ReceiptRequester {
             }, this.getCloseTime(bucket) - Date.now())
             this.closeTimeouts.set(bucket.getId(), timeoutRef)
         })
+        nodeToNode.on(Event.BROADCAST_MESSAGE_SENT, ({ streamMessage }, recipient) => {
+            this.collector.record(streamMessage, recipient)
+        })
         nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ receipt }, source) => {
             const { receiver, sender } = receipt.claim
             if (receiver !== source) { // TODO: This is not necessarily wrong, however, why would these get relayed thru a 3rd party?
@@ -101,10 +104,6 @@ export class ReceiptRequester {
             this.receiptStore.store(receipt)
             logger.info("Accepted receipt %j", receipt)
         })
-    }
-
-    recordMessageSent(recipient: NodeId, streamMessage: StreamMessage): void {
-        this.collector.record(streamMessage, recipient)
     }
 
     stop(): void {

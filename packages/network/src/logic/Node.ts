@@ -149,7 +149,6 @@ export class Node extends EventEmitter {
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
-                    this.receiptRequester?.recordMessageSent(neighborId, streamMessage)
                     this.consecutiveDeliveryFailures[neighborId] = 0
                 } catch (e) {
                     const serializedMsgId = streamMessage.getMessageID().serialize()

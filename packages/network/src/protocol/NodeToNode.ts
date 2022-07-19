@@ -31,7 +31,8 @@ export enum Event {
     RECEIPT_REQUEST_RECEIVED = 'node-node:receipt-request-received',
     RECEIPT_RESPONSE_RECEIVED = 'node-node:receipt-response-received',
     ERROR_RESPONSE_RECEIVED = 'node-node:error-response-received',
-    LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
+    LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received',
+    BROADCAST_MESSAGE_SENT = 'node-node:broadcast-message-sent'
 }
 
 const eventPerType: Record<number, string> = {}
@@ -61,6 +62,7 @@ export interface NodeToNode {
        listener: (message: ErrorResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED,
        listener: (message: UnsubscribeRequest, nodeId: NodeId) => void): this
+    on(event: Event.BROADCAST_MESSAGE_SENT, listener: (message: BroadcastMessage, recipient: NodeId) => void): this
 }
 
 export class NodeToNode extends EventEmitter {
@@ -88,11 +90,13 @@ export class NodeToNode extends EventEmitter {
         return this.endpoint.connect(receiverNodeId, trackerAddress, trackerInstructed)
     }
 
-    sendData(receiverNodeId: NodeId, streamMessage: StreamMessage): Promise<BroadcastMessage> {
-        return this.send(receiverNodeId, new BroadcastMessage({
+    async sendData(receiverNodeId: NodeId, streamMessage: StreamMessage): Promise<BroadcastMessage> {
+        const broadcastMessage = await this.send(receiverNodeId, new BroadcastMessage({
             requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
             streamMessage,
         }))
+        this.emit(Event.BROADCAST_MESSAGE_SENT, broadcastMessage, receiverNodeId)
+        return broadcastMessage
     }
 
     registerErrorHandler(requestId: string, errorHandler: (errorResponse: ErrorResponse, source: NodeId) => void): void {
