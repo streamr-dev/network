@@ -115,16 +115,19 @@ export class ReceiptRequester {
     }
 
     private sendReceiptRequest(bucket: Bucket): void {
-        const requestId = uuidv4()
-        this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
-            requestId,
-            claim: this.createClaim(bucket)
-        })).catch((e) => {
+        (async () => {
+            const requestId = uuidv4()
+            const claim = await this.createClaim(bucket)
+            await this.nodeToNode.send(bucket.getNodeId(), new ReceiptRequest({
+                requestId,
+                claim
+            }))
+            this.nodeToNode.registerErrorHandler(requestId, (errorResponse, source) => {
+                logger.warn('receiver %s refused to provide receipt due to %s', source, errorResponse.errorCode)
+                // TODO: cut connection?
+            })
+        })().catch((e) => {
             logger.warn('failed to send ReceiptRequest to %s, reason: %s', bucket.getNodeId(), e)
-        })
-        this.nodeToNode.registerErrorHandler(requestId, (errorResponse, source) => {
-            logger.warn('receiver %s refused to provide receipt due to %s', source, errorResponse.errorCode)
-            // TODO: cut connection?
         })
     }
 
@@ -135,7 +138,7 @@ export class ReceiptRequester {
         )
     }
 
-    private createClaim(bucket: Bucket): Claim {
+    private async createClaim(bucket: Bucket): Promise<Claim> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(bucket.getStreamPartId())
         const claim: Omit<Claim, 'signature'> = {
             streamId,
@@ -150,7 +153,7 @@ export class ReceiptRequester {
         }
         return {
             ...claim,
-            signature: this.signers.claim.sign(claim)
+            signature: await this.signers.claim.sign(claim)
         }
     }
 }

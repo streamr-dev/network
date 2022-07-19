@@ -93,22 +93,24 @@ export class ReceiptResponder {
             return
         }
 
-        logger.info("I agree with claim %j", claim)
-        const receipt = {
-            claim,
-            signature: this.signers.receipt.sign({ claim })
-        }
-        this.receiptStore.store(receipt)
-        this.sendReceiptResponse(receipt, requestId)
+        (async () => {
+            logger.info("I agree with claim %j", claim)
+            const receipt = {
+                claim,
+                signature: await this.signers.receipt.sign({ claim })
+            }
+            this.receiptStore.store(receipt)
+            await this.sendReceiptResponse(receipt, requestId)
+        })().catch((e) => {
+            logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', claim.sender, e)
+        })
     }
 
-    private sendReceiptResponse(receipt: Receipt, requestId: string): void {
-        this.nodeToNode.send(receipt.claim.sender, new ReceiptResponse({
+    private async sendReceiptResponse(receipt: Receipt, requestId: string): Promise<void> {
+        await this.nodeToNode.send(receipt.claim.sender, new ReceiptResponse({
             requestId,
             receipt
-        })).catch((e) => {
-            logger.warn('failed to send ReceiptResponse(signature) to %s, reason: %s', receipt.claim.sender, e)
-        })
+        }))
     }
 
     private sendErrorResponse(claim: Claim, requestId: string, errorCode: ErrorCode): void {

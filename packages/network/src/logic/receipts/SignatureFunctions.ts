@@ -1,7 +1,7 @@
 import { Claim, Receipt } from 'streamr-client-protocol'
 
 export interface SignatureFunctions<T extends { signature: string }> {
-    sign(item: Omit<T, 'signature'>): string
+    sign(item: Omit<T, 'signature'>): Promise<string>
     validate(item: T): boolean
 }
 
