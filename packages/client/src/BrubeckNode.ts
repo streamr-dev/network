@@ -2,18 +2,18 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext, Signers } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
 import { uuid } from './utils/uuid'
 import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection, Claim, Receipt } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { AuthConfig, Authentication, AuthenticationInjectionToken } from './Authentication'
-import { sign, verify } from './utils/signingUtils'
+import { createSigners } from './utils/createSigners'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -33,43 +33,6 @@ export interface NetworkNodeStub {
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
-}
-
-export const getEthereumAddressFromNodeId = (nodeId: string): string => {
-    const ETHERUM_ADDRESS_LENGTH = 42
-    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
-}
-
-const createSigners = (privateKey: string | undefined): Signers | undefined => {
-    if (privateKey === undefined) {
-        return undefined
-    }
-    return {
-        claim: {
-            sign(claim: Omit<Claim, 'signature'>): string {
-                return sign(JSON.stringify(claim), privateKey)
-            },
-            validate({ signature, ...claim }: Claim): boolean {
-                return verify(
-                    getEthereumAddressFromNodeId(claim.sender),
-                    JSON.stringify(claim),
-                    signature
-                )
-            }
-        },
-        receipt: {
-            sign(receipt: Omit<Receipt, 'signature'>): string {
-                return sign(JSON.stringify(receipt), privateKey)
-            },
-            validate({ signature, ...receipt }: Receipt): boolean {
-                return verify(
-                    getEthereumAddressFromNodeId(receipt.claim.receiver),
-                    JSON.stringify(receipt),
-                    signature
-                )
-            }
-        }
-    }
 }
 
 /**
