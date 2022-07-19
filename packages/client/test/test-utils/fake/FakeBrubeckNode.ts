@@ -114,7 +114,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     }
 }
 
-export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete'> {
+export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete' | 'getLastValue'> {
 
     readonly id: EthereumAddress
     readonly debug

@@ -355,6 +355,10 @@ export class StreamrClient implements Context {
         return this.proxyPublishSubscribe.closeProxyConnections(streamDefinition, nodeIds, direction)
     }
 
+    getLastValue(): string {
+        return this.node.getLastValue()
+    }
+
     // --------------------------------------------------------------------------------------------
     // Lifecycle
     // --------------------------------------------------------------------------------------------

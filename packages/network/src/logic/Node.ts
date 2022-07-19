@@ -17,6 +17,7 @@ import { TrackerManager, TrackerManagerOptions } from './TrackerManager'
 import { Propagation } from './propagation/Propagation'
 import { DisconnectionManager } from './DisconnectionManager'
 import { ProxyStreamConnectionManager } from './ProxyStreamConnectionManager'
+import { LastValueCache } from '../cache/LastValueCache'
 
 const logger = new Logger(module)
 
@@ -47,6 +48,7 @@ export interface NodeOptions extends TrackerManagerOptions {
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
     acceptProxyConnections?: boolean
+    lastValueCache: LastValueCache
 }
 
 interface Metrics extends MetricsDefinition {
@@ -86,6 +88,7 @@ export class Node extends EventEmitter {
     protected extraMetadata: Record<string, unknown> = {}
     private readonly acceptProxyConnections: boolean
     private readonly proxyStreamConnectionManager: ProxyStreamConnectionManager
+    private readonly lastValueCache: LastValueCache
 
     constructor(opts: NodeOptions) {
         super()
@@ -195,6 +198,7 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.LEAVE_REQUEST_RECEIVED, (message, nodeId) => {
             this.proxyStreamConnectionManager.processLeaveRequest(message, nodeId)
         })
+        this.lastValueCache = opts.lastValueCache
     }
 
     start(): void {
@@ -273,6 +277,7 @@ export class Node extends EventEmitter {
 
     // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
+        this.lastValueCache.setLastValue(streamMessage.getContent())
         const streamPartId = streamMessage.getStreamPartID()
         // Check if the stream is set as one-directional and has inbound connection
         if (source
@@ -375,6 +380,10 @@ export class Node extends EventEmitter {
 
     getMetricsContext(): MetricsContext {
         return this.metricsContext
+    }
+
+    getLastValue(): string {
+        return this.lastValueCache.getLastValue()
     }
 
     async subscribeAndWaitForJoinOperation(streamPartId: StreamPartID, timeout = this.nodeConnectTimeout): Promise<number> {

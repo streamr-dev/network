@@ -12,6 +12,7 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory} from './connection/webrtc/NodeWebRtcConnection'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { LastValueCache } from './cache/LastValueCache'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: SmartContractRecord[],
@@ -50,6 +51,7 @@ export const createNetworkNode = ({
 
     const webRtcSignaller = new RtcSignaller(peerInfo, nodeToTracker)
     const negotiatedProtocolVersions = new NegotiatedProtocolVersions(peerInfo)
+    const lastValueCache = new LastValueCache()
     const nodeToNode = new NodeToNode(new WebRtcEndpoint(
         peerInfo,
         stunUrls,
@@ -75,6 +77,7 @@ export const createNetworkNode = ({
         disconnectionWaitTime,
         rttUpdateTimeout,
         trackerConnectionMaintenanceInterval,
-        acceptProxyConnections
+        acceptProxyConnections,
+        lastValueCache
     })
 }

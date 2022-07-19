@@ -241,5 +241,12 @@ export class BrubeckNode implements Context {
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete
     }
+
+    getLastValue(): string {
+        if (this.cachedNode) {
+            return this.cachedNode.getLastValue()
+        }
+        throw new Error("Node not initialized")
+    }
 }
 
