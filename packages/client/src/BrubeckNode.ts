@@ -107,7 +107,7 @@ export class BrubeckNode implements Context {
             ...networkOptions,
             id,
             metricsContext: new MetricsContext(),
-            signers: createSigners(this.authConfig.privateKey)
+            signers: createSigners(this.authentication)
         })
 
         if (!this.destroySignal.isDestroyed()) {

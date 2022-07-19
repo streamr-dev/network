@@ -1,18 +1,17 @@
 import { Signers } from 'streamr-network'
 import { Claim, Receipt } from 'streamr-client-protocol'
-import { sign, verify } from './signingUtils'
+import { verify } from './signingUtils'
 import { getEthereumAddressFromNodeId } from './utils'
+import { Authentication } from '../Authentication'
 
-export function createSigners(privateKey: undefined): undefined
-export function createSigners(privateKey: string): Signers
-export function createSigners(privateKey: string | undefined): Signers | undefined {
-    if (privateKey === undefined) {
+export function createSigners(authentication: Authentication): Signers | undefined {
+    if (!authentication.isAuthenticated()) {
         return undefined
     }
     return {
         claim: {
-            sign(claim: Omit<Claim, 'signature'>): string {
-                return sign(JSON.stringify(claim), privateKey)
+            sign(claim: Omit<Claim, 'signature'>): Promise<string> {
+                return authentication.createMessagePayloadSignature(JSON.stringify(claim))
             },
             validate({ signature, ...claim }: Claim): boolean {
                 return verify(
@@ -23,8 +22,8 @@ export function createSigners(privateKey: string | undefined): Signers | undefin
             }
         },
         receipt: {
-            sign(receipt: Omit<Receipt, 'signature'>): string {
-                return sign(JSON.stringify(receipt), privateKey)
+            sign(receipt: Omit<Receipt, 'signature'>): Promise<string> {
+                return authentication.createMessagePayloadSignature(JSON.stringify(receipt))
             },
             validate({ signature, ...receipt }: Receipt): boolean {
                 return verify(
