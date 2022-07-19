@@ -17,11 +17,14 @@ export class ReceiptStore {
         this.myId = myId
     }
 
-    store(receipt: Receipt): void {
-        if (receipt.claim.sender === this.myId) {
-            store(receipt.claim.sender, receipt, this.myReceipts)
+    store(receipt: Receipt): void | never {
+        const { sender, receiver } = receipt.claim
+        if (sender === this.myId) {
+            store(receiver, receipt, this.myReceipts)
+        } else if (receiver === this.myId) {
+            store(sender, receipt, this.theirReceipts)
         } else {
-            store(receipt.claim.receiver, receipt, this.theirReceipts)
+            throw new Error(`receipt between ${sender} -> ${receiver} does not concern me (${this.myId})`)
         }
     }
 
