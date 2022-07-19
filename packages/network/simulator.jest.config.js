@@ -25,9 +25,6 @@ module.exports = {
     testTimeout: 15000,
     maxWorkers: 3,
 
-    // This option allows use of a custom test runner
-    testRunner: 'jest-circus/runner',
-
     testPathIgnorePatterns: ["/browser/","/fixtures/","/benchmarks/",
         "/integration/webrtc-endpoint-back-pressure-handling.test.ts", 
         "/integration/ws-endpoint-back-pressure-handling.test.ts", 
