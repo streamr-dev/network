@@ -8,7 +8,6 @@ import {
     toStreamPartID
 } from 'streamr-client-protocol'
 import { Event as NodeToNodeEvent, NodeToNode } from '../../protocol/NodeToNode'
-import { PeerInfo } from '../../connection/PeerInfo'
 import { NodeId } from '../../identifiers'
 import { BucketID, formBucketID } from './Bucket'
 import { Signers } from './SignatureFunctions'
@@ -27,19 +26,38 @@ function getBucketIdFromClaim(claim: Claim): BucketID {
     })
 }
 
+export interface ConstructorOptions {
+    myNodeId: NodeId
+    nodeToNode: NodeToNode
+    receiptStore: ReceiptStore
+    signers: Signers
+}
+
+/**
+ * Plays the active role of the receipt responder.
+ *
+ * A counterparty node will ask us to agree to a certain ground truth
+ * concerning the amount of stream message data they have sent us. They will
+ * do so by sending us a receipt request.
+ *
+ * Upon receiving a receipt request, we will validate some things about it,
+ * such as that the included signature is valid. Importantly, we will check
+ * whether we agree with the stream message amounts. If we do, we send them
+ * back signed receipt response acknowledging our agreement, otherwise we
+ * send them back an error response.
+ */
 export class ReceiptResponder {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
     private readonly receiptStore: ReceiptStore
     private readonly signers: Signers
-    private readonly collector: BucketCollector
+    private readonly collector = new BucketCollector()
 
-    constructor(myPeerInfo: PeerInfo, nodeToNode: NodeToNode, receiptStore: ReceiptStore, signers: Signers) {
-        this.myNodeId = myPeerInfo.peerId
+    constructor({ myNodeId, nodeToNode, receiptStore, signers }: ConstructorOptions) {
+        this.myNodeId = myNodeId
         this.nodeToNode = nodeToNode
         this.receiptStore = receiptStore
         this.signers = signers
-        this.collector = new BucketCollector()
         nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => {
             this.collector.record(broadcastMessage.streamMessage, nodeId)
         })

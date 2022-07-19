@@ -22,6 +22,21 @@ export interface ConstructorOptions {
     bucketUpdateTimeoutMargin?: number
 }
 
+/**
+ * Plays the active role of the receipt requester.
+ *
+ * When a bucket is closed (due to window timeout or bucket update timeout),
+ * this class will send a receipt request to the counterparty node in order to
+ * establish a common ground truth on the amount of stream message data this
+ * node has sent and what the counterparty has received during the window.
+ *
+ * It will then wait for a response, and upon receiving such, will perform
+ * signature validations and such. If everything looks good, it will ask
+ * `ReceiptStore` to store the receipt.
+ *
+ * In addition, method `recordMessageSent` should be wired to be invoked every
+ * time a message is sent to the counterparty node.
+ */
 export class ReceiptRequester {
     private readonly myNodeId: NodeId
     private readonly nodeToNode: NodeToNode
@@ -62,17 +77,18 @@ export class ReceiptRequester {
         })
         nodeToNode.on(Event.RECEIPT_RESPONSE_RECEIVED, ({ receipt }, source) => {
             const { receiver, sender } = receipt.claim
-            if (receiver !== source) { // TODO: This is not entirely wrong, however why would these get relayed thru a 3rd party?
+            if (receiver !== source) { // TODO: This is not necessarily wrong, however, why would these get relayed thru a 3rd party?
                 logger.warn('unexpected receipt from %s (trying to respond on behalf of %s)', source, receiver)
                 // TODO: cut connection?
                 return
             }
             if (sender !== this.myNodeId) {
-                logger.warn('unexpected receipt from %s (the claim does not concern me)', source, sender)
+                logger.warn('unexpected receipt from %s (the claim directed to %s does not concern me)',
+                    source, sender)
                 // TODO: cut connection?
                 return
             }
-            if (!this.signers.receipt.validate(receipt!)) {
+            if (!this.signers.receipt.validate(receipt)) {
                 logger.warn('receipt from %s has invalid signature', source)
                 // TODO: cut connection?
                 return

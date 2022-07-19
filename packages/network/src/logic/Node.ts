@@ -123,12 +123,12 @@ export class Node extends EventEmitter {
                 receiptStore: this.receiptStore,
                 signers: opts.signers
             })
-            this.receiptResponder = new ReceiptResponder(
-                this.peerInfo,
-                this.nodeToNode,
-                this.receiptStore,
-                opts.signers
-            )
+            this.receiptResponder = new ReceiptResponder({
+                myNodeId: this.peerInfo.peerId,
+                nodeToNode: this.nodeToNode,
+                receiptStore: this.receiptStore,
+                signers: opts.signers
+            })
             attachInspectResponder({
                 myPeerInfo: this.peerInfo,
                 receiptStore: this.receiptStore,
