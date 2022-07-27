@@ -15,7 +15,7 @@ const logger = new Logger(module)
 
 export interface ConstructorOptions {
     myNodeId: NodeId
-    nodeToNode: NodeToNode
+    nodeToNode: Pick<NodeToNode, 'on' | 'send' | 'registerErrorHandler'>
     receiptStore: ReceiptStore
     signers: Signers
     windowTimeoutMargin?: number
