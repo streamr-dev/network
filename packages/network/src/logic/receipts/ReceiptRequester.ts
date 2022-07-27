@@ -1,6 +1,6 @@
 import { BucketCollector } from './BucketCollector'
 import { NodeId } from '../../identifiers'
-import { Logger } from '@streamr/utils'
+import { DebouncedTaskManager, Logger } from '@streamr/utils'
 import { Bucket, BucketID, getWindowStartTime, WINDOW_LENGTH } from './Bucket'
 import { Event, NodeToNode } from '../../protocol/NodeToNode'
 import { Claim, ReceiptRequest, StreamPartIDUtils } from 'streamr-client-protocol'
@@ -33,19 +33,22 @@ export interface ConstructorOptions {
  * It will then wait for a response, and upon receiving such, will perform
  * signature validations and such. If everything looks good, it will ask
  * `ReceiptStore` to store the receipt.
- *
- * In addition, method `recordMessageSent` should be wired to be invoked every
- * time a message is sent to the counterparty node.
  */
 export class ReceiptRequester {
     private readonly myNodeId: NodeId
-    private readonly nodeToNode: NodeToNode
+    private readonly nodeToNode: Pick<NodeToNode, 'on' | 'send' | 'registerErrorHandler'>
     private readonly receiptStore: ReceiptStore
     private readonly signers: Signers
     private readonly windowTimeoutMargin: number
     private readonly bucketUpdateTimeoutMargin: number
-    private readonly collector: BucketCollector
-    private readonly closeTimeouts = new Map<BucketID, NodeJS.Timeout>() // TODO: browser setTimeout?
+    private readonly debouncedTasks = new DebouncedTaskManager<BucketID>()
+    private readonly collector = new BucketCollector((bucket) => {
+        this.debouncedTasks.schedule(bucket.getId(), this.getCloseTime(bucket) - Date.now(), () => {
+            this.sendReceiptRequest(bucket)
+            this.collector.removeBucket(bucket.getId())
+            logger.info('closed bucket %s', bucket.getId())
+        })
+    })
 
     constructor({
         myNodeId,
@@ -61,20 +64,7 @@ export class ReceiptRequester {
         this.signers = signers
         this.windowTimeoutMargin = windowTimeoutMargin || DEFAULT_WINDOW_TIMEOUT_MARGIN
         this.bucketUpdateTimeoutMargin = bucketUpdateTimeoutMargin || DEFAULT_UPDATE_TIMEOUT_MARGIN
-        this.collector = new BucketCollector((bucket) => { // TODO: debounce?
-            // TODO: we could use the fact that timeouts can only go later and later, therefore we don't have to
-            //  clear them all the time here...
-            const existingTimeout = this.closeTimeouts.get(bucket.getId())
-            if (existingTimeout !== undefined) {
-                clearTimeout(existingTimeout)
-            }
-            const timeoutRef = setTimeout(() => {
-                this.sendReceiptRequest(bucket)
-                this.collector.removeBucket(bucket.getId())
-                logger.info('closed bucket %s', bucket.getId())
-            }, this.getCloseTime(bucket) - Date.now())
-            this.closeTimeouts.set(bucket.getId(), timeoutRef)
-        })
+
         nodeToNode.on(Event.BROADCAST_MESSAGE_SENT, ({ streamMessage }, recipient) => {
             this.collector.record(streamMessage, recipient)
         })
@@ -107,10 +97,7 @@ export class ReceiptRequester {
     }
 
     stop(): void {
-        for (const timeout of this.closeTimeouts.values()) {
-            clearTimeout(timeout)
-        }
-        this.closeTimeouts.clear()
+        this.debouncedTasks.unscheduleAll()
     }
 
     private sendReceiptRequest(bucket: Bucket): void {
