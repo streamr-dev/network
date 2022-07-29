@@ -3,7 +3,7 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyErrorResponse,
-    StreamIDUtils
+    StreamIDUtils, toStreamPartID
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, delay, inject } from 'tsyringe'
 
@@ -18,6 +18,7 @@ import Ethereum from '../Ethereum'
 import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './Encryption'
+import BrubeckNode from '../BrubeckNode'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
@@ -81,6 +82,7 @@ export class KeyExchangeStream implements Context, Stoppable {
         private ethereum: Ethereum,
         private subscriber: Subscriber,
         private destroySignal: DestroySignal,
+        private brubeckNode: BrubeckNode,
         @inject(delay(() => Publisher)) private publisher: Publisher
     ) {
         this.id = instanceId(this)
@@ -155,6 +157,7 @@ export class KeyExchangeStream implements Context, Stoppable {
             if (sub) {
                 await sub.unsubscribe()
             }
+            (await this.brubeckNode.getNode()).unsubscribe(toStreamPartID(streamId, 0))
             await responseTask
         }
     }
