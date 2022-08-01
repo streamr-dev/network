@@ -31,7 +31,8 @@ runs:
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: |
-        npm run bootstrap-pkg @streamr/proto-rpc
+        npm_config_package=@streamr/proto-rpc npm run bootstrap-pkg
+        npm_config_package=@streamr/dht npm run bootstrap-pkg
         npm ci --no-audit
       shell: bash
     - name: build
