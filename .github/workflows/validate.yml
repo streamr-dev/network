@@ -61,6 +61,15 @@ jobs:
         npm run test
         sudo apt-get install xvfb
         xvfb-run --auto-servernum npm run test-browser
+  trackerless-network:
+    needs: build
+    uses: ./.github/workflows/test-setup.yml
+    with:
+      package: trackerless-network
+      command: |
+        npm run test
+        sudo apt-get install xvfb
+        xvfb-run --auto-servernum npm run test-browser
   network:
     needs: build
     uses: ./.github/workflows/test-setup.yml
