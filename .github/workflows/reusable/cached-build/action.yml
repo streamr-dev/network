@@ -27,12 +27,17 @@ runs:
           packages/client/vendor
           packages/proto-rpc/src/proto
           packages/dht/src/proto
-          packages/trackerless-network/src/proto
+          packages/tracer
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: |
-        npm_config_package=@streamr/proto-rpc npm run bootstrap-pkg
-        npm_config_package=@streamr/dht npm run bootstrap-pkg
+        version=3.12.0
+        archive=protoc-${version}-linux-x86_64.zip
+        curl -O -L https://github.com/protocolbuffers/protobuf/releases/download/v${version}/${archive}
+        sudo unzip -d '/usr/local' ${archive} 'bin/*' 'include/*'
+        sudo chmod 755 /usr/local/bin/protoc
+        rm ${archive}
+        protoc --version
         npm ci --no-audit
       shell: bash
     - name: build
