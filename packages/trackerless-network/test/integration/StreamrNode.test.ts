@@ -15,11 +15,11 @@ describe('StreamrNode', () => {
     let node2: StreamrNode
 
     const peer1: PeerDescriptor = {
-        peerId: new Uint8Array([1,2,3]),
+        peerId: new Uint8Array([1, 2, 3]),
         type: NodeType.NODEJS
     }
     const peer2: PeerDescriptor = {
-        peerId: new Uint8Array([1,1,1]),
+        peerId: new Uint8Array([1, 1, 1]),
         type: NodeType.NODEJS
     }
     const STREAM_ID = 'test'
@@ -28,7 +28,7 @@ describe('StreamrNode', () => {
         timestamp: 123123
     }
     const msg: DataMessage = {
-        content: JSON.stringify({hello: "WORLD"}),
+        content: JSON.stringify({ hello: "WORLD" }),
         senderId: PeerID.fromValue(peer2.peerId).toMapKey(),
         messageRef,
         streamPartId: STREAM_ID
@@ -114,7 +114,7 @@ describe('StreamrNode', () => {
         ])
 
         const msg2: DataMessage = {
-            content: JSON.stringify({hello: "WORLD"}),
+            content: JSON.stringify({ hello: "WORLD" }),
             senderId: PeerID.fromValue(peer1.peerId).toMapKey(),
             messageRef,
             streamPartId: stream2

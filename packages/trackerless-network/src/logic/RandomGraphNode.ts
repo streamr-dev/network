@@ -1,4 +1,4 @@
-import EventEmitter = require('events')
+import { EventEmitter } from 'events'
 import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
 import { DataMessage, HandshakeRequest, HandshakeResponse, LeaveNotice, MessageRef } from '../proto/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
@@ -18,8 +18,8 @@ export interface RandomGraphNode {
 }
 
 export interface RandomGraphNodeParams {
-    randomGraphId: string,
-    layer1: DhtNode,
+    randomGraphId: string
+    layer1: DhtNode
     P2PTransport: ITransport
 }
 
@@ -50,7 +50,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     start(): void {
         this.started = true
-        this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${this.randomGraphId}`, this.P2PTransport)
+        this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
         this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         const candidates = this.getNewNeighborCandidates()
@@ -61,11 +61,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.bootstrapIntervalRef = setInterval(() => {
             if (this.selectedNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() >= 1) {
                 this.newContact(
-                    {peerId: new Uint8Array(), type: 0},
+                    { peerId: new Uint8Array(), type: 0 },
                     this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((peer) => peer.getPeerDescriptor())
                 )
             }
-        },2000)
+        }, 2000)
     }
 
     stop(): void {

@@ -13,11 +13,11 @@ describe('RemoteRandomGraphNode', () => {
     let remoteRandomGraphNode: RemoteRandomGraphNode
 
     const clientPeer: PeerDescriptor = {
-        peerId: new Uint8Array([1,1,1]),
+        peerId: new Uint8Array([1, 1, 1]),
         type: 1
     }
     const serverPeer: PeerDescriptor = {
-        peerId: new Uint8Array([2,2,2]),
+        peerId: new Uint8Array([2, 2, 2]),
         type: 1
     }
 
@@ -83,7 +83,7 @@ describe('RemoteRandomGraphNode', () => {
             timestamp: 0
         }
         const dataMessage: DataMessage = {
-            content: JSON.stringify({hello: 'WORLD'}),
+            content: JSON.stringify({ hello: 'WORLD' }),
             senderId: PeerID.fromValue(clientPeer.peerId).toString(),
             streamPartId: 'test-stream',
             messageRef

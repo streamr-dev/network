@@ -8,7 +8,7 @@ import { waitForCondition } from 'streamr-test-utils'
 
 describe('Propagation', () => {
     const entryPointDescriptor: PeerDescriptor = {
-        peerId: new Uint8Array([1,2,3]),
+        peerId: new Uint8Array([1, 2, 3]),
         type: 1
     }
 
@@ -33,7 +33,7 @@ describe('Propagation', () => {
 
         range(9).map(async (i) => {
             const descriptor: PeerDescriptor = {
-                peerId: new Uint8Array([i,1,1]),
+                peerId: new Uint8Array([i, 1, 1]),
                 type: 1
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
@@ -67,7 +67,7 @@ describe('Propagation', () => {
             timestamp: 123123
         }
         const message: DataMessage = {
-            content: JSON.stringify({hello: "WORLD"}),
+            content: JSON.stringify({ hello: "WORLD" }),
             senderId: PeerID.fromValue(dhtNodes[0].getPeerDescriptor().peerId).toString(),
             messageRef,
             streamPartId: STREAM_ID

@@ -8,7 +8,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 
 describe('Network RPC', () => {
     const peer2: PeerDescriptor = {
-        peerId: new Uint8Array([2,2,2]),
+        peerId: new Uint8Array([2, 2, 2]),
         type: 1
     }
     let rpcCommunicator1: RpcCommunicator

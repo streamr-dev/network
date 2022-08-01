@@ -6,7 +6,7 @@ import { DataMessage } from '../proto/NetworkRpc'
 import { EventEmitter } from 'events'
 
 interface StreamObject {
-    layer1: DhtNode,
+    layer1: DhtNode
     layer2: RandomGraphNode
 }
 
