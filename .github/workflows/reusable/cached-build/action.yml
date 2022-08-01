@@ -27,7 +27,7 @@ runs:
           packages/client/vendor
           packages/proto-rpc/src/proto
           packages/dht/src/proto
-          packages/tracer
+          packages/trackerless-network/src/proto
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: |
