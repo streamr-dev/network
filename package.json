@@ -28,10 +28,10 @@
         "packages/cli-tools"
     ],
     "dependencies": {
-        "@protobuf-ts/protoc": "^2.4.0",
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
+        "@protobuf-ts/protoc": "^2.4.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^28.1.2",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
