@@ -31,7 +31,7 @@ runs:
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: |
-        npm i -g @protobuf-ts/protoc
+        npm i -g @protobuf-ts/plugin
         npm ci --no-audit
       shell: bash
     - name: build
