@@ -1,12 +1,12 @@
 import { IWebRtcConnection, Event as IWebRtcEvent } from './IWebRtcConnection'
-import { ConnectionType, IConnection, Event as ConnectionEvent, } from '../IConnection'
-import { ConnectionID } from '../../types'
+import { ConnectionType, IConnection, ConnectionID, Event as ConnectionEvent, } from '../IConnection'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import EventEmitter = require('events')
+import EventEmitter from 'events'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
-import { Logger } from '../../helpers/Logger'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
+import { Logger } from '@streamr/utils'
+import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
 
 const logger = new Logger(module)
 
@@ -19,12 +19,18 @@ export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
 }
 
 export interface Params {
-    remotePeerDescriptor: PeerDescriptor,
-    bufferThresholdHigh?: number,
-    bufferThresholdLow?: number,
-    connectingTimeout?: number,
+    remotePeerDescriptor: PeerDescriptor
+    bufferThresholdHigh?: number
+    bufferThresholdLow?: number
+    connectingTimeout?: number
     stunUrls?: string[]
 }
+
+// Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
+// because importing single dom definitions in not possible
+
+enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
+type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
 export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
 
@@ -35,12 +41,13 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private stunUrls: string[]
     private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow: number
-    private lastState = ''
+    private lastState: RTCPeerConnectionState = 'connecting'
     private buffer: Uint8Array[] = []
     private remoteDescriptionSet = false
     private connectingTimeoutRef: NodeJS.Timeout | null = null
     private connectingTimeout: number
     private remotePeerDescriptor: PeerDescriptor
+
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
@@ -121,8 +128,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     send(data: Uint8Array): void {
         if (this.isOpen()) {
             this.doSend(data)
-        }
-        else {
+        } else {
             this.addToBuffer(data)
         }
     }
@@ -201,7 +207,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     private onStateChange(state: string): void {
-        this.lastState = state
+        if (!Object.keys(RTCPeerConnectionStateEnum).filter((s) => isNaN(+s)).includes(state)) {
+            throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
+        } else {
+            this.lastState = state as RTCPeerConnectionState
+        }
     }
 
     isOpen(): boolean {

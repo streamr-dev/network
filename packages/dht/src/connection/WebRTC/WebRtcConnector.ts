@@ -1,4 +1,4 @@
-require('setimmediate')
+import 'setimmediate'
 import { EventEmitter } from "events"
 import { Event as ConnectionSourceEvents, IConnectionSource } from '../IConnectionSource'
 import {
@@ -23,7 +23,7 @@ import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { TODO } from '../../types'
 import { DeferredConnection } from '../DeferredConnection'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 import { IWebRtcConnector } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -32,9 +32,9 @@ import { UUID } from "../../helpers/UUID"
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
-    rpcTransport: ITransport,
-    canConnect: (peerDescriptor: PeerDescriptor) => boolean,
-    getConnection: (peerDescriptor: PeerDescriptor) => IConnection | null,
+    rpcTransport: ITransport
+    canConnect: (peerDescriptor: PeerDescriptor) => boolean
+    getConnection: (peerDescriptor: PeerDescriptor) => IConnection | null
     addConnection: (peerDescriptor: PeerDescriptor, connection: IConnection) => boolean
 }
 

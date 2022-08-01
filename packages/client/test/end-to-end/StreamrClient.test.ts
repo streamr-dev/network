@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
-import { MessageLayer, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { StreamMessage, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import {
     getCreateClient,
     createPartitionedTestStream,
@@ -20,8 +21,6 @@ import * as G from '../../src/utils/GeneratorUtils'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
 
 jest.setTimeout(60000)
-
-const { StreamMessage } = MessageLayer
 
 const MAX_MESSAGES = 10
 const TIMEOUT = 30 * 1000

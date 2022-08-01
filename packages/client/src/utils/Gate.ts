@@ -100,7 +100,7 @@ export class Gate implements Context {
 
         if (!this.pending) {
             // this.debug('close')
-            this.pending = Defer<void>()
+            this.pending = Defer<undefined>()
         }
     }
 

@@ -1,9 +1,8 @@
-import { IConnection, Event as ConnectionEvent, ConnectionType } from '../IConnection'
-import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent} from 'websocket'
+import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from '../IConnection'
+import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent } from 'websocket'
 import { EventEmitter } from 'events'
-import { ConnectionID } from '../../types'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -44,8 +43,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         this.socket.onmessage = (message: IMessageEvent) => {
             if (typeof message.data === 'string') {
                 logger.debug("Received string: '" + message.data + "'")
-            }
-            else {
+            } else {
                 this.emit(ConnectionEvent.DATA, new Uint8Array(message.data))
                 logger.trace("Received data: '" + message.data + "'")
             }
@@ -56,8 +54,7 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         if (this.socket && this.socket.readyState === this.socket.OPEN) {
             logger.trace(`Sending data with size ${data.byteLength}`)
             this.socket?.send(data.buffer)
-        }
-        else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
+        } else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
             this.buffer.push(data)
         }
     }

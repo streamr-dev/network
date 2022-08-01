@@ -19,7 +19,7 @@ import * as Err from '../helpers/errors'
 import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { jsFormatPeerDescriptor } from '../helpers/common'
 import { IDhtRpc } from '../proto/DhtRpc.server'
@@ -49,7 +49,7 @@ export interface DhtNodeConfig {
     webSocketPort?: number
     peerIdString?: string
     appId?: string
-    numberOfNodesPerKBucket?: number,
+    numberOfNodesPerKBucket?: number
     nodeName?: string
 }
 
@@ -105,8 +105,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.transportLayer = this.config.transportLayer
             this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
             this.ownPeerId = PeerID.fromValue(this.ownPeerDescriptor.peerId)
-        }
-        else {
+        } else {
             let connectionManager: ConnectionManager
             if (this.config.peerDescriptor && this.config.peerDescriptor.websocket) {
                 connectionManager = new ConnectionManager({
@@ -157,8 +156,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
 
         if (msg) {
             peerId = peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value
-        }
-        else {
+        } else {
             peerId = PeerID.fromString(peerIdString!).value
         }
 
@@ -386,8 +384,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             
             if (this.neighborList!.getClosestContactId().equals(oldClosestContact)) {
                 this.noProgressCounter++
-            }
-            else {
+            } else {
                 this.noProgressCounter = 0
             }
 
@@ -569,8 +566,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     public getNodeName(): string {
         if (this.config.nodeName) {
             return this.config.nodeName
-        }
-        else {
+        } else {
             return 'unnamed node'
         }
     }
@@ -628,7 +624,9 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             setImmediate(async () => {
                 try {
                     await this.onRoutedMessage(converted)
-                } catch (err) {}
+                } catch (err) {
+                    // no-op
+                }
             })
         }
         return response

@@ -36,7 +36,7 @@ export default class GroupKeyRequest extends GroupKeyMessage {
         return [this.requestId, this.streamId, this.rsaPublicKey, this.groupKeyIds]
     }
 
-    static fromArray(args: GroupKeyRequestSerialized): GroupKeyRequest {
+    static override fromArray(args: GroupKeyRequestSerialized): GroupKeyRequest {
         const [requestId, streamId, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,

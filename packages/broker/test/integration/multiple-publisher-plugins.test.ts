@@ -6,7 +6,8 @@ import { Tracker } from '@streamr/network-tracker'
 import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { startBroker, createClient, createTestStream, startTestTracker } from '../utils'
-import { fastPrivateKey, waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { range, sample } from 'lodash'
 
 const MESSAGE_COUNT = 120
@@ -67,7 +68,7 @@ class HttpPluginPublisher implements PluginPublisher {
 }
 
 const publishMessages = async (streamId: string): Promise<any[]> => {
-    const publishers: Record<string,PluginPublisher> = {
+    const publishers: Record<string, PluginPublisher> = {
         mqtt1: new MqttPluginPublisher(),
         mqtt2: new MqttPluginPublisher(),
         websocket1: new WebsocketPluginPublisher(),

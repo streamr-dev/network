@@ -10,7 +10,7 @@
 
 import { EthereumAddress } from 'streamr-client-protocol'
 
-const NAMES: Record<EthereumAddress,string> = {
+const NAMES: Record<EthereumAddress, string> = {
     '0xb9e7cebf7b03ae26458e32a059488386b05798e8': 'T1',
     '0x0540a3e144cdd81f402e7772c76a5808b71d2d30': 'T2',
     '0xf2c195be194a2c91e93eacb1d6d55a00552a85e2': 'T3',
@@ -22,6 +22,7 @@ const NAMES: Record<EthereumAddress,string> = {
     '0x231b810d98702782963472e1d60a25496999e75d': 'DOCKER_DEV_STORAGE_NODE_REGISTRY'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class NameDirectory {
 
     static MAX_FALLBACK_NAME_LENGTH = 8

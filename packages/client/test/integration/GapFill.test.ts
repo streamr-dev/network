@@ -1,5 +1,5 @@
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
@@ -16,7 +16,7 @@ import { StreamPermission } from '../../src'
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
 
-function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
+function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0
     // eslint-disable-next-line no-param-reassign
     // @ts-expect-error private

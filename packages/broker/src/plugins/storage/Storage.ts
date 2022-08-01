@@ -8,7 +8,7 @@ import { v1 as uuidv1 } from 'uuid'
 import merge2 from 'merge2'
 import { StreamMessage } from 'streamr-client-protocol'
 import { BucketManager, BucketManagerOptions } from './BucketManager'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { Bucket, BucketId } from './Bucket'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from './DataQueryEndpoints'
 
@@ -32,14 +32,14 @@ const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => buck
 
 // NET-329
 interface ResendDebugInfo {
-    streamId: string,
-    partition?: number,
-    limit?: number,
-    fromTimestamp?: number,
-    toTimestamp?: number,
-    fromSequenceNo?: number | null,
-    toSequenceNo?: number | null,
-    publisherId?: string | null,
+    streamId: string
+    partition?: number
+    limit?: number
+    fromTimestamp?: number
+    toTimestamp?: number
+    fromSequenceNo?: number | null
+    toSequenceNo?: number | null
+    publisherId?: string | null
     msgChainId?: string | null
 }
 
@@ -54,7 +54,7 @@ export class Storage extends EventEmitter {
     cassandraClient: Client
     bucketManager: BucketManager
     batchManager: BatchManager
-    pendingStores: Map<string,NodeJS.Timeout>
+    pendingStores: Map<string, NodeJS.Timeout>
 
     constructor(cassandraClient: Client, opts: StorageOptions) {
         super()
@@ -130,7 +130,7 @@ export class Storage extends EventEmitter {
             prepare: true, fetchSize: 1
         }
 
-        const resultStream = this.createResultStream({streamId, partition, limit})
+        const resultStream = this.createResultStream({ streamId, partition, limit })
 
         const makeLastQuery = async (bucketIds: BucketId[]) => {
             try {
@@ -215,8 +215,8 @@ export class Storage extends EventEmitter {
         fromSequenceNo: number,
         toTimestamp: number,
         toSequenceNo: number,
-        publisherId: string|undefined,
-        msgChainId: string|undefined
+        publisherId: string | undefined,
+        msgChainId: string | undefined
     ): Readable {
         logger.trace('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
 
@@ -518,8 +518,8 @@ export class Storage extends EventEmitter {
                 prepare: true
             })
 
-            for (let i = 0; i < res.rows.length; i++) {
-                count += res.rows[i].size
+            for (const row of res.rows) {
+                count += row.size
             }
         }
 

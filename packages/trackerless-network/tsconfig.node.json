@@ -2,7 +2,8 @@
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
         "composite": true,
-        "outDir": "dist"
+        "outDir": "dist",
+        "noImplicitOverride": false
     },
     "include": [
         "src/**/*"

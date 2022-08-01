@@ -1,26 +1,25 @@
-import { PeerID } from "../helpers/PeerID"
+import { PeerID, PeerIDKey } from "../helpers/PeerID"
 import { Message, PeerDescriptor } from "../proto/DhtRpc"
 import { SimulatorTransport } from "./SimulatorTransport"
 
 export class Simulator {
 
-    private connectionManagers: { [id: string]: SimulatorTransport } = {}
+    private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
     
     private latenciesEnabled = false
 
     addConnectionManager(manager: SimulatorTransport): void {
-        this.connectionManagers[PeerID.fromValue(manager.getPeerDescriptor().peerId).toMapKey()] = manager
+        this.connectionManagers.set(PeerID.fromValue(manager.getPeerDescriptor().peerId).toMapKey(), manager)
     }
 
     send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
         if (this.latenciesEnabled) {
             setTimeout(() => {
-                this.connectionManagers[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].handleIncomingMessage(sourceDescriptor, msg)
+                this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
             }
             , Math.random() * (250 - 5) + 5)
-        }
-        else {
-            this.connectionManagers[PeerID.fromValue(targetDescriptor.peerId).toMapKey()].handleIncomingMessage(sourceDescriptor, msg)
+        } else {
+            this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
         }
     }
 

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
-import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
     EthereumAddress,
@@ -10,9 +11,9 @@ import {
     toStreamPartID,
     MAX_PARTITION_COUNT,
     StreamMessageOptions,
-    MessageID,
-    SigningUtil
+    MessageID
 } from 'streamr-client-protocol'
+import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
@@ -152,7 +153,7 @@ type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'me
     publisher: Wallet
     msgChainId?: string
     timestamp?: number
-    sequenceNumber?: number,
+    sequenceNumber?: number
     encryptionKey?: GroupKey
 }
 
@@ -170,15 +171,16 @@ export const createMockMessage = (
             opts.timestamp ?? Date.now(),
             opts.sequenceNumber ?? 0,
             opts.publisher.address,
-            opts.msgChainId ?? 'msgChainId'
+            opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         content: {},
+        prevMsgRef: opts.prevMsgRef,
         ...opts
     })
     if (opts.encryptionKey !== undefined) {
         EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
     }
-    msg.signature = SigningUtil.sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
+    msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
 }

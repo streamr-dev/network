@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import StrictEventEmitter from 'strict-event-emitter-types'
 import { DeferredConnectionAttempt } from './DeferredConnectionAttempt'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { PeerId, PeerInfo } from '../PeerInfo'
 import { MessageQueue, QueueItem } from '../MessageQueue'
 import { NameDirectory } from '../../NameDirectory'
@@ -43,6 +43,7 @@ interface Events {
 // reminder: only use Connection emitter for external handlers
 // to make it safe for consumers to call removeAllListeners
 // i.e. no this.on('event')
+// eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
 export function isOffering(myId: PeerId, theirId: PeerId): boolean {
@@ -216,7 +217,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
 
         try {
             this.doClose(err)
-        } catch(e) {
+        } catch (e) {
             this.baseLogger.warn(`doClose (subclass) threw: %s`, e)
         }
 

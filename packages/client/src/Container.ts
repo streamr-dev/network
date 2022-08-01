@@ -70,6 +70,8 @@ export function initContainer(
         [ConfigInjectionToken.Publish, config],
         [ConfigInjectionToken.Encryption, config],
         [ConfigInjectionToken.Cache, config.cache],
+        // eslint-disable-next-line no-underscore-dangle
+        [ConfigInjectionToken.Timeouts, config._timeouts],
     ]
 
     configTokens.forEach(([token, useValue]) => {

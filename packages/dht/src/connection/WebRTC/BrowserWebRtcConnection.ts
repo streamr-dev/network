@@ -1,12 +1,9 @@
 import EventEmitter from "events"
 import { Event, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
-import { IConnection, Event as ConnectionEvent, ConnectionType } from "../IConnection"
+import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from "../IConnection"
 import { PeerDescriptor } from "../../proto/DhtRpc"
-import { ConnectionID } from "../../types"
-import { Logger } from '../../helpers/Logger'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
-
-enum ConnectionState { CONNECTING = 'connecting', OPEN = 'open', CLOSED = 'closed' }
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
@@ -20,7 +17,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     public connectionId: ConnectionID = new ConnectionID()
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
 
-    private lastState: ConnectionState = ConnectionState.CONNECTING
+    // We need to keep track of connection state ourselves because
+    // RTCPeerConnection.connectionState is not supported on Firefox
+    
+    private lastState: RTCPeerConnectionState = 'connecting'
+
     private stunUrls = ['stun:stun.l.google.com:19302']
     private peerConnection?: RTCPeerConnection
     private dataChannel?: RTCDataChannel
@@ -114,12 +115,12 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     isOpen(): boolean {
-        return this.lastState === ConnectionState.OPEN
+        return this.lastState === 'connected'
     }
 
     // IConnection implementation
     close(): void {
-        this.lastState = ConnectionState.CLOSED
+        this.lastState = 'closed'
 
         if (this.dataChannel) {
             try {
@@ -151,10 +152,9 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     send(data: Uint8Array): void {
-        if (this.lastState == ConnectionState.OPEN) {
+        if (this.lastState == 'connected') {
             this.doSend(data)
-        }
-        else if (this.lastState == ConnectionState.CONNECTING) {
+        } else if (this.lastState == 'connecting') {
             this.addToBuffer(data)
         }
     }
@@ -204,7 +204,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
 
     private openDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
-        this.lastState = ConnectionState.OPEN
+        this.lastState = 'connected'
         this.emit(ConnectionEvent.CONNECTED)
     }
 

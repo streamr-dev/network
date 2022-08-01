@@ -2,22 +2,11 @@
 import pkg from '../package.json'
 import { createFnParseInt } from '../src/common'
 import { createCommand } from '../src/command'
-
-// From: https://stackoverflow.com/questions/10726909/random-alpha-numeric-string-in-javascript
-function randomString(
-    length: number,
-    chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-): string {
-    let result = ''
-    for (let i = length; i > 0; --i) {
-        result += chars[Math.floor(Math.random() * chars.length)]
-    }
-    return result
-}
+import { randomString } from '@streamr/utils'
 
 function genArray<T>(size: number, elementFn: () => T): T[] {
     const arr = []
-    for (let i=0; i < size; ++i) {
+    for (let i = 0; i < size; ++i) {
         arr.push(elementFn())
     }
     return arr

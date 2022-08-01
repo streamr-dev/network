@@ -85,7 +85,7 @@ describe('Subscriber', () => {
             publisherWallet,
             [],
             dependencyContainer,
-            () => 'mock-error-code'
+            async () => 'mock-error-code'
         )
 
         const subscriber = dependencyContainer.resolve(Subscriber)

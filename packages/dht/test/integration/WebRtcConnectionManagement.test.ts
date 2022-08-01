@@ -31,11 +31,11 @@ describe('WebRTC Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new SimulatorTransport(peerDescriptor1 , simulator)
-        manager1 = new ConnectionManager({transportLayer: connectorTransport1})
+        connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
         
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
-        manager2 = new ConnectionManager({transportLayer: connectorTransport2})
+        manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
 
         await manager1.start()
         await manager2.start()

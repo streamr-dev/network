@@ -16,6 +16,8 @@ import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeHttpUtil } from './FakeHttpUtil'
 import { HttpUtil } from '../../../src/HttpUtil'
 import { EthereumAddress } from 'streamr-client-protocol'
+import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
+import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 
 export const DEFAULT_CLIENT_OPTIONS = {
     metrics: false
@@ -31,6 +33,7 @@ export const createFakeContainer = (config: StreamrClientConfig | undefined): De
         initContainer(createStrictConfig(config), mockContainer)
     }
     mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
+    mockContainer.registerSingleton(StreamStorageRegistry, FakeStreamStorageRegistry as any)
     mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
     mockContainer.registerSingleton(HttpUtil, FakeHttpUtil)
     mockContainer.registerSingleton(ActiveNodes, ActiveNodes as any)

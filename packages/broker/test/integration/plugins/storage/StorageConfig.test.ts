@@ -1,6 +1,5 @@
 import { Client } from 'cassandra-driver'
 import StreamrClient, { Stream } from 'streamr-client'
-import { Protocol } from 'streamr-network'
 import { Tracker } from '@streamr/network-tracker'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
@@ -14,6 +13,7 @@ import {
     startStorageNode
 } from '../../../utils'
 import { Broker } from '../../../../src/broker'
+import { StreamMessage } from 'streamr-client-protocol'
 
 jest.setTimeout(30000)
 
@@ -81,7 +81,7 @@ describe('StorageConfig', () => {
             return (result.first().count > 0)
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
-        const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
+        const storeMessage = StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
         expect(storeMessage.messageId).toEqual(publishMessage.messageId)
     })
 })

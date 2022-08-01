@@ -13,7 +13,7 @@ describe('Kademlia correctness', () => {
     const simulator = new Simulator()
     const NUM_NODES = 1000
 
-    const nodeIndicesById: { [id: string]: number } = {}
+    const nodeIndicesById: Record<string, number> = {}
 
     if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
@@ -21,7 +21,7 @@ describe('Kademlia correctness', () => {
     }
 
     const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
-    const groundTruth: { [nodeName: string]: Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }> }
+    const groundTruth: Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
         = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
@@ -76,6 +76,7 @@ describe('Kademlia correctness', () => {
             sumOutgoingRpcCalls += outgoingCalls
 
             let groundTruthString = 'groundTruthNeighb: '
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let j = 0; j < groundTruth[i + ''].length; j++) {
                 groundTruthString += groundTruth[i + ''][j].name + ','
             }
@@ -96,7 +97,7 @@ describe('Kademlia correctness', () => {
                     correctNeighbors++
                 }
             } catch (e) {
-                console.error("Node " + nodes[i].getNodeName() + " had only " + kademliaNeighbors.length+" kademlia neighbors")
+                console.error("Node " + nodes[i].getNodeName() + " had only " + kademliaNeighbors.length + " kademlia neighbors")
             }
             if (correctNeighbors === 0) {
                 console.log('No correct neighbors found for node ' + i)

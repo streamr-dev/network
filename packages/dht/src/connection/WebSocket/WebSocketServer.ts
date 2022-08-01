@@ -9,11 +9,11 @@ import {
 import { TODO } from '../../types'
 import { Event as ConnectionEvents, IConnection } from '../IConnection'
 import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-declare class NodeJsWsServer extends WsServer {}
+declare class NodeJsWsServer extends WsServer { }
 
 export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
@@ -21,7 +21,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
     private wsServer: WsServer | null = null
     private ownPeerDescriptor: PeerDescriptor | null = null
 
-    start({ host, port }: { host?: string; port?: number } = {}): Promise<void> {
+    start({ host, port }: { host?: string, port?: number } = {}): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace((new Date()) + ' Received request for ' + request.url)
@@ -34,16 +34,12 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                     logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
-            }
-
-            else if (port) {
+            } else if (port) {
                 this.httpServer.listen(port, () => {
                     logger.info((new Date()) + ' Server is listening on port ' + port)
                     resolve()
                 })
-            }
-
-            else {
+            } else {
                 reject('Listen port for WebSocket server not given')
             }
 
@@ -52,8 +48,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                     httpServer: this.httpServer,
                     autoAcceptConnections: false
                 })
-            }
-            else {
+            } else {
                 this.wsServer = new WsServer({
                     httpServer: this.httpServer,
                     // You should not use autoAcceptConnections for production
@@ -98,10 +93,10 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
                     logger.trace('received connectivity request')
                     connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
-                }
-
-                else if (this.ownPeerDescriptor) {
-                    incomingMessageHandler(connection, message)
+                } else {
+                    if (this.isInitialized()) {
+                        incomingMessageHandler(connection, message)
+                    }
                 }
             })
         })
@@ -109,6 +104,13 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = peerDescriptor
+    }
+
+    private isInitialized(): boolean {
+        if (this.ownPeerDescriptor) {
+            return true
+        }
+        return false
     }
 
     stop(): Promise<void> {

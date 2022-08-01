@@ -3,7 +3,7 @@ import { RpcCommunicator, RpcCommunicatorEvent, RpcError } from '@streamr/proto-
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -29,10 +29,10 @@ describe('DhtRpc', () => {
 
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
-        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator1.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
+        rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
 
         rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
@@ -77,7 +77,7 @@ describe('DhtRpc', () => {
         await expect(response2.response).rejects.toEqual(
             new RpcError.RpcTimeout('Rpc request timed out')
         )
-    })
+    }, 15000)
 
     it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
@@ -88,7 +88,7 @@ describe('DhtRpc', () => {
                 peers: neighbors,
                 nonce: 'why am i still here'
             }
-            return new Promise(async (resolve, _reject) => {
+            return new Promise((resolve, _reject) => {
                 timeout = setTimeout(() => {
                     resolve(response)
                 }, 5000)

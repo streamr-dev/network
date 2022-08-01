@@ -186,11 +186,11 @@ describe(FifoMapWithTtl, () => {
 
         describe('onItemDropped callback', () => {
             let time: number
-            let onItemDropped: jest.Mock<void, [string]>
+            let onItemDropped: jest.Mock<undefined, [string]>
 
             beforeEach(() => {
                 time = 0
-                onItemDropped = jest.fn<void, [string]>()
+                onItemDropped = jest.fn<undefined, [string]>()
                 fifoMap = new FifoMapWithTtl<string, string>({
                     ttlInMs: 100,
                     maxSize: 5,

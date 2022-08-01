@@ -2,7 +2,7 @@ import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 
@@ -25,10 +25,10 @@ describe('Layer0 with WebRTC connections', () => {
 
         await epDhtNode.joinDht(epPeerDescriptor)
 
-        node1 = new DhtNode({peerIdString: 'Peer0', entryPoints: [epPeerDescriptor]})
-        node2 = new DhtNode({peerIdString: 'Peer1', entryPoints: [epPeerDescriptor]})
-        node3 = new DhtNode({peerIdString: 'Peer2', entryPoints: [epPeerDescriptor]})
-        node4 = new DhtNode({peerIdString: 'Peer3', entryPoints: [epPeerDescriptor]})
+        node1 = new DhtNode({ peerIdString: 'Peer0', entryPoints: [epPeerDescriptor] })
+        node2 = new DhtNode({ peerIdString: 'Peer1', entryPoints: [epPeerDescriptor] })
+        node3 = new DhtNode({ peerIdString: 'Peer2', entryPoints: [epPeerDescriptor] })
+        node4 = new DhtNode({ peerIdString: 'Peer3', entryPoints: [epPeerDescriptor] })
 
         await Promise.all([
             node1.start(),

@@ -5,7 +5,6 @@ import {
 import { uuid } from '../utils/uuid'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { Subscriber } from '../subscribe/Subscriber'
 
 import {
     GroupKeyId,
@@ -14,10 +13,13 @@ import {
 
 import { GroupKey } from './GroupKey'
 import { EncryptionUtil } from './EncryptionUtil'
-import { RsaKeyPair } from './RsaKeyPair'
+import { RSAKeyPair } from './RSAKeyPair'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { Lifecycle, scoped } from 'tsyringe'
 import { GroupKeyStore } from './GroupKeyStore'
+import { pLimitFn } from '../utils/promises'
+
+const MAX_PARALLEL_REQUEST_COUNT = 20 // we can tweak the value if needed, TODO make this configurable?
 
 export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
     let encryptedGroupKeys: EncryptedGroupKey[] = []
@@ -31,7 +33,7 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
     const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(
             encryptedGroupKey.groupKeyId,
-            EncryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
         )
     ))
     await Promise.allSettled(tasks)
@@ -42,21 +44,23 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
 export class SubscriberKeyExchange implements Context {
     readonly id
     readonly debug
-    private rsaKeyPair: RsaKeyPair
+    private rsaKeyPair: RSAKeyPair
+    private requestKeys: (opts: { streamId: StreamID, publisherId: string, groupKeyIds: GroupKeyId[] }) => Promise<GroupKey[]>
 
     constructor(
-        private subscriber: Subscriber,
+        context: Context,
         private keyExchangeStream: KeyExchangeStream,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
     ) {
         this.id = instanceId(this)
-        this.debug = this.subscriber.debug.extend(this.id)
-        this.rsaKeyPair = new RsaKeyPair()
+        this.debug = context.debug.extend(this.id)
+        this.rsaKeyPair = new RSAKeyPair()
+        this.requestKeys = pLimitFn(this.doRequestKeys.bind(this), MAX_PARALLEL_REQUEST_COUNT)
     }
 
-    private async requestKeys({ streamId, publisherId, groupKeyIds }: {
-        streamId: StreamID,
-        publisherId: string,
+    private async doRequestKeys({ streamId, publisherId, groupKeyIds }: {
+        streamId: StreamID
+        publisherId: string
         groupKeyIds: GroupKeyId[]
     }): Promise<GroupKey[]> {
         const requestId = uuid('GroupKeyRequest')

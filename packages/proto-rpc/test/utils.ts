@@ -12,7 +12,7 @@ interface IDhtRpcWithError extends IDhtRpc {
 }
 
 let timeoutCounter = 0
-const timeouts: { [key: string]: any } = {}
+const timeouts: Record<string, any> = {}
 export const MockDhtRpc: IDhtRpcWithError = {
     async getClosestPeers(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
         const neighbors = getMockPeers()

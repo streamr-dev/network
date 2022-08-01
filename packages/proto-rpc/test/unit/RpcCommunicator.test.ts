@@ -20,7 +20,7 @@ describe('RpcCommunicator', () => {
     let responseRpcMessage: RpcMessage
 
     beforeEach(() => {
-        rpcCommunicator = new RpcCommunicator({ rpcRequestTimeout: 1000})
+        rpcCommunicator = new RpcCommunicator({ rpcRequestTimeout: 1000 })
         
         const deferredParser = (bytes: Uint8Array) => PingResponse.fromBinary(bytes)
         promises = {
@@ -36,7 +36,7 @@ describe('RpcCommunicator', () => {
                 method: 'ping',
                 request: 'request',
             },
-            body: PingRequest.toBinary({nonce: 'nonce'})
+            body: PingRequest.toBinary({ nonce: 'nonce' })
         }
         responseRpcMessage = {
             requestId: 'message',
@@ -44,7 +44,7 @@ describe('RpcCommunicator', () => {
                 method: 'ping',
                 response: 'response',
             },
-            body: PingResponse.toBinary({nonce: 'nonce'}),
+            body: PingResponse.toBinary({ nonce: 'nonce' }),
         }
         /*
         response = {
@@ -67,7 +67,7 @@ describe('RpcCommunicator', () => {
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(responseRpcMessage))
         const pong = await promises.message.promise
-        expect(pong).toEqual({nonce: 'nonce'})
+        expect(pong).toEqual({ nonce: 'nonce' })
     })
 
     it('Timeouts Promises', async () => {

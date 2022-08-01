@@ -1,5 +1,5 @@
 import { PeerDescriptor } from "../proto/DhtRpc"
-import { ConnectionID } from "../types"
+import { UUID } from "../helpers/UUID"
 
 export enum Event {
     DATA = 'streamr:dht:connection:data',
@@ -12,6 +12,14 @@ export enum ConnectionType {
     WEBSOCKET_CLIENT = 'websocket-client',
     DEFERRED = 'deferred',
     WEBRTC = 'webrtc',
+}
+
+export type ConnectionIDKey = string & { readonly __brand: 'connectionIDKey' } // Nominal typing 
+
+export class ConnectionID extends UUID {
+    toMapKey(): ConnectionIDKey {
+        return this.toString() as ConnectionIDKey
+    }
 }
 
 export interface IConnection {

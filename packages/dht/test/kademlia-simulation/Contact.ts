@@ -1,6 +1,6 @@
 import type { DhtNode } from './DhtNode'
 export class Contact {	
-    private static counter = 0;
+    private static counter = 0
 
     public id: Uint8Array = new Uint8Array()
     public vectorClock = 0

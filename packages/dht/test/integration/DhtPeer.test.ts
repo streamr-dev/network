@@ -32,8 +32,8 @@ describe('DhtPeer', () => {
         clientRpcCommunicator = new RpcCommunicator()
         serverRpcCommunicator = new RpcCommunicator()
 
-        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse,'getClosestPeers', MockDhtRpc.getClosestPeers)
-        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse,'ping', MockDhtRpc.ping)
+        serverRpcCommunicator.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
+        serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
         clientRpcCommunicator.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {

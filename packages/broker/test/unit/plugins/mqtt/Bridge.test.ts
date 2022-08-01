@@ -19,7 +19,7 @@ const MOCK_MESSAGE_ID = {
 describe('MQTT Bridge', () => {
 
     let streamrClient: Partial<StreamrClient>
-    let subscription: Pick<Subscription, 'streamPartId'|'unsubscribe'>
+    let subscription: Pick<Subscription, 'streamPartId' | 'unsubscribe'>
 
     beforeEach(() => {
         subscription = {
@@ -38,7 +38,7 @@ describe('MQTT Bridge', () => {
     describe.each([
         [MOCK_STREAM_ID_DOMAIN, MOCK_TOPIC],
         [undefined, MOCK_STREAM_ID]
-    ])('streamIdDomain: %p', (streamIdDomain: string|undefined, topic: string) => {
+    ])('streamIdDomain: %p', (streamIdDomain: string | undefined, topic: string) => {
 
         let bridge: Bridge
 

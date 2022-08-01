@@ -2,10 +2,10 @@ import assert from 'assert'
 
 import {
     StreamMessage,
-    GroupKeyMessage,
     GroupKeyRequest,
     toStreamID
 } from '../../../../src/index'
+import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 
 // Message definitions
 const message = new GroupKeyRequest({

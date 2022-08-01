@@ -11,19 +11,19 @@ import { ConnectionType, Event as ConnectionEvents, IConnection } from './IConne
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { WebSocketServer } from './WebSocket/WebSocketServer'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { PeerID } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { Event, ITransport } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { v4 } from 'uuid'
 
 export interface ConnectionManagerConfig {
-    transportLayer: ITransport,
-    webSocketHost?: string,
-    webSocketPort?: number,
-    entryPoints?: PeerDescriptor[],
+    transportLayer: ITransport
+    webSocketHost?: string
+    webSocketPort?: number
+    entryPoints?: PeerDescriptor[]
 }
 
 export enum NatType {
@@ -42,9 +42,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     private started = false
 
     private ownPeerDescriptor: PeerDescriptor | null = null
-    private connections: { [peerId: string]: IConnection } = {}
+    private connections: Map<PeerIDKey, IConnection> = new Map()
 
-    private disconnectionTimeouts: { [peerId: string]: NodeJS.Timeout } = {}
+    private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
 
@@ -71,8 +71,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 host: (connection as ServerWebSocket).getRemoteAddress(),
                 port: connectivityRequest.port, timeoutMs: 1000
             })
-        }
-        catch (e) {
+        } catch (e) {
             logger.trace("Connectivity test produced negative result, communicating reply to the requester")
             logger.debug(e)
 
@@ -105,6 +104,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
     }
 
     private async sendConnectivityRequest(): Promise<ConnectivityResponseMessage> {
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const entryPoint = this.config.entryPoints![0]
 
@@ -114,8 +114,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 outgoingConnection = await this.webSocketConnector!.connectAsync({
                     host: entryPoint.websocket?.ip, port: entryPoint.websocket?.port, timeoutMs: 1000
                 })
-            }
-            catch (e) {
+            } catch (e) {
                 logger.error("Failed to connect to the entrypoints")
 
                 reject(new Error('Failed to connect to the entrypoints'))
@@ -165,14 +164,13 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
             await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
 
+            // eslint-disable-next-line no-async-promise-executor
             return new Promise(async (resolve, reject) => {
                 // Open websocket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
 
                 if (this.config.entryPoints && this.config.entryPoints.length > 0) {
                     this.sendConnectivityRequest().then((response) => resolve(response)).catch((err) => reject(err))
-                }
-
-                else {
+                } else {
                     // return connectivity info given in config to be used for id generation
 
                     const connectivityResponseMessage: ConnectivityResponseMessage = {
@@ -218,13 +216,13 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             const handshake = HandshakeMessage.fromBinary(message.body)
             const hexId = PeerID.fromValue(handshake.sourceId).toMapKey()
             connection.setPeerDescriptor(handshake.peerDescriptor as PeerDescriptor)
-            const isDeferredConnection = (this.connections[hexId] && this.connections[hexId].connectionType === ConnectionType.DEFERRED)
-            if (!this.connections.hasOwnProperty(hexId) || isDeferredConnection) {
+            const isDeferredConnection = (this.connections.has(hexId) && this.connections.get(hexId)!.connectionType === ConnectionType.DEFERRED)
+            if (!this.connections.has(hexId) || isDeferredConnection) {
                 let oldConnection
                 if (isDeferredConnection) {
-                    oldConnection = this.connections[hexId]
+                    oldConnection = this.connections.get(hexId)
                 }
-                this.connections[hexId] = connection
+                this.connections.set(hexId, connection)
 
                 const outgoingHandshake: HandshakeMessage = {
                     sourceId: this.ownPeerDescriptor.peerId,
@@ -245,8 +243,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     oldConnection.close()
                 }
             }
-        }
-        else {
+        } else {
             this.emit(Event.DATA, message, connection.getPeerDescriptor())
         }
     }
@@ -261,14 +258,14 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         if (this.webSocketServer) {
             await this.webSocketServer.stop()
         }
-        Object.values(this.disconnectionTimeouts).map(async (timeout) => {
+        [...this.disconnectionTimeouts.values()].map(async (timeout) => {
             clearTimeout(timeout)
         })
-        this.disconnectionTimeouts = {}
+        this.disconnectionTimeouts.clear()
         this.webSocketConnector.stop()
         this.webrtcConnector.stop()
 
-        Object.values(this.connections).forEach((connection) => connection.close())
+        this.connections.forEach((connection) => connection.close())
         WEB_RTC_CLEANUP.cleanUp()
     }
 
@@ -282,31 +279,26 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
         logger.trace(`Sending message to: ${peerDescriptor.peerId.toString()}`)
 
-        if (this.connections.hasOwnProperty(hexId)) {
-            this.connections[hexId].send(Message.toBinary(message))
-        }
-
-        else if (peerDescriptor.websocket) {
+        if (this.connections.has(hexId)) {
+            this.connections.get(hexId)!.send(Message.toBinary(message))
+        } else if (peerDescriptor.websocket) {
             const connection = this.webSocketConnector!.connect({
                 host: peerDescriptor.websocket.ip,
                 port: peerDescriptor.websocket.port
             })
             connection.setPeerDescriptor(peerDescriptor)
-            this.connections[hexId] = connection
+            this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))
-        }
-
-        else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
+        } else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
             const connection = this.webSocketConnector!.connect({
                 ownPeerDescriptor: this.ownPeerDescriptor!,
                 targetPeerDescriptor: peerDescriptor
             })
-            this.connections[hexId] = connection
+            this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))
-        }
-        else if (this.webrtcConnector) {
+        } else if (this.webrtcConnector) {
             const connection = this.webrtcConnector.connect(peerDescriptor)
-            this.connections[hexId] = connection
+            this.connections.set(hexId, connection)
             connection.send(Message.toBinary(message))
         }
     }
@@ -316,24 +308,25 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             return
         }
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        this.disconnectionTimeouts[hexId] = setTimeout(() => {
+        this.disconnectionTimeouts.set(hexId, setTimeout(() => {
             this.closeConnection(hexId, reason)
-        }, timeout)
+            this.disconnectionTimeouts.delete(hexId)
+        }, timeout))
     }
 
-    private closeConnection(stringId: string, reason?: string): void {
+    private closeConnection(id: PeerIDKey, reason?: string): void {
         if (!this.started || this.stopped) {
             return
         }
-        if (this.connections.hasOwnProperty(stringId)) {
-            logger.trace(`Disconnecting from Peer ${stringId}${reason ? `: ${reason}` : ''}`)
-            this.connections[stringId].close()
+        if (this.connections.has(id)) {
+            logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
+            this.connections.get(id)!.close()
         }
     }
 
     getConnection(peerDescriptor: PeerDescriptor): IConnection | null {
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        return this.connections[hexId] || null
+        return this.connections.get(hexId) || null
     }
 
     getPeerDescriptor(): PeerDescriptor {
@@ -342,7 +335,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     hasConnection(peerDescriptor: PeerDescriptor): boolean {
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        return !!this.connections[hexId]
+        return this.connections.has(hexId)
     }
 
     canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
@@ -360,7 +353,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 && this.getConnection(peerDescriptor)!.connectionType === ConnectionType.DEFERRED)
         ) {
 
-            this.connections[PeerID.fromValue(peerDescriptor.peerId).toMapKey()] = connection
+            this.connections.set(PeerID.fromValue(peerDescriptor.peerId).toMapKey(), connection)
             return true
         }
         return false

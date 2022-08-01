@@ -28,7 +28,7 @@ describe('SubscriberKeyExchange', () => {
     const createStream = async (): Promise<Stream> => {
         const streamRegistry = fakeContainer.resolve(StreamRegistry)
         const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
-        streamRegistry.grantPermissions(stream.id, {
+        await streamRegistry.grantPermissions(stream.id, {
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
@@ -87,7 +87,7 @@ describe('SubscriberKeyExchange', () => {
          * - tests that a correct kind of request message is sent to a publisher node
          * - tests that we can parse the group key from the response sent by the publisher
         */
-        it('happy path', async() => {
+        it('happy path', async () => {
             const receivedKey = await testSuccessRequest(AVAILABLE_GROUP_KEY.id)
             expect(receivedKey).toEqual(AVAILABLE_GROUP_KEY)
         })
@@ -102,7 +102,7 @@ describe('SubscriberKeyExchange', () => {
                 publisherWallet,
                 [],
                 fakeContainer,
-                () => 'mock-error-code'
+                async () => 'mock-error-code'
             )
 
             const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)

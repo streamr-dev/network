@@ -35,7 +35,7 @@ describe('WebSocket Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor , simulator)
+        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor, simulator)
         connectorTransport2 = new SimulatorTransport(noWsServerConnectorPeerDescriptor, simulator)
 
         const config1 = {

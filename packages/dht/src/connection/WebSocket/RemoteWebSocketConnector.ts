@@ -5,7 +5,7 @@ import {
 import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
 
 const logger = new Logger(module)

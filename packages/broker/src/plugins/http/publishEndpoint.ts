@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
 import { StreamrClient } from 'streamr-client'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { v4 as uuid } from 'uuid'
 import { parseQueryParameter, parsePositiveInteger, parseTimestamp } from '../../helpers/parser'
 import { PlainPayloadFormat } from '../../helpers/PayloadFormat'
@@ -16,10 +16,10 @@ export const createEndpoint = (streamrClient: StreamrClient): express.Router => 
         type() { return true },
     }))
     router.post('/streams/:streamId/', async (req: Request, res: Response) => {
-        let content: Record<string,unknown>
-        let timestamp: number|undefined
-        let partition: number|undefined
-        let partitionKey: string|undefined
+        let content: Record<string, unknown>
+        let timestamp: number | undefined
+        let partition: number | undefined
+        let partitionKey: string | undefined
         try {
             content = PAYLOAD_FORMAT.createMessage(req.body.toString()).content
             timestamp = parseQueryParameter<number>('timestamp', req.query, parseTimestamp)

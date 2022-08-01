@@ -5,7 +5,7 @@ import { PeerID } from '../helpers/PeerID'
 import { jsFormatPeerDescriptor } from '../helpers/common'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { RouteMessageParams } from './DhtNode'
-import { Logger } from '../helpers/Logger'
+import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 

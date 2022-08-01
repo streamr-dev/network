@@ -15,7 +15,7 @@ import { CallContext, ServerRegistryEvent as ServerRegistryEvent, Parser, Serial
 import { EventEmitter } from 'events'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { Logger } from './Logger'
+import { Logger } from '@streamr/utils'
 
 export enum StatusCode {
     OK = 'OK',
@@ -29,7 +29,7 @@ export enum RpcCommunicatorEvent {
 }
 
 export interface RpcCommunicatorConfig {
-    rpcRequestTimeout?: number,
+    rpcRequestTimeout?: number
 }
 
 interface IRpcIo {
@@ -38,7 +38,7 @@ interface IRpcIo {
 }
 
 interface OngoingRequest {
-    deferredPromises: ResultParts,
+    deferredPromises: ResultParts
     timeoutRef: NodeJS.Timeout
 }
 

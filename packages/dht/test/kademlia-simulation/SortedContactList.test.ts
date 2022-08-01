@@ -3,11 +3,11 @@ import { DhtNode } from './DhtNode'
 
 describe('SortedContactList', () => {
 
-    const id0 = Buffer.from([0,0,0,0])
-    const id1 = Buffer.from([0,0,0,1])
-    const id2 = Buffer.from([0,0,0,2])
-    const id3 = Buffer.from([0,0,0,3])
-    const id4 = Buffer.from([0,0,0,4])
+    const id0 = Buffer.from([0, 0, 0, 0])
+    const id1 = Buffer.from([0, 0, 0, 1])
+    const id2 = Buffer.from([0, 0, 0, 2])
+    const id3 = Buffer.from([0, 0, 0, 3])
+    const id4 = Buffer.from([0, 0, 0, 4])
 
     const node1 = new DhtNode(id1)
     const node2 = new DhtNode(id2)

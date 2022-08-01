@@ -68,6 +68,7 @@ describe('Signalling error scenarios', () => {
             if (event === NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED) {
                 if (!closed) {
                     // @ts-expect-error private field
+                    // eslint-disable-next-line no-prototype-builtins
                     if (nodeTwo.nodeToNode.endpoint.connections.hasOwnProperty('node-1')) {
                         closed = true
                         spy.mockRestore()
@@ -104,6 +105,7 @@ describe('Signalling error scenarios', () => {
             if (event === NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED) {
                 if (!closedOne) {
                     // @ts-expect-error private field
+                    // eslint-disable-next-line no-prototype-builtins
                     if (nodeOne.nodeToNode.endpoint.connections.hasOwnProperty('node-2')) {
                         closedOne = true
                         spyOne.mockRestore()
@@ -125,6 +127,7 @@ describe('Signalling error scenarios', () => {
             if (event === NodeToTrackerEvent.RELAY_MESSAGE_RECEIVED) {
                 if (!closedTwo) {
                     // @ts-expect-error private field
+                    // eslint-disable-next-line no-prototype-builtins
                     if (nodeTwo.nodeToNode.endpoint.connections.hasOwnProperty('node-1')) {
                         closedTwo = true
                         spyTwo.mockRestore()

@@ -19,7 +19,8 @@ class ErrorService implements IErrorRpc {
     }
     async unknownMethod(_request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         throw new Err.NotImplemented()
-    }}
+    }
+}
 
 const run = async () => {
     // Setup server

@@ -62,14 +62,14 @@ export const addFakePublisherNode = async (
     publisherWallet: Wallet,
     groupKeys: GroupKey[],
     dependencyContainer: DependencyContainer,
-    getError: (request: StreamMessage<GroupKeyRequestSerialized>) => string | undefined = () => undefined
+    getError: (request: StreamMessage<GroupKeyRequestSerialized>) => Promise<string | undefined> = async () => undefined,
 ): Promise<FakeBrubeckNode> => {
     const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
     const streamRegistry = dependencyContainer.resolve(StreamRegistry)
     const requests = publisherNode.addSubscriber<GroupKeyRequestSerialized>(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {
-            const errorCode = getError(request)
+            const errorCode = await getError(request)
             const response = (errorCode === undefined)
                 ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet, streamRegistry)
                 : createGroupKeyErrorResponse(errorCode, request, publisherWallet)

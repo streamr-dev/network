@@ -1,8 +1,9 @@
 import { DhtNode, SimulatorTransport, PeerDescriptor, PeerID, Simulator } from '@streamr/dht'
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
 import { DataMessage, MessageRef } from '../../src/proto/NetworkRpc'
+import { waitForEvent } from '@streamr/utils'
 
 describe('StreamrNode', () => {
 

@@ -1,6 +1,7 @@
 import { DhtNode } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
+import { waitForCondition } from 'streamr-test-utils'
 import { Event as MessageRouterEvent } from '../../src/transport/ITransport'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -49,7 +50,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it ('Happy path', async () => {
+    it('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -121,7 +122,7 @@ describe('Route Message With Mock Connections', () => {
 
     it('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
-        const numsOfReceivedMessages: {[key: string]: number} = {}
+        const numsOfReceivedMessages: Record<string, number> = {}
         await entryPoint.joinDht(entryPointDescriptor)
         await Promise.all(
             routers.map((node) => {
