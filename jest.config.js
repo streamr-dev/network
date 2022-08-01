@@ -7,6 +7,5 @@ module.exports = {
             tsconfig: 'tsconfig.jest.json',
         }
     },
-    testRunner: 'jest-circus/runner',
     setupFilesAfterEnv: ['jest-extended']
 }
