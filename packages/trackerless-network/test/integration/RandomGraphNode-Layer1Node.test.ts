@@ -32,13 +32,13 @@ describe('RandomGraphNode-DhtNode', () => {
         dhtEntryPoint = new DhtNode({
             transportLayer: entrypointCm,
             peerDescriptor: entrypointDescriptor,
-            appId: streamId
+            serviceId: streamId
         })
 
         dhtNodes = range(numOfNodes).map((i) => new DhtNode({
             transportLayer: cms[i],
             peerDescriptor: peerDescriptors[i],
-            appId: streamId
+            serviceId: streamId
         }))
 
         graphNodes = range(numOfNodes).map((i) => new RandomGraphNode({
