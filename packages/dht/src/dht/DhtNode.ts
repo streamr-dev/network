@@ -28,7 +28,7 @@ export interface RouteMessageParams {
     message: Uint8Array
     destinationPeer: PeerDescriptor
     sourcePeer: PeerDescriptor
-    appId: string
+    serviceId: string
     previousPeer?: PeerDescriptor
     messageId?: string
 }
@@ -39,7 +39,7 @@ export enum Event {
     JOIN_COMPLETED = 'streamr:dht:dht-node:join-completed'
 }
 
-export const DEFAULT_APP_ID = 'layer0'
+export const DEFAULT_SERVICE_ID = 'layer0'
 
 export interface DhtNodeConfig {
     transportLayer?: ITransport
@@ -48,7 +48,7 @@ export interface DhtNodeConfig {
     webSocketHost?: string
     webSocketPort?: number
     peerIdString?: string
-    appId?: string
+    serviceId?: string
     numberOfNodesPerKBucket?: number
     nodeName?: string
 }
@@ -64,7 +64,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
     private readonly peers: Map<string, DhtPeer>
     private readonly numberOfNodesPerKBucket: number
     private readonly routerDuplicateDetector: DuplicateDetector
-    private readonly appId: string
+    private readonly serviceId: string
     private readonly ongoingClosestPeersRequests: Set<string>
     private joinTimeoutRef: NodeJS.Timeout | null = null
     private ongoingJoinOperation = false
@@ -88,7 +88,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
 
         this.peers = new Map()
 
-        this.appId = config.appId ?? DEFAULT_APP_ID
+        this.serviceId = config.serviceId ?? DEFAULT_SERVICE_ID
 
         this.numberOfNodesPerKBucket = config.numberOfNodesPerKBucket || this.NUMBER_OF_NODES_PER_K_BUCKET
         this.ongoingClosestPeersRequests = new Set()
@@ -99,7 +99,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         if (this.started || this.stopped) {
             return
         }
-        logger.info(`Starting new Streamr Network DHT Node on ${this.appId === DEFAULT_APP_ID ? 'Layer 0' : 'Layer 1 (stream)'}`)
+        logger.info(`Starting new Streamr Network DHT Node on ${this.serviceId === DEFAULT_SERVICE_ID ? 'Layer 0' : 'Layer 1 (stream)'}`)
         this.started = true
         if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
@@ -144,7 +144,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.transportLayer = connectionManager
         }
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.appId, this.transportLayer)
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.transportLayer)
         
         this.bindDefaultServerMethods()
         this.initKBucket(this.ownPeerId!)
@@ -257,7 +257,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 previousPeer: routedMessage.previousPeer as PeerDescriptor,
                 destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
                 sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
-                appId: message.appId,
+                serviceId: message.serviceId,
                 messageId: routedMessage.nonce
             })
         }
@@ -271,7 +271,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             message: Message.toBinary(msg),
             messageId: v4(),
             destinationPeer: targetPeerDescriptor,
-            appId: msg.appId ? msg.appId : 'layer0',
+            serviceId: msg.serviceId ? msg.serviceId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
         this.doRouteMessage(params).catch((err) => {

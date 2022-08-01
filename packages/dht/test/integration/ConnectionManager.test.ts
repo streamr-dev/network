@@ -10,7 +10,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 
 describe('ConnectionManager', () => {
-    const appId = 'demo'
+    const serviceId = 'demo'
 
     const mockPeerDescriptor1: PeerDescriptor = {
         peerId: PeerID.fromString("tester1").value,
@@ -104,7 +104,7 @@ describe('ConnectionManager', () => {
 
         const arr = new Uint8Array(10)
         const msg: Message = {
-            appId: appId,
+            serviceId: serviceId,
             messageType: MessageType.RPC, 
             messageId: '1',
             body: arr
@@ -150,7 +150,7 @@ describe('ConnectionManager', () => {
 
         const arr = new Uint8Array(10)
         const msg: Message = {
-            appId: appId,
+            serviceId: serviceId,
             messageType: MessageType.RPC,
             messageId: '1',
             body: arr

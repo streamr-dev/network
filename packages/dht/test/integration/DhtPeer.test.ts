@@ -17,7 +17,7 @@ describe('DhtPeer', () => {
     let dhtPeer: DhtPeer
     let clientRpcCommunicator: RpcCommunicator
     let serverRpcCommunicator: RpcCommunicator
-    const appId = 'test'
+    const serviceId = 'test'
 
     const clientPeerDescriptor: PeerDescriptor = {
         peerId: generateId('dhtPeer'),
@@ -67,7 +67,7 @@ describe('DhtPeer', () => {
     it('routeMessage happy path', async () => {
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            appId: appId,
+            serviceId: serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -77,7 +77,7 @@ describe('DhtPeer', () => {
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
-            appId: 'unit-test'
+            serviceId: 'unit-test'
         })
         expect(routable).toEqual(true)
     })
@@ -98,7 +98,7 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.throwRouteMessageError)
         const rpcWrapper = createWrappedClosestPeersRequest(clientPeerDescriptor, serverPeerDescriptor)
         const routed: Message = {
-            appId: appId,
+            serviceId: serviceId,
             messageId: 'routed',
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
@@ -108,7 +108,7 @@ describe('DhtPeer', () => {
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
-            appId: 'unit-test'
+            serviceId: 'unit-test'
         })
         expect(routable).toEqual(false)
     })

@@ -135,7 +135,7 @@ message Message {
   MessageType messageType = 2;
   PeerDescriptor sourceDescriptor = 3;
   PeerDescriptor targetDescriptor = 4;
-  string appId = 5; // application-specific id
+  string serviceId = 5; // id of the RPC service
   bytes body = 6;
 }
 
