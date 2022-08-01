@@ -19,7 +19,8 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepare": "npm run build",
     "test": "jest",
-    "test-unit": "jest test/unit"
+    "test-unit": "jest test/unit",
+    "preinstall": "./proto.sh"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",

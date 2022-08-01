@@ -23,7 +23,8 @@
     "test": "jest",
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration"
+    "test-integration": "jest test/integration",
+    "preinstall": "./proto.sh"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.4.0",
