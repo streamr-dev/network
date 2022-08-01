@@ -49,11 +49,11 @@ describe('WebRTC Connection Management', () => {
         await manager2.stop()
     })
 
-    const appId = 'dummy'
+    const serviceId = 'dummy'
 
     it('Peer1 can open WebRTC Datachannels', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -81,7 +81,7 @@ describe('WebRTC Connection Management', () => {
     
     it('Peer2 can open WebRTC Datachannel', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -105,7 +105,7 @@ describe('WebRTC Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'

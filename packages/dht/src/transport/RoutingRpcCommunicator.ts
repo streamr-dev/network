@@ -6,10 +6,10 @@ import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
 
 export class RoutingRpcCommunicator extends RpcCommunicator {
     
-    constructor(private ownAppId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
+    constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
         transport.on(TransportEvent.DATA, (message: Message, peerDescriptor: PeerDescriptor) => {
-            if (message.appId == this.ownAppId) {
+            if (message.serviceId == this.ownServiceId) {
                 const context = new DhtCallContext()
                 context.incomingSourceDescriptor = peerDescriptor
                 this.handleIncomingMessage(message.body, context)
@@ -27,7 +27,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
                 targetDescriptor = callContext!.incomingSourceDescriptor!
             }
 
-            const message: Message = { messageId: v4(), appId: this.ownAppId, body: msgBody, messageType: MessageType.RPC }
+            const message: Message = { messageId: v4(), serviceId: this.ownServiceId, body: msgBody, messageType: MessageType.RPC }
             this.transport.send(message, targetDescriptor!)
         })
 

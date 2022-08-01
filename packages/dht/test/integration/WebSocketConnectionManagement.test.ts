@@ -10,7 +10,7 @@ import * as Err from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
-    const appId = 'test'
+    const serviceId = 'test'
     let wsServerManager: ConnectionManager
     let noWsServerManager: ConnectionManager
 
@@ -64,7 +64,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to serverless peer', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -83,7 +83,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Can open connections to peer with server', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
@@ -102,7 +102,7 @@ describe('WebSocket Connection Management', () => {
 
     it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
-            appId: appId,
+            serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'

@@ -39,7 +39,7 @@ export interface WebRtcConnectorConfig {
 }
 
 export class WebRtcConnector extends EventEmitter implements IConnectionSource, IWebRtcConnector {
-    private static WEBRTC_CONNECTOR_APP_ID = 'webrtc_connector'
+    private static WEBRTC_CONNECTOR_SERVICE_ID = 'webrtc_connector'
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RoutingRpcCommunicator
     private rpcTransport: ITransport
@@ -49,7 +49,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_APP_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
@@ -235,7 +235,7 @@ export class WebRtcConnector extends EventEmitter implements IConnectionSource, 
                 }
 
                 const msg: Message = {
-                    appId: WebRtcConnector.WEBRTC_CONNECTOR_APP_ID,
+                    serviceId: WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID,
                     messageType: MessageType.HANDSHAKE,
                     messageId: new UUID().toString(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)

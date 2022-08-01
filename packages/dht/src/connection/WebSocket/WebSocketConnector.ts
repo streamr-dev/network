@@ -30,7 +30,7 @@ import * as Err from '../../helpers/errors'
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
-    private static WEBSOCKET_CONNECTOR_APP_ID = 'websocketconnector'
+    private static WEBSOCKET_CONNECTOR_SERVICE_ID = 'websocketconnector'
     private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor: PeerDescriptor | null = null
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
@@ -42,7 +42,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         super()
         this.canConnectFunction = fnCanConnect.bind(this)
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
             rpcRequestTimeout: 10000
         })
 
@@ -157,7 +157,7 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
                 }
 
                 const msg: Message = {
-                    appId: WebSocketConnector.WEBSOCKET_CONNECTOR_APP_ID,
+                    serviceId: WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID,
                     messageType: MessageType.HANDSHAKE,
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)

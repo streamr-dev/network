@@ -37,7 +37,7 @@ const logger = new Logger(module)
 
 export class ConnectionManager extends EventEmitter implements ITransport {
     public static PROTOCOL_VERSION = '1.0'
-    private static CONNECTION_MANAGER_APP_ID = 'connectionmanager'
+    private static CONNECTION_MANAGER_SERVICE_ID = 'connectionmanager'
     private stopped = false
     private started = false
 
@@ -96,7 +96,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
 
         const msg: Message = {
-            appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
+            serviceId: ConnectionManager.CONNECTION_MANAGER_SERVICE_ID,
             messageType: MessageType.CONNECTIVITY_RESPONSE, messageId: v4(),
             body: ConnectivityResponseMessage.toBinary(connectivityResponseMessage!)
         }
@@ -133,7 +133,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 // send connectivity request
                 const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.config.webSocketPort! }
                 const msg: Message = {
-                    appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
+                    serviceId: ConnectionManager.CONNECTION_MANAGER_SERVICE_ID,
                     messageType: MessageType.CONNECTIVITY_REQUEST, messageId: 'xyz',
                     body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
                 }
@@ -230,7 +230,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                     peerDescriptor: this.ownPeerDescriptor
                 }
                 const msg: Message = {
-                    appId: ConnectionManager.CONNECTION_MANAGER_APP_ID,
+                    serviceId: ConnectionManager.CONNECTION_MANAGER_SERVICE_ID,
                     messageType: MessageType.HANDSHAKE, 
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
