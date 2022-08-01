@@ -34,5 +34,7 @@ runs:
       shell: bash
     - name: build
       if: steps.cache-build.outputs.cache-hit != 'true'
-      run: npm run build
+      run: |
+        npm run build --workspace=@streamr/proto-rpc
+        npm run build
       shell: bash
