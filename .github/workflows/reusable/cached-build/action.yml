@@ -30,8 +30,7 @@ runs:
           packages/trackerless-network/src/proto
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
-      run: |
-        npm i -g @protobuf-ts/plugin
+      run:
         npm ci --no-audit
       shell: bash
     - name: build

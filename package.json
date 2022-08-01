@@ -28,6 +28,7 @@
         "packages/cli-tools"
     ],
     "dependencies": {
+        "@protobuf-ts/protoc": "^2.4.0",
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
