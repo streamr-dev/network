@@ -162,7 +162,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 this.onIncomingMessage.bind(this)
             )
 
-            await this.webSocketServer.start({ host: this.config.webSocketHost, port: this.config.webSocketPort })
+            await this.webSocketServer.start(this.config.webSocketPort!, this.config.webSocketHost )
 
             // eslint-disable-next-line no-async-promise-executor
             return new Promise(async (resolve, reject) => {
