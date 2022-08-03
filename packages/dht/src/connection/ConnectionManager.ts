@@ -28,7 +28,7 @@ export interface ConnectionManagerConfig {
 
 export enum NatType {
     OPEN_INTERNET = 'open_internet',
-    UNKNOWN =  'unknown'
+    UNKNOWN = 'unknown'
 }
 
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
@@ -162,33 +162,33 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 this.onIncomingMessage.bind(this)
             )
 
-            await this.webSocketServer.start(this.config.webSocketPort!, this.config.webSocketHost )
+            await this.webSocketServer.start(this.config.webSocketPort!, this.config.webSocketHost)
 
-            // eslint-disable-next-line no-async-promise-executor
-            return new Promise(async (resolve, reject) => {
-                // Open websocket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
+            // Open websocket connection to one of the entrypoints and send a CONNECTIVITY_REQUEST message
 
-                if (this.config.entryPoints && this.config.entryPoints.length > 0) {
-                    this.sendConnectivityRequest().then((response) => resolve(response)).catch((err) => reject(err))
-                } else {
-                    // return connectivity info given in config to be used for id generation
+            if (this.config.entryPoints && this.config.entryPoints.length > 0) {
+                const response = await this.sendConnectivityRequest()
+                return response
+            } else {
+                // return connectivity info given in config to be used for id generation
 
-                    const connectivityResponseMessage: ConnectivityResponseMessage = {
-                        openInternet: true,
-                        ip: this.config.webSocketHost!,
-                        natType: NatType.OPEN_INTERNET,
-                        websocket: { ip: this.config.webSocketHost!, port: this.config.webSocketPort! }
-                    }
-                    resolve(connectivityResponseMessage)
+                const connectivityResponseMessage: ConnectivityResponseMessage = {
+                    openInternet: true,
+                    ip: this.config.webSocketHost!,
+                    natType: NatType.OPEN_INTERNET,
+                    websocket: { ip: this.config.webSocketHost!, port: this.config.webSocketPort! }
                 }
-            })
+                return connectivityResponseMessage
+            }
+
+        } else {
+            const connectivityResponseMessage: ConnectivityResponseMessage = {
+                openInternet: false,
+                ip: 'localhost',
+                natType: NatType.UNKNOWN
+            }
+            return connectivityResponseMessage
         }
-        const connectivityResponseMessage: ConnectivityResponseMessage = {
-            openInternet: false,
-            ip: 'localhost',
-            natType: NatType.UNKNOWN
-        }
-        return connectivityResponseMessage
     }
 
     enableConnectivity(ownPeerDescriptor: PeerDescriptor): void {
@@ -231,7 +231,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
                 }
                 const msg: Message = {
                     serviceId: ConnectionManager.CONNECTION_MANAGER_SERVICE_ID,
-                    messageType: MessageType.HANDSHAKE, 
+                    messageType: MessageType.HANDSHAKE,
                     messageId: v4(),
                     body: HandshakeMessage.toBinary(outgoingHandshake)
                 }
@@ -366,7 +366,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
 
     private createWebRtcConnector(): WebRtcConnector {
         logger.trace(`Creating WebRTC Connector`)
-        return  new WebRtcConnector({
+        return new WebRtcConnector({
             rpcTransport: this.config.transportLayer,
             canConnect: () => true,
             getConnection: this.getConnection.bind(this),
