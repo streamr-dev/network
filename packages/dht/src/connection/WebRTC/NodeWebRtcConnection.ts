@@ -42,7 +42,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow: number
     private lastState: RTCPeerConnectionState = 'connecting'
-    private buffer: Uint8Array[] = []
+    private outputBuffer: Uint8Array[] = []
     private remoteDescriptionSet = false
     private connectingTimeoutRef: NodeJS.Timeout | null = null
     private connectingTimeout: number
@@ -134,8 +134,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     sendBufferedMessages(): void {
-        while (this.buffer.length > 0) {
-            this.send(this.buffer.shift()!)
+        while (this.outputBuffer.length > 0) {
+            this.send(this.outputBuffer.shift()!)
         }
     }
 
@@ -144,11 +144,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     }
 
     private addToBuffer(msg: Uint8Array): void {
-        this.buffer.push(msg)
+        this.outputBuffer.push(msg)
     }
 
     getBufferedMessages(): Uint8Array[] {
-        return this.buffer
+        return this.outputBuffer
     }
 
     close(): void {

@@ -27,7 +27,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
-    private buffer: Uint8Array[] = []
+    private outputBuffer: Uint8Array[] = []
 
     private remotePeerDescriptor?: PeerDescriptor
 
@@ -160,8 +160,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     sendBufferedMessages(): void {
-        while (this.buffer.length > 0) {
-            this.send(this.buffer.shift() as Uint8Array)
+        while (this.outputBuffer.length > 0) {
+            this.send(this.outputBuffer.shift() as Uint8Array)
         }
     }
 
@@ -170,11 +170,11 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     }
 
     private addToBuffer(msg: Uint8Array): void {
-        this.buffer.push(msg)
+        this.outputBuffer.push(msg)
     }
 
     getBufferedMessages(): Uint8Array[] {
-        return this.buffer
+        return this.outputBuffer
     }
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {

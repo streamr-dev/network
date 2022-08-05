@@ -11,7 +11,7 @@ const BINARY_TYPE = 'arraybuffer'
 export class ClientWebSocket extends EventEmitter implements IConnection {
     public readonly connectionId: ConnectionID
     private remotePeerDescriptor?: PeerDescriptor
-    private buffer: Uint8Array[] = []
+    private outputBuffer: Uint8Array[] = []
     private socket: WebSocket | null = null
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
@@ -55,20 +55,20 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
             logger.trace(`Sending data with size ${data.byteLength}`)
             this.socket?.send(data.buffer)
         } else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
-            this.buffer.push(data)
+            this.outputBuffer.push(data)
         }
     }
 
     sendBufferedMessages(): void {
-        while (this.buffer.length > 0) {
-            this.send(this.buffer.shift()!)
+        while (this.outputBuffer.length > 0) {
+            this.send(this.outputBuffer.shift()!)
         }
     }
 
     close(): void {
         logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
         this.socket?.close()
-        this.buffer = []
+        this.outputBuffer = []
     }
 
     setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
@@ -80,6 +80,6 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
     }
 
     getBufferedMessages(): Uint8Array[] {
-        return this.buffer
+        return this.outputBuffer
     }
 }
