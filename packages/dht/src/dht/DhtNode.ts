@@ -2,21 +2,25 @@ import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import EventEmitter from 'events'
-import { SortedContactList } from './SortedContactList'
+import { SortedContactList, Event as ContactListEvent } from './SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
 import {
-    ClosestPeersRequest, ClosestPeersResponse,
+    ClosestPeersRequest,
+    ClosestPeersResponse,
     ConnectivityResponseMessage,
     Message,
     NodeType,
-    PeerDescriptor, PingRequest, PingResponse, RouteMessageAck,
+    PeerDescriptor,
+    PingRequest,
+    PingResponse,
+    RouteMessageAck,
     RouteMessageWrapper
 } from '../proto/DhtRpc'
 import { DuplicateDetector } from './DuplicateDetector'
 import * as Err from '../helpers/errors'
-import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
+import { Event as ITransportEvent, ITransport } from '../transport/ITransport'
 import { ConnectionManager } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -34,9 +38,13 @@ export interface RouteMessageParams {
 }
 
 export enum Event {
-    NEW_CONTACT = 'streamr:dht:dht-node:new-peer',
-    CONTACT_REMOVED = 'streamr:dht:dht-node:peer-removed',
-    JOIN_COMPLETED = 'streamr:dht:dht-node:join-completed'
+    NEW_KBUCKET_CONTACT = 'new-peer',
+    KBUCKET_CONTACT_REMOVED = 'peer-removed',
+    NEW_CONTACT = 'new-contact',
+    CONTACT_REMOVED = 'removed-contact',
+    NEW_OPEN_INTERNET_CONTACT = 'new-open-internet-contact',
+    OPEN_INTERNET_CONTACT_REMOVED = 'removed-open-internet-contact',
+    JOIN_COMPLETED = 'join-completed'
 }
 
 export const DEFAULT_SERVICE_ID = 'layer0'
@@ -194,9 +202,8 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             this.cleanUpHandleForConnectionManager?.disconnect(contact.getPeerDescriptor())
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
             this.emit(
-                Event.CONTACT_REMOVED,
-                contact.getPeerDescriptor(),
-                this.neighborList!.getActiveContacts(10).map((peer) => peer.getPeerDescriptor())
+                Event.KBUCKET_CONTACT_REMOVED,
+                contact.getPeerDescriptor()
             )
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
@@ -204,9 +211,9 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
                     this.emit(
-                        Event.NEW_CONTACT,
+                        Event.NEW_KBUCKET_CONTACT,
                         contact.getPeerDescriptor(),
-                        this.neighborList!.getActiveContacts(10).map((peer) => peer.getPeerDescriptor())
+                        this.neighborList!.getClosestContacts(10).map((peer) => peer.getPeerDescriptor())
                     )
                 } else {
                     this.removeContact(contact.getPeerDescriptor())
@@ -218,7 +225,19 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.MAX_NEIGHBOR_LIST_SIZE)
+        this.neighborList.on(ContactListEvent.CONTACT_REMOVED, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit(Event.CONTACT_REMOVED, peerDescriptor, activeContacts)
+        )
+        this.neighborList.on(ContactListEvent.NEW_CONTACT, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit(Event.NEW_CONTACT, peerDescriptor, activeContacts)
+        )
         this.openInternetPeers = new SortedContactList(selfId, this.MAX_NEIGHBOR_LIST_SIZE / 2)
+        this.openInternetPeers.on(ContactListEvent.CONTACT_REMOVED, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit(Event.OPEN_INTERNET_CONTACT_REMOVED, peerDescriptor, activeContacts)
+        )
+        this.openInternetPeers.on(ContactListEvent.NEW_CONTACT, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+            this.emit(Event.NEW_OPEN_INTERNET_CONTACT, peerDescriptor, activeContacts)
+        )
     }
 
     public getNeighborList(): SortedContactList {

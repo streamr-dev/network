@@ -1,6 +1,8 @@
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { DhtPeer } from './DhtPeer'
+import EventEmitter from 'events'
+import { PeerDescriptor } from '..'
 
 class ContactState {
     public contacted = false
@@ -9,11 +11,22 @@ class ContactState {
     }
 }
 
-export class SortedContactList {
+export enum Event {
+    NEW_CONTACT = 'new_contact',
+    CONTACT_REMOVED = 'contact_removed'
+}
+
+export interface SortedContactList {
+    on(event: Event.NEW_CONTACT, listener: (peerDescriptor: PeerDescriptor, closestActiveContacts: PeerDescriptor[]) => void): this
+    on(event: Event.CONTACT_REMOVED, listener: (peerDescriptor: PeerDescriptor, closestActiveContacts: PeerDescriptor[]) => void): this
+}
+
+export class SortedContactList extends EventEmitter {
     private contactsById: Map<PeerIDKey, ContactState> = new Map()
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number) {
+        super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
     }
@@ -35,15 +48,22 @@ export class SortedContactList {
                 this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
-            
+
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
                 this.contactsById.delete(removed!.toMapKey())
                 this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
+                this.emit(
+                    Event.CONTACT_REMOVED,
+                    contact.getPeerDescriptor(),
+                    this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor())
+                )
             }
-        }  
+        }
+        this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor(), this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor()))
+
     }
 
     public addContacts(contacts: DhtPeer[]): void {
@@ -75,12 +95,10 @@ export class SortedContactList {
         return ret
     }
 
-    public getActiveContacts(limit = this.maxSize): DhtPeer[] {
+    public getClosestContacts(limit = this.maxSize): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
-            if (this.isActive(contactId)) {
-                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
-            }
+            ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
         })
         return ret.splice(0, limit)
     }
@@ -89,6 +107,11 @@ export class SortedContactList {
         const distance1 = KBucket.distance(this.ownId.value, id1.value)
         const distance2 = KBucket.distance(this.ownId.value, id2.value)
         return distance1 - distance2
+    }
+
+    public getSymmetricDistance(id1: PeerID): number {
+        const sortedArray = [this.ownId.value, id1.value].sort()
+        return KBucket.distance(sortedArray[0], sortedArray[1])
     }
 
     public getStringIds(): string[] {
@@ -105,9 +128,11 @@ export class SortedContactList {
 
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toMapKey())) {
+            const removedDescriptor = this.contactsById.get(id.toMapKey())!.contact.getPeerDescriptor()
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toMapKey())
+            this.emit(Event.CONTACT_REMOVED, removedDescriptor, this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor()))
             return true
         }
         return false
