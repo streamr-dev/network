@@ -31,7 +31,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly randomGraphId: string // StreamPartID
     private readonly layer1: DhtNode
     private readonly contactPool: NodeNeighbors
-    private readonly selectedNeighbors: NodeNeighbors = new NodeNeighbors(4)
+    private readonly targetNeighbors: NodeNeighbors = new NodeNeighbors(4)
+    private readonly acceptedNeighbors: NodeNeighbors = new NodeNeighbors(4)
     private rpcCommunicator: RoutingRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
     private readonly duplicateDetector: DuplicateMessageDetector
@@ -44,7 +45,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.P2PTransport = params.P2PTransport
 
         this.contactPool = new NodeNeighbors(this.PEER_VIEW_SIZE)
-        this.selectedNeighbors = new NodeNeighbors(this.N)
+        this.targetNeighbors = new NodeNeighbors(this.N)
+        this.acceptedNeighbors = new NodeNeighbors(this.N)
         this.duplicateDetector = new DuplicateMessageDetector(10000)
     }
 
@@ -59,10 +61,10 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         }
         this.registerDefaultServerMethods()
         this.bootstrapIntervalRef = setInterval(() => {
-            if (this.selectedNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() >= 1) {
+            if (this.targetNeighbors.size() < this.N && this.layer1.getNeighborList().getSize() >= 1) {
                 this.newContact(
                     { peerId: new Uint8Array(), type: 0 },
-                    this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((peer) => peer.getPeerDescriptor())
+                    this.layer1.getNeighborList().getClosestContacts(this.PEER_VIEW_SIZE).map((peer) => peer.getPeerDescriptor())
                 )
             }
         }, 2000)
@@ -73,13 +75,13 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         this.stopped = true
-        this.selectedNeighbors.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
+        this.targetNeighbors.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
         this.layer1.off(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.off(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         this.contactPool.clear()
-        this.selectedNeighbors.clear()
+        this.targetNeighbors.clear()
         if (this.bootstrapIntervalRef) {
             clearInterval(this.bootstrapIntervalRef)
         }
@@ -89,9 +91,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (!previousPeer) {
             this.markAndCheckDuplicate(msg.messageRef!, msg.previousMessageRef)
         }
-        this.selectedNeighbors.getStringIds().map((remote) => {
+        this.targetNeighbors.getStringIds().map((remote) => {
             if (previousPeer !== remote) {
-                this.selectedNeighbors.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg)
+                this.targetNeighbors.getNeighborWithId(remote)!.sendData(this.layer1.getPeerDescriptor(), msg)
             }
         })
     }
@@ -103,7 +105,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         const toReplace: string[] = []
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
-        this.selectedNeighbors.getStringIds().forEach((neighbor) => {
+        this.targetNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
             }
@@ -116,12 +118,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         const toReplace: string[] = []
-        if (this.selectedNeighbors.hasNeighbor(removedContact)) {
+        if (this.targetNeighbors.hasNeighbor(removedContact)) {
             toReplace.push(PeerID.fromValue(removedContact.peerId).toMapKey())
         }
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
-        this.selectedNeighbors.getStringIds().forEach((neighbor) => {
+        this.targetNeighbors.getStringIds().forEach((neighbor) => {
             if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
                 toReplace.push(neighbor)
             }
@@ -134,15 +136,15 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         stringIds.forEach((replace) => {
-            const toReplace = this.selectedNeighbors.getNeighborWithId(replace)
+            const toReplace = this.targetNeighbors.getNeighborWithId(replace)
             if (toReplace) {
-                this.selectedNeighbors.remove(toReplace.getPeerDescriptor())
+                this.targetNeighbors.remove(toReplace.getPeerDescriptor())
             }
         })
         const promises: Promise<void>[] = []
         // Fill up neighbors to N
-        for (let i = this.selectedNeighbors.size(); i < this.N; i++) {
-            if (this.selectedNeighbors.size() >= this.contactPool.size()
+        for (let i = this.targetNeighbors.size(); i < this.N; i++) {
+            if (this.targetNeighbors.size() >= this.contactPool.size()
                 || this.contactPool.size() < i) {
                 break
             }
@@ -153,7 +155,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
-        return this.layer1.getNeighborList().getActiveContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
+        return this.layer1.getNeighborList().getClosestContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
         })
     }
@@ -165,12 +167,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         const newNeighbor = this.contactPool.getRandom()
         if (newNeighbor) {
             const stringId = PeerID.fromValue(newNeighbor.getPeerDescriptor().peerId).toMapKey()
-            if (!this.selectedNeighbors.hasNeighborWithStringId(stringId)) {
+            if (!this.targetNeighbors.hasNeighborWithStringId(stringId)) {
                 // Negotiate Layer 2 connection here if success add as neighbor
-                this.selectedNeighbors.add(newNeighbor)
+                this.targetNeighbors.add(newNeighbor)
                 const accepted = await newNeighbor.handshake(this.layer1.getPeerDescriptor())
                 if (!accepted) {
-                    this.selectedNeighbors.remove(newNeighbor.getPeerDescriptor())
+                    this.targetNeighbors.remove(newNeighbor.getPeerDescriptor())
                     this.addRandomContactToNeighbors().catch(() => {})
                 }
             }
@@ -179,7 +181,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     getSelectedNeighborIds(): string[] {
-        return this.selectedNeighbors.getStringIds()
+        return this.targetNeighbors.getStringIds()
     }
 
     getContactPoolIds(): string[] {
@@ -232,7 +234,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             // TODO: check integrity of notifier?
             if (contact) {
                 this.layer1!.removeContact(contact.getPeerDescriptor(), true)
-                this.selectedNeighbors.remove(contact.getPeerDescriptor())
+                this.targetNeighbors.remove(contact.getPeerDescriptor())
                 this.contactPool.remove(contact.getPeerDescriptor())
             }
         }

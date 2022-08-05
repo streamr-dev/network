@@ -67,6 +67,19 @@ export class NodeNeighbors {
         return undefined
     }
 
+    getClosest(exclude: string[]): RemoteRandomGraphNode | undefined {
+        const excluded = new Map<string, RemoteRandomGraphNode>()
+        this.neighbors.forEach((val, key) => {
+            if (!exclude.includes(key)) {
+                excluded.set(key, val)
+            }
+        })
+        if (excluded.size === 0) {
+            return undefined
+        }
+        return excluded.get([...excluded.keys()][0])
+    }
+
     clear(): void {
         this.neighbors.clear()
     }
