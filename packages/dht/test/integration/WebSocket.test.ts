@@ -21,7 +21,7 @@ describe('WebSocket', () => {
     const webSocketConnector = new WebSocketConnector(new SimulatorTransport(peerDescriptor, simulator), () => true)
 
     beforeAll(async () => {
-        await webSocketServer.start({ port: 9999 })
+        await webSocketServer.start(9999)
     })
 
     it('Happy path', (done) => {

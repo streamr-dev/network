@@ -10,8 +10,14 @@ import { TODO } from '../../types'
 import { Event as ConnectionEvents, IConnection } from '../IConnection'
 import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
 import { Logger } from '@streamr/utils'
+import { StartingWebSocketServerFailed } from '../../helpers/errors'
 
 const logger = new Logger(module)
+
+// NodeJsWsServer is declared as a global in test-browser Electron tests
+// in preload.js using "window.NodeJsWsServer = require('websocket').server".
+// This is done in order to use the real nodejs websocket server in tests
+// instead of a dummy polyfill.
 
 declare class NodeJsWsServer extends WsServer { }
 
@@ -21,7 +27,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
     private wsServer: WsServer | null = null
     private ownPeerDescriptor: PeerDescriptor | null = null
 
-    start({ host, port }: { host?: string, port?: number } = {}): Promise<void> {
+    start(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace((new Date()) + ' Received request for ' + request.url)
@@ -29,19 +35,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
                 response.end()
             })
 
-            if (host) {
-                this.httpServer.listen(port, host, () => {
-                    logger.info((new Date()) + ' Server is listening on port ' + port)
-                    resolve()
-                })
-            } else if (port) {
-                this.httpServer.listen(port, () => {
-                    logger.info((new Date()) + ' Server is listening on port ' + port)
-                    resolve()
-                })
-            } else {
-                reject('Listen port for WebSocket server not given')
-            }
+            // Use the real nodejs WebSocket server in Electron tests
 
             if (typeof NodeJsWsServer !== 'undefined') {
                 this.wsServer = new NodeJsWsServer({
@@ -51,17 +45,11 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
             } else {
                 this.wsServer = new WsServer({
                     httpServer: this.httpServer,
-                    // You should not use autoAcceptConnections for production
-                    // applications, as it defeats all standard cross-origin protection
-                    // facilities built into the protocol and the browser.  You should
-                    // *always* verify the connection's origin and decide whether or not
-                    // to accept it.
                     autoAcceptConnections: false
                 })
             }
 
             function originIsAllowed(_uorigin: string) {
-                // put logic here to detect whether the specified origin is allowed.
                 return true
             }
 
@@ -79,6 +67,21 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
                 this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
             })
+
+            this.httpServer.once('error', (err: Error) => {
+                reject(new StartingWebSocketServerFailed('Starting Websocket server failed', err))
+            })
+
+            this.httpServer.once('listening', () => {
+                logger.info((new Date()) + ' Websocket server is listening on port ' + port)
+                resolve()
+            })
+
+            try {
+                this.httpServer.listen(port, host)
+            } catch (e) {
+                reject(new StartingWebSocketServerFailed('Websocket server threw an exception', e))
+            }
         })
     }
 
