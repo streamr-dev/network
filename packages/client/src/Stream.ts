@@ -28,6 +28,7 @@ import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
+import { detectFields, Field } from './StreamField'
 
 export interface StreamProperties {
     id: string
@@ -43,32 +44,6 @@ export interface StreamProperties {
 /** @internal */
 export interface StreamrStreamConstructorOptions extends StreamProperties {
     id: StreamID
-}
-
-export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
-
-export interface Field {
-    name: string
-    type: typeof VALID_FIELD_TYPES[number]
-}
-
-function getFieldType(value: any): (Field['type'] | undefined) {
-    const type = typeof value
-    switch (true) {
-        case Array.isArray(value): {
-            return 'list'
-        }
-        case type === 'object': {
-            return 'map'
-        }
-        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
-            // see https://github.com/microsoft/TypeScript/issues/36275
-            return type as Field['type']
-        }
-        default: {
-            return undefined
-        }
-    }
 }
 
 /**
@@ -162,13 +137,7 @@ class StreamrStream implements StreamMetadata {
 
         const [lastMessage] = receivedMsgs
 
-        const fields = Object.entries(lastMessage).map(([name, value]) => {
-            const type = getFieldType(value)
-            return !!type && {
-                name,
-                type,
-            }
-        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
+        const fields = detectFields(lastMessage)
 
         // Save field config back to the stream
         await this.update({
