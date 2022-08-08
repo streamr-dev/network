@@ -1,5 +1,5 @@
 import { random } from 'lodash'
-import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID, Utils } from 'streamr-client-protocol'
+import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
@@ -7,6 +7,7 @@ import { CacheFn } from '../utils/caches'
 import { Validator } from '../Validator'
 import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
 import { MessageMetadata } from './PublishPipeline'
+import { keyToArrayIndex } from '@streamr/utils'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -41,7 +42,7 @@ export class MessageFactory {
         this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
         this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
-            return Utils.keyToArrayIndex(opts.partitionCount, partitionKey)
+            return keyToArrayIndex(opts.partitionCount, partitionKey)
         }, {
             ...opts.cacheConfig,
             cacheKey: ([partitionKey]) => partitionKey
