@@ -12,7 +12,6 @@ describe('Scaffold', () => {
     let emitter: Emitter
     let onDone: (isUp: boolean) => void
     let onChange: (isUp: boolean) => void
-    // const log = debug.extend('Scaffold')
 
     beforeEach(() => {
         if (emitter) {
@@ -25,7 +24,6 @@ describe('Scaffold', () => {
 
         emitter.on('next', (name: string, v = '') => {
             const msg = `${name} ${v}`.trim()
-            // log(msg)
             currentOrder.push(msg)
         })
 

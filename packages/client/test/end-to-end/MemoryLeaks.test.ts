@@ -261,7 +261,6 @@ describe('MemoryLeaks', () => {
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
-                    // leaksDetector = new LeaksDetector()
                     const stream = await client.createStream({
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
