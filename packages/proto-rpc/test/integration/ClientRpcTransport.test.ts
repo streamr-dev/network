@@ -26,7 +26,8 @@ describe('DhtClientRpcTransport', () => {
             rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(response))
         })
 
-        const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
+        // @ts-expect-error private 
+        const client: RpcClientTransport = new DhtRpcClient(rpcCommunicator.rpcClientTransport) // new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
             peerId: new Uint8Array([1, 2, 3]),
