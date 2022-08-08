@@ -193,7 +193,7 @@ describe('Subscriber', () => {
         msg.signature = 'invalid-signature'
         publisherNode.publishToNode(msg)
 
-        // TODO would it make sense, if we custom error handler doesn't stop the pipepline
+        // TODO would it make sense, if we custom error handler doesn't stop the pipeline
         // and we just continue normally (could e.g. write an error to console.log)
         await expect(() => collect(sub)).rejects.toThrow('mock-error')
     })
