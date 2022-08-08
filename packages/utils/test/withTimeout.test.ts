@@ -15,4 +15,14 @@ describe(withTimeout, () => {
         return expect(withTimeout(Promise.reject(new Error('foobar')), 20))
             .rejects.toEqual(new Error('foobar'))
     })
+
+    it('rejection timeout can be given custom error context', () => {
+        return expect(
+            withTimeout(
+                new Promise((resolve) => setTimeout(() => resolve(123), 20)),
+                10,
+                'no connection available'
+            )
+        ).rejects.toEqual(new TimeoutError(10, 'no connection available'))
+    })
 })

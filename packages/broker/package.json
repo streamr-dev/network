@@ -28,6 +28,7 @@
   "author": "Streamr Network AG <contact@streamr.com>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
+    "@ethersproject/hdnode": "^5.4.0",
     "@streamr/network-tracker": "1.0.0",
     "@streamr/slackbot": "^1.1.0",
     "@streamr/utils": "^0.0.1",
@@ -53,7 +54,6 @@
     "streamr-client-protocol": "^12.0.0",
     "streamr-network": "^35.0.0",
     "streamr-test-utils": "^2.0.0",
-    "utf8-binary-cutter": "^0.9.2",
     "uuid": "^8.3.2",
     "ws": "^7.5.0"
   },

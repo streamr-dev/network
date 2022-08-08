@@ -1,8 +1,9 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import WebSocket from 'ws'
-import { waitForEvent, wait } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 
-import { ServerWsEndpoint } from '../../dist/src/connection/ws/ServerWsEndpoint'
+import { ServerWsEndpoint } from '../../src/connection/ws/ServerWsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 import NodeClientWsEndpoint from '../../src/connection/ws/NodeClientWsEndpoint'
 import { DisconnectionCode, Event } from '../../src/connection/ws/AbstractWsEndpoint'
@@ -85,7 +86,7 @@ describe('ws-endpoint', () => {
                     port: trackerPort
                 }
             })
-            // @ts-expect-error TODO: do this proper way (pass via constructor)
+            // @ts-expect-error private access
             tracker.trackerServer.endpoint.handshakeTimer = 3000
         })
 
@@ -122,8 +123,8 @@ describe('ws-endpoint', () => {
                 await client1.stop()
                 await client2.stop()
                 await server.stop()
-            }
-            catch(_ue) {
+            } catch (_ue) {
+                // no-op
             }
         })
     }) 

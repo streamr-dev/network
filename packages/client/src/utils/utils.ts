@@ -7,11 +7,6 @@ import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 
 export const debug = Debug('utils')
 
-export function randomString(length = 20): string {
-    // eslint-disable-next-line no-bitwise
-    return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('')
-}
-
 /**
  * Generates counter-based ids.
  * Basically lodash.uniqueid but per-prefix.
@@ -28,7 +23,7 @@ export function randomString(length = 20): string {
 // TODO convert to a class?
 type  CounterIdType = ((prefix: string, separator?: string) => string) & { clear: (...args: [string] | []) => void }
 export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefixes?: number } = {}): CounterIdType => {
-    let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
+    let counts: Record<string, number> = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID', separator = SEPARATOR) => {
         // pedantic: wrap around if count grows too large
@@ -69,7 +64,7 @@ export const CounterId = (rootPrefix?: string, { maxPrefixes = 256 }: { maxPrefi
 
 export const counterId = CounterId()
 
-export type AnyInstance = {
+export interface AnyInstance {
     constructor: {
         name: string
         prototype: null | AnyInstance

@@ -111,6 +111,6 @@ export class AggregatedError extends Error {
             return this
         }
         const errors = [err, ...this.errors]
-        return new (<typeof AggregatedError> baseClass)(errors, joinMessages([message, this.ownMessage]))
+        return new (baseClass as typeof AggregatedError)(errors, joinMessages([message, this.ownMessage]))
     }
 }

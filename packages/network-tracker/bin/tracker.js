@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 const program = require('commander')
 const { startTracker } = require('..')
 const { Logger } = require('@streamr/utils')

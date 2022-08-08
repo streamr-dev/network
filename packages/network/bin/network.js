@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { toStreamPartID } = require('streamr-client-protocol')
 
 const { spawn } = require('child_process')

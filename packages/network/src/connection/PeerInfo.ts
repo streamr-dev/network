@@ -1,5 +1,5 @@
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { Location, NodeId, TrackerId } from '../identifiers'
+import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
 export type PeerId = NodeId | TrackerId | string
 
@@ -17,8 +17,8 @@ interface ObjectRepresentation {
     location?: Location | null | undefined
 }
 
-const defaultControlLayerVersions = ControlLayer.ControlMessage.getSupportedVersions()
-const defaultMessageLayerVersions = MessageLayer.StreamMessage.getSupportedVersions()
+const defaultControlLayerVersions = ControlMessage.getSupportedVersions()
+const defaultMessageLayerVersions = StreamMessage.getSupportedVersions()
 
 export class PeerInfo {
     static newTracker(

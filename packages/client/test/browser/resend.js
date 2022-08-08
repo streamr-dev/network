@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+/* eslint-disable no-undef, @typescript-eslint/no-require-imports */
 const { v4: uuidv4 } = require('uuid')
 
 describe('StreamrClient Resend', () => {

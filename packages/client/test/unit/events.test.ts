@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { initEventGateway, ObservableEventEmitter } from '../../src/events'
 
 interface FooPayload {
-    x: string,
+    x: string
     y: number
 }
 

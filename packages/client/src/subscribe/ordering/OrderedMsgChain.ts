@@ -4,10 +4,8 @@ import Debug from 'debug'
 import Heap from 'heap'
 import StrictEventEmitter from 'strict-event-emitter-types'
 
-import GapFillFailedError from '../errors/GapFillFailedError'
-import MessageRef from '../protocol/message_layer/MessageRef'
-
-import StreamMessage from '../protocol/message_layer/StreamMessage'
+import { StreamMessage, MessageRef } from 'streamr-client-protocol'
+import GapFillFailedError from './GapFillFailedError'
 
 function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
     return streamMessage.getMessageRef().serialize()
@@ -15,7 +13,7 @@ function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
 
 type MsgRefId = string
 
-type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']>}
+type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']> }
 
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
@@ -135,17 +133,18 @@ interface Events {
      * Message was marked and is being skipped.
      * Does not fire if maxGapRequests = 0
      */
-    skip: MessageHandler;
+    skip: MessageHandler
     /**
      * Queue was drained after something was in it.
      */
-    drain: (numMessages: number) => void;
+    drain: (numMessages: number) => void
     /**
      * Probably a GapFillFailedError.
      */
-    error: (error: Error) => void;
+    error: (error: Error) => void
 }
 
+// eslint-disable-next-line @typescript-eslint/prefer-function-type
 export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
 
 // The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
@@ -310,6 +309,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         const { prevMsgRef } = streamMessage
         // is first message
         if (this.lastOrderedMsgRef === null) { return true }
+
         if (prevMsgRef !== null) {
             // if has prev, message is chained: ensure prev points at last ordered message
             return prevMsgRef.compareTo(this.lastOrderedMsgRef) === 0

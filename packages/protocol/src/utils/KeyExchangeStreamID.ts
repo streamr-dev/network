@@ -2,6 +2,7 @@ import { StreamID } from './StreamID'
 import { StreamPartID, toStreamPartID } from './StreamPartID'
 import { EthereumAddress } from './types'
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class KeyExchangeStreamIDUtils {
 
     static readonly STREAM_ID_PREFIX = 'SYSTEM/keyexchange/'

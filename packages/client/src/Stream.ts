@@ -14,7 +14,6 @@ import {
     EthereumAddress,
     StreamID,
     StreamMessage,
-    StreamMetadata,
     StreamPartID,
     toStreamPartID
 } from 'streamr-client-protocol'
@@ -23,17 +22,18 @@ import { ConfigInjectionToken, TimeoutsConfig } from './Config'
 import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from './permission'
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
-import { withTimeout } from './utils/promises'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { InspectOptions } from 'util'
 import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { withTimeout } from '@streamr/utils'
+import { StreamMetadata } from './StreamMessageValidator'
 
 export interface StreamProperties {
     id: string
     description?: string
     config?: {
-        fields: Field[];
+        fields: Field[]
     }
     partitions?: number
     storageDays?: number
@@ -47,9 +47,9 @@ export interface StreamrStreamConstructorOptions extends StreamProperties {
 
 export const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-export type Field = {
-    name: string;
-    type: typeof VALID_FIELD_TYPES[number];
+export interface Field {
+    name: string
+    type: typeof VALID_FIELD_TYPES[number]
 }
 
 function getFieldType(value: any): (Field['type'] | undefined) {
@@ -78,7 +78,7 @@ class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
     config: {
-        fields: Field[];
+        fields: Field[]
     } = { fields: [] }
     partitions!: number
     storageDays?: number
@@ -191,7 +191,7 @@ class StreamrStream implements StreamMetadata {
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle
                 waitOptions.timeout ?? this._timeoutsConfig.storageNode.timeout,
-                'timed out waiting for storage nodes to respond'
+                'storage node did not respond'
             )
         } finally {
             this._streamRegistryCached.clearStream(this.id)

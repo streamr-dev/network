@@ -10,8 +10,7 @@
         "bin/**/*"
     ],
     "references": [
-        { "path": "../test-utils/tsconfig.node.json" },
-        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../utils/tsconfig.node.json" },
         { "path": "../client/tsconfig.node.json" }
     ]
 }

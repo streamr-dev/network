@@ -1,7 +1,6 @@
 import fetchNatType from 'nat-type-identifier'
-import { scheduleAtInterval } from 'streamr-network'
-import { Logger, withTimeout } from '@streamr/utils'
-import { wait } from 'streamr-test-utils'
+import { Logger, scheduleAtInterval, withTimeout } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Response } from 'node-fetch'
@@ -24,12 +23,12 @@ export interface BrubeckMinerPluginConfig {
     rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
-    stunServerHost: string|null
+    stunServerHost: string | null
 }
 
 interface Peer {
     id: string
-    rtt: number|undefined
+    rtt: number | undefined
 }
 
 export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
@@ -47,7 +46,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
-        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)])
+        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random() * this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
@@ -145,7 +144,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    private async getLatency(): Promise<number|undefined> {
+    private async getLatency(): Promise<number | undefined> {
         const startTime = Date.now()
         try {
             await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)
@@ -180,7 +179,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

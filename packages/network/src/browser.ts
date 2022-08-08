@@ -1,5 +1,4 @@
 import 'setimmediate'
-export * as Protocol from 'streamr-client-protocol'
 export { NameDirectory } from './NameDirectory'
 export { Logger } from '@streamr/utils'
 export { 

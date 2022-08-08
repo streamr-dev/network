@@ -3,7 +3,7 @@ import path from 'path'
 import _ from 'lodash'
 import pinoPretty from 'pino-pretty'
 
-const parseBoolean = (value: string|undefined) => {
+const parseBoolean = (value: string | undefined) => {
     switch (value) {
         case 'true':
             return true

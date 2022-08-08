@@ -36,7 +36,7 @@ export default class GroupKeyAnnounce extends GroupKeyMessage {
         return [this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey)=> it.toArray())]
     }
 
-    static fromArray(arr: GroupKeyAnnounceSerialized): GroupKeyAnnounce {
+    static override fromArray(arr: GroupKeyAnnounceSerialized): GroupKeyAnnounce {
         const [streamId, encryptedGroupKeys] = arr
         return new GroupKeyAnnounce({
             streamId: toStreamID(streamId),

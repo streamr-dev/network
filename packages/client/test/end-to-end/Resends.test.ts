@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'

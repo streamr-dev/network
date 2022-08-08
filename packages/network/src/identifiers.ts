@@ -1,12 +1,10 @@
-import { SmartContractRecord, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/Metric'
 
 export type NodeId = string
 export type TrackerId = string
 
-export interface Rtts {
-    [key: string]: number
-}
+export type Rtts = Record<string, number>
 
 export interface Location {
     latitude?: number
@@ -17,7 +15,7 @@ export interface Location {
 
 export interface StreamPartStatus {
     id: StreamID
-    partition: number,
+    partition: number
     neighbors: NodeId[]
     counter: number
 }
@@ -35,8 +33,6 @@ export interface RtcErrorMessage {
     targetNode: NodeId
     errorCode: string
 }
-
-export type TrackerInfo = SmartContractRecord
 
 export interface AbstractNodeOptions {
     id?: NodeId

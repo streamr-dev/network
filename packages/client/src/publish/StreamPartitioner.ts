@@ -1,11 +1,12 @@
 /**
  * Derive partitions for StreamMessages.
  */
-import { StreamID, Utils } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { CacheFn } from '../utils/caches'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { keyToArrayIndex } from '@streamr/utils'
 
 export type PartitionKey = string | number | undefined
 
@@ -42,7 +43,7 @@ export class StreamPartitioner {  // TODO remove this class
             return Math.floor(Math.random() * partitionCount)
         }
 
-        return Utils.keyToArrayIndex(partitionCount, partitionKey)
+        return keyToArrayIndex(partitionCount, partitionKey)
     }, {
         ...this.cacheOptions,
         cacheKey([streamId, partitionCount, partitionKey]) {

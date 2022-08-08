@@ -1,11 +1,9 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageLayer, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { waitForCondition } from 'streamr-test-utils'
 
 import { createNetworkNode, NodeEvent } from '../../src/composition'
-
-const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they

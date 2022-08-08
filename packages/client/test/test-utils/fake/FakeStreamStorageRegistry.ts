@@ -5,10 +5,10 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { ActiveNodes } from './ActiveNodes'
 import { Stream } from '../../../src/Stream'
-import { Multimap } from '../Multimap'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { Methods } from '../types'
+import { Multimap } from '@streamr/utils'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
@@ -84,7 +84,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     }
 
     // eslint-disable-next-line class-methods-use-this
-    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[]; blockNumber: number }> {
+    getStoredStreams(_nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         throw new Error('not implemented')
     }
 }

@@ -1,7 +1,8 @@
 import { KeyExchangeStreamIDUtils } from './KeyExchangeStreamID'
 import { EthereumAddress, ENSName } from './types'
+import { BrandedString } from '@streamr/utils'
 
-export type StreamID = string & { readonly __brand: 'streamID' } // Nominal typing
+export type StreamID = BrandedString<'StreamID'>
 
 /**
  * Create an instance of `StreamID` from a given string stream id or path.
@@ -35,6 +36,7 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class StreamIDUtils {
 
     static isPathOnlyFormat(streamIdOrPath: string): boolean {

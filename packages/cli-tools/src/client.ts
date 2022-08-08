@@ -19,7 +19,9 @@ const addInterruptHandler = (client: StreamrClient) => {
     process.on('SIGINT', async () => {
         try {
             await client.destroy()
-        } catch {}
+        } catch {
+            // no-op
+        }
         process.exit()
     })
 }

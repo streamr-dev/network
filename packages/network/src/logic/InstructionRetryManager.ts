@@ -14,8 +14,8 @@ export class InstructionRetryManager {
     private readonly intervalInMs: number
     private readonly statusSendCounterLimit: number
     private instructionRetryIntervals: Record<StreamPartID, {
-        interval: NodeJS.Timeout,
-        counter: number,
+        interval: NodeJS.Timeout
+        counter: number
     }>
     private stopped: boolean
 

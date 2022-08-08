@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from '../connection/ws/AbstractWsEndpoint'
 import { NodeClientWsConnection } from './NodeClientWsConnection_simulator'
@@ -7,10 +8,8 @@ import { Simulator } from './Simulator'
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> implements ISimulatedWsEndpoint {
 
-    private pendingHandshakes: {
-        [peerId: string]: [resolve: (value: PeerId | PromiseLike<string>) => void,
-            reject: (value: PeerId | PromiseLike<string>) => void, serverPeerInfo: PeerInfo]
-    } = {}
+    private pendingHandshakes: Record<string, [resolve: (value: PeerId | PromiseLike<string>) => void,
+            reject: (value: PeerId | PromiseLike<string>) => void, serverPeerInfo: PeerInfo]> = {}
 
     constructor(
         peerInfo: PeerInfo,
@@ -72,9 +71,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         if (this.pendingHandshakes.hasOwnProperty(fromInfo.peerId)) {
             this.onHandshakeClosed(this.getServerUrlByPeerId(fromInfo.peerId) as string, code, reason, this.pendingHandshakes[fromInfo.peerId][1])
             delete this.pendingHandshakes[fromInfo.peerId]
-        }
-
-        else {
+        } else {
             const connection = this.getConnectionByPeerId(fromInfo.peerId) as NodeClientWsConnection
             if (connection) {
                 this.onClose(connection, code, reason as DisconnectionReason)
@@ -90,20 +87,15 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         const parsed = data.toString()
         if (parsed === 'ping') {
             await this.send(fromInfo.peerId, 'pong')
-        }
-        else if (parsed === 'pong') {
+        } else if (parsed === 'pong') {
             connection.onPong()
-        }
-
-        else if (this.pendingHandshakes.hasOwnProperty(fromInfo.peerId)) {
+        } else if (this.pendingHandshakes.hasOwnProperty(fromInfo.peerId)) {
             try {
                 const { uuid, peerId } = JSON.parse(parsed)
 
                 if (uuid && peerId && this.pendingHandshakes.hasOwnProperty(fromInfo.peerId)) {
                     this.handshakeListener(this.pendingHandshakes[fromInfo.peerId][2], fromAddress, data, this.pendingHandshakes[fromInfo.peerId][0])
-                }
-
-                else {
+                } else {
                     this.onReceive(connection, data)
                 }
 
@@ -111,8 +103,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                 this.logger.trace(err)
                 this.onReceive(connection, data)
             }
-        }
-        else {
+        } else {
             this.onReceive(connection, data)
         }
     }

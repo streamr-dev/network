@@ -10,6 +10,7 @@ describe('ServerWsEndpoint', () => {
         try {
             await serverWsEndpoint?.stop()
         } catch (err) {
+            // no-op
         }
     })
 
@@ -21,12 +22,12 @@ describe('ServerWsEndpoint', () => {
         serverWsEndpoint = new ServerWsEndpoint(listen, false, httpsServer, PeerInfo.newTracker('tracker'))
         const webSocketClient = new WebSocket(
             serverWsEndpoint.getUrl(),
-            {rejectUnauthorized: false}
+            { rejectUnauthorized: false }
         )
         webSocketClient.on('message', async (message: string) => {
-            const {uuid, peerId} = JSON.parse(message)
+            const { uuid, peerId } = JSON.parse(message)
             if (uuid && peerId) {
-                webSocketClient.send(JSON.stringify({uuid, peerId: 'peerId'}))
+                webSocketClient.send(JSON.stringify({ uuid, peerId: 'peerId' }))
                 await waitForCondition(() => webSocketClient.readyState === webSocketClient.OPEN)
                 webSocketClient.close()
             }

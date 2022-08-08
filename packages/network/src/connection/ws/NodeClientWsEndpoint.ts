@@ -5,13 +5,6 @@ import { NodeClientWsConnection, NodeWebSocketConnectionFactory } from './NodeCl
 import { AbstractClientWsEndpoint, HandshakeValues, ServerUrl } from "./AbstractClientWsEndpoint"
 
 export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeClientWsConnection> {
-    constructor(
-        peerInfo: PeerInfo,
-        pingInterval?: number
-    ) {
-        super(peerInfo, pingInterval)
-    }
-
     protected doConnect(serverUrl: ServerUrl, serverPeerInfo: PeerInfo): Promise<PeerId> {
         return new Promise<PeerId>((resolve, reject) => {
             try {

@@ -1,5 +1,5 @@
 import { Schema } from 'ajv'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { MetricsReport } from 'streamr-network'
 import { Logger } from '@streamr/utils'
@@ -16,12 +16,7 @@ export interface ConsoleMetricsPluginConfig {
 }
 
 export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
-
-    private producer?: { stop: () => void}
-
-    constructor(options: PluginOptions) {
-        super(options)
-    }
+    private producer?: { stop: () => void }
 
     async start(): Promise<void> {
         const metricsContext = (await (this.streamrClient!.getNode())).getMetricsContext()
@@ -38,7 +33,7 @@ export class ConsoleMetricsPlugin extends Plugin<ConsoleMetricsPluginConfig> {
         this.producer?.stop()
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

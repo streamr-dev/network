@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { SynchronizedGraphQLClient } from '../../src/utils/SynchronizedGraphQLClient'
 import { mockContext } from '../test-utils/utils'
 
@@ -171,7 +171,7 @@ describe('SynchronizedGraphQLClient', () => {
     it('timeout', async () => {
         client.updateRequiredBlockNumber(999999)
         theGraphIndex.start()
-        return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('timed out while waiting for The Graph to synchronized to block 999999')
+        return expect(() => client.sendQuery(MOCK_QUERY)).rejects.toThrow('The Graph did not synchronize to block 999999 (timed out after 1000 ms)')
     })
 
     it('one query timeouts, another succeeds', async () => {
@@ -180,7 +180,7 @@ describe('SynchronizedGraphQLClient', () => {
         await wait(800)
         const responsePromise2 = client.sendQuery(MOCK_QUERY)
         theGraphIndex.start()
-        await expect(() => responsePromise1).rejects.toThrow('timed out while waiting for The Graph to synchronized to block 7')
+        await expect(() => responsePromise1).rejects.toThrow('The Graph did not synchronize to block 7 (timed out after 1000 ms)')
         expect(await responsePromise2).toEqual({
             foo: 'result-7'
         })

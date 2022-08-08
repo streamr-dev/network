@@ -5,7 +5,7 @@ import { Subscriber } from './../../src/subscribe/Subscriber'
 import { FakeBrubeckNode } from './../test-utils/fake/FakeBrubeckNode'
 import { StreamRegistry } from './../../src/registry/StreamRegistry'
 import { range } from 'lodash'
-import { fastWallet, wait } from 'streamr-test-utils'
+import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
@@ -13,13 +13,14 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
 import { MessageRef, StreamMessage } from 'streamr-client-protocol'
+import { wait } from '@streamr/utils'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
 const GROUP_KEY_FETCH_DELAY = 1000
 
 interface PublisherInfo {
-    wallet: Wallet,
+    wallet: Wallet
     groupKey: GroupKey
     node?: FakeBrubeckNode
 }

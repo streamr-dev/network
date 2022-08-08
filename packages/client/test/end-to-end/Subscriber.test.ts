@@ -1,5 +1,6 @@
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import {
     toStreamDefinition,
     createPartitionedTestStream,
@@ -19,8 +20,8 @@ jest.setTimeout(60000)
 const collect = async <T>(
     iterator: AsyncGenerator<StreamMessage<T>>,
     fn: MaybeAsync<(item: {
-        msg: StreamMessage<T>,
-        iterator: AsyncGenerator<StreamMessage<T>>,
+        msg: StreamMessage<T>
+        iterator: AsyncGenerator<StreamMessage<T>>
         received: T[]
     }) => void> = async () => {}
 ): Promise<T[]> => {

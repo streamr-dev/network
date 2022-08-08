@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 import { Simulator } from './Simulator'
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { AbstractWsEndpoint, DisconnectionCode, DisconnectionReason, } from "../connection/ws/AbstractWsEndpoint"
@@ -11,8 +12,8 @@ import { v4 } from 'uuid'
 import { AbstractWsConnection } from '../connection/ws/AbstractWsConnection'
 import { ISimulatedWsEndpoint } from './ISimulatedWsEndpoint'
 
-type HostPort = {
-    hostname: string,
+interface HostPort {
+    hostname: string
     port: number
 }
 type UnixSocket = string
@@ -23,7 +24,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
     private readonly serverUrl: string
     private readonly httpServer: http.Server | https.Server | null
     private readonly ownAddress: string
-    private handshakeListeners: { [fromAddress: string]: { [uuid: string]: (data: string) => Promise<void> } } = {}
+    private handshakeListeners: Record<string, Record<string, (data: string) => Promise<void>>> = {}
 
     constructor(
         listen: HttpServerConfig,
@@ -76,7 +77,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                         Simulator.instance().wsDisconnect(this.ownAddress, this.peerInfo, fromAddress, DisconnectionCode.DUPLICATE_SOCKET, 
                             failedMessage)
 
-                        this.logger.warn(failedMessage + " "+data)
+                        this.logger.warn(failedMessage + " " + data)
                     }
                 } else {
                     this.logger.trace('Expected a handshake message got: ' + data.toString())
@@ -110,22 +111,16 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
     public async handleIncomingMessage(fromAddress: string, fromInfo: PeerInfo, data: string): Promise<void> {
         if (data === 'ping') {
             await this.send(fromInfo.peerId, 'pong')
-        }
-
-        else if (data === 'pong') {
+        } else if (data === 'pong') {
             const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
             connection.onPong()
-        }
-
-        else if (this.handshakeListeners.hasOwnProperty(fromAddress) && Object.keys(this.handshakeListeners[fromAddress]).length > 0) {
+        } else if (this.handshakeListeners.hasOwnProperty(fromAddress) && Object.keys(this.handshakeListeners[fromAddress]).length > 0) {
             try {
                 const { uuid, peerId } = JSON.parse(data)
 
                 if (uuid && peerId && this.handshakeListeners[fromAddress].hasOwnProperty(uuid)) {
                     this.handshakeListeners[fromAddress][uuid](data)
-                }
-
-                else {
+                } else {
                     const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
                     this.onReceive(connection, data.toString())
                 }
@@ -135,8 +130,7 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> imp
                 this.logger.trace(err)
                 this.onReceive(connection, data.toString())
             }
-        }
-        else {
+        } else {
             const connection = this.getConnectionByPeerId(fromInfo.peerId) as AbstractWsConnection
             this.onReceive(connection, data)
         }

@@ -1,5 +1,6 @@
 import 'reflect-metadata'
-import { fetchPrivateKeyWithGas, wait } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { getPublishTestMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -75,9 +76,10 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
         let createContainer: (opts?: any) => Promise<any>
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
-                config: StrictStreamrClientConfig;
-                childContainer: DependencyContainer;
-                rootContext: any;}> => {
+                config: StrictStreamrClientConfig
+                childContainer: DependencyContainer
+                rootContext: any
+            }> => {
                 const config = createStrictConfig({
                     ...ConfigTest,
                     auth: {
