@@ -1,7 +1,8 @@
+import { ConfigTest } from './../../src/ConfigTest'
 import fs from 'fs'
 import path from 'path'
 import { StreamMessage, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import {
     getCreateClient,
@@ -44,7 +45,12 @@ describeRepeats.skip('StreamrClient', () => { // TODO enable the test when it do
     let streamDefinition: { id: string, partition: number }
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream(module)
+        const stream = await createPartitionedTestStream(module, new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey: await fetchPrivateKeyWithGas()
+            }
+        }))
         streamParts = createStreamPartIterator(stream)
     })
 

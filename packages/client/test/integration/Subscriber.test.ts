@@ -1,17 +1,17 @@
+import { waitForCondition } from 'streamr-test-utils'
 import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import {
     toStreamDefinition,
     createPartitionedTestStream,
     createStreamPartIterator
 } from '../test-utils/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { ConfigTest, MaybeAsync, StreamDefinition } from '../../src'
+import { MaybeAsync, StreamDefinition } from '../../src'
+import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -35,47 +35,51 @@ const collect = async <T>(
     return received
 }
 
-describe.skip('Subscriber', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestMessages)
+const getPublishTestMessages = (client: StreamrClient, streamDefinition: StreamDefinition) => {
+    return async (count = 5, opts?: {
+        timestamp?: number
+        delay?: number
+    }): Promise<unknown[]> => {
+        const contents = []
+        for (let i = 0; i < count; i++) {
+            const msg = await client.publish(streamDefinition, {}, {
+                timestamp: opts?.timestamp
+            })
+            contents.push(msg.getParsedContent())
+            if (opts?.delay !== undefined) {
+                await wait(opts?.delay)
+            }
+        }
+        return contents
+    }
+}
+
+describe('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
-    let privateKey: string
     let streamParts: AsyncGenerator<StreamPartID>
     let streamDefinition: StreamDefinition
     let M: Subscriber
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
-    beforeAll(async () => {
-        const stream = await createPartitionedTestStream(module)
-        streamParts = createStreamPartIterator(stream)
-    })
-
     beforeEach(async () => {
+        const clientFactory = createClientFactory()
+        client = clientFactory.createClient()
+        const stream = await createPartitionedTestStream(module, clientFactory.createClient())
+        streamParts = createStreamPartIterator(stream)
         streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
         expectErrors = 0
         onError = jest.fn()
-    })
-
-    beforeEach(async () => {
-        privateKey = fastPrivateKey()
-        client = new StreamrClient({
-            ...ConfigTest,
-            auth: {
-                privateKey
-            }
-        })
         // @ts-expect-error private
         M = client.subscriber
-        client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
         ])
-        client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, streamDefinition)
     })
 
     afterEach(async () => {
-        client.debug('after test')
         expect(await M.count()).toBe(0)
         expect(await M.count(streamDefinition)).toBe(0)
         expect(M.countSubscriptionSessions()).toBe(0)
@@ -296,6 +300,8 @@ describe.skip('Subscriber', () => { // TODO enable the test when it doesn't depe
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
+
+                await waitForCondition(() => onError1.mock.calls.length > 0)
 
                 expect(received1).toEqual(published.slice(0, MAX_ITEMS))
                 expect(onError1).toHaveBeenCalledTimes(1)
