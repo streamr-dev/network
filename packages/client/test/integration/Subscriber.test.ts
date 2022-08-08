@@ -15,7 +15,6 @@ import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
-jest.setTimeout(60000)
 
 const collect = async <T>(
     iterator: AsyncGenerator<StreamMessage<T>>,
@@ -79,10 +78,6 @@ describe('Subscriber', () => {
         expect(await M.count()).toBe(0)
         expect(await M.count(streamDefinition)).toBe(0)
         expect(M.countSubscriptionSessions()).toBe(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
     })
 
     describe('basics', () => {
@@ -170,7 +165,6 @@ describe('Subscriber', () => {
                 }
                 expect(onErrorHandler).toHaveBeenCalledWith(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
-                await wait(100)
             })
 
             it('works when multiple steps error', async () => {
