@@ -55,8 +55,6 @@ const getPublishTestMessages = (client: StreamrClient, streamDefinition: StreamD
 }
 
 describe('Subscriber', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
     let client: StreamrClient
     let streamParts: AsyncGenerator<StreamPartID>
     let streamDefinition: StreamDefinition
@@ -69,8 +67,6 @@ describe('Subscriber', () => {
         const stream = await createPartitionedTestStream(module, clientFactory.createClient())
         streamParts = createStreamPartIterator(stream)
         streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
-        expectErrors = 0
-        onError = jest.fn()
         // @ts-expect-error private
         M = client.subscriber
         await Promise.all([
@@ -87,8 +83,6 @@ describe('Subscriber', () => {
 
     afterEach(async () => {
         await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     describe('basics', () => {
