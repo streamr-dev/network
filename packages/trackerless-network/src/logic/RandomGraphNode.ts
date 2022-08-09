@@ -276,10 +276,15 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     registerDefaultServerMethods(): void {
-        this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake.bind(this))
-        this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData.bind(this))
-        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice.bind(this))
-        this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice.bind(this))
+        this.handshake = this.handshake.bind(this)
+        this.sendData = this.sendData.bind(this)
+        this.interleaveNotice = this.interleaveNotice.bind(this)
+        this.leaveNotice = this.leaveNotice.bind(this)
+
+        this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData)
+        this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
+        this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
+        this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
     }
 
     // INetworkRpc server method
