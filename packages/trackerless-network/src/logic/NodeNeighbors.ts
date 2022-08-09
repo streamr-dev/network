@@ -80,6 +80,36 @@ export class NodeNeighbors {
         return excluded.get([...excluded.keys()][0])
     }
 
+    getClosestAndFurthest(exclude: string[]): RemoteRandomGraphNode[] {
+        const excluded: RemoteRandomGraphNode[] = []
+        this.neighbors.forEach((val, key) => {
+            if (!exclude.includes(key)) {
+                excluded.push(val)
+            }
+        })
+        if (excluded.length === 0) {
+            return []
+        } else if (excluded.length > 1) {
+            const toReturn = [excluded[0], excluded[excluded.length - 1]]
+            return toReturn.filter((contact) => contact)
+        } else {
+            return [excluded[0]]
+        }
+    }
+
+    getFurthest(exclude: string[]): RemoteRandomGraphNode | undefined {
+        const excluded = new Map<string, RemoteRandomGraphNode>()
+        this.neighbors.forEach((val, key) => {
+            if (!exclude.includes(key)) {
+                excluded.set(key, val)
+            }
+        })
+        if (excluded.size === 0) {
+            return undefined
+        }
+        return excluded.get([...excluded.keys()][excluded.size - 1])
+    }
+
     clear(): void {
         this.neighbors.clear()
     }

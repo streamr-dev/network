@@ -1,7 +1,13 @@
 import { RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerDescriptor } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
-import { NetworkRpcClient } from '../../src/proto/NetworkRpc.client'
-import { DataMessage, HandshakeRequest, HandshakeResponse, LeaveNotice, MessageRef } from '../../src/proto/NetworkRpc'
+import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
+import {
+    DataMessage,
+    HandshakeRequest,
+    HandshakeResponse,
+    LeaveNotice,
+    MessageRef
+} from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -93,8 +99,8 @@ describe('RemoteRandomGraphNode', () => {
     })
 
     it('handshake', async () => {
-        const result = await remoteRandomGraphNode.handshake(clientPeer)
-        expect(result).toEqual(true)
+        const result = await remoteRandomGraphNode.handshake(clientPeer, [], [])
+        expect(result.accepted).toEqual(true)
     })
 
     it('leaveNotice', async () => {

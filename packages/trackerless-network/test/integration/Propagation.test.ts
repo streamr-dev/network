@@ -2,7 +2,7 @@ import { DhtNode, PeerDescriptor, Simulator } from '@streamr/dht'
 import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode } from '../utils'
 import { range } from 'lodash'
-import { DataMessage, MessageRef } from '../../src/proto/NetworkRpc'
+import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerID } from '@streamr/dht/dist/src'
 import { waitForCondition } from 'streamr-test-utils'
 
@@ -73,7 +73,7 @@ describe('Propagation', () => {
             streamPartId: STREAM_ID
         }
         randomGraphNodes[0].broadcast(message)
-        await waitForCondition(() => totalReceived >= 5)
+        await waitForCondition(() => totalReceived >= 9)
         // expect(totalReceived).toEqual(7)
     }, 10000)
 })

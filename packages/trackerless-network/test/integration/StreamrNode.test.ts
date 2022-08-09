@@ -2,7 +2,7 @@ import { DhtNode, SimulatorTransport, PeerDescriptor, PeerID, Simulator } from '
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { StreamrNode, Event as NodeEvent } from '../../src/logic/StreamrNode'
-import { DataMessage, MessageRef } from '../../src/proto/NetworkRpc'
+import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForEvent } from '@streamr/utils'
 
 describe('StreamrNode', () => {

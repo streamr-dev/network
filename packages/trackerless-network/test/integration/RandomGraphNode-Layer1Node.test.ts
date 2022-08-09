@@ -7,6 +7,7 @@ describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 128
     let dhtNodes: DhtNode[]
     let dhtEntryPoint: DhtNode
+    let entryPointRandomGraphNode: RandomGraphNode
     let graphNodes: RandomGraphNode[]
 
     const streamId = 'Stream1'
@@ -47,6 +48,12 @@ describe('RandomGraphNode-DhtNode', () => {
             P2PTransport: cms[i]
         }))
 
+        entryPointRandomGraphNode = new RandomGraphNode({
+            randomGraphId: streamId,
+            layer1: dhtEntryPoint,
+            P2PTransport: entrypointCm
+        })
+
         await dhtEntryPoint.start()
         await dhtEntryPoint.joinDht(entrypointDescriptor)
         await Promise.all(dhtNodes.map((node) => node.start()))
@@ -54,29 +61,38 @@ describe('RandomGraphNode-DhtNode', () => {
 
     afterEach(async () => {
         dhtEntryPoint.stop()
+        entryPointRandomGraphNode.stop()
         await Promise.all(dhtNodes.map((node) => node.stop()))
         await Promise.all(graphNodes.map((node) => node.stop()))
     })
 
     it('happy path single peer', async () => {
         await dhtNodes[0].joinDht(entrypointDescriptor)
+        entryPointRandomGraphNode.start()
         await graphNodes[0].start()
+
+        await Promise.all([
+            waitForCondition(() => graphNodes[0].getContactPoolIds().length === 1),
+            waitForCondition(() => graphNodes[0].getSelectedNeighborIds().length === 1)
+        ])
         expect(graphNodes[0].getContactPoolIds().length).toEqual(1)
         expect(graphNodes[0].getSelectedNeighborIds().length).toEqual(1)
     })
 
     it('happy path 4 peers', async () => {
+        entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
-        await waitForCondition(() => graphNodes[3].getSelectedNeighborIds().length >= 2)
+        await waitForCondition(() => graphNodes[3].getSelectedNeighborIds().length >= 4)
+
         range(4).map((i) => {
-            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(2)
-            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(2)
+            expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
-    })
+    }, 10000)
 
     it('happy path 128 peers', async () => {
         range(numOfNodes).map((i) => graphNodes[i].start())
