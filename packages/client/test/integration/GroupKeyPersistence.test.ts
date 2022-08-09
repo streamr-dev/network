@@ -277,7 +277,6 @@ describe.skip('Group Key Persistence', () => { // TODO enable the test when it d
                     },
                 })
 
-                // streams = await Promise.all(Array(NUM_STREAMS).fill(true).map(async () => createTestStream(publisher, module)))
                 for (let i = 0; i < NUM_STREAMS; i++) {
                     // eslint-disable-next-line no-await-in-loop
                     const s = await createTestStream(publisher, module)

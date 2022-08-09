@@ -113,14 +113,6 @@ describe('Subscriber', () => {
             expect(await M.count(streamDefinition)).toBe(0)
         })
 
-        // it('errors if not connected', async () => {
-        // await client.destroy()
-        // await expect(() => (
-        // M.subscribe(streamDefinition)
-        // )).rejects.toThrow('connect')
-        // expect(await M.count(streamDefinition)).toBe(0)
-        // })
-
         it('errors if iterating twice', async () => {
             const sub = await M.subscribe(streamDefinition)
             const c1 = sub.collect()
@@ -327,51 +319,6 @@ describe('Subscriber', () => {
                 expect(count).toEqual(MAX_ITEMS)
                 expect(await M.count(streamDefinition)).toBe(0)
             })
-
-            /*
-            describe('error is bad groupkey', () => {
-                let sub: Subscription
-                const BAD_GROUP_KEY_ID = 'BAD_GROUP_KEY_ID'
-
-                beforeEach(async () => {
-                    await client.publisher.startKeyExchange()
-                    sub = await M.subscribe({
-                        ...stream,
-                        // @ts-expect-error not in type but works
-                        beforeSteps: [
-                            async function* ThrowError(s: AsyncIterable<any>) {
-                                let count = 0
-                                for await (const msg of s) {
-                                    if (count === MAX_ITEMS) {
-                                        msg.streamMessage.encryptionType = 2
-                                        msg.streamMessage.groupKeyId = BAD_GROUP_KEY_ID
-                                    }
-                                    count += 1
-                                    yield msg
-                                }
-                            }
-                        ]
-                    })
-
-                    expect(await M.count(streamDefinition)).toBe(1)
-                })
-
-                it('throws subscription loop when encountering bad message', async () => {
-                    const published = await publishTestMessages(NUM_MESSAGES, {
-                        timestamp: 111111,
-                    })
-
-                    const received: unknown[] = []
-                    await expect(async () => {
-                        for await (const m of sub) {
-                            received.push(m.getParsedContent())
-                        }
-                    }).rejects.toThrow(BAD_GROUP_KEY_ID)
-                    expect(received).toEqual(published.slice(0, MAX_ITEMS))
-                })
-
-            })
-            */
 
             it('will skip bad message if error handler attached', async () => {
                 const err = new Error('expected')

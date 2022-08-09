@@ -212,7 +212,6 @@ describe('CacheAsyncFn', () => {
         const secondCall = memoized()
 
         expect(await Promise.all([firstCall, secondCall])).toEqual([1, 1])
-        // expect(fn).toHaveBeenCalledTimes(1)
     })
 
     it('can not be executed in parallel', async () => {

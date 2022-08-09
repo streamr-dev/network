@@ -61,7 +61,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             counterId.clear(publisherId) // prevent overflows in counter
         })
 
-        // pubClient.on('error', getOnError(errors))
         const pubUser = await pubClient.getAddress()
         await mainClient.setPermissions({
             streamId: stream.id,
@@ -83,7 +82,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             ...opts,
         })
 
-        // client.on('error', getOnError(errors))
         const user = await client.getAddress()
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
@@ -126,177 +124,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
         })
-        /*
-        describe('subscriber disconnects after each message (uses resend)', () => {
-            test('single subscriber', async () => {
-                const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
-                otherClient = await createSubscriber()
-                await mainClient.connect()
-
-                const receivedMessagesOther: any[] = []
-                const msgs = receivedMessagesOther
-                const otherDone = Defer()
-                // subscribe to stream from other client instance
-                await otherClient.subscribe({
-                    stream: stream.id,
-                }, (msg) => {
-                    receivedMessagesOther.push(msg)
-                    onConnectionMessage()
-
-                    if (receivedMessagesOther.length === maxMessages) {
-                        cancelled = true
-                        otherDone.resolve(undefined)
-                    }
-                })
-
-                let cancelled = false
-                const localOtherClient = otherClient // capture so no chance of disconnecting wrong client
-                let reconnected = Defer()
-
-                const disconnect = async () => {
-                    if (localOtherClient !== otherClient) {
-                        throw new Error('not equal')
-                    }
-
-                    if (cancelled || msgs.length === MAX_MESSAGES) {
-                        reconnected.resolve(undefined)
-                        return
-                    }
-
-                    await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
-                    if (cancelled || msgs.length === MAX_MESSAGES) {
-                        reconnected.resolve(undefined)
-                        return
-                    }
-
-                    if (localOtherClient !== otherClient) {
-                        throw new Error('not equal')
-                    }
-                    await localOtherClient.nextConnection()
-                    if (cancelled || msgs.length === MAX_MESSAGES) {
-                        reconnected.resolve(undefined)
-                        return
-                    }
-
-                    if (localOtherClient !== otherClient) {
-                        throw new Error('not equal')
-                    }
-                    localOtherClient.connection.socket.close()
-                    // wait for reconnection before possibly disconnecting again
-                    await localOtherClient.nextConnection()
-                    const p = reconnected
-                    p.resolve(undefined)
-                    reconnected = Defer()
-                }
-
-                const onConnectionMessage = jest.fn(() => {
-                    // disconnect after every message
-                    destroy()
-                })
-
-                const onConnected = jest.fn()
-                const onDisconnected = jest.fn()
-                otherClient.connection.on('connected', onConnected)
-                otherClient.connection.on('disconnected', onDisconnected)
-                addAfter(() => {
-                    otherClient.connection.off('connected', onConnected)
-                    otherClient.connection.off('disconnected', onDisconnected)
-                })
-                let t = 0
-                const publishTestMessages = getPublishTestMessages(mainClient, {
-                    stream,
-                    delay: 600,
-                    timestamp: () => {
-                        t += 1
-                        return t
-                    },
-                    waitForLast: true,
-                    waitForLastTimeout: 10000,
-                    waitForLastCount: maxMessages,
-                })
-
-                const published = await publishTestMessages(maxMessages)
-                await otherDone
-
-                expect(receivedMessagesOther).toEqual(published)
-            }, 60000)
-
-            test('publisher also subscriber', async () => {
-                const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
-                otherClient = await createSubscriber()
-                await mainClient.connect()
-
-                const receivedMessagesOther = []
-                const msgs = receivedMessagesOther
-                const receivedMessagesMain = []
-                const mainDone = Defer()
-                const otherDone = Defer()
-                // subscribe to stream from other client instance
-                await otherClient.subscribe({
-                    stream: stream.id,
-                }, (msg) => {
-                    otherClient.debug('other %d of %d', receivedMessagesOther.length, maxMessages, msg.value)
-                    receivedMessagesOther.push(msg)
-
-                    if (receivedMessagesOther.length === maxMessages) {
-                        otherDone.resolve()
-                    }
-                })
-
-                const disconnect = pLimitFn(async () => {
-                    if (msgs.length === maxMessages) { return }
-                    otherClient.debug('disconnecting...', msgs.length)
-                    otherClient.connection.socket.close()
-                    // wait for reconnection before possibly disconnecting again
-                    await otherClient.nextConnection()
-                    otherClient.debug('reconnected...', msgs.length)
-                })
-
-                const onConnectionMessage = jest.fn(() => {
-                    disconnect.clear()
-                    // disconnect after every message
-                    destroy()
-                })
-
-                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
-                // subscribe to stream from main client instance
-                await mainClient.subscribe({
-                    stream: stream.id,
-                }, (msg) => {
-                    mainClient.debug('main %d of %d', receivedMessagesOther.length, maxMessages, msg.value)
-                    receivedMessagesMain.push(msg)
-                    if (receivedMessagesMain.length === maxMessages) {
-                        mainDone.resolve()
-                    }
-                })
-
-                let t = 0
-
-                const publishTestMessages = getPublishTestMessages(mainClient, {
-                    stream,
-                    delay: 600,
-                    waitForLast: true,
-                    waitForLastTimeout: 10000,
-                    waitForLastCount: maxMessages,
-                    timestamp: () => {
-                        t += 1
-                        return t
-                    },
-                })
-                const published = await publishTestMessages(maxMessages)
-                mainClient.debug('publish done')
-                mainDone.then(() => mainClient.debug('done')).catch(() => {})
-                otherDone.then(() => otherClient.debug('done')).catch(() => {})
-                await mainDone
-                await otherDone
-
-                // messages should arrive on both clients?
-                expect(receivedMessagesMain).toEqual(published)
-                expect(receivedMessagesOther).toEqual(published)
-            }, 60000)
-        })
-        */
     })
 
     describe('multiple publishers', () => {
@@ -342,7 +169,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
                 const publishTestMessages = getPublishTestMessages(pubClient, stream, {
-                    // delay: 500 + Math.random() * 1500,
                     waitForLast: true,
                     waitForLastTimeout: 20000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
@@ -409,12 +235,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             let counter = 0
             const published: Record<string, any[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                // const vaitForStorage = getWaitForStorage(pubClient, {
-                //     stream,
-                //     timeout: 35000,
-                //     count: MAX_MESSAGES * publishers.length,
-                // })
-
                 const publisherId = (await pubClient.getAddress()).toLowerCase()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
@@ -456,7 +276,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                         firstMessage = streamMessage
                     }
                 }) // ensure first message stored
-                // await waitForStorage
                 published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                     waitForLast: true,
                     async afterEach() {
@@ -534,7 +353,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             })
 
             await publishTestMessages(MAX_MESSAGES, {
-                // delay: 500 + Math.random() * 1500,
                 afterEach(msg) {
                     published[publisherId] = published[publisherId] || []
                     published[publisherId].push(msg.getParsedContent())
@@ -567,7 +385,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                 privateKey: await fetchPrivateKeyWithGas()
             }
         })
-        // otherClient.on('error', getOnError(errors))
         const otherUser = await otherClient.getAddress()
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
@@ -598,12 +415,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         let counter = 0
         /* eslint-enable no-await-in-loop */
         await Promise.all(publishers.map(async (pubClient) => {
-            // const waitForStorage = getWaitForStorage(pubClient, {
-            //     stream,
-            //     timeout: 35000,
-            //     count: MAX_MESSAGES * publishers.length,
-            // })
-
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
             const publishTestMessages = getPublishTestMessages(pubClient, stream, {
                 waitForLast: true,
@@ -637,7 +448,6 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                     firstMessage = streamMessage
                 }
             }) // ensure first message stored
-            // await waitForStorage
             published[publisherId] = msgs.concat(await publishTestMessages(MAX_MESSAGES - 1, {
                 async afterEach() {
                     counter += 1

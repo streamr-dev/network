@@ -8,8 +8,8 @@ import { createAuthentication } from '../../src/Authentication'
 import { sign } from '../../src/utils/signingUtils'
 
 /*
-The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
-we are testing the Signer which is internal, we use private keys with the '0x' prefix.
+ * The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
+ * we are testing the Signer which is internal, we use private keys with the '0x' prefix.
  */
 describe('Signer', () => {
     describe('construction', () => {

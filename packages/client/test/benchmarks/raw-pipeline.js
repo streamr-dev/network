@@ -206,8 +206,6 @@ async function run() {
         }
         const avgMsgsBytes = bench.MESSAGES_BYTES.reduce((a, b) => a + b, 0) / bench.MESSAGES_BYTES.length
         const bytesPerSecond = avgMsgsBytes * benchHz
-        // const msgsPerSecond = (1000 * bench.times.period) / bench.BATCH_SIZE
-        // log(bench)
         result += ' x ' + Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) + ' msgs/sec '
             + `(${bytes(bench.TOTAL_BYTES)} at ${bytes(bytesPerSecond)}/sec) `
             + pm + stats.rme.toFixed(2) + '% (' + size + ' run' + (size === 1 ? '' : 's') + ' sampled)'
