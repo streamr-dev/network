@@ -12,7 +12,7 @@ import {
 import {
     Msg,
     getPublishTestMessages,
-    publishManyGenerator
+    createTestMessages
 } from '../test-utils/publish'
 import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -297,7 +297,7 @@ describeRepeats('StreamrClient', () => {
                 received.push(msg)
             })
 
-            const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
+            const msgs = await G.collect(createTestMessages(MAX_MESSAGES))
 
             const publishTasks = [
                 client.publish(streamDefinition, msgs[0]).finally(async () => {

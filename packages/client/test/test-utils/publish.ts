@@ -15,19 +15,19 @@ export function Msg<T extends object = object>(opts?: T): any {
     }
 }
 
-type PublishManyOpts = Partial<{
+type TestMessageOptions = Partial<{
     delay: number
     timestamp: number | (() => number)
     partitionKey: number | string | (() => number | string)
     createMessage: (content: any) => any
 }>
 
-export async function* publishManyGenerator(
+export async function* createTestMessages(
     total: number = 5,
-    opts: PublishManyOpts = {}
+    opts: TestMessageOptions = {}
 ): AsyncGenerator<PublishMetadata<any>> {
     const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
-    const batchId = counterId('publishMany')
+    const batchId = counterId('createTestMessages')
     for (let i = 0; i < total; i++) {
         yield {
             timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
@@ -47,7 +47,7 @@ export async function* publishManyGenerator(
     }
 }
 
-type PublishTestMessageOptions = PublishManyOpts & {
+type PublishTestMessageOptions = TestMessageOptions & {
     waitForLast?: boolean
     waitForLastCount?: number
     waitForLastTimeout?: number
@@ -61,7 +61,7 @@ export function publishTestMessagesGenerator(
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
 ): AsyncGenerator<StreamMessage<unknown>> {
-    const source = new Pipeline(publishManyGenerator(maxMessages, opts))
+    const source = new Pipeline(createTestMessages(maxMessages, opts))
     const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
