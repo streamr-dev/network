@@ -180,7 +180,6 @@ describe('decryption', () => {
                 const sub = await subscriber.subscribe({
                     stream: stream.id,
                 })
-                // sub.once('error', done.reject)
 
                 const groupKey = GroupKey.generate()
                 await publisher.updateEncryptionKey({
@@ -309,12 +308,6 @@ describe('decryption', () => {
 
                 await testSub(stream)
                 await testSub(stream2)
-                // const tasks = [
-                //    testSub(stream),
-                //    testSub(stream2)
-                // ]
-                // await Promise.allSettled(tasks)
-                // await Promise.all(tasks)
                 onEncryptionMessageErr.resolve(undefined)
                 await onEncryptionMessageErr
                 expect(didFindStream2).toBeTruthy()
