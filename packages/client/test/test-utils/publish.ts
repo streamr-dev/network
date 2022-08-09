@@ -137,7 +137,7 @@ export function getPublishTestMessages(
     }
 }
 
-export async function* publishFromMetadata<T>(
+async function* publishFromMetadata<T>(
     streamDefinition: StreamDefinition, 
     seq: AsyncIterable<PublishMetadata<T>>,
     client: StreamrClient

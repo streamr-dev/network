@@ -1,7 +1,7 @@
 import { wait } from '@streamr/utils'
 
 import { getCreateClient, uid } from '../test-utils/utils'
-import { Msg, publishFromMetadata, publishManyGenerator } from '../test-utils/publish'
+import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -81,8 +81,7 @@ describe('StreamrClient', () => {
             const sub = await client.subscribe({
                 streamId: stream.id,
             })
-            const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-            const publish = publishFromMetadata(stream, source, client)
+            const publish = publishTestMessagesGenerator(client, stream, MAX_MESSAGES, { timestamp: 1111111 })
             const published = await collect(publish, MAX_MESSAGES)
             const received = []
             for await (const msg of sub) {
@@ -101,8 +100,7 @@ describe('StreamrClient', () => {
                 const sub = await client.subscribe({
                     streamId: testStream.id,
                 })
-                const source = publishManyGenerator(MAX_MESSAGES, { timestamp: 1111111 })
-                const publish = publishFromMetadata(testStream, source, client)
+                const publish = publishTestMessagesGenerator(client, testStream, MAX_MESSAGES, { timestamp: 1111111 })
                 const published = await collect(publish, MAX_MESSAGES)
                 const received = []
                 for await (const msg of sub) {
