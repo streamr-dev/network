@@ -60,7 +60,7 @@ export function publishTestMessagesGenerator(
     streamDefinition: StreamDefinition,
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
-): Pipeline<StreamMessage<unknown>, StreamMessage<unknown>> {
+): AsyncGenerator<StreamMessage<unknown>> {
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
     const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
     if (opts.afterEach) {

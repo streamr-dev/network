@@ -20,6 +20,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
+import { collect } from '../../src/utils/GeneratorUtils'
 
 const debug = Debug('StreamrClient::test')
 const TIMEOUT = 15 * 1000
@@ -424,7 +425,7 @@ describe('decryption', () => {
                 const sub = (await subscriber.subscribe({
                     stream: stream.id,
                 }))
-                await publishStream.collect(NUM_MESSAGES)
+                await collect(publishStream, NUM_MESSAGES)
 
                 // published with encryption
                 expect(streamMessagesPublished.map((streamMessage) => streamMessage.encryptionType))
