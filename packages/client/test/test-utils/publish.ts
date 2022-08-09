@@ -4,7 +4,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
 import { PublishMetadata } from '../../src/publish/Publisher'
-import { Pipeline } from '../../src/utils/Pipeline'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
 import { uid } from './utils'
 
@@ -55,18 +54,23 @@ type PublishTestMessageOptions = TestMessageOptions & {
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(
+export async function* publishTestMessagesGenerator(
     client: StreamrClient,
     streamDefinition: StreamDefinition,
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
 ): AsyncGenerator<StreamMessage<unknown>> {
-    const source = new Pipeline(createTestMessages(maxMessages, opts))
-    const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
-    if (opts.afterEach) {
-        pipeline.forEach(opts.afterEach)
+    const source = createTestMessages(maxMessages, opts)
+    for await (const msg of source) {
+        const published = await client.publish(streamDefinition, msg.content, {
+            timestamp: msg.timestamp,
+            partitionKey: msg.partitionKey
+        })
+        if (opts.afterEach) {
+            await opts.afterEach(published)
+        }
+        yield published
     }
-    return pipeline
 }
 
 export function getPublishTestStreamMessages(
@@ -134,19 +138,6 @@ export function getPublishTestMessages(
     return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
         const streamMessages = await publishTestStreamMessages(maxMessages, opts)
         return streamMessages.map((s) => s.getParsedContent())
-    }
-}
-
-async function* publishFromMetadata<T>(
-    streamDefinition: StreamDefinition, 
-    seq: AsyncIterable<PublishMetadata<T>>,
-    client: StreamrClient
-): AsyncGenerator<StreamMessage<T>, void, unknown> {
-    for await (const msg of seq) {
-        yield await client.publish(streamDefinition, msg.content, {
-            timestamp: msg.timestamp,
-            partitionKey: msg.partitionKey
-        })
     }
 }
 
