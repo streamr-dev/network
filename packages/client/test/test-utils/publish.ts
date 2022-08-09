@@ -15,17 +15,6 @@ export function Msg<T extends object = object>(opts?: T): any {
     }
 }
 
-export interface CreateMessageOpts {
-    /** index of message in total */
-    index: number
-    /** batch number */
-    batch: number
-    /** index of message in batch */
-    batchIndex: number
-    /** total messages */
-    total: number
-}
-
 type PublishManyOpts = Partial<{
     delay: number
     timestamp: number | (() => number)
