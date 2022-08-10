@@ -174,85 +174,22 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.stopped) {
             return
         }
-        // const toReplace: string[] = []
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
-        // this.targetNeighbors.getStringIds().forEach((neighbor) => {
-        //     if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
-        //         toReplace.push(neighbor)
-        //     }
-        // })
-        // this.replaceNeighbors(toReplace).catch((_err) => {})
     }
 
-    private removedContact(removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+    private removedContact(_removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
         if (this.stopped) {
             return
         }
-        // const toReplace: string[] = []
-        // if (this.targetNeighbors.hasNeighbor(removedContact)) {
-        //     toReplace.push(PeerID.fromValue(removedContact.peerId).toMapKey())
-        // }
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
-        // this.targetNeighbors.getStringIds().forEach((neighbor) => {
-        //     if (!this.contactPool.hasNeighborWithStringId(neighbor)) {
-        //         toReplace.push(neighbor)
-        //     }
-        // })
-        // this.replaceNeighbors(toReplace).catch((_err) => {})
-    }
-
-    private async replaceNeighbors(stringIds: string[]): Promise<void> {
-        if (this.stopped) {
-            return
-        }
-        stringIds.forEach((replace) => {
-            const toReplace = this.targetNeighbors.getNeighborWithId(replace)
-            if (toReplace) {
-                this.targetNeighbors.remove(toReplace.getPeerDescriptor())
-            }
-        })
-        const promises: Promise<void>[] = []
-        // Fill up neighbors to N
-        for (let i = this.targetNeighbors.size(); i < this.N; i++) {
-            if (this.targetNeighbors.size() >= this.contactPool.size()
-                || this.contactPool.size() < i) {
-                break
-            }
-            const promise = this.addRandomContactToNeighbors()
-            promises.push(promise)
-        }
-        await Promise.all(promises)
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
         return this.layer1.getNeighborList().getClosestContacts(this.PEER_VIEW_SIZE).map((contact: DhtPeer) => {
             return contact.getPeerDescriptor()
         })
-    }
-
-    private async addRandomContactToNeighbors(): Promise<void> {
-        if (this.stopped) {
-            return
-        }
-        const newNeighbor = this.contactPool.getRandom()
-        if (newNeighbor) {
-            const stringId = PeerID.fromValue(newNeighbor.getPeerDescriptor().peerId).toMapKey()
-            if (!this.targetNeighbors.hasNeighborWithStringId(stringId)) {
-                // Negotiate Layer 2 connection here if success add as neighbor
-                this.targetNeighbors.add(newNeighbor)
-                const accepted = await newNeighbor.handshake(
-                    this.layer1.getPeerDescriptor(),
-                    this.targetNeighbors.getStringIds(),
-                    this.contactPool.getStringIds()
-                )
-                if (!accepted) {
-                    this.targetNeighbors.remove(newNeighbor.getPeerDescriptor())
-                    this.addRandomContactToNeighbors().catch(() => {})
-                }
-            }
-        }
     }
 
     getSelectedNeighborIds(): string[] {
