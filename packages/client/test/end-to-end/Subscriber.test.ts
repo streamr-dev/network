@@ -289,7 +289,8 @@ describe('Subscriber', () => {
                 const published = await publishTestMessages(NUM_MESSAGES, {
                     timestamp: 111111,
                 })
-
+                await waitForCondition(() => received1.length >= MAX_ITEMS)
+                
                 expect(received1.map((m) => m.signature)).toEqual(published.slice(0, MAX_ITEMS).map((m) => m.signature))
                 expect(onError1).toHaveBeenCalledTimes(1)
             })
