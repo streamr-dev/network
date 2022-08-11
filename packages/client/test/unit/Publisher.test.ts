@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { container as rootContainer } from 'tsyringe'
+import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { BrubeckNode, NetworkNodeStub } from '../../src/BrubeckNode'
 import { Publisher } from '../../src/publish/Publisher'
@@ -10,6 +10,8 @@ import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
 import { createStrictConfig } from '../../src/Config'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { createRelativeTestStreamId } from '../test-utils/utils'
+import { StreamPermission } from '../../src/permission'
 
 const AUTHENTICATED_USER = '0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf'
 const PRIVATE_KEY = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -43,6 +45,7 @@ describe('Publisher', () => {
 
     let publisher: Pick<Publisher, 'publish' | 'stop'>
     let brubeckNode: Pick<BrubeckNode, 'publishToNode' | 'getNode'>
+    let mockContainer: DependencyContainer
 
     beforeEach(async () => {
         brubeckNode = {
@@ -54,7 +57,7 @@ describe('Publisher', () => {
                 } as unknown as NetworkNodeStub
             } 
         }
-        const mockContainer = await createMockContainer(brubeckNode)
+        mockContainer = await createMockContainer(brubeckNode)
         publisher = mockContainer.resolve(Publisher)
         const streamRegistry = mockContainer.resolve(StreamRegistry)
         await streamRegistry.createStream(STREAM_ID)
@@ -87,6 +90,27 @@ describe('Publisher', () => {
             serializedContent: expect.anything(),
             signature: expect.anything(),
             signatureType: 2
+        })
+    })
+
+    it('public stream', async () => {
+        const streamRegistry = mockContainer.resolve(StreamRegistry)
+        const publicStream = await streamRegistry.createStream(createRelativeTestStreamId(module))
+        publicStream.grantPermissions({
+            public: true,
+            permissions: [StreamPermission.SUBSCRIBE]
+        })
+        const CONTENT = {
+            foo: 'bar'
+        }
+        await publisher.publish(publicStream, CONTENT)
+        await publisher.stop()
+        expect(brubeckNode.publishToNode).toBeCalledTimes(1)
+        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
+        expect(actual).toMatchObject({
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            groupKeyId: null,
+            serializedContent: JSON.stringify(CONTENT)
         })
     })
 
