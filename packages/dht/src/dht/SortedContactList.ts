@@ -85,8 +85,9 @@ export class SortedContactList extends EventEmitter {
     public getUncontactedContacts(num: number): DhtPeer[] {
         const ret: DhtPeer[] = []
         for (const contactId of this.contactIds) {
-            if (this.contactsById.has(contactId.toMapKey()) && !this.contactsById.get(contactId.toMapKey())!.contacted) {
-                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
+            const contact = this.contactsById.get(contactId.toMapKey())
+            if (contact && !contact.contacted) {
+                ret.push(contact.contact)
                 if (ret.length >= num) {
                     return ret
                 }
@@ -98,7 +99,10 @@ export class SortedContactList extends EventEmitter {
     public getClosestContacts(limit = this.maxSize): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
-            ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
+            const contact = this.contactsById.get(contactId.toMapKey())
+            if (contact) {
+                ret.push(contact.contact)
+            }
         })
         return ret.splice(0, limit)
     }
@@ -107,11 +111,6 @@ export class SortedContactList extends EventEmitter {
         const distance1 = KBucket.distance(this.ownId.value, id1.value)
         const distance2 = KBucket.distance(this.ownId.value, id2.value)
         return distance1 - distance2
-    }
-
-    public getSymmetricDistance(id1: PeerID): number {
-        const sortedArray = [this.ownId.value, id1.value].sort()
-        return KBucket.distance(sortedArray[0], sortedArray[1])
     }
 
     public getStringIds(): string[] {

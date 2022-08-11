@@ -3,11 +3,13 @@ syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
+import "packages/dht/protos/DhtRpc.proto";
 
 service NetworkRpc {
   rpc sendData (DataMessage) returns (google.protobuf.Empty);
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+  rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
 }
 
 message MessageRef {
@@ -36,11 +38,23 @@ message HandshakeRequest {
   string randomGraphId = 1;
   string senderId = 2;
   string requestId = 3;
+  optional string concurrentHandshakeTargetId = 4;
+  repeated string neighbors = 5;
+  repeated string peerView = 6;
+  PeerDescriptor senderDescriptor = 7;
+  bool interleaving = 8;
 }
 
 message HandshakeResponse {
   bool accepted = 1;
   string requestId = 2;
+  optional PeerDescriptor interleaveTarget = 3;
+}
+
+message InterleaveNotice {
+  string senderId = 1;
+  string randomGraphId = 2;
+  PeerDescriptor interleaveTarget = 3;
 }
 
 message LeaveNotice {

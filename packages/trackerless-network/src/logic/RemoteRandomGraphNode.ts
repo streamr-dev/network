@@ -1,7 +1,18 @@
-import { INetworkRpcClient } from '../proto/NetworkRpc.client'
+import { INetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { PeerDescriptor, UUID, PeerID } from '@streamr/dht'
-import { DataMessage, HandshakeRequest, LeaveNotice } from '../proto/NetworkRpc'
+import {
+    DataMessage,
+    HandshakeRequest,
+    InterleaveNotice,
+    LeaveNotice
+} from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
+
+interface HandshakeResponse {
+    accepted: boolean
+    interleaveTarget?: PeerDescriptor
+}
+
 export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
     private client: INetworkRpcClient
@@ -12,11 +23,23 @@ export class RemoteRandomGraphNode {
         this.graphId = graphId
     }
 
-    async handshake(ownPeerDescriptor: PeerDescriptor): Promise<boolean> {
+    async handshake(
+        ownPeerDescriptor: PeerDescriptor,
+        neighbors: string[],
+        peerView: string[],
+        concurrentHandshakeTargetId?: string,
+        interleaving = false
+    ): Promise<HandshakeResponse> {
+
         const request: HandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey()
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            neighbors,
+            peerView,
+            concurrentHandshakeTargetId,
+            interleaving,
+            senderDescriptor: ownPeerDescriptor
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
@@ -25,10 +48,15 @@ export class RemoteRandomGraphNode {
         try {
             const result = await this.client.handshake(request, options)
             const response = await result.response
-            return response.accepted
+            return {
+                accepted: response.accepted,
+                interleaveTarget: response.interleaveTarget
+            }
         } catch (err) {
             console.error(err)
-            return false
+            return {
+                accepted: false
+            }
         }
     }
 
@@ -43,6 +71,20 @@ export class RemoteRandomGraphNode {
         } catch (err) {
             console.error(err)
         }
+    }
+
+    interleaveNotice(ownPeerDescriptor: PeerDescriptor, originatorDescriptor: PeerDescriptor): void {
+        const options: DhtRpcOptions = {
+            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+            notification: true
+        }
+        const notification: InterleaveNotice = {
+            randomGraphId: this.graphId,
+            interleaveTarget: originatorDescriptor,
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey()
+        }
+        this.client.interleaveNotice(notification, options)
     }
 
     leaveNotice(ownPeerDescriptor: PeerDescriptor): void {

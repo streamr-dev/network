@@ -11,5 +11,4 @@ bin/.idea
 
 docs
 .vscode
-src/proto
 coverage
