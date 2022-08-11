@@ -4,7 +4,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
 import { PublishMetadata } from '../../src/publish/Publisher'
-import { PublishPipeline } from '../../src/publish/PublishPipeline'
 import { uid } from './utils'
 
 export function Msg<T extends object = object>(opts?: T): any {
@@ -90,13 +89,6 @@ export function getPublishTestStreamMessages(
             ...opts,
         }
 
-        const contents = new WeakMap()
-        // @ts-expect-error private
-        const publishPipeline = client.container.resolve(PublishPipeline)
-        // @ts-expect-error private
-        publishPipeline.streamMessageQueue.onMessage.listen(([streamMessage]) => {
-            contents.set(streamMessage, streamMessage.serializedContent)
-        })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
         const streamMessages = []
         let count = 0
@@ -118,14 +110,7 @@ export function getPublishTestStreamMessages(
             })(streamMessages[streamMessages.length - 1])
         }
 
-        return streamMessages.map((streamMessage) => {
-            const targetStreamMessage = streamMessage.clone()
-            targetStreamMessage.serializedContent = contents.get(streamMessage)
-            targetStreamMessage.encryptionType = 0
-            targetStreamMessage.parsedContent = null
-            targetStreamMessage.getParsedContent()
-            return targetStreamMessage
-        })
+        return streamMessages
     }
 }
 
