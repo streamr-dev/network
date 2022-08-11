@@ -113,11 +113,6 @@ export class SortedContactList extends EventEmitter {
         return distance1 - distance2
     }
 
-    public getSymmetricDistance(id1: PeerID): number {
-        const sortedArray = [this.ownId.value, id1.value].sort()
-        return KBucket.distance(sortedArray[0], sortedArray[1])
-    }
-
     public getStringIds(): string[] {
         return this.contactIds.map((peerId) => peerId.toMapKey())
     }
