@@ -72,7 +72,13 @@ describe('Subscriber', () => {
             client.connect(),
         ])
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestStreamMessages(client, streamDefinition)
+        const publisherClient = new StreamrClient({
+            ...ConfigTest,
+            auth: {
+                privateKey
+            }
+        })
+        publishTestMessages = getPublishTestStreamMessages(publisherClient, streamDefinition)
     })
 
     afterEach(async () => {
