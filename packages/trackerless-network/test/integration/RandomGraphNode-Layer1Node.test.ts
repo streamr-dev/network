@@ -79,7 +79,7 @@ describe('RandomGraphNode-DhtNode', () => {
         expect(graphNodes[0].getSelectedNeighborIds().length).toEqual(1)
     })
 
-    it('happy path 4 peers', async () => {
+    it.only('happy path 4 peers', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {
@@ -91,6 +91,18 @@ describe('RandomGraphNode-DhtNode', () => {
         range(4).map((i) => {
             expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(4)
+        })
+
+        // Check bidirectionality
+        const allNodes = graphNodes
+        allNodes.push(entryPointRandomGraphNode)
+        range(5).map((i) => {
+            allNodes[i].getContactPoolIds().forEach((stringId) => {
+                const neighbor = allNodes.find((peer) => {
+                    return peer.getOwnStringId() === stringId
+                })
+                expect(neighbor.getSelectedNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+            })
         })
     }, 10000)
 
@@ -105,5 +117,10 @@ describe('RandomGraphNode-DhtNode', () => {
                 waitForCondition(() => node.getSelectedNeighborIds().length >= 3)
             ])
         ))
+        const avg = graphNodes.reduce((acc, curr) => {
+            return acc + curr.getSelectedNeighborIds().length
+        }, 0) / numOfNodes
+
+        console.log(avg)
     })
 })
