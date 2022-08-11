@@ -19,7 +19,6 @@ import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
-import { PublishPipeline } from '../../src/publish/PublishPipeline'
 import { collect } from '../../src/utils/GeneratorUtils'
 
 const debug = Debug('StreamrClient::test')
@@ -27,11 +26,6 @@ const TIMEOUT = 15 * 1000
 const NUM_MESSAGES = 5
 
 jest.setTimeout(30000)
-
-const getPublishPipeline = (client: StreamrClient): PublishPipeline => {
-    // @ts-expect-error private
-    return client.container.resolve(PublishPipeline)
-}
 
 describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -229,23 +223,17 @@ describe('decryption', () => {
                     distributionMethod: 'rotate'
                 })
 
-                const published: any[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    published.push(streamMessage.getParsedContent())
-                })
-                await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
+                const published = await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
 
-                const received = []
+                const received: StreamMessage[] = []
                 for await (const msg of sub) {
-                    received.push(msg.getParsedContent())
+                    received.push(msg)
                     if (received.length === NUM_MESSAGES) {
                         break
                     }
                 }
 
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(received).toHaveLength(NUM_MESSAGES)
             }, TIMEOUT * 2)
 
@@ -259,20 +247,17 @@ describe('decryption', () => {
                     streamId: stream.id,
                     distributionMethod: 'rotate'
                 })
-                const publishedStreamMessages: any[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.onMessage.listen(async ([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    publishedStreamMessages.push(streamMessage.clone())
-                    await publisher.updateEncryptionKey({
-                        streamId: stream.id,
-                        distributionMethod: 'rotate'
-                    })
+                const published = await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES, {
+                    afterEach: async () => {
+                        await publisher.updateEncryptionKey({
+                            streamId: stream.id,
+                            distributionMethod: 'rotate'
+                        })
+                    }
                 })
-                const published = await getPublishTestStreamMessages(publisher, stream)(NUM_MESSAGES)
 
                 const received = await sub.collect(published.length)
-                expect(received.map((s) => s.getParsedContent())).toEqual(publishedStreamMessages.map((s) => s.getParsedContent()))
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(received).toHaveLength(NUM_MESSAGES)
             }, TIMEOUT * 2)
 
@@ -305,33 +290,18 @@ describe('decryption', () => {
                     encryptionKeys: groupKeys
                 })
 
-                const contentClear: any[] = []
-                const streamMessagesPublished: StreamMessage<any>[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.forEach(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    contentClear.push(streamMessage.getParsedContent())
-                })
-                // @ts-expect-error private
-                getPublishPipeline(publisher).publishQueue.forEach(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== stream.id) { return }
-                    streamMessagesPublished.push(streamMessage)
-                })
-
-                const publishStream = publishTestMessagesGenerator(publisher, stream, NUM_MESSAGES)
+                const publishTask = publishTestMessagesGenerator(publisher, stream, NUM_MESSAGES)
                 await publisher.connect()
                 await publisher.updateEncryptionKey({
                     streamId: stream.id,
                     distributionMethod: 'rotate'
                 })
-                const sub = (await subscriber.subscribe({
+                const sub = await subscriber.subscribe({
                     stream: stream.id,
-                }))
-                await collect(publishStream, NUM_MESSAGES)
-
+                })
+                const published = await collect(publishTask, NUM_MESSAGES)
                 const received = await sub.collect(NUM_MESSAGES)
-
-                expect(received.map((s) => s.getParsedContent())).toEqual(contentClear)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             }, TIMEOUT * 2)
 
             it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
@@ -340,15 +310,14 @@ describe('decryption', () => {
                     streamId: stream.id,
                     distributionMethod: 'rotate'
                 })
-                // @ts-expect-error private
-                getPublishPipeline(publisher).publishQueue.forEach(async () => {
-                    await publisher.updateEncryptionKey({
-                        streamId: stream.id,
-                        distributionMethod: 'rotate'
-                    })
-                })
                 const published = await publishTestMessages(5, {
                     waitForLast: true,
+                    afterEach: async () => {
+                        await publisher.updateEncryptionKey({
+                            streamId: stream.id,
+                            distributionMethod: 'rotate'
+                        })
+                    }
                 })
 
                 await grantSubscriberPermissions()
@@ -369,7 +338,6 @@ describe('decryption', () => {
                 let sub: Subscription<any>
                 const MAX_MESSAGES_MORE = 10
                 const BAD_INDEX = 6
-                let contentClear: any[] = []
 
                 beforeEach(async () => {
                     const groupKey = GroupKey.generate()
@@ -378,21 +346,6 @@ describe('decryption', () => {
                         streamId: stream.id,
                         key: groupKey,
                         distributionMethod: 'rotate'
-                    })
-                    contentClear = []
-
-                    // @ts-expect-error private
-                    getPublishPipeline(publisher).streamMessageQueue.forEach(([streamMessage]) => {
-                        if (streamMessage.getStreamId() !== stream.id) { return }
-                        contentClear.push(streamMessage.getParsedContent())
-                    })
-
-                    // @ts-expect-error private
-                    getPublishPipeline(publisher).publishQueue.forEach(async () => {
-                        await publisher.updateEncryptionKey({
-                            streamId: stream.id,
-                            distributionMethod: 'rotate'
-                        })
                     })
 
                     sub = await subscriber.subscribe({
@@ -414,22 +367,28 @@ describe('decryption', () => {
                     const onSubError = jest.fn()
                     sub.onError.listen(onSubError)
                     // Publish after subscribed
-                    await publishTestMessages(MAX_MESSAGES_MORE, {
+                    const published = await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
+                        afterEach: async () => {
+                            await publisher.updateEncryptionKey({
+                                streamId: stream.id,
+                                distributionMethod: 'rotate'
+                            })
+                        }
                     })
 
-                    const received: any[] = []
+                    const received: StreamMessage[] = []
                     for await (const m of sub) {
-                        received.push(m.getParsedContent())
+                        received.push(m)
                         if (received.length === MAX_MESSAGES_MORE - 1) {
                             break
                         }
                     }
 
-                    expect(received).toEqual([
-                        ...contentClear.slice(0, BAD_INDEX),
-                        ...contentClear.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
-                    ])
+                    expect(received.map((m) => m.signature)).toEqual([
+                        ...published.slice(0, BAD_INDEX),
+                        ...published.slice(BAD_INDEX + 1, MAX_MESSAGES_MORE)
+                    ].map((m) => m.signature))
 
                     expect(await subscriber.getSubscriptions()).toHaveLength(0)
                     expect(onSubError).toHaveBeenCalledTimes(1)
@@ -442,23 +401,29 @@ describe('decryption', () => {
                     })
                     sub.onError.listen(onSubError)
                     // Publish after subscribed
-                    await publishTestMessages(MAX_MESSAGES_MORE, {
+                    const published = await publishTestMessages(MAX_MESSAGES_MORE, {
                         timestamp: 1111111,
+                        afterEach: async () => {
+                            await publisher.updateEncryptionKey({
+                                streamId: stream.id,
+                                distributionMethod: 'rotate'
+                            })
+                        }
                     })
 
-                    const received: any[] = []
+                    const received: StreamMessage[] = []
                     await expect(async () => {
                         for await (const m of sub) {
-                            received.push(m.getParsedContent())
+                            received.push(m)
                             if (received.length === MAX_MESSAGES_MORE - 1) {
                                 break
                             }
                         }
                     }).rejects.toThrow('decrypt')
 
-                    expect(received).toEqual([
-                        ...contentClear.slice(0, BAD_INDEX),
-                    ])
+                    expect(received.map((m) => m.signature)).toEqual([
+                        ...published.slice(0, BAD_INDEX),
+                    ].map((m) => m.signature))
                     expect(await subscriber.getSubscriptions()).toHaveLength(0)
 
                     expect(onSubError).toHaveBeenCalledTimes(1)
@@ -501,51 +466,24 @@ describe('decryption', () => {
         it('sets group key per-stream', async () => {
             const stream2 = await createTestStream(publisher, module)
 
-            function checkEncryptionMessagesPerStream(testClient: StreamrClient) {
-                const onSendTest = Defer()
-                // @ts-expect-error private
-                getPublishPipeline(testClient).publishQueue.forEach(onSendTest.wrapError(async ([streamMessage]) => {
-                    testClient.debug({ streamMessage })
-                    if (streamMessage.getStreamId() === stream2.id) {
-                        expect(streamMessage.groupKeyId).toEqual(groupKey2.id)
-                    }
-                    if (streamMessage.getStreamId() === stream.id) {
-                        expect(streamMessage.groupKeyId).toEqual(groupKey.id)
-                    }
-                })).onFinally.listen(() => {
-                    onSendTest.resolve(undefined)
-                })
-
-                return onSendTest
-            }
-
-            async function testSub(testStream: Stream) {
+            async function testSub(testStream: Stream, expectedGroupKeyId: string) {
                 const done = Defer()
-                const received: any = []
+                const received: StreamMessage[] = []
                 await grantSubscriberPermissions({ stream: testStream })
                 await subscriber.subscribe({
                     streamId: testStream.id,
-                }, (parsedContent) => {
-                    received.push(parsedContent)
+                }, (_content, msg) => {
+                    received.push(msg)
                     if (received.length === NUM_MESSAGES) {
                         done.resolve(undefined)
                     }
                 })
 
-                const contentClear: any[] = []
-                // @ts-expect-error private
-                getPublishPipeline(publisher).streamMessageQueue.onMessage.listen(([streamMessage]) => {
-                    if (streamMessage.getStreamId() !== testStream.id) { return }
-                    contentClear.push(streamMessage.getParsedContent())
-                })
-                await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
-
+                const published = await getPublishTestStreamMessages(publisher, testStream)(NUM_MESSAGES)
                 await done
-
-                expect(received).toEqual(contentClear)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
+                expect(received.map((m) => m.groupKeyId)).toSatisfyAll((actualGroupKeyId) => actualGroupKeyId === expectedGroupKeyId)
             }
-
-            const onEncryptionMessageErr = checkEncryptionMessagesPerStream(publisher)
 
             const groupKey = GroupKey.generate()
             await publisher.updateEncryptionKey({
@@ -560,10 +498,8 @@ describe('decryption', () => {
                 distributionMethod: 'rotate'
             })
 
-            await testSub(stream)
-            await testSub(stream2)
-            onEncryptionMessageErr.resolve(undefined)
-            await onEncryptionMessageErr
+            await testSub(stream, groupKey.id)
+            await testSub(stream2, groupKey2.id)
         }, TIMEOUT * 2)
     })
 
