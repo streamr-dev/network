@@ -121,6 +121,7 @@ describe('RandomGraphNode-DhtNode', () => {
             return acc + curr.getSelectedNeighborIds().length
         }, 0) / numOfNodes
 
+        // eslint-disable-next-line no-console
         console.log(avg)
     })
 })
