@@ -462,9 +462,9 @@ describe('decryption', () => {
                     },
                 }, (_msg: any) => {})
 
-                const received = await sub.collectContent(2)
+                const received = await sub.collect(2)
 
-                expect(received).toEqual(published.slice(-2).map((s) => s.getParsedContent()))
+                expect(received.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             }, TIMEOUT * 3)
 
             describe('error handling', () => {
@@ -795,7 +795,7 @@ describe('decryption', () => {
 
             sub.onError.listen(onSubError)
 
-            const received: any[] = []
+            const received: StreamMessage[] = []
             // Publish after subscribed
             let count = 0
             const gotMessages = Defer()
@@ -855,11 +855,10 @@ describe('decryption', () => {
                 })
 
                 expect(timedOut).toHaveBeenCalledTimes(0)
-                expect(received).toEqual([
-                    ...published.slice(0, revokeAfter),
-                ])
-
                 expect(onSubError).toHaveBeenCalledTimes(1)
+                expect(received.map((m) => m.signature)).toEqual([
+                    ...published.slice(0, revokeAfter),
+                ].map((m) => m.signature))
             }
         }
         describe('very low cache maxAge', () => {

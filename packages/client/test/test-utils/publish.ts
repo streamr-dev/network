@@ -114,18 +114,6 @@ export function getPublishTestStreamMessages(
     }
 }
 
-export function getPublishTestMessages(
-    client: StreamrClient,
-    streamDefinition: StreamDefinition,
-    defaultOpts: PublishTestMessageOptions = {}
-): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<unknown[]> {
-    const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
-    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const streamMessages = await publishTestStreamMessages(maxMessages, opts)
-        return streamMessages.map((s) => s.getParsedContent())
-    }
-}
-
 export function getWaitForStorage(client: StreamrClient, defaultOpts = {}): (lastPublished: StreamMessage, opts?: {
     interval?: number
     timeout?: number
