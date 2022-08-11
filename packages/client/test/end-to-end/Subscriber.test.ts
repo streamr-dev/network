@@ -12,6 +12,7 @@ import { Defer } from '../../src/utils/Defer'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { ConfigTest, MaybeAsync, StreamDefinition } from '../../src'
+import { Wallet } from 'ethers'
 
 const MAX_ITEMS = 3
 const NUM_MESSAGES = 8
@@ -46,7 +47,8 @@ describe('Subscriber', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream(module)
+        privateKey = fastPrivateKey()
+        const stream = await createPartitionedTestStream(module, new Wallet(privateKey).address)
         streamParts = createStreamPartIterator(stream)
     })
 
@@ -57,7 +59,6 @@ describe('Subscriber', () => {
     })
 
     beforeEach(async () => {
-        privateKey = fastPrivateKey()
         client = new StreamrClient({
             ...ConfigTest,
             auth: {

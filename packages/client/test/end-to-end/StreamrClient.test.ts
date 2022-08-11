@@ -19,6 +19,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
+import { Wallet } from 'ethers'
 
 jest.setTimeout(60000)
 
@@ -44,7 +45,8 @@ describeRepeats('StreamrClient', () => {
     let streamDefinition: { id: string, partition: number }
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream(module)
+        privateKey = fastPrivateKey()
+        const stream = await createPartitionedTestStream(module, new Wallet(privateKey).address)
         streamParts = createStreamPartIterator(stream)
     })
 
@@ -62,7 +64,6 @@ describeRepeats('StreamrClient', () => {
     })
 
     beforeEach(async () => {
-        privateKey = fastPrivateKey()
         client = await createClient({
             auth: {
                 privateKey
