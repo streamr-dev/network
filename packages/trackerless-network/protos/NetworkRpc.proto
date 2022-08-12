@@ -10,6 +10,7 @@ service NetworkRpc {
   rpc handshake (HandshakeRequest) returns (HandshakeResponse);
   rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
   rpc interleaveNotice (InterleaveNotice) returns (google.protobuf.Empty);
+  rpc neighborUpdate (NeighborUpdate) returns (NeighborUpdate);
 }
 
 message MessageRef {
@@ -60,4 +61,10 @@ message InterleaveNotice {
 message LeaveNotice {
   string randomGraphId = 1;
   string senderId = 2;
+}
+
+message NeighborUpdate {
+  string senderId = 1;
+  string randomGraphId = 2;
+  repeated PeerDescriptor neighborDescriptors = 4;
 }

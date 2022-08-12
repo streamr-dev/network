@@ -4,7 +4,7 @@ import {
     DataMessage,
     HandshakeRequest,
     InterleaveNotice,
-    LeaveNotice
+    LeaveNotice, NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
 
@@ -17,10 +17,12 @@ export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
     private client: INetworkRpcClient
     private graphId: string
+    private neighbors: PeerDescriptor[]
     constructor(peerDescriptor: PeerDescriptor, graphId: string, client: INetworkRpcClient) {
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
         this.graphId = graphId
+        this.neighbors = []
     }
 
     async handshake(
@@ -102,5 +104,33 @@ export class RemoteRandomGraphNode {
 
     getPeerDescriptor(): PeerDescriptor {
         return this.remotePeerDescriptor
+    }
+
+    async updateNeighbors(ownPeerDescriptor: PeerDescriptor, neighbors: PeerDescriptor[]): Promise<PeerDescriptor[]> {
+        const options: DhtRpcOptions = {
+            sourceDescriptor: ownPeerDescriptor as PeerDescriptor,
+            targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
+        }
+        const request: NeighborUpdate = {
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            randomGraphId: this.graphId,
+            neighborDescriptors: neighbors
+        }
+        try {
+            const result = this.client.neighborUpdate(request, options)
+            const response = await result.response
+            return response.neighborDescriptors!
+        } catch (err) {
+            console.error(err)
+            return []
+        }
+    }
+
+    updateLocalNeighbors(neighbors: PeerDescriptor[]): void {
+        this.neighbors = neighbors
+    }
+
+    getLocalNeighbors(): PeerDescriptor[] {
+        return this.neighbors
     }
 }

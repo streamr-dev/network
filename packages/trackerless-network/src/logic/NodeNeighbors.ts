@@ -117,4 +117,8 @@ export class NodeNeighbors {
     values(): RemoteRandomGraphNode[] {
         return [...this.neighbors.values()]
     }
+
+    getNeighborByStringId(id: string): RemoteRandomGraphNode | undefined {
+        return this.neighbors.get(id)
+    }
 }

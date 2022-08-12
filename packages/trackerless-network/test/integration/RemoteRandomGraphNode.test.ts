@@ -6,7 +6,7 @@ import {
     HandshakeRequest,
     HandshakeResponse,
     LeaveNotice,
-    MessageRef
+    MessageRef, NeighborUpdate
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -71,6 +71,26 @@ describe('RemoteRandomGraphNode', () => {
             }
         )
 
+        mockServerRpc.registerRpcMethod(
+            NeighborUpdate,
+            NeighborUpdate,
+            'neighborUpdate',
+            async (_msg: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> => {
+                const peer: PeerDescriptor = {
+                    peerId: new Uint8Array([4, 2, 4]),
+                    type: 0
+                }
+
+                const update: NeighborUpdate = {
+                    senderId: PeerID.fromValue(peer.peerId).toMapKey(),
+                    randomGraphId: 'testStream',
+                    neighborDescriptors: [
+                        peer
+                    ]
+                }
+                return update
+            }
+        )
         remoteRandomGraphNode = new RemoteRandomGraphNode(
             serverPeer,
             'test-stream',
@@ -106,5 +126,10 @@ describe('RemoteRandomGraphNode', () => {
     it('leaveNotice', async () => {
         await remoteRandomGraphNode.leaveNotice(clientPeer)
         await waitForCondition(() => recvCounter === 1)
+    })
+
+    it('updateNeighbors', async () => {
+        const res = await remoteRandomGraphNode.updateNeighbors(clientPeer, [])
+        expect(res.length).toEqual(1)
     })
 })

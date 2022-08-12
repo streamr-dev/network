@@ -6,7 +6,7 @@ import {
     HandshakeResponse,
     InterleaveNotice,
     LeaveNotice,
-    MessageRef
+    MessageRef, NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { NodeNeighbors } from './NodeNeighbors'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -217,11 +217,13 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.sendData = this.sendData.bind(this)
         this.interleaveNotice = this.interleaveNotice.bind(this)
         this.leaveNotice = this.leaveNotice.bind(this)
+        this.neighborUpdate = this.neighborUpdate.bind(this)
 
         this.rpcCommunicator!.registerRpcNotification(DataMessage, 'sendData', this.sendData)
         this.rpcCommunicator!.registerRpcNotification(LeaveNotice, 'leaveNotice', this.leaveNotice)
         this.rpcCommunicator!.registerRpcNotification(InterleaveNotice, 'interleaveNotice', this.interleaveNotice)
         this.rpcCommunicator!.registerRpcMethod(HandshakeRequest, HandshakeResponse, 'handshake', this.handshake)
+        this.rpcCommunicator!.registerRpcMethod(NeighborUpdate, NeighborUpdate, 'neighborUpdate', this.neighborUpdate)
     }
 
     // INetworkRpc server method
@@ -314,5 +316,17 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             ).catch(() => {})
         }
         return Empty
+    }
+
+    async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
+        if (this.targetNeighbors.hasNeighborWithStringId(message.senderId)) {
+            this.targetNeighbors.getNeighborByStringId(message.senderId)!.updateLocalNeighbors(message.neighborDescriptors)
+        }
+        const response: NeighborUpdate = {
+            senderId: this.getOwnStringId(),
+            randomGraphId: this.randomGraphId,
+            neighborDescriptors: this.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor())
+        }
+        return response
     }
 }
