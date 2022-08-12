@@ -22,7 +22,7 @@ import { StreamDefinition } from '../types'
 import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
-    public publishMetadata
+    public publishMetadata // TODO would it be ok just to store streamDefinition and timestamp (and not e.g. the content)
     public reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
