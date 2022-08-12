@@ -175,8 +175,7 @@ describe('Subscriber', () => {
         expect(receivedMessages).toHaveLength(2)
         expect(receivedMessages[0].getTimestamp()).toBe(1000)
         expect(receivedMessages[1].getTimestamp()).toBe(3000)
-        expect(onError).toBeCalled()
-        expect(onError.mock.calls[0][0].message).toInclude('Signature validation failed')
+        expect(onError).toBeCalledTimes(1)
     })
 
     it('custom error handler throws', async () => {
