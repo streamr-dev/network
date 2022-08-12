@@ -101,7 +101,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
-                expect(neighbor.getSelectedNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getSelectedNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
             })
         })
     }, 10000)
