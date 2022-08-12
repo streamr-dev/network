@@ -33,7 +33,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
     })
 }
 
-describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend on PublishPipeline
+describe('GapFill', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let onError = jest.fn()
@@ -124,7 +124,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 // might be > 1, depends whether messages in storage by time gap is requested.
                 // message pipeline is processed as soon as messages arrive,
                 // not when sub starts iterating
@@ -149,7 +149,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can fill multiple gaps', async () => {
@@ -171,7 +171,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
         })
 
@@ -204,7 +204,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                     received.push(m)
                     // should not need to explicitly end
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
@@ -242,7 +242,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                     received.push(m)
                     // should not need to explicitly end
                 }
-                expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+                expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
             })
 
             it('rejects resend if no storage assigned', async () => {
@@ -299,7 +299,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                 }
             }
             const published = await publishedTask
-            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
             expect(calledResend).toHaveBeenCalledTimes(0)
         })
 
@@ -344,7 +344,7 @@ describe.skip('GapFill', () => { // TODO enable the test when it doesn't depend 
                     break
                 }
             }
-            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
             expect(calledResend).toHaveBeenCalledTimes(2 * 3) // another 3 come from resend done in publishTestMessages
         })
     })
