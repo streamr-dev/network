@@ -101,7 +101,7 @@ describe('sequential resend subscribe', () => {
             published.push(streamMessage)
             const msgs = await sub.collect(published.length)
             expect(msgs).toHaveLength(published.length)
-            expect(msgs).toEqual(published)
+            expect(msgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
     }
 })
