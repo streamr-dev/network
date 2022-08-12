@@ -25,7 +25,7 @@ function toSeq(requests: any[], ts = Date.now()) {
     })
 }
 
-describe.skip('Sequencing', () => { // TODO enable when compatilble with the new Publisher
+describe('Sequencing', () => {
     let client: StreamrClient
     let stream: Stream
 
