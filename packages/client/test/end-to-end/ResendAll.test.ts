@@ -103,9 +103,7 @@ describe('ResendAll', () => {
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(published.length)
-                for (const msg of published) {
-                    expect(receivedMsgs).toContainEqual(msg)
-                }
+                expect(receivedMsgs.map((m) => m.signature)).toIncludeSameMembers(published.map((m) => m.signature))
             })
 
             it('can resend subset', async () => {
