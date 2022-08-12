@@ -6,9 +6,7 @@ import {
     getCreateClient,
     uid,
 } from '../test-utils/utils'
-import {
-    getPublishTestMessages
-} from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { addAfterFn } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
@@ -22,7 +20,7 @@ jest.setTimeout(50000)
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
 
-describe.skip('PubSub with multiple clients', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestMessages)
+describe('PubSub with multiple clients', () => {
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient
@@ -89,9 +87,9 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         return client
     }
 
-    function checkMessages<T>(published: Record<string, T[]>, received: Record<string, T[]>) {
+    function checkMessages(published: Record<string, StreamMessage[]>, received: Record<string, StreamMessage[]>) {
         for (const [key, msgs] of Object.entries(published)) {
-            expect(received[key]).toEqual(msgs)
+            expect(received[key].map((m) => m.signature)).toEqual(msgs.map((m) => m.signature))
         }
     }
 
@@ -134,23 +132,23 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
 
             otherClient = await createSubscriber()
 
-            const receivedMessagesOther: Record<string, any[]> = {}
-            const receivedMessagesMain: Record<string, any[]> = {}
+            const receivedMessagesOther: Record<string, StreamMessage[]> = {}
+            const receivedMessagesMain: Record<string, StreamMessage[]> = {}
             // subscribe to stream from other client instance
             await otherClient.subscribe({
                 stream: stream.id,
-            }, (msg, streamMessage) => {
+            }, (_content, streamMessage) => {
                 const msgs = receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] || []
-                msgs.push(msg)
+                msgs.push(streamMessage)
                 receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] = msgs
             })
 
             // subscribe to stream from main client instance
             await mainClient.subscribe({
                 stream: stream.id,
-            }, (msg, streamMessage) => {
+            }, (_content, streamMessage) => {
                 const msgs = receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] || []
-                msgs.push(msg)
+                msgs.push(streamMessage)
                 receivedMessagesMain[streamMessage.getPublisherId().toLowerCase()] = msgs
             })
 
@@ -162,13 +160,13 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                 }))
             }
             /* eslint-enable no-await-in-loop */
-            const published: Record<string, any[]> = {}
+            const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = (await pubClient.getAddress()).toLowerCase()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
-                const publishTestMessages = getPublishTestMessages(pubClient, stream, {
+                const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                     waitForLast: true,
                     waitForLastTimeout: 20000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
@@ -207,16 +205,16 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             otherClient = await createSubscriber()
             await mainClient.connect()
 
-            const receivedMessagesOther: Record<string, any[]> = {}
-            const receivedMessagesMain: Record<string, any[]> = {}
+            const receivedMessagesOther: Record<string, StreamMessage[]> = {}
+            const receivedMessagesMain: Record<string, StreamMessage[]> = {}
 
             // subscribe to stream from main client instance
             const mainSub = await mainClient.subscribe({
                 stream: stream.id,
-            }, (msg, streamMessage) => {
+            }, (_content, streamMessage) => {
                 const key = streamMessage.getPublisherId().toLowerCase()
                 const msgs = receivedMessagesMain[key] || []
-                msgs.push(msg)
+                msgs.push(streamMessage)
                 receivedMessagesMain[key] = msgs
                 if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                     mainSub.unsubscribe()
@@ -233,14 +231,14 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
 
             /* eslint-enable no-await-in-loop */
             let counter = 0
-            const published: Record<string, any[]> = {}
+            const published: Record<string, StreamMessage[]> = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = (await pubClient.getAddress()).toLowerCase()
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
 
-                const publishTestMessages = getPublishTestMessages(pubClient, stream, {
+                const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                     waitForLast: true,
                     waitForLastTimeout: 35000,
                     waitForLastCount: MAX_MESSAGES * publishers.length,
@@ -258,10 +256,10 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                         resend: {
                             from: lastMessage.getMessageRef()
                         }
-                    }, (msg, streamMessage) => {
+                    }, (_content, streamMessage) => {
                         const key = streamMessage.getPublisherId().toLowerCase()
                         const msgs = receivedMessagesOther[key] || []
-                        msgs.push(msg)
+                        msgs.push(streamMessage)
                         receivedMessagesOther[key] = msgs
                     })
 
@@ -315,25 +313,25 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await otherClient.connect()
 
-        const receivedMessagesOther: Record<string, any[]> = {}
-        const receivedMessagesMain: Record<string, any[]> = {}
+        const receivedMessagesOther: Record<string, StreamMessage[]> = {}
+        const receivedMessagesMain: Record<string, StreamMessage[]> = {}
         // subscribe to stream from other client instance
         await otherClient.subscribe({
             stream: stream.id,
-        }, (msg, streamMessage) => {
+        }, (_content, streamMessage) => {
             const key = streamMessage.getPublisherId().toLowerCase()
             const msgs = receivedMessagesOther[key] || []
-            msgs.push(msg)
+            msgs.push(streamMessage)
             receivedMessagesOther[key] = msgs
         })
 
         // subscribe to stream from main client instance
         await mainClient.subscribe({
             stream: stream.id,
-        }, (msg, streamMessage) => {
+        }, (_content, streamMessage) => {
             const key = streamMessage.getPublisherId().toLowerCase()
             const msgs = receivedMessagesMain[key] || []
-            msgs.push(msg)
+            msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
         })
 
@@ -344,10 +342,10 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         }
 
         /* eslint-enable no-await-in-loop */
-        const published: Record<string, any[]> = {}
+        const published: Record<string, StreamMessage[]> = {}
         await Promise.all(publishers.map(async (pubClient) => {
             const publisherId = (await pubClient.getAddress()).toLowerCase()
-            const publishTestMessages = getPublishTestMessages(pubClient, stream, {
+            const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
             })
@@ -355,7 +353,7 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
             await publishTestMessages(MAX_MESSAGES, {
                 afterEach(msg) {
                     published[publisherId] = published[publisherId] || []
-                    published[publisherId].push(msg.getParsedContent())
+                    published[publisherId].push(msg)
                 }
             })
         }))
@@ -377,7 +375,7 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
     // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
     // late subscriber reliably get all of both realtime and resent messages
     test.skip('works with multiple publishers on one stream with late subscriber (resend)', async () => {
-        const published: Record<string, any[]> = {}
+        const published: Record<string, StreamMessage[]> = {}
         await mainClient.connect()
 
         otherClient = await createClient({
@@ -390,16 +388,16 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
         await otherClient.connect()
 
-        const receivedMessagesOther: Record<string, any[]> = {}
-        const receivedMessagesMain: Record<string, any[]> = {}
+        const receivedMessagesOther: Record<string, StreamMessage[]> = {}
+        const receivedMessagesMain: Record<string, StreamMessage[]> = {}
 
         // subscribe to stream from main client instance
         const mainSub = await mainClient.subscribe({
             stream: stream.id,
-        }, (msg, streamMessage) => {
+        }, (_content, streamMessage) => {
             const key = streamMessage.getPublisherId().toLowerCase()
             const msgs = receivedMessagesMain[key] || []
-            msgs.push(msg)
+            msgs.push(streamMessage)
             receivedMessagesMain[key] = msgs
             if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
                 mainSub.unsubscribe()
@@ -416,7 +414,7 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
         /* eslint-enable no-await-in-loop */
         await Promise.all(publishers.map(async (pubClient) => {
             const publisherId = (await pubClient.getAddress()).toString().toLowerCase()
-            const publishTestMessages = getPublishTestMessages(pubClient, stream, {
+            const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
                 waitForLastCount: MAX_MESSAGES * publishers.length,
@@ -430,10 +428,10 @@ describe.skip('PubSub with multiple clients', () => { // TODO enable the test wh
                     resend: {
                         from: lastMessage.getMessageRef()
                     }
-                }, (msg, streamMessage) => {
+                }, (_content, streamMessage) => {
                     const key = streamMessage.getPublisherId().toLowerCase()
                     const msgs = receivedMessagesOther[key] || []
-                    msgs.push(msg)
+                    msgs.push(streamMessage)
                     receivedMessagesOther[key] = msgs
                 })
 

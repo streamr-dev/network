@@ -117,12 +117,12 @@ export const createEthereumAddressCache = (): { getAddress: (privateKey: string)
 }
 
 // eslint-disable-next-line no-undef
-export const createPartitionedTestStream = async (module: NodeModule, client: StreamrClient): Promise<Stream> => {
+export const createPartitionedTestStream = async (userAddress: string, client: StreamrClient, module: NodeModule): Promise<Stream> => {
     const stream = await createTestStream(client, module, {
         partitions: MAX_PARTITION_COUNT
     })
     await stream.grantPermissions({
-        public: true,
+        user: userAddress,
         permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
     })
     await client.destroy()

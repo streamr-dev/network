@@ -17,7 +17,7 @@ const MAX_MESSAGES = 5
 
 jest.setTimeout(60000)
 
-describe.skip('resends', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestStreamMessages)
+describe('resends', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
@@ -156,7 +156,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 }
 
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
-                expect(receivedMsgs).toEqual(publishedStream2)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedStream2.map((m) => m.signature))
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(await client.getSubscriptions(stream2.id)).toHaveLength(0)
             })
@@ -219,7 +219,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 const published = await publishTestMessagesStream2(3)
                 const receivedMsgs = await sub.collect(3)
 
-                expect(receivedMsgs).toEqual(published)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(await client.getSubscriptions(stream2.id)).toHaveLength(0)
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(onSubError).toHaveBeenCalledTimes(1)
@@ -261,7 +261,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 }
 
                 expect(receivedMsgs).toHaveLength(publishedStream2.length)
-                expect(receivedMsgs).toEqual(publishedStream2)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedStream2.map((m) => m.signature))
                 expect(onResent).toHaveBeenCalledTimes(1)
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
@@ -304,7 +304,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(published.length)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can resend subset', async () => {
@@ -317,7 +317,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(2)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(-2).map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             })
         })
 
@@ -334,7 +334,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(published.length)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can resend subset', async () => {
@@ -349,7 +349,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(MAX_MESSAGES - 2)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(2).map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(2).map((m) => m.signature))
             })
         })
 
@@ -369,7 +369,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(published.length)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can resend subset', async () => {
@@ -387,7 +387,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const receivedMsgs = await sub.collect()
                 expect(receivedMsgs).toHaveLength(2)
-                expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.slice(2, 4).map((s) => s.toObject()))
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.slice(2, 4).map((m) => m.signature))
             })
         })
 
@@ -406,7 +406,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
             await sub.onFinally.listen()
             expect(receivedMsgs).toHaveLength(published.length)
-            expect(receivedMsgs.map((s) => s.toObject())).toEqual(published.map((s) => s.toObject()))
+            expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
 
         describe('resendSubscribe', () => {
@@ -429,7 +429,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(receivedMsgs).toEqual(published)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
@@ -440,7 +440,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 published.push(...await publishTestMessages(2))
 
                 const received = await sub.collect(2)
-                expect(received).toEqual(published.slice(-2))
+                expect(received.map((m) => m.signature)).toEqual(published.slice(-2).map((m) => m.signature))
             })
 
             it('sees resends when no realtime', async () => {
@@ -468,7 +468,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 }
 
                 expect(receivedMsgs).toHaveLength(published.length)
-                expect(receivedMsgs).toEqual(published)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
@@ -491,7 +491,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
-                expect(msgs).toEqual(published.slice(0, END_AFTER))
+                expect(msgs.map((m) => m.signature)).toEqual(published.slice(0, END_AFTER).map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
@@ -539,7 +539,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const msgs = received
                 expect(msgs).toHaveLength(published.length)
-                expect(msgs).toEqual(published)
+                expect(msgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
@@ -563,7 +563,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
 
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(END_AFTER)
-                expect(msgs).toEqual(published.slice(0, END_AFTER))
+                expect(msgs.map((m) => m.signature)).toEqual(published.slice(0, END_AFTER).map((m) => m.signature))
                 expect(await client.getSubscriptions(stream.id)).toHaveLength(0)
             })
 
@@ -585,7 +585,7 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 const receivedMsgs = await sub.collect(publishedMessages.length)
                 expect(receivedMsgs).toHaveLength(publishedMessages.length)
                 expect(onResent).toHaveBeenCalledTimes(1)
-                expect(receivedMsgs).toEqual(publishedMessages)
+                expect(receivedMsgs.map((m) => m.signature)).toEqual(publishedMessages.map((m) => m.signature))
                 expect(await client.getSubscriptions(nonStoredStream.id)).toHaveLength(0)
             })
         })
@@ -603,6 +603,6 @@ describe.skip('resends', () => { // TODO enable the test when it doesn't depend 
                 last: 1
             })
         const messages = await sub.collectContent()
-        expect(messages).toEqual([publishedMessage])
+        expect(messages.map((m) => m.signature)).toEqual([publishedMessage.signature])
     })
 })

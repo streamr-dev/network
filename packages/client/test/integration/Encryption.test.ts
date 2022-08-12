@@ -13,12 +13,13 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamMessage } from 'streamr-client-protocol'
 
 const debug = Debug('StreamrClient::test')
 
 jest.setTimeout(30000)
 
-describe.skip('decryption', () => { // TODO enable the test when it doesn't depend on PublishPipeline
+describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let expectErrors = 0 // check no errors by default
     let errors: Error[] = []
@@ -133,7 +134,7 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
 
             sub.onError.listen(onSubError)
 
-            const received: any[] = []
+            const received: StreamMessage[] = []
             // Publish after subscribed
             let count = 0
             const gotMessages = Defer()
@@ -193,11 +194,10 @@ describe.skip('decryption', () => { // TODO enable the test when it doesn't depe
                 })
 
                 expect(timedOut).toHaveBeenCalledTimes(0)
-                expect(received).toEqual([
-                    ...published.slice(0, revokeAfter),
-                ])
-
                 expect(onSubError).toHaveBeenCalledTimes(1)
+                expect(received.map((m) => m.signature)).toEqual([
+                    ...published.slice(0, revokeAfter),
+                ].map((m) => m.signature))
             }
         }
         describe('very low cache maxAge', () => {

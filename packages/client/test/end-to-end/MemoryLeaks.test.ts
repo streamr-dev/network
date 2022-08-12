@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
 import { initContainer } from '../../src/Container'
@@ -52,7 +52,7 @@ function snapshot(): string {
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
 
-describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestMessages)
+describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
 
     beforeEach(() => {
@@ -191,7 +191,7 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
                 const stream = await client.createStream({
                     id: `/${counterId('stream')}-${Date.now()}`
                 })
-                const publishTestMessages = getPublishTestMessages(client, stream, {
+                const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                     retainMessages: false,
                 })
 
@@ -208,7 +208,7 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -221,7 +221,7 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -241,7 +241,7 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const received: any[] = []
@@ -265,7 +265,7 @@ describe.skip('MemoryLeaks', () => { // TODO enable the test when it doesn't dep
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const sub1Done = Defer()

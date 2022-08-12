@@ -2,7 +2,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 
 import { createTestStream, getCreateClient } from '../test-utils/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -13,12 +13,12 @@ const MAX_MESSAGES = 4
 const PARTITIONS = 3
 jest.setTimeout(60000)
 
-describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestMessages)
+describe('SubscribeAll', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
 
     const createClient = getCreateClient()
 
@@ -34,7 +34,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        publishTestMessages = getPublishTestMessages(client, stream)
+        publishTestMessages = getPublishTestStreamMessages(client, stream)
     })
 
     afterEach(async () => {
@@ -55,7 +55,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
 
     it('subscribes to all partitions', async () => {
         const subMsgs: any[] = []
-        await client.subscribeAll(stream.id, (msg) => {
+        await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
         const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
@@ -64,9 +64,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
         await client.unsubscribe()
         expect(await client.getSubscriptions()).toHaveLength(0)
     })
@@ -76,9 +74,9 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
         stream = await createTestStream(client, module, {
             partitions: 1
         })
-        publishTestMessages = getPublishTestMessages(client, stream)
+        publishTestMessages = getPublishTestStreamMessages(client, stream)
 
-        await client.subscribeAll(stream.id, (msg) => {
+        await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
 
@@ -88,16 +86,15 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(NUM_MESSAGES)
         await waitForCondition(() => subMsgs.length >= (NUM_MESSAGES), 25000)
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
+
         await client.unsubscribe()
         expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('can stop prematurely', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
             if (subMsgs.length === MAX_MESSAGES) {
                 sub.return()
@@ -118,7 +115,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
 
     it('stops with unsubscribeAll', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
             if (subMsgs.length === MAX_MESSAGES) {
                 client.unsubscribe()
@@ -138,7 +135,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
 
     it('stops only when all subs are unsubbed', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
         const onFinallyCalled = jest.fn()
@@ -162,9 +159,7 @@ describe.skip('SubscribeAll', () => { // TODO enable the test when it doesn't de
         // should have ended after last partition unsubbed
         expect(onFinallyCalled).toHaveBeenCalledTimes(1)
 
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
         // got the messages
         expect(subMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         // unsubscribed from everything
