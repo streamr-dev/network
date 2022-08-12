@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
@@ -18,8 +17,6 @@ const MAX_MESSAGES = 5
 jest.setTimeout(60000)
 
 describe('resends', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
@@ -62,20 +59,12 @@ describe('resends', () => {
 
     beforeEach(async () => {
         await client.connect()
-        expectErrors = 0
-        onError = jest.fn()
     })
 
     afterAll(async () => {
         if (client) {
             await client.destroy()
         }
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     it('throws error if bad stream id', async () => {

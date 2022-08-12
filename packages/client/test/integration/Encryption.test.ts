@@ -1,5 +1,4 @@
 import { fastPrivateKey } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
 import {
     Debug,
     createTestStream,
@@ -21,9 +20,6 @@ jest.setTimeout(30000)
 
 describe('decryption', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let expectErrors = 0 // check no errors by default
-    let errors: Error[] = []
-
     let publisher: StreamrClient
     let publisherPrivateKey: string
     let subscriber: StreamrClient
@@ -33,14 +29,6 @@ describe('decryption', () => {
 
     beforeEach(() => {
         clientFactory = createClientFactory()
-        errors = []
-        expectErrors = 0
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(errors).toHaveLength(expectErrors)
     })
 
     async function setupClient(opts?: any) {

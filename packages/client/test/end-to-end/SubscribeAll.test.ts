@@ -14,18 +14,10 @@ const PARTITIONS = 3
 jest.setTimeout(60000)
 
 describe('SubscribeAll', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-
     const createClient = getCreateClient()
-
-    beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
-    })
 
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
@@ -47,10 +39,7 @@ describe('SubscribeAll', () => {
     })
 
     afterEach(async () => {
-        await wait(0)
         await client?.destroy()
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     it('subscribes to all partitions', async () => {

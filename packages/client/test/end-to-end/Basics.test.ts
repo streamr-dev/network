@@ -1,5 +1,3 @@
-import { wait } from '@streamr/utils'
-
 import { getCreateClient, uid } from '../test-utils/utils'
 import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -14,29 +12,9 @@ jest.setTimeout(TEST_TIMEOUT)
 
 describe('StreamrClient', () => {
     const MAX_MESSAGES = 10
-    let expectErrors = 0 // check no errors by default
-    let errors: any[] = []
-
-    const getOnError = (errs: any) => jest.fn((err) => {
-        errs.push(err)
-    })
-
-    let onError = jest.fn()
     let client: StreamrClient
 
     const createClient = getCreateClient()
-
-    beforeEach(() => {
-        errors = []
-        expectErrors = 0
-        onError = getOnError(errors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(errors).toHaveLength(expectErrors)
-    })
 
     let stream: Stream
 
@@ -57,7 +35,6 @@ describe('StreamrClient', () => {
         stream = await createStream()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('create stream <<')
-        expect(onError).toHaveBeenCalledTimes(0)
     })
 
     describe('Pub/Sub', () => {

@@ -27,14 +27,6 @@ const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
 describeRepeats('StreamrClient', () => {
-    let expectErrors = 0 // check no errors by default
-    let errors: any[] = []
-
-    const getOnError = (errs: any) => jest.fn((err) => {
-        errs.push(err)
-    })
-
-    let onError = jest.fn()
     let client: StreamrClient
     let privateKey: string
     const createClient = getCreateClient()
@@ -51,15 +43,6 @@ describeRepeats('StreamrClient', () => {
 
     beforeEach(async () => {
         streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
-        errors = []
-        expectErrors = 0
-        onError = getOnError(errors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(errors).toHaveLength(expectErrors)
     })
 
     beforeEach(async () => {
@@ -70,13 +53,6 @@ describeRepeats('StreamrClient', () => {
         })
         await client.connect()
         publishTestMessages = getPublishTestStreamMessages(client, streamDefinition)
-        expect(onError).toHaveBeenCalledTimes(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     describe('Pub/Sub', () => {

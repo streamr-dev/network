@@ -1,5 +1,4 @@
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from '@streamr/utils'
 
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
@@ -34,9 +33,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
 }
 
 describe('GapFill', () => {
-    let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
@@ -63,8 +60,6 @@ describe('GapFill', () => {
 
     beforeEach(async () => {
         clientFactory = createClientFactory()
-        expectErrors = 0
-        onError = jest.fn()
     })
 
     afterEach(async () => {
@@ -73,12 +68,6 @@ describe('GapFill', () => {
         if (!client) { return }
         const subscriptions = await subscriber.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     let subs: Subscription<any>[] = []
