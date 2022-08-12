@@ -1,5 +1,5 @@
 import { createTestStream, getCreateClient } from '../test-utils/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import { Stream } from '../../src/Stream'
@@ -12,7 +12,7 @@ const MAX_MESSAGES = 10
 jest.setTimeout(30000)
 
 describe('Validation', () => {
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
@@ -28,7 +28,7 @@ describe('Validation', () => {
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestMessages(client, stream.id)
+        publishTestMessages = getPublishTestStreamMessages(client, stream.id)
         return client
     }
 
@@ -82,9 +82,9 @@ describe('Validation', () => {
             })
 
             let t!: ReturnType<typeof setTimeout>
-            const received = []
+            const received: StreamMessage[] = []
             for await (const m of sub) {
-                received.push(m.getParsedContent())
+                received.push(m)
                 if (received.length === published.length - 1) {
                     clearTimeout(t)
                     // give it a chance to fail
@@ -108,7 +108,7 @@ describe('Validation', () => {
                 ...published.slice(BAD_INDEX + 1, MAX_MESSAGES)
             ]
 
-            expect(received).toEqual(expectedMessages)
+            expect(received.map((m) => m.signature)).toEqual(expectedMessages.map((m) => m.signature))
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(errs).toHaveLength(1)
             errs.forEach((err) => {
@@ -156,18 +156,18 @@ describe('Validation', () => {
                 timestamp: 1111111,
             })
 
-            const received = []
+            const received: StreamMessage[] = []
             for await (const m of sub) {
-                received.push(m.getParsedContent())
+                received.push(m)
                 if (received.length === published.length - 1) {
                     break
                 }
             }
 
-            expect(received).toEqual([
+            expect(received.map((m) => m.signature)).toEqual([
                 ...published.slice(0, BAD_INDEX),
                 ...published.slice(BAD_INDEX + 1, MAX_MESSAGES)
-            ])
+            ].map((m) => m.signature))
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(() => { throw errs[0] }).toThrow('JSON')
             expect(errs).toHaveLength(1)

@@ -9,6 +9,7 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
+import { StreamMessage } from 'streamr-client-protocol'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
@@ -107,7 +108,7 @@ describe('Group Key Persistence', () => {
                 // also probably needs to create a connection handle
                 await publisherKeyExchange.useGroupKey(stream.id)
 
-                const received = []
+                const received: StreamMessage[] = []
                 const sub = await subscriber.resend(
                     stream.id,
                     {
@@ -122,7 +123,7 @@ describe('Group Key Persistence', () => {
                     }
                 }
 
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             }, 2 * TIMEOUT)
         })
 
@@ -168,7 +169,7 @@ describe('Group Key Persistence', () => {
             ])
 
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
-            expect(received).toEqual(published.slice(0, 1))
+            expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
         }, 2 * TIMEOUT)
 
         it('subscriber persists group key with resend last', async () => {
@@ -221,8 +222,8 @@ describe('Group Key Persistence', () => {
                     break
                 }
             }
-            expect(received2).toEqual(published)
-            expect(received).toEqual(published.slice(0, 1))
+            expect(received2.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
+            expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
         }, 3 * TIMEOUT)
 
         it('can run multiple publishers in parallel', async () => {
@@ -261,8 +262,8 @@ describe('Group Key Persistence', () => {
                 }
             }
 
-            expect(received1).toEqual(published1)
-            expect(received2).toEqual(published2)
+            expect(received1.map((m) => m.signature)).toEqual(published1.map((m) => m.signature))
+            expect(received2.map((m) => m.signature)).toEqual(published2.map((m) => m.signature))
         }, 3 * TIMEOUT)
 
         describe('publisher does not complain about group key when many concurrent publishes', () => {

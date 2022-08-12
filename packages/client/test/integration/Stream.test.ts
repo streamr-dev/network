@@ -1,7 +1,7 @@
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { createTestStream } from '../test-utils/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
 
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
@@ -67,7 +67,7 @@ describe('Stream', () => {
                 array: [1, 2, 3],
                 string: 'test',
             }
-            const publishTestMessages = getPublishTestMessages(client, stream, {
+            const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })
@@ -112,7 +112,7 @@ describe('Stream', () => {
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
             }
-            const publishTestMessages = getPublishTestMessages(client, stream, {
+            const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                 waitForLast: true,
                 createMessage: () => msg,
             })

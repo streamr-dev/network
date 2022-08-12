@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { StreamMessage, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import {
@@ -11,14 +11,14 @@ import {
 } from '../test-utils/utils'
 import {
     Msg,
-    getPublishTestMessages,
-    publishManyGenerator
+    createTestMessages,
+    getPublishTestStreamMessages
 } from '../test-utils/publish'
 import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
-import { PublishPipeline } from '../../src/publish/PublishPipeline'
+import { Wallet } from 'ethers'
 
 jest.setTimeout(60000)
 
@@ -38,13 +38,14 @@ describeRepeats('StreamrClient', () => {
     let client: StreamrClient
     let privateKey: string
     const createClient = getCreateClient()
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
 
     let streamParts: AsyncGenerator<StreamPartID>
     let streamDefinition: { id: string, partition: number }
 
     beforeAll(async () => {
-        const stream = await createPartitionedTestStream(module)
+        privateKey = fastPrivateKey()
+        const stream = await createPartitionedTestStream(module, new Wallet(privateKey).address)
         streamParts = createStreamPartIterator(stream)
     })
 
@@ -62,14 +63,13 @@ describeRepeats('StreamrClient', () => {
     })
 
     beforeEach(async () => {
-        privateKey = fastPrivateKey()
         client = await createClient({
             auth: {
                 privateKey
             }
         })
         await client.connect()
-        publishTestMessages = getPublishTestMessages(client, streamDefinition)
+        publishTestMessages = getPublishTestStreamMessages(client, streamDefinition)
         expect(onError).toHaveBeenCalledTimes(0)
     })
 
@@ -176,9 +176,9 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('client.subscribe with onMessage & collect', async () => {
-            const onMessageMsgs: any[] = []
+            const onMessageMsgs: StreamMessage[] = []
             const done = Defer()
-            const sub = await client.subscribe<typeof Msg>(streamDefinition, async (msg) => {
+            const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
                 onMessageMsgs.push(msg)
                 if (onMessageMsgs.length === MAX_MESSAGES) {
                     done.resolve(undefined)
@@ -188,15 +188,14 @@ describeRepeats('StreamrClient', () => {
             const published = await publishTestMessages(MAX_MESSAGES)
             await expect(async () => sub.collect(1)).rejects.toThrow()
             await done
-            expect(onMessageMsgs).toEqual(published)
+            expect(onMessageMsgs.map(((m) => m.signature))).toEqual(published.map(((m) => m.signature)))
         })
 
         it('client.subscribe with onMessage callback that throws', async () => {
-            const onMessageMsgs: any[] = []
+            const onMessageMsgs: StreamMessage[] = []
             const err = new Error('expected error')
-            const sub = await client.subscribe<typeof Msg>(streamDefinition, async (msg) => {
+            const sub = await client.subscribe(streamDefinition, async (_content, msg) => {
                 onMessageMsgs.push(msg)
-
                 if (onMessageMsgs.length === MAX_MESSAGES) {
                     sub.return()
                 }
@@ -208,16 +207,16 @@ describeRepeats('StreamrClient', () => {
 
             const published = await publishTestMessages(MAX_MESSAGES)
             await sub.onFinally.listen()
-            expect(onMessageMsgs).toEqual(published.slice(0, 1))
+            expect(onMessageMsgs.map(((m) => m.signature))).toEqual(published.slice(0, 1).map(((m) => m.signature)))
             expect(onSubError).toHaveBeenCalledTimes(1)
             expect(onSubError).toHaveBeenCalledWith(err)
         })
 
         it('publish and subscribe a sequence of messages', async () => {
             const done = Defer()
-            const received: typeof Msg[] = []
-            const sub = await client.subscribe<typeof Msg>(streamDefinition, done.wrapError((parsedContent, streamMessage) => {
-                received.push(parsedContent)
+            const received: StreamMessage[] = []
+            const sub = await client.subscribe<any>(streamDefinition, done.wrapError((_content, streamMessage) => {
+                received.push(streamMessage)
                 // Check signature stuff
                 expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                 expect(streamMessage.getPublisherId()).toBeTruthy()
@@ -231,54 +230,24 @@ describeRepeats('StreamrClient', () => {
             const published = await publishTestMessages(MAX_MESSAGES)
 
             await done
-            expect(received).toEqual(published)
+            expect(received.map((m) => m.signature)).toEqual(published.map(((m) => m.signature)))
         })
 
         it('destroying stops publish', async () => {
-            const subscriber = await createClient({
-                auth: {
-                    privateKey
-                }
-            })
-            const sub = await subscriber.subscribe(streamDefinition)
-
-            const onMessage = jest.fn()
-            const gotMessages = Defer()
-            const published: any[] = []
-            // @ts-expect-error private
-            const publishPipeline = client.container.resolve(PublishPipeline)
-            // @ts-expect-error private
-            publishPipeline.publishQueue.onMessage.listen(async ([streamMessage]) => {
-                const requiredStreamPartID = toStreamPartID(toStreamID(streamDefinition.id), streamDefinition.partition)
-                if (requiredStreamPartID !== streamMessage.getStreamPartID()) { return }
-                onMessage()
-                published.push(streamMessage.getParsedContent())
-                if (published.length === 3) {
-                    await gotMessages
-                    await client.destroy()
-                }
-            })
-
-            const received: any[] = []
+            let publishedCount = 0
             const publishTask = (async () => {
                 for (let i = 0; i < MAX_MESSAGES; i += 1) {
                     // eslint-disable-next-line no-await-in-loop
                     await client.publish(streamDefinition, Msg())
+                    // eslint-disable-next-line no-plusplus
+                    publishedCount++
+                    if (publishedCount === 3) {
+                        await client.destroy()
+                    }
                 }
             })()
-            publishTask.catch(() => {})
-            for await (const msg of sub) {
-                received.push(msg)
-                if (received.length === 3) {
-                    gotMessages.resolve(undefined)
-                    setTimeout(() => { sub.unsubscribe() }, 500)
-                }
-            }
-            await expect(async () => {
-                await publishTask
-            }).rejects.toThrow('publish')
-            expect(received.map((s) => s.getParsedContent())).toEqual(published.slice(0, 3))
-            return expect(onMessage).toHaveBeenCalledTimes(3)
+            await expect(() => publishTask).rejects.toThrow('publish')
+            expect(publishedCount).toBe(3)
         })
 
         it('destroying resolves publish promises', async () => {
@@ -297,7 +266,7 @@ describeRepeats('StreamrClient', () => {
                 received.push(msg)
             })
 
-            const msgs = await G.collect(publishManyGenerator(MAX_MESSAGES))
+            const msgs = await G.collect(createTestMessages(MAX_MESSAGES))
 
             const publishTasks = [
                 client.publish(streamDefinition, msgs[0]).finally(async () => {
