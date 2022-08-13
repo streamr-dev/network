@@ -120,6 +120,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     readonly debug
     readonly activeNodes: ActiveNodes
     readonly networkNodeStub: FakeNetworkNodeStub
+    private readonly destroySignal?: DestroySignal
 
     constructor(
         id: EthereumAddress,
@@ -131,6 +132,7 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
         this.debug = debug('Streamr:FakeBrubeckNode')
         this.activeNodes = activeNodes
         this.networkNodeStub = new FakeNetworkNodeStub(this)
+        this.destroySignal = destroySignal
         if (destroySignal !== undefined) {
             destroySignal.onDestroy.listen(() => {
                 this.debug(`destroy ${this.id}`)
@@ -157,17 +159,18 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     }
 
     publishToNode(msg: StreamMessage): void {
+        this.destroySignal?.assertNotDestroyed(this)
         this.networkNodeStub.publish(msg)
     }
 
-    async getNode(): Promise<FakeNetworkNodeStub> {
+    private startNodeTask = async () => {
+        this.destroySignal?.assertNotDestroyed(this)
         return this.networkNodeStub
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async startNode(): Promise<any> {
-        // no-op
-    }
+    getNode = this.startNodeTask
+
+    startNode = this.startNodeTask
 
     // eslint-disable-next-line class-methods-use-this
     async openProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
