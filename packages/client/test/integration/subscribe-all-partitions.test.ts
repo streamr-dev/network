@@ -1,32 +1,38 @@
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
-import { createTestStream, getCreateClient } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
 import { range } from 'lodash'
+import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamPermission } from './../../src/permission'
 
 const NUM_MESSAGES = 8
 const MAX_MESSAGES = 4
 const PARTITIONS = 3
-jest.setTimeout(60000)
 
-describe('SubscribeAll', () => {
+describe('subscribe all partitions', () => {
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    const createClient = getCreateClient()
 
     beforeEach(async () => {
-        // eslint-disable-next-line require-atomic-updates
-        client = await createClient()
-        await client.connect()
+        const clientFactory = createClientFactory()
+        client = clientFactory.createClient()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        publishTestMessages = getPublishTestStreamMessages(client, stream)
+        const publisherWallet = fastWallet()
+        await stream.grantPermissions({
+            user: publisherWallet.address,
+            permissions: [StreamPermission.PUBLISH]
+        })
+        publishTestMessages = getPublishTestStreamMessages(clientFactory.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), stream)
     })
 
     afterEach(async () => {
@@ -36,9 +42,6 @@ describe('SubscribeAll', () => {
         expect(await client.subscriber.count(stream.id)).toBe(0)
         // @ts-expect-error private
         expect(client.subscriber.countSubscriptionSessions()).toBe(0)
-    })
-
-    afterEach(async () => {
         await client?.destroy()
     })
 
