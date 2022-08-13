@@ -582,7 +582,7 @@ describe('resends', () => {
 
     it('decodes resent messages correctly', async () => {
         const publishedMessage = Msg({
-            content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+            content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
         })
         const publishReq = await client.publish(stream, publishedMessage)
 

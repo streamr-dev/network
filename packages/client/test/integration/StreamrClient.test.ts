@@ -1,58 +1,53 @@
 import fs from 'fs'
 import path from 'path'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import {
-    getCreateClient,
-    createPartitionedTestStream,
-    createStreamPartIterator,
-    toStreamDefinition
-} from '../test-utils/utils'
 import {
     Msg,
     createTestMessages,
     getPublishTestStreamMessages
 } from '../test-utils/publish'
-import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
-import { Wallet } from 'ethers'
+import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamPermission } from '../../src/permission'
+import { createTestStream } from '../test-utils/utils'
 
-jest.setTimeout(60000)
+// TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
 const MAX_MESSAGES = 10
 const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
-describeRepeats('StreamrClient', () => {
+describe('StreamrClient', () => {
     let client: StreamrClient
-    let privateKey: string
-    const createClient = getCreateClient()
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
+    let streamDefinition: StreamPartID
+    let privateKey: string
+    let clientFactory: ClientFactory
 
-    let streamParts: AsyncGenerator<StreamPartID>
-    let streamDefinition: { id: string, partition: number }
-
-    beforeAll(async () => {
+    beforeEach(async () => {
         privateKey = fastPrivateKey()
-        const stream = await createPartitionedTestStream(new Wallet(privateKey).address, await createClient(), module)
-        streamParts = createStreamPartIterator(stream)
-    })
-
-    beforeEach(async () => {
-        streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
-    })
-
-    beforeEach(async () => {
-        client = await createClient({
+        clientFactory = createClientFactory()
+        client = clientFactory.createClient({
             auth: {
                 privateKey
             }
         })
-        await client.connect()
-        publishTestMessages = getPublishTestStreamMessages(client, streamDefinition)
+        const stream = await createTestStream(client, module)
+        streamDefinition = stream.getStreamParts()[0]
+        const publisherWallet = fastWallet()
+        await stream.grantPermissions({
+            user: publisherWallet.address,
+            permissions: [StreamPermission.PUBLISH]
+        })
+        publishTestMessages = getPublishTestStreamMessages(clientFactory.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), streamDefinition)
     })
 
     describe('Pub/Sub', () => {
@@ -64,7 +59,7 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
 
         it('Stream.publish does not error', async () => {
-            const stream = await client.getStream(streamDefinition.id)
+            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
             await stream.publish({
                 test: 'Stream.publish',
             })
@@ -72,7 +67,7 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
 
         it('client.publish with Stream object as arg', async () => {
-            const stream = await client.getStream(streamDefinition.id)
+            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
             await client.publish(stream, {
                 test: 'client.publish.Stream.object',
             })
@@ -231,7 +226,7 @@ describeRepeats('StreamrClient', () => {
             // can't yet reliably publish messages then disconnect and know
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
-            const subscriber = await createClient({
+            const subscriber = clientFactory.createClient({
                 auth: {
                     privateKey
                 }
@@ -278,7 +273,7 @@ describeRepeats('StreamrClient', () => {
     describe('utf-8 encoding', () => {
         it('decodes realtime messages correctly', async () => {
             const publishedMessage = Msg({
-                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+                content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
             })
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)

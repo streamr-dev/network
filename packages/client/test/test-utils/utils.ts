@@ -8,8 +8,6 @@ import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
-    toStreamPartID,
-    MAX_PARTITION_COUNT,
     StreamMessageOptions,
     MessageID
 } from 'streamr-client-protocol'
@@ -19,7 +17,6 @@ import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
@@ -113,33 +110,6 @@ export const createEthereumAddressCache = (): { getAddress: (privateKey: string)
             }
             return address
         }
-    }
-}
-
-// eslint-disable-next-line no-undef
-export const createPartitionedTestStream = async (userAddress: string, client: StreamrClient, module: NodeModule): Promise<Stream> => {
-    const stream = await createTestStream(client, module, {
-        partitions: MAX_PARTITION_COUNT
-    })
-    await stream.grantPermissions({
-        user: userAddress,
-        permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
-    })
-    await client.destroy()
-    return stream
-}
-
-export async function* createStreamPartIterator(stream: Stream): AsyncGenerator<StreamPartID> {
-    for (let partition = 0; partition < stream.partitions; partition++) {
-        yield toStreamPartID(stream.id, partition)
-    }
-}
-
-export const toStreamDefinition = (streamPart: StreamPartID): { id: string, partition: number } => {
-    const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPart)
-    return {
-        id,
-        partition
     }
 }
 
