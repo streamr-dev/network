@@ -32,7 +32,9 @@ export class FakeStorageNode extends FakeNetworkNode {
         stream.getStreamParts().forEach(async (streamPartId, idx) => {
             if (!this.subscriptions.has(streamPartId)) {
                 this.addMessageListener((msg: StreamMessage) => {
-                    this.storeMessage(msg)
+                    if (msg.getStreamPartID() === streamPartId) {
+                        this.storeMessage(msg)
+                    }
                 })
                 this.subscribe(streamPartId)
                 const assignmentMessage = new StreamMessage({
@@ -49,7 +51,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                     }
                 })
                 const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = await sign(payload, PRIVATE_KEY)
+                assignmentMessage.signature = sign(payload, PRIVATE_KEY)
                 this.publish(assignmentMessage)
             }
         })
