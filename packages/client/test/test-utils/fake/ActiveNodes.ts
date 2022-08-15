@@ -1,17 +1,18 @@
 import { EthereumAddress } from 'streamr-client-protocol'
 import { Lifecycle, scoped } from 'tsyringe'
-import { FakeBrubeckNode } from './FakeBrubeckNode'
+import { FakeNetworkNode } from './FakeNetworkNode'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ActiveNodes {
 
-    private readonly nodes: Map<EthereumAddress, FakeBrubeckNode> = new Map()
+    private readonly nodes: Map<EthereumAddress, FakeNetworkNode> = new Map()
 
-    addNode(node: FakeBrubeckNode): void {
-        if (!this.nodes.has(node.id)) {
-            this.nodes.set(node.id, node)
+    addNode(node: FakeNetworkNode): void {
+        const id = node.id.toLowerCase()
+        if (!this.nodes.has(id)) {
+            this.nodes.set(id, node)
         } else {
-            throw new Error(`Duplicate node: ${node.id}`)
+            throw new Error(`Duplicate node: ${id}`)
         }
     }
 
@@ -19,11 +20,11 @@ export class ActiveNodes {
         this.nodes.delete(address)
     }
 
-    getNode(address: EthereumAddress): FakeBrubeckNode | undefined {
+    getNode(address: EthereumAddress): FakeNetworkNode | undefined {
         return this.nodes.get(address.toLowerCase())
     }
 
-    getNodes(): FakeBrubeckNode[] {
+    getNodes(): FakeNetworkNode[] {
         return Array.from(this.nodes.values())
     }
 }

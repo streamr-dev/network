@@ -24,7 +24,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     ) {
         this.streamIdBuilder = streamIdBuilder
         this.activeNodes = activeNodes
-        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, 'storage', streamRegistry))
+        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, streamRegistry))
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
