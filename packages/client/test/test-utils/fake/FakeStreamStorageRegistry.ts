@@ -3,7 +3,7 @@ import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils } from 'stre
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
 import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
-import { ActiveNodes } from './ActiveNodes'
+import { FakeNetwork } from './FakeNetwork'
 import { Stream } from '../../../src/Stream'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
@@ -15,16 +15,16 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
 
     private readonly assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
     private readonly streamIdBuilder: StreamIDBuilder
-    private readonly activeNodes: ActiveNodes
+    private readonly network: FakeNetwork
 
     constructor(
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
-        @inject(ActiveNodes) activeNodes: ActiveNodes,
+        @inject(FakeNetwork) network: FakeNetwork,
         @inject(StreamRegistry) streamRegistry: StreamRegistry
     ) {
         this.streamIdBuilder = streamIdBuilder
-        this.activeNodes = activeNodes
-        this.activeNodes.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, activeNodes, streamRegistry))
+        this.network = network
+        this.network.addNode(new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, network, streamRegistry))
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
@@ -47,7 +47,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         const nodeAddresses = await this.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (nodeAddresses.length > 0) {
             const chosenAddress = nodeAddresses[Math.floor(Math.random() * nodeAddresses.length)]
-            const storageNode = this.activeNodes.getNode(chosenAddress)
+            const storageNode = this.network.getNode(chosenAddress)
             if (storageNode !== undefined) {
                 return storageNode as FakeStorageNode
                 // eslint-disable-next-line no-else-return
@@ -63,7 +63,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         if (!(await this.hasAssignment(streamIdOrPath, nodeAddress))) {
             const normalizedNodeAddress = nodeAddress.toLowerCase()
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            const node = this.activeNodes.getNode(nodeAddress)
+            const node = this.network.getNode(nodeAddress)
             if (node !== undefined) {
                 this.assignments.add(streamId, normalizedNodeAddress)
                 await (node as FakeStorageNode).addAssignment(streamId)

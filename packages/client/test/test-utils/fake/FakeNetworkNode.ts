@@ -4,7 +4,7 @@ import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-prot
 import { MetricsContext } from 'streamr-network'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NetworkNodeFactory, NetworkNodeStub } from './../../../src/BrubeckNode'
-import { ActiveNodes } from './ActiveNodes'
+import { FakeNetwork } from './FakeNetwork'
 
 type MessageListener = (msg: StreamMessage) => void
 
@@ -13,11 +13,11 @@ export class FakeNetworkNode implements NetworkNodeStub {
     public readonly id: string
     readonly subscriptions: Set<StreamPartID> = new Set()
     private readonly messageListeners: MessageListener[] = []
-    private readonly activeNodes: ActiveNodes
+    private readonly network: FakeNetwork
 
-    constructor(opts: NetworkNodeOptions, activeNodes: ActiveNodes) {
+    constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
         this.id = opts.id!
-        this.activeNodes = activeNodes
+        this.network = network
     }
 
     getNodeId(): string {
@@ -59,7 +59,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
          * TODO: should we change the serialization or the test? Or keep this hack?
          */
         const serialized = msg.serialize()
-        this.activeNodes.getNodes()
+        this.network.getNodes()
             .forEach(async (networkNode) => {
                 if (networkNode.subscriptions.has(msg.getStreamPartID())) {
                     networkNode.messageListeners.forEach((listener) => {
@@ -82,7 +82,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
-        const allNodes = this.activeNodes.getNodes()
+        const allNodes = this.network.getNodes()
         return allNodes
             .filter((node) => (node.id !== this.id))
             .filter((node) => node.subscriptions.has(streamPartId))
@@ -137,15 +137,15 @@ export class FakeNetworkNode implements NetworkNodeStub {
 @scoped(Lifecycle.ContainerScoped)
 export class FakeNetworkNodeFactory implements NetworkNodeFactory {
 
-    private activeNodes: ActiveNodes
+    private network: FakeNetwork
 
-    constructor(activeNodes: ActiveNodes) {
-        this.activeNodes = activeNodes
+    constructor(network: FakeNetwork) {
+        this.network = network
     }
 
     createNetworkNode(opts: NetworkNodeOptions): FakeNetworkNode {
-        const node = new FakeNetworkNode(opts, this.activeNodes)
-        this.activeNodes.addNode(node)
+        const node = new FakeNetworkNode(opts, this.network)
+        this.network.addNode(node)
         return node
     }
 }

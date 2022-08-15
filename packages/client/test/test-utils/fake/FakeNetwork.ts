@@ -3,7 +3,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { FakeNetworkNode } from './FakeNetworkNode'
 
 @scoped(Lifecycle.ContainerScoped)
-export class ActiveNodes {
+export class FakeNetwork {
 
     private readonly nodes: Map<EthereumAddress, FakeNetworkNode> = new Map()
 

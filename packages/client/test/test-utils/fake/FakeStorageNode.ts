@@ -7,7 +7,7 @@ import {
     toStreamID
 } from 'streamr-client-protocol'
 import { FakeNetworkNode } from './FakeNetworkNode'
-import { ActiveNodes } from './ActiveNodes'
+import { FakeNetwork } from './FakeNetwork'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { sign } from '../../../src/utils/signingUtils'
@@ -20,10 +20,10 @@ export class FakeStorageNode extends FakeNetworkNode {
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private readonly streamRegistry: StreamRegistry
 
-    constructor(address: EthereumAddress, activeNodes: ActiveNodes, streamRegistry: StreamRegistry) {
+    constructor(address: EthereumAddress, network: FakeNetwork, streamRegistry: StreamRegistry) {
         super({
             id: address
-        } as any, activeNodes)
+        } as any, network)
         this.streamRegistry = streamRegistry
     }
 
