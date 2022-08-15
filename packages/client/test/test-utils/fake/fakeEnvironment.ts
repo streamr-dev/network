@@ -64,7 +64,9 @@ export const addFakeNode = (
     mockContainer: DependencyContainer
 ): FakeNetworkNode => {
     const factory = mockContainer.resolve(FakeNetworkNodeFactory)
-    return factory.createNetworkNode({
+    const node = factory.createNetworkNode({
         id: nodeId
     } as any) as FakeNetworkNode
+    node.start()
+    return node
 }

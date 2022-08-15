@@ -113,14 +113,12 @@ export class FakeNetworkNode implements NetworkNodeStub {
         throw new Error('not implemented')
     }
 
-    // eslint-disable-next-line class-methods-use-this
     start(): void {
-        // no-op
+        this.network.addNode(this)
     }
 
-    // eslint-disable-next-line class-methods-use-this
     async stop(): Promise<void> {
-        // no-op
+        this.network.removeNode(this.id)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -144,8 +142,6 @@ export class FakeNetworkNodeFactory implements NetworkNodeFactory {
     }
 
     createNetworkNode(opts: NetworkNodeOptions): FakeNetworkNode {
-        const node = new FakeNetworkNode(opts, this.network)
-        this.network.addNode(node)
-        return node
+        return new FakeNetworkNode(opts, this.network)
     }
 }
