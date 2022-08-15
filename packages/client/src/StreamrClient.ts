@@ -10,7 +10,7 @@ import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
-import { BrubeckNode, NetworkNodeStub } from './BrubeckNode'
+import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
 import { DestroySignal } from './DestroySignal'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
@@ -42,7 +42,7 @@ export class StreamrClient implements Context {
     readonly debug
 
     private container: DependencyContainer
-    private node: BrubeckNode
+    private node: NetworkNodeFacade
     private authentication: Authentication
     private resends: Resends
     private publisher: Publisher
@@ -62,7 +62,7 @@ export class StreamrClient implements Context {
         initContainer(config, container)
 
         this.container = container
-        this.node = container.resolve<BrubeckNode>(BrubeckNode)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { BrubeckNode, NetworkNodeStub } from '../../src/BrubeckNode'
+import { NetworkNodeFacade, NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { Publisher } from '../../src/publish/Publisher'
 import { initContainer } from '../../src/Container'
 import { StreamRegistry } from '../../src/registry/StreamRegistry'
@@ -19,7 +19,7 @@ const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 const GROUP_KEY = GroupKey.generate()
 
 const createMockContainer = async (
-    brubeckNode: Pick<BrubeckNode, 'publishToNode'>,
+    networkNodeFacade: Pick<NetworkNodeFacade, 'publishToNode'>,
 ) => {
     const config = createStrictConfig({
         auth: {
@@ -37,18 +37,18 @@ const createMockContainer = async (
     initContainer(config, childContainer)
     return childContainer
         .registerSingleton(StreamRegistry, FakeStreamRegistry as any)
-        .register(BrubeckNode, { useValue: brubeckNode as any })
+        .register(NetworkNodeFacade, { useValue: networkNodeFacade as any })
         .register(GroupKeyStoreFactory, { useValue: groupKeyStoreFactory } as any)
 }
 
 describe('Publisher', () => {
 
     let publisher: Pick<Publisher, 'publish' | 'stop'>
-    let brubeckNode: Pick<BrubeckNode, 'publishToNode' | 'getNode'>
+    let networkNodeFacade: Pick<NetworkNodeFacade, 'publishToNode' | 'getNode'>
     let mockContainer: DependencyContainer
 
     beforeEach(async () => {
-        brubeckNode = {
+        networkNodeFacade = {
             publishToNode: jest.fn(),
             getNode: async () => {
                 return {
@@ -57,7 +57,7 @@ describe('Publisher', () => {
                 } as unknown as NetworkNodeStub
             } 
         }
-        mockContainer = await createMockContainer(brubeckNode)
+        mockContainer = await createMockContainer(networkNodeFacade)
         publisher = mockContainer.resolve(Publisher)
         const streamRegistry = mockContainer.resolve(StreamRegistry)
         await streamRegistry.createStream(STREAM_ID)
@@ -69,8 +69,8 @@ describe('Publisher', () => {
             foo: 'bar'
         })
         await publisher.stop()
-        expect(brubeckNode.publishToNode).toBeCalledTimes(1)
-        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
+        expect(networkNodeFacade.publishToNode).toBeCalledTimes(1)
+        const actual = (networkNodeFacade.publishToNode as any).mock.calls[0][0]
         expect(actual).toMatchObject({
             contentType: 0,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
@@ -105,8 +105,8 @@ describe('Publisher', () => {
         }
         await publisher.publish(publicStream, CONTENT)
         await publisher.stop()
-        expect(brubeckNode.publishToNode).toBeCalledTimes(1)
-        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
+        expect(networkNodeFacade.publishToNode).toBeCalledTimes(1)
+        const actual = (networkNodeFacade.publishToNode as any).mock.calls[0][0]
         expect(actual).toMatchObject({
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             groupKeyId: null,
@@ -124,8 +124,8 @@ describe('Publisher', () => {
             msgChainId: MSG_CHAIN_ID
         })
         await publisher.stop()
-        expect(brubeckNode.publishToNode).toBeCalledTimes(1)
-        const actual = (brubeckNode.publishToNode as any).mock.calls[0][0]
+        expect(networkNodeFacade.publishToNode).toBeCalledTimes(1)
+        const actual = (networkNodeFacade.publishToNode as any).mock.calls[0][0]
         expect(actual.messageId.timestamp).toBe(TIMESTAMP)
         expect(actual.messageId.msgChainId).toBe(MSG_CHAIN_ID)
     })

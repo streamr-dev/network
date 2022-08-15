@@ -62,7 +62,7 @@ export class NetworkNodeFactory {
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
-export class BrubeckNode implements Context {
+export class NetworkNodeFacade implements Context {
     private cachedNode?: NetworkNodeStub
     private networkConfig: NetworkConfig
     private ethereumConfig: EthereumConfig

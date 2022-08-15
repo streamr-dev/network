@@ -12,7 +12,7 @@ import { MessageStream } from './MessageStream'
 import { Subscription } from './Subscription'
 import { SubscribePipeline } from './SubscribePipeline'
 import { BrubeckContainer } from '../Container'
-import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
+import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -41,7 +41,7 @@ export class SubscriptionSession<T> implements Context {
         this.debug = context.debug.extend(this.id)
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
-        this.node = container.resolve<BrubeckNode>(BrubeckNode)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.onError = this.onError.bind(this)
         this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
         this.pipeline.onError.listen(this.onError)
