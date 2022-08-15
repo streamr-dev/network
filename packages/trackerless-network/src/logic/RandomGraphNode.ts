@@ -357,9 +357,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                             new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
                         )
                         this.ongoingHandshakes.add(targetStringId)
-                        const result = await targetNeighbor.handshake(this.layer1.getPeerDescriptor(), this.targetNeighbors.getStringIds(), this.contactPool.getStringIds())
+                        const result = await targetNeighbor.handshake(
+                            this.layer1.getPeerDescriptor(),
+                            this.targetNeighbors.getStringIds(),
+                            this.contactPool.getStringIds()
+                        )
                         if (result.accepted) {
-                            console.log("JEEEE")
                             this.targetNeighbors.add(targetNeighbor)
                         }
                         this.ongoingHandshakes.delete(targetStringId)

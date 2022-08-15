@@ -2,7 +2,6 @@ import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
 
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 128
