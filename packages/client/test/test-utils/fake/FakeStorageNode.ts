@@ -6,8 +6,8 @@ import {
     StreamPartID,
     toStreamID
 } from 'streamr-client-protocol'
-import { FakeBrubeckNode } from './FakeBrubeckNode'
-import { ActiveNodes } from './ActiveNodes'
+import { FakeNetworkNode } from './FakeNetworkNode'
+import { FakeNetwork } from './FakeNetwork'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { sign } from '../../../src/utils/signingUtils'
@@ -15,25 +15,28 @@ import { Multimap } from '@streamr/utils'
 
 const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
 
-export class FakeStorageNode extends FakeBrubeckNode {
+export class FakeStorageNode extends FakeNetworkNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private readonly streamRegistry: StreamRegistry
 
-    constructor(address: EthereumAddress, activeNodes: ActiveNodes, name: string, streamRegistry: StreamRegistry) {
-        super(address, activeNodes, undefined, name)
+    constructor(address: EthereumAddress, network: FakeNetwork, streamRegistry: StreamRegistry) {
+        super({
+            id: address
+        } as any, network)
         this.streamRegistry = streamRegistry
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
         const stream = await this.streamRegistry.getStream(streamId)
-        const networkNode = await this.getNode()
         stream.getStreamParts().forEach(async (streamPartId, idx) => {
-            if (!networkNode.subscriptions.has(streamPartId)) {
-                networkNode.addMessageListener((msg: StreamMessage) => {
-                    this.storeMessage(msg)
+            if (!this.subscriptions.has(streamPartId)) {
+                this.addMessageListener((msg: StreamMessage) => {
+                    if (msg.getStreamPartID() === streamPartId) {
+                        this.storeMessage(msg)
+                    }
                 })
-                networkNode.subscribe(streamPartId)
+                this.subscribe(streamPartId)
                 const assignmentMessage = new StreamMessage({
                     messageId: new MessageID(
                         toStreamID(formStorageNodeAssignmentStreamId(this.id)),
@@ -48,8 +51,8 @@ export class FakeStorageNode extends FakeBrubeckNode {
                     }
                 })
                 const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = await sign(payload, PRIVATE_KEY)
-                this.publishToNode(assignmentMessage)
+                assignmentMessage.signature = sign(payload, PRIVATE_KEY)
+                this.publish(assignmentMessage)
             }
         })
     }

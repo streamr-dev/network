@@ -2,7 +2,7 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode, NetworkNode, MetricsContext } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext } from 'streamr-network'
 import { uuid } from './utils/uuid'
 import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
@@ -32,6 +32,14 @@ export interface NetworkNodeStub {
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+    /** @internal */
+    start: () => void
+    /** @internal */
+    stop: () => Promise<unknown>
+    /** @internal */
+    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    /** @internal */
+    closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
@@ -40,12 +48,22 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
 }
 
 /**
+ * The factory is used so that integration tests can replace the real network node with a fake instance
+ */
+@scoped(Lifecycle.ContainerScoped)
+export class NetworkNodeFactory {
+    createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {
+        return _createNetworkNode(opts)
+    }
+}
+
+/**
  * Wrap a network node.
  * Lazily creates & starts node on first call to getNode().
  */
 @scoped(Lifecycle.ContainerScoped)
 export class BrubeckNode implements Context {
-    private cachedNode?: NetworkNode
+    private cachedNode?: NetworkNodeStub
     private networkConfig: NetworkConfig
     private ethereumConfig: EthereumConfig
     readonly id
@@ -56,6 +74,7 @@ export class BrubeckNode implements Context {
     constructor(
         context: Context,
         private destroySignal: DestroySignal,
+        private networkNodeFactory: NetworkNodeFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Network) networkConfig: NetworkConfig,
         @inject(ConfigInjectionToken.Ethereum) ethereumConfig: EthereumConfig
@@ -85,7 +104,7 @@ export class BrubeckNode implements Context {
         return this.networkConfig as NetworkNodeOptions
     }
 
-    private async initNode(): Promise<NetworkNode> {
+    private async initNode(): Promise<NetworkNodeStub> {
         this.assertNotDestroyed()
         if (this.cachedNode) { return this.cachedNode }
 
@@ -103,7 +122,7 @@ export class BrubeckNode implements Context {
 
         this.debug('initNode', id)
         const networkOptions = await this.getNormalizedNetworkOptions()
-        const node = createNetworkNode({
+        const node = this.networkNodeFactory.createNetworkNode({
             disconnectionWaitTime: 200,
             ...networkOptions,
             id,
@@ -163,7 +182,7 @@ export class BrubeckNode implements Context {
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
-                await node.start()
+                node.start()
             }
 
             if (this.destroySignal.isDestroyed()) {

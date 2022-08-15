@@ -4,7 +4,6 @@ import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
-    EthereumAddress,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
@@ -26,6 +25,8 @@ import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
+import { TransformStream } from 'node:stream/web'
+import { NetworkNodeStub } from './../../src/BrubeckNode'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -102,20 +103,6 @@ export const createEthereumAddress = (id: number): string => {
     return '0x' + padEnd(String(id), 40, '0')
 }
 
-export const createEthereumAddressCache = (): { getAddress: (privateKey: string) => EthereumAddress } => {
-    const cache: Map<string, EthereumAddress> = new Map()
-    return {
-        getAddress: (privateKey: string): EthereumAddress => {
-            let address = cache.get(privateKey)
-            if (address === undefined) {
-                address = new Wallet(privateKey).address
-                cache.set(privateKey, address)
-            }
-            return address
-        }
-    }
-}
-
 // eslint-disable-next-line no-undef
 export const createPartitionedTestStream = async (module: NodeModule, userAddress: string): Promise<Stream> => {
     const client = new StreamrClient({
@@ -183,4 +170,16 @@ export const createMockMessage = (
     }
     msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
+}
+
+export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> => {
+    const messages = new TransformStream()
+    const messageWriter = messages.writable.getWriter()
+    networkNodeStub.addMessageListener((msg: StreamMessage) => {
+        if (streamPartIds.includes(msg.getStreamPartID())) {
+            messageWriter.write(msg)
+        }
+    })
+    streamPartIds.forEach((id) => networkNodeStub.subscribe(id))
+    return messages.readable[Symbol.asyncIterator]()
 }

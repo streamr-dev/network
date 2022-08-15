@@ -1,26 +1,27 @@
-import debug from 'debug'
+import { Lifecycle, scoped } from 'tsyringe'
 import { pull } from 'lodash'
-import { EthereumAddress, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
-import { BrubeckNode, NetworkNodeStub } from '../../../src/BrubeckNode'
-import { DestroySignal } from '../../../src/DestroySignal'
-import { ActiveNodes } from './ActiveNodes'
-import { TransformStream } from 'node:stream/web'
+import { NetworkNodeOptions } from 'streamr-network'
+import { NetworkNodeFactory, NetworkNodeStub } from './../../../src/BrubeckNode'
+import { FakeNetwork } from './FakeNetwork'
 
 type MessageListener = (msg: StreamMessage) => void
 
-class FakeNetworkNodeStub implements NetworkNodeStub {
+export class FakeNetworkNode implements NetworkNodeStub {
 
-    private readonly node: FakeBrubeckNode
+    public readonly id: string
     readonly subscriptions: Set<StreamPartID> = new Set()
     private readonly messageListeners: MessageListener[] = []
+    private readonly network: FakeNetwork
 
-    constructor(node: FakeBrubeckNode) {
-        this.node = node
+    constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
+        this.id = opts.id!
+        this.network = network
     }
 
     getNodeId(): string {
-        return this.node.id
+        return this.id
     }
 
     addMessageListener(listener: (msg: StreamMessage<unknown>) => void): void {
@@ -58,9 +59,8 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
          * TODO: should we change the serialization or the test? Or keep this hack?
          */
         const serialized = msg.serialize()
-        this.node.activeNodes.getNodes()
-            .forEach(async (n) => {
-                const networkNode = await n.getNode()
+        this.network.getNodes()
+            .forEach(async (networkNode) => {
                 if (networkNode.subscriptions.has(msg.getStreamPartID())) {
                     networkNode.messageListeners.forEach((listener) => {
                         // return a clone as client mutates message when it decrypts messages
@@ -82,10 +82,10 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     }
 
     getNeighborsForStreamPart(streamPartId: StreamPartID): ReadonlyArray<string> {
-        const allNodes = this.node.activeNodes.getNodes()
+        const allNodes = this.network.getNodes()
         return allNodes
-            .filter((node) => (node.id !== this.node.id))
-            .filter((node) => node.networkNodeStub.subscriptions.has(streamPartId))
+            .filter((node) => (node.id !== this.id))
+            .filter((node) => node.subscriptions.has(streamPartId))
             .map((node) => node.id)
     }
 
@@ -95,7 +95,7 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    setExtraMetadata(_metadata: Record<string, unknown>) {
+    setExtraMetadata(_metadata: Record<string, unknown>): void {
         throw new Error('not implemented')
     }
 
@@ -112,61 +112,13 @@ class FakeNetworkNodeStub implements NetworkNodeStub {
     hasProxyConnection(_streamPartId: StreamPartID, _contactNodeId: string, _direction: ProxyDirection): boolean {
         throw new Error('not implemented')
     }
-}
 
-export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 'startNodeComplete'> {
-
-    readonly id: EthereumAddress
-    readonly debug
-    readonly activeNodes: ActiveNodes
-    readonly networkNodeStub: FakeNetworkNodeStub
-
-    constructor(
-        id: EthereumAddress,
-        activeNodes: ActiveNodes,
-        destroySignal: DestroySignal | undefined,
-        name?: string
-    ) {
-        this.id = id.toLowerCase()
-        this.debug = debug('Streamr:FakeBrubeckNode')
-        this.activeNodes = activeNodes
-        this.networkNodeStub = new FakeNetworkNodeStub(this)
-        if (destroySignal !== undefined) {
-            destroySignal.onDestroy.listen(() => {
-                this.debug(`destroy ${this.id}`)
-                this.activeNodes.removeNode(this.id)
-            })
-        }
-        this.debug(`Created${name ? ' ' + name : ''}: ${id}`)
+    start(): void {
+        this.network.addNode(this)
     }
 
-    addSubscriber<T>(...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> {
-        const messages = new TransformStream()
-        const messageWriter = messages.writable.getWriter()
-        this.networkNodeStub.addMessageListener((msg: StreamMessage) => {
-            if (streamPartIds.includes(msg.getStreamPartID())) {
-                messageWriter.write(msg)
-            }
-        })
-        streamPartIds.forEach((id) => this.networkNodeStub.subscribe(id))
-        return messages.readable[Symbol.asyncIterator]()
-    }
-
-    async getNodeId(): Promise<EthereumAddress> {
-        return this.id
-    }
-
-    publishToNode(msg: StreamMessage): void {
-        this.networkNodeStub.publish(msg)
-    }
-
-    async getNode(): Promise<FakeNetworkNodeStub> {
-        return this.networkNodeStub
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    async startNode(): Promise<any> {
-        // no-op
+    async stop(): Promise<void> {
+        this.network.removeNode(this.id)
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -177,5 +129,19 @@ export class FakeBrubeckNode implements Omit<BrubeckNode, 'startNodeCalled' | 's
     // eslint-disable-next-line class-methods-use-this
     async closeProxyConnection(_streamPartId: StreamPartID, _nodeId: string, _direction: ProxyDirection): Promise<void> {
         throw new Error('not implemented')
+    }
+}
+
+@scoped(Lifecycle.ContainerScoped)
+export class FakeNetworkNodeFactory implements NetworkNodeFactory {
+
+    private network: FakeNetwork
+
+    constructor(network: FakeNetwork) {
+        this.network = network
+    }
+
+    createNetworkNode(opts: NetworkNodeOptions): FakeNetworkNode {
+        return new FakeNetworkNode(opts, this.network)
     }
 }

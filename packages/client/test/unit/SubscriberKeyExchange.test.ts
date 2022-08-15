@@ -15,6 +15,7 @@ import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
+import { addSubscriber } from '../test-utils/utils'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 
@@ -37,7 +38,7 @@ describe('SubscriberKeyExchange', () => {
 
     const testSuccessRequest = async (requestedKeyId: string): Promise<GroupKey | undefined> => {
         const publisherNode = await addFakePublisherNode(publisherWallet, [AVAILABLE_GROUP_KEY], fakeContainer)
-        const receivedRequests = publisherNode.addSubscriber(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+        const receivedRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
 
         const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
         const receivedKey = subscriberKeyExchange.getGroupKey({
