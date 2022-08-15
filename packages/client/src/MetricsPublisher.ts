@@ -40,7 +40,7 @@ const getPeriodConfig = (rootConfig: StrictStreamrClientConfig): MetricsPeriodCo
 export class MetricsPublisher {
 
     private publisher: Publisher
-    private networkNodeFacade: NetworkNodeFacade
+    private node: NetworkNodeFacade
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
     private periodConfigs: MetricsPeriodConfig[]
@@ -48,13 +48,13 @@ export class MetricsPublisher {
 
     constructor(
         @inject(Publisher) publisher: Publisher,
-        @inject(NetworkNodeFacade) networkNodeFacade: NetworkNodeFacade,
+        @inject(NetworkNodeFacade) node: NetworkNodeFacade,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(DestroySignal) destroySignal: DestroySignal,
         @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.publisher = publisher
-        this.networkNodeFacade = networkNodeFacade
+        this.node = node
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
         this.periodConfigs = getPeriodConfig(rootConfig)
@@ -67,7 +67,7 @@ export class MetricsPublisher {
 
     private async ensureStarted(): Promise<void> {
         if (this.producers.length === 0) {
-            const node = await this.networkNodeFacade.getNode()
+            const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = getEthereumAddressFromNodeId(node.getNodeId()).toLowerCase()
             this.producers = this.periodConfigs.map((config) => {
