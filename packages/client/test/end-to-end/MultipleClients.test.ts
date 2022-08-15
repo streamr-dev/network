@@ -25,7 +25,6 @@ describe('PubSub with multiple clients', () => {
     let mainClient: StreamrClient
     let otherClient: StreamrClient
     let privateKey: string
-    const errors: Error[] = []
 
     const createClient = getCreateClient()
     const addAfter = addAfterFn()
@@ -40,10 +39,6 @@ describe('PubSub with multiple clients', () => {
         })
         stream = await createTestStream(mainClient, module)
         await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-    })
-
-    afterEach(async () => {
-        expect(errors).toEqual([])
     })
 
     async function createPublisher(opts = {}) {
