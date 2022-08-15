@@ -45,7 +45,7 @@ describe('Subscriber', () => {
 
     it('without encryption', async () => {
         const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT
@@ -79,7 +79,7 @@ describe('Subscriber', () => {
         const nextGroupKey = GroupKey.generate()
         const publisherNode = await addFakePublisherNode(publisherWallet, [groupKey], dependencyContainer)
 
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,
@@ -125,7 +125,7 @@ describe('Subscriber', () => {
         sub.on('error', onError)
 
         const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
             encryptionKey: GroupKey.generate()
@@ -145,7 +145,7 @@ describe('Subscriber', () => {
             dependencyContainer,
             async () => 'mock-error-code'
         )
-        publisherNode.publishToNode(createMockMessage({
+        publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,
@@ -169,7 +169,7 @@ describe('Subscriber', () => {
             })
         })
         publishedMessages[1].signature = 'invalid-signature'
-        publishedMessages.forEach((m) => publisherNode.publishToNode(m))
+        publishedMessages.forEach((m) => publisherNode.publish(m))
 
         const receivedMessages = await collect(sub, 2)
         expect(receivedMessages).toHaveLength(2)
@@ -190,7 +190,7 @@ describe('Subscriber', () => {
             publisher: publisherWallet
         })
         msg.signature = 'invalid-signature'
-        publisherNode.publishToNode(msg)
+        publisherNode.publish(msg)
 
         // TODO would it make sense, if we custom error handler doesn't stop the pipeline
         // and we just continue normally (could e.g. write an error to console.log)

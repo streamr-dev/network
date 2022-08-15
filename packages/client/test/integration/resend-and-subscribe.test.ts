@@ -8,7 +8,7 @@ import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { ActiveNodes } from '../test-utils/fake/ActiveNodes'
+import { FakeNetwork } from '../test-utils/fake/FakeNetwork'
 import { StreamStorageRegistry } from '../../src/registry/StreamStorageRegistry'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createFakeContainer, DEFAULT_CLIENT_OPTIONS } from '../test-utils/fake/fakeEnvironment'
@@ -60,7 +60,7 @@ describe('resend and subscribe', () => {
                 mockId: 1
             }
         })
-        const storageNode = dependencyContainer.resolve(ActiveNodes).getNode(DOCKER_DEV_STORAGE_NODE) as FakeStorageNode
+        const storageNode = dependencyContainer.resolve(FakeNetwork).getNode(DOCKER_DEV_STORAGE_NODE) as FakeStorageNode
         storageNode.storeMessage(historicalMessage)
 
         const sub = await subscriber.subscribe({
@@ -82,7 +82,7 @@ describe('resend and subscribe', () => {
                 mockId: 2
             }
         })
-        publisherNode.publishToNode(realtimeMessage)
+        publisherNode.publish(realtimeMessage)
 
         const receivedMessage2 = await nextValue(sub)
         expect(receivedMessage1!.getParsedContent()).toEqual({

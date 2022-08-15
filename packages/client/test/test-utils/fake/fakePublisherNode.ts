@@ -1,7 +1,7 @@
 import { DependencyContainer } from 'tsyringe'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
-import { FakeBrubeckNode } from './FakeBrubeckNode'
-import { createMockMessage } from '../utils'
+import { FakeNetworkNode } from './FakeNetworkNode'
+import { addSubscriber, createMockMessage } from '../utils'
 import {
     EthereumAddress,
     GroupKeyErrorResponse,
@@ -63,17 +63,17 @@ export const addFakePublisherNode = async (
     groupKeys: GroupKey[],
     dependencyContainer: DependencyContainer,
     getError: (request: StreamMessage<GroupKeyRequestSerialized>) => Promise<string | undefined> = async () => undefined,
-): Promise<FakeBrubeckNode> => {
+): Promise<FakeNetworkNode> => {
     const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
     const streamRegistry = dependencyContainer.resolve(StreamRegistry)
-    const requests = publisherNode.addSubscriber<GroupKeyRequestSerialized>(KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+    const requests = addSubscriber<GroupKeyRequestSerialized>(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {
             const errorCode = await getError(request)
             const response = (errorCode === undefined)
                 ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet, streamRegistry)
                 : createGroupKeyErrorResponse(errorCode, request, publisherWallet)
-            publisherNode.publishToNode(response)
+            publisherNode.publish(response)
         }
     })
     return publisherNode

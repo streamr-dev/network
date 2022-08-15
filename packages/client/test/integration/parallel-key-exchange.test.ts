@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { DependencyContainer } from 'tsyringe'
 import { createFakeContainer, DEFAULT_CLIENT_OPTIONS } from './../test-utils/fake/fakeEnvironment'
 import { Subscriber } from './../../src/subscribe/Subscriber'
-import { FakeBrubeckNode } from './../test-utils/fake/FakeBrubeckNode'
+import { FakeNetworkNode } from './../test-utils/fake/FakeNetworkNode'
 import { StreamRegistry } from './../../src/registry/StreamRegistry'
 import { range } from 'lodash'
 import { fastWallet } from 'streamr-test-utils'
@@ -22,7 +22,7 @@ const GROUP_KEY_FETCH_DELAY = 1000
 interface PublisherInfo {
     wallet: Wallet
     groupKey: GroupKey
-    node?: FakeBrubeckNode
+    node?: FakeNetworkNode
 }
 
 const PUBLISHERS: PublisherInfo[] = range(PUBLISHER_COUNT).map(() => ({
@@ -74,7 +74,7 @@ describe('parallel key exchange', () => {
                     encryptionKey: publisher.groupKey,
                     prevMsgRef: (prevMessage !== undefined) ? new MessageRef(prevMessage.getTimestamp(), prevMessage.getSequenceNumber()) : null
                 })
-                publisher.node!.publishToNode(msg)
+                publisher.node!.publish(msg)
                 await wait(10)
                 prevMessage = msg
             }

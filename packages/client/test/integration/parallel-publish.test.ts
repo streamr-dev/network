@@ -11,6 +11,7 @@ import { addFakeNode, createFakeContainer, DEFAULT_CLIENT_OPTIONS } from './../t
 import { GroupKeyStoreFactory } from './../../src/encryption/GroupKeyStoreFactory'
 import { EncryptionUtil } from './../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/iterators'
+import { addSubscriber } from '../test-utils/utils'
 
 const MESSAGE_COUNT = 100
 
@@ -40,7 +41,8 @@ describe('parallel publish', () => {
             user: subscriberWallet.address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        receivedMessages = addFakeNode(subscriberWallet.address, dependencyContainer).addSubscriber(...stream.getStreamParts())
+        const node = addFakeNode(subscriberWallet.address, dependencyContainer)
+        receivedMessages = addSubscriber(node, ...stream.getStreamParts())
     })
 
     it('messages in order and in same chain', async () => {

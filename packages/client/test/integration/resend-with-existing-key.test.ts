@@ -14,7 +14,7 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Resends } from '../../src/subscribe/Resends'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
-import { ActiveNodes } from '../test-utils/fake/ActiveNodes'
+import { FakeNetwork } from '../test-utils/fake/FakeNetwork'
 import { StreamStorageRegistry } from '../../src/registry/StreamStorageRegistry'
 
 /*
@@ -42,7 +42,7 @@ describe('resend with existing key', () => {
             stream,
             publisher: publisherWallet,
         })
-        const storageNode = dependencyContainer.resolve(ActiveNodes).getNode(DOCKER_DEV_STORAGE_NODE) as FakeStorageNode
+        const storageNode = dependencyContainer.resolve(FakeNetwork).getNode(DOCKER_DEV_STORAGE_NODE) as FakeStorageNode
         storageNode.storeMessage(message)
     }
 
