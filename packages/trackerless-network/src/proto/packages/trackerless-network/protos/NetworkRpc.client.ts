@@ -4,6 +4,7 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { NetworkRpc } from "./NetworkRpc";
+import type { NeighborUpdate } from "./NetworkRpc";
 import type { InterleaveNotice } from "./NetworkRpc";
 import type { LeaveNotice } from "./NetworkRpc";
 import type { HandshakeResponse } from "./NetworkRpc";
@@ -33,6 +34,10 @@ export interface INetworkRpcClient {
      * @generated from protobuf rpc: interleaveNotice(InterleaveNotice) returns (google.protobuf.Empty);
      */
     interleaveNotice(input: InterleaveNotice, options?: RpcOptions): UnaryCall<InterleaveNotice, Empty>;
+    /**
+     * @generated from protobuf rpc: neighborUpdate(NeighborUpdate) returns (NeighborUpdate);
+     */
+    neighborUpdate(input: NeighborUpdate, options?: RpcOptions): UnaryCall<NeighborUpdate, NeighborUpdate>;
 }
 /**
  * @generated from protobuf service NetworkRpc
@@ -70,5 +75,12 @@ export class NetworkRpcClient implements INetworkRpcClient, ServiceInfo {
     interleaveNotice(input: InterleaveNotice, options?: RpcOptions): UnaryCall<InterleaveNotice, Empty> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<InterleaveNotice, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: neighborUpdate(NeighborUpdate) returns (NeighborUpdate);
+     */
+    neighborUpdate(input: NeighborUpdate, options?: RpcOptions): UnaryCall<NeighborUpdate, NeighborUpdate> {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept<NeighborUpdate, NeighborUpdate>("unary", this._transport, method, opt, input);
     }
 }

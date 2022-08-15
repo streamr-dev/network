@@ -141,6 +141,23 @@ export interface LeaveNotice {
     senderId: string;
 }
 /**
+ * @generated from protobuf message NeighborUpdate
+ */
+export interface NeighborUpdate {
+    /**
+     * @generated from protobuf field: string senderId = 1;
+     */
+    senderId: string;
+    /**
+     * @generated from protobuf field: string randomGraphId = 2;
+     */
+    randomGraphId: string;
+    /**
+     * @generated from protobuf field: repeated PeerDescriptor neighborDescriptors = 4;
+     */
+    neighborDescriptors: PeerDescriptor[];
+}
+/**
  * @generated from protobuf enum Layer2Type
  */
 export enum Layer2Type {
@@ -251,6 +268,20 @@ class LeaveNotice$Type extends MessageType<LeaveNotice> {
  * @generated MessageType for protobuf message LeaveNotice
  */
 export const LeaveNotice = new LeaveNotice$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NeighborUpdate$Type extends MessageType<NeighborUpdate> {
+    constructor() {
+        super("NeighborUpdate", [
+            { no: 1, name: "senderId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "randomGraphId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "neighborDescriptors", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message NeighborUpdate
+ */
+export const NeighborUpdate = new NeighborUpdate$Type();
 /**
  * @generated ServiceType for protobuf service NetworkRpc
  */
@@ -258,5 +289,6 @@ export const NetworkRpc = new ServiceType("NetworkRpc", [
     { name: "sendData", options: {}, I: DataMessage, O: Empty },
     { name: "handshake", options: {}, I: HandshakeRequest, O: HandshakeResponse },
     { name: "leaveNotice", options: {}, I: LeaveNotice, O: Empty },
-    { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty }
+    { name: "interleaveNotice", options: {}, I: InterleaveNotice, O: Empty },
+    { name: "neighborUpdate", options: {}, I: NeighborUpdate, O: NeighborUpdate }
 ]);

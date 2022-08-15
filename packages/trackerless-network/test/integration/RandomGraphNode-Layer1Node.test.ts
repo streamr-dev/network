@@ -92,6 +92,18 @@ describe('RandomGraphNode-DhtNode', () => {
             expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
             expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(4)
         })
+
+        // Check bidirectionality
+        const allNodes = graphNodes
+        allNodes.push(entryPointRandomGraphNode)
+        range(5).map((i) => {
+            allNodes[i].getContactPoolIds().forEach((stringId) => {
+                const neighbor = allNodes.find((peer) => {
+                    return peer.getOwnStringId() === stringId
+                })
+                expect(neighbor!.getSelectedNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+            })
+        })
     }, 10000)
 
     it('happy path 128 peers', async () => {
@@ -105,5 +117,11 @@ describe('RandomGraphNode-DhtNode', () => {
                 waitForCondition(() => node.getSelectedNeighborIds().length >= 3)
             ])
         ))
+        const avg = graphNodes.reduce((acc, curr) => {
+            return acc + curr.getSelectedNeighborIds().length
+        }, 0) / numOfNodes
+
+        // eslint-disable-next-line no-console
+        console.log(avg)
     })
 })
