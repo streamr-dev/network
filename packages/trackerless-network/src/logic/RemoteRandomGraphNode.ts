@@ -126,7 +126,7 @@ export class RemoteRandomGraphNode {
         }
     }
 
-    updateLocalNeighbors(neighbors: PeerDescriptor[]): void {
+    setLocalNeighbors(neighbors: PeerDescriptor[]): void {
         this.neighbors = neighbors
     }
 

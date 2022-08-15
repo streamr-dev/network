@@ -74,7 +74,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.findNeighbors().catch(() => {})
         this.neighborUpdateIntervalRef = setTimeout(async () => {
             await this.updateNeighborInfo()
-        }, 2500)
+        }, 20)
     }
 
     stop(): void {
@@ -339,7 +339,33 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
         if (this.targetNeighbors.hasNeighborWithStringId(message.senderId)) {
-            this.targetNeighbors.getNeighborByStringId(message.senderId)!.updateLocalNeighbors(message.neighborDescriptors)
+            this.targetNeighbors.getNeighborByStringId(message.senderId)!.setLocalNeighbors(message.neighborDescriptors)
+            if (this.targetNeighbors.size() === 3 && message.neighborDescriptors.length < this.N && this.ongoingHandshakes.size === 0) {
+                setImmediate(async () => {
+                    const found = message.neighborDescriptors
+                        .map((desc) => PeerID.fromValue(desc.peerId).toMapKey() as string)
+                        .find((stringId) => stringId !== this.getOwnStringId() && !this.targetNeighbors.getStringIds().includes(stringId))
+
+                    if (found) {
+                        const targetPeerDescriptor = message.neighborDescriptors.find(
+                            (descriptor) => PeerID.fromValue(descriptor.peerId).toMapKey() === found
+                        )
+                        const targetStringId = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
+                        const targetNeighbor = new RemoteRandomGraphNode(
+                            targetPeerDescriptor,
+                            this.randomGraphId,
+                            new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
+                        )
+                        this.ongoingHandshakes.add(targetStringId)
+                        const result = await targetNeighbor.handshake(this.layer1.getPeerDescriptor(), this.targetNeighbors.getStringIds(), this.contactPool.getStringIds())
+                        if (result.accepted) {
+                            console.log("JEEEE")
+                            this.targetNeighbors.add(targetNeighbor)
+                        }
+                        this.ongoingHandshakes.delete(targetStringId)
+                    }
+                })
+            }
         }
         const response: NeighborUpdate = {
             senderId: this.getOwnStringId(),
