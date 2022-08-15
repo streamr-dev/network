@@ -63,7 +63,7 @@ export const addFakeNode = (
     nodeId: EthereumAddress,
     mockContainer: DependencyContainer
 ): FakeNetworkNode => {
-    const factory = mockContainer.resolve(FakeNetworkNodeFactory)
+    const factory = mockContainer.resolve(NetworkNodeFactory)
     const node = factory.createNetworkNode({
         id: nodeId
     } as any) as FakeNetworkNode
