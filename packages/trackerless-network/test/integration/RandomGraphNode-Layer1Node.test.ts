@@ -79,7 +79,7 @@ describe('RandomGraphNode-DhtNode', () => {
         expect(graphNodes[0].getSelectedNeighborIds().length).toEqual(1)
     })
 
-    it.only('happy path 4 peers', async () => {
+    it('happy path 4 peers', async () => {
         entryPointRandomGraphNode.start()
         range(4).map((i) => graphNodes[i].start())
         await Promise.all(range(4).map(async (i) => {

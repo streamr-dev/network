@@ -45,6 +45,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly P2PTransport: ITransport
     private readonly duplicateDetector: DuplicateMessageDetector
     private findNeighborsIntervalRef: NodeJS.Timeout | null = null
+    private neighborUpdateIntervalRef: NodeJS.Timeout | null = null
 
     constructor(params: RandomGraphNodeParams) {
         super()
@@ -71,6 +72,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.newContact(candidates[0], candidates)
         }
         this.findNeighbors().catch(() => {})
+        this.neighborUpdateIntervalRef = setTimeout(async () => {
+            await this.updateNeighborInfo()
+        }, 2500)
     }
 
     stop(): void {
@@ -87,6 +91,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.targetNeighbors.clear()
         if (this.findNeighborsIntervalRef) {
             clearInterval(this.findNeighborsIntervalRef)
+        }
+        if (this.neighborUpdateIntervalRef) {
+            clearTimeout(this.neighborUpdateIntervalRef)
         }
     }
 
@@ -168,6 +175,18 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                 this.findNeighbors(excludedIds).catch(() => {})
             }, 250)
         }
+    }
+
+    private async updateNeighborInfo(): Promise<void> {
+        const neighborDescriptors = this.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor())
+
+        await Promise.allSettled(this.targetNeighbors.values().map((neighbor) => {
+            neighbor.updateNeighbors(this.layer1.getPeerDescriptor(), neighborDescriptors)
+        }))
+        this.neighborUpdateIntervalRef = setTimeout(async () => {
+            await this.updateNeighborInfo()
+        }, 10000)
+
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
