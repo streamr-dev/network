@@ -182,7 +182,7 @@ export class BrubeckNode implements Context {
         try {
             const node = await this.initNode()
             if (!this.destroySignal.isDestroyed()) {
-                await node.start()
+                node.start()
             }
 
             if (this.destroySignal.isDestroyed()) {
