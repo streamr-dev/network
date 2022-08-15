@@ -350,9 +350,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                         const targetPeerDescriptor = message.neighborDescriptors.find(
                             (descriptor) => PeerID.fromValue(descriptor.peerId).toMapKey() === found
                         )
-                        const targetStringId = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
+                        const targetStringId = PeerID.fromValue(targetPeerDescriptor!.peerId).toMapKey()
                         const targetNeighbor = new RemoteRandomGraphNode(
-                            targetPeerDescriptor,
+                            targetPeerDescriptor!,
                             this.randomGraphId,
                             new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
                         )
