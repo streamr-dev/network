@@ -6,7 +6,6 @@ import { DataMessage } from '../proto/packages/trackerless-network/protos/Networ
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
 
-
 interface StreamObject {
     layer1: DhtNode
     layer2: RandomGraphNode
