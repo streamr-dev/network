@@ -3,10 +3,8 @@ import { Simulator } from '../../src/connection/Simulator'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
-import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { ITransport } from '../../src/transport/ITransport'
-import { NodeWebRtcConnection } from '../../src/connection/WebRTC/NodeWebRtcConnection'
+import { ITransport, Event as TransportEvents } from '../../src/transport/ITransport'
 import * as Err from '../../src/helpers/errors'
 
 describe('WebRTC Connection Management', () => {
@@ -37,11 +35,9 @@ describe('WebRTC Connection Management', () => {
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
 
-        await manager1.start()
-        await manager2.start()
+        await manager1.start((_msg) => peerDescriptor1)
+        await manager2.start((_msg) => peerDescriptor2)
 
-        manager1.enableConnectivity(peerDescriptor1)
-        manager2.enableConnectivity(peerDescriptor2)
     })
 
     afterEach(async () => {
@@ -51,7 +47,7 @@ describe('WebRTC Connection Management', () => {
 
     const serviceId = 'dummy'
 
-    it('Peer1 can open WebRTC Datachannels', async () => {
+    it('Peer1 can open WebRTC Datachannels', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
@@ -59,48 +55,31 @@ describe('WebRTC Connection Management', () => {
             messageId: 'mockerer'
         }
         
-        await manager1.send(dummyMessage, peerDescriptor2)
-        
-        await waitForCondition(
-            () => {
-                return (!!manager1.getConnection(peerDescriptor2)
-                    && manager1.getConnection(peerDescriptor2)!.connectionType === ConnectionType.WEBRTC)
-            }
-        )
-
-        await waitForCondition(
-            () => {
-                return (!!manager2.getConnection(peerDescriptor1)
-                && manager2.getConnection(peerDescriptor1)!.connectionType === ConnectionType.WEBRTC)
-            }
-        )
-
-        await waitForCondition(() => (manager2.getConnection(peerDescriptor1) as NodeWebRtcConnection).isOpen())
-        await waitForCondition(() => (manager1.getConnection(peerDescriptor2) as NodeWebRtcConnection).isOpen())
+        manager2.on(TransportEvents.DATA,  (message: Message, _peerDescriptor: PeerDescriptor) => {
+            expect(message.messageId).toEqual('mockerer')
+            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            
+            done()
+        })
+        manager1.send(dummyMessage, peerDescriptor2)
     })
     
-    it('Peer2 can open WebRTC Datachannel', async () => {
+    it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await manager2.send(dummyMessage, peerDescriptor1)
-        await waitForCondition(
-            () => {
-                return (!!manager1.getConnection(peerDescriptor2)
-                    && manager1.getConnection(peerDescriptor2)!.connectionType === ConnectionType.WEBRTC)
-            }
-        )
-        await waitForCondition(
-            () => {
-                return (!!manager2.getConnection(peerDescriptor1)
-                    && manager2.getConnection(peerDescriptor1)!.connectionType === ConnectionType.WEBRTC)
-            }
-        )
-        await waitForCondition(() => (manager2.getConnection(peerDescriptor1) as NodeWebRtcConnection).isOpen())
-        await waitForCondition(() => (manager1.getConnection(peerDescriptor2) as NodeWebRtcConnection).isOpen())
+        manager1.on(TransportEvents.DATA,  (message: Message, _peerDescriptor: PeerDescriptor) => {
+            expect(message.messageId).toEqual('mockerer')
+            expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
+            
+            done()
+        })
+        manager2.send(dummyMessage, peerDescriptor1)
     })
 
     it('Connecting to self throws', async () => {

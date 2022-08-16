@@ -6,9 +6,11 @@ import {
     IConnectionSource,
     Event as ConnectionSourceEvent,
 } from '../IConnectionSource'
+/*
 import { TODO } from '../../types'
 import { Event as ConnectionEvents, IConnection } from '../IConnection'
 import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
+*/
 import { Logger } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
 
@@ -25,9 +27,8 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
     private httpServer: http.Server | null = null
     private wsServer: WsServer | null = null
-    private ownPeerDescriptor: PeerDescriptor | null = null
-
-    start(port: number, host?: string): Promise<void> {
+    
+    public start(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             this.httpServer = http.createServer((request, response) => {
                 logger.trace((new Date()) + ' Received request for ' + request.url)
@@ -85,38 +86,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
         })
     }
 
-    bindListeners(connectivityRequestHandler: TODO, incomingMessageHandler: TODO): void {
-        this.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
-            logger.trace('server received new connection')
-
-            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                logger.trace('server received data')
-                const message = Message.fromBinary(data)
-
-                if (message.messageType === MessageType.CONNECTIVITY_REQUEST) {
-                    logger.trace('received connectivity request')
-                    connectivityRequestHandler(connection, ConnectivityRequestMessage.fromBinary(message.body))
-                } else {
-                    if (this.isInitialized()) {
-                        incomingMessageHandler(connection, message)
-                    }
-                }
-            })
-        })
-    }
-
-    setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.ownPeerDescriptor = peerDescriptor
-    }
-
-    private isInitialized(): boolean {
-        if (this.ownPeerDescriptor) {
-            return true
-        }
-        return false
-    }
-
-    stop(): Promise<void> {
+    public stop(): Promise<void> {
         this.removeAllListeners()
         return new Promise((resolve, _reject) => {
             this.wsServer?.shutDown()

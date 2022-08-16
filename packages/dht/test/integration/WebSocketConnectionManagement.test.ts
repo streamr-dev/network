@@ -1,4 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { Event as TransportEvents } from '../../src/transport/ITransport'
 import { Simulator } from '../../src/connection/Simulator'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -50,11 +51,8 @@ describe('WebSocket Connection Management', () => {
         wsServerManager = new ConnectionManager(config1)
         noWsServerManager = new ConnectionManager(config2)
 
-        await wsServerManager.start()
-        await noWsServerManager.start()
-
-        wsServerManager.enableConnectivity(wsServerConnectorPeerDescriptor)
-        noWsServerManager.enableConnectivity(noWsServerConnectorPeerDescriptor)
+        await wsServerManager.start((_response) => wsServerConnectorPeerDescriptor)
+        await noWsServerManager.start((_response) => noWsServerConnectorPeerDescriptor)
     })
 
     afterEach(async () => {
@@ -62,23 +60,22 @@ describe('WebSocket Connection Management', () => {
         await noWsServerManager.stop()
     })
 
-    it('Can open connections to serverless peer', async () => {
+    it('Can open connections to serverless peer', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
-        await waitForCondition(
-            () => {
-                return (!!wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)
-                    && wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_SERVER)
-            }
-        )
-        await waitForCondition(
-            () => noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType === ConnectionType.WEBSOCKET_CLIENT
-        )
+        noWsServerManager.on(TransportEvents.DATA, (message: Message, _peerDescriptor: PeerDescriptor) => {
+            expect(message.messageId).toEqual('mockerer')
+            expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
+            expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
+            
+            done()
+        })
+
+        wsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
     })
 
     it('Can open connections to peer with server', async () => {

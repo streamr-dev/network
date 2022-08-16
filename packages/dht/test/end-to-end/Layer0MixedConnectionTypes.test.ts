@@ -1,7 +1,7 @@
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { waitForEvent } from '@streamr/utils'
-import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
+import { Event as ManagedConnectionSourceEvent } from '../../src/connection/IManagedConnectionSource'
 
 describe('Layer0MixedConnectionTypes', () => {
 
@@ -55,9 +55,9 @@ describe('Layer0MixedConnectionTypes', () => {
     it('2 non-server peers join first', async () => {
         await Promise.all([
             // @ts-expect-error private
-            waitForEvent((node3.getTransport() as ConnectionManager).webrtcConnector, ConnectionSourceEvent.CONNECTED),
+            waitForEvent((node3.getTransport() as ConnectionManager).webrtcConnector, ManagedConnectionSourceEvent.CONNECTED),
             // @ts-expect-error private
-            waitForEvent((node4.getTransport() as ConnectionManager).webrtcConnector, ConnectionSourceEvent.CONNECTED),
+            waitForEvent((node4.getTransport() as ConnectionManager).webrtcConnector, ManagedConnectionSourceEvent.CONNECTED),
             node3.joinDht(epPeerDescriptor),
             node4.joinDht(epPeerDescriptor)
         ])

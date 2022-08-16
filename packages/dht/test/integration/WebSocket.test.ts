@@ -1,24 +1,15 @@
 /* eslint-disable no-console */
 
-import { WebSocketConnector } from "../../src/connection/WebSocket/WebSocketConnector"
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
-import { Event as ConnectionSourceEvent } from '../../src/connection/IConnectionSource'
+import { Event as ConnectionEvents } from '../../src/connection/IConnection'
+import { Event as ConnectionSourceEvents } from '../../src/connection/IConnectionSource'
 import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
-import { PeerID } from '../../src/helpers/PeerID'
-import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
-import { Simulator } from '../../src/connection/Simulator'
+import { ClientWebSocket } from "../../src/connection/WebSocket/ClientWebSocket"
 
 describe('WebSocket', () => {
 
-    const id = PeerID.fromString("test")
-    const peerDescriptor: PeerDescriptor = {
-        peerId: id.value,
-        type: NodeType.NODEJS
-    }
     const webSocketServer = new WebSocketServer()
-    const simulator = new Simulator()
-    const webSocketConnector = new WebSocketConnector(new SimulatorTransport(peerDescriptor, simulator), () => true)
+    const clientWebSocket = new ClientWebSocket()
 
     beforeAll(async () => {
         await webSocketServer.start(9999)
@@ -26,7 +17,7 @@ describe('WebSocket', () => {
 
     it('Happy path', (done) => {
             
-        webSocketServer.on(ConnectionSourceEvent.CONNECTED, (serverConnection: IConnection) => {
+        webSocketServer.on(ConnectionSourceEvents.CONNECTED, (serverConnection: IConnection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
@@ -46,11 +37,11 @@ describe('WebSocket', () => {
             })
         })
         
-        webSocketConnector.on(ConnectionSourceEvent.CONNECTED, (clientConnection: IConnection) => {
+        clientWebSocket.on(ConnectionEvents.CONNECTED, () => {
             const time = Date.now()
             console.log('client side setting listeners at ' + time)
             
-            clientConnection.on(ConnectionEvent.DATA, (bytes: Uint8Array) => {
+            clientWebSocket.on(ConnectionEvents.DATA, (bytes: Uint8Array) => {
                 const time = Date.now()
                 console.log('client side receiving message at ' + time)
 
@@ -59,11 +50,11 @@ describe('WebSocket', () => {
                 
                 const time2 = Date.now()
                 console.log('client side sendind msg at ' + time2)
-                clientConnection.send(Uint8Array.from([1, 2, 3, 4]))
+                clientWebSocket.send(Uint8Array.from([1, 2, 3, 4]))
             })
         })
 
-        webSocketConnector.connect({ url: 'ws://localhost:9999' })    
+        clientWebSocket.connect('ws://localhost:9999')    
     })
 
     afterAll(async () => {
