@@ -152,28 +152,27 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
         return managedConnection
     }
 
+    private onServerSocketHandshakeCompleted = (peerDescriptor: PeerDescriptor,
+        serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
+        
+        logger.trace('serversocket handshake completed')
+        const peerId = PeerID.fromValue(peerDescriptor.peerId)
+        if (this.ongoingConnectRequests.has(peerId.toMapKey())) {
+            this.ongoingConnectRequests.get(peerId.toMapKey())?.attachImplementation(serverWebSocket, peerDescriptor)
+            this.ongoingConnectRequests.delete(peerId.toMapKey())
+        } else {
+            this.emit(ManagedConnectionSourceEvent.CONNECTED, managedConnection)
+        }
+    }
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
         this.ownPeerDescriptor = ownPeerDescriptor
 
         if (this.webSocketServer) {
-            let onHandshakeCompleted = (peerDescriptor: PeerDescriptor, serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
-                logger.trace('!!this: ' + this)
-                const peerId = PeerID.fromValue(peerDescriptor.peerId)
-                if (this.ongoingConnectRequests.has(peerId.toMapKey())) {
-                    this.ongoingConnectRequests.get(peerId.toMapKey())?.attachImplementation(serverWebSocket, peerDescriptor)
-                    this.ongoingConnectRequests.delete(peerId.toMapKey())
-                } else {
-                    this.emit(ManagedConnectionSourceEvent.CONNECTED, managedConnection)
-                }
-            }
-
-            onHandshakeCompleted = onHandshakeCompleted.bind(this)
-
             this.webSocketServer.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
                 const managedConnection = new ManagedConnection(ownPeerDescriptor, 'TODO', ConnectionType.WEBSOCKET_SERVER, undefined, connection)
                 managedConnection.once(ManagedConnectionEvents.HANDSHAKE_COMPLETED, (peerDescriptor: PeerDescriptor) => {
 
-                    onHandshakeCompleted(peerDescriptor, connection, managedConnection)
+                    this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
                 })
             })
         }
