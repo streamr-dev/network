@@ -132,7 +132,7 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            const store = await (await fakeContainer.resolve(GroupKeyStoreFactory)).getStore(mockStream.id)
+            const store = await (fakeContainer.resolve(GroupKeyStoreFactory)).getStore(mockStream.id)
             await store.add(key)
 
             const receivedResponses = addSubscriber(subscriberNode, KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
