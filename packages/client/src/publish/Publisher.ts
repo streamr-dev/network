@@ -10,7 +10,7 @@ import { FailedToPublishError, MessageMetadata, PublishMetadata } from './Publis
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
-import { BrubeckNode } from '../BrubeckNode'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
@@ -41,7 +41,7 @@ export class Publisher implements Context {
     private authentication: Authentication
     private streamRegistryCached: StreamRegistryCached
     private keyExchange: PublisherKeyExchange
-    private node: BrubeckNode
+    private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
     private validator: Validator
@@ -52,7 +52,7 @@ export class Publisher implements Context {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => PublisherKeyExchange)) keyExchange: PublisherKeyExchange,
-        node: BrubeckNode,
+        node: NetworkNodeFacade,
         validator: Validator,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
     ) {
