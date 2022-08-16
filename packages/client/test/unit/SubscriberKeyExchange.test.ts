@@ -15,7 +15,7 @@ import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
 import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
-import { addSubscriber } from '../test-utils/utils'
+import { addSubscriber, createRelativeTestStreamId } from '../test-utils/utils'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 
@@ -28,7 +28,7 @@ describe('SubscriberKeyExchange', () => {
 
     const createStream = async (): Promise<Stream> => {
         const streamRegistry = fakeContainer.resolve(StreamRegistry)
-        const stream = await streamRegistry.createStream(StreamPartIDUtils.parse('stream#0'))
+        const stream = await streamRegistry.createStream(createRelativeTestStreamId(module))
         await streamRegistry.grantPermissions(stream.id, {
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address

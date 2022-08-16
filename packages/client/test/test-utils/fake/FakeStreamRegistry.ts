@@ -13,45 +13,32 @@ import { BrubeckContainer } from '../../../src/Container'
 import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { NotFoundError, SearchStreamsPermissionFilter } from '../../../src'
 import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached'
-import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
-import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Methods } from '../types'
 import { Multimap } from '@streamr/utils'
-
-type PublicPermissionTarget = 'public'
-const PUBLIC_PERMISSION_TARGET: PublicPermissionTarget = 'public'
-
-interface RegistryItem {
-    metadata: Omit<StreamProperties, 'id'>
-    permissions: Multimap<EthereumAddress | PublicPermissionTarget, StreamPermission>
-}
+import { FakeChain, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
 
-    private readonly registryItems: Map<StreamID, RegistryItem> = new Map()
+    private readonly chain: FakeChain
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     private readonly container: DependencyContainer
     private readonly streamRegistryCached: StreamRegistryCached
 
     constructor(
+        @inject(FakeChain) chain: FakeChain,
         @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         @inject(BrubeckContainer) container: DependencyContainer,
         @inject(StreamRegistryCached) streamRegistryCached: StreamRegistryCached
     ) {
+        this.chain = chain
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.container = container
         this.streamRegistryCached = streamRegistryCached
-        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(DOCKER_DEV_STORAGE_NODE.toLowerCase(), StreamPermission.PUBLISH)
-        this.registryItems.set(formStorageNodeAssignmentStreamId(DOCKER_DEV_STORAGE_NODE), {
-            metadata: {},
-            permissions: storageNodeAssignmentStreamPermissions
-        })
     }
 
     async createStream(propsOrStreamIdOrPath: StreamProperties | string): Promise<Stream> {
@@ -61,17 +48,17 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         const props = typeof propsOrStreamIdOrPath === 'object' ? propsOrStreamIdOrPath : { id: propsOrStreamIdOrPath }
         props.partitions ??= 1
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        if (this.registryItems.has(streamId)) {
-            throw new Error('Stream already exists')
+        if (this.chain.streams.has(streamId)) {
+            throw new Error(`Stream already exists: ${streamId}`)
         }
         const authenticatedUser: EthereumAddress = (await this.authentication.getAddress())!.toLowerCase()
         const permissions = new Multimap<EthereumAddress, StreamPermission>()
         permissions.addAll(authenticatedUser, Object.values(StreamPermission))
-        const registryItem: RegistryItem = {
+        const registryItem: StreamRegistryItem = {
             metadata: props,
             permissions
         }
-        this.registryItems.set(streamId, registryItem)
+        this.chain.streams.set(streamId, registryItem)
         return this.createFakeStream({
             ...props,
             id: streamId
@@ -84,7 +71,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     }
 
     async getStream(id: StreamID): Promise<Stream> {
-        const registryItem = this.registryItems.get(id)
+        const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
             return this.createFakeStream({ ...registryItem.metadata, id })
             // eslint-disable-next-line no-else-return
@@ -96,7 +83,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     // eslint-disable-next-line class-methods-use-this
     async updateStream(props: StreamProperties): Promise<Stream> {
         const streamId = await this.streamIdBuilder.toStreamID(props.id)
-        const registryItem = this.registryItems.get(streamId)
+        const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {
@@ -111,7 +98,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     /* eslint-disable padding-line-between-statements */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
-        const registryItem = this.registryItems.get(streamId)
+        const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             return false
         }
@@ -134,7 +121,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
                 registryItem.permissions.addAll(target, permissions)
             }
         )
@@ -144,7 +131,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
                 registryItem.permissions.removeAll(target, permissions)
             }
         )
@@ -153,11 +140,11 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     async updatePermissions(
         streamIdOrPath: string,
         assignments: PermissionAssignment[],
-        modifyRegistryItem: (registryItem: RegistryItem, target: string, permissions: StreamPermission[]) => void
+        modifyRegistryItem: (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.streamRegistryCached.clearStream(streamId)
-        const registryItem = this.registryItems.get(streamId)
+        const registryItem = this.chain.streams.get(streamId)
         if (registryItem === undefined) {
             throw new Error('Stream not found')
         } else {

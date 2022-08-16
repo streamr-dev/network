@@ -1,35 +1,63 @@
+import { range } from 'lodash'
 import {
     EthereumAddress,
     MessageID,
     StreamID,
     StreamMessage,
     StreamPartID,
-    toStreamID
+    toStreamID,
+    toStreamPartID
 } from 'streamr-client-protocol'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { FakeNetwork } from './FakeNetwork'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { sign } from '../../../src/utils/signingUtils'
 import { Multimap } from '@streamr/utils'
+import { FakeChain } from './FakeChain'
+import { StreamPermission } from '../../../src/permission'
+import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
-const PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
+const URL_SCHEME = 'FakeStorageNode'
+
+const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME}://${address.toLowerCase()}`
+
+export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
+    const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
+    if ((groups !== null) && (groups[1] === URL_SCHEME)) {
+        return groups[2]
+    } else {
+        throw new Error(`unknown storage node url: ${url}`)
+    }
+}
 
 export class FakeStorageNode extends FakeNetworkNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
-    private readonly streamRegistry: StreamRegistry
+    private readonly privateKey: string
+    private readonly chain: FakeChain
 
-    constructor(address: EthereumAddress, network: FakeNetwork, streamRegistry: StreamRegistry) {
+    constructor(address: EthereumAddress, privateKey: string, network: FakeNetwork, chain: FakeChain) {
         super({
             id: address
         } as any, network)
-        this.streamRegistry = streamRegistry
+        this.privateKey = privateKey
+        this.chain = chain
+        chain.storageNodeMetadatas.set(address, {
+            http: createStorageNodeUrl(address)
+        })
+        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(address.toLowerCase(), StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
+            metadata: {},
+            permissions: storageNodeAssignmentStreamPermissions
+        })
+    
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
-        const stream = await this.streamRegistry.getStream(streamId)
-        stream.getStreamParts().forEach(async (streamPartId, idx) => {
+        const partitionCount = this.chain.streams.get(streamId)!.metadata.partitions
+        const streamParts = range(0, partitionCount).map((p) => toStreamPartID(streamId, p))
+        streamParts.forEach(async (streamPartId, idx) => {
             if (!this.subscriptions.has(streamPartId)) {
                 this.addMessageListener((msg: StreamMessage) => {
                     if (msg.getStreamPartID() === streamPartId) {
@@ -51,7 +79,7 @@ export class FakeStorageNode extends FakeNetworkNode {
                     }
                 })
                 const payload = assignmentMessage.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH)
-                assignmentMessage.signature = sign(payload, PRIVATE_KEY)
+                assignmentMessage.signature = sign(payload, this.privateKey)
                 this.publish(assignmentMessage)
             }
         })
@@ -103,5 +131,11 @@ export class FakeStorageNode extends FakeNetworkNode {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []
         }
+    }
+
+    // TODO it is maybe misleading that we use DOCKER_DEV_STORAGE_NODE address in fake environment, we could have a separate address for this
+    static createInstance(network: FakeNetwork, chain: FakeChain): FakeStorageNode {
+        const DOCKER_DEV_STORAGE_NODE_PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
+        return new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, DOCKER_DEV_STORAGE_NODE_PRIVATE_KEY, network, chain)
     }
 }

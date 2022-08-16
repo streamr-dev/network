@@ -15,6 +15,9 @@ import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegist
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
 import { NetworkNodeFactory } from './../../../src/BrubeckNode'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeChain } from './FakeChain'
+import { FakeStorageNode } from './FakeStorageNode'
 
 export const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
@@ -33,11 +36,18 @@ export const createFakeContainer = (config: StreamrClientConfig | undefined): De
         const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, config)
         initContainer(createStrictConfig(configWithDefaults), mockContainer)
     }
-    mockContainer.registerSingleton(NetworkNodeFactory, FakeNetworkNodeFactory)
-    mockContainer.registerSingleton(StreamRegistry, FakeStreamRegistry as any)
-    mockContainer.registerSingleton(StreamStorageRegistry, FakeStreamStorageRegistry as any)
-    mockContainer.registerSingleton(StorageNodeRegistry, FakeStorageNodeRegistry as any)
-    mockContainer.registerSingleton(HttpUtil, FakeHttpUtil)
+    const network = new FakeNetwork()
+    const chain = new FakeChain()
+    const httpUtil = new FakeHttpUtil(network)
+    const storageNode = FakeStorageNode.createInstance(network, chain)    
+    storageNode.start()
+    mockContainer.register(FakeNetwork, { useValue: network })
+    mockContainer.register(FakeChain, { useValue: chain })
+    mockContainer.register(HttpUtil, { useValue: httpUtil })
+    mockContainer.register(NetworkNodeFactory, FakeNetworkNodeFactory)
+    mockContainer.register(StreamRegistry, FakeStreamRegistry as any)
+    mockContainer.register(StreamStorageRegistry, FakeStreamStorageRegistry as any)
+    mockContainer.register(StorageNodeRegistry, FakeStorageNodeRegistry as any)
     return mockContainer
 }
 
