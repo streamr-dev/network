@@ -15,6 +15,7 @@ import { INetworkRpc } from '../proto/packages/trackerless-network/protos/Networ
 import { Empty } from '../proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -29,6 +30,8 @@ export interface RandomGraphNodeParams {
     layer1: DhtNode
     P2PTransport: ITransport
 }
+
+const logger = new Logger(module)
 
 export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private stopped = false
@@ -109,6 +112,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private async findNeighbors(excluded?: string[]): Promise<void> {
+        logger.trace(`Finding new neighbors...`)
         const excludedIds = excluded ? excluded : []
 
         // Handshake with two contacts if there is room
@@ -178,6 +182,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private async updateNeighborInfo(): Promise<void> {
+        logger.trace(`Updating neighbor info to peers`)
         const neighborDescriptors = this.targetNeighbors.values().map((neighbor) => neighbor.getPeerDescriptor())
 
         await Promise.allSettled(this.targetNeighbors.values().map((neighbor) => {
@@ -190,6 +195,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private newContact(_newContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+        logger.trace(`New nearby contact found`)
         if (this.stopped) {
             return
         }
@@ -198,6 +204,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     private removedContact(_removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
+        logger.trace(`Nearby contact removed`)
         if (this.stopped) {
             return
         }

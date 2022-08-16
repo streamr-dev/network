@@ -4,6 +4,7 @@ import { PeerDescriptor } from '@streamr/dht'
 import { ITransport } from '@streamr/dht/dist/src'
 import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
+import { Logger } from '@streamr/utils'
 
 interface StreamObject {
     layer1: DhtNode
@@ -17,6 +18,8 @@ export enum Event {
 export interface StreamrNode {
     on(event: Event.NEW_MESSAGE, listener: (msg: DataMessage, nodeId: string) => void): this
 }
+
+const logger = new Logger(module)
 
 export class StreamrNode extends EventEmitter {
     private readonly streams: Map<string, StreamObject>
@@ -33,6 +36,7 @@ export class StreamrNode extends EventEmitter {
         if (this.started || this.stopped) {
             return
         }
+        logger.info(`Starting new StreamrNode with id ${startedAndJoinedLayer0.getPeerDescriptor().peerId}`)
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
@@ -58,8 +62,8 @@ export class StreamrNode extends EventEmitter {
                 (message: DataMessage) =>
                     this.emit(Event.NEW_MESSAGE, message, message.senderId))
             )
-            .catch((_err) => {
-                // console.log(err)
+            .catch((err) => {
+                logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
             })
     }
 
@@ -69,8 +73,8 @@ export class StreamrNode extends EventEmitter {
         } else {
             this.joinStream(streamPartID, entryPointDescriptor)
                 .then(() => this.streams.get(streamPartID)?.layer2.broadcast(msg))
-                .catch((_err) => {
-                    // console.log(err)
+                .catch((err) => {
+                    logger.warn(`Failed to publish to stream ${streamPartID} with error: ${err}`)
                 })
         }
     }
@@ -91,6 +95,8 @@ export class StreamrNode extends EventEmitter {
         if (this.streams.has(streamPartID)) {
             return
         }
+        logger.info(`Joining stream ${streamPartID}`)
+
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
             serviceId: streamPartID,
