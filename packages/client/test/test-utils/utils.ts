@@ -23,7 +23,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { TransformStream } from 'node:stream/web'
-import { NetworkNodeStub } from './../../src/BrubeckNode'
+import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)

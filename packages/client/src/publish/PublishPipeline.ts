@@ -12,7 +12,7 @@ import { Pipeline } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
 
 import { MessageCreator } from './MessageCreator'
-import { BrubeckNode } from '../BrubeckNode'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { Signer } from './Signer'
 import { Encrypt } from './Encrypt'
 import { Validator } from '../Validator'
@@ -81,7 +81,7 @@ export class PublishPipeline implements Context { // TODO: remove this class
 
     constructor(
         context: Context,
-        private node: BrubeckNode,
+        private node: NetworkNodeFacade,
         private messageCreator: MessageCreator,
         private signer: Signer,
         private validator: Validator,
