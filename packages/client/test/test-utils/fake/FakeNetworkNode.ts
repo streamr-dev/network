@@ -16,7 +16,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     private readonly network: FakeNetwork
 
     constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
-        this.id = opts.id!.toLowerCase()
+        this.id = opts.id!
         this.network = network
     }
 

@@ -19,7 +19,7 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 
 const URL_SCHEME = 'FakeStorageNode'
 
-const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME}://${address.toLowerCase()}`
+const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME}://${address}`
 
 export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
     const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
@@ -42,7 +42,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         } as any, network)
         this.privateKey = privateKey
         this.chain = chain
-        chain.storageNodeMetadatas.set(address, {
+        chain.storageNodeMetadatas.set(address.toLowerCase(), {
             http: createStorageNodeUrl(address)
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()

@@ -18,7 +18,7 @@ export class FakeNetwork {
     }
 
     getNode(address: EthereumAddress): FakeNetworkNode | undefined {
-        return this.nodes.get(address.toLowerCase())
+        return this.nodes.get(address)
     }
 
     getNodes(): FakeNetworkNode[] {
