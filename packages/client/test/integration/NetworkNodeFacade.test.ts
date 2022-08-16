@@ -3,7 +3,7 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { getCreateClient } from '../test-utils/utils'
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
 
-describe('BrubeckNode', () => {
+describe('NetworkNodeFacade', () => {
     const createClient = getCreateClient()
 
     describe('id assignment/generation', () => {

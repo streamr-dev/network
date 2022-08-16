@@ -3,7 +3,7 @@ import { pull } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
 import { NetworkNodeOptions } from 'streamr-network'
-import { NetworkNodeFactory, NetworkNodeStub } from './../../../src/BrubeckNode'
+import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 
 type MessageListener = (msg: StreamMessage) => void

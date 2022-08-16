@@ -14,7 +14,7 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 import { Context } from '../../src/utils/Context'
-import { BrubeckNode } from '../../src/BrubeckNode'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
@@ -26,7 +26,7 @@ import { Debug } from '../test-utils/utils'
 
 const Dependencies = {
     Context,
-    BrubeckNode,
+    NetworkNodeFacade,
     StorageNodeRegistry,
     StreamRegistryCached,
     Resends,
