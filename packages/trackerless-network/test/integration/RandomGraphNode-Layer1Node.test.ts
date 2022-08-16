@@ -2,6 +2,9 @@ import { DhtNode, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '
 import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 describe('RandomGraphNode-DhtNode', () => {
     const numOfNodes = 128
@@ -121,7 +124,6 @@ describe('RandomGraphNode-DhtNode', () => {
             return acc + curr.getSelectedNeighborIds().length
         }, 0) / numOfNodes
 
-        // eslint-disable-next-line no-console
-        console.log(avg)
+        logger.info(`AVG Number of neighbors: ${avg}`)
     })
 })

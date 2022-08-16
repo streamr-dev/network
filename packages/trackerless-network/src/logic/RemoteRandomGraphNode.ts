@@ -7,11 +7,14 @@ import {
     LeaveNotice, NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
+import { Logger } from '@streamr/utils'
 
 interface HandshakeResponse {
     accepted: boolean
     interleaveTarget?: PeerDescriptor
 }
+
+const logger = new Logger(module)
 
 export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
@@ -55,7 +58,7 @@ export class RemoteRandomGraphNode {
                 interleaveTarget: response.interleaveTarget
             }
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return {
                 accepted: false
             }
@@ -71,7 +74,7 @@ export class RemoteRandomGraphNode {
         try {
             await this.client.sendData(dataMessage, options)
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
         }
     }
 
@@ -121,7 +124,7 @@ export class RemoteRandomGraphNode {
             const response = await result.response
             return response.neighborDescriptors!
         } catch (err) {
-            console.error(err)
+            logger.debug(err)
             return []
         }
     }
