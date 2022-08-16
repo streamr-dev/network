@@ -8,8 +8,7 @@ import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { StreamPartManager } from './StreamPartManager'
-import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import { Logger, withTimeout } from "@streamr/utils"
+import { Logger, withTimeout, GapMisMatchError, InvalidNumberingError } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import type { NodeId, TrackerId } from '../identifiers'
 import { DEFAULT_MAX_NEIGHBOR_COUNT } from '../constants'

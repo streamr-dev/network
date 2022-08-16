@@ -8,6 +8,7 @@ import { BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
 import { TimeoutError, withTimeout } from './withTimeout'
+import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 
 export {
     BrandedString,
@@ -21,4 +22,8 @@ export {
     wait,
     waitForEvent,
     withTimeout,
+    DuplicateMessageDetector,
+    NumberPair,
+    GapMisMatchError,
+    InvalidNumberingError
 }

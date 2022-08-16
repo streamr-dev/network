@@ -26,6 +26,7 @@
     "@protobuf-ts/plugin": "^2.4.0",
     "@streamr/dht": "0.0.1",
     "@streamr/proto-rpc": "1.1.1",
+    "@streamr/utils": "^0.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
