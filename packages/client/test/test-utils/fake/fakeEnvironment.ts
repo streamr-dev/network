@@ -14,14 +14,14 @@ import { EthereumAddress } from 'streamr-client-protocol'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
-import { NetworkNodeFactory } from './../../../src/BrubeckNode'
+import { NetworkNodeFactory } from './../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeStorageNode } from './FakeStorageNode'
 
 export const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
-        trackers: [] // without this setting BrubeckNode would query the tracker addresses from the contract
+        trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
     },
     metrics: false
 }

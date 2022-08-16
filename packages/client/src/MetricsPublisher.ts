@@ -2,7 +2,7 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { StreamrClientEventEmitter } from './events'
 import { DestroySignal } from './DestroySignal'
 import { MetricsReport } from 'streamr-network'
-import { BrubeckNode, getEthereumAddressFromNodeId } from './BrubeckNode'
+import { NetworkNodeFacade, getEthereumAddressFromNodeId } from './NetworkNodeFacade'
 import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, MetricsPeriodConfig, StrictStreamrClientConfig } from './Config'
 
@@ -40,7 +40,7 @@ const getPeriodConfig = (rootConfig: StrictStreamrClientConfig): MetricsPeriodCo
 export class MetricsPublisher {
 
     private publisher: Publisher
-    private brubeckNode: BrubeckNode
+    private node: NetworkNodeFacade
     private eventEmitter: StreamrClientEventEmitter
     private destroySignal: DestroySignal
     private periodConfigs: MetricsPeriodConfig[]
@@ -48,13 +48,13 @@ export class MetricsPublisher {
 
     constructor(
         @inject(Publisher) publisher: Publisher,
-        @inject(BrubeckNode) brubeckNode: BrubeckNode,
+        @inject(NetworkNodeFacade) node: NetworkNodeFacade,
         @inject(StreamrClientEventEmitter) eventEmitter: StreamrClientEventEmitter,
         @inject(DestroySignal) destroySignal: DestroySignal,
         @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.publisher = publisher
-        this.brubeckNode = brubeckNode
+        this.node = node
         this.eventEmitter = eventEmitter
         this.destroySignal = destroySignal
         this.periodConfigs = getPeriodConfig(rootConfig)
@@ -67,7 +67,7 @@ export class MetricsPublisher {
 
     private async ensureStarted(): Promise<void> {
         if (this.producers.length === 0) {
-            const node = await this.brubeckNode.getNode()
+            const node = await this.node.getNode()
             const metricsContext = node.getMetricsContext()
             const partitionKey = getEthereumAddressFromNodeId(node.getNodeId()).toLowerCase()
             this.producers = this.periodConfigs.map((config) => {
