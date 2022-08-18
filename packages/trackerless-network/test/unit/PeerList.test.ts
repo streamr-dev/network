@@ -5,7 +5,7 @@ import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/p
 
 describe('PeerList', () => {
 
-    let ids = [
+    const ids = [
         new Uint8Array([1, 1, 1]),
         new Uint8Array([1, 1, 2]),
         new Uint8Array([1, 1, 3]),
@@ -23,7 +23,6 @@ describe('PeerList', () => {
     }
     beforeEach(() => {
         peerList = new PeerList(6)
-
 
         ids.forEach((peerId) => {
             const peerDescriptor: PeerDescriptor = {
