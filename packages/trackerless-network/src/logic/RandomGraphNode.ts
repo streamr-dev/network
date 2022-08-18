@@ -8,7 +8,7 @@ import {
     LeaveNotice,
     MessageRef, NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
-import { NodeNeighbors } from './NodeNeighbors'
+import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { INetworkRpc } from '../proto/packages/trackerless-network/protos/NetworkRpc.server'
@@ -40,9 +40,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly PEER_VIEW_SIZE = 10
     private readonly randomGraphId: string // StreamPartID
     private readonly layer1: DhtNode
-    private readonly contactPool: NodeNeighbors
-    private readonly targetNeighbors: NodeNeighbors = new NodeNeighbors(4)
-    private readonly acceptedNeighbors: NodeNeighbors = new NodeNeighbors(4)
+    private readonly contactPool: PeerList
+    private readonly targetNeighbors: PeerList = new PeerList(4)
+    private readonly acceptedNeighbors: PeerList = new PeerList(4)
     private readonly ongoingHandshakes: Set<string> = new Set()
     private rpcCommunicator: RoutingRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
@@ -56,9 +56,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.layer1 = params.layer1
         this.P2PTransport = params.P2PTransport
 
-        this.contactPool = new NodeNeighbors(this.PEER_VIEW_SIZE)
-        this.targetNeighbors = new NodeNeighbors(this.N)
-        this.acceptedNeighbors = new NodeNeighbors(this.N)
+        this.contactPool = new PeerList(this.PEER_VIEW_SIZE)
+        this.targetNeighbors = new PeerList(this.N)
+        this.acceptedNeighbors = new PeerList(this.N)
         this.duplicateDetector = new DuplicateMessageDetector(10000)
     }
 
@@ -345,7 +345,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
-        if (this.targetNeighbors.hasNeighborWithStringId(message.senderId)) {
+        if (this.targetNeighbors.hasPeerWithStringId(message.senderId)) {
             this.targetNeighbors.getNeighborByStringId(message.senderId)!.setLocalNeighbors(message.neighborDescriptors)
             if (this.targetNeighbors.size() === 3 && message.neighborDescriptors.length < this.N && this.ongoingHandshakes.size === 0) {
                 setImmediate(async () => {

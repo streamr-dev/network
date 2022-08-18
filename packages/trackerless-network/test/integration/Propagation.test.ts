@@ -74,6 +74,5 @@ describe('Propagation', () => {
         }
         randomGraphNodes[0].broadcast(message)
         await waitForCondition(() => totalReceived >= 9)
-        // expect(totalReceived).toEqual(7)
     }, 10000)
 })
