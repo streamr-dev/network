@@ -2,7 +2,6 @@ import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
-import * as Err from '../../src/helpers/errors'
 
 describe('DhtNode', () => {
     let node: DhtNode
@@ -25,13 +24,13 @@ describe('DhtNode', () => {
         node = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
         await node.start()
         // @ts-expect-error private
-        node.bucket!.on("added", () => {})
+        node.bucket!.on("added", () => { })
         // @ts-expect-error private
-        node.bucket!.on("removed", () => {})
+        node.bucket!.on("removed", () => { })
         // @ts-expect-error private
-        node.bucket!.on("ping", () => {})
+        node.bucket!.on("ping", () => { })
         // @ts-expect-error private
-        node.bucket!.on("updated", () => {})
+        node.bucket!.on("updated", () => { })
 
     })
 
@@ -39,11 +38,17 @@ describe('DhtNode', () => {
         await node.stop()
     })
 
-    it('Cannot be stopped before starting', async () => {
+    it('Cannot be stopped before starting', (done) => {
         const notStarted = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
-        await expect(notStarted.stop())
-            .rejects
-            .toEqual(new Err.CouldNotStop('Cannot not stop() before start()'))
+        notStarted.stop()
+            .then(() => {
+                done.fail('Test did not throw an exeption as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Cannot not stop() before start()')
+                done()
+            })
     })
 
     it('DhtNode getKBucketPeers', async () => {

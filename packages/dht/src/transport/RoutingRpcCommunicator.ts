@@ -1,5 +1,5 @@
 import { Message, MessageType, PeerDescriptor } from "../proto/DhtRpc"
-import { ITransport, Event as TransportEvent } from "./ITransport"
+import { ITransport } from "./ITransport"
 import { v4 } from "uuid"
 import { RpcCommunicator, RpcCommunicatorConfig, RpcCommunicatorEvent } from "@streamr/proto-rpc"
 import { DhtCallContext } from "../rpc-protocol/DhtCallContext"
@@ -8,7 +8,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     
     constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
-        transport.on(TransportEvent.DATA, (message: Message, peerDescriptor: PeerDescriptor) => {
+        transport.on('DATA', (message: Message, peerDescriptor: PeerDescriptor) => {
             if (message.serviceId == this.ownServiceId) {
                 const context = new DhtCallContext()
                 context.incomingSourceDescriptor = peerDescriptor

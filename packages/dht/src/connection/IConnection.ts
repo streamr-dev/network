@@ -33,6 +33,11 @@ export interface IConnection {
     once(event: Event.CONNECTED, listener: () => void): this
     once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
 
+    off(event: Event.DATA, listener: (bytes: Uint8Array) => void): void
+    off(event: Event.ERROR, listener: (name: string) => void): void
+    off(event: Event.CONNECTED, listener: () => void): void
+    off(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): void
+
     send(data: Uint8Array): void
     close(): void
 }

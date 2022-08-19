@@ -1,7 +1,7 @@
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
-import EventEmitter from 'events'
+import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
@@ -16,7 +16,7 @@ import {
 } from '../proto/DhtRpc'
 import { DuplicateDetector } from './DuplicateDetector'
 import * as Err from '../helpers/errors'
-import { ITransport, Event as ITransportEvent } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
 import { DhtRpcClient } from '../proto/DhtRpc.client'
 import { Logger } from '@streamr/utils'
@@ -33,11 +33,11 @@ export interface RouteMessageParams {
     messageId?: string
 }
 
-export enum Event {
-    NEW_CONTACT = 'streamr:dht:dht-node:new-peer',
-    CONTACT_REMOVED = 'streamr:dht:dht-node:peer-removed',
-    JOIN_COMPLETED = 'streamr:dht:dht-node:join-completed'
-}
+interface DhtNodeEvents {
+    NEW_CONTACT: (peerDescriptor: PeerDescriptor) => void
+    CONTACT_REMOVED: (peerDescriptor: PeerDescriptor) => void
+    JOIN_COMPLETED: () => void
+} 
 
 export class DhtNodeConfig {
     transportLayer?: ITransport
@@ -68,7 +68,9 @@ export class DhtNodeConfig {
 
 const logger = new Logger(module)
 
-export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
+export type Events = TransportEvents & DhtNodeEvents
+
+export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc {
     private readonly config: DhtNodeConfig
     private readonly peers: Map<string, DhtPeer> = new Map()
     private readonly routerDuplicateDetector: DuplicateDetector = new DuplicateDetector()
@@ -147,7 +149,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         return this.ownPeerDescriptor
     }
 
-    private static createPeerDescriptor = (msg?: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
+    public static createPeerDescriptor = (msg?: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
 
         let peerId: Uint8Array
 
@@ -190,13 +192,13 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         this.bucket.on('removed', (contact: DhtPeer) => {
             this.cleanUpHandleForConnectionManager?.disconnect(contact.getPeerDescriptor())
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
-            this.emit(Event.CONTACT_REMOVED, contact.getPeerDescriptor())
+            this.emit('CONTACT_REMOVED', contact.getPeerDescriptor())
         })
         this.bucket.on('added', async (contact: DhtPeer) => {
             if (!contact.peerId.equals(this.ownPeerId!)) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
-                    this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor())
+                    this.emit('NEW_CONTACT', contact.getPeerDescriptor())
                 } else {
                     this.removeContact(contact.getPeerDescriptor())
                     this.addClosestContactToBucket()
@@ -239,7 +241,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
         const message = Message.fromBinary(routedMessage.message)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`RouteMessage ${routedMessage.nonce} successfully arrived to destination`)
-            this.emit(ITransportEvent.DATA, message, routedMessage.sourcePeer)
+            this.emit('DATA', message, routedMessage.sourcePeer!)
         } else {
             await this.doRouteMessage({
                 message: routedMessage.message,
@@ -378,7 +380,7 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
             }
 
             if (this.ongoingJoinOperation && this.isJoinCompleted()) {
-                this.emit(Event.JOIN_COMPLETED)
+                this.emit('JOIN_COMPLETED')
                 this.ongoingJoinOperation = false
             } else {
                 this.findMoreContacts()
@@ -428,11 +430,11 @@ export class DhtNode extends EventEmitter implements ITransport, IDhtRpc {
                 resolve()
             }
             this.joinTimeoutRef = setTimeout(() => {
-                this.off(Event.JOIN_COMPLETED, resolveFn)
+                this.off('JOIN_COMPLETED', resolveFn)
                 reject('join timed out')
             }, 60000)
 
-            this.once(Event.JOIN_COMPLETED, resolveFn)
+            this.once('JOIN_COMPLETED', resolveFn)
         })
     }
 

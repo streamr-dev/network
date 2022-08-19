@@ -2,9 +2,8 @@ import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { waitForEvent } from '@streamr/utils'
-import { Event as ManagedConnectionSourceEvent } from '../../src/connection/IManagedConnectionSource'
-import { ConnectionManager } from '../../src/connection/ConnectionManager'
+import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
+import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
 
 describe('Layer0 with WebRTC connections', () => {
     const epPeerDescriptor: PeerDescriptor = {
@@ -52,8 +51,7 @@ describe('Layer0 with WebRTC connections', () => {
 
     it('Happy path two peers', async () => {
         const promise =  Promise.all([
-            // @ts-expect-error private
-            waitForEvent((node1.getTransport() as ConnectionManager).webrtcConnector, ManagedConnectionSourceEvent.CONNECTED),
+            waitForEvent3<ConnectionManagerEvents>(node1.getTransport() as ConnectionManager, 'NEW_CONNECTION'),
             node2.joinDht(epPeerDescriptor)
         ])
 

@@ -4,14 +4,13 @@ import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
-import { ITransport, Event as TransportEvents } from '../../src/transport/ITransport'
-import * as Err from '../../src/helpers/errors'
+import { ITransport } from '../../src/transport/ITransport'
 
 describe('WebRTC Connection Management', () => {
 
     let manager1: ConnectionManager
     let manager2: ConnectionManager
-    
+
     const simulator = new Simulator()
 
     const peerDescriptor1: PeerDescriptor = {
@@ -31,7 +30,7 @@ describe('WebRTC Connection Management', () => {
 
         connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
         manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
-        
+
         connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
         manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
 
@@ -54,17 +53,17 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        
-        manager2.on(TransportEvents.DATA,  (message: Message, _peerDescriptor: PeerDescriptor) => {
+
+        manager2.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
             expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            
+
             done()
         })
         manager1.send(dummyMessage, peerDescriptor2)
     })
-    
+
     it('Peer2 can open WebRTC Datachannel', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
@@ -72,25 +71,31 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        manager1.on(TransportEvents.DATA,  (message: Message, _peerDescriptor: PeerDescriptor) => {
+        manager1.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
             expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
-            
+
             done()
         })
         manager2.send(dummyMessage, peerDescriptor1)
     })
 
-    it('Connecting to self throws', async () => {
+    it('Connecting to self throws', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(manager1.send(dummyMessage, peerDescriptor1))
-            .rejects
-            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+        manager1.send(dummyMessage, peerDescriptor1)
+            .then(() => {
+                done.fail('test did not throw as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Cannot send to self')
+                done()
+            })
     })
 })

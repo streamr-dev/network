@@ -1,4 +1,4 @@
-import EventEmitter from 'events'
+import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
     Message,
@@ -7,7 +7,7 @@ import {
 } from '../proto/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { Event, ITransport } from '../transport/ITransport'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { WebRtcConnector } from './WebRTC/WebRtcConnector'
 import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
@@ -33,7 +33,13 @@ export type PeerDescriptorGeneratorCallback = (connectivityResponse: Connectivit
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
 const logger = new Logger(module)
 
-export class ConnectionManager extends EventEmitter implements ITransport {
+interface ConnectionManagerEvents {
+    NEW_CONNECTION: (connection: ManagedConnection) => void   
+}
+
+export type Events = TransportEvents & ConnectionManagerEvents
+
+export class ConnectionManager extends EventEmitter<Events> implements ITransport {
     public static PROTOCOL_VERSION = '1.0'
     private stopped = false
     private started = false
@@ -173,7 +179,7 @@ export class ConnectionManager extends EventEmitter implements ITransport {
             const message = Message.fromBinary(data)
             logger.trace('Received message of type ' + message.messageType)
             if (message.messageType === MessageType.RPC) {
-                this.emit(Event.DATA, message, peerDescriptor)
+                this.emit('DATA', message, peerDescriptor)
             } else {
                 logger.trace('Filtered out message of type ' + message.messageType)
             }
@@ -188,8 +194,9 @@ export class ConnectionManager extends EventEmitter implements ITransport {
         }
 
         connection.on(ManagedConnectionEvents.DATA, this.onData) 
-
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toMapKey(), connection)
+        
+        this.emit('NEW_CONNECTION', connection)
     }
 
     private closeConnection(id: PeerIDKey, reason?: string): void {

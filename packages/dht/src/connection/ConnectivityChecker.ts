@@ -6,7 +6,6 @@ import { ClientWebSocket } from './WebSocket/ClientWebSocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
-import { once } from 'events'
 
 const logger = new Logger(module)
 
@@ -17,6 +16,7 @@ const logger = new Logger(module)
 export class ConnectivityChecker {
 
     private static CONNECTIVITY_CHECKER_SERVICE_ID = 'connectivitychecker'
+    private static CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private stopped = false
 
     constructor(private webSocketPort?: number) {
@@ -34,10 +34,6 @@ export class ConnectivityChecker {
             throw new Err.ConnectionFailed("Failed to connect to the entrypoints", e)
         }
 
-        // prepare for receiving a connectivity reply
-
-        const bytesPromise = once(outgoingConnection, ConnectionEvents.DATA)
-
         // send connectivity request
         const connectivityRequestMessage: ConnectivityRequestMessage = { port: this.webSocketPort! }
         const msg: Message = {
@@ -46,17 +42,34 @@ export class ConnectivityChecker {
             body: ConnectivityRequestMessage.toBinary(connectivityRequestMessage)
         }
 
+        const responseAwaiter = () => {
+            return new Promise((resolve: (res: ConnectivityResponseMessage) => void, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Err.ConnectivityResponseTimeout('timeout'))
+                }, ConnectivityChecker.CONNECTIVITY_CHECKER_TIMEOUT)
+                const listener = (bytes: Uint8Array) => {
+                    const message: Message = Message.fromBinary(bytes)
+                    if (message.messageType != MessageType.CONNECTIVITY_RESPONSE) {
+                        return
+                    }
+                    const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
+                    outgoingConnection!.off(ConnectionEvents.DATA, listener)
+                    clearTimeout(timeoutId)
+                    resolve(connectivityResponseMessage) //(connectivityResponseMessage)
+                }
+                outgoingConnection!.on(ConnectionEvents.DATA, listener)
+            })
+        }
         try {
+            const retPromise = responseAwaiter()
+
             logger.trace('trying to send connectivity request')
             outgoingConnection.send(Message.toBinary(msg))
-            logger.trace('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
+            logger.info('connectivity request sent: ' + JSON.stringify(Message.toJson(msg)))
 
-            const [bytes] = await bytesPromise
-            const message: Message = Message.fromBinary(bytes)
-            const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
-            return connectivityResponseMessage
+            return await retPromise
         } catch (e) {
-            logger.trace('error getting connectivityresponse')
+            logger.info('error getting connectivityresponse')
             throw e
         }
     }

@@ -1,9 +1,9 @@
 import { Message, PeerDescriptor } from '../proto/DhtRpc'
-import { EventEmitter } from 'events'
-import { ITransport, Event } from '../transport/ITransport'
+import { EventEmitter } from 'eventemitter3'
+import { ITransport, TransportEvents } from '../transport/ITransport'
 import { Simulator } from './Simulator'
 
-export class SimulatorTransport extends EventEmitter implements ITransport {
+export class SimulatorTransport extends EventEmitter<TransportEvents> implements ITransport {
     constructor(private ownPeerDescriptor: PeerDescriptor, private simulator: Simulator) {
         super()
         this.simulator.addConnectionManager(this)
@@ -20,6 +20,6 @@ export class SimulatorTransport extends EventEmitter implements ITransport {
     }
 
     handleIncomingMessage(peerDescriptor: PeerDescriptor, msg: Message): void {
-        this.emit(Event.DATA, msg, peerDescriptor)
+        this.emit('DATA', msg, peerDescriptor)
     }
 }

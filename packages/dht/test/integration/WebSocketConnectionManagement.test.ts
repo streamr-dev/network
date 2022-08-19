@@ -1,5 +1,4 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { Event as TransportEvents } from '../../src/transport/ITransport'
 import { Simulator } from '../../src/connection/Simulator'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -7,7 +6,6 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
-import * as Err from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
@@ -67,11 +65,11 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        noWsServerManager.on(TransportEvents.DATA, (message: Message, _peerDescriptor: PeerDescriptor) => {
+        noWsServerManager.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
             expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)
-            
+
             done()
         })
 
@@ -97,19 +95,29 @@ describe('WebSocket Connection Management', () => {
         )
     })
 
-    it('Connecting to self throws', async () => {
+    it('Connecting to self throws', (done) => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
-            .rejects
-            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
-
-        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
-            .rejects
-            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+        noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
+            .then(() => {
+                done.fail('test did not throw as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Cannot send to self')
+                wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
+                    .then(() => {
+                        done.fail('test did not throw as expected')
+                        return
+                    })
+                    .catch((e) => {
+                        expect(e.message).toEqual('Cannot send to self')
+                        done()
+                    })
+            })
     })
 })

@@ -1,13 +1,12 @@
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
-import { Event as ITransportEvent } from "../../src/transport/ITransport"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
-import { createPeerDescriptor } from '../utils'
 import { waitForEvent } from '@streamr/utils'
 import { Event as ConnectionEvent } from '../../src/connection/IConnection'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
+import { DhtNode } from "../../src/dht/DhtNode"
 
 describe('ConnectionManager', () => {
     const serviceId = 'demo'
@@ -32,37 +31,45 @@ describe('ConnectionManager', () => {
         await connectionManager.start((report) => {
             expect(report.ip).toEqual('localhost')
             expect(report.openInternet).toEqual(true)
-            return createPeerDescriptor(report)
+            return DhtNode.createPeerDescriptor(report)
         })
 
         await connectionManager.stop()
     })
+    
+    // The await expect(doSomething()).rejects.toThrow('someError') method does not work
+    // in browsers, use the old non-async way
 
-    it('Throws an async exception if fails to connect to entrypoints', async () => {
+    it('Throws an async exception if fails to connect to entrypoints', (done) => {
 
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
             webSocketPort: 9992, entryPoints: [
-                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 123 } }
+                { peerId: Uint8Array.from([1, 2, 3]), type: NodeType.NODEJS, websocket: { ip: 'localhost', port: 12345 } }
             ]
         })
 
-        await expect(connectionManager.start((report) => {
-            return createPeerDescriptor(report)
-        }))
-            .rejects
-            .toThrow('Failed to connect to the entrypoints')
-
-        await connectionManager.stop()
+        connectionManager.start((report) => {
+            return DhtNode.createPeerDescriptor(report)
+        }).then(async () => {
+            await connectionManager.stop()
+            done.fail('Expected exception was not thrown')
+            return
+        })
+            .catch(async (e) => {
+                await connectionManager.stop()
+                expect(e.message).toBe('Failed to connect to the entrypoints')
+                done()
+            })  
     })
-
+    
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
 
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('localhost')
             expect(report.openInternet).toEqual(true)
-            return createPeerDescriptor(report)
+            return DhtNode.createPeerDescriptor(report)
         })
 
         const connectionManager2 = new ConnectionManager({
@@ -75,13 +82,13 @@ describe('ConnectionManager', () => {
         await connectionManager2.start((report) => {
             expect(report.ip).toEqual('127.0.0.1')
             expect(report.openInternet).toEqual(true)
-            return createPeerDescriptor(report)
+            return DhtNode.createPeerDescriptor(report)
         })
 
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
-
+    
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
 
@@ -90,7 +97,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('localhost')
             expect(report.openInternet).toEqual(true)
-            peerDescriptor = createPeerDescriptor(report)
+            peerDescriptor = DhtNode.createPeerDescriptor(report)
             return peerDescriptor
         })
 
@@ -105,7 +112,7 @@ describe('ConnectionManager', () => {
         await connectionManager2.start((report2) => {
             expect(report2.ip).toEqual('127.0.0.1')
             expect(report2.openInternet).toEqual(true)
-            peerDescriptor2 = createPeerDescriptor(report2)
+            peerDescriptor2 = DhtNode.createPeerDescriptor(report2)
             return peerDescriptor2
         })
 
@@ -118,7 +125,7 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('DATA', async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
@@ -138,7 +145,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.start((report) => {
             expect(report.ip).toEqual('localhost')
             expect(report.openInternet).toEqual(true)
-            peerDescriptor = createPeerDescriptor(report)
+            peerDescriptor = DhtNode.createPeerDescriptor(report)
             return peerDescriptor
         })
 
@@ -151,7 +158,7 @@ describe('ConnectionManager', () => {
 
         let peerDescriptor2: PeerDescriptor | undefined
         await connectionManager2.start((report2) => {
-            peerDescriptor2 = createPeerDescriptor(report2)
+            peerDescriptor2 = DhtNode.createPeerDescriptor(report2)
             return peerDescriptor2
         })
 
@@ -164,7 +171,7 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on(ITransportEvent.DATA, async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('DATA', async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
@@ -180,7 +187,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
-
+    
     afterAll(async () => {
     })
 

@@ -183,7 +183,7 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
             await remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
         connection.on(ConnectionEvents.CONNECTED, () => {
-            this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
+            //this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
         })
         connection.start(offering)
         if (offering === false && sendRequest) {

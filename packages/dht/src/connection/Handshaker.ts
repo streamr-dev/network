@@ -1,13 +1,18 @@
 import { Logger } from "@streamr/utils"
-import { EventEmitter } from "events"
+import { EventEmitter } from "eventemitter3"
 import { v4 } from "uuid"
+import { PeerID } from "../helpers/PeerID"
 import { Message, HandshakeMessage, MessageType, PeerDescriptor } from "../proto/DhtRpc"
 import { IConnection, Event as ConnectionEvents } from "./IConnection"
-import { IHandshaker, Event as HandshakerEvents } from './IHandshaker'
 
 const logger = new Logger(module)
 
-export class Handshaker extends EventEmitter implements IHandshaker {
+interface HandshakerEvent {
+    HANDSHAKE_COMPLETED: (peerDescriptor: PeerDescriptor) => void
+    HANDSHAKE_FAILED: (peerId: PeerID) => void
+}
+
+export class Handshaker extends EventEmitter<HandshakerEvent> {
 
     private static HANDSHAKER_SERVICE_ID = 'handshaker'
 
@@ -30,7 +35,7 @@ export class Handshaker extends EventEmitter implements IHandshaker {
             logger.trace('handshake message received')
             const handshake = HandshakeMessage.fromBinary(message.body)
             //this.connection.off(this.onData)
-            this.emit(HandshakerEvents.HANDSHAKE_COMPLETED, handshake.peerDescriptor)
+            this.emit('HANDSHAKE_COMPLETED', handshake.peerDescriptor!)
         }
     }
 

@@ -14,27 +14,45 @@ describe('WebSocketServer', () => {
         await server.stop()
     })
 
-    it('throws if too big a port number is given', async () => {
-        const server1 = new WebSocketServer()
-        await server1.start(19792)
-        
-        const server2 = new WebSocketServer()
-        
-        await expect(server2.start(19792))
-            .rejects
-            .toThrow()
+    // The await expect(doSomething()).rejects.toThrow('someError') method does not work
+    // in browsers, use the old non-async way
 
-        await server1.stop()
-        await server2.stop()
+    it('throws if too big a port number is given', (done) => {
+        const server1 = new WebSocketServer()
+        const server2 = new WebSocketServer()
+
+        server1.start(19792)
+            .then(() => {
+                server2.start(19792).then(async () => {
+                    await server1.stop()
+                    await server2.stop()
+                    done.fail('Expected exception was not thrown')
+                    return
+                }).catch(async (_e) => {
+                    await server1.stop()
+                    await server2.stop()
+                    done()
+                    return
+                })
+                return
+            })
+            .catch((e1) => {
+                done.fail(e1)
+                return
+            })
     })
 
-    it('throws if port is already in use', async () => {
+    it('throws if port is already in use', (done) => {
         const server = new WebSocketServer()
 
-        await expect(server.start(197923233))
-            .rejects
-            .toThrow()
-
-        await server.stop()
+        server.start(197923233).then(async () => {
+            await server.stop()
+            done.fail('Expected exception was not thrown')
+            return
+        }).catch(async (_e) => {
+            await server.stop()
+            done()
+            return
+        })
     })
 })

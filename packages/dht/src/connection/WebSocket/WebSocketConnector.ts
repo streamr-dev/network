@@ -83,13 +83,14 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
 
     public async checkConnectivity(): Promise<ConnectivityResponseMessage> {
 
+        const noServerConnectivityResponse: ConnectivityResponseMessage = {
+            openInternet: false,
+            ip: 'localhost',
+            natType: NatType.UNKNOWN
+        }
+
         if (!this.webSocketServer) {
-            // If no websocket server, return openInternet: false 
-            const noServerConnectivityResponse: ConnectivityResponseMessage = {
-                openInternet: false,
-                ip: 'localhost',
-                natType: NatType.UNKNOWN
-            }
+            // If no websocket server, return openInternet: false     
             return noServerConnectivityResponse
         } else {
             if (!this.entrypoints || this.entrypoints.length < 1) {
@@ -105,7 +106,11 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
             } else {
                 // Do real connectivity checking
 
-                return this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+                let response = noServerConnectivityResponse
+
+                response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+                
+                return response
             }
         }
     }

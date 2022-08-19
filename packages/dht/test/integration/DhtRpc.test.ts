@@ -1,5 +1,5 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator, RpcCommunicatorEvent, RpcError } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -39,7 +39,7 @@ describe('DhtRpc', () => {
         })
 
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
-        
+
         client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
         client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
     })
@@ -48,7 +48,7 @@ describe('DhtRpc', () => {
         await rpcCommunicator1.stop()
         await rpcCommunicator2.stop()
     })
-    
+
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
             { peerDescriptor: peerDescriptor1, nonce: '1' },
@@ -64,8 +64,8 @@ describe('DhtRpc', () => {
         const res2 = await response2.response
         expect(res2.peers).toEqual(getMockPeers())
     })
-    
-    it('Default RPC timeout, client side', async () => {
+
+    it('Default RPC timeout, client side', (done) => {
         rpcCommunicator2.off(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
             await wait(3000)
@@ -74,14 +74,21 @@ describe('DhtRpc', () => {
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response2.response).rejects.toEqual(
-            new RpcError.RpcTimeout('Rpc request timed out')
-        )
+        response2.response
+            .then(() => {
+                done.fail('Test did not throw exception as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Rpc request timed out')
+                done()
+            })
+
     }, 15000)
 
-    it('Server side timeout', async () => {
+    it('Server side timeout', (done) => {
         let timeout: NodeJS.Timeout
-        
+
         function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
@@ -94,25 +101,38 @@ describe('DhtRpc', () => {
                 }, 5000)
             })
         }
-        
+
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response.response).rejects.toEqual(
-            new RpcError.RpcTimeout('Server timed out on request')
-        )
-        clearTimeout(timeout!)
+        response.response
+            .then(() => {
+                clearTimeout(timeout!)
+                done.fail('Test did not throw as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Server timed out on request')
+                clearTimeout(timeout!)
+                done()
+            })
     })
-    
-    it('Server responds with error on unknown method', async () => {
+
+    it('Server responds with error on unknown method', (done) => {
         const response = client2.ping(
             { nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response.response).rejects.toEqual(
-            new RpcError.UnknownRpcMethod('Server does not implement method ping')
-        )
+        response.response
+            .then(() => {
+                done.fail('Test did not throw an exeption as expected')
+                return
+            })
+            .catch((e) => {
+                expect(e.message).toEqual('Server does not implement method ping')
+                done()
+            })
     })
 })

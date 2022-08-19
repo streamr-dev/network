@@ -1,7 +1,6 @@
 import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent } from 'websocket'
 import { EventEmitter } from 'events'
-import { PeerDescriptor } from '../../proto/DhtRpc'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -10,8 +9,6 @@ const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebSocket extends EventEmitter implements IConnection {
     public readonly connectionId: ConnectionID
-    private remotePeerDescriptor?: PeerDescriptor
-    private outputBuffer: Uint8Array[] = []
     private socket: WebSocket | null = null
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
@@ -54,32 +51,14 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         if (this.socket && this.socket.readyState === this.socket.OPEN) {
             logger.trace(`Sending data with size ${data.byteLength}`)
             this.socket?.send(data.buffer)
-        } else if (this.socket && this.socket.readyState == this.socket.CONNECTING) {
-            this.outputBuffer.push(data)
+        } else {
+            logger.warn('Tried to send data on a non-open connection')
         }
-    }
-
-    sendBufferedMessages(): void {
-        while (this.outputBuffer.length > 0) {
-            this.send(this.outputBuffer.shift()!)
-        }
+        
     }
 
     close(): void {
         logger.trace(`Closing socket for connection ${this.connectionId.toString()}`)
         this.socket?.close()
-        this.outputBuffer = []
-    }
-
-    setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.remotePeerDescriptor = peerDescriptor
-    }
-
-    getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.remotePeerDescriptor
-    }
-
-    getBufferedMessages(): Uint8Array[] {
-        return this.outputBuffer
     }
 }

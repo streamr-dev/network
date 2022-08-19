@@ -2,7 +2,6 @@ import { Connection } from "./Connection"
 import { ConnectionType, Event as ConnectionEvents, IConnection } from "./IConnection"
 import * as Err from '../helpers/errors'
 import { Handshaker } from "./Handshaker"
-import { Event as HandshakerEvents } from "./IHandshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { IManagedConnection, Event as ManagedConnectionEvents } from "./IManagedConnection"
 import { Logger } from "@streamr/utils"
@@ -99,7 +98,7 @@ export class ManagedConnection extends Connection implements IConnection, IManag
 
         if (!peerDescriptor) {
             const handshaker = new Handshaker(this.ownPeerDescriptor, this.protocolVersion, impl)
-            handshaker.on(HandshakerEvents.HANDSHAKE_COMPLETED, (peerDescriptor: PeerDescriptor) => {
+            handshaker.on('HANDSHAKE_COMPLETED', (peerDescriptor: PeerDescriptor) => {
                 this.onHandshakeCompleted(peerDescriptor)
             })
 
