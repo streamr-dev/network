@@ -59,7 +59,7 @@ describe('SubscriberKeyExchange', () => {
             expect.any(String),
             stream.id,
             expect.any(String),
-            [expectedRequestedKeyIds]
+            expectedRequestedKeyIds
         ])
     }
 

@@ -28,7 +28,7 @@ describe('SubscribePipeline', () => {
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
-        subscriber = new StreamrClient()
+        subscriber = environment.createClient()
         const stream = await subscriber.createStream('/path')
         streamPartId = stream.getStreamParts()[0]
         publisher = fastWallet()
