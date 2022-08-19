@@ -25,12 +25,12 @@ describe('SubscriberKeyExchange', () => {
     let environment: FakeEnvironment
 
     const createStream = async (): Promise<Stream> => {
-        const stream = await subscriber.createStream(createRelativeTestStreamId(module))
-        await stream.grantPermissions({
+        const s = await subscriber.createStream(createRelativeTestStreamId(module))
+        await s.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
-        return stream
+        return s
     }
 
     const triggerGroupKeyRequest = (key: GroupKey, publisherNode: NetworkNodeStub): void => {
