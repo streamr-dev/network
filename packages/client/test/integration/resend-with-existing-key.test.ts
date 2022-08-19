@@ -88,7 +88,7 @@ describe('resend with existing key', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        subscriber.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        await subscriber.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()
         rekeyedKey = GroupKey.generate()
