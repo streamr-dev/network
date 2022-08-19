@@ -72,30 +72,35 @@ describe('Subscriber', () => {
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
     })
 
-    it('group key response error', async () => {
-        await stream.grantPermissions({
-            permissions: [StreamPermission.PUBLISH],
-            user: publisherWallet.address
+    describe.each([
+        [true, /Could not get GroupKey.*GroupKeyErrorResponse/],
+        [false, /Could not get GroupKey.*no permission/]
+    ])('group key not available', (isError: boolean, expectedErrorMessage: RegExp) => {
+        it(`error: ${isError}`, async () => {
+            await stream.grantPermissions({
+                permissions: [StreamPermission.PUBLISH],
+                user: publisherWallet.address
+            })
+            const publisherNode = await startFakePublisherNode(
+                publisherWallet,
+                [],
+                environment,
+                async () => isError ? 'mock-error-code' : undefined
+            )
+
+            const sub = await subscriber.subscribe(stream.id)
+            const onError = jest.fn()
+            sub.on('error', onError)
+
+            publisherNode.publish(createMockMessage({
+                stream,
+                publisher: publisherWallet,
+                content: MOCK_CONTENT,
+                encryptionKey: GroupKey.generate()
+            }))
+
+            await waitForCondition(() => onError.mock.calls.length > 0)
+            expect(onError.mock.calls[0][0].message).toMatch(expectedErrorMessage)
         })
-        const publisherNode = await startFakePublisherNode(
-            publisherWallet,
-            [],
-            environment,
-            async () => 'mock-error-code'
-        )
-
-        const sub = await subscriber.subscribe(stream.id)
-        const onError = jest.fn()
-        sub.on('error', onError)
-
-        publisherNode.publish(createMockMessage({
-            stream,
-            publisher: publisherWallet,
-            content: MOCK_CONTENT,
-            encryptionKey: GroupKey.generate()
-        }))
-
-        await waitForCondition(() => onError.mock.calls.length > 0)
-        expect(onError.mock.calls[0][0].message).toInclude('GroupKeyErrorResponse')
     })
 })

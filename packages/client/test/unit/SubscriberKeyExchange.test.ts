@@ -8,15 +8,13 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
-import { fastWallet } from 'streamr-test-utils'
-import { addSubscriber, createRelativeTestStreamId } from '../test-utils/utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
+import { addSubscriber, createMockMessage, createRelativeTestStreamId } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-
-const AVAILABLE_GROUP_KEY = GroupKey.generate()
+import { NetworkNodeStub } from '../../src'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -35,19 +33,15 @@ describe('SubscriberKeyExchange', () => {
         return stream
     }
 
-    const testSuccessRequest = async (requestedKeyId: string): Promise<GroupKey | undefined> => {
-        const publisherNode = await startFakePublisherNode(publisherWallet, [AVAILABLE_GROUP_KEY], environment)
-        const receivedRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+    const triggerGroupKeyRequest = (key: GroupKey, publisherNode: NetworkNodeStub): void => {
+        publisherNode.publish(createMockMessage({
+            stream,
+            publisher: publisherWallet,
+            encryptionKey: key
+        }))
+    }
 
-        // @ts-expect-error private
-        const subscriberKeyExchange = subscriber.container.resolve(SubscriberKeyExchange)
-        const receivedKey = subscriberKeyExchange.getGroupKey({
-            getStreamId: () => stream.id,
-            getPublisherId: () => publisherWallet.address,
-            groupKeyId: requestedKeyId
-        } as any)
-
-        const request = await nextValue(receivedRequests)
+    const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
         const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
         expect(request).toMatchObject({
             messageId: {
@@ -65,9 +59,8 @@ describe('SubscriberKeyExchange', () => {
             expect.any(String),
             stream.id,
             expect.any(String),
-            [requestedKeyId]
+            [expectedRequestedKeyIds]
         ])
-        return await receivedKey
     }
 
     beforeEach(async () => {
@@ -85,37 +78,23 @@ describe('SubscriberKeyExchange', () => {
     describe('requests a group key', () => {
 
         /*
-         * A subscriber node requests a group key by calling subscriberKeyExchange.getGroupKey()
+         * A subscriber node requests a group key
          * - tests that a correct kind of request message is sent to a publisher node
-         * - tests that we can parse the group key from the response sent by the publisher
+         * - tests that we store the received key
         */
         it('happy path', async () => {
-            const receivedKey = await testSuccessRequest(AVAILABLE_GROUP_KEY.id)
-            expect(receivedKey).toEqual(AVAILABLE_GROUP_KEY)
-        })
+            const groupKey = GroupKey.generate()
+            const publisherNode = await startFakePublisherNode(publisherWallet, [groupKey], environment)
+            const groupKeyRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
+            await subscriber.subscribe(stream.id, () => {})
 
-        it('no group key available', async () => {
-            const receivedKey = await testSuccessRequest('unavailable-group-id')
-            expect(receivedKey).toBeUndefined()
-        })
-
-        it('response error', async () => {
-            await startFakePublisherNode(
-                publisherWallet,
-                [],
-                environment,
-                async () => 'mock-error-code'
-            )
-
+            triggerGroupKeyRequest(groupKey, publisherNode)
+            
+            const request = await nextValue(groupKeyRequests)
+            assertGroupKeyRequest(request!, [groupKey.id])
             // @ts-expect-error private
-            const subscriberKeyExchange = subscriber.container.resolve(SubscriberKeyExchange)
-            const receivedKey = subscriberKeyExchange.getGroupKey({
-                getStreamId: () => stream.id,
-                getPublisherId: () => publisherWallet.address,
-                groupKeyId: 'error-group-key-id'
-            } as any)
-
-            await expect(receivedKey).rejects.toThrow()
+            const keyStore = await subscriber.groupKeyStoreFactory.getStore(stream.id)
+            await waitForCondition(async () => (await keyStore.get(groupKey.id)) !== undefined)
         })
     })
 })
