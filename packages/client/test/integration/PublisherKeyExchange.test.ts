@@ -132,9 +132,7 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            // @ts-expect-error private
-            const store = await (publisherClient.groupKeyStoreFactory).getStore(mockStream.id)
-            await store.add(key)
+            await getGroupKeyPersistence(mockStream.id, publisherWallet.address).add(key)
 
             const receivedResponses = addSubscriber(subscriberNode, KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { toStreamID } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage, createRelativeTestStreamId } from '../test-utils/utils'
+import { createMockMessage, createRelativeTestStreamId, getGroupKeyPersistence } from '../test-utils/utils'
 import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -113,9 +113,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            // @ts-expect-error private
-            const keyStore = await subscriber.groupKeyStoreFactory.getStore(stream.id)
-            await keyStore.add(initialKey)
+            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(initialKey)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -133,9 +131,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            // @ts-expect-error private
-            const keyStore = await subscriber.groupKeyStoreFactory.getStore(stream.id)
-            await keyStore.add(rotatedKey)
+            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(rotatedKey)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -150,9 +146,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            // @ts-expect-error private
-            const keyStore = await subscriber.groupKeyStoreFactory.getStore(stream.id)
-            await keyStore.add(rekeyedKey)
+            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(rekeyedKey)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

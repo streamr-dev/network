@@ -12,7 +12,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId } from '../test-utils/utils'
+import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyPersistence } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { NetworkNodeStub } from '../../src'
 
@@ -92,9 +92,8 @@ describe('SubscriberKeyExchange', () => {
             
             const request = await nextValue(groupKeyRequests)
             assertGroupKeyRequest(request!, [groupKey.id])
-            // @ts-expect-error private
-            const keyStore = await subscriber.groupKeyStoreFactory.getStore(stream.id)
-            await waitForCondition(async () => (await keyStore.get(groupKey.id)) !== undefined)
+            const keyPersistence = getGroupKeyPersistence(stream.id, subscriberWallet.address)
+            await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
         })
     })
 })
