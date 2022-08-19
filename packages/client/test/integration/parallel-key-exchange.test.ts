@@ -11,7 +11,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
 import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
-import StreamrClient from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3

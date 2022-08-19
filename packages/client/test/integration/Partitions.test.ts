@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import StreamrClient from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'

@@ -11,7 +11,7 @@ import { SubscribePipeline } from "../../src/subscribe/SubscribePipeline"
 import { FakeEnvironment } from "../test-utils/fake/FakeEnvironment"
 import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import StreamrClient from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 
 const CONTENT = {
     foo: 'bar'

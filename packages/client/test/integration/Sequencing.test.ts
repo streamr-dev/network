@@ -1,10 +1,8 @@
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
 import { uid, createTestStream } from '../test-utils/utils'
 import { getWaitForStorage } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
