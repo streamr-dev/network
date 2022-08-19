@@ -1,4 +1,5 @@
 import { fastPrivateKey } from 'streamr-test-utils'
+import { StreamMessage } from 'streamr-client-protocol'
 import {
     Debug,
     createTestStream,
@@ -10,9 +11,7 @@ import { Defer } from '../../src/utils/Defer'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
-import { StreamMessage } from 'streamr-client-protocol'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 const debug = Debug('StreamrClient::test')
 
@@ -25,14 +24,14 @@ describe('decryption', () => {
     let subscriber: StreamrClient
     let subscriberPrivateKey: string
     let stream: Stream
-    let clientFactory: ClientFactory
+    let environment: FakeEnvironment
 
     beforeEach(() => {
-        clientFactory = createClientFactory()
+        environment = new FakeEnvironment()
     })
 
     async function setupClient(opts?: any) {
-        const client = clientFactory.createClient(opts)
+        const client = environment.createClient(opts)
         await Promise.all([
             client.connect(),
         ])
@@ -41,7 +40,8 @@ describe('decryption', () => {
 
     async function setupStream() {
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const storageNode = environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 

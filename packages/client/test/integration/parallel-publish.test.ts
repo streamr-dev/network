@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import { DependencyContainer } from 'tsyringe'
 import { random, uniq } from 'lodash'
 import { fastWallet } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
@@ -7,11 +6,10 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { addFakeNode, createFakeContainer, DEFAULT_CLIENT_OPTIONS } from './../test-utils/fake/fakeEnvironment'
-import { GroupKeyStoreFactory } from './../../src/encryption/GroupKeyStoreFactory'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { EncryptionUtil } from './../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/iterators'
-import { addSubscriber } from '../test-utils/utils'
+import { addSubscriber, getGroupKeyPersistence } from '../test-utils/utils'
 
 const MESSAGE_COUNT = 100
 
@@ -25,23 +23,20 @@ describe('parallel publish', () => {
     let publisher: StreamrClient
     let stream: Stream
     let receivedMessages: AsyncIterableIterator<StreamMessage<any>>
-    let dependencyContainer: DependencyContainer
 
     beforeAll(async () => {
-        const config = {
-            ...DEFAULT_CLIENT_OPTIONS,
+        const environment = new FakeEnvironment()
+        publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
             }
-        }
-        dependencyContainer = createFakeContainer(config)
-        publisher = new StreamrClient(config, dependencyContainer)
+        })
         stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             user: subscriberWallet.address,
             permissions: [StreamPermission.SUBSCRIBE]
         })
-        const node = addFakeNode(subscriberWallet.address, dependencyContainer)
+        const node = environment.startNode(subscriberWallet.address)
         receivedMessages = addSubscriber(node, ...stream.getStreamParts())
     })
 
@@ -76,8 +71,8 @@ describe('parallel publish', () => {
         const groupKeyIds = uniq(sortedMessages.map((m) => m.groupKeyId))
         expect(groupKeyIds).toHaveLength(1)
 
-        const groupKeyStore = await dependencyContainer.resolve(GroupKeyStoreFactory).getStore(stream.id)
-        const groupKey = await groupKeyStore.get(groupKeyIds[0]!)
+        const groupKeyPersistence = getGroupKeyPersistence(stream.id, await publisher.getAddress())
+        const groupKey = await groupKeyPersistence.get(groupKeyIds[0]!)
         const decryptedMessages = sortedMessages.map((m) => {
             EncryptionUtil.decryptStreamMessage(m, groupKey!)
             return m

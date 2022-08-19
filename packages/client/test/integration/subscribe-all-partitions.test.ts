@@ -5,7 +5,7 @@ import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { range } from 'lodash'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from './../../src/permission'
 
 const NUM_MESSAGES = 8
@@ -18,8 +18,8 @@ describe('subscribe all partitions', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
 
     beforeEach(async () => {
-        const clientFactory = createClientFactory()
-        client = clientFactory.createClient()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
@@ -28,7 +28,7 @@ describe('subscribe all partitions', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        publishTestMessages = getPublishTestStreamMessages(clientFactory.createClient({
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
             }

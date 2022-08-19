@@ -11,7 +11,7 @@ import {
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
 import { createTestStream } from '../test-utils/utils'
 
@@ -26,12 +26,12 @@ describe('StreamrClient', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
     let streamDefinition: StreamPartID
     let privateKey: string
-    let clientFactory: ClientFactory
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
         privateKey = fastPrivateKey()
-        clientFactory = createClientFactory()
-        client = clientFactory.createClient({
+        environment = new FakeEnvironment()
+        client = environment.createClient({
             auth: {
                 privateKey
             }
@@ -43,7 +43,7 @@ describe('StreamrClient', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        publishTestMessages = getPublishTestStreamMessages(clientFactory.createClient({
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
             }
@@ -226,7 +226,7 @@ describe('StreamrClient', () => {
             // can't yet reliably publish messages then disconnect and know
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
-            const subscriber = clientFactory.createClient({
+            const subscriber = environment.createClient({
                 auth: {
                     privateKey
                 }

@@ -5,7 +5,7 @@ import { StreamrClient } from './../../src/StreamrClient'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
-import { createClientFactory } from './../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { nextValue } from '../../src/utils/iterators'
 
 /*
@@ -20,9 +20,9 @@ describe('update encryption key', () => {
     let sub: Subscription
 
     beforeEach(async () => {
-        const clientFactory = createClientFactory()
-        publisher = clientFactory.createClient()
-        subscriber = clientFactory.createClient()
+        const environment = new FakeEnvironment()
+        publisher = environment.createClient()
+        subscriber = environment.createClient()
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             user: await subscriber.getAddress(),

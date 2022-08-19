@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 import { MessageID, StreamMessage } from 'streamr-client-protocol'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { createRelativeTestStreamId } from '../test-utils/utils'
 
 describe('Resends', () => {
@@ -13,17 +13,20 @@ describe('Resends', () => {
 
         let client: StreamrClient
         let stream: Stream
+        let storageNode: FakeStorageNode
 
         beforeEach(async () => {
-            client = createClientFactory().createClient()
+            const environment = new FakeEnvironment()
+            client = environment.createClient()
             stream = await client.createStream({
-                id: await createRelativeTestStreamId(module),
+                id: createRelativeTestStreamId(module),
             })
             await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
+            storageNode = environment.startStorageNode()
         })
 
         it('happy path', async () => {
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
             const content = {
                 foo: Date.now()
             }
@@ -32,7 +35,7 @@ describe('Resends', () => {
         })
 
         it('no match', async () => {
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
             const content = {
                 foo: Date.now()
             }
@@ -50,7 +53,7 @@ describe('Resends', () => {
         })
 
         it('no message', async () => {
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
             const msg = new StreamMessage({
                 messageId: new MessageID(stream.id, 0, Date.now(), 0, 'publisherId', 'msgChainId'),
                 content: {}

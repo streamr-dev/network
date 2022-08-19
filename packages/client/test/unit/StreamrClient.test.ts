@@ -1,16 +1,23 @@
 import 'reflect-metadata'
-import { createFakeContainer } from './../test-utils/fake/fakeEnvironment'
-import { DEFAULT_CLIENT_OPTIONS } from '../test-utils/fake/fakeEnvironment'
+import { container } from 'tsyringe'
+import { merge } from 'lodash'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { ConfigTest } from '../../src'
 
 describe('StreamrClient', () => {
 
     describe('public API', () => {
 
-        const client = new StreamrClient({
-            ...DEFAULT_CLIENT_OPTIONS
-        }, createFakeContainer(undefined))
+        const client = new StreamrClient(merge(
+            {},
+            ConfigTest,
+            {
+                network: {
+                    trackers: [] // without this setting NetworkNodeFacade would query the tracker addresses from the contract
+                }
+            }
+        ), container)
 
         it('updateEncryptionKey', async () => {
             await expect(() => {

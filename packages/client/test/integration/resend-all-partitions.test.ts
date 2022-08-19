@@ -1,12 +1,11 @@
 import { range } from 'lodash'
 import { StreamMessage } from 'streamr-client-protocol'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, getWaitForStorage } from '../test-utils/publish'
 import { StreamPermission } from '../../src/permission'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet } from 'streamr-test-utils'
 
 const NUM_MESSAGES = 8
@@ -21,12 +20,13 @@ describe('resend all partitions', () => {
     // note: test order matters
     // reuses same stream across tests
     beforeAll(async () => {
-        const clientFactory = createClientFactory()
-        client = clientFactory.createClient()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const storageNode = environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
         const publisherWallet = fastWallet()
         /*
         TODO use encryption when the bug in pullManyToOne has been fixed (https://github.com/streamr-dev/network-monorepo/pull/583)
@@ -39,7 +39,7 @@ describe('resend all partitions', () => {
             public: true,
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
         })
-        publishTestMessages = getPublishTestStreamMessages(clientFactory.createClient({
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
             }
