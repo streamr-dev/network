@@ -1,3 +1,5 @@
+/* eslint-disable promise/no-nesting */
+
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
