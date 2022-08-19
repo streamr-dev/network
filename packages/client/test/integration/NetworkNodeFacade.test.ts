@@ -1,14 +1,20 @@
+import 'reflect-metadata'
 import { StreamrClient } from '../../src/StreamrClient'
 import { ConfigTest } from '../../src/ConfigTest'
-import { getCreateClient } from '../test-utils/utils'
 import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('NetworkNodeFacade', () => {
-    const createClient = getCreateClient()
+
+    let environment: FakeEnvironment
+
+    beforeEach(() => {
+        environment = new FakeEnvironment()
+    })
 
     describe('id assignment/generation', () => {
         it('generates node id from address, if id not supplied', async () => {
-            const client = await createClient({
+            const client = environment.createClient({
                 auth: {
                     privateKey: fastPrivateKey()
                 }
@@ -21,12 +27,12 @@ describe('NetworkNodeFacade', () => {
 
         it('generates different ids for different clients with same private key', async () => {
             const privateKey = fastPrivateKey()
-            const client1 = await createClient({
+            const client1 = environment.createClient({
                 auth: {
                     privateKey
                 }
             })
-            const client2 = await createClient({
+            const client2 = environment.createClient({
                 auth: {
                     privateKey
                 }
@@ -46,7 +52,7 @@ describe('NetworkNodeFacade', () => {
         it('uses supplied network node id, if compatible', async () => {
             const wallet = fastWallet()
             const nodeId = `${wallet.address}#my-custom-id`
-            const client = await createClient({
+            const client = environment.createClient({
                 auth: {
                     privateKey: wallet.privateKey
                 },
@@ -61,7 +67,7 @@ describe('NetworkNodeFacade', () => {
 
         it('throws error if supplied network node id not compatible', async () => {
             const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
-            const client = await createClient({
+            const client = environment.createClient({
                 auth: {
                     privateKey: fastPrivateKey()
                 },
@@ -76,7 +82,10 @@ describe('NetworkNodeFacade', () => {
 
         it('throws error if supplied network id whilst unauthenticated', async () => {
             const nodeId = '0xafafafafafafafafafafafafafafafafafafafaf#my-custom-id'
-            const client = new StreamrClient({
+            const client = environment.createClient({
+                auth: {
+                    unauthenticated: true
+                },
                 network: {
                     id: nodeId,
                 }
@@ -91,7 +100,7 @@ describe('NetworkNodeFacade', () => {
         let client: StreamrClient
 
         beforeEach(async () => {
-            client = await createClient({
+            client = environment.createClient({
                 auth: {
                     privateKey: fastPrivateKey()
                 }

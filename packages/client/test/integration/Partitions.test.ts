@@ -1,6 +1,6 @@
 import 'reflect-metadata'
-import StreamrClient from '../../src'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -10,7 +10,7 @@ describe('Partition', () => {
     let client: StreamrClient
 
     beforeEach(() => {
-        client = createClientFactory().createClient()
+        client = new FakeEnvironment().createClient()
     })
 
     const createStream = (props?: any) => {

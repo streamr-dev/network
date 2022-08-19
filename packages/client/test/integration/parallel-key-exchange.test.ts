@@ -1,19 +1,17 @@
 import 'reflect-metadata'
-import { DependencyContainer } from 'tsyringe'
-import { createFakeContainer, DEFAULT_CLIENT_OPTIONS } from './../test-utils/fake/fakeEnvironment'
-import { Subscriber } from './../../src/subscribe/Subscriber'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from './../test-utils/fake/FakeNetworkNode'
-import { StreamRegistry } from './../../src/registry/StreamRegistry'
 import { range } from 'lodash'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
 import { MessageRef, StreamMessage } from 'streamr-client-protocol'
 import { wait } from '@streamr/utils'
+import { StreamrClient } from '../../src/StreamrClient'
 
 const PUBLISHER_COUNT = 50
 const MESSAGE_COUNT_PER_PUBLISHER = 3
@@ -32,25 +30,19 @@ const PUBLISHERS: PublisherInfo[] = range(PUBLISHER_COUNT).map(() => ({
 
 describe('parallel key exchange', () => {
 
-    const subscriberWallet = fastWallet()
     let stream: Stream
-    let dependencyContainer: DependencyContainer
+    let subscriber: StreamrClient
 
     beforeAll(async () => {
-        dependencyContainer = createFakeContainer({
-            ...DEFAULT_CLIENT_OPTIONS,
-            auth: {
-                privateKey: subscriberWallet.privateKey
-            }
-        })
-        const streamRegistry = dependencyContainer.resolve(StreamRegistry)
-        stream = await streamRegistry.createStream('/path')
+        const environment = new FakeEnvironment()
+        subscriber = environment.createClient()
+        stream = await subscriber.createStream('/path')
         for (const publisher of PUBLISHERS) {
             await stream.grantPermissions({
                 user: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
             })
-            const node = await addFakePublisherNode(publisher.wallet, [publisher.groupKey], dependencyContainer, async () => {
+            const node = await startPublisherNode(publisher.wallet, [publisher.groupKey], environment, async () => {
                 await wait(GROUP_KEY_FETCH_DELAY)
                 return undefined
             })
@@ -59,7 +51,6 @@ describe('parallel key exchange', () => {
     })
 
     it('happy path', async () => {
-        const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
 
         for (const publisher of PUBLISHERS) {

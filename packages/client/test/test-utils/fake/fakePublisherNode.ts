@@ -1,26 +1,21 @@
-import { DependencyContainer } from 'tsyringe'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { addSubscriber, createMockMessage } from '../utils'
 import {
-    EthereumAddress,
     GroupKeyErrorResponse,
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     KeyExchangeStreamIDUtils,
-    StreamID,
     StreamMessage
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../../src/encryption/GroupKey'
 import { createGroupKeyResponse } from '../../../src/encryption/PublisherKeyExchange'
 import { Wallet } from '@ethersproject/wallet'
-import { addFakeNode } from './fakeEnvironment'
+import { FakeEnvironment } from './FakeEnvironment'
 
 const createGroupKeySuccessResponse = async (
     request: StreamMessage<GroupKeyRequestSerialized>,
     groupKeys: GroupKey[],
-    publisherWallet: Wallet,
-    streamRegistry: StreamRegistry
+    publisherWallet: Wallet
 ): Promise<StreamMessage<any>> => {
     return createMockMessage({
         streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(request.getPublisherId()),
@@ -28,7 +23,7 @@ const createGroupKeySuccessResponse = async (
         content: (await createGroupKeyResponse(
             request,
             async (groupKeyId: string) => groupKeys.find((key) => key.id === groupKeyId),
-            async (streamId: StreamID, ethAddress: EthereumAddress) => streamRegistry.isStreamSubscriber(streamId, ethAddress)
+            async () => true
         )).serialize(),
         messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA
@@ -58,20 +53,19 @@ const createGroupKeyErrorResponse = (
     })
 }
 
-export const addFakePublisherNode = async (
+export const startPublisherNode = async (
     publisherWallet: Wallet,
     groupKeys: GroupKey[],
-    dependencyContainer: DependencyContainer,
+    environment: FakeEnvironment,
     getError: (request: StreamMessage<GroupKeyRequestSerialized>) => Promise<string | undefined> = async () => undefined,
 ): Promise<FakeNetworkNode> => {
-    const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
-    const streamRegistry = dependencyContainer.resolve(StreamRegistry)
+    const publisherNode = environment.startNode(publisherWallet.address)
     const requests = addSubscriber<GroupKeyRequestSerialized>(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {
             const errorCode = await getError(request)
             const response = (errorCode === undefined)
-                ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet, streamRegistry)
+                ? await createGroupKeySuccessResponse(request, groupKeys, publisherWallet)
                 : createGroupKeyErrorResponse(errorCode, request, publisherWallet)
             publisherNode.publish(response)
         }

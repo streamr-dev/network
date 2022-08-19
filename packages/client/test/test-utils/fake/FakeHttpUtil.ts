@@ -1,32 +1,35 @@
 import { Readable } from 'stream'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { URLSearchParams } from 'url'
 import { HttpUtil } from '../../../src/HttpUtil'
-import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
-import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeStorageNode, parseNodeIdFromStorageNodeUrl } from './FakeStorageNode'
 
-interface ResendRequest { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
+interface ResendRequest { 
+    nodeId: EthereumAddress
+    resendType: string
+    streamPartId: StreamPartID 
+    query?: URLSearchParams 
+}
 
-@scoped(Lifecycle.ContainerScoped)
 export class FakeHttpUtil implements HttpUtil {
+    private readonly network: FakeNetwork
     private readonly realHttpUtil: HttpUtil
-    private readonly streamStorageRegistry: FakeStreamStorageRegistry
 
     constructor(
-        @inject(StreamStorageRegistry) streamStorageRegistry: StreamStorageRegistry
+        network: FakeNetwork
     ) {
+        this.network = network
         this.realHttpUtil = new HttpUtil()
-        this.streamStorageRegistry = streamStorageRegistry as unknown as FakeStreamStorageRegistry
     }
 
     async fetchHttpStream(url: string): Promise<Readable> {
         const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
+            const storageNode = this.network.getNode(request.nodeId) as FakeStorageNode
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                const storageNode = await this.streamStorageRegistry.getRandomStorageNodeFor(request.streamPartId)
                 let msgs: StreamMessage<unknown>[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
@@ -60,6 +63,7 @@ export class FakeHttpUtil implements HttpUtil {
             const streamId = decodeURIComponent(encodedStreamId) as StreamID
             const streamPartId = toStreamPartID(streamId, Number(partition))
             return {
+                nodeId: parseNodeIdFromStorageNodeUrl(url),
                 resendType,
                 streamPartId,
                 query: (queryParams !== undefined) ? new URLSearchParams(queryParams.substring(1)) : undefined

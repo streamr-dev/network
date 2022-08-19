@@ -1,12 +1,10 @@
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
 import { uid, createTestStream } from '../test-utils/utils'
 import { getWaitForStorage } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 jest.setTimeout(30000)
 
@@ -30,7 +28,7 @@ describe('Sequencing', () => {
     let stream: Stream
 
     beforeEach(async () => {
-        client = createClientFactory().createClient()
+        client = new FakeEnvironment().createClient()
         stream = await createTestStream(client, module)
     })
 

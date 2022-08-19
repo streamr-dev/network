@@ -2,17 +2,19 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
-
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 
 describe('Stream', () => {
     let client: StreamrClient
+    let storageNode: FakeStorageNode
 
     beforeEach(() => {
-        client = createClientFactory().createClient()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
+        storageNode = environment.startStorageNode()
     })
 
     afterEach(async () => {
@@ -20,11 +22,12 @@ describe('Stream', () => {
     })
 
     describe('addToStorageNode()', () => {
+
         it('single partition stream', async () => {
             const stream = await createTestStream(client, module, {
                 partitions: 1
             })
-            await expect(stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -33,7 +36,7 @@ describe('Stream', () => {
             const stream = await createTestStream(client, module, {
                 partitions: 5
             })
-            await expect(stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -53,7 +56,7 @@ describe('Stream', () => {
 
         beforeEach(async () => {
             stream = await createTestStream(client, module)
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
         })
 
         it('does detect primitive types', async () => {

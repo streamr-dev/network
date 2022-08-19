@@ -10,7 +10,9 @@ import {
     toStreamPartID,
     MAX_PARTITION_COUNT,
     StreamMessageOptions,
-    MessageID
+    MessageID,
+    EthereumAddress,
+    StreamID
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -27,6 +29,7 @@ import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { TransformStream } from 'node:stream/web'
 import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
+import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -182,4 +185,13 @@ export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPart
     })
     streamPartIds.forEach((id) => networkNodeStub.subscribe(id))
     return messages.readable[Symbol.asyncIterator]()
+}
+
+export const getGroupKeyPersistence = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyPersistence => {
+    return new GroupKeyPersistence({ 
+        context: mockContext(), 
+        clientId: userAddress.toLowerCase(), 
+        streamId, 
+        initialData: {}
+    })
 }

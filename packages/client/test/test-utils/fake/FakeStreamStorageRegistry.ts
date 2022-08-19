@@ -1,31 +1,28 @@
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { EthereumAddress, StreamID, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { EthereumAddress, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../../../src/StreamIDBuilder'
-import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
 import { FakeStorageNode } from './FakeStorageNode'
 import { FakeNetwork } from './FakeNetwork'
 import { Stream } from '../../../src/Stream'
-import { StreamRegistry } from '../../../src/registry/StreamRegistry'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { Methods } from '../types'
-import { Multimap } from '@streamr/utils'
+import { FakeChain } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry> {
 
-    private readonly assignments: Multimap<StreamID, EthereumAddress> = new Multimap()
-    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly chain: FakeChain
     private readonly network: FakeNetwork
+    private readonly streamIdBuilder: StreamIDBuilder
 
     constructor(
-        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder,
+        @inject(FakeChain) chain: FakeChain,
         @inject(FakeNetwork) network: FakeNetwork,
-        @inject(StreamRegistry) streamRegistry: StreamRegistry
+        @inject(StreamIDBuilder) streamIdBuilder: StreamIDBuilder
     ) {
-        this.streamIdBuilder = streamIdBuilder
+        this.chain = chain
         this.network = network
-        const node = new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, network, streamRegistry)
-        node.start()
+        this.streamIdBuilder = streamIdBuilder
     }
 
     private async hasAssignment(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
@@ -37,7 +34,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
     async getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-            return this.assignments.get(streamId)
+            return this.chain.storageAssignments.get(streamId)
             // eslint-disable-next-line no-else-return
         } else {
             throw new Error('not implemented')
@@ -66,7 +63,7 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             const node = this.network.getNode(nodeAddress)
             if (node !== undefined) {
-                this.assignments.add(streamId, normalizedNodeAddress)
+                this.chain.storageAssignments.add(streamId, normalizedNodeAddress)
                 await (node as FakeStorageNode).addAssignment(streamId)
             } else {
                 throw new Error(`No storage node ${nodeAddress} for ${streamId}`)
