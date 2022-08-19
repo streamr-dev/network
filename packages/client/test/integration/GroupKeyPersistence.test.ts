@@ -6,7 +6,7 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { StreamMessage } from 'streamr-client-protocol'
@@ -20,17 +20,17 @@ describe('Group Key Persistence', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let clientFactory: ClientFactory
+    let environment: FakeEnvironment
 
     beforeEach(() => {
-        clientFactory = createClientFactory()
+        environment = new FakeEnvironment()
     })
 
     describe('with encrypted streams', () => {
         let stream: Stream
 
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
-            const client = clientFactory.createClient(opts)
+            const client = environment.createClient(opts)
             await Promise.all([
                 client.connect(),
             ])
@@ -52,7 +52,7 @@ describe('Group Key Persistence', () => {
                     privateKey: publisherPrivateKey,
                 }
             })
-            subscriber = clientFactory.createClient({
+            subscriber = environment.createClient({
                 id: 'subscriber',
                 auth: {
                     privateKey: subscriberPrivateKey,
@@ -90,7 +90,7 @@ describe('Group Key Persistence', () => {
                 })
 
                 await publisher.destroy()
-                publisher2 = clientFactory.createClient({
+                publisher2 = environment.createClient({
                     id: 'publisher2',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -151,7 +151,7 @@ describe('Group Key Persistence', () => {
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             await subscriber.destroy()
 
-            const subscriber2 = clientFactory.createClient({
+            const subscriber2 = environment.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -200,7 +200,7 @@ describe('Group Key Persistence', () => {
             await subscriber.destroy()
             await publisher.destroy()
 
-            const subscriber2 = clientFactory.createClient({
+            const subscriber2 = environment.createClient({
                 id: 'subscriber2',
                 auth: {
                     privateKey: subscriberPrivateKey
@@ -232,7 +232,7 @@ describe('Group Key Persistence', () => {
             })
 
             // ensure publishers don't clobber each others data
-            const publisher2 = clientFactory.createClient({
+            const publisher2 = environment.createClient({
                 id: 'publisher2',
                 auth: {
                     privateKey: publisherPrivateKey,
@@ -271,7 +271,7 @@ describe('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = clientFactory.createClient({
+                publisher = environment.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -311,7 +311,7 @@ describe('Group Key Persistence', () => {
             const streams: Stream[] = []
 
             beforeEach(async () => {
-                publisher = clientFactory.createClient({
+                publisher = environment.createClient({
                     id: 'publisher',
                     auth: {
                         privateKey: publisherPrivateKey,
@@ -354,7 +354,7 @@ describe('Group Key Persistence', () => {
         const streams: Stream[] = []
 
         beforeEach(async () => {
-            publisher = clientFactory.createClient({
+            publisher = environment.createClient({
                 id: 'publisher',
                 auth: {
                     privateKey: publisherPrivateKey,

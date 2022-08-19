@@ -1,12 +1,12 @@
 import 'reflect-metadata'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 describe('events', () => {
 
     describe('remove listeners when client destroyed', () => {
 
         it('client', async () => {
-            const client = createClientFactory().createClient()
+            const client = new FakeEnvironment().createClient()
             client.on('addToStorageNode', () => {})
             await client.destroy()
             // @ts-expect-error private
@@ -14,7 +14,7 @@ describe('events', () => {
         })
 
         it('resend subcription', async () => {
-            const client = createClientFactory().createClient()
+            const client = new FakeEnvironment().createClient()
             const stream = await client.createStream('/foobar')
             const subscription = await client.subscribe({
                 streamId: stream.id,

@@ -1,4 +1,3 @@
-import { DependencyContainer } from 'tsyringe'
 import { FakeNetworkNode } from './FakeNetworkNode'
 import { addSubscriber, createMockMessage } from '../utils'
 import {
@@ -11,7 +10,7 @@ import {
 import { GroupKey } from '../../../src/encryption/GroupKey'
 import { createGroupKeyResponse } from '../../../src/encryption/PublisherKeyExchange'
 import { Wallet } from '@ethersproject/wallet'
-import { addFakeNode } from './fakeEnvironment'
+import { FakeEnvironment } from './FakeEnvironment'
 
 const createGroupKeySuccessResponse = async (
     request: StreamMessage<GroupKeyRequestSerialized>,
@@ -54,13 +53,13 @@ const createGroupKeyErrorResponse = (
     })
 }
 
-export const addFakePublisherNode = async (
+export const startFakePublisherNode = async (
     publisherWallet: Wallet,
     groupKeys: GroupKey[],
-    dependencyContainer: DependencyContainer,
+    environment: FakeEnvironment,
     getError: (request: StreamMessage<GroupKeyRequestSerialized>) => Promise<string | undefined> = async () => undefined,
 ): Promise<FakeNetworkNode> => {
-    const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
+    const publisherNode = environment.startFakeNode(publisherWallet.address)
     const requests = addSubscriber<GroupKeyRequestSerialized>(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {

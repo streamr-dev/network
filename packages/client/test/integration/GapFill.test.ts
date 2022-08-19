@@ -10,7 +10,7 @@ import { Subscription } from '../../src/subscribe/Subscription'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src'
 
 const MAX_MESSAGES = 10
@@ -40,11 +40,11 @@ describe('GapFill', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
-    let clientFactory: ClientFactory
+    let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
-        client = clientFactory.createClient({
+        client = environment.createClient({
             maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
@@ -62,7 +62,7 @@ describe('GapFill', () => {
     }
 
     beforeEach(async () => {
-        clientFactory = createClientFactory()
+        environment = new FakeEnvironment()
         expectErrors = 0
         onError = jest.fn()
     })

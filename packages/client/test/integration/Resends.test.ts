@@ -4,7 +4,7 @@ import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createRelativeTestStreamId } from '../test-utils/utils'
 
 describe('Resends', () => {
@@ -15,7 +15,7 @@ describe('Resends', () => {
         let stream: Stream
 
         beforeEach(async () => {
-            client = createClientFactory().createClient()
+            client = new FakeEnvironment().createClient()
             stream = await client.createStream({
                 id: await createRelativeTestStreamId(module),
             })

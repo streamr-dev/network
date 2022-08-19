@@ -1,12 +1,9 @@
 import 'reflect-metadata'
-import { DependencyContainer } from 'tsyringe'
 import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
-import { Subscriber } from '../../src/subscribe/Subscriber'
-import { addFakeNode, createFakeContainer } from '../test-utils/fake/fakeEnvironment'
-import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
-import { StreamPermission } from '../../src'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import StreamrClient, { StreamPermission } from '../../src'
 import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { nextValue } from '../../src/utils/iterators'
@@ -19,18 +16,19 @@ describe('Subscriber', () => {
     let stream: Stream
     let subscriberWallet: Wallet
     let publisherWallet: Wallet
-    let dependencyContainer: DependencyContainer
+    let subscriber: StreamrClient
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
         subscriberWallet = fastWallet()
         publisherWallet = fastWallet()
-        dependencyContainer = createFakeContainer({
+        environment = new FakeEnvironment()
+        subscriber = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
             }
         })
-        const streamRegistry = dependencyContainer.resolve(StreamRegistry)
-        stream = await streamRegistry.createStream('/path')
+        stream = await subscriber.createStream('/path')
     })
 
     it('without encryption', async () => {
@@ -39,10 +37,9 @@ describe('Subscriber', () => {
             public: true
         })
 
-        const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
 
-        const publisherNode = addFakeNode(publisherWallet.address, dependencyContainer)
+        const publisherNode = environment.startFakeNode(publisherWallet.address)
         publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
@@ -60,9 +57,8 @@ describe('Subscriber', () => {
         })
 
         const groupKey = GroupKey.generate()
-        const publisherNode = await addFakePublisherNode(publisherWallet, [groupKey], dependencyContainer)
+        const publisherNode = await startFakePublisherNode(publisherWallet, [groupKey], environment)
 
-        const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
 
         publisherNode.publish(createMockMessage({
@@ -81,14 +77,13 @@ describe('Subscriber', () => {
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
-        const publisherNode = await addFakePublisherNode(
+        const publisherNode = await startFakePublisherNode(
             publisherWallet,
             [],
-            dependencyContainer,
+            environment,
             async () => 'mock-error-code'
         )
 
-        const subscriber = dependencyContainer.resolve(Subscriber)
         const sub = await subscriber.subscribe(stream.id)
         const onError = jest.fn()
         sub.on('error', onError)

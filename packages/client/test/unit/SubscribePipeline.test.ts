@@ -1,18 +1,17 @@
 import 'reflect-metadata'
-import { addFakePublisherNode } from './../test-utils/fake/fakePublisherNode'
+import { startFakePublisherNode } from './../test-utils/fake/fakePublisherNode'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
-import { DependencyContainer } from 'tsyringe'
 import { StreamPermission } from './../../src/permission'
-import { StreamRegistry } from './../../src/registry/StreamRegistry'
 import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
-import { fastPrivateKey, fastWallet } from "streamr-test-utils"
+import { fastWallet } from "streamr-test-utils"
 import { SubscribePipeline } from "../../src/subscribe/SubscribePipeline"
-import { createFakeContainer, DEFAULT_CLIENT_OPTIONS } from "../test-utils/fake/fakeEnvironment"
+import { FakeEnvironment } from "../test-utils/fake/FakeEnvironment"
 import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
+import StreamrClient from '../../src'
 
 const CONTENT = {
     foo: 'bar'
@@ -24,17 +23,13 @@ describe('SubscribePipeline', () => {
     let input: MessageStream
     let streamPartId: StreamPartID
     let publisher: Wallet
-    let dependencyContainer: DependencyContainer
+    let subscriber: StreamrClient
+    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        dependencyContainer = createFakeContainer({
-            ...DEFAULT_CLIENT_OPTIONS,
-            auth: {
-                privateKey: fastPrivateKey()
-            }
-        })
-        const streamRegistry = dependencyContainer.resolve(StreamRegistry)
-        const stream = await streamRegistry.createStream('/path')
+        environment = new FakeEnvironment()
+        subscriber = new StreamrClient()
+        const stream = await subscriber.createStream('/path')
         streamPartId = stream.getStreamParts()[0]
         publisher = fastWallet()
         await stream.grantPermissions({
@@ -47,7 +42,8 @@ describe('SubscribePipeline', () => {
             input,
             streamPartId,
             context,
-            dependencyContainer
+            // @ts-expect-error private
+            subscriber.container
         )
     })
 
@@ -82,7 +78,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: no encryption key available', async () => {
-        await addFakePublisherNode(publisher, [], dependencyContainer)
+        await startFakePublisherNode(publisher, [], environment)
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,
@@ -101,7 +97,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: group key request failed', async () => {
-        await addFakePublisherNode(publisher, [], dependencyContainer, async () => 'mock-error')
+        await startFakePublisherNode(publisher, [], environment, async () => 'mock-error')
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,

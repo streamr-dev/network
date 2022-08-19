@@ -18,7 +18,7 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { collect } from '../../src/utils/GeneratorUtils'
 
 const debug = Debug('StreamrClient::test')
@@ -37,10 +37,10 @@ describe('decryption', () => {
     let subscriber: StreamrClient
     let subscriberPrivateKey: string
     let stream: Stream
-    let clientFactory: ClientFactory
+    let environment: FakeEnvironment
 
     beforeEach(() => {
-        clientFactory = createClientFactory()
+        environment = new FakeEnvironment()
         errors = []
         expectErrors = 0
     })
@@ -52,7 +52,7 @@ describe('decryption', () => {
     })
 
     async function setupClient(opts?: any) {
-        const client = clientFactory.createClient(opts)
+        const client = environment.createClient(opts)
         await Promise.all([
             client.connect(),
         ])

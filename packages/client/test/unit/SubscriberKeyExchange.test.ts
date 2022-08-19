@@ -1,21 +1,20 @@
 import 'reflect-metadata'
-import { DependencyContainer } from 'tsyringe'
 import {
     KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { SubscriberKeyExchange } from '../../src/encryption/SubscriberKeyExchange'
-import { createFakeContainer } from '../test-utils/fake/fakeEnvironment'
-import { addFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
 import { addSubscriber, createRelativeTestStreamId } from '../test-utils/utils'
+import { StreamrClient } from '../../src/StreamrClient'
 
 const AVAILABLE_GROUP_KEY = GroupKey.generate()
 
@@ -23,13 +22,13 @@ describe('SubscriberKeyExchange', () => {
 
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
-    let mockStream: Stream
-    let fakeContainer: DependencyContainer
+    let subscriber: StreamrClient
+    let stream: Stream
+    let environment: FakeEnvironment
 
     const createStream = async (): Promise<Stream> => {
-        const streamRegistry = fakeContainer.resolve(StreamRegistry)
-        const stream = await streamRegistry.createStream(createRelativeTestStreamId(module))
-        await streamRegistry.grantPermissions(stream.id, {
+        const stream = await subscriber.createStream(createRelativeTestStreamId(module))
+        await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],
             user: publisherWallet.address
         })
@@ -37,12 +36,13 @@ describe('SubscriberKeyExchange', () => {
     }
 
     const testSuccessRequest = async (requestedKeyId: string): Promise<GroupKey | undefined> => {
-        const publisherNode = await addFakePublisherNode(publisherWallet, [AVAILABLE_GROUP_KEY], fakeContainer)
+        const publisherNode = await startFakePublisherNode(publisherWallet, [AVAILABLE_GROUP_KEY], environment)
         const receivedRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
 
-        const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
+        // @ts-expect-error private
+        const subscriberKeyExchange = subscriber.container.resolve(SubscriberKeyExchange)
         const receivedKey = subscriberKeyExchange.getGroupKey({
-            getStreamId: () => mockStream.id,
+            getStreamId: () => stream.id,
             getPublisherId: () => publisherWallet.address,
             groupKeyId: requestedKeyId
         } as any)
@@ -63,7 +63,7 @@ describe('SubscriberKeyExchange', () => {
         })
         expect(request!.getParsedContent()).toEqual([
             expect.any(String),
-            mockStream.id,
+            stream.id,
             expect.any(String),
             [requestedKeyId]
         ])
@@ -73,12 +73,13 @@ describe('SubscriberKeyExchange', () => {
     beforeEach(async () => {
         publisherWallet = fastWallet()
         subscriberWallet = fastWallet()
-        fakeContainer = createFakeContainer({
+        environment = new FakeEnvironment()
+        subscriber = environment.createClient({
             auth: {
                 privateKey: subscriberWallet.privateKey
             }
         })
-        mockStream = await createStream()
+        stream = await createStream()
     })
 
     describe('requests a group key', () => {
@@ -99,16 +100,17 @@ describe('SubscriberKeyExchange', () => {
         })
 
         it('response error', async () => {
-            await addFakePublisherNode(
+            await startFakePublisherNode(
                 publisherWallet,
                 [],
-                fakeContainer,
+                environment,
                 async () => 'mock-error-code'
             )
 
-            const subscriberKeyExchange = fakeContainer.resolve(SubscriberKeyExchange)
+            // @ts-expect-error private
+            const subscriberKeyExchange = subscriber.container.resolve(SubscriberKeyExchange)
             const receivedKey = subscriberKeyExchange.getGroupKey({
-                getStreamId: () => mockStream.id,
+                getStreamId: () => stream.id,
                 getPublisherId: () => publisherWallet.address,
                 groupKeyId: 'error-group-key-id'
             } as any)
