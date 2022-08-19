@@ -9,9 +9,9 @@ import { Subscription } from '../../src/subscribe/Subscription'
 
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 10
 jest.setTimeout(50000)
@@ -40,6 +40,7 @@ describe('GapFill', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
+    let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
@@ -55,7 +56,7 @@ describe('GapFill', () => {
         client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        await stream.addToStorageNode(storageNode.id)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client
@@ -63,6 +64,7 @@ describe('GapFill', () => {
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
+        storageNode = environment.startStorageNode()
         expectErrors = 0
         onError = jest.fn()
     })

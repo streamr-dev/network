@@ -15,7 +15,7 @@ import { sign } from '../../../src/utils/signingUtils'
 import { Multimap } from '@streamr/utils'
 import { FakeChain } from './FakeChain'
 import { StreamPermission } from '../../../src/permission'
-import { DOCKER_DEV_STORAGE_NODE } from '../../../src/ConfigTest'
+import { Wallet } from 'ethers'
 
 const URL_SCHEME = 'FakeStorageNode'
 
@@ -36,18 +36,18 @@ export class FakeStorageNode extends FakeNetworkNode {
     private readonly privateKey: string
     private readonly chain: FakeChain
 
-    constructor(address: EthereumAddress, privateKey: string, network: FakeNetwork, chain: FakeChain) {
+    constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
         super({
-            id: address
+            id: wallet.address
         } as any, network)
-        this.privateKey = privateKey
+        this.privateKey = wallet.privateKey
         this.chain = chain
-        chain.storageNodeMetadatas.set(address.toLowerCase(), {
-            http: createStorageNodeUrl(address)
+        chain.storageNodeMetadatas.set(wallet.address.toLowerCase(), {
+            http: createStorageNodeUrl(wallet.address)
         })
         const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(address.toLowerCase(), StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(address), {
+        storageNodeAssignmentStreamPermissions.add(wallet.address.toLowerCase(), StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(wallet.address), {
             metadata: {},
             permissions: storageNodeAssignmentStreamPermissions
         })
@@ -131,11 +131,5 @@ export class FakeStorageNode extends FakeNetworkNode {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []
         }
-    }
-
-    // TODO it is maybe misleading that we use DOCKER_DEV_STORAGE_NODE address in fake environment, we could have a separate address for this
-    static createInstance(network: FakeNetwork, chain: FakeChain): FakeStorageNode {
-        const DOCKER_DEV_STORAGE_NODE_PRIVATE_KEY = 'aa7a3b3bb9b4a662e756e978ad8c6464412e7eef1b871f19e5120d4747bce966'
-        return new FakeStorageNode(DOCKER_DEV_STORAGE_NODE, DOCKER_DEV_STORAGE_NODE_PRIVATE_KEY, network, chain)
     }
 }

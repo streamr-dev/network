@@ -7,7 +7,6 @@ import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -29,7 +28,7 @@ describe('resend with existing key', () => {
     let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
     let environment: FakeEnvironment
 
-    const storeMessage = (timestamp: number, currentGroupKey: GroupKey, nextGroupKey?: GroupKey) => {
+    const storeMessage = (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
         const message = createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
@@ -37,7 +36,6 @@ describe('resend with existing key', () => {
             stream,
             publisher: publisherWallet,
         })
-        const storageNode = environment.getNetwork().getNode(DOCKER_DEV_STORAGE_NODE) as FakeStorageNode
         storageNode.storeMessage(message)
     }
 
@@ -88,7 +86,8 @@ describe('resend with existing key', () => {
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
-        await subscriber.addStreamToStorageNode(stream.id, DOCKER_DEV_STORAGE_NODE)
+        const storageNode = environment.startStorageNode()
+        await subscriber.addStreamToStorageNode(stream.id, storageNode.id)
         initialKey = GroupKey.generate()
         rotatedKey = GroupKey.generate()
         rekeyedKey = GroupKey.generate()
@@ -101,7 +100,7 @@ describe('resend with existing key', () => {
             { timestamp: 6000, groupKey: rekeyedKey }
         ]
         for (const msg of allMessages) {
-            storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey)
+            storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
         }
     })
 

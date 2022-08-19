@@ -5,11 +5,11 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { StreamMessage } from 'streamr-client-protocol'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const TIMEOUT = 30 * 1000
 jest.setTimeout(60000)
@@ -20,10 +20,12 @@ describe('Group Key Persistence', () => {
     let publisher: StreamrClient
     let subscriber: StreamrClient
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
+    let storageNode: FakeStorageNode
     let environment: FakeEnvironment
 
     beforeEach(() => {
         environment = new FakeEnvironment()
+        storageNode = environment.startStorageNode()
     })
 
     describe('with encrypted streams', () => {
@@ -38,7 +40,7 @@ describe('Group Key Persistence', () => {
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
             publishTestMessages = getPublishTestStreamMessages(client, stream)
             return client
         }
@@ -321,7 +323,7 @@ describe('Group Key Persistence', () => {
                 for (let i = 0; i < NUM_STREAMS; i++) {
 
                     const s = await createTestStream(publisher, module)
-                    await s.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+                    await s.addToStorageNode(storageNode.id)
                     // eslint-disable-next-line no-loop-func
                     streams.push(s)
                 }

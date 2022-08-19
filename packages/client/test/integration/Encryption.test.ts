@@ -17,7 +17,6 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { Subscription } from '../../src/subscribe/Subscription'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { collect } from '../../src/utils/GeneratorUtils'
 
@@ -61,7 +60,8 @@ describe('decryption', () => {
 
     async function setupStream() {
         stream = await createTestStream(publisher, module)
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const storageNode = environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
     }
 

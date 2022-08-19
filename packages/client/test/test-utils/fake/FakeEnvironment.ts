@@ -1,6 +1,6 @@
 import { container, DependencyContainer } from 'tsyringe'
 import { merge } from 'lodash'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
 import { StreamrClientConfig } from '../../../src/Config'
 import { StorageNodeRegistry } from '../../../src/registry/StorageNodeRegistry'
 import { StreamrClient } from '../../../src/StreamrClient'
@@ -35,8 +35,6 @@ export class FakeEnvironment {
         this.chain = new FakeChain()
         this.dependencyContainer = container.createChildContainer()
         const httpUtil = new FakeHttpUtil(this.network)
-        const storageNode = FakeStorageNode.createInstance(this.network, this.chain)    
-        storageNode.start()
         this.dependencyContainer.register(FakeNetwork, { useValue: this.network })
         this.dependencyContainer.register(FakeChain, { useValue: this.chain })
         this.dependencyContainer.register(HttpUtil, { useValue: httpUtil })
@@ -63,6 +61,13 @@ export class FakeEnvironment {
         const node = new FakeNetworkNode({
             id: nodeId
         } as any, this.network)
+        node.start()
+        return node
+    }
+
+    startStorageNode() {
+        const wallet = fastWallet()
+        const node = new FakeStorageNode(wallet, this.network, this.chain)
         node.start()
         return node
     }
