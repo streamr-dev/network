@@ -19,7 +19,7 @@ describe('Resends', () => {
             const environment = new FakeEnvironment()
             client = environment.createClient()
             stream = await client.createStream({
-                id: await createRelativeTestStreamId(module),
+                id: createRelativeTestStreamId(module),
             })
             await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
             storageNode = environment.startStorageNode()
