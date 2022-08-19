@@ -48,7 +48,7 @@ export class FakeEnvironment {
     
     createClient(opts?: StreamrClientConfig): StreamrClient {
         let authOpts
-        if (opts?.auth?.privateKey === undefined) {
+        if (opts?.auth === undefined) {
             authOpts = {
                 auth: {
                     privateKey: fastPrivateKey()
