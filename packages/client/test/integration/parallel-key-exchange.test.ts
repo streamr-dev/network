@@ -5,7 +5,7 @@ import { range } from 'lodash'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { Stream } from '../../src/Stream'
-import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from '../test-utils/utils'
@@ -42,7 +42,7 @@ describe('parallel key exchange', () => {
                 user: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
             })
-            const node = await startFakePublisherNode(publisher.wallet, [publisher.groupKey], environment, async () => {
+            const node = await startPublisherNode(publisher.wallet, [publisher.groupKey], environment, async () => {
                 await wait(GROUP_KEY_FETCH_DELAY)
                 return undefined
             })

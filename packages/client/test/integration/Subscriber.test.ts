@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import StreamrClient, { StreamPermission } from '../../src'
 import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -39,7 +39,7 @@ describe('Subscriber', () => {
 
         const sub = await subscriber.subscribe(stream.id)
 
-        const publisherNode = environment.startFakeNode(publisherWallet.address)
+        const publisherNode = environment.startNode(publisherWallet.address)
         publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
@@ -57,7 +57,7 @@ describe('Subscriber', () => {
         })
 
         const groupKey = GroupKey.generate()
-        const publisherNode = await startFakePublisherNode(publisherWallet, [groupKey], environment)
+        const publisherNode = await startPublisherNode(publisherWallet, [groupKey], environment)
 
         const sub = await subscriber.subscribe(stream.id)
 
@@ -81,7 +81,7 @@ describe('Subscriber', () => {
                 permissions: [StreamPermission.PUBLISH],
                 user: publisherWallet.address
             })
-            const publisherNode = await startFakePublisherNode(
+            const publisherNode = await startPublisherNode(
                 publisherWallet,
                 [],
                 environment,

@@ -120,7 +120,7 @@ describe('PublisherKeyExchange', () => {
             }
         })
         mockStream = await createStream()
-        subscriberNode = environment.startFakeNode(subscriberWallet.address)
+        subscriberNode = environment.startNode(subscriberWallet.address)
         await startPublisherKeyExchangeSubscription()
     })
 
@@ -156,7 +156,7 @@ describe('PublisherKeyExchange', () => {
         it('request from non-subscriber', async () => {
             const groupKey = GroupKey.generate()
             const otherWallet = fastWallet()
-            const otherNode = environment.startFakeNode(otherWallet.address)
+            const otherNode = environment.startNode(otherWallet.address)
             const receivedResponses = addSubscriber(otherNode, KeyExchangeStreamIDUtils.formStreamPartID(otherWallet.address))
 
             const request = createGroupKeyRequest(groupKey.id, otherWallet, (await RSAKeyPair.create()).getPublicKey())

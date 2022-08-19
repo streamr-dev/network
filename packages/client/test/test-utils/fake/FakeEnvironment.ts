@@ -59,7 +59,7 @@ export class FakeEnvironment {
         return new StreamrClient(configWithDefaults, this.dependencyContainer)
     }
 
-    startFakeNode(nodeId: EthereumAddress): FakeNetworkNode {
+    startNode(nodeId: EthereumAddress): FakeNetworkNode {
         const node = new FakeNetworkNode({
             id: nodeId
         } as any, this.network)

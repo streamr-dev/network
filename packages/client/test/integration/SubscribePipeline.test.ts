@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { startFakePublisherNode } from './../test-utils/fake/fakePublisherNode'
+import { startPublisherNode } from './../test-utils/fake/fakePublisherNode'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
@@ -78,7 +78,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: no encryption key available', async () => {
-        await startFakePublisherNode(publisher, [], environment)
+        await startPublisherNode(publisher, [], environment)
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,
@@ -97,7 +97,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: group key request failed', async () => {
-        await startFakePublisherNode(publisher, [], environment, async () => 'mock-error')
+        await startPublisherNode(publisher, [], environment, async () => 'mock-error')
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,

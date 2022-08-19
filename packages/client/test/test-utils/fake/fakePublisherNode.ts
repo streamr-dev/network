@@ -53,13 +53,13 @@ const createGroupKeyErrorResponse = (
     })
 }
 
-export const startFakePublisherNode = async (
+export const startPublisherNode = async (
     publisherWallet: Wallet,
     groupKeys: GroupKey[],
     environment: FakeEnvironment,
     getError: (request: StreamMessage<GroupKeyRequestSerialized>) => Promise<string | undefined> = async () => undefined,
 ): Promise<FakeNetworkNode> => {
-    const publisherNode = environment.startFakeNode(publisherWallet.address)
+    const publisherNode = environment.startNode(publisherWallet.address)
     const requests = addSubscriber<GroupKeyRequestSerialized>(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
     setImmediate(async () => {
         for await (const request of requests) {

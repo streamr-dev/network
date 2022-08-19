@@ -9,7 +9,7 @@ import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { startFakePublisherNode } from '../test-utils/fake/fakePublisherNode'
+import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyPersistence } from '../test-utils/utils'
@@ -84,7 +84,7 @@ describe('SubscriberKeyExchange', () => {
         */
         it('happy path', async () => {
             const groupKey = GroupKey.generate()
-            const publisherNode = await startFakePublisherNode(publisherWallet, [groupKey], environment)
+            const publisherNode = await startPublisherNode(publisherWallet, [groupKey], environment)
             const groupKeyRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
             await subscriber.subscribe(stream.id, () => {})
 
