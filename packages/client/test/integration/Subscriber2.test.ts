@@ -47,7 +47,7 @@ describe('Subscriber', () => {
             client.connect(),
         ])
         const publisherWallet = fastWallet()
-        stream.grantPermissions({
+        await stream.grantPermissions({
             user: publisherWallet.address,
             permissions: [StreamPermission.PUBLISH]
         })
