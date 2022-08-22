@@ -140,7 +140,8 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
             streamIdOrPath,
             assignments,
             (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
-                registryItem.permissions.addAll(target, permissions)
+                const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
+                registryItem.permissions.addAll(target, nonExistingPermissions)
             }
         )
     }
