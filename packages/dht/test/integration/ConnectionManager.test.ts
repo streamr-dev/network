@@ -36,11 +36,11 @@ describe('ConnectionManager', () => {
 
         await connectionManager.stop()
     })
-    
+
     // The await expect(doSomething()).rejects.toThrow('someError') method does not work
     // in browsers, use the old non-async way
 
-    it('Throws an async exception if fails to connect to entrypoints', (done) => {
+    it('Throws an async exception if fails to connect to entrypoints', async () => {
 
         const connectionManager = new ConnectionManager({
             transportLayer: mockTransport,
@@ -49,20 +49,13 @@ describe('ConnectionManager', () => {
             ]
         })
 
-        connectionManager.start((report) => {
+        await expect(connectionManager.start((report) => {
             return DhtNode.createPeerDescriptor(report)
-        }).then(async () => {
-            await connectionManager.stop()
-            done.fail('Expected exception was not thrown')
-            return
-        })
-            .catch(async (e) => {
-                await connectionManager.stop()
-                expect(e.message).toBe('Failed to connect to the entrypoints')
-                done()
-            })  
+        })).rejects.toThrow('Failed to connect to the entrypoints')
+
+        await connectionManager.stop()
     })
-    
+
     it('Can probe connectivity in open internet', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9993 })
 
@@ -88,7 +81,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
-    
+
     it('Can send data to other connectionmanager over websocket', async () => {
         const connectionManager1 = new ConnectionManager({ transportLayer: mockConnectorTransport1, webSocketHost: 'localhost', webSocketPort: 9995 })
 
@@ -187,7 +180,7 @@ describe('ConnectionManager', () => {
         await connectionManager1.stop()
         await connectionManager2.stop()
     })
-    
+
     afterAll(async () => {
     })
 

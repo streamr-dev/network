@@ -5,6 +5,7 @@ import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebRTC Connection Management', () => {
 
@@ -81,21 +82,15 @@ describe('WebRTC Connection Management', () => {
         manager2.send(dummyMessage, peerDescriptor1)
     })
 
-    it('Connecting to self throws', (done) => {
+    it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        manager1.send(dummyMessage, peerDescriptor1)
-            .then(() => {
-                done.fail('test did not throw as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Cannot send to self')
-                done()
-            })
+        await expect(manager1.send(dummyMessage, peerDescriptor1))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
 })

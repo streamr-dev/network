@@ -8,6 +8,7 @@ import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
 import { ConnectionType } from '../../src/connection/IConnection'
 import { ITransport } from '../../src/transport/ITransport'
+import * as Err from '../../src/helpers/errors'
 
 describe('WebSocket Connection Management', () => {
 
@@ -97,29 +98,19 @@ describe('WebSocket Connection Management', () => {
         )
     })
 
-    it('Connecting to self throws', (done) => {
+    it('Connecting to self throws', async () => {
         const dummyMessage: Message = {
             serviceId: serviceId,
             body: new Uint8Array(),
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor)
-            .then(() => {
-                done.fail('test did not throw as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Cannot send to self')
-                wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor)
-                    .then(() => {
-                        done.fail('test did not throw as expected')
-                        return
-                    })
-                    .catch((e) => {
-                        expect(e.message).toEqual('Cannot send to self')
-                        done()
-                    })
-            })
+        await expect(noWsServerManager.send(dummyMessage, noWsServerConnectorPeerDescriptor))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
+
+        await expect(wsServerManager.send(dummyMessage, wsServerConnectorPeerDescriptor))
+            .rejects
+            .toEqual(new Err.CannotConnectToSelf('Cannot send to self'))
     })
 })

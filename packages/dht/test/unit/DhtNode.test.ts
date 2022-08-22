@@ -2,6 +2,7 @@ import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from '../../src/dht/DhtNode'
 import { PeerID } from '../../src/helpers/PeerID'
+import * as Err from '../../src/helpers/errors'
 
 describe('DhtNode', () => {
     let node: DhtNode
@@ -38,17 +39,11 @@ describe('DhtNode', () => {
         await node.stop()
     })
 
-    it('Cannot be stopped before starting', (done) => {
+    it('Cannot be stopped before starting', async () => {
         const notStarted = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
-        notStarted.stop()
-            .then(() => {
-                done.fail('Test did not throw an exeption as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Cannot not stop() before start()')
-                done()
-            })
+        await expect(notStarted.stop())
+            .rejects
+            .toEqual(new Err.CouldNotStop('Cannot not stop() before start()'))
     })
 
     it('DhtNode getKBucketPeers', async () => {

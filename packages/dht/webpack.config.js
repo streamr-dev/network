@@ -11,6 +11,7 @@ const externals = (env) => {
         'http': 'HTTP',
         'https': 'HTTPS',
         'express': 'Express',
+        'process': 'process'
     }
     return externals
 }

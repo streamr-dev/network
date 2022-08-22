@@ -1,9 +1,13 @@
-window.process = {} 
-window.process.stdout = {}
 // Add important parts of Jest to the Karma/Jasmine browser-test runtime's global scope
 // the jest.fn() API
+
 import * as jestMock from 'jest-mock'
-import expect from 'expect'
+
+// The following lines need to use the require syntax to fix 
+// process.stdout dependency in expect v. 28+ 
+process.stdout = require('./dummy-stdout')
+const expect = require ('expect').default
+
 import { ModernFakeTimers } from '@jest/fake-timers'
 
 // importing jest-extended directly relies on global.expect to be set

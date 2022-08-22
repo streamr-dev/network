@@ -6,12 +6,12 @@ module.exports = function (config) {
             'karma-electron',
             'karma-webpack',
             'karma-jasmine',
-            'karma-mocha-reporter',
+            'karma-spec-reporter',
             'karma-sourcemap-loader'
         ],
         basePath: '.',
         frameworks: ['jasmine'],
-        reporters: ['mocha'],
+        reporters: ['spec'],
         files: [
             './karma-setup.js',
             './test/end-to-end/**',
@@ -38,7 +38,7 @@ module.exports = function (config) {
                         webSecurity: false,
                         sandbox: false
                     },
-                    show: true  // set to true to show the electron window
+                    show: false // set to true to show the electron window
                 }
             }
         },

@@ -1,5 +1,5 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent, RpcError } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -65,7 +65,7 @@ describe('DhtRpc', () => {
         expect(res2.peers).toEqual(getMockPeers())
     })
 
-    it('Default RPC timeout, client side', (done) => {
+    it('Default RPC timeout, client side', async () => {
         rpcCommunicator2.off(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
             await wait(3000)
@@ -74,21 +74,14 @@ describe('DhtRpc', () => {
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        response2.response
-            .then(() => {
-                done.fail('Test did not throw exception as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Rpc request timed out')
-                done()
-            })
-
+        await expect(response2.response).rejects.toEqual(
+            new RpcError.RpcTimeout('Rpc request timed out')
+        )
     }, 15000)
 
-    it('Server side timeout', (done) => {
+    it('Server side timeout', async () => {
         let timeout: NodeJS.Timeout
-
+        
         function respondGetClosestPeersWithTimeout(_request: ClosestPeersRequest, _context: ServerCallContext): Promise<ClosestPeersResponse> {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
@@ -101,38 +94,25 @@ describe('DhtRpc', () => {
                 }, 5000)
             })
         }
-
+        
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        response.response
-            .then(() => {
-                clearTimeout(timeout!)
-                done.fail('Test did not throw as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Server timed out on request')
-                clearTimeout(timeout!)
-                done()
-            })
+        await expect(response.response).rejects.toEqual(
+            new RpcError.RpcTimeout('Server timed out on request')
+        )
+        clearTimeout(timeout!)
     })
 
-    it('Server responds with error on unknown method', (done) => {
+    it('Server responds with error on unknown method', async () => {
         const response = client2.ping(
             { nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        response.response
-            .then(() => {
-                done.fail('Test did not throw an exeption as expected')
-                return
-            })
-            .catch((e) => {
-                expect(e.message).toEqual('Server does not implement method ping')
-                done()
-            })
+        await expect(response.response).rejects.toEqual(
+            new RpcError.UnknownRpcMethod('Server does not implement method ping')
+        )
     })
 })
