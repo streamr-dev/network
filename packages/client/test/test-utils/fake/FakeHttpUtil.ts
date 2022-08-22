@@ -5,11 +5,14 @@ import { HttpUtil } from '../../../src/HttpUtil'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeStorageNode, parseNodeIdFromStorageNodeUrl } from './FakeStorageNode'
 
-interface ResendRequest { 
+const MAX_TIMESTAMP_VALUE = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
+const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
+
+interface ResendRequest {
     nodeId: EthereumAddress
     resendType: string
-    streamPartId: StreamPartID 
-    query?: URLSearchParams 
+    streamPartId: StreamPartID
+    query?: URLSearchParams
 }
 
 export class FakeHttpUtil implements HttpUtil {
@@ -42,8 +45,17 @@ export class FakeHttpUtil implements HttpUtil {
                         publisherId: request.query!.get('publisherId') ?? undefined,
                         msgChainId: request.query!.get('msgChainId') ?? undefined
                     })
+                } else if (request.resendType === 'from') {
+                    msgs = await storageNode.getRange(request.streamPartId, {
+                        fromTimestamp: Number(request.query!.get('fromTimestamp')),
+                        fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
+                        toTimestamp: MAX_TIMESTAMP_VALUE,
+                        toSequenceNumber: MAX_SEQUENCE_NUMBER_VALUE,
+                        publisherId: request.query!.get('publisherId') ?? undefined,
+                        msgChainId: undefined
+                    })
                 } else {
-                    throw new Error('not implemented: ' + JSON.stringify(request))
+                    throw new Error(`assertion failed: resendType=${request.resendType}`)
                 }
                 return Readable.from(msgs)
             }

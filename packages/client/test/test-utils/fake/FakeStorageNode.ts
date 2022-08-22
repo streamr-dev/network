@@ -51,7 +51,7 @@ export class FakeStorageNode extends FakeNetworkNode {
             metadata: {},
             permissions: storageNodeAssignmentStreamPermissions
         })
-    
+
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
