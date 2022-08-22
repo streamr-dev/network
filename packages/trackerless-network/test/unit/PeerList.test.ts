@@ -16,7 +16,7 @@ describe('PeerList', () => {
     let peerList: PeerList
     const simulator = new Simulator()
 
-    const createRemoteGraphNode = (peerDescriptor) => {
+    const createRemoteGraphNode = (peerDescriptor: PeerDescriptor) => {
         const mockTransport = new SimulatorTransport(peerDescriptor, simulator)
         const mockClient = new RoutingRpcCommunicator(`layer2-${ graphId }`, mockTransport).getRpcClientTransport()
         return new RemoteRandomGraphNode(peerDescriptor, graphId, new NetworkRpcClient(mockClient))
@@ -54,14 +54,14 @@ describe('PeerList', () => {
 
     it('remove', () => {
         const toRemove = peerList.getClosest([])
-        peerList.remove(toRemove.getPeerDescriptor())
-        expect(peerList.hasPeer(toRemove.getPeerDescriptor())).toEqual(false)
+        peerList.remove(toRemove!.getPeerDescriptor())
+        expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = PeerID.fromValue(toRemove.getPeerDescriptor().peerId).toMapKey()
+        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().peerId).toMapKey()
         peerList.removeById(stringId)
-        expect(peerList.hasPeer(toRemove.getPeerDescriptor())).toEqual(false)
+        expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })
 })
