@@ -177,7 +177,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamPublisher(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid address', async () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
@@ -200,7 +200,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamSubscriber(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid address', async () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
