@@ -1,40 +1,38 @@
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
-import { createTestStream, getCreateClient } from '../test-utils/utils'
+import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
 import { range } from 'lodash'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { StreamPermission } from './../../src/permission'
 
 const NUM_MESSAGES = 8
 const MAX_MESSAGES = 4
 const PARTITIONS = 3
-jest.setTimeout(60000)
 
-describe('SubscribeAll', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
+describe('subscribe all partitions', () => {
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
 
-    const createClient = getCreateClient()
-
     beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
-    })
-
-    beforeEach(async () => {
-        // eslint-disable-next-line require-atomic-updates
-        client = await createClient()
-        await client.connect()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        publishTestMessages = getPublishTestStreamMessages(client, stream)
+        const publisherWallet = fastWallet()
+        await stream.grantPermissions({
+            user: publisherWallet.address,
+            permissions: [StreamPermission.PUBLISH]
+        })
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), stream)
     })
 
     afterEach(async () => {
@@ -44,13 +42,7 @@ describe('SubscribeAll', () => {
         expect(await client.subscriber.count(stream.id)).toBe(0)
         // @ts-expect-error private
         expect(client.subscriber.countSubscriptionSessions()).toBe(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
         await client?.destroy()
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     it('subscribes to all partitions', async () => {
