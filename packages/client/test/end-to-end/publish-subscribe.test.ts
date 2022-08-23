@@ -83,7 +83,7 @@ describe('publish-subscribe', () => {
         ])
     }, TIMEOUT)
 
-    describe('non-public stream', () => {
+    describe('private stream', () => {
         let stream: Stream
 
         beforeAll(async () => {
