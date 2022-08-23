@@ -1,16 +1,12 @@
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, getWaitForStorage, Msg } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-import { ConfigTest, DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
-const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 24000 : 12000
 const MAX_MESSAGES = 5
 const ITERATIONS = 4
-
-jest.setTimeout(30000)
 
 describe('sequential resend subscribe', () => {
     let publisher: StreamrClient
@@ -21,47 +17,31 @@ describe('sequential resend subscribe', () => {
     let waitForStorage: (...args: any[]) => Promise<void> = async () => {}
 
     let published: any[] = [] // keeps track of stream message data so we can verify they were resent
+    let environment: FakeEnvironment
 
     beforeAll(async () => {
-        publisher = new StreamrClient({
-            ...ConfigTest,
-            id: 'TestPublisher',
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas(),
-            },
-        })
-
-        subscriber = new StreamrClient({
-            ...ConfigTest,
-            id: 'TestSubscriber',
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas(),
-            },
-        })
-
+        environment = new FakeEnvironment()
+        publisher = environment.createClient()
+        subscriber = environment.createClient()
         stream = await createTestStream(publisher, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-
+        const storageNode = environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(publisher, stream)
         await stream.grantPermissions({
             user: await subscriber.getAddress(),
             permissions: [StreamPermission.SUBSCRIBE]
         })
-
         waitForStorage = getWaitForStorage(publisher, {
-            stream,
-            timeout: WAIT_FOR_STORAGE_TIMEOUT,
+            stream
         })
-
         // initialize resend data by publishing some messages and waiting for
         // them to land in storage
         published = await publishTestMessages(MAX_MESSAGES, {
             waitForLast: true,
             timestamp: 111111,
         })
-
-    }, WAIT_FOR_STORAGE_TIMEOUT * 2)
+    })
 
     afterAll(async () => {
         await publisher?.destroy()
@@ -92,15 +72,18 @@ describe('sequential resend subscribe', () => {
             const onResent = jest.fn()
             sub.once('resendComplete', onResent)
 
-            const message = Msg()
-            // eslint-disable-next-line no-await-in-loop
-            const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
-                timestamp: id
+            const expectedMessageCount = published.length + 1 // the realtime message which we publish next
+            setImmediate(async () => {
+                const message = Msg()
+                // eslint-disable-next-line no-await-in-loop
+                const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
+                    timestamp: id
+                })
+                // keep track of published messages so we can check they are resent in next test(s)
+                published.push(streamMessage)
             })
-            // keep track of published messages so we can check they are resent in next test(s)
-            published.push(streamMessage)
-            const msgs = await sub.collect(published.length)
-            expect(msgs).toHaveLength(published.length)
+            const msgs = await sub.collect(expectedMessageCount)
+            expect(msgs).toHaveLength(expectedMessageCount)
             expect(msgs).toEqual(published)
         })
     }
