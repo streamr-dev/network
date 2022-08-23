@@ -33,10 +33,6 @@ describe('Group Key Persistence', () => {
 
         async function setupPublisher(opts?: any, streamOpts: any = {}) {
             const client = environment.createClient(opts)
-            await Promise.all([
-                client.connect(),
-            ])
-
             stream = await createTestStream(client, module, {
                 ...streamOpts,
             })
@@ -98,8 +94,6 @@ describe('Group Key Persistence', () => {
                         privateKey: publisherPrivateKey,
                     }
                 })
-
-                await publisher2.connect()
             }, 2 * TIMEOUT)
 
             it('works', async () => {
@@ -208,8 +202,6 @@ describe('Group Key Persistence', () => {
                     privateKey: subscriberPrivateKey
                 }
             })
-
-            await subscriber2.connect()
             const sub2 = await subscriber2.resend(
                 stream.id,
                 {

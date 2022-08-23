@@ -171,7 +171,6 @@ describe('Sequencing', () => {
         expect(msgsReceieved).toEqual(msgsPublished.filter(({ backdated }) => !backdated))
 
         const seq = toSeq(requests, ts)
-        client.debug(seq)
         expect(seq).toEqual([
             [[0, 0], null],
             [[1, 0], [0, 0]],
