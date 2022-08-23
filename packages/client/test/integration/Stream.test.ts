@@ -20,7 +20,7 @@ describe('Stream', () => {
         await Promise.allSettled([client?.destroy()])
     })
 
-    describe('addToStorageNode()', () => {
+    describe('addToStorageNode', () => {
 
         it('single partition stream', async () => {
             const stream = await createTestStream(client, module, {
