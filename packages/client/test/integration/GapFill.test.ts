@@ -11,7 +11,6 @@ import { StreamPermission } from '../../src'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(50000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0

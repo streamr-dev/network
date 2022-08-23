@@ -11,9 +11,6 @@ import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { StreamMessage } from 'streamr-client-protocol'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
-const TIMEOUT = 30 * 1000
-jest.setTimeout(60000)
-
 describe('Group Key Persistence', () => {
     let publisherPrivateKey: string
     let subscriberPrivateKey: string
@@ -94,7 +91,7 @@ describe('Group Key Persistence', () => {
                         privateKey: publisherPrivateKey,
                     }
                 })
-            }, 2 * TIMEOUT)
+            })
 
             it('works', async () => {
                 // @ts-expect-error private
@@ -120,7 +117,7 @@ describe('Group Key Persistence', () => {
                 }
 
                 expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
-            }, 2 * TIMEOUT)
+            })
         })
 
         it('subscriber persists group key with realtime', async () => {
@@ -166,7 +163,7 @@ describe('Group Key Persistence', () => {
 
             expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
-        }, 2 * TIMEOUT)
+        })
 
         it('subscriber persists group key with resend last', async () => {
             // we want to check that subscriber can read a group key
@@ -218,7 +215,7 @@ describe('Group Key Persistence', () => {
             }
             expect(received2.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
-        }, 3 * TIMEOUT)
+        })
 
         it('can run multiple publishers in parallel', async () => {
             const sub = await subscriber.subscribe({
@@ -258,7 +255,7 @@ describe('Group Key Persistence', () => {
 
             expect(received1.map((m) => m.signature)).toEqual(published1.map((m) => m.signature))
             expect(received2.map((m) => m.signature)).toEqual(published2.map((m) => m.signature))
-        }, 3 * TIMEOUT)
+        })
 
         describe('publisher does not complain about group key when many concurrent publishes', () => {
             const NUM_STREAMS = 5
@@ -277,7 +274,7 @@ describe('Group Key Persistence', () => {
                     const s = await createTestStream(publisher, module)
                     streams.push(s)
                 }
-            }, 2 * TIMEOUT)
+            })
 
             afterEach(() => (
                 publisher.destroy()
@@ -297,7 +294,7 @@ describe('Group Key Persistence', () => {
                 await Promise.allSettled(tasks)
                 const publishedPerStream = await Promise.all(tasks)
                 expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
-            }, 2 * TIMEOUT)
+            })
         })
 
         describe('publisher does not complain about group key when many concurrent publishes with storage', () => {
@@ -363,7 +360,7 @@ describe('Group Key Persistence', () => {
                 })
                 streams.push(stream)
             }
-        }, 2 * TIMEOUT)
+        })
 
         afterEach(() => (
             publisher.destroy()
@@ -384,6 +381,6 @@ describe('Group Key Persistence', () => {
             await Promise.allSettled(tasks)
             const publishedPerStream = await Promise.all(tasks)
             expect(publishedPerStream.map((p) => p.length)).toEqual(Array(NUM_STREAMS).fill(20))
-        }, 2 * TIMEOUT)
+        })
     })
 })

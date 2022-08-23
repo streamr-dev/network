@@ -6,8 +6,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
-jest.setTimeout(30000)
-
 const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
