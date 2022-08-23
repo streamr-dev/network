@@ -42,7 +42,6 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
     private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
     private bufferThresholdLow: number
     private lastState: RTCPeerConnectionState = 'connecting'
-    private buffer: Uint8Array[] = []
     private remoteDescriptionSet = false
     private connectingTimeoutRef: NodeJS.Timeout | null = null
     private connectingTimeout: number
@@ -117,38 +116,12 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         }
     }
 
-    setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.remotePeerDescriptor = peerDescriptor
-    }
-
-    getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.remotePeerDescriptor
-    }
-
     send(data: Uint8Array): void {
         if (this.isOpen()) {
-            this.doSend(data)
+            this.dataChannel?.sendMessageBinary(data as Buffer)
         } else {
-            this.addToBuffer(data)
+            logger.warn('Tried to send data on a non-open connection')
         }
-    }
-
-    sendBufferedMessages(): void {
-        while (this.buffer.length > 0) {
-            this.send(this.buffer.shift()!)
-        }
-    }
-
-    private doSend(data: Uint8Array): void {
-        this.dataChannel?.sendMessageBinary(data as Buffer)
-    }
-
-    private addToBuffer(msg: Uint8Array): void {
-        this.buffer.push(msg)
-    }
-
-    getBufferedMessages(): Uint8Array[] {
-        return this.buffer
     }
 
     close(): void {
@@ -200,10 +173,8 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
             clearTimeout(this.connectingTimeoutRef)
         }
         this.dataChannel = dataChannel
-        this.sendBufferedMessages()
         logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.peerId.toString()}`)
         this.emit(ConnectionEvent.CONNECTED)
-
     }
 
     private onStateChange(state: string): void {

@@ -64,6 +64,7 @@ describe('RpcCommunicator', () => {
     })
 
     it('Resolves Promises', async () => {
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(responseRpcMessage))
         const pong = await promises.message.promise
@@ -71,6 +72,7 @@ describe('RpcCommunicator', () => {
     })
 
     it('Timeouts Promises', async () => {
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
         await expect(promises.message.promise)
             .rejects
@@ -83,6 +85,7 @@ describe('RpcCommunicator', () => {
             responseError: RpcResponseError.SERVER_ERROR
         }
         //response.body = RpcMessage.toBinary(errorResponse)
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -96,6 +99,7 @@ describe('RpcCommunicator', () => {
             responseError: RpcResponseError.SERVER_TIMOUT
         }
         //response.body = RpcMessage.toBinary(errorResponse)
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -109,6 +113,7 @@ describe('RpcCommunicator', () => {
             responseError: RpcResponseError.UNKNOWN_RPC_METHOD
         }
         //response.body = RpcMessage.toBinary(errorResponse)
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(request, promises)
         rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(errorResponse))
         await expect(promises.message.promise)
@@ -125,6 +130,7 @@ describe('RpcCommunicator', () => {
             }
         }
         promises.messageParser = (bytes: Uint8Array) => Empty.fromBinary(bytes)
+        // @ts-expect-error private 
         rpcCommunicator.onOutgoingMessage(notification, promises)
         const res = await promises.message.promise as Empty
         expect(res).toBeTruthy()

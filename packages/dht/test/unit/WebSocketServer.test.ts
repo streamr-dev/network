@@ -1,3 +1,5 @@
+/* eslint-disable promise/no-nesting */
+
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
 
 describe('WebSocketServer', () => {

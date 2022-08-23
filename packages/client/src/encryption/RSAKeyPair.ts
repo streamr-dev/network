@@ -5,7 +5,6 @@ import { promisify } from 'util'
 const { webcrypto } = crypto
 
 function getSubtle(): any {
-    // @ts-expect-error webcrypto.subtle does not currently exist in node types
     const subtle = typeof window !== 'undefined' ? window?.crypto?.subtle : webcrypto.subtle
     if (!subtle) {
         const url = 'https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto'

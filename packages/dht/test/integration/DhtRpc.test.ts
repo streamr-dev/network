@@ -39,7 +39,7 @@ describe('DhtRpc', () => {
         })
 
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
-        
+
         client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
         client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
     })
@@ -48,7 +48,7 @@ describe('DhtRpc', () => {
         await rpcCommunicator1.stop()
         await rpcCommunicator2.stop()
     })
-    
+
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
             { peerDescriptor: peerDescriptor1, nonce: '1' },
@@ -64,7 +64,7 @@ describe('DhtRpc', () => {
         const res2 = await response2.response
         expect(res2.peers).toEqual(getMockPeers())
     })
-    
+
     it('Default RPC timeout, client side', async () => {
         rpcCommunicator2.off(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
@@ -105,7 +105,7 @@ describe('DhtRpc', () => {
         )
         clearTimeout(timeout!)
     })
-    
+
     it('Server responds with error on unknown method', async () => {
         const response = client2.ping(
             { nonce: '1' },

@@ -1,4 +1,3 @@
-import { PeerDescriptor } from "../proto/DhtRpc"
 import { UUID } from "../helpers/UUID"
 
 export enum Event {
@@ -24,9 +23,6 @@ export class ConnectionID extends UUID {
 
 export interface IConnection {
     
-    connectionId: ConnectionID
-    connectionType: ConnectionType
-
     on(event: Event.DATA, listener: (bytes: Uint8Array) => void): this
     on(event: Event.ERROR, listener: (name: string) => void): this
     on(event: Event.CONNECTED, listener: () => void): this
@@ -37,11 +33,11 @@ export interface IConnection {
     once(event: Event.CONNECTED, listener: () => void): this
     once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
 
-    setPeerDescriptor(peerDescriptor: PeerDescriptor): void
-    getPeerDescriptor(): PeerDescriptor | undefined
+    off(event: Event.DATA, listener: (bytes: Uint8Array) => void): void
+    off(event: Event.ERROR, listener: (name: string) => void): void
+    off(event: Event.CONNECTED, listener: () => void): void
+    off(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): void
 
     send(data: Uint8Array): void
-    sendBufferedMessages(): void
-    getBufferedMessages(): Uint8Array[]
     close(): void
 }

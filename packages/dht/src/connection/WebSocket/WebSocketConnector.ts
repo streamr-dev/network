@@ -1,45 +1,61 @@
 import 'setimmediate'
 import { EventEmitter } from 'events'
 import {
-    IConnectionSource,
+    IManagedConnectionSource,
+    Event as ManagedConnectionSourceEvent,
+} from '../IManagedConnectionSource'
+
+import {
     Event as ConnectionSourceEvent,
-    Event as ConnectionSourceEvents
 } from '../IConnectionSource'
+import { PeerID } from '../../helpers/PeerID'
 import { ClientWebSocket } from './ClientWebSocket'
-import { Event as ConnectionEvents, Event as ConnectionEvent, IConnection } from '../IConnection'
+import { IConnection, ConnectionType } from '../IConnection'
 import { ITransport } from '../../transport/ITransport'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { RemoteWebSocketConnector } from './RemoteWebSocketConnector'
 import {
-    HandshakeMessage,
-    Message,
-    MessageType,
+    ConnectivityResponseMessage,
     PeerDescriptor,
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
 } from '../../proto/DhtRpc'
 import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
-import { DeferredConnection } from '../DeferredConnection'
-import { TODO } from '../../types'
 import { Logger } from '@streamr/utils'
 import { IWebSocketConnector } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { v4 } from 'uuid'
-import * as Err from '../../helpers/errors'
+import { ManagedConnection } from '../ManagedConnection'
+import { Event as ManagedConnectionEvents } from '../IManagedConnection'
+import { WebSocketServer } from './WebSocketServer'
+import { ConnectivityChecker } from '../ConnectivityChecker'
+import { NatType } from '../ConnectionManager'
+import { PeerIDKey } from '../../helpers/PeerID'
+import { ServerWebSocket } from './ServerWebSocket'
 
 const logger = new Logger(module)
 
-export class WebSocketConnector extends EventEmitter implements IConnectionSource, IWebSocketConnector {
+export class WebSocketConnector extends EventEmitter implements IManagedConnectionSource, IWebSocketConnector {
     private static WEBSOCKET_CONNECTOR_SERVICE_ID = 'websocketconnector'
     private rpcCommunicator: RoutingRpcCommunicator
-    private ownPeerDescriptor: PeerDescriptor | null = null
+    private ownPeerDescriptor?: PeerDescriptor
     private canConnectFunction: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+    private webSocketServer?: WebSocketServer
+    private connectivityChecker: ConnectivityChecker
+    private ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
 
     constructor(
         private rpcTransport: ITransport,
-        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean
+        fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
+        private webSocketPort?: number,
+        private webSocketHost?: string,
+        private entrypoints?: PeerDescriptor[],
+        private stopped = false
     ) {
         super()
+
+        this.webSocketServer = webSocketPort ? new WebSocketServer() : undefined
+        this.connectivityChecker = new ConnectivityChecker(webSocketPort)
+
         this.canConnectFunction = fnCanConnect.bind(this)
 
         this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
@@ -56,23 +72,62 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
         )
     }
 
-    connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {
+    public async start(): Promise<void> {
+        if (this.webSocketServer) {
+            this.webSocketServer.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
+                this.connectivityChecker.listenToIncomingConnectivityRequests(connection as unknown as ServerWebSocket)
+            })
+            await this.webSocketServer.start(this.webSocketPort!, this.webSocketHost)
+        }
+    }
+
+    public async checkConnectivity(): Promise<ConnectivityResponseMessage> {
+
+        const noServerConnectivityResponse: ConnectivityResponseMessage = {
+            openInternet: false,
+            ip: 'localhost',
+            natType: NatType.UNKNOWN
+        }
+
+        if (!this.webSocketServer) {
+            // If no websocket server, return openInternet: false     
+            return noServerConnectivityResponse
+        } else {
+            if (!this.entrypoints || this.entrypoints.length < 1) {
+                // return connectivity info given in config
+
+                const preconfiguredConnectivityResponse: ConnectivityResponseMessage = {
+                    openInternet: true,
+                    ip: this.webSocketHost!,
+                    natType: NatType.OPEN_INTERNET,
+                    websocket: { ip: this.webSocketHost!, port: this.webSocketPort! }
+                }
+                return preconfiguredConnectivityResponse
+            } else {
+                // Do real connectivity checking
+
+                let response = noServerConnectivityResponse
+
+                response = await this.connectivityChecker.sendConnectivityRequest(this.entrypoints[0])
+                
+                return response
+            }
+        }
+    }
+
+    public connect({ host, port, url, ownPeerDescriptor, targetPeerDescriptor }: {
         host?: string
         port?: number
         url?: string
         ownPeerDescriptor?: PeerDescriptor
         targetPeerDescriptor?: PeerDescriptor
     } = {}
-    ): IConnection {
+    ): ManagedConnection {
 
         if (!host && !port && !url && ownPeerDescriptor && targetPeerDescriptor) {
             return this.requestConnectionFromPeer(ownPeerDescriptor, targetPeerDescriptor)
         }
         const socket = new ClientWebSocket()
-
-        socket.once(ConnectionEvent.CONNECTED, () => {
-            this.emit(ConnectionSourceEvent.CONNECTED, socket)
-        })
 
         let address = ''
         if (url) {
@@ -81,49 +136,14 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             address = 'ws://' + host + ':' + port
         }
 
+        const managedConnection = new ManagedConnection(ownPeerDescriptor!, 'TODO', ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+        managedConnection.setPeerDescriptor(targetPeerDescriptor!)
         socket.connect(address)
-        return socket
+
+        return managedConnection
     }
 
-    connectAsync({ host, port, url, timeoutMs }:
-        { host?: string, port?: number, url?: string, timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
-
-        return new Promise((resolve, reject) => {
-            const socket = new ClientWebSocket()
-
-            const connectHandler = () => {
-                clearTimeout(timeout)
-                socket.off(ConnectionEvent.ERROR, errorHandler)
-                resolve(socket)
-            }
-
-            const errorHandler = () => {
-                clearTimeout(timeout)
-                reject(new Err.ConnectionFailed('Could not open WebSocket connection'))
-            }
-
-            const timeoutHandler = () => {
-                socket.off(ConnectionEvent.ERROR, errorHandler)
-                reject(new Err.ConnectionFailed('WebSocket connection timed out'))
-            }
-
-            const timeout = setTimeout(timeoutHandler, timeoutMs)
-
-            socket.once(ConnectionEvent.CONNECTED, connectHandler)
-            socket.once(ConnectionEvent.ERROR, errorHandler)
-
-            let address = ''
-            if (url) {
-                address = url
-            } else if (host && port) {
-                address = 'ws://' + host + ':' + port
-            }
-
-            socket.connect(address)
-        })
-    }
-
-    requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): IConnection {
+    public requestConnectionFromPeer(ownPeerDescriptor: PeerDescriptor, targetPeerDescriptor: PeerDescriptor): ManagedConnection {
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
@@ -131,52 +151,54 @@ export class WebSocketConnector extends EventEmitter implements IConnectionSourc
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
-        return new DeferredConnection(targetPeerDescriptor)
+        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, 'TODO', ConnectionType.WEBSOCKET_SERVER)
+        managedConnection.setPeerDescriptor(targetPeerDescriptor)
+        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey(), managedConnection)
+        return managedConnection
     }
 
-    setOwnPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.ownPeerDescriptor = peerDescriptor
+    private onServerSocketHandshakeCompleted = (peerDescriptor: PeerDescriptor,
+        serverWebSocket: IConnection, managedConnection: ManagedConnection) => {
+        
+        logger.trace('serversocket handshake completed')
+        const peerId = PeerID.fromValue(peerDescriptor.peerId)
+        if (this.ongoingConnectRequests.has(peerId.toMapKey())) {
+            this.ongoingConnectRequests.get(peerId.toMapKey())?.attachImplementation(serverWebSocket, peerDescriptor)
+            this.ongoingConnectRequests.delete(peerId.toMapKey())
+        } else {
+            this.emit(ManagedConnectionSourceEvent.CONNECTED, managedConnection)
+        }
     }
+    public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
+        this.ownPeerDescriptor = ownPeerDescriptor
 
-    bindListeners(incomingMessageHandler: TODO, protocolVersion: string): void {
-        // set up normal listeners that send a handshake for new connections from webSocketConnector
-        this.on(ConnectionSourceEvents.CONNECTED, (connection: IConnection) => {
-            connection.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
-                const message = Message.fromBinary(data)
-                if (this.ownPeerDescriptor) {
-                    incomingMessageHandler(connection, message)
-                }
+        if (this.webSocketServer) {
+            this.webSocketServer.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
+                const managedConnection = new ManagedConnection(ownPeerDescriptor, 'TODO', ConnectionType.WEBSOCKET_SERVER, undefined, connection)
+                managedConnection.once(ManagedConnectionEvents.HANDSHAKE_COMPLETED, (peerDescriptor: PeerDescriptor) => {
+
+                    this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
+                })
             })
-
-            if (this.ownPeerDescriptor) {
-                logger.trace(`Initiating handshake with ${connection.getPeerDescriptor()?.peerId.toString()}`)
-                const outgoingHandshake: HandshakeMessage = {
-                    sourceId: this.ownPeerDescriptor.peerId,
-                    protocolVersion: protocolVersion,
-                    peerDescriptor: this.ownPeerDescriptor
-                }
-
-                const msg: Message = {
-                    serviceId: WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID,
-                    messageType: MessageType.HANDSHAKE,
-                    messageId: v4(),
-                    body: HandshakeMessage.toBinary(outgoingHandshake)
-                }
-
-                connection.send(Message.toBinary(msg))
-                connection.sendBufferedMessages()
-            }
-        })
+        }
     }
 
-    stop(): void {
+    public async stop(): Promise<void> {
+        this.stopped = true
         this.rpcCommunicator.stop()
+        await this.webSocketServer?.stop()
     }
 
     // IWebSocketConnector implementation
-    async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
+    public async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
         if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
-            setImmediate(() => this.connect({ host: request.ip, port: request.port }))
+            setImmediate(() => {
+                const connection = this.connect({
+                    host: request.ip, port: request.port,
+                    targetPeerDescriptor: request.requester, ownPeerDescriptor: this.ownPeerDescriptor
+                })
+                this.emit(ManagedConnectionSourceEvent.CONNECTED, connection)
+            })
             const res: WebSocketConnectionResponse = {
                 accepted: true
             }
