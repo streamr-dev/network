@@ -39,7 +39,7 @@ describe('StreamRegistry', () => {
 
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
-            const path = await createRelativeTestStreamId(module)
+            const path = createRelativeTestStreamId(module)
             const stream = await client.createStream({
                 id: path
             })
@@ -229,7 +229,7 @@ describe('StreamRegistry', () => {
 
     describe('delete', () => {
         it('happy path', async () => {
-            const props = { id: await createRelativeTestStreamId(module) }
+            const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await stream.delete()
             await until(async () => {
