@@ -1,5 +1,5 @@
 import { getMockPeers, MockDhtRpc } from '../utils'
-import { RpcCommunicator, RpcCommunicatorEvent, RpcError } from '@streamr/proto-rpc'
+import { ProtoRpcClient, RpcCommunicator, RpcCommunicatorEvent, RpcError, toProtoRpcClient } from '@streamr/proto-rpc'
 import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { ClosestPeersRequest, ClosestPeersResponse, PeerDescriptor } from '../../src/proto/DhtRpc'
@@ -10,8 +10,8 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 describe('DhtRpc', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client1: DhtRpcClient
-    let client2: DhtRpcClient
+    let client1: ProtoRpcClient<DhtRpcClient>
+    let client2: ProtoRpcClient<DhtRpcClient>
 
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
@@ -40,8 +40,8 @@ describe('DhtRpc', () => {
 
         rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, outgoingListener2)
 
-        client1 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
-        client2 = new DhtRpcClient(rpcCommunicator1.getRpcClientTransport())
+        client1 = toProtoRpcClient(new DhtRpcClient(rpcCommunicator1.getRpcClientTransport()))
+        client2 = toProtoRpcClient(new DhtRpcClient(rpcCommunicator1.getRpcClientTransport()))
     })
 
     afterEach(async () => {
@@ -54,14 +54,14 @@ describe('DhtRpc', () => {
             { peerDescriptor: peerDescriptor1, nonce: '1' },
             { targetDescriptor: peerDescriptor2 }
         )
-        const res1 = await response1.response
+        const res1 = await response1
         expect(res1.peers).toEqual(getMockPeers())
 
         const response2 = client2.getClosestPeers(
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        const res2 = await response2.response
+        const res2 = await response2
         expect(res2.peers).toEqual(getMockPeers())
     })
 
@@ -74,7 +74,7 @@ describe('DhtRpc', () => {
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response2.response).rejects.toEqual(
+        await expect(response2).rejects.toEqual(
             new RpcError.RpcTimeout('Rpc request timed out')
         )
     }, 15000)
@@ -100,7 +100,7 @@ describe('DhtRpc', () => {
             { peerDescriptor: peerDescriptor2, nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response.response).rejects.toEqual(
+        await expect(response).rejects.toEqual(
             new RpcError.RpcTimeout('Server timed out on request')
         )
         clearTimeout(timeout!)
@@ -111,7 +111,7 @@ describe('DhtRpc', () => {
             { nonce: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
-        await expect(response.response).rejects.toEqual(
+        await expect(response).rejects.toEqual(
             new RpcError.UnknownRpcMethod('Server does not implement method ping')
         )
     })

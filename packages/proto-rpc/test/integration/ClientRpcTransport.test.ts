@@ -4,6 +4,7 @@ import { RpcCommunicator, RpcCommunicatorEvent } from '../../src/RpcCommunicator
 import { DhtRpcClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
 import { CallContext } from '../../src/ServerRegistry'
+import { toProtoRpcClient } from '../../src'
 
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
@@ -26,14 +27,13 @@ describe('DhtClientRpcTransport', () => {
             rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(response))
         })
 
-        const client =  new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
+        const client =  toProtoRpcClient(new DhtRpcClient(rpcCommunicator.getRpcClientTransport()))
 
         const peerDescriptor: PeerDescriptor = {
             peerId: new Uint8Array([1, 2, 3]),
             type: 0
         }
-        const response = client.getClosestPeers({ peerDescriptor, nonce: '1' })
-        const res = await response.response
+        const res = await client.getClosestPeers({ peerDescriptor, nonce: '1' })
         expect(res.peers.length).toEqual(4)
         expect(res.peers[0]).toEqual(getMockPeers()[0])
         expect(res.peers[1]).toEqual(getMockPeers()[1])

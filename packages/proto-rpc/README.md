@@ -63,12 +63,13 @@ const helloService = new HelloService()
 communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
 ```
 
-- start a RPC communicator for the client side, and bind it to the auto-generated HelloClient class
+- start a RPC communicator for the client side, bind it to an instance of the auto-generated HelloClient class, and convert the auto-generated client
+into a ProtoRpcClient<HelloClient> 
 
 
 ```typescript
 const communicator2 = new RpcCommunicator()
-const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
+const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
 ```
 
 - listen to outgoing packets from the RpcCpommunicators on both the client and server sides, and
@@ -87,8 +88,7 @@ communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _
 - make the RPC call and print the result
   
 ```typescript
-const result = helloClient.sayHello({ myName: 'Alice' })
-const response = await result.response
+const response = await helloClient.sayHello({ myName: 'Alice' })
 console.log(response.greeting)
 ```
 

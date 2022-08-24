@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcCommunicator, RpcCommunicatorEvents, CallContext } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent, CallContext, toProtoRpcClient } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/HelloRpc'
 import { IHelloRpc } from './proto/HelloRpc.server'
 import { HelloRpcClient } from './proto/HelloRpc.client'
@@ -19,18 +19,18 @@ const run = async () => {
 
     // Setup client
     const communicator2 = new RpcCommunicator()
-    const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
+    const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
-    communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+    communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator2.handleIncomingMessage(msgBody)
     })
-    communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+    communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator1.handleIncomingMessage(msgBody)
     })
 
-    const results = helloClient.sayHello({ myName: 'Alice' })
-    const { greeting } = await results.response
+    const { greeting } = await helloClient.sayHello({ myName: 'Alice' })
+    //const { greeting } = await results.response
     // eslint-disable-next-line no-console
     console.log(greeting)
 
@@ -39,3 +39,4 @@ const run = async () => {
 }
 
 run()
+
