@@ -81,15 +81,13 @@ describe('StreamrClient', () => {
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
-                // @ts-expect-error private
-                expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
+                expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                // @ts-expect-error private
-                expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
+                expect(await client.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -248,10 +246,8 @@ describe('StreamrClient', () => {
                 client.publish(streamDefinition, msgs[3]),
             ]
             const results = await Promise.allSettled(publishTasks)
-            client.debug('publishTasks', results.map(({ status }) => status))
             expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'rejected', 'rejected'])
             await wait(500)
-            client.debug('received', received)
             // should probably get every publish that was fulfilled, right?
             // expect(received).toEqual([msgs[0].content])
         })

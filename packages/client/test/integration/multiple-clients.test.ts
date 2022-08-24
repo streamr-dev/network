@@ -66,7 +66,6 @@ describe('PubSub with multiple clients', () => {
             permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
             user: pubUser
         })
-        await pubClient.connect()
         return pubClient
     }
 
@@ -78,7 +77,6 @@ describe('PubSub with multiple clients', () => {
         })
         const user = await client.getAddress()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
-        await client.connect()
         return client
     }
 
@@ -91,7 +89,6 @@ describe('PubSub with multiple clients', () => {
     describe('can get messages published from other client', () => {
         test('it works', async () => {
             otherClient = await createSubscriber()
-            await mainClient.connect()
 
             const receivedMessagesOther: any[] = []
             const receivedMessagesMain: any[] = []
@@ -125,7 +122,6 @@ describe('PubSub with multiple clients', () => {
         test('works with multiple publishers on a single stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
-            await mainClient.connect()
 
             otherClient = await createSubscriber()
 
@@ -190,7 +186,6 @@ describe('PubSub with multiple clients', () => {
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
-            await mainClient.connect()
 
             const receivedMessagesOther: Record<string, StreamMessage[]> = {}
             const receivedMessagesMain: Record<string, StreamMessage[]> = {}
@@ -282,11 +277,8 @@ describe('PubSub with multiple clients', () => {
     })
 
     test('works with multiple publishers on one stream', async () => {
-        await mainClient.connect()
-
         otherClient = environment.createClient()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        await otherClient.connect()
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
         const receivedMessagesMain: Record<string, StreamMessage[]> = {}
@@ -345,13 +337,11 @@ describe('PubSub with multiple clients', () => {
     // late subscriber reliably get all of both realtime and resent messages
     test.skip('works with multiple publishers on one stream with late subscriber (resend)', async () => {
         const published: Record<string, StreamMessage[]> = {}
-        await mainClient.connect()
 
         otherClient = environment.createClient()
         const otherUser = await otherClient.getAddress()
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
-        await otherClient.connect()
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
         const receivedMessagesMain: Record<string, StreamMessage[]> = {}

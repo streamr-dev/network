@@ -2,6 +2,7 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { createTestStream } from '../test-utils/utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
+import { Stream } from '../../src/Stream'
 
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 
@@ -19,7 +20,7 @@ describe('Stream', () => {
         await Promise.allSettled([client?.destroy()])
     })
 
-    describe('addToStorageNode()', () => {
+    describe('addToStorageNode', () => {
 
         it('single partition stream', async () => {
             const stream = await createTestStream(client, module, {
@@ -50,22 +51,79 @@ describe('Stream', () => {
     })
 
     describe('detectFields', () => {
-        it('happy path', async () => {
-            const stream = await createTestStream(client, module)
-            await stream.addToStorageNode(storageNode.id)
-            expect(stream.config.fields).toEqual([])
 
+        let stream: Stream
+
+        beforeEach(async () => {
+            stream = await createTestStream(client, module)
+            await stream.addToStorageNode(storageNode.id)
+        })
+
+        it('primitive types', async () => {
             const msg = await stream.publish({
-                foo: 123,
+                number: 123,
+                boolean: true,
+                object: {
+                    k: 1,
+                    v: 2,
+                },
+                array: [1, 2, 3],
+                string: 'test'
             })
             await client.waitForStorage(msg)
 
             await stream.detectFields()
 
-            const expectedFields = [{
-                name: 'foo',
-                type: 'number',
-            }]
+            const expectedFields = [
+                {
+                    name: 'number',
+                    type: 'number',
+                },
+                {
+                    name: 'boolean',
+                    type: 'boolean',
+                },
+                {
+                    name: 'object',
+                    type: 'map',
+                },
+                {
+                    name: 'array',
+                    type: 'list',
+                },
+                {
+                    name: 'string',
+                    type: 'string',
+                },
+            ]
+            expect(stream.config.fields).toEqual(expectedFields)
+            const loadedStream = await client.getStream(stream.id)
+            expect(loadedStream.config.fields).toEqual(expectedFields)
+        })
+
+        it('skips unsupported types', async () => {
+            const msg = await stream.publish({
+                null: null,
+                empty: {},
+                func: () => null,
+                nonexistent: undefined,
+                symbol: Symbol('test'),
+                // TODO: bigint: 10n,
+            })
+            await client.waitForStorage(msg)
+
+            await stream.detectFields()
+
+            const expectedFields = [
+                {
+                    name: 'null',
+                    type: 'map',
+                },
+                {
+                    name: 'empty',
+                    type: 'map',
+                },
+            ]
             expect(stream.config.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
             expect(loadedStream.config.fields).toEqual(expectedFields)

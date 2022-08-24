@@ -25,10 +25,6 @@ describe('Resends2', () => {
     beforeEach(async () => {
         const environment = new FakeEnvironment()
         client = environment.createClient()
-        // eslint-disable-next-line require-atomic-updates
-        await Promise.all([
-            client.connect()
-        ])
         stream = await createTestStream(client, module)
         const publisherWallet = fastWallet()
         await stream.grantPermissions({
@@ -42,7 +38,6 @@ describe('Resends2', () => {
                 privateKey: publisherWallet.privateKey
             }
         }), stream.id)
-        await client.connect()
     })
 
     afterEach(async () => {
@@ -227,7 +222,6 @@ describe('Resends2', () => {
         beforeEach(async () => {
             // eslint-disable-next-line require-atomic-updates
             published = await publishTestMessages(MAX_MESSAGES)
-            await client.connect()
             // ensure last message is in storage
             await client.waitForStorage(published[published.length - 1])
         })

@@ -3,7 +3,6 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export { Field, VALID_FIELD_TYPES } from './StreamField'
 export { UnableToDecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/PublishPipeline'
