@@ -6,7 +6,7 @@ import { scoped, Lifecycle, delay, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { FailedToPublishError, MessageMetadata, PublishMetadata } from './PublishPipeline'
+import { MessageMetadata, PublishError, PublishMetadata } from './PublishPipeline'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -115,8 +115,8 @@ export class Publisher implements Context {
         metadata?: MessageMetadata
     ): Promise<StreamMessage<T>> {
         const timestamp = parseTimestamp(metadata)
+        const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
         try {
-            const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             const messageFactory = await this.getMessageFactory(streamId)
             const message = await messageFactory.createMessage(
                 partition,
@@ -129,12 +129,7 @@ export class Publisher implements Context {
             await this.node.publishToNode(message)
             return message
         } catch (e) {
-            throw new FailedToPublishError({
-                content,
-                timestamp,
-                streamDefinition,
-                partitionKey: metadata?.partitionKey
-            }, e)
+            throw new PublishError(streamId, timestamp, e)
         }
     }
 }

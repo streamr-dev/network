@@ -1,7 +1,7 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { EncryptionType, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
+import { EncryptionType, StreamID, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from '../utils/log'
@@ -17,18 +17,26 @@ import { Signer } from './Signer'
 import { Encrypt } from './Encrypt'
 import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
-import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
+import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { InspectOptions } from 'util'
 
-export class FailedToPublishError extends Error {
-    public publishMetadata // TODO would it be ok just to store streamDefinition and timestamp (and not e.g. the content)
-    public reason
-    constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
+export class PublishError extends Error {
+    
+    public streamId: StreamID
+    public timestamp: number
+
+    constructor(streamId: StreamID, timestamp: number, cause: Error) {
+        // Currently Node and Firefox show the full error chain (this error and
+        // the message and the stack of the "cause" variable) when an error is printed
+        // to console.log. Chrome shows only the root error.
+        // TODO: Remove the cause suffix from the error message when Chrome adds the support:
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
         // eslint-disable-next-line max-len
-        super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
-        this.publishMetadata = publishMetadata
-        this.reason = reason
+        // @ts-expect-error typescript definitions don't support error cause
+        super(`Failed to publish to stream ${streamId} (timestamp=${timestamp}), cause: ${cause.message}`, { cause })
+        this.streamId = streamId
+        this.timestamp = timestamp
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
@@ -197,10 +205,8 @@ export class PublishPipeline implements Context { // TODO: remove this class
      */
     async publish<T>(publishMetadata: PublishMetadataStrict<T>): Promise<StreamMessage<T>> {
         this.debug('publish >> %o', {
-            streamDefinition: formStreamDefinitionDescription(publishMetadata.streamDefinition),
-            timestamp: publishMetadata.timestamp,
-            partitionKey: publishMetadata.partitionKey,
-            msgChainId: publishMetadata.msgChainId
+            streamId: 'TODO' as any,
+            timestamp: publishMetadata.timestamp
         })
         this.startQueue()
 
@@ -211,7 +217,7 @@ export class PublishPipeline implements Context { // TODO: remove this class
             await this.streamMessageQueue.push([publishMetadata, defer])
             return await defer
         } catch (err) {
-            const error = new FailedToPublishError(publishMetadata, err)
+            const error = new PublishError('TODO' as any, publishMetadata.timestamp, err)
             defer.reject(error)
             throw error
         } finally {
