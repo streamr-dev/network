@@ -1,63 +1,25 @@
-import { wait } from '@streamr/utils'
-
-import { getCreateClient, uid } from '../test-utils/utils'
+import { createTestStream } from './../test-utils/utils'
 import { Msg, publishTestMessagesGenerator } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src'
 import { collect } from '../../src/utils/GeneratorUtils'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
-const TEST_TIMEOUT = 60 * 1000
-
-jest.setTimeout(TEST_TIMEOUT)
-
-describe('StreamrClient', () => {
+describe('Basics', () => {
     const MAX_MESSAGES = 10
-    let expectErrors = 0 // check no errors by default
-    let errors: any[] = []
-
-    const getOnError = (errs: any) => jest.fn((err) => {
-        errs.push(err)
-    })
-
-    let onError = jest.fn()
     let client: StreamrClient
+    let stream: Stream
 
-    const createClient = getCreateClient()
-
-    beforeEach(() => {
-        errors = []
-        expectErrors = 0
-        onError = getOnError(errors)
+    beforeEach(async () => {
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
+        stream = await createTestStream(client, module)
+        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
     })
 
     afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(errors).toHaveLength(expectErrors)
-    })
-
-    let stream: Stream
-
-    const createStream = async ({ ...opts } = {}) => {
-        const id = `/${uid('stream')}`
-        const s = await client.createStream({
-            id,
-            partitions: 1,
-            ...opts,
-        })
-        expect(s.id).toBeTruthy()
-        return s
-    }
-
-    beforeEach(async () => {
-        client = await createClient()
-        client.debug('create stream >>')
-        stream = await createStream()
-        await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        client.debug('create stream <<')
-        expect(onError).toHaveBeenCalledTimes(0)
+        await client?.destroy()
     })
 
     describe('Pub/Sub', () => {
@@ -112,7 +74,7 @@ describe('StreamrClient', () => {
                 expect(received.map((s) => s.getParsedContent())).toEqual(published.map((s) => s.getParsedContent()))
                 return expect(received.map((streamMessage) => streamMessage.getTimestamp())).toEqual(published.map(() => 1111111))
             }
-            const stream2 = await createStream()
+            const stream2 = await createTestStream(client, module)
             await stream2.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
             const tasks = [

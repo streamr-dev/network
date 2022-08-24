@@ -77,6 +77,23 @@ describe('SubscribePipeline', () => {
         expect(output).toEqual([])
     })
 
+    it('error: invalid content', async () => {
+        const msg = createMockMessage({
+            publisher,
+            streamPartId,
+            content: '{ invalid-json'
+        })
+        await input.push(msg)
+        input.endWrite()
+        const onError = jest.fn()
+        pipeline.onError.listen(onError)
+        const output = await collect(pipeline)
+        expect(onError).toBeCalledTimes(1)
+        const error = onError.mock.calls[0][0]
+        expect(error.message).toContain('Invalid JSON')
+        expect(output).toEqual([])
+    })
+
     it('error: no encryption key available', async () => {
         await startPublisherNode(publisher, [], environment)
         const encryptionKey = GroupKey.generate()

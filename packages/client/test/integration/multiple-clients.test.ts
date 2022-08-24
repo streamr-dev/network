@@ -1,9 +1,8 @@
-import { fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
-
+import 'reflect-metadata'
+import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
+import { fastPrivateKey, waitForCondition } from 'streamr-test-utils'
 import {
     createTestStream,
-    getCreateClient,
     uid,
 } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
@@ -13,46 +12,49 @@ import { counterId } from '../../src/utils/utils'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { StreamMessage } from 'streamr-client-protocol'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
-jest.setTimeout(50000)
 // this number should be at least 10, otherwise late subscribers might not join
 // in time to see any realtime messages
 const MAX_MESSAGES = 10
+
+const waitMessagesReceived = async (
+    received: Record<string, StreamMessage[]>,
+    published: Record<string, StreamMessage[]>,
+) => {
+    await waitForCondition(() => {
+        const receivedCount = Object.values(received).flat().length
+        const publishedCount = Object.values(published).flat().length
+        return receivedCount === publishedCount
+    })
+}
 
 describe('PubSub with multiple clients', () => {
     let stream: Stream
     let mainClient: StreamrClient
     let otherClient: StreamrClient
     let privateKey: string
-    const errors: Error[] = []
-
-    const createClient = getCreateClient()
+    let environment: FakeEnvironment
     const addAfter = addAfterFn()
 
     beforeEach(async () => {
-        privateKey = await fetchPrivateKeyWithGas()
-        mainClient = await createClient({
-            id: 'main',
+        environment = new FakeEnvironment()
+        privateKey = fastPrivateKey()
+        mainClient = environment.createClient({
             auth: {
                 privateKey
             }
         })
         stream = await createTestStream(mainClient, module)
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+        const storageNode = environment.startStorageNode()
+        await stream.addToStorageNode(storageNode.id)
     })
 
     afterEach(async () => {
-        expect(errors).toEqual([])
+        await mainClient?.destroy()
     })
 
-    async function createPublisher(opts = {}) {
-        const pubClient = await createClient({
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas(),
-            },
-            ...opts
-        })
+    async function createPublisher() {
+        const pubClient = environment.createClient()
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
         addAfter(async () => {
@@ -60,30 +62,21 @@ describe('PubSub with multiple clients', () => {
         })
 
         const pubUser = await pubClient.getAddress()
-        await mainClient.setPermissions({
-            streamId: stream.id,
-            assignments: [
-                // StreamPermission.SUBSCRIBE needed to check last
-                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: pubUser }
-            ]
+        await stream.grantPermissions({
+            permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE],
+            user: pubUser
         })
-        await pubClient.connect()
         return pubClient
     }
 
-    async function createSubscriber(opts = {}) {
-        const client = await createClient({
-            id: 'subscriber',
+    async function createSubscriber() {
+        const client = environment.createClient({
             auth: {
                 privateKey
-            },
-            ...opts,
+            }
         })
-
         const user = await client.getAddress()
-
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user })
-        await client.connect()
         return client
     }
 
@@ -96,7 +89,6 @@ describe('PubSub with multiple clients', () => {
     describe('can get messages published from other client', () => {
         test('it works', async () => {
             otherClient = await createSubscriber()
-            await mainClient.connect()
 
             const receivedMessagesOther: any[] = []
             const receivedMessagesMain: any[] = []
@@ -117,10 +109,12 @@ describe('PubSub with multiple clients', () => {
             }
             // publish message on main client
             await mainClient.publish(stream, message)
-            await wait(5000)
+            await waitForCondition(() => receivedMessagesMain.length === 1 && receivedMessagesOther.length === 1)
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
+
+            await otherClient.destroy()
         })
     })
 
@@ -128,7 +122,6 @@ describe('PubSub with multiple clients', () => {
         test('works with multiple publishers on a single stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
-            await mainClient.connect()
 
             otherClient = await createSubscriber()
 
@@ -153,11 +146,9 @@ describe('PubSub with multiple clients', () => {
             })
 
             /* eslint-disable no-await-in-loop */
-            const publishers = []
+            const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
-                publishers.push(await createPublisher({
-                    id: `publisher-${i}`,
-                }))
+                publishers.push(await createPublisher())
             }
             /* eslint-enable no-await-in-loop */
             const published: Record<string, StreamMessage[]> = {}
@@ -178,22 +169,14 @@ describe('PubSub with multiple clients', () => {
                 published[publisherId] = await publishTestMessages(MAX_MESSAGES)
             }))
 
-            await waitForCondition(() => {
-                try {
-                    checkMessages(published, receivedMessagesMain)
-                    checkMessages(published, receivedMessagesOther)
-                    return true
-                } catch (err) {
-                    return false
-                }
-            }, 35000).catch((err) => {
-                checkMessages(published, receivedMessagesMain)
-                checkMessages(published, receivedMessagesOther)
-                throw err
-            })
+            await waitMessagesReceived(receivedMessagesMain, published)
+            await waitMessagesReceived(receivedMessagesOther, published)
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
+
+            await otherClient.destroy()
+            await Promise.all(publishers.map((p) => p.destroy()))
         })
 
         // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
@@ -203,7 +186,6 @@ describe('PubSub with multiple clients', () => {
             // all subscribing and publishing to same stream
             // the otherClient subscribes after the 3rd message hits storage
             otherClient = await createSubscriber()
-            await mainClient.connect()
 
             const receivedMessagesOther: Record<string, StreamMessage[]> = {}
             const receivedMessagesMain: Record<string, StreamMessage[]> = {}
@@ -222,11 +204,9 @@ describe('PubSub with multiple clients', () => {
             })
 
             /* eslint-disable no-await-in-loop */
-            const publishers = []
+            const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
-                publishers.push(await createPublisher({
-                    id: `publisher-${i}`,
-                }))
+                publishers.push(await createPublisher())
             }
 
             /* eslint-enable no-await-in-loop */
@@ -285,33 +265,20 @@ describe('PubSub with multiple clients', () => {
                 }))
             }))
 
-            await waitForCondition(() => {
-                try {
-                    checkMessages(published, receivedMessagesMain)
-                    checkMessages(published, receivedMessagesOther)
-                    return true
-                } catch (err) {
-                    return false
-                }
-            }, 30000, 300).catch((err) => {
-                // convert timeout to actual error
-                checkMessages(published, receivedMessagesMain)
-                checkMessages(published, receivedMessagesOther)
-                throw err
-            })
+            await waitMessagesReceived(receivedMessagesMain, published)
+            await waitMessagesReceived(receivedMessagesOther, published)
+
+            checkMessages(published, receivedMessagesMain)
+            checkMessages(published, receivedMessagesOther)
+
+            await otherClient.destroy()
+            await Promise.all(publishers.map((p) => p.destroy()))
         })
     })
 
     test('works with multiple publishers on one stream', async () => {
-        await mainClient.connect()
-
-        otherClient = await createClient({
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            }
-        })
+        otherClient = environment.createClient()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        await otherClient.connect()
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
         const receivedMessagesMain: Record<string, StreamMessage[]> = {}
@@ -336,7 +303,7 @@ describe('PubSub with multiple clients', () => {
         })
 
         /* eslint-disable no-await-in-loop */
-        const publishers = []
+        const publishers: StreamrClient[] = []
         for (let i = 0; i < 1; i++) {
             publishers.push(await createPublisher())
         }
@@ -349,7 +316,6 @@ describe('PubSub with multiple clients', () => {
                 waitForLast: true,
                 waitForLastTimeout: 35000,
             })
-
             await publishTestMessages(MAX_MESSAGES, {
                 afterEach(msg) {
                     published[publisherId] = published[publisherId] || []
@@ -358,35 +324,24 @@ describe('PubSub with multiple clients', () => {
             })
         }))
 
-        await waitForCondition(() => {
-            try {
-                checkMessages(published, receivedMessagesMain)
-                checkMessages(published, receivedMessagesOther)
-                return true
-            } catch (err) {
-                return false
-            }
-        }, 25000).catch(() => {
-            checkMessages(published, receivedMessagesMain)
-            checkMessages(published, receivedMessagesOther)
-        })
+        await waitMessagesReceived(receivedMessagesMain, published)
+        await waitMessagesReceived(receivedMessagesOther, published)
+
+        checkMessages(published, receivedMessagesMain)
+        checkMessages(published, receivedMessagesOther)
+
+        await Promise.all(publishers.map((p) => p.destroy()))
     })
 
     // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
     // late subscriber reliably get all of both realtime and resent messages
     test.skip('works with multiple publishers on one stream with late subscriber (resend)', async () => {
         const published: Record<string, StreamMessage[]> = {}
-        await mainClient.connect()
 
-        otherClient = await createClient({
-            auth: {
-                privateKey: await fetchPrivateKeyWithGas()
-            }
-        })
+        otherClient = environment.createClient()
         const otherUser = await otherClient.getAddress()
 
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], user: otherUser })
-        await otherClient.connect()
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
         const receivedMessagesMain: Record<string, StreamMessage[]> = {}
@@ -405,7 +360,7 @@ describe('PubSub with multiple clients', () => {
         })
 
         /* eslint-disable no-await-in-loop */
-        const publishers = []
+        const publishers: StreamrClient[] = []
         for (let i = 0; i < 3; i++) {
             publishers.push(await createPublisher())
         }
@@ -457,17 +412,12 @@ describe('PubSub with multiple clients', () => {
             }))
         }))
 
-        await waitForCondition(() => {
-            try {
-                checkMessages(published, receivedMessagesMain)
-                checkMessages(published, receivedMessagesOther)
-                return true
-            } catch (err) {
-                return false
-            }
-        }, 25000, 300).catch(() => {
-            checkMessages(published, receivedMessagesMain)
-            checkMessages(published, receivedMessagesOther)
-        })
+        await waitMessagesReceived(receivedMessagesMain, published)
+        await waitMessagesReceived(receivedMessagesOther, published)
+
+        checkMessages(published, receivedMessagesMain)
+        checkMessages(published, receivedMessagesOther)
+
+        await Promise.all(publishers.map((p) => p.destroy()))
     })
 })

@@ -112,9 +112,27 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return targets.some((target) => registryItem.permissions.get(target).includes(query.permission))
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async getPermissions(_streamIdOrPath: string): Promise<PermissionAssignment[]> {
-        throw new Error('not implemented')
+    async getPermissions(streamIdOrPath: string): Promise<PermissionAssignment[]> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        const registryItem = this.chain.streams.get(streamId)
+        if (registryItem === undefined) {
+            return []
+        }
+        const targets = registryItem.permissions.keys()
+        return targets.map((target) => {
+            const permissions = registryItem.permissions.get(target)
+            if (target === PUBLIC_PERMISSION_TARGET) {
+                return {
+                    public: true,
+                    permissions
+                }
+            } else {
+                return {
+                    user: target,
+                    permissions
+                }
+            }
+        })
     }
 
     async grantPermissions(streamIdOrPath: string, ...assignments: PermissionAssignment[]): Promise<void> {
@@ -122,7 +140,8 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
             streamIdOrPath,
             assignments,
             (registryItem: StreamRegistryItem, target: string, permissions: StreamPermission[]) => {
-                registryItem.permissions.addAll(target, permissions)
+                const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
+                registryItem.permissions.addAll(target, nonExistingPermissions)
             }
         )
     }
@@ -157,12 +176,14 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
-    async setPermissions(..._streams: {
+    async setPermissions(...streams: {
         streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
-        throw new Error('not implemented')
+        await Promise.all(streams.map(async (stream) => {
+            await this.revokePermissions(stream.streamId, ...await this.getPermissions(stream.streamId))
+            await this.grantPermissions(stream.streamId, ...stream.assignments)
+        }))
     }
 
     async isStreamPublisher(streamIdOrPath: string, user: EthereumAddress): Promise<boolean> {

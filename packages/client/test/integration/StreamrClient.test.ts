@@ -1,82 +1,53 @@
 import fs from 'fs'
 import path from 'path'
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { fastPrivateKey } from 'streamr-test-utils'
+import { StreamMessage, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+import { fastPrivateKey, fastWallet } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import {
-    getCreateClient,
-    createPartitionedTestStream,
-    createStreamPartIterator,
-    toStreamDefinition
-} from '../test-utils/utils'
 import {
     Msg,
     createTestMessages,
     getPublishTestStreamMessages
 } from '../test-utils/publish'
-import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils/Defer'
 import * as G from '../../src/utils/GeneratorUtils'
-import { Wallet } from 'ethers'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { StreamPermission } from '../../src/permission'
+import { createTestStream } from '../test-utils/utils'
 
-jest.setTimeout(60000)
+// TODO rename this test to something more specific (and maybe divide to multiple test files?)
 
 const MAX_MESSAGES = 10
 const TIMEOUT = 30 * 1000
 const WAIT_TIME = 600
 
-describeRepeats('StreamrClient', () => {
-    let expectErrors = 0 // check no errors by default
-    let errors: any[] = []
-
-    const getOnError = (errs: any) => jest.fn((err) => {
-        errs.push(err)
-    })
-
-    let onError = jest.fn()
+describe('StreamrClient', () => {
     let client: StreamrClient
-    let privateKey: string
-    const createClient = getCreateClient()
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
+    let streamDefinition: StreamPartID
+    let privateKey: string
+    let environment: FakeEnvironment
 
-    let streamParts: AsyncGenerator<StreamPartID>
-    let streamDefinition: { id: string, partition: number }
-
-    beforeAll(async () => {
+    beforeEach(async () => {
         privateKey = fastPrivateKey()
-        const stream = await createPartitionedTestStream(module, new Wallet(privateKey).address)
-        streamParts = createStreamPartIterator(stream)
-    })
-
-    beforeEach(async () => {
-        streamDefinition = toStreamDefinition((await (await streamParts.next()).value))
-        errors = []
-        expectErrors = 0
-        onError = getOnError(errors)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(errors).toHaveLength(expectErrors)
-    })
-
-    beforeEach(async () => {
-        client = await createClient({
+        environment = new FakeEnvironment()
+        client = environment.createClient({
             auth: {
                 privateKey
             }
         })
-        await client.connect()
-        publishTestMessages = getPublishTestStreamMessages(client, streamDefinition)
-        expect(onError).toHaveBeenCalledTimes(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
+        const stream = await createTestStream(client, module)
+        streamDefinition = stream.getStreamParts()[0]
+        const publisherWallet = fastWallet()
+        await stream.grantPermissions({
+            user: publisherWallet.address,
+            permissions: [StreamPermission.PUBLISH]
+        })
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), streamDefinition)
     })
 
     describe('Pub/Sub', () => {
@@ -88,7 +59,7 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
 
         it('Stream.publish does not error', async () => {
-            const stream = await client.getStream(streamDefinition.id)
+            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
             await stream.publish({
                 test: 'Stream.publish',
             })
@@ -96,7 +67,7 @@ describeRepeats('StreamrClient', () => {
         }, TIMEOUT)
 
         it('client.publish with Stream object as arg', async () => {
-            const stream = await client.getStream(streamDefinition.id)
+            const stream = await client.getStream(StreamPartIDUtils.getStreamID(streamDefinition))
             await client.publish(stream, {
                 test: 'client.publish.Stream.object',
             })
@@ -110,15 +81,13 @@ describeRepeats('StreamrClient', () => {
 
             it('client.subscribe then unsubscribe after subscribed', async () => {
                 const subTask = client.subscribe<{ test: string }>(streamDefinition, () => {})
-                // @ts-expect-error private
-                expect(await client.subscriber.getSubscriptions()).toHaveLength(0) // does not have subscription yet
+                expect(await client.getSubscriptions()).toHaveLength(0) // does not have subscription yet
 
                 const sub = await subTask
 
                 expect(await client.getSubscriptions()).toHaveLength(1)
                 await client.unsubscribe(sub)
-                // @ts-expect-error private
-                expect(await client.subscriber.getSubscriptions()).toHaveLength(0)
+                expect(await client.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe then unsubscribe before subscribed', async () => {
@@ -255,7 +224,7 @@ describeRepeats('StreamrClient', () => {
             // can't yet reliably publish messages then disconnect and know
             // that subscriber will actually get something.
             // Probably needs to wait for propagation.
-            const subscriber = await createClient({
+            const subscriber = environment.createClient({
                 auth: {
                     privateKey
                 }
@@ -277,10 +246,8 @@ describeRepeats('StreamrClient', () => {
                 client.publish(streamDefinition, msgs[3]),
             ]
             const results = await Promise.allSettled(publishTasks)
-            client.debug('publishTasks', results.map(({ status }) => status))
             expect(results.map((r) => r.status)).toEqual(['fulfilled', 'rejected', 'rejected', 'rejected'])
             await wait(500)
-            client.debug('received', received)
             // should probably get every publish that was fulfilled, right?
             // expect(received).toEqual([msgs[0].content])
         })
@@ -302,7 +269,7 @@ describeRepeats('StreamrClient', () => {
     describe('utf-8 encoding', () => {
         it('decodes realtime messages correctly', async () => {
             const publishedMessage = Msg({
-                content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+                content: fs.readFileSync(path.join(__dirname, '../data/utf8Example.txt'), 'utf8')
             })
             const sub = await client.subscribe(streamDefinition)
             await client.publish(streamDefinition, publishedMessage)

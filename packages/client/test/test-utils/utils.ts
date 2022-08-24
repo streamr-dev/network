@@ -7,8 +7,6 @@ import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
-    toStreamPartID,
-    MAX_PARTITION_COUNT,
     StreamMessageOptions,
     MessageID,
     EthereumAddress,
@@ -20,7 +18,6 @@ import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
 import { Stream, StreamProperties } from '../../src/Stream'
 import { ConfigTest } from '../../src/ConfigTest'
-import { StreamPermission } from '../../src/permission'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
@@ -106,39 +103,6 @@ export const createEthereumAddress = (id: number): string => {
     return '0x' + padEnd(String(id), 40, '0')
 }
 
-// eslint-disable-next-line no-undef
-export const createPartitionedTestStream = async (module: NodeModule, userAddress: string): Promise<Stream> => {
-    const client = new StreamrClient({
-        ...ConfigTest,
-        auth: {
-            privateKey: await fetchPrivateKeyWithGas()
-        }
-    })
-    const stream = await createTestStream(client, module, {
-        partitions: MAX_PARTITION_COUNT
-    })
-    await stream.grantPermissions({
-        user: userAddress,
-        permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE]
-    })
-    await client.destroy()
-    return stream
-}
-
-export async function* createStreamPartIterator(stream: Stream): AsyncGenerator<StreamPartID> {
-    for (let partition = 0; partition < stream.partitions; partition++) {
-        yield toStreamPartID(stream.id, partition)
-    }
-}
-
-export const toStreamDefinition = (streamPart: StreamPartID): { id: string, partition: number } => {
-    const [id, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamPart)
-    return {
-        id,
-        partition
-    }
-}
-
 type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
     publisher: Wallet
     msgChainId?: string
@@ -151,6 +115,7 @@ export const createMockMessage = (
     opts: CreateMockMessageOptionsBase
     & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 ): StreamMessage<any> => {
+    const DEFAULT_CONTENT = {}
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
@@ -164,7 +129,7 @@ export const createMockMessage = (
             opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content: {},
+        content: DEFAULT_CONTENT,
         prevMsgRef: opts.prevMsgRef,
         ...opts
     })

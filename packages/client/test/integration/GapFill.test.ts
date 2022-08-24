@@ -1,12 +1,9 @@
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from '@streamr/utils'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
-
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -14,7 +11,6 @@ import { StreamPermission } from '../../src'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(50000)
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0
@@ -25,7 +21,6 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
             const result = fn(msg, count)
             count += 1
             if (result === null) {
-                sub.debug('(%o) << Test Dropped Message %s: %o', count, msg)
                 continue
             }
             yield msg
@@ -34,9 +29,7 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
 }
 
 describe('GapFill', () => {
-    let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
@@ -53,11 +46,9 @@ describe('GapFill', () => {
         })
         // @ts-expect-error private
         subscriber = client.subscriber
-        client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
         await stream.addToStorageNode(storageNode.id)
-        client.debug('connecting before test <<')
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client
     }
@@ -65,8 +56,6 @@ describe('GapFill', () => {
     beforeEach(async () => {
         environment = new FakeEnvironment()
         storageNode = environment.startStorageNode()
-        expectErrors = 0
-        onError = jest.fn()
     })
 
     afterEach(async () => {
@@ -75,12 +64,6 @@ describe('GapFill', () => {
         if (!client) { return }
         const subscriptions = await subscriber.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     let subs: Subscription<any>[] = []
@@ -99,7 +82,6 @@ describe('GapFill', () => {
                 gapFillTimeout: 200,
                 retryResendAfter: 200,
             })
-            await client.connect()
         })
 
         describe('realtime (uses resend)', () => {
@@ -109,7 +91,6 @@ describe('GapFill', () => {
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
                     if (count === 2) {
-                        sub.debug('test dropping message %d:', count, msg)
                         return null
                     }
                     return undefined
@@ -311,8 +292,6 @@ describe('GapFill', () => {
                 retryResendAfter: 200,
                 maxGapRequests: 3
             })
-
-            await client.connect()
 
             // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')

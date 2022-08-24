@@ -6,8 +6,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
-jest.setTimeout(30000)
-
 const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
@@ -171,7 +169,6 @@ describe('Sequencing', () => {
         expect(msgsReceieved).toEqual(msgsPublished.filter(({ backdated }) => !backdated))
 
         const seq = toSeq(requests, ts)
-        client.debug(seq)
         expect(seq).toEqual([
             [[0, 0], null],
             [[1, 0], [0, 0]],
