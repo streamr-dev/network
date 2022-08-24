@@ -61,7 +61,7 @@ describe('SortedContactList', () => {
         list.addContact(peer1)
 
         const contacts = list.getUncontactedContacts(3)
-        expect(contacts).toHaveLength(3)
+        expect(contacts.length).toEqual(3)
         expect(contacts[0]).toEqual(peer1)
         expect(contacts[1]).toEqual(peer2)
         expect(contacts[2]).toEqual(peer3)
@@ -76,7 +76,7 @@ describe('SortedContactList', () => {
 
         list.setContacted(id2)
         const contacts = list.getUncontactedContacts(3)
-        expect(contacts).toHaveLength(2)
+        expect(contacts.length).toEqual(2)
         expect(contacts[0]).toEqual(peer1)
         expect(contacts[1]).toEqual(peer3)
     })

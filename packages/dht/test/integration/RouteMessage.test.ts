@@ -1,8 +1,7 @@
-import { DhtNode } from '../../src/dht/DhtNode'
+import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { waitForEvent } from '@streamr/utils'
+import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
-import { Event as MessageRouterEvent } from '../../src/transport/ITransport'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
@@ -65,7 +64,7 @@ describe('Route Message With Mock Connections', () => {
             body: RpcMessage.toBinary(rpcWrapper)
         }
         await Promise.all([
-            waitForEvent(destinationNode, MessageRouterEvent.DATA),
+            waitForEvent3<DhtNodeEvents>(destinationNode, 'DATA'),
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
@@ -99,7 +98,7 @@ describe('Route Message With Mock Connections', () => {
         await destinationNode.joinDht(entryPointDescriptor)
 
         let receivedMessages = 0
-        destinationNode.on(MessageRouterEvent.DATA, () => {
+        destinationNode.on('DATA', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
@@ -128,7 +127,7 @@ describe('Route Message With Mock Connections', () => {
             routers.map((node) => {
                 node.joinDht(entryPointDescriptor)
                 numsOfReceivedMessages[node.getNodeId().toMapKey()] = 0
-                node.on(MessageRouterEvent.DATA, () => {
+                node.on('DATA', () => {
                     numsOfReceivedMessages[node.getNodeId().toMapKey()] = numsOfReceivedMessages[node.getNodeId().toMapKey()] + 1
                 })
             })

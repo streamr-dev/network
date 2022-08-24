@@ -25,13 +25,13 @@ describe('DhtNode', () => {
         node = new DhtNode({ peerIdString: 'UnitNode', transportLayer: new SimulatorTransport(mockDescriptor, simulator) })
         await node.start()
         // @ts-expect-error private
-        node.bucket!.on("added", () => {})
+        node.bucket!.on("added", () => { })
         // @ts-expect-error private
-        node.bucket!.on("removed", () => {})
+        node.bucket!.on("removed", () => { })
         // @ts-expect-error private
-        node.bucket!.on("ping", () => {})
+        node.bucket!.on("ping", () => { })
         // @ts-expect-error private
-        node.bucket!.on("updated", () => {})
+        node.bucket!.on("updated", () => { })
 
     })
 

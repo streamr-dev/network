@@ -95,6 +95,10 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
     ): void {
         this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
     }
+
+    public getRpcClientTransport(): ClientTransport {
+        return this.rpcClientTransport
+    }
     
     public stop(): void {
         this.stopped = true

@@ -17,8 +17,7 @@ module.exports = function (config) {
             './test/end-to-end/**',
             './test/integration/**',
             './test/unit/**',
-
-            {
+           {
                 pattern: '**/*.js.map',
                 included: false
             }
@@ -37,8 +36,9 @@ module.exports = function (config) {
                         contextIsolation: false,
                         preload: __dirname + '/preload.js',
                         webSecurity: false,
+                        sandbox: false
                     },
-                    show: false
+                    show: false // set to true to show the electron window
                 }
             }
         },
@@ -46,9 +46,9 @@ module.exports = function (config) {
         browsers: ['CustomElectron'],
         client: {
             clearContext: false, // leave Jasmine Spec Runner output visible in browser
-            useIframe: false
+            useIframe: false,
         },
-        singleRun: true,
+        singleRun: true,   //set to false to leave electron window open
         webpack: {
             ...webpackConfig('test'),
             entry: {}

@@ -11,6 +11,7 @@ const externals = (env) => {
         'http': 'HTTP',
         'https': 'HTTPS',
         'express': 'Express',
+        'process': 'process'
     }
     return externals
 }
@@ -69,7 +70,9 @@ module.exports = (env, argv) => {
             ],
         },
         plugins: [
-            new NodePolyfillPlugin(),
+            new NodePolyfillPlugin({
+                includeAliases: ['process']
+            }),
             new webpack.ProvidePlugin({
                 process: 'process/browser',
             })
