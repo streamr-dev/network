@@ -26,7 +26,7 @@ describe('DhtClientRpcTransport', () => {
             rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(response))
         })
 
-        const client = new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
+        const client =  new DhtRpcClient(rpcCommunicator.getRpcClientTransport())
 
         const peerDescriptor: PeerDescriptor = {
             peerId: new Uint8Array([1, 2, 3]),

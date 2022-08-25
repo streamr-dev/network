@@ -1,7 +1,6 @@
 import EventEmitter from "events"
 import { Event, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
 import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from "../IConnection"
-import { PeerDescriptor } from "../../proto/DhtRpc"
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 import { Logger } from '@streamr/utils'
 
@@ -19,7 +18,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
 
     // We need to keep track of connection state ourselves because
     // RTCPeerConnection.connectionState is not supported on Firefox
-    
+
     private lastState: RTCPeerConnectionState = 'connecting'
 
     private stunUrls = ['stun:stun.l.google.com:19302']
@@ -27,9 +26,6 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
-    private buffer: Uint8Array[] = []
-
-    private remotePeerDescriptor?: PeerDescriptor
 
     start(isOffering: boolean): void {
         this.isOffering = isOffering
@@ -98,7 +94,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
             } catch (err) {
                 logger.warn(err)
             }
-            if (this.peerConnection.localDescription) {  
+            if (this.peerConnection.localDescription) {
                 this.emit(Event.LOCAL_DESCRIPTION, this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
             }
         }
@@ -143,38 +139,12 @@ export class NodeWebRtcConnection extends EventEmitter implements IWebRtcConnect
         this.peerConnection = undefined
     }
 
-    setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.remotePeerDescriptor = peerDescriptor
-    }
-
-    getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.remotePeerDescriptor
-    }
-
     send(data: Uint8Array): void {
         if (this.lastState == 'connected') {
-            this.doSend(data)
-        } else if (this.lastState == 'connecting') {
-            this.addToBuffer(data)
+            this.dataChannel?.send(data as Buffer)
+        } else {
+            logger.warn('Tried to send on a connection with last state ' + this.lastState)
         }
-    }
-
-    sendBufferedMessages(): void {
-        while (this.buffer.length > 0) {
-            this.send(this.buffer.shift() as Uint8Array)
-        }
-    }
-
-    private doSend(data: Uint8Array): void {
-        this.dataChannel?.send(data as Buffer)
-    }
-
-    private addToBuffer(msg: Uint8Array): void {
-        this.buffer.push(msg)
-    }
-
-    getBufferedMessages(): Uint8Array[] {
-        return this.buffer
     }
 
     private setupDataChannel(dataChannel: RTCDataChannel): void {

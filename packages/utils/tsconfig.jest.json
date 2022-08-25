@@ -6,5 +6,8 @@
   "include": [
     "src/**/*",
     "test/**/*"
+  ],
+  "lib": [ 
+    "DOM"
   ]
 }

@@ -2,7 +2,6 @@ import { DhtNode } from '../src/dht/DhtNode'
 import { SimulatorTransport } from '../src/connection/SimulatorTransport'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
-    ConnectivityResponseMessage,
     NodeType,
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
@@ -68,15 +67,6 @@ export const createWrappedClosestPeersRequest = (
         requestId: 'testId'
     }
     return rpcWrapper
-}
-
-export const createPeerDescriptor = (msg: ConnectivityResponseMessage, peerIdString?: string): PeerDescriptor => {
-    const ret: PeerDescriptor = {
-        peerId: peerIdString ? PeerID.fromString(peerIdString).value : PeerID.fromIp(msg.ip).value,
-        type: NodeType.NODEJS,
-        websocket: { ip: msg.websocket!.ip, port: msg.websocket!.port }
-    }
-    return ret
 }
 
 interface IDhtRpcWithError extends IDhtRpc {

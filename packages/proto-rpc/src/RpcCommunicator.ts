@@ -79,7 +79,40 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         return this.onIncomingMessage(rpcCall, callContext)
     }
 
-    public onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: CallContext): void {
+    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
+        requestClass: RequestClass,
+        returnClass: ReturnClass,
+        name: string,
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>
+    ): void {
+        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
+    }
+
+    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
+        requestClass: RequestClass,
+        name: string,
+        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
+    ): void {
+        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
+    }
+
+    public getRpcClientTransport(): ClientTransport {
+        return this.rpcClientTransport
+    }
+    
+    public stop(): void {
+        this.stopped = true
+        this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
+            clearTimeout(ongoingRequest.timeoutRef)
+            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), StatusCode.STOPPED)
+        })
+        this.removeAllListeners()
+        this.ongoingRequests.clear()
+        this.rpcClientTransport.stop()
+        this.rpcServerRegistry.stop()
+    }
+
+    private onOutgoingMessage(rpcMessage: RpcMessage, deferredPromises?: ResultParts, callContext?: CallContext): void {
         if (this.stopped) {
             return
         }
@@ -112,27 +145,6 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
                 await this.handleRequest(rpcMessage, callContext)
             }
         }
-    }
-
-    public getRpcClientTransport(): ClientTransport {
-        return this.rpcClientTransport
-    }
-
-    public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
-        requestClass: RequestClass,
-        returnClass: ReturnClass,
-        name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<ReturnType>
-    ): void {
-        this.rpcServerRegistry.registerRpcMethod(requestClass, returnClass, name, fn)
-    }
-
-    public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
-        requestClass: RequestClass,
-        name: string,
-        fn: (rq: RequestType, _context: ServerCallContext) => Promise<Empty>
-    ): void {
-        this.rpcServerRegistry.registerRpcNotification(requestClass, name, fn)
     }
 
     private async handleRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {
@@ -263,17 +275,5 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             requestId,
         }
         return wrapper
-    }
-
-    stop(): void {
-        this.stopped = true
-        this.ongoingRequests.forEach((ongoingRequest: OngoingRequest) => {
-            clearTimeout(ongoingRequest.timeoutRef)
-            this.rejectDeferredPromises(ongoingRequest.deferredPromises, new Error('stopped'), StatusCode.STOPPED)
-        })
-        this.removeAllListeners()
-        this.ongoingRequests.clear()
-        this.rpcClientTransport.stop()
-        this.rpcServerRegistry.stop()
     }
 }

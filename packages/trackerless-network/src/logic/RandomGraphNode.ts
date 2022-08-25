@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DhtNode, DhtNodeEvent, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
+import { DhtNode, PeerID, PeerDescriptor, DhtPeer, RoutingRpcCommunicator, ITransport } from '@streamr/dht'
 import {
     DataMessage,
     HandshakeRequest,
@@ -67,8 +67,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.started = true
 
         this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
-        this.layer1.on(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.on(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.on('NEW_CONTACT', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.on('CONTACT_REMOVED', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
@@ -88,8 +88,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.targetNeighbors.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
-        this.layer1.off(DhtNodeEvent.NEW_CONTACT, (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.off(DhtNodeEvent.CONTACT_REMOVED, (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.off('NEW_CONTACT', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.off('CONTACT_REMOVED', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         this.contactPool.clear()
         this.targetNeighbors.clear()
         if (this.findNeighborsIntervalRef) {

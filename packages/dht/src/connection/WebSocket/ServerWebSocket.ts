@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
-import { PeerDescriptor } from '../../proto/DhtRpc'
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
@@ -17,8 +16,7 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
    
     public connectionId: ConnectionID
     private socket: WsConnection
-    private remotePeerDescriptor?: PeerDescriptor
-    connectionType = ConnectionType.WEBSOCKET_SERVER
+    public connectionType = ConnectionType.WEBSOCKET_SERVER
 
     constructor(socket: WsConnection) {
         super()
@@ -57,19 +55,8 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
         }
     }
 
-    sendBufferedMessages(): void {
-    }
-
     close(): void {
         this.socket.close()
-    }
-
-    setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
-        this.remotePeerDescriptor = peerDescriptor
-    }
-
-    getPeerDescriptor(): PeerDescriptor | undefined {
-        return this.remotePeerDescriptor
     }
 
     public getRemoteAddress(): string {
@@ -78,9 +65,5 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
 
     stop(): void {
         this.removeAllListeners()
-    }
-
-    getBufferedMessages(): Uint8Array[] {
-        return []
     }
 }

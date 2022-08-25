@@ -1,4 +1,4 @@
-export { DhtNode, Event as DhtNodeEvent } from './dht/DhtNode'
+export { DhtNode, DhtNodeEvents } from './dht/DhtNode'
 export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
 export { SimulatorTransport } from './connection/SimulatorTransport'
 export { Simulator } from './connection/Simulator'
