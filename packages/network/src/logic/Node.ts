@@ -169,7 +169,6 @@ export class Node extends EventEmitter {
                 unsubscribeFromStreamPartOnNode: this.unsubscribeFromStreamPartOnNode.bind(this),
                 emitJoinCompleted: this.emitJoinCompleted.bind(this),
                 emitJoinFailed: this.emitJoinFailed.bind(this)
-
             }
         )
         this.proxyStreamConnectionManager = new ProxyStreamConnectionManager({
