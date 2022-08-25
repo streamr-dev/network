@@ -137,6 +137,7 @@ describe('subscribe and wait for the node to join the stream', () => {
         })
         invalidNode.start()
         await expect(() => invalidNode.subscribeAndWaitForJoin(stream1, 1000)).rejects.toThrow('timed out')
+        await invalidNode.stop()
     })
 
     test('fail: unable to handle instruction', async () => {
@@ -164,5 +165,6 @@ describe('subscribe and wait for the node to join the stream', () => {
         })
         // eslint-disable-next-line max-len
         await expect(() => connectNode.subscribeAndWaitForJoin(stream1, TIMEOUT)).rejects.toThrow('Failed initial join operation to stream partition stream-1#0, failed to form connections to all target neighbors')
+        await connectNode.stop()
     })
 })
