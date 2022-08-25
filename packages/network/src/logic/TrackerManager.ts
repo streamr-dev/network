@@ -167,10 +167,6 @@ export class TrackerManager {
                 logger.trace('sent status %j to tracker %s', status.streamPart, trackerId)
             } catch (e) {
                 const error = `failed to send status to tracker ${trackerId}, reason: ${e}`
-                if (this.streamPartManager.isSetUp(streamPartId)
-                    && this.streamPartManager.isNewStream(streamPartId)) {
-                    this.subscriber.emitJoinFailed(streamPartId, error)
-                }
                 logger.trace(error)
             }
         }
@@ -230,8 +226,7 @@ export class TrackerManager {
         if (newStream) {
             if (subscribedNodeIds.length === 0) {
                 this.subscriber.emitJoinFailed(streamPartId,
-                    `Failed initial join operation to stream partition ${streamPartId},
-                            failed to form connections to all target neighbors`
+                    `Failed initial join operation to stream partition ${streamPartId}, failed to form connections to all target neighbors`
                 )
             } else {
                 this.subscriber.emitJoinCompleted(streamPartId, subscribedNodeIds.length)
