@@ -410,7 +410,7 @@ export class Node extends EventEmitter {
     }
 
     emitJoinFailed(streamPartId: StreamPartID, error: string): void {
-        this.emit(streamPartId, error)
+        this.emit(Event.JOIN_FAILED, streamPartId, error)
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
