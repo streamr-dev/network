@@ -37,9 +37,15 @@ interface ConnectionManagerEvents {
     NEW_CONNECTION: (connection: ManagedConnection) => void   
 }
 
+
+export interface ConnectionLocker {
+    lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+}
+
 export type Events = TransportEvents & ConnectionManagerEvents
 
-export class ConnectionManager extends EventEmitter<Events> implements ITransport {
+export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
     public static PROTOCOL_VERSION = '1.0'
     private stopped = false
     private started = false
@@ -50,6 +56,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
+
+    private lockedConnections: Map<PeerID, Set<string>>
 
     constructor(private config: ConnectionManagerConfig) {
         super()
@@ -207,5 +215,19 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
             this.connections.get(id)!.close()
         }
+    }
+
+    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
+        const peerId = PeerID.fromValue(targetDescriptor.peerId)
+        if (this.lockedConnections.get(peerId)?.has(serviceId)) {
+            return
+        } else if (!this.lockedConnections.has(peerId)) {
+            this.send()
+        }
+    }
+
+
+    public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
+
     }
 }
