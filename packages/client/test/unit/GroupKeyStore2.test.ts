@@ -51,8 +51,8 @@ describe('GroupKeyStore', () => {
         expect(await store.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store.clear()).toBeFalsy()
 
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.add(groupKey)).toBeFalsy()
+        expect(await store.add(groupKey)).toBe(groupKey)
+        expect(await store.add(groupKey)).toEqual(groupKey)
         expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
         expect(await store.size()).toBe(1)
