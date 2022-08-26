@@ -157,4 +157,8 @@ export class GroupKeyStore implements Context {
         this.currentGroupKeyId = newKey.id
         this.nextGroupKeys.length = 0
     }
+
+    async size(): Promise<number> {
+        return this.persistence.size()
+    }
 }
