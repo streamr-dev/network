@@ -17,6 +17,7 @@ const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms
 export interface ServerPersistentStoreOptions {
     context: Context
     tableName: string
+    valueColumnName: string
     clientId: string
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
@@ -27,6 +28,7 @@ export interface ServerPersistentStoreOptions {
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
     readonly id: string
     private readonly tableName: string
+    private readonly valueColumnName: string
     private readonly streamId: string
     private readonly dbFilePath: string
     private store?: Database
@@ -42,13 +44,14 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         clientId,
         streamId,
         tableName,
+        valueColumnName,
         initialData = {},
         migrationsPath,
         onInit
     }: ServerPersistentStoreOptions) {
         this.id = instanceId(this)
         this.tableName = tableName
-
+        this.valueColumnName = valueColumnName
         this.debug = context.debug.extend(this.id)
         this.streamId = encodeURIComponent(streamId)
         this.initialData = initialData
@@ -149,8 +152,8 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const value = await this.store!.get(`SELECT groupKey FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return value?.groupKey
+        const value = await this.store!.get(`SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
+        return value?.[this.valueColumnName]
     }
 
     async has(key: string): Promise<boolean> {
@@ -166,11 +169,14 @@ export default class ServerPersistentStore implements PersistentStore<string, st
 
     private async setKeyValue(key: string, value: string): Promise<boolean> {
         // set, but without init so init can insert initialData
-        const result = await this.store!.run(`INSERT INTO ${this.tableName} VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING`, {
-            $id: key,
-            $groupKey: value,
-            $streamId: this.streamId,
-        })
+        const result = await this.store!.run(
+            `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`, 
+            {
+                $id: key,
+                [`$${this.valueColumnName}`]: value,
+                $streamId: this.streamId,
+            }
+        )
 
         return !!result?.changes
     }

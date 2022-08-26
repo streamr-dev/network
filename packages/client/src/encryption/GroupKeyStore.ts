@@ -19,10 +19,11 @@ interface GroupKeyStoreOptions {
 export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     private store: PersistentStore<string, string>
 
-    constructor(options: Omit<ServerPersistentStoreOptions, 'tableName' | 'migrationsPath'>) {
+    constructor(options: Omit<ServerPersistentStoreOptions, 'tableName' | 'valueColumnName' | 'migrationsPath'>) {
         this.store = new ServerPersistentStore({
             ...options,
             tableName: 'GroupKeys',
+            valueColumnName: 'groupKey',
             migrationsPath: join(__dirname, 'migrations')
         })
     }

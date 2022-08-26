@@ -14,6 +14,7 @@ describe('ServerPersistentStore', () => {
         store = new ServerPersistentStore({
             context: mockContext(),
             tableName: 'GroupKeys',
+            valueColumnName: 'groupKey',
             clientId,
             streamId,
             onInit: async (db: Database) => {
