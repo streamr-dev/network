@@ -19,7 +19,6 @@ export interface ServerPersistentStoreOptions {
     clientId: string
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
-    rootPath?: string
     migrationsPath?: string
 }
 
@@ -39,7 +38,6 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         clientId,
         streamId,
         initialData = {},
-        rootPath = './',
         migrationsPath = join(__dirname, 'migrations')
     }: ServerPersistentStoreOptions) {
         this.id = instanceId(this)
@@ -47,7 +45,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         this.streamId = encodeURIComponent(streamId)
         this.initialData = initialData
         const paths = envPaths('streamr-client')
-        const dbFilePath = resolve(paths.data, join(rootPath, clientId, 'GroupKeys.db'))
+        const dbFilePath = resolve(paths.data, join('./', clientId, 'GroupKeys.db'))
         this.dbFilePath = dbFilePath
         this.migrationsPath = migrationsPath
         this.init = pOnce(this.init.bind(this))
