@@ -1,3 +1,4 @@
+import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
@@ -18,8 +19,11 @@ interface GroupKeyStoreOptions {
 export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     private store: PersistentStore<string, string>
 
-    constructor(options: ServerPersistentStoreOptions) {
-        this.store = new ServerPersistentStore(options)
+    constructor(options: Omit<ServerPersistentStoreOptions, 'migrationsPath'>) {
+        this.store = new ServerPersistentStore({
+            ...options,
+            migrationsPath: join(__dirname, 'migrations')
+        })
     }
 
     async has(groupKeyId: string): Promise<boolean> {

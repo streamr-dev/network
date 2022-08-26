@@ -20,6 +20,7 @@ export interface ServerPersistentStoreOptions {
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
     migrationsPath?: string
+    onInit?: (db: Database) => Promise<void>
 }
 
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
@@ -30,7 +31,8 @@ export default class ServerPersistentStore implements PersistentStore<string, st
     private error?: Error
     private readonly initialData
     private initCalled = false
-    private readonly migrationsPath: string
+    private readonly migrationsPath?: string
+    private readonly onInit?: (db: Database) => Promise<void>
     readonly debug
 
     constructor({
@@ -38,7 +40,8 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         clientId,
         streamId,
         initialData = {},
-        migrationsPath = join(__dirname, 'migrations')
+        migrationsPath,
+        onInit
     }: ServerPersistentStoreOptions) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -48,6 +51,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         const dbFilePath = resolve(paths.data, join('./', clientId, 'GroupKeys.db'))
         this.dbFilePath = dbFilePath
         this.migrationsPath = migrationsPath
+        this.onInit = onInit
         this.init = pOnce(this.init.bind(this))
     }
 
@@ -99,19 +103,22 @@ export default class ServerPersistentStore implements PersistentStore<string, st
                 await store.configure('busyTimeout', 200)
                 await store.run('PRAGMA journal_mode = WAL;')
             })
-            await this.tryExec(async () => {
-                try {
-                    await store.migrate({
-                        migrationsPath: this.migrationsPath
-                    })
-                } catch (err) {
-                    if (err.code.startsWith('SQLITE_')) {
-                        // ignore: some other migration is probably running, assume that worked
-                        return
+            if (this.migrationsPath !== undefined) {
+                await this.tryExec(async () => {
+                    try {
+                        await store.migrate({
+                            migrationsPath: this.migrationsPath
+                        })
+                    } catch (err) {
+                        if (err.code.startsWith('SQLITE_')) {
+                            // ignore: some other migration is probably running, assume that worked
+                            return
+                        }
+                        throw err
                     }
-                    throw err
-                }
-            })
+                })
+            }
+            await this.onInit?.(store)
             this.store = store
         } catch (err) {
             this.debug('error', err)

@@ -1,3 +1,4 @@
+import { Database } from 'sqlite'
 import { toStreamID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import ServerPersistentStore from '../../src/encryption/ServerPersistentStore'
@@ -14,6 +15,9 @@ describe('ServerPersistentStore', () => {
             context: mockContext(),
             clientId,
             streamId,
+            onInit: async (db: Database) => {
+                await db.exec('CREATE TABLE IF NOT EXISTS GroupKeys (id TEXT, groupKey TEXT, streamId TEXT);')
+            }
         })
     })
 
