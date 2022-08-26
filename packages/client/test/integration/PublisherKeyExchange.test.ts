@@ -4,13 +4,13 @@ import {
     GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
     StreamMessage,
+    StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
-import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -27,13 +27,13 @@ describe('PublisherKeyExchange', () => {
     let subscriberWallet: Wallet
     let subscriberRSAKeyPair: RSAKeyPair
     let subscriberNode: FakeNetworkNode
-    let mockStream: Stream
+    let streamPartId: StreamPartID
     let environment: FakeEnvironment
 
     const startPublisherKeyExchangeSubscription = async (): Promise<void> => {
         // @ts-expect-error private
         const publisherKeyExchange = publisherClient.container.resolve(PublisherKeyExchange)
-        await publisherKeyExchange.useGroupKey(mockStream.id)
+        await publisherKeyExchange.useGroupKey(StreamPartIDUtils.getStreamID(streamPartId))
     }
 
     const createStream = async () => {
@@ -55,7 +55,7 @@ describe('PublisherKeyExchange', () => {
             publisher,
             content: JSON.stringify([
                 uuid(),
-                mockStream.id,
+                StreamPartIDUtils.getStreamID(streamPartId),
                 rsaPublicKey,
                 [groupKeyId]
             ]),
@@ -119,7 +119,8 @@ describe('PublisherKeyExchange', () => {
                 privateKey: publisherWallet.privateKey
             }
         })
-        mockStream = await createStream()
+        const stream = await createStream()
+        streamPartId = stream.getStreamParts()[0]
         subscriberNode = environment.startNode(subscriberWallet.address)
         await startPublisherKeyExchangeSubscription()
     })
@@ -132,7 +133,7 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyPersistence(mockStream.id, publisherWallet.address).add(key)
+            await getGroupKeyPersistence(StreamPartIDUtils.getStreamID(streamPartId), publisherWallet.address).add(key)
 
             const receivedResponses = addSubscriber(subscriberNode, KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
