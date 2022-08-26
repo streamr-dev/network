@@ -19,7 +19,7 @@ interface GroupKeyStoreOptions {
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    private store: Persistence<string, string>
+    private persistence: Persistence<string, string>
     private currentGroupKeyId: GroupKeyId | undefined // current key id if any
     private nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
@@ -29,7 +29,7 @@ export class GroupKeyStore implements Context {
         const initialData = groupKeys.reduce((o, [, groupKey]) => Object.assign(o, {
             [groupKey.id]: groupKey.hex,
         }), {})
-        this.store = new ServerPersistence({
+        this.persistence = new ServerPersistence({
             context: this, 
             tableName: 'GroupKeys',
             valueColumnName: 'groupKey',
@@ -58,11 +58,11 @@ export class GroupKeyStore implements Context {
                 )
             }
 
-            await this.store.set(groupKey.id, existingKey.hex)
+            await this.persistence.set(groupKey.id, existingKey.hex)
             return existingKey
         }
 
-        await this.store.set(groupKey.id, groupKey.hex)
+        await this.persistence.set(groupKey.id, groupKey.hex)
         return groupKey
     }
 
@@ -71,14 +71,14 @@ export class GroupKeyStore implements Context {
 
         if (this.nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
 
-        return this.store.has(id)
+        return this.persistence.has(id)
     }
 
     async isEmpty(): Promise<boolean> {
         // any pending keys means it's not empty
         if (this.nextGroupKeys.length) { return false }
 
-        return (await this.store.size()) === 0
+        return (await this.persistence.size()) === 0
     }
 
     async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
@@ -118,20 +118,20 @@ export class GroupKeyStore implements Context {
     }
 
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
-        const value = await this.store.get(id)
+        const value = await this.persistence.get(id)
         if (!value) { return undefined }
         return GroupKey.from([id, value])
     }
 
     async exists(): Promise<boolean> {
-        return this.store.exists()
+        return this.persistence.exists()
     }
 
     async clear(): Promise<boolean> {
         this.currentGroupKeyId = undefined
         this.nextGroupKeys.length = 0
 
-        return this.store.clear()
+        return this.persistence.clear()
     }
 
     async rotateGroupKey(): Promise<void> {
@@ -149,7 +149,7 @@ export class GroupKeyStore implements Context {
     }
 
     async close(): Promise<void> {
-        return this.store.close()
+        return this.persistence.close()
     }
 
     async rekey(newKey = GroupKey.generate()): Promise<void> {
