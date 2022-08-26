@@ -13,12 +13,12 @@ describe('ServerPersistentStore', () => {
         const streamId = toStreamID('0x0000000000000000000000000000000000000001/path')
         store = new ServerPersistentStore({
             context: mockContext(),
-            tableName: 'GroupKeys',
-            valueColumnName: 'groupKey',
+            tableName: 'MockTable',
+            valueColumnName: 'mockValue',
             clientId,
             streamId,
             onInit: async (db: Database) => {
-                await db.exec('CREATE TABLE IF NOT EXISTS GroupKeys (id TEXT, groupKey TEXT, streamId TEXT);')
+                await db.exec('CREATE TABLE IF NOT EXISTS MockTable (id TEXT, mockValue TEXT, streamId TEXT);')
             }
         })
     })
