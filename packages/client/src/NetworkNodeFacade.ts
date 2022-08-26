@@ -14,11 +14,15 @@ import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './E
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
+export type NodeID = string // TODO from network package
+export type UserID = string // TODO from network package
+export type MessageDistributionMethod = 'broadcast' | 'unicast' | 'multicast' // TODO from network package
+
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
     getNodeId: () => string
-    addMessageListener: (listener: (msg: StreamMessage) => void) => void
-    removeMessageListener: (listener: (msg: StreamMessage) => void) => void
+    addMessageListener: (listener: (msg: StreamMessage, distributionMethod: MessageDistributionMethod) => void) => void
+    removeMessageListener: (listener: (msg: StreamMessage, distributionMethod: MessageDistributionMethod) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>
@@ -32,6 +36,8 @@ export interface NetworkNodeStub {
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
+    sendUnicastMessage: (streamMessage: StreamMessage, recipient: NodeID) => void
+    sendMulticastMessage: (streamMessage: StreamMessage, recipient: UserID) => void
     /** @internal */
     start: () => void
     /** @internal */
@@ -53,7 +59,7 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
 @scoped(Lifecycle.ContainerScoped)
 export class NetworkNodeFactory {
     createNetworkNode(opts: NetworkNodeOptions): NetworkNodeStub {
-        return _createNetworkNode(opts)
+        return _createNetworkNode(opts) as any // TODO
     }
 }
 
