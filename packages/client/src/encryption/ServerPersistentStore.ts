@@ -16,6 +16,7 @@ const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms
 
 export interface ServerPersistentStoreOptions {
     context: Context
+    tableName: string
     clientId: string
     streamId: StreamID
     initialData?: Record<string, string> // key -> value
@@ -25,6 +26,7 @@ export interface ServerPersistentStoreOptions {
 
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
     readonly id: string
+    private readonly tableName: string
     private readonly streamId: string
     private readonly dbFilePath: string
     private store?: Database
@@ -39,16 +41,19 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         context,
         clientId,
         streamId,
+        tableName,
         initialData = {},
         migrationsPath,
         onInit
     }: ServerPersistentStoreOptions) {
         this.id = instanceId(this)
+        this.tableName = tableName
+
         this.debug = context.debug.extend(this.id)
         this.streamId = encodeURIComponent(streamId)
         this.initialData = initialData
         const paths = envPaths('streamr-client')
-        const dbFilePath = resolve(paths.data, join('./', clientId, 'GroupKeys.db'))
+        const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
         this.dbFilePath = dbFilePath
         this.migrationsPath = migrationsPath
         this.onInit = onInit
@@ -144,7 +149,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const value = await this.store!.get('SELECT groupKey FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        const value = await this.store!.get(`SELECT groupKey FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
         return value?.groupKey
     }
 
@@ -155,13 +160,13 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const value = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        const value = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
         return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
     }
 
     private async setKeyValue(key: string, value: string): Promise<boolean> {
         // set, but without init so init can insert initialData
-        const result = await this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
+        const result = await this.store!.run(`INSERT INTO ${this.tableName} VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING`, {
             $id: key,
             $groupKey: value,
             $streamId: this.streamId,
@@ -182,7 +187,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const result = await this.store!.run('DELETE FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        const result = await this.store!.run(`DELETE FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
         return !!result?.changes
     }
 
@@ -194,7 +199,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const result = await this.store!.run('DELETE FROM GroupKeys WHERE streamId = ?', this.streamId)
+        const result = await this.store!.run(`DELETE FROM ${this.tableName} WHERE streamId = ?`, this.streamId)
         return !!result?.changes
     }
 
@@ -205,7 +210,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         }
 
         await this.init()
-        const size = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE streamId = ?;', this.streamId)
+        const size = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE streamId = ?;`, this.streamId)
         return size && size['COUNT(*)']
     }
 

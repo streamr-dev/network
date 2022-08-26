@@ -13,6 +13,7 @@ describe('ServerPersistentStore', () => {
         const streamId = toStreamID('0x0000000000000000000000000000000000000001/path')
         store = new ServerPersistentStore({
             context: mockContext(),
+            tableName: 'GroupKeys',
             clientId,
             streamId,
             onInit: async (db: Database) => {

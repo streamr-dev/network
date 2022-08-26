@@ -19,9 +19,10 @@ interface GroupKeyStoreOptions {
 export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     private store: PersistentStore<string, string>
 
-    constructor(options: Omit<ServerPersistentStoreOptions, 'migrationsPath'>) {
+    constructor(options: Omit<ServerPersistentStoreOptions, 'tableName' | 'migrationsPath'>) {
         this.store = new ServerPersistentStore({
             ...options,
+            tableName: 'GroupKeys',
             migrationsPath: join(__dirname, 'migrations')
         })
     }
