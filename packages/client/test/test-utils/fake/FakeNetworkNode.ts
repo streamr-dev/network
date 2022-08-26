@@ -3,7 +3,7 @@ import { pull } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { MetricsContext } from 'streamr-network'
 import { NetworkNodeOptions } from 'streamr-network'
-import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
+import { NetworkNodeFactory, NetworkNodeStub, NodeID, UserID, parseUserIdFromNodeId } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 
 type MessageListener = (msg: StreamMessage) => void
@@ -12,7 +12,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
 
     public readonly id: string
     readonly subscriptions: Set<StreamPartID> = new Set()
-    private readonly messageListeners: MessageListener[] = []
+    readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
 
     constructor(opts: NetworkNodeOptions, network: FakeNetwork) {
@@ -53,22 +53,15 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     publish(msg: StreamMessage): void {
-        /*
-         * This serialization+serialization is needed in test/integration/Encryption.ts
-         * as it expects that the EncryptedGroupKey format changes in the process.
-         * TODO: should we change the serialization or the test? Or keep this hack?
-         */
-        const serialized = msg.serialize()
-        this.network.getNodes()
-            .forEach(async (networkNode) => {
-                if (networkNode.subscriptions.has(msg.getStreamPartID())) {
-                    networkNode.messageListeners.forEach((listener) => {
-                        // return a clone as client mutates message when it decrypts messages
-                        const deserialized = StreamMessage.deserialize(serialized)
-                        listener(deserialized)
-                    })
-                }
-            })
+        this.network.sendMessage(msg, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
+    }
+
+    sendUnicastMessage(msg: StreamMessage, recipient: NodeID): void {
+        this.network.sendMessage(msg, (node: FakeNetworkNode) => node.id === recipient)
+    }
+
+    sendMulticastMessage(msg: StreamMessage, recipient: UserID): void {
+        this.network.sendMessage(msg, (node: FakeNetworkNode) => parseUserIdFromNodeId(node.id) === recipient)
     }
 
     // eslint-disable-next-line class-methods-use-this

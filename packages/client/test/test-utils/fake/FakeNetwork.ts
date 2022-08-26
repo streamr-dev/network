@@ -1,4 +1,4 @@
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import { FakeNetworkNode } from './FakeNetworkNode'
 
 export class FakeNetwork {
@@ -23,5 +23,23 @@ export class FakeNetwork {
 
     getNodes(): FakeNetworkNode[] {
         return Array.from(this.nodes.values())
+    }
+
+    sendMessage(msg: StreamMessage, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+        /*
+        * This serialization+serialization is needed in test/integration/Encryption.ts
+        * as it expects that the EncryptedGroupKey format changes in the process.
+        * TODO: should we change the serialization or the test? Or keep this hack?
+        */
+        const serialized = msg.serialize()
+        this.getNodes().forEach(async (networkNode) => {
+            if (isRecipient(networkNode)) {
+                networkNode.messageListeners.forEach((listener) => {
+                    // return a clone as client mutates message when it decrypts messages
+                    const deserialized = StreamMessage.deserialize(serialized)
+                    listener(deserialized)
+                })
+            }
+        })
     }
 }
