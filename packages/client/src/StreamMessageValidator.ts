@@ -97,10 +97,9 @@ export default class StreamMessageValidator {
                 return this.validateMessage(streamMessage)
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST:
                 return this.validateGroupKeyRequest(streamMessage)
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ANNOUNCE:
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE:
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE:
-                return this.validateGroupKeyResponseOrAnnounce(streamMessage)
+                return this.validateGroupKeyResponse(streamMessage)
             default:
                 throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
         }
@@ -196,7 +195,7 @@ export default class StreamMessageValidator {
         }
     }
 
-    private async validateGroupKeyResponseOrAnnounce(streamMessage: StreamMessage): Promise<void> {
+    private async validateGroupKeyResponse(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
@@ -210,7 +209,7 @@ export default class StreamMessageValidator {
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
-        const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // can be GroupKeyResponse or GroupKeyAnnounce, only streamId is read
+        const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // only streamId is read
         const sender = streamMessage.getPublisherId()
 
         // Check that the sender of the request is a valid publisher of the stream
