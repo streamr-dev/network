@@ -113,8 +113,8 @@ module.exports = (env, argv) => {
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
                 // swap out ServerPersistentStore for BrowserPersistentStore
-                [path.resolve('./src/encryption/ServerPersistentStore')]: (
-                    path.resolve('./src/encryption/BrowserPersistentStore.ts')
+                [path.resolve('./src/utils/persistence/ServerPersistentStore.ts')]: (
+                    path.resolve('./src/utils/persistence/BrowserPersistentStore.ts')
                 ),
             },
             fallback: {

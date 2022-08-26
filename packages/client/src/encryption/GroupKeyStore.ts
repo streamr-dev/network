@@ -2,9 +2,9 @@ import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
-import { PersistentStore } from './PersistentStore'
+import { PersistentStore } from '../utils/persistence/PersistentStore'
 
-import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import ServerPersistentStore, { ServerPersistentStoreOptions } from '../utils/persistence/ServerPersistentStore'
 import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string

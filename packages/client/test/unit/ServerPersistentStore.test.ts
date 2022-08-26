@@ -1,7 +1,7 @@
 import { Database } from 'sqlite'
 import { toStreamID } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
-import ServerPersistentStore from '../../src/encryption/ServerPersistentStore'
+import ServerPersistentStore from '../../src/utils/persistence/ServerPersistentStore'
 import { mockContext } from '../test-utils/utils'
 
 describe('ServerPersistentStore', () => {

@@ -4,9 +4,9 @@ import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
-import { instanceId } from '../utils/utils'
-import { pOnce } from '../utils/promises'
-import { Context } from '../utils/Context'
+import { instanceId } from '../utils'
+import { pOnce } from '../promises'
+import { Context } from '../Context'
 
 import { PersistentStore } from './PersistentStore'
 import { StreamID } from 'streamr-client-protocol'
@@ -25,6 +25,9 @@ export interface ServerPersistentStoreOptions {
     onInit?: (db: Database) => Promise<void>
 }
 
+/*
+ * Stores key-value pairs for a given stream
+ */
 export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
     readonly id: string
     private readonly tableName: string
