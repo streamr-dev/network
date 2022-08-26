@@ -172,7 +172,7 @@ describeRepeats('GroupKeyPersistence', () => {
     it('can migrate old data', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
         const migrationsPath = await mkdtemp(join(tmpdir(), 'group-key-test-migrations'))
-        // @ts-expect-error migrationsPath is only on ServerPersistentStore
+        // @ts-expect-error migrationsPath is only on ServerPersistence
         await copyFile(join(store.store.migrationsPath, '001-initial.sql'), join(migrationsPath, '001-initial.sql'))
         const store2 = new GroupKeyPersistence({
             context: mockContext(),

@@ -8,13 +8,13 @@ import { instanceId } from '../utils'
 import { pOnce } from '../promises'
 import { Context } from '../Context'
 
-import { PersistentStore } from './PersistentStore'
+import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
 
 // eslint-disable-next-line promise/param-names
 const wait = (ms: number) => new Promise((resolveFn) => setTimeout(resolveFn, ms))
 
-export interface ServerPersistentStoreOptions {
+export interface ServerPersistenceOptions {
     context: Context
     tableName: string
     valueColumnName: string
@@ -28,7 +28,7 @@ export interface ServerPersistentStoreOptions {
 /*
  * Stores key-value pairs for a given stream
  */
-export default class ServerPersistentStore implements PersistentStore<string, string>, Context {
+export default class ServerPersistence implements Persistence<string, string>, Context {
     readonly id: string
     private readonly tableName: string
     private readonly valueColumnName: string
@@ -51,7 +51,7 @@ export default class ServerPersistentStore implements PersistentStore<string, st
         initialData = {},
         migrationsPath,
         onInit
-    }: ServerPersistentStoreOptions) {
+    }: ServerPersistenceOptions) {
         this.id = instanceId(this)
         this.tableName = tableName
         this.valueColumnName = valueColumnName
