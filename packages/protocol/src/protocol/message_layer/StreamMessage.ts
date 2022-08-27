@@ -19,7 +19,6 @@ export enum StreamMessageType {
     MESSAGE = 27,
     GROUP_KEY_REQUEST = 28,
     GROUP_KEY_RESPONSE = 29,
-    GROUP_KEY_ANNOUNCE = 30,
     GROUP_KEY_ERROR_RESPONSE = 31
 }
 

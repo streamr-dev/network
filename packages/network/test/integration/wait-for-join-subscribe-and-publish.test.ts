@@ -3,7 +3,7 @@ import { Tracker, startTracker } from '@streamr/network-tracker'
 import { MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { waitForEvent } from '@streamr/utils'
 
-import { createNetworkNode } from '../../src/composition'
+import { createNetworkNode, NodeToTrackerEvent } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 /**
@@ -17,7 +17,7 @@ describe('subscribe and wait for the node to join the stream', () => {
     const stream3 = toStreamPartID(toStreamID('stream-3'), 0)
     const TIMEOUT = 5000
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
@@ -32,7 +32,6 @@ describe('subscribe and wait for the node to join the stream', () => {
                 trackers: [trackerInfo],
                 stunUrls: [],
                 webrtcDisallowPrivateAddresses: false
-
             }),
             createNetworkNode({
                 id: 'node-1',
@@ -62,7 +61,7 @@ describe('subscribe and wait for the node to join the stream', () => {
         await Promise.all([nodes.map((node) => node.start())])
     }, 5000)
 
-    afterAll(async () => {
+    afterEach(async () => {
         await Promise.allSettled([
             tracker.stop(),
             nodes.map((node) => node.stop())
@@ -123,5 +122,49 @@ describe('subscribe and wait for the node to join the stream', () => {
         ret.map((numOfNeighbors) => {
             expect(numOfNeighbors).toEqual(4)
         })
+    })
+
+    test('fail: timeout', async () => {
+        const invalidNode = createNetworkNode({
+            id: 'node-0',
+            trackers: [{
+                id: 'mock-id',
+                http: '',
+                ws: ''
+            }],
+            stunUrls: [],
+            webrtcDisallowPrivateAddresses: false
+        })
+        invalidNode.start()
+        await expect(() => invalidNode.subscribeAndWaitForJoin(stream1, 1000)).rejects.toThrow('timed out')
+        await invalidNode.stop()
+    })
+
+    test('fail: unable to handle instruction', async () => {
+        const connectNode = createNetworkNode({
+            id: 'node-0',
+            trackers: [tracker.getConfigRecord()],
+            stunUrls: [],
+            webrtcDisallowPrivateAddresses: false,
+            newWebrtcConnectionTimeout: 500
+        })
+        connectNode.start()
+        const targetNode = createNetworkNode({
+            id: 'target',
+            trackers: [tracker.getConfigRecord()],
+            stunUrls: [],
+            webrtcDisallowPrivateAddresses: false,
+        })
+        targetNode.start()
+        await targetNode.subscribeAndWaitForJoin(stream1, TIMEOUT)
+        // @ts-expect-error private
+        connectNode.trackerManager.nodeToTracker.once(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
+            setImmediate(() => {
+                targetNode.stop()
+            })
+        })
+        // eslint-disable-next-line max-len
+        await expect(() => connectNode.subscribeAndWaitForJoin(stream1, TIMEOUT)).rejects.toThrow('Failed initial join operation to stream partition stream-1#0, failed to form connections to all target neighbors')
+        await connectNode.stop()
     })
 })
