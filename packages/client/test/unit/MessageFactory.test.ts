@@ -1,5 +1,6 @@
 import { random } from 'lodash'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { keyToArrayIndex } from '@streamr/utils'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
@@ -52,7 +53,7 @@ describe('MessageFactory', () => {
             newGroupKey: null,
             signature: SIGNATURE,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-            contentType: 0,
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
             serializedContent: expect.anything(),
         })
     })
@@ -72,12 +73,33 @@ describe('MessageFactory', () => {
 
     it('metadata', async () => {
         const messageFactory = createMessageFactory()
-        const MSG_CHAIN_ID = 'mock-msgChainId'
+        const partitionKey = 'mock-partitionKey'
+        const msgChainId = 'mock-msgChainId'
+        const messageType = StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        const encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
         const msg = await messageFactory.createMessage(undefined, CONTENT, {
             timestamp: TIMESTAMP,
-            msgChainId: MSG_CHAIN_ID
+            partitionKey,
+            msgChainId,
+            messageType,
+            encryptionType
         })
-        expect(msg.messageId.msgChainId).toBe(MSG_CHAIN_ID)
+        expect(msg).toMatchObject({
+            encryptionType,
+            messageId: {
+                msgChainId,
+                streamPartition: keyToArrayIndex(PARTITION_COUNT, partitionKey)
+            },
+            messageType
+        })
+    })
+
+    it('chaining', async () => {
+        const messageFactory = createMessageFactory()
+        const msg1 = await messageFactory.createMessage(undefined, { foo: 'bar ' }, { timestamp: 1000 })
+        const msg2 = await messageFactory.createMessage(undefined, { lorem: 'ipsum' }, { timestamp: 1000 })
+        expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
+        expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
     })
 
     it('next group key', async () => {
