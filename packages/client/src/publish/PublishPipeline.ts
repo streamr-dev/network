@@ -43,8 +43,3 @@ export interface MessageMetadata {
     /** @internal */
     encryptionType?: EncryptionType
 }
-
-// TODO better name?
-export type PublishMetadata<T = unknown> = MessageMetadata & {
-    content: T
-}

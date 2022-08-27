@@ -6,7 +6,7 @@ import { scoped, Lifecycle, delay, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { MessageMetadata, PublishError, PublishMetadata } from './PublishPipeline'
+import { MessageMetadata, PublishError } from './PublishPipeline'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -18,8 +18,6 @@ import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { pLimitFn } from '../utils/promises'
 import { Validator } from '../Validator'
-
-export type { PublishMetadata }
 
 const parseTimestamp = (metadata?: MessageMetadata): number => {
     if (metadata?.timestamp === undefined) {
