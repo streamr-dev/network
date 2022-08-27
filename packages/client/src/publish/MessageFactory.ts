@@ -6,7 +6,7 @@ import { GroupKey } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
 import { Validator } from '../Validator'
 import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
-import { MessageMetadata } from './PublishPipeline'
+import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 
 export interface MessageFactoryOptions {

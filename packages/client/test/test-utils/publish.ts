@@ -3,7 +3,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
-import { MessageMetadata } from '../../src/publish/PublishPipeline'
+import { MessageMetadata } from '../../src/publish/Publisher'
 import { uid } from './utils'
 
 export function Msg<T extends object = object>(opts?: T): any {

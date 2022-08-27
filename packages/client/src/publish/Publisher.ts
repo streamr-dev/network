@@ -1,12 +1,9 @@
-/**
- * Public Publishing API
- */
-import { KeyExchangeStreamIDUtils, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, KeyExchangeStreamIDUtils, StreamID, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { scoped, Lifecycle, delay, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
+import { InspectOptions } from 'util'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { MessageMetadata, PublishError } from './PublishPipeline'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -18,6 +15,47 @@ import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { pLimitFn } from '../utils/promises'
 import { Validator } from '../Validator'
+import { inspect } from '../utils/log'
+
+export class PublishError extends Error {
+    
+    public streamId: StreamID
+    public timestamp: number
+
+    constructor(streamId: StreamID, timestamp: number, cause: Error) {
+        // Currently Node and Firefox show the full error chain (this error and
+        // the message and the stack of the "cause" variable) when an error is printed
+        // to console.log. Chrome shows only the root error.
+        // TODO: Remove the cause suffix from the error message when Chrome adds the support:
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=1211260
+        // eslint-disable-next-line max-len
+        // @ts-expect-error typescript definitions don't support error cause
+        super(`Failed to publish to stream ${streamId} (timestamp=${timestamp}), cause: ${cause.message}`, { cause })
+        this.streamId = streamId
+        this.timestamp = timestamp
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+
+    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
+        return inspect(this, {
+            ...options,
+            customInspect: false,
+            depth,
+        })
+    }
+}
+
+export interface MessageMetadata {
+    timestamp?: string | number | Date
+    partitionKey?: string | number
+    msgChainId?: string
+    /** @internal */
+    messageType?: StreamMessageType
+    /** @internal */
+    encryptionType?: EncryptionType
+}
 
 const parseTimestamp = (metadata?: MessageMetadata): number => {
     if (metadata?.timestamp === undefined) {
