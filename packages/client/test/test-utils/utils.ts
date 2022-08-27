@@ -10,7 +10,8 @@ import {
     StreamMessageOptions,
     MessageID,
     EthereumAddress,
-    StreamID
+    StreamID,
+    EncryptionType
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -115,11 +116,25 @@ export const createMockMessage = (
     opts: CreateMockMessageOptionsBase
     & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 ): StreamMessage<any> => {
-    const DEFAULT_CONTENT = {}
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
+    const DEFAULT_CONTENT = {}
+    const plainContent = opts.content ?? DEFAULT_CONTENT
+    let content: any
+    let encryptionType: EncryptionType
+    let groupKeyId: string | null
+    if (opts.encryptionKey !== undefined) {
+        content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(plainContent), 'utf8'), opts.encryptionKey.data)
+        encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+        groupKeyId = opts.encryptionKey.id
+    } else {
+        content = plainContent
+        encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
+        groupKeyId = null
+    }
     const msg = new StreamMessage({
+        ...opts,
         messageId: new MessageID(
             streamId,
             partition,
@@ -129,15 +144,13 @@ export const createMockMessage = (
             opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content: DEFAULT_CONTENT,
-        prevMsgRef: opts.prevMsgRef,
-        ...opts
+        content,
+        encryptionType,
+        groupKeyId
     })
-    if (opts.encryptionKey !== undefined) {
-        EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
-    }
     msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
+
 }
 
 export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> => {
