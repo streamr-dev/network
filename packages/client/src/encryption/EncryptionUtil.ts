@@ -61,22 +61,6 @@ export class EncryptionUtil {
         return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
     }
 
-    /*
-     * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
-     */
-    // TODO remove this method
-    static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
-        /* eslint-disable no-param-reassign */
-        streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-        streamMessage.groupKeyId = groupKey.id
-        streamMessage.serializedContent = this.encryptWithAES(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey.data)
-        if (nextGroupKey) {
-            streamMessage.newGroupKey = EncryptionUtil.encryptGroupKey(nextGroupKey, groupKey)
-        }
-        streamMessage.parsedContent = undefined
-        /* eslint-enable no-param-reassign */
-    }
-
     static decryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey): void | never {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
             return
