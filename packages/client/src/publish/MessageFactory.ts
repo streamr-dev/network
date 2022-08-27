@@ -4,7 +4,6 @@ import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
-import { Validator } from '../Validator'
 import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
@@ -16,7 +15,6 @@ export interface MessageFactoryOptions {
     publisherId: EthereumAddress
     createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
-    validator: Validator
     cacheConfig?: CacheConfig
 }
 
@@ -31,7 +29,6 @@ export class MessageFactory {
     private useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
     private getStreamPartitionForKey: (partitionKey: string | number) => number
     private getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain
-    private validator: Validator
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
@@ -48,7 +45,6 @@ export class MessageFactory {
             cacheKey: ([partitionKey]) => partitionKey
         })
         this.getMsgChain = getCachedMessageChain(opts.cacheConfig) // TODO would it ok to just use pMemoize (we don't have many chains)
-        this.validator = opts.validator
     }
 
     async createMessage<T>(
@@ -115,10 +111,6 @@ export class MessageFactory {
         })
         message.signature = await this.createSignature(message.getPayloadToSign())
 
-        // TODO are most of validation checks testing something we already know that is true? E.g. that the message contains a signature
-        // -> those checks are needed in SubscribePipeline, but why the same checks were in PublishPipeline (if there is no
-        // need to check any of the aspects of a message, we can remove this validation step)
-        await this.validator.validate(message)
         return message
     }
 }

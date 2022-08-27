@@ -15,7 +15,7 @@ describe('Publisher', () => {
         const streamIDBuilder = new StreamIDBuilder(authentication as any)
         const streamRegistry: Partial<StreamRegistryCached> = {
             getStream: (async () => {
-                throw new Error('mock-error') 
+                throw new Error('mock-error')
             }) as any
         }
         const publisher = new Publisher(
@@ -23,7 +23,6 @@ describe('Publisher', () => {
             streamIDBuilder,
             authentication as any,
             streamRegistry as any,
-            undefined as any,
             undefined as any,
             undefined as any,
             undefined as any

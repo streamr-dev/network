@@ -14,11 +14,10 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { pLimitFn } from '../utils/promises'
-import { Validator } from '../Validator'
 import { inspect } from '../utils/log'
 
 export class PublishError extends Error {
-    
+
     public streamId: StreamID
     public timestamp: number
 
@@ -80,7 +79,6 @@ export class Publisher implements Context {
     private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
-    private validator: Validator
 
     constructor(
         context: Context,
@@ -89,7 +87,6 @@ export class Publisher implements Context {
         streamRegistryCached: StreamRegistryCached,
         @inject(delay(() => PublisherKeyExchange)) keyExchange: PublisherKeyExchange,
         node: NetworkNodeFacade,
-        validator: Validator,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
     ) {
         this.id = instanceId(this)
@@ -105,7 +102,6 @@ export class Publisher implements Context {
         }, {
             cacheKey: ([streamId]) => streamId
         }))
-        this.validator = validator
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
@@ -120,8 +116,7 @@ export class Publisher implements Context {
                 publisherId: authenticatedUser.toLowerCase(),
                 createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
                 useGroupKey: () => Promise.reject(),
-                cacheConfig: this.cacheConfig,
-                validator: this.validator
+                cacheConfig: this.cacheConfig
             })
         }
         const [ stream, authenticatedUser ] = await Promise.all([
@@ -140,8 +135,7 @@ export class Publisher implements Context {
             publisherId: authenticatedUser.toLowerCase(),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
             useGroupKey: pLimitFn(() => this.keyExchange.useGroupKey(streamId), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
-            cacheConfig: this.cacheConfig,
-            validator: this.validator
+            cacheConfig: this.cacheConfig
         })
     }
 
