@@ -113,8 +113,6 @@ export class MessageFactory {
             newGroupKey,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH
         })
-
-        // TODO pass this as a constructor parameter to StreamMessage?
         message.signature = await this.createSignature(message.getPayloadToSign())
 
         // TODO are most of validation checks testing something we already know that is true? E.g. that the message contains a signature
