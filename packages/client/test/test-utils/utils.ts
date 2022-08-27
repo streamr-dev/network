@@ -148,9 +148,8 @@ export const createMockMessage = (
         encryptionType,
         groupKeyId
     })
-    msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
+    msg.signature = sign(msg.getPayloadToSign(), opts.publisher.privateKey)
     return msg
-
 }
 
 export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> => {
@@ -166,10 +165,10 @@ export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPart
 }
 
 export const getGroupKeyPersistence = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyPersistence => {
-    return new GroupKeyPersistence({ 
-        context: mockContext(), 
-        clientId: userAddress.toLowerCase(), 
-        streamId, 
+    return new GroupKeyPersistence({
+        context: mockContext(),
+        clientId: userAddress.toLowerCase(),
+        streamId,
         initialData: {}
     })
 }

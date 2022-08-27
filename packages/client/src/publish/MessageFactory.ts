@@ -115,7 +115,7 @@ export class MessageFactory {
         })
 
         // TODO pass this as a constructor parameter to StreamMessage?
-        message.signature = await this.createSignature(message.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH))
+        message.signature = await this.createSignature(message.getPayloadToSign())
 
         // TODO are most of validation checks testing something we already know that is true? E.g. that the message contains a signature
         // -> those checks are needed in SubscribePipeline, but why the same checks were in PublishPipeline (if there is no
