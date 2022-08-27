@@ -54,7 +54,7 @@ describe('MessageFactory', () => {
             signature: SIGNATURE,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
-            serializedContent: expect.anything(),
+            serializedContent: expect.stringMatching(/^[0-9a-f]+$/),
         })
     })
 
@@ -111,6 +111,10 @@ describe('MessageFactory', () => {
             timestamp: TIMESTAMP
         })
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
+        expect(msg.newGroupKey).toMatchObject({
+            groupKeyId: nextGroupKey.id,
+            encryptedGroupKeyHex: expect.any(String)
+        })
         expect(EncryptionUtil.decryptGroupKey(msg.newGroupKey!, GROUP_KEY)).toEqual(nextGroupKey)
     })
 

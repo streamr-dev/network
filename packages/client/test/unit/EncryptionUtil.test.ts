@@ -33,29 +33,6 @@ describe('EncryptionUtil', () => {
         expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))
     })
 
-    it('StreamMessage gets encrypted', () => {
-        const key = GroupKey.generate()
-        const nextKey = GroupKey.generate()
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
-            content: {
-                foo: 'bar',
-            },
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-            signature: null,
-        })
-        EncryptionUtil.encryptStreamMessage(streamMessage, key, nextKey)
-        expect(streamMessage.getSerializedContent()).not.toStrictEqual('{"foo":"bar"}')
-        expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-        expect(streamMessage.groupKeyId).toBe(key.id)
-        expect(streamMessage.newGroupKey).toMatchObject({
-            groupKeyId: nextKey.id,
-            encryptedGroupKeyHex: expect.any(String)
-        })
-    })
-
     it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
