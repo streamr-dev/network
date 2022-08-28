@@ -33,7 +33,7 @@ describe('MessageFactory', () => {
 
     it('happy path', async () => {
         const messageFactory = createMessageFactory()
-        const msg = await messageFactory.createMessage(undefined, CONTENT, { timestamp: TIMESTAMP })
+        const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
@@ -60,7 +60,7 @@ describe('MessageFactory', () => {
             isPublicStream: true,
             useGroupKey: () => Promise.reject()
         })
-        const msg = await messageFactory.createMessage(undefined, CONTENT, { timestamp: TIMESTAMP })
+        const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
         expect(msg).toMatchObject({
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             groupKeyId: null,
@@ -74,7 +74,7 @@ describe('MessageFactory', () => {
         const msgChainId = 'mock-msgChainId'
         const messageType = StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
         const encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-        const msg = await messageFactory.createMessage(undefined, CONTENT, {
+        const msg = await messageFactory.createMessage(CONTENT, {
             timestamp: TIMESTAMP,
             partitionKey,
             msgChainId,
@@ -93,8 +93,8 @@ describe('MessageFactory', () => {
 
     it('chaining', async () => {
         const messageFactory = createMessageFactory()
-        const msg1 = await messageFactory.createMessage(undefined, { foo: 'bar ' }, { timestamp: 1000 })
-        const msg2 = await messageFactory.createMessage(undefined, { lorem: 'ipsum' }, { timestamp: 1000 })
+        const msg1 = await messageFactory.createMessage({ foo: 'bar ' }, { timestamp: 1000 })
+        const msg2 = await messageFactory.createMessage({ lorem: 'ipsum' }, { timestamp: 1000 })
         expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
         expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
     })
@@ -104,7 +104,7 @@ describe('MessageFactory', () => {
         const messageFactory = createMessageFactory({
             useGroupKey: async () => [GROUP_KEY, nextGroupKey]
         })
-        const msg = await messageFactory.createMessage(undefined, CONTENT, {
+        const msg = await messageFactory.createMessage(CONTENT, {
             timestamp: TIMESTAMP
         })
         expect(msg.groupKeyId).toBe(GROUP_KEY.id)
@@ -119,19 +119,23 @@ describe('MessageFactory', () => {
         it('partition and partitionKey', async () => {
             const messageFactory = createMessageFactory()
             return expect(() => {
-                return messageFactory.createMessage(0, CONTENT, {
-                    timestamp: TIMESTAMP,
-                    partitionKey: 'mockPartitionKey'
-                })
+                return messageFactory.createMessage(
+                    CONTENT,
+                    {
+                        timestamp: TIMESTAMP,
+                        partitionKey: 'mockPartitionKey'
+                    },
+                    0
+                )
             }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
         })
 
         it('no partition key: uses same partition for all messages', async () => {
             const messageFactory = createMessageFactory()
-            const msg1 = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg1 = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP
             })
-            const msg2 = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg2 = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP
             })
             expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
@@ -140,11 +144,11 @@ describe('MessageFactory', () => {
         it('same partition key maps to same partition', async () => {
             const messageFactory = createMessageFactory()
             const partitionKey = `mock-partition-key-${random(Number.MAX_SAFE_INTEGER)}`
-            const msg1 = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg1 = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP,
                 partitionKey
             })
-            const msg2 = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg2 = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP,
                 partitionKey
             })
@@ -154,7 +158,7 @@ describe('MessageFactory', () => {
         it('numeric partition key maps to the partition if in range', async () => {
             const messageFactory = createMessageFactory()
             const partitionKey = 10
-            const msg = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP,
                 partitionKey
             })
@@ -164,7 +168,7 @@ describe('MessageFactory', () => {
         it('numeric partition key maps to partition range', async () => {
             const messageFactory = createMessageFactory()
             const partitionOffset = 20
-            const msg = await messageFactory.createMessage(undefined, CONTENT, {
+            const msg = await messageFactory.createMessage(CONTENT, {
                 timestamp: TIMESTAMP,
                 partitionKey: PARTITION_COUNT + partitionOffset
             })

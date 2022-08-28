@@ -48,9 +48,9 @@ export class MessageFactory {
     }
 
     async createMessage<T>(
-        explicitPartition: number | undefined,
         content: T,
-        metadata: MessageMetadata & { timestamp: number }
+        metadata: MessageMetadata & { timestamp: number },
+        explicitPartition?: number
     ): Promise<StreamMessage<T>> {
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= this.partitionCount)) {

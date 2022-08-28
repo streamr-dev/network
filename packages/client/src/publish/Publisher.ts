@@ -149,12 +149,12 @@ export class Publisher implements Context {
         try {
             const messageFactory = await this.getMessageFactory(streamId)
             const message = await messageFactory.createMessage(
-                partition,
                 content,
                 {
                     ...metadata,
                     timestamp
-                }
+                },
+                partition
             )
             await this.node.publishToNode(message)
             return message
