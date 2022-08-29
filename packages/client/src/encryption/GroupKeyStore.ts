@@ -119,7 +119,7 @@ export class GroupKeyStore implements Context {
 
     async clear(): Promise<boolean> {
         this.currentGroupKeyId = undefined
-        this.nextGroupKeys.length = 0
+        this.nextGroupKeys = []
         return this.persistence.clear()
     }
 
@@ -144,7 +144,7 @@ export class GroupKeyStore implements Context {
     async rekey(newKey = GroupKey.generate()): Promise<void> {
         await this.storeKey(newKey)
         this.currentGroupKeyId = newKey.id
-        this.nextGroupKeys.length = 0
+        this.nextGroupKeys = []
     }
 
     async size(): Promise<number> {
