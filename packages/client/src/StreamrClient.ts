@@ -106,11 +106,7 @@ export class StreamrClient implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const store = await this.groupKeyStoreFactory.getStore(streamId)
         if (opts.distributionMethod === 'rotate') {
-            if (opts.key === undefined) {
-                return store.rotateGroupKey()
-            } else { // eslint-disable-line no-else-return
-                return store.setNextGroupKey(opts.key)
-            }
+            return store.rotate(opts.key)
         } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
             return store.rekey(opts.key)
         } else {

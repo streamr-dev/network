@@ -73,25 +73,25 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.exists()).toBeTruthy()
     })
 
-    it('can set next and use', async () => {
+    it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
-        await store.setNextGroupKey(groupKey)
+        await store.rotate(groupKey)
         expect(await store.exists()).toBeTruthy()
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         const groupKey2 = GroupKey.generate()
-        await store.setNextGroupKey(groupKey2)
+        await store.rotate(groupKey2)
         expect(await store.useGroupKey()).toEqual([groupKey, groupKey2])
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
-    it('can set next in parallel and use', async () => {
+    it('can rotate in parallel and use', async () => {
         const groupKey = GroupKey.generate()
         const groupKey2 = GroupKey.generate()
         await Promise.all([
-            store.setNextGroupKey(groupKey),
-            store.setNextGroupKey(groupKey2),
+            store.rotate(groupKey),
+            store.rotate(groupKey2),
         ])
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
     })

@@ -102,7 +102,7 @@ export class GroupKeyStore implements Context {
             ]
         } else {
             // Generate & use new key if none already set.
-            await this.rotateGroupKey()
+            await this.rotate()
             return this.useGroupKey()
         }
     }
@@ -123,15 +123,11 @@ export class GroupKeyStore implements Context {
         return this.persistence.clear()
     }
 
-    async rotateGroupKey(): Promise<void> {
-        return this.setNextGroupKey(GroupKey.generate())
-    }
-
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
 
-    async setNextGroupKey(newKey: GroupKey): Promise<void> {
+    async rotate(newKey = GroupKey.generate()): Promise<void> {
         this.nextGroupKeys.unshift(newKey)
         this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
         await this.storeKey(newKey)
