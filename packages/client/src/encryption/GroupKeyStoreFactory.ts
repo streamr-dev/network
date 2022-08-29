@@ -26,7 +26,7 @@ export interface UpdateEncryptionKeyOptions {
 export class GroupKeyStoreFactory implements Context {
     readonly id
     readonly debug
-    private cleanupFns: ((...args: any[]) => any)[] = []
+    private cleanupFns: (() => void)[] = []
     private initialGroupKeys: Record<string, GroupKeysSerialized>
     public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>)
 
