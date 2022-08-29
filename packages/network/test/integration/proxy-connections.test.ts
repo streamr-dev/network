@@ -290,7 +290,7 @@ describe('Proxy connection tests', () => {
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
 
         await Promise.all([
-            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 20000),
+            waitForEvent(contactNode, NodeEvent.NODE_CONNECTED, 20000),
             // @ts-expect-error private
             contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
         ])
