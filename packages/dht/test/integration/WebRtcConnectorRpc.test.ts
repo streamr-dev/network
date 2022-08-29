@@ -1,4 +1,4 @@
-import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
+import { ProtoRpcClient, RpcCommunicator, RpcCommunicatorEvent, toProtoRpcClient } from '@streamr/proto-rpc'
 import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
 import {
     IceCandidate,
@@ -17,7 +17,7 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client: WebRtcConnectorClient
+    let client: ProtoRpcClient<WebRtcConnectorClient>
 
     let requestConnectionCounter: number
     let rtcOfferCounter: number
@@ -82,7 +82,7 @@ describe('WebRTC rpc messages', () => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client = new WebRtcConnectorClient(rpcCommunicator1.getRpcClientTransport())
+        client = toProtoRpcClient(new WebRtcConnectorClient(rpcCommunicator1.getRpcClientTransport()))
     })
 
     afterEach(async () => {
@@ -91,20 +91,19 @@ describe('WebRTC rpc messages', () => {
     })
 
     it('send connectionRequest', async () => {
-        const response = client.requestConnection({
+        client.requestConnection({
             requester: peerDescriptor1,
             target: peerDescriptor2,
             connectionId: 'connectionRequest'
         },
         { targetDescriptor: peerDescriptor2, notification: true }
         )
-        const res = await response.response
-        await (expect(res)).toBeTruthy()
+
         await waitForCondition(() => requestConnectionCounter === 1)
     })
 
     it('send rtcOffer', async () => {
-        const response = client.rtcOffer({
+        client.rtcOffer({
             requester: peerDescriptor1,
             target: peerDescriptor2,
             connectionId: 'rtcOffer',
@@ -112,13 +111,12 @@ describe('WebRTC rpc messages', () => {
         },
         { targetDescriptor: peerDescriptor2, notification: true }
         )
-        const res = await response.response
-        await (expect(res)).toBeTruthy()
+
         await waitForCondition(() => rtcOfferCounter === 1)
     })
 
     it('send rtcAnswer', async () => {
-        const response = client.rtcAnswer({
+        client.rtcAnswer({
             requester: peerDescriptor1,
             target: peerDescriptor2,
             connectionId: 'rtcOffer',
@@ -126,13 +124,12 @@ describe('WebRTC rpc messages', () => {
         },
         { targetDescriptor: peerDescriptor2, notification: true }
         )
-        const res = await response.response
-        await (expect(res)).toBeTruthy()
+
         await waitForCondition(() => rtcAnswerCounter === 1)
     })
 
     it('send iceCandidate', async () => {
-        const response = client.iceCandidate({
+        client.iceCandidate({
             requester: peerDescriptor1,
             target: peerDescriptor2,
             connectionId: 'rtcOffer',
@@ -141,8 +138,7 @@ describe('WebRTC rpc messages', () => {
         },
         { targetDescriptor: peerDescriptor2, notification: true }
         )
-        const res = await response.response
-        await (expect(res)).toBeTruthy()
+
         await waitForCondition(() => iceCandidateCounter === 1)
     })
 })

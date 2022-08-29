@@ -3,7 +3,6 @@ import {
     RpcMessage,
     RpcResponseError
 } from '../../src/proto/ProtoRpc'
-import { Empty } from '../../src/proto/google/protobuf/empty'
 import { PingRequest, PingResponse } from '../proto/TestProtos' 
 import { ResultParts } from '../../src/ClientTransport'
 import { Deferred, RpcMetadata, RpcStatus } from '@protobuf-ts/runtime-rpc'
@@ -119,21 +118,6 @@ describe('RpcCommunicator', () => {
         await expect(promises.message.promise)
             .rejects
             .toEqual(new Err.RpcRequest(`Server does not implement method ping`))
-    })
-
-    it('Immediately resolves notifications', async () => {
-        const notification: RpcMessage = {
-            ...request,
-            header: {
-                ...request.header,
-                notification: 'notification'
-            }
-        }
-        promises.messageParser = (bytes: Uint8Array) => Empty.fromBinary(bytes)
-        // @ts-expect-error private 
-        rpcCommunicator.onOutgoingMessage(notification, promises)
-        const res = await promises.message.promise as Empty
-        expect(res).toBeTruthy()
     })
 
     it('Success responses to requests', async () => {

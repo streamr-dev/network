@@ -1,4 +1,4 @@
-import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
+import { ProtoRpcClient, RpcCommunicator, RpcCommunicatorEvent, toProtoRpcClient } from '@streamr/proto-rpc'
 import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import {
@@ -12,8 +12,8 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 describe('WebSocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client1: WebSocketConnectorClient
-    let client2: WebSocketConnectorClient
+    let client1: ProtoRpcClient<WebSocketConnectorClient>
+    let client2: ProtoRpcClient<WebSocketConnectorClient>
 
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
@@ -50,8 +50,8 @@ describe('WebSocketConnectorRpc', () => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client1 = new WebSocketConnectorClient(rpcCommunicator1.getRpcClientTransport())
-        client2 = new WebSocketConnectorClient(rpcCommunicator2.getRpcClientTransport())
+        client1 = toProtoRpcClient(new WebSocketConnectorClient(rpcCommunicator1.getRpcClientTransport()))
+        client2 = toProtoRpcClient(new WebSocketConnectorClient(rpcCommunicator2.getRpcClientTransport()))
     })
 
     afterEach(async () => {
@@ -68,7 +68,7 @@ describe('WebSocketConnectorRpc', () => {
         },
         { targetDescriptor: peerDescriptor2 },
         )
-        const res1 = await response1.response
+        const res1 = await response1
         await (expect(res1.accepted)).toEqual(true)
 
         const response2 = client2.requestConnection({
@@ -79,7 +79,7 @@ describe('WebSocketConnectorRpc', () => {
         },
         { targetDescriptor: peerDescriptor1 },
         )
-        const res2 = await response2.response
+        const res2 = await response2
         await (expect(res2.accepted)).toEqual(true)
     })
 })

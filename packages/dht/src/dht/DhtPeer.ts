@@ -6,6 +6,7 @@ import { jsFormatPeerDescriptor } from '../helpers/common'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { RouteMessageParams } from './DhtNode'
 import { Logger } from '@streamr/utils'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
@@ -26,9 +27,9 @@ export class DhtPeer implements KBucketContact {
 
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
-    private readonly dhtClient: IDhtRpcClient
+    private readonly dhtClient: ProtoRpcClient<IDhtRpcClient>
     
-    constructor(peerDescriptor: PeerDescriptor, client: IDhtRpcClient) {
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcClient>) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++
@@ -48,8 +49,7 @@ export class DhtPeer implements KBucketContact {
         }
 
         try {
-            const results = this.dhtClient.getClosestPeers(request, options)
-            const peers = await results.response
+            const peers = await this.dhtClient.getClosestPeers(request, options)
             return peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
         } catch (err) {
             logger.debug(err)
@@ -67,8 +67,7 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const results = this.dhtClient.ping(request, options)
-            const pong = await results.response
+            const pong = await this.dhtClient.ping(request, options)
             if (pong.nonce === request.nonce) {
                 return true
             }
@@ -91,8 +90,7 @@ export class DhtPeer implements KBucketContact {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const results = this.dhtClient.routeMessage(message, options)
-            const ack = await results.response
+            const ack = await this.dhtClient.routeMessage(message, options)
             if (ack.error!.length > 0) {
                 return false
             }
