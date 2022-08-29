@@ -77,20 +77,20 @@ export class GroupKeyStore implements Context {
 
     async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
         const nextGroupKey = this.nextGroupKeys.pop()
-        if (!this.currentGroupKeyId && nextGroupKey) {
+        if (this.currentGroupKeyId === undefined && nextGroupKey !== undefined) {
             // First use of group key on this stream, no current key. Make next key current.
             this.currentGroupKeyId = nextGroupKey.id
             return [
                 await this.get(this.currentGroupKeyId!),
                 undefined,
             ]
-        } else if (this.currentGroupKeyId != null && !nextGroupKey) {
+        } else if (this.currentGroupKeyId !== undefined && nextGroupKey === undefined) {
             // Keep using current key (empty next)
             return [
                 await this.get(this.currentGroupKeyId),
                 undefined
             ]
-        } else if (this.currentGroupKeyId != null && nextGroupKey != null) {
+        } else if (this.currentGroupKeyId !== undefined && nextGroupKey !== undefined) {
             // Key changed (non-empty next). return current + next. Make next key current.
             const prevId = this.currentGroupKeyId
             this.currentGroupKeyId = nextGroupKey.id
@@ -109,7 +109,7 @@ export class GroupKeyStore implements Context {
 
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
-        if (!value) { return undefined }
+        if (value === undefined) { return undefined }
         return GroupKey.from([id, value])
     }
 
