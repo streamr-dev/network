@@ -26,7 +26,6 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
-
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {

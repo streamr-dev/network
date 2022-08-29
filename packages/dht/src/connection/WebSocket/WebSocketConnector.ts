@@ -33,7 +33,6 @@ import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
-
 const logger = new Logger(module)
 
 export class WebSocketConnector extends EventEmitter implements IManagedConnectionSource, IWebSocketConnector {
