@@ -90,12 +90,12 @@ export function getPublishTestStreamMessages(
         }
 
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
-        const streamMessages = []
+        let streamMessages = []
         let count = 0
         for await (const streamMessage of publishStream) {
             count += 1
             if (!retainMessages) {
-                streamMessages.length = 0 // only keep last message
+                streamMessages = [] // only keep last message
             }
             streamMessages.push(streamMessage)
             if (count === maxMessages) {
