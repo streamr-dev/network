@@ -9,7 +9,7 @@ import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { EncryptionUtil } from './../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/iterators'
-import { addSubscriber, getGroupKeyPersistence } from '../test-utils/utils'
+import { addSubscriber, getGroupKeyStore } from '../test-utils/utils'
 
 const MESSAGE_COUNT = 100
 
@@ -71,7 +71,7 @@ describe('parallel publish', () => {
         const groupKeyIds = uniq(sortedMessages.map((m) => m.groupKeyId))
         expect(groupKeyIds).toHaveLength(1)
 
-        const groupKeyPersistence = getGroupKeyPersistence(stream.id, await publisher.getAddress())
+        const groupKeyPersistence = getGroupKeyStore(stream.id, await publisher.getAddress())
         const groupKey = await groupKeyPersistence.get(groupKeyIds[0]!)
         const decryptedMessages = sortedMessages.map((m) => {
             EncryptionUtil.decryptStreamMessage(m, groupKey!)
