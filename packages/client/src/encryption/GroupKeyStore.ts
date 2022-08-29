@@ -1,9 +1,10 @@
+import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
-import { PersistentStore } from './PersistentStore'
+import { Persistence } from '../utils/persistence/Persistence'
 
-import ServerPersistentStore, { ServerPersistentStoreOptions } from './ServerPersistentStore'
+import ServerPersistence, { ServerPersistenceOptions } from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
 
 type GroupKeyId = string
@@ -15,23 +16,28 @@ interface GroupKeyStoreOptions {
     groupKeys: [GroupKeyId, GroupKey][]
 }
 
-export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
-    private store: PersistentStore<string, string>
+export class GroupKeyPersistence implements Persistence<string, GroupKey> {
+    private delegate: Persistence<string, string>
 
-    constructor(options: ServerPersistentStoreOptions) {
-        this.store = new ServerPersistentStore(options)
+    constructor(options: Omit<ServerPersistenceOptions, 'tableName' | 'valueColumnName' | 'migrationsPath'>) {
+        this.delegate = new ServerPersistence({
+            ...options,
+            tableName: 'GroupKeys',
+            valueColumnName: 'groupKey',
+            migrationsPath: join(__dirname, 'migrations')
+        })
     }
 
     async has(groupKeyId: string): Promise<boolean> {
-        return this.store.has(groupKeyId)
+        return this.delegate.has(groupKeyId)
     }
 
     async size(): Promise<number> {
-        return this.store.size()
+        return this.delegate.size()
     }
 
     async get(groupKeyId: string): Promise<GroupKey | undefined> {
-        const value = await this.store.get(groupKeyId)
+        const value = await this.delegate.get(groupKeyId)
         if (!value) { return undefined }
         return GroupKey.from([groupKeyId, value])
     }
@@ -41,27 +47,27 @@ export class GroupKeyPersistence implements PersistentStore<string, GroupKey> {
     }
 
     async set(groupKeyId: string, value: GroupKey): Promise<boolean> {
-        return this.store.set(groupKeyId, value.hex)
+        return this.delegate.set(groupKeyId, value.hex)
     }
 
     async delete(groupKeyId: string): Promise<boolean> {
-        return this.store.delete(groupKeyId)
+        return this.delegate.delete(groupKeyId)
     }
 
     async clear(): Promise<boolean> {
-        return this.store.clear()
+        return this.delegate.clear()
     }
 
     async destroy(): Promise<void> {
-        return this.store.destroy()
+        return this.delegate.destroy()
     }
 
     async close(): Promise<void> {
-        return this.store.close()
+        return this.delegate.close()
     }
 
     async exists(): Promise<boolean> {
-        return this.store.exists()
+        return this.delegate.exists()
     }
 
     get [Symbol.toStringTag](): string {

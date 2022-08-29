@@ -1,8 +1,8 @@
 import { get, set, del, clear, keys, createStore, UseStore } from 'idb-keyval'
-import { PersistentStore } from './PersistentStore'
+import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
 
-export default class BrowserPersistentStore implements PersistentStore<string, string> {
+export default class BrowserPersistence implements Persistence<string, string> {
     private store: UseStore
     private dbName: string
 

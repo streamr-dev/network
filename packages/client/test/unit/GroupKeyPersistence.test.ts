@@ -1,19 +1,12 @@
 import crypto from 'crypto'
-import fs from 'fs'
-import { join } from 'path'
-import { tmpdir } from 'os'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
 import { uid, mockContext } from '../test-utils/utils'
-import { addAfterFn, describeRepeats } from '../test-utils/jest-utils'
+import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 
-// this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
-// TODO: replace rmdir with rm after dropping support for node 12.
-const { mkdtemp, rmdir, copyFile } = fs.promises
-
-describeRepeats('GroupKeyPersistence', () => {
+describe('GroupKeyPersistence', () => {
     let clientId: string
     let streamId: StreamID
     let store: GroupKeyPersistence
@@ -169,29 +162,21 @@ describeRepeats('GroupKeyPersistence', () => {
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
-    it('can migrate old data', async () => {
+    it('can read previously persisted data', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const migrationsPath = await mkdtemp(join(tmpdir(), 'group-key-test-migrations'))
-        // @ts-expect-error migrationsPath is only on ServerPersistentStore
-        await copyFile(join(store.store.migrationsPath, '001-initial.sql'), join(migrationsPath, '001-initial.sql'))
         const store2 = new GroupKeyPersistence({
             context: mockContext(),
             clientId: clientId2,
-            streamId,
-            migrationsPath,
+            streamId
         })
-
-        addAfter(() => store2.destroy())
-        addAfter(() => rmdir(migrationsPath, { recursive: true }))
-
         const groupKey = GroupKey.generate()
+
         await store2.add(groupKey)
-        expect(await store2.get(groupKey.id)).toEqual(groupKey)
 
         const store3 = new GroupKeyPersistence({
             context: mockContext(),
             clientId: clientId2,
-            streamId,
+            streamId
         })
         expect(await store3.get(groupKey.id)).toEqual(groupKey)
     })
