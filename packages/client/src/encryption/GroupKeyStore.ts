@@ -30,7 +30,7 @@ export class GroupKeyStore implements Context {
             [groupKey.id]: groupKey.hex,
         }), {})
         this.persistence = new ServerPersistence({
-            context: this, 
+            context: this,
             tableName: 'GroupKeys',
             valueColumnName: 'groupKey',
             clientId,
