@@ -4,7 +4,7 @@ import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKey } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
-import { getCachedMessageChain, MessageChain, MessageChainOptions } from './MessageChain'
+import { getCachedMessageChain, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 
@@ -28,7 +28,7 @@ export class MessageFactory {
     private createSignature: (payload: string) => Promise<string>
     private useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
     private getStreamPartitionForKey: (partitionKey: string | number) => number
-    private getMsgChain: (streamPartId: StreamPartID, opts: MessageChainOptions) => MessageChain
+    private getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
@@ -67,10 +67,7 @@ export class MessageFactory {
         const streamPartId = toStreamPartID(this.streamId, partition)
 
         // TODO add commenting to highlight that this must be called in the same sequence as the original publish call
-        const chain = this.getMsgChain(streamPartId, {
-            publisherId: this.publisherId,
-            msgChainId: metadata?.msgChainId
-        })
+        const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
         const encryptionType = metadata.encryptionType

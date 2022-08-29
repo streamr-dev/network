@@ -13,23 +13,21 @@ import { CacheConfig } from '../Config'
 import { CacheFn } from '../utils/caches'
 import { randomString } from '@streamr/utils'
 
-export interface MessageChainOptions {
-    publisherId: EthereumAddress
-    msgChainId?: string
-}
-
 export function getCachedMessageChain(
     cacheConfig?: CacheConfig
-): (streamPartId: StreamPartID, msgChainOptions: MessageChainOptions) => MessageChain {
+): (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain {
     // one chainer per streamId + streamPartition + publisherId + msgChainId
-    return CacheFn((...args: ConstructorParameters<typeof MessageChain>) => new MessageChain(...args), {
-        cacheKey: ([streamPartId, { publisherId, msgChainId }]) => (
-            // empty msgChainId is fine
-            [streamPartId, publisherId, msgChainId ?? ''].join('|')
-        ),
-        ...cacheConfig,
-        maxAge: Infinity
-    })
+    return CacheFn(
+        (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => new MessageChain(streamPartId, publisherId, msgChainId),
+        {
+            cacheKey: ([streamPartId, publisherId, msgChainId]) => (
+                // empty msgChainId is fine
+                [streamPartId, publisherId, msgChainId ?? ''].join('|')
+            ),
+            ...cacheConfig,
+            maxAge: Infinity
+        }
+    )
 }
 
 /**
@@ -42,7 +40,7 @@ export class MessageChain {
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 
-    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
+    constructor(streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId = randomString(20)) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
