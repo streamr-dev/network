@@ -205,7 +205,7 @@ export class Signal<ArgsType extends any[] = []> {
      * Remove all callback listeners from this Signal.
      */
     unlistenAll(): void {
-        this.listeners.length = 0
+        this.listeners = []
     }
 
     // TODO better return type?
@@ -238,7 +238,7 @@ export class Signal<ArgsType extends any[] = []> {
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
             // remove all listeners
-            this.listeners.length = 0
+            this.listeners = []
             this.end(...args)
         }
 
@@ -304,7 +304,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
             // remove all listeners
-            this.listeners.length = 0
+            this.listeners = []
             this.end(...args)
         }
 

@@ -21,10 +21,10 @@ describeRepeats.only = (msg: any, fn: any) => {
 }
 
 export function addAfterFn(): (fn: any) => void {
-    const afterFns: any[] = []
+    let afterFns: any[] = []
     afterEach(async () => {
         const fns = afterFns.slice()
-        afterFns.length = 0
+        afterFns = []
         // @ts-expect-error invalid parameter
         AggregatedError.throwAllSettled(await Promise.allSettled(fns.map((fn) => fn())))
     })
