@@ -54,7 +54,6 @@ export class ClientWebSocket extends EventEmitter implements IConnection {
         } else {
             logger.warn('Tried to send data on a non-open connection')
         }
-        
     }
 
     close(): void {

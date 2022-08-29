@@ -26,6 +26,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
+
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
@@ -129,7 +130,6 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
-
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.emit(ManagedConnectionSourceEvents.CONNECTED, managedConnection)
@@ -145,7 +145,6 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
             return
         }
         const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toMapKey()
-
         const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
 
         if (!connection) {
@@ -185,7 +184,7 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
         })
         connection.on(ConnectionEvents.CONNECTED, () => {
             // Sending Connected event is now handled by ManagedConnection
-            //this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
+            // this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
         })
         connection.start(offering)
         if (offering === false && sendRequest) {
