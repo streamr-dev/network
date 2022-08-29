@@ -1,22 +1,24 @@
 import crypto from 'crypto'
-import fs from 'fs'
-import { join } from 'path'
-import { tmpdir } from 'os'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { GroupKeyPersistence } from '../../src/encryption/GroupKeyStore'
+import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { uid, mockContext } from '../test-utils/utils'
-import { addAfterFn, describeRepeats } from '../test-utils/jest-utils'
+import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 
-// this will produce a deprecation warning for rmdir, but the replacement, rm, is not available in Node 12.
-// TODO: replace rmdir with rm after dropping support for node 12.
-const { mkdtemp, rmdir, copyFile } = fs.promises
+const createStore = (clientId: string, streamId: StreamID): GroupKeyStore => {
+    return new GroupKeyStore({
+        context: mockContext(),
+        clientId,
+        streamId,
+        groupKeys: []
+    })
+}
 
-describeRepeats('GroupKeyPersistence', () => {
+describe('GroupKeyStore', () => {
     let clientId: string
     let streamId: StreamID
-    let store: GroupKeyPersistence
+    let store: GroupKeyStore
     let leakDetector: LeakDetector
 
     const addAfter = addAfterFn()
@@ -24,18 +26,14 @@ describeRepeats('GroupKeyPersistence', () => {
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = toStreamID(uid('stream'))
-        store = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId,
-            streamId,
-        })
-
+        store = createStore(clientId, streamId)
         leakDetector = new LeakDetector(store)
     })
 
     afterEach(async () => {
         if (!store) { return }
-        await store.destroy()
+        // @ts-expect-error private
+        await store.persistence.destroy()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -49,21 +47,24 @@ describeRepeats('GroupKeyPersistence', () => {
         expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.size()).toBe(0)
         expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.delete(groupKey.id)).toBeFalsy()
+        // @ts-expect-error private
+        expect(await store.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store.clear()).toBeFalsy()
 
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.add(groupKey)).toBeFalsy()
+        expect(await store.add(groupKey)).toBe(groupKey)
+        expect(await store.add(groupKey)).toEqual(groupKey)
         expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
         expect(await store.size()).toBe(1)
-        expect(await store.delete(groupKey.id)).toBeTruthy()
+        // @ts-expect-error private
+        expect(await store.persistence.delete(groupKey.id)).toBeTruthy()
 
         expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.size()).toBe(0)
 
         expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.delete(groupKey.id)).toBeFalsy()
+        // @ts-expect-error private
+        expect(await store.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store.add(groupKey)).toBeTruthy()
         expect(await store.size()).toBe(1)
         expect(await store.clear()).toBeTruthy()
@@ -71,12 +72,9 @@ describeRepeats('GroupKeyPersistence', () => {
     })
 
     it('can get set and delete with multiple instances in parallel', async () => {
-        const store2 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId,
-            streamId,
-        })
-        addAfter(() => store2.destroy())
+        const store2 = createStore(clientId, streamId)
+        // @ts-expect-error private
+        addAfter(() => store2.persistence.destroy())
 
         for (let i = 0; i < 5; i++) {
             const groupKey = GroupKey.generate()
@@ -108,20 +106,18 @@ describeRepeats('GroupKeyPersistence', () => {
 
     it('does not conflict with other streamIds', async () => {
         const streamId2 = toStreamID(uid('stream'))
-        const store2 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId,
-            streamId: streamId2,
-        })
+        const store2 = createStore(clientId, streamId2)
 
-        addAfter(() => store2.destroy())
+        // @ts-expect-error private
+        addAfter(() => store2.persistence.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store2.size()).toBe(0)
-        expect(await store2.delete(groupKey.id)).toBeFalsy()
+        // @ts-expect-error private
+        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
@@ -129,20 +125,18 @@ describeRepeats('GroupKeyPersistence', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId: clientId2,
-            streamId,
-        })
+        const store2 = createStore(clientId2, streamId)
 
-        addAfter(() => store2.destroy())
+        // @ts-expect-error private
+        addAfter(() => store2.persistence.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store2.size()).toBe(0)
-        expect(await store2.delete(groupKey.id)).toBeFalsy()
+        // @ts-expect-error private
+        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
@@ -150,49 +144,31 @@ describeRepeats('GroupKeyPersistence', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId: clientId2,
-            streamId,
-        })
+        const store2 = createStore(clientId2, streamId)
 
-        addAfter(() => store2.destroy())
+        // @ts-expect-error private
+        addAfter(() => store2.persistence.destroy())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store2.size()).toBe(0)
-        expect(await store2.delete(groupKey.id)).toBeFalsy()
+        // @ts-expect-error private
+        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
-    it('can migrate old data', async () => {
+    it('can read previously persisted data', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const migrationsPath = await mkdtemp(join(tmpdir(), 'group-key-test-migrations'))
-        // @ts-expect-error migrationsPath is only on ServerPersistentStore
-        await copyFile(join(store.store.migrationsPath, '001-initial.sql'), join(migrationsPath, '001-initial.sql'))
-        const store2 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId: clientId2,
-            streamId,
-            migrationsPath,
-        })
-
-        addAfter(() => store2.destroy())
-        addAfter(() => rmdir(migrationsPath, { recursive: true }))
-
+        const store2 = createStore(clientId2, streamId)
         const groupKey = GroupKey.generate()
+
         await store2.add(groupKey)
-        expect(await store2.get(groupKey.id)).toEqual(groupKey)
 
-        const store3 = new GroupKeyPersistence({
-            context: mockContext(),
-            clientId: clientId2,
-            streamId,
-        })
+        const store3 = createStore(clientId2, streamId)
         expect(await store3.get(groupKey.id)).toEqual(groupKey)
     })
 })

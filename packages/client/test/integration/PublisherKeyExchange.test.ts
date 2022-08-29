@@ -15,7 +15,7 @@ import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyPersistence } from '../test-utils/utils'
+import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -133,7 +133,7 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyPersistence(StreamPartIDUtils.getStreamID(streamPartId), publisherWallet.address).add(key)
+            await getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), publisherWallet.address).add(key)
 
             const receivedResponses = addSubscriber(subscriberNode, KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address))
 
