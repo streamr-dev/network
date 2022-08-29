@@ -1,9 +1,9 @@
+/* eslint-disable padding-line-between-statements */
 import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { Persistence } from '../utils/persistence/Persistence'
-
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
 
@@ -38,7 +38,6 @@ export class GroupKeyStore implements Context {
             initialData,
             migrationsPath: join(__dirname, 'migrations')
         })
-
         groupKeys.forEach(([groupKeyId, groupKey]) => {
             if (groupKeyId !== groupKey.id) {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
@@ -57,51 +56,42 @@ export class GroupKeyStore implements Context {
                     groupKey
                 )
             }
-
             await this.persistence.set(groupKey.id, existingKey.hex)
             return existingKey
         }
-
         await this.persistence.set(groupKey.id, groupKey.hex)
         return groupKey
     }
 
     async has(id: GroupKeyId): Promise<boolean> {
         if (this.currentGroupKeyId === id) { return true }
-
         if (this.nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
-
         return this.persistence.has(id)
     }
 
     async isEmpty(): Promise<boolean> {
         // any pending keys means it's not empty
         if (this.nextGroupKeys.length) { return false }
-
         return (await this.persistence.size()) === 0
     }
 
     async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
         const nextGroupKey = this.nextGroupKeys.pop()
-        // First use of group key on this stream, no current key. Make next key current.
         if (!this.currentGroupKeyId && nextGroupKey) {
+            // First use of group key on this stream, no current key. Make next key current.
             this.currentGroupKeyId = nextGroupKey.id
             return [
                 await this.get(this.currentGroupKeyId!),
                 undefined,
             ]
-        }
-
-        // Keep using current key (empty next)
-        if (this.currentGroupKeyId != null && !nextGroupKey) {
+        } else if (this.currentGroupKeyId != null && !nextGroupKey) {
+            // Keep using current key (empty next)
             return [
                 await this.get(this.currentGroupKeyId),
                 undefined
             ]
-        }
-
-        // Key changed (non-empty next). return current + next. Make next key current.
-        if (this.currentGroupKeyId != null && nextGroupKey != null) {
+        } else if (this.currentGroupKeyId != null && nextGroupKey != null) {
+            // Key changed (non-empty next). return current + next. Make next key current.
             const prevId = this.currentGroupKeyId
             this.currentGroupKeyId = nextGroupKey.id
             const prevGroupKey = await this.get(prevId)
@@ -110,11 +100,11 @@ export class GroupKeyStore implements Context {
                 prevGroupKey,
                 nextGroupKey,
             ]
+        } else {
+            // Generate & use new key if none already set.
+            await this.rotateGroupKey()
+            return this.useGroupKey()
         }
-
-        // Generate & use new key if none already set.
-        await this.rotateGroupKey()
-        return this.useGroupKey()
     }
 
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
@@ -130,7 +120,6 @@ export class GroupKeyStore implements Context {
     async clear(): Promise<boolean> {
         this.currentGroupKeyId = undefined
         this.nextGroupKeys.length = 0
-
         return this.persistence.clear()
     }
 
