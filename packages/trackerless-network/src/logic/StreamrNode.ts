@@ -5,6 +5,7 @@ import { ITransport } from '@streamr/dht/dist/src'
 import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
+import { ConnectionLocker } from '../../../dht/src'
 
 interface StreamObject {
     layer1: DhtNode
@@ -27,12 +28,13 @@ export class StreamrNode extends EventEmitter {
     private started = false
     private stopped = false
     private P2PTransport: ITransport | null = null
+    private connectionLocker: ConnectionLocker | null = null
     constructor() {
         super()
         this.streams = new Map()
     }
 
-    async start(startedAndJoinedLayer0: DhtNode, transport: ITransport): Promise<void> {
+    async start(startedAndJoinedLayer0: DhtNode, transport: ITransport, connectionLocker: ConnectionLocker): Promise<void> {
         if (this.started || this.stopped) {
             return
         }
@@ -40,6 +42,7 @@ export class StreamrNode extends EventEmitter {
         this.started = true
         this.layer0 = startedAndJoinedLayer0
         this.P2PTransport = transport
+        this.connectionLocker = connectionLocker
     }
 
     destroy(): void {
@@ -105,7 +108,8 @@ export class StreamrNode extends EventEmitter {
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
             P2PTransport: this.P2PTransport!,
-            layer1: layer1
+            layer1: layer1,
+            connectionLocker: this.connectionLocker!
         })
         this.streams.set(streamPartID, {
             layer1,
