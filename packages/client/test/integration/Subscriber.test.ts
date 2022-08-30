@@ -2,9 +2,8 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import StreamrClient, { StreamPermission } from '../../src'
-import { createMockMessage } from '../test-utils/utils'
+import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
@@ -57,10 +56,21 @@ describe('Subscriber', () => {
         })
 
         const groupKey = GroupKey.generate()
-        const publisherNode = await startPublisherNode(publisherWallet, [groupKey], environment)
+        const publisher = environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            },
+            encryptionKeys: {
+                [stream.id]: {
+                    [groupKey.id]: groupKey
+                }
+            }
+        })
+        await startPublisherKeyExchangeSubscription(publisher)
 
         const sub = await subscriber.subscribe(stream.id)
 
+        const publisherNode = await publisher.getNode()
         publisherNode.publish(createMockMessage({
             stream,
             publisher: publisherWallet,
@@ -70,5 +80,6 @@ describe('Subscriber', () => {
 
         const receivedMessage = await nextValue(sub)
         expect(receivedMessage!.getParsedContent()).toEqual(MOCK_CONTENT)
+        expect(receivedMessage!.groupKeyId).toEqual(groupKey.id)
     })
 })
