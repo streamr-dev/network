@@ -1,4 +1,5 @@
 import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { NodeID } from '../../../src/NetworkNodeFacade'
 import { FakeNetworkNode } from './FakeNetworkNode'
 
 export class FakeNetwork {
@@ -25,7 +26,7 @@ export class FakeNetwork {
         return Array.from(this.nodes.values())
     }
 
-    sendMessage(msg: StreamMessage, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
+    sendMessage(msg: StreamMessage, sender: NodeID | undefined, isRecipient: (networkNode: FakeNetworkNode) => boolean): void {
         /*
         * This serialization+serialization is needed in test/integration/Encryption.ts
         * as it expects that the EncryptedGroupKey format changes in the process.
@@ -37,7 +38,7 @@ export class FakeNetwork {
                 networkNode.messageListeners.forEach((listener) => {
                     // return a clone as client mutates message when it decrypts messages
                     const deserialized = StreamMessage.deserialize(serialized)
-                    listener(deserialized)
+                    listener(deserialized, sender)
                 })
             }
         })

@@ -21,8 +21,8 @@ export const parseUserIdFromNodeId = (nodeId: NodeID): UserID => nodeId.split('#
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
     getNodeId: () => string
-    addMessageListener: (listener: (msg: StreamMessage) => void) => void
-    removeMessageListener: (listener: (msg: StreamMessage) => void) => void
+    addMessageListener: (listener: (msg: StreamMessage, sender?: NodeID) => void) => void
+    removeMessageListener: (listener: (msg: StreamMessage, sender?: NodeID) => void) => void
     subscribe: (streamPartId: StreamPartID) => void
     subscribeAndWaitForJoin: (streamPart: StreamPartID, timeout?: number) => Promise<number>
     waitForJoinAndPublish: (msg: StreamMessage, timeout?: number) => Promise<number>

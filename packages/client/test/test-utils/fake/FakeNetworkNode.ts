@@ -6,7 +6,7 @@ import { NetworkNodeOptions } from 'streamr-network'
 import { NetworkNodeFactory, NetworkNodeStub, NodeID, UserID, parseUserIdFromNodeId } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 
-type MessageListener = (msg: StreamMessage) => void
+type MessageListener = (msg: StreamMessage, sender?: NodeID) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
@@ -53,15 +53,15 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     publish(msg: StreamMessage): void {
-        this.network.sendMessage(msg, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
+        this.network.sendMessage(msg, undefined, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
     sendUnicastMessage(msg: StreamMessage, recipient: NodeID): void {
-        this.network.sendMessage(msg, (node: FakeNetworkNode) => node.id === recipient)
+        this.network.sendMessage(msg, this.id, (node: FakeNetworkNode) => node.id === recipient)
     }
 
     sendMulticastMessage(msg: StreamMessage, recipient: UserID): void {
-        this.network.sendMessage(msg, (node: FakeNetworkNode) => parseUserIdFromNodeId(node.id) === recipient)
+        this.network.sendMessage(msg, this.id, (node: FakeNetworkNode) => parseUserIdFromNodeId(node.id) === recipient)
     }
 
     // eslint-disable-next-line class-methods-use-this
