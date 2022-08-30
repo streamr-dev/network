@@ -2,6 +2,7 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
+import EventEmitter from 'eventemitter3'
 import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext } from 'streamr-network'
 import { uuid } from './utils/uuid'
 import { instanceId } from './utils/utils'
@@ -53,6 +54,10 @@ export const getEthereumAddressFromNodeId = (nodeId: string): string => {
     return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
 }
 
+export interface Events {
+    start: () => void
+}
+
 /**
  * The factory is used so that integration tests can replace the real network node with a fake instance
  */
@@ -76,6 +81,7 @@ export class NetworkNodeFacade implements Context {
     readonly debug
     private startNodeCalled = false
     private startNodeComplete = false
+    private eventEmitter: EventEmitter<Events>
 
     constructor(
         context: Context,
@@ -89,6 +95,7 @@ export class NetworkNodeFacade implements Context {
         this.ethereumConfig = ethereumConfig
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+        this.eventEmitter = new EventEmitter<Events>()
         destroySignal.onDestroy.listen(this.destroy)
     }
 
@@ -200,6 +207,7 @@ export class NetworkNodeFacade implements Context {
             return node
         } finally {
             this.startNodeComplete = true
+            this.eventEmitter.emit('start')
             this.debug('start <<')
         }
     })
@@ -265,6 +273,10 @@ export class NetworkNodeFacade implements Context {
 
     private isStarting(): boolean {
         return !this.cachedNode || !this.startNodeComplete
+    }
+
+    once<E extends keyof Events>(eventName: E, listener: Events[E]): void {
+        this.eventEmitter.once(eventName, listener as any)
     }
 }
 
