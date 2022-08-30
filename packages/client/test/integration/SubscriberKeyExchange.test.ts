@@ -9,10 +9,15 @@ import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { startPublisherNode } from '../test-utils/fake/fakePublisherNode'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
+import { 
+    addSubscriber,
+    createMockMessage,
+    createRelativeTestStreamId,
+    getGroupKeyStore,
+    startPublisherKeyExchangeSubscription
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { NetworkNodeStub } from '../../src'
 
@@ -84,7 +89,18 @@ describe('SubscriberKeyExchange', () => {
         */
         it('happy path', async () => {
             const groupKey = GroupKey.generate()
-            const publisherNode = await startPublisherNode(publisherWallet, [groupKey], environment)
+            const publisher = environment.createClient({
+                auth: {
+                    privateKey: publisherWallet.privateKey
+                },
+                encryptionKeys: {
+                    [stream.id]: {
+                        [groupKey.id]: groupKey
+                    }
+                }
+            })
+            await startPublisherKeyExchangeSubscription(publisher)
+            const publisherNode = await publisher.getNode()
             const groupKeyRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
             await subscriber.subscribe(stream.id, () => {})
 
