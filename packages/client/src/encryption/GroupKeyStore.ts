@@ -20,8 +20,8 @@ export class GroupKeyStore implements Context {
     readonly id
     readonly debug
     private persistence: Persistence<string, string>
-    private currentGroupKeyId: GroupKeyId | undefined // current key id if any
-    private nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
+    private currentGroupKey: GroupKey | undefined // current key id if any
+    private nextGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
 
     constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
@@ -44,7 +44,7 @@ export class GroupKeyStore implements Context {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
             }
             // use last init key as current
-            this.currentGroupKeyId = groupKey.id
+            this.currentGroupKey = groupKey
         })
     }
 
@@ -67,49 +67,48 @@ export class GroupKeyStore implements Context {
     }
 
     async has(id: GroupKeyId): Promise<boolean> {
-        if (this.currentGroupKeyId === id) { return true }
+        if (this.currentGroupKey?.id === id) { return true }
 
-        if (this.nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
+        if (this.nextGroupKey?.id === id) { return true }
 
         return this.persistence.has(id)
     }
 
     async isEmpty(): Promise<boolean> {
-        // any pending keys means it's not empty
-        if (this.nextGroupKeys.length) { return false }
+        // a queued key means it's not empty
+        if (this.nextGroupKey) { return false }
 
         return (await this.persistence.size()) === 0
     }
 
     async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
-        const nextGroupKey = this.nextGroupKeys.pop()
         // First use of group key on this stream, no current key. Make next key current.
-        if (!this.currentGroupKeyId && nextGroupKey) {
-            this.currentGroupKeyId = nextGroupKey.id
+        if (!this.currentGroupKey && this.nextGroupKey) {
+            this.currentGroupKey = this.nextGroupKey
+            this.nextGroupKey = undefined
             return [
-                await this.get(this.currentGroupKeyId!),
+                this.currentGroupKey,
                 undefined,
             ]
         }
 
         // Keep using current key (empty next)
-        if (this.currentGroupKeyId != null && !nextGroupKey) {
+        if (this.currentGroupKey && !this.nextGroupKey) {
             return [
-                await this.get(this.currentGroupKeyId),
+                this.currentGroupKey,
                 undefined
             ]
         }
 
         // Key changed (non-empty next). return current + next. Make next key current.
-        if (this.currentGroupKeyId != null && nextGroupKey != null) {
-            const prevId = this.currentGroupKeyId
-            this.currentGroupKeyId = nextGroupKey.id
-            const prevGroupKey = await this.get(prevId)
-            // use current key one more time
-            return [
-                prevGroupKey,
-                nextGroupKey,
+        if (this.currentGroupKey && this.nextGroupKey) {
+            const result: [GroupKey, GroupKey] = [
+                this.currentGroupKey,
+                this.nextGroupKey,
             ]
+            this.currentGroupKey = this.nextGroupKey
+            this.nextGroupKey = undefined
+            return result
         }
 
         // Generate & use new key if none already set.
@@ -128,8 +127,8 @@ export class GroupKeyStore implements Context {
     }
 
     async clear(): Promise<boolean> {
-        this.currentGroupKeyId = undefined
-        this.nextGroupKeys = []
+        this.currentGroupKey = undefined
+        this.nextGroupKey = undefined
 
         return this.persistence.clear()
     }
@@ -143,8 +142,7 @@ export class GroupKeyStore implements Context {
     }
 
     async setNextGroupKey(newKey: GroupKey): Promise<void> {
-        this.nextGroupKeys.unshift(newKey)
-        this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
+        this.nextGroupKey = newKey
         await this.storeKey(newKey)
     }
 
@@ -154,8 +152,8 @@ export class GroupKeyStore implements Context {
 
     async rekey(newKey = GroupKey.generate()): Promise<void> {
         await this.storeKey(newKey)
-        this.currentGroupKeyId = newKey.id
-        this.nextGroupKeys = []
+        this.currentGroupKey = newKey
+        this.nextGroupKey = undefined
     }
 
     async size(): Promise<number> {

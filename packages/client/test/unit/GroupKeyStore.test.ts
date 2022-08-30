@@ -86,13 +86,23 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
-    it('can set next in parallel and use', async () => {
+    it('replaces previously queued keys before the first call to useGroupKey', async () => {
         const groupKey = GroupKey.generate()
         const groupKey2 = GroupKey.generate()
-        await Promise.all([
-            store.setNextGroupKey(groupKey),
-            store.setNextGroupKey(groupKey2),
-        ])
-        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
+        await store.setNextGroupKey(groupKey)
+        await store.setNextGroupKey(groupKey2)
+        expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
+    })
+
+    it('replaces previously queued keys after the first call to useGroupKey', async () => {
+        const [generatedKey, queuedKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(queuedKey).toEqual(undefined)
+
+        const groupKey = GroupKey.generate()
+        const groupKey2 = GroupKey.generate()
+        await store.setNextGroupKey(groupKey)
+        await store.setNextGroupKey(groupKey2)
+        expect(await store.useGroupKey()).toEqual([generatedKey, groupKey2])
     })
 })
