@@ -1,13 +1,13 @@
 import 'reflect-metadata'
+import { StreamMessage } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage } from '../test-utils/utils'
+import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamPermission } from '../../src/permission'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { startPublisherNode } from './../test-utils/fake/fakePublisherNode'
 import { nextValue } from './../../src/utils/iterators'
 
 /*
@@ -41,8 +41,18 @@ describe('resend and subscribe', () => {
 
     it('happy path', async () => {
         const groupKey = GroupKey.generate()
-        const onGroupKeyRequest = jest.fn().mockResolvedValue(undefined)
-        const publisherNode = await startPublisherNode(publisherWallet, [groupKey], environment, onGroupKeyRequest)
+        const publisher = environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            },
+            encryptionKeys: {
+                [stream.id]: {
+                    [groupKey.id]: groupKey
+                }
+            }
+        })
+    
+        await startPublisherKeyExchangeSubscription(publisher)
 
         const historicalMessage = createMockMessage({
             timestamp: 1000,
@@ -65,24 +75,20 @@ describe('resend and subscribe', () => {
 
         const receivedMessage1 = await nextValue(sub)
 
-        const realtimeMessage = createMockMessage({
-            timestamp: 2000,
-            publisher: publisherWallet,
-            stream,
-            encryptionKey: groupKey,
-            content: {
-                mockId: 2
-            }
-        })
-        publisherNode.publish(realtimeMessage)
+        await publisher.publish(stream.id, { mockId: 2 }, { timestamp: 2000 })
 
         const receivedMessage2 = await nextValue(sub)
         expect(receivedMessage1!.getParsedContent()).toEqual({
             mockId: 1
         })
+        expect(receivedMessage1!.groupKeyId).toBe(groupKey.id)
         expect(receivedMessage2!.getParsedContent()).toEqual({
             mockId: 2
         })
-        expect(onGroupKeyRequest).toBeCalledTimes(1)
+        expect(receivedMessage2!.groupKeyId).toBe(groupKey.id)
+        const groupKeyRequests = environment.getNetwork().getSentMessages().filter((m) => {
+            return m.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        })
+        expect(groupKeyRequests.length).toBe(1)
     })
 })

@@ -5,6 +5,7 @@ import { FakeNetworkNode } from './FakeNetworkNode'
 export class FakeNetwork {
 
     private readonly nodes: Map<NodeID, FakeNetworkNode> = new Map()
+    private sentMessages: StreamMessage[] = []
 
     addNode(node: FakeNetworkNode): void {
         if (!this.nodes.has(node.id)) {
@@ -42,5 +43,10 @@ export class FakeNetwork {
                 })
             }
         })
+        this.sentMessages.push(msg)
+    }
+
+    getSentMessages(): StreamMessage[] {
+        return this.sentMessages
     }
 }
