@@ -86,7 +86,13 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
-    it('replaces previously queued keys before the first call to useGroupKey', async () => {
+    it('generates a new key on first use', async () => {
+        const [generatedKey, nextKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(nextKey).toBeUndefined()
+    })
+
+    it('only keeps the latest unused key', async () => {
         const groupKey = GroupKey.generate()
         const groupKey2 = GroupKey.generate()
         await store.setNextGroupKey(groupKey)
@@ -94,7 +100,7 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
-    it('replaces previously queued keys after the first call to useGroupKey', async () => {
+    it('replaces previously queued keys', async () => {
         const [generatedKey, queuedKey] = await store.useGroupKey()
         expect(generatedKey).toBeTruthy()
         expect(queuedKey).toEqual(undefined)
