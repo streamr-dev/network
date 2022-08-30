@@ -1,10 +1,5 @@
 import { EventEmitter } from 'eventemitter3'
-import {
-    ConnectivityResponseMessage,
-    Message,
-    MessageType,
-    PeerDescriptor
-} from '../proto/DhtRpc'
+import { ConnectivityResponseMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -15,6 +10,7 @@ import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
 import { Event as ManagedConnectionEvents } from './IManagedConnection'
 import { Event as ManagedConnectionSourceEvents } from './IManagedConnectionSource'
+import { UUID } from '..'
 
 export interface ConnectionManagerConfig {
     transportLayer: ITransport
@@ -37,7 +33,6 @@ interface ConnectionManagerEvents {
     NEW_CONNECTION: (connection: ManagedConnection) => void   
 }
 
-
 export interface ConnectionLocker {
     lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
     unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
@@ -57,7 +52,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
 
-    private lockedConnections: Map<PeerID, Set<string>>
+    private lockedConnections: Map<PeerIDKey, Set<string>> = new Map()
 
     constructor(private config: ConnectionManagerConfig) {
         super()
@@ -177,6 +172,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.connections.has(hexId)
     }
 
+    public hasLockedConnection(peerDescriptor: PeerDescriptor): boolean {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        return this.lockedConnections.has(hexId)
+    }
+
     public canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
         // Perhaps the connection's state should be checked here
         return !this.hasConnection(peerDescriptor) // TODO: Add port range check
@@ -217,17 +217,38 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
-        const peerId = PeerID.fromValue(targetDescriptor.peerId)
-        if (this.lockedConnections.get(peerId)?.has(serviceId)) {
-            return
-        } else if (!this.lockedConnections.has(peerId)) {
-            this.send()
+    private clearDisconnectionTimeout(hexId: PeerIDKey): void {
+        if (this.disconnectionTimeouts.has(hexId)) {
+            clearTimeout(this.disconnectionTimeouts.get(hexId))
+            this.disconnectionTimeouts.delete(hexId)
         }
     }
 
+    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        this.clearDisconnectionTimeout(hexKey)
+        if (!this.lockedConnections.has(hexKey)) {
+            const newSet = new Set<string>()
+            newSet.add(serviceId)
+            this.lockedConnections.set(hexKey, newSet)
+        } else if (!this.lockedConnections.get(hexKey)?.has(serviceId)) {
+            this.lockedConnections.get(hexKey)?.add(serviceId)
+        }
+        const connectMessage: Message = {
+            messageId: new UUID().toString(),
+            serviceId: 'connection-manager',
+            messageType: MessageType.RPC,
+            body: new Uint8Array([0, 1, 2])
+        }
+        this.send(connectMessage, targetDescriptor).catch((err) => {console.error(err)})
+    }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
-
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        this.lockedConnections.get(hexKey)?.delete(serviceId)
+        if (this.lockedConnections.get(hexKey)?.size === 0) {
+            this.lockedConnections.delete(hexKey)
+            this.disconnect(targetDescriptor, 'connection is no longer locked by any services')
+        }
     }
 }

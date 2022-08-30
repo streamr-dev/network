@@ -198,7 +198,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
-            this.cleanUpHandleForConnectionManager?.disconnect(contact.getPeerDescriptor())
+            this.cleanUpHandleForConnectionManager?.unlockConnection(contact.getPeerDescriptor(), this.config.serviceId)
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
             this.emit(
                 'KBUCKET_CONTACT_REMOVED',
@@ -208,6 +208,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.bucket.on('added', async (contact: DhtPeer) => {
             if (!contact.peerId.equals(this.ownPeerId!)) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
+                    this.cleanUpHandleForConnectionManager?.lockConnection(contact.getPeerDescriptor(), this.config.serviceId)
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
                     this.emit(
                         'NEW_KBUCKET_CONTACT',
