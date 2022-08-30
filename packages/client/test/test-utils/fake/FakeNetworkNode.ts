@@ -10,7 +10,7 @@ type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: string
+    public readonly id: NodeID
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork

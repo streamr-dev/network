@@ -3,7 +3,7 @@ import { FakeNetworkNode } from './FakeNetworkNode'
 
 export class FakeNetwork {
 
-    private readonly nodes: Map<EthereumAddress, FakeNetworkNode> = new Map()
+    private readonly nodes: Map<NodeID, FakeNetworkNode> = new Map()
 
     addNode(node: FakeNetworkNode): void {
         if (!this.nodes.has(node.id)) {
