@@ -96,7 +96,7 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 },
                 encryptionKeys: {
-                    [stream.id]: {
+                    [StreamPartIDUtils.getStreamID(streamPartId)]: {
                         [groupKey.id]: groupKey
                     }
                 }
