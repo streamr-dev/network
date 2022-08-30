@@ -101,9 +101,14 @@ export class GroupKeyStore implements Context {
                 nextGroupKey,
             ]
         } else {
-            // Generate & use new key if none already set.
-            await this.rotate()
-            return this.useGroupKey()
+            // Generate
+            const newKey = GroupKey.generate()
+            this.currentGroupKeyId = newKey.id
+            await this.storeKey(newKey)
+            return [
+                newKey,
+                undefined
+            ]
         }
     }
 
