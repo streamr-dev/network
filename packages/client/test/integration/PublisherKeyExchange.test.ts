@@ -7,7 +7,6 @@ import {
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { Stream } from '../../src/Stream'
@@ -15,7 +14,7 @@ import { StreamPermission } from '../../src/permission'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
+import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -29,12 +28,6 @@ describe('PublisherKeyExchange', () => {
     let subscriberNode: FakeNetworkNode
     let mockStream: Stream
     let environment: FakeEnvironment
-
-    const startPublisherKeyExchangeSubscription = async (): Promise<void> => {
-        // @ts-expect-error private
-        const publisherKeyExchange = publisherClient.container.resolve(PublisherKeyExchange)
-        await publisherKeyExchange.useGroupKey(mockStream.id)
-    }
 
     const createStream = async () => {
         const stream = await publisherClient.createStream(createRelativeTestStreamId(module))
@@ -121,7 +114,7 @@ describe('PublisherKeyExchange', () => {
         })
         mockStream = await createStream()
         subscriberNode = environment.startNode(subscriberWallet.address)
-        await startPublisherKeyExchangeSubscription()
+        await startPublisherKeyExchangeSubscription(publisherClient)
     })
 
     describe('responds to a group key request', () => {
