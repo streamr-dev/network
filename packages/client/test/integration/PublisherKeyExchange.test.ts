@@ -11,7 +11,13 @@ import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { 
+    addSubscriber,
+    createMockMessage,
+    createRelativeTestStreamId,
+    getGroupKeyStore,
+    startPublisherKeyExchangeSubscription
+} from '../test-utils/utils'
 import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'

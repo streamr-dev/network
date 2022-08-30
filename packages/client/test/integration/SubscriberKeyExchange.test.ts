@@ -11,7 +11,13 @@ import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { addSubscriber, createMockMessage, createRelativeTestStreamId, getGroupKeyStore, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { 
+    addSubscriber,
+    createMockMessage,
+    createRelativeTestStreamId,
+    getGroupKeyStore,
+    startPublisherKeyExchangeSubscription
+} from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { NetworkNodeStub } from '../../src'
 
