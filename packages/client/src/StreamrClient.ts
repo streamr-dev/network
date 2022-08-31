@@ -106,9 +106,13 @@ export class StreamrClient implements Context {
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
         const store = await this.groupKeyStoreFactory.getStore(streamId)
         if (opts.distributionMethod === 'rotate') {
-            return store.rotate(opts.key)
+            if (opts.key === undefined) {
+                await store.rotateGroupKey()
+            } else { // eslint-disable-line no-else-return
+                await store.setNextGroupKey(opts.key)
+            }
         } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
-            return store.rekey(opts.key)
+            await store.rekey(opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
