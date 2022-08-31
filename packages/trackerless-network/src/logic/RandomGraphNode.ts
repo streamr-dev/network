@@ -275,7 +275,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             if (furthest) {
                 furthest.interleaveNotice(this.layer1.getPeerDescriptor(), request.senderDescriptor!)
                 this.targetNeighbors.remove(furthest.getPeerDescriptor())
-                this.connectionLocker.unlockConnection(furthestPeerDescriptor, this.randomGraphId)
+                this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
             }
             this.targetNeighbors.add(newRemotePeer)
             const res: HandshakeResponse = {
