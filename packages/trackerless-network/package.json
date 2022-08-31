@@ -17,13 +17,13 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "coverage": "jest --coverage",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run build",
     "test": "jest",
     "test-unit": "jest test/unit",
-    "preinstall": "./proto.sh"
+    "postinstall": "./proto.sh"
   },
   "dependencies": {
-    "@protobuf-ts/plugin": "^2.4.0",
+    "@protobuf-ts/runtime-rpc": "^2.8.0",
+    "@protobuf-ts/runtime": "^2.8.0",
     "@streamr/dht": "0.0.1",
     "@streamr/proto-rpc": "1.1.1",
     "@streamr/utils": "^0.0.1",

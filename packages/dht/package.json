@@ -27,10 +27,11 @@
     "benchmark": "jest test/benchmark",
     "prepare-dht-simulation": "cd test/kademlia-simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
     "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION test/kademlia-simulation/DhtSimulation.ts",
-    "preinstall": "./proto.sh"
+    "postinstall": "./proto.sh"
   },
   "dependencies": {
-    "@protobuf-ts/plugin": "^2.8.0",
+    "@protobuf-ts/runtime-rpc": "^2.8.0",
+    "@protobuf-ts/runtime": "^2.8.0",
     "@streamr/proto-rpc": "^1.1.1",
     "@streamr/utils": "^0.0.1",
     "bloomfilter": "^0.0.18",
