@@ -19,7 +19,7 @@
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest",
     "test-unit": "jest test/unit",
-    "postinstall": "./proto.sh"
+    "preinstall": "./proto.sh"
   },
   "dependencies": {
     "@protobuf-ts/runtime-rpc": "^2.8.0",

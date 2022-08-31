@@ -31,7 +31,7 @@
         "@commitlint/cli": "^12.1.4",
         "@commitlint/config-conventional": "^12.1.4",
         "@manypkg/cli": "^0.19.1",
-        "@protobuf-ts/protoc": "^2.8.0",
+        "@protobuf-ts/plugin": "^2.8.0",
         "@tsconfig/node16": "^1.0.2",
         "@types/jest": "^28.1.2",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
@@ -47,7 +47,6 @@
         "node-gyp-build": "^4.3.0",
         "semver": "^7.3.5",
         "ts-jest": "^28.0.5",
-        "ts-protoc-gen": "^0.15.0",
         "typescript": "^4.5.2",
         "yarn": "^1.22.17",
         "zx": "^1.14.1"
