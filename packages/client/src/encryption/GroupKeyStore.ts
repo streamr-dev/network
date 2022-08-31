@@ -110,15 +110,11 @@ export class GroupKeyStore implements Context {
         return this.persistence.clear()
     }
 
-    async rotateGroupKey(): Promise<GroupKey> {
-        return this.setNextGroupKey(GroupKey.generate())
-    }
-
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
 
-    async setNextGroupKey(newKey: GroupKey): Promise<GroupKey> {
+    async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
         this.queuedGroupKey = newKey
         await this.storeKey(newKey)
         return newKey
