@@ -6,11 +6,7 @@ import {
     IConnectionSource,
     Event as ConnectionSourceEvent,
 } from '../IConnectionSource'
-/*
-import { TODO } from '../../types'
-import { Event as ConnectionEvents, IConnection } from '../IConnection'
-import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
-*/
+
 import { Logger } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
 

@@ -55,12 +55,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
 
         logger.trace(`Creating WebSocket Connector`)
-        this.webSocketConnector = new WebSocketConnector(this.config.transportLayer, 
-            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, this.config.entryPoints)
+        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer, 
+            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, 
+            this.config.entryPoints)
         
         logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
-            rpcTransport: this.config.transportLayer
+            rpcTransport: this.config.transportLayer,
+            protocolVersion: ConnectionManager.PROTOCOL_VERSION
         })
     }
 
