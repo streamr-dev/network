@@ -1,5 +1,7 @@
 import { SortedContactList } from '../../src/dht/SortedContactList'
+import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { IDhtRpcClient } from '../../src/proto/DhtRpc.client'
 import { NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
 import type { PingResponse } from "../../src/proto//DhtRpc"
@@ -9,8 +11,16 @@ import type { ClosestPeersRequest } from "../../src/proto//DhtRpc"
 import { UnaryCall } from "@protobuf-ts/runtime-rpc"
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
+import { IMessageType } from '@protobuf-ts/runtime'
 
-class MockRpcClient implements IDhtRpcClient {
+class MockRpcClient implements IDhtRpcClient, ServiceInfo {
+    typeName = 'MockRpcClient'
+    methods: MethodInfo<any, any> [] = [
+        { name: 'getClosestPeers', O: {} as IMessageType<ClosestPeersResponse> } as MethodInfo<any, any>,
+        { name: 'ping', O: {} as IMessageType<PingResponse> } as MethodInfo<any, any>,
+        { name: 'routeMessage', O: {} as IMessageType<RouteMessageAck> } as MethodInfo<any, any>,
+    ]
+    options = {}
     getClosestPeers(_input: ClosestPeersRequest, _options?: RpcOptions): UnaryCall<ClosestPeersRequest, ClosestPeersResponse> {
         return {} as  UnaryCall<ClosestPeersRequest, ClosestPeersResponse>
     }
@@ -35,10 +45,10 @@ describe('SortedContactList', () => {
     const descriptor3: PeerDescriptor = { peerId: id3.value, type: NodeType.NODEJS }
     const descriptor4: PeerDescriptor = { peerId: id4.value, type: NodeType.NODEJS }
 
-    const peer1 = new DhtPeer(descriptor1, new MockRpcClient())
-    const peer2 = new DhtPeer(descriptor2, new MockRpcClient())
-    const peer3 = new DhtPeer(descriptor3, new MockRpcClient())
-    const peer4 = new DhtPeer(descriptor4, new MockRpcClient())
+    const peer1 = new DhtPeer(descriptor1, toProtoRpcClient(new MockRpcClient()))
+    const peer2 = new DhtPeer(descriptor2, toProtoRpcClient(new MockRpcClient()))
+    const peer3 = new DhtPeer(descriptor3, toProtoRpcClient(new MockRpcClient()))
+    const peer4 = new DhtPeer(descriptor4, toProtoRpcClient(new MockRpcClient()))
 
     it('compares Ids correctly', async () => {
         const list = new SortedContactList(id0, 10)

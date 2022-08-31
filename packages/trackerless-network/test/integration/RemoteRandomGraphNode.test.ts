@@ -12,6 +12,7 @@ import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
 import { PeerID } from '@streamr/dht/dist/src'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 describe('RemoteRandomGraphNode', () => {
     let mockServerRpc: RoutingRpcCommunicator
@@ -94,7 +95,7 @@ describe('RemoteRandomGraphNode', () => {
         remoteRandomGraphNode = new RemoteRandomGraphNode(
             serverPeer,
             'test-stream',
-            new NetworkRpcClient(clientRpc.getRpcClientTransport())
+            toProtoRpcClient(new NetworkRpcClient(clientRpc.getRpcClientTransport()))
         )
     })
 

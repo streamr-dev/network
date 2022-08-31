@@ -35,6 +35,7 @@ export interface ResultParts {
 
 export interface ProtoRpcOptions extends RpcOptions {
     notification?: boolean
+    isProtoRpc?: boolean
 }
 
 const logger = new Logger(module)
@@ -70,11 +71,11 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
     }
 
     unary<I extends object, O extends object>(method: MethodInfo<I, O>, input: I, options: ProtoRpcOptions): UnaryCall<I, O> {
+        if (!options || !options.isProtoRpc) {
+            // eslint-disable-next-line max-len
+            throw new Error('ProtoRpc ClientTransport can only be used with ProtoRpcClients. Please convert your protobuf-ts generated client to a ProtoRpcClient by calling toProtoRpcclient(yourClient).')
+        }
         const requestBody = method.I.toBinary(input)
-        const defHeader = new Deferred<RpcMetadata>()
-        const defMessage = new Deferred<O>()
-        const defStatus = new Deferred<RpcStatus>()
-        const defTrailer = new Deferred<RpcMetadata>()
 
         const request: RpcMessage = {
             header: ClientTransport.createRequestHeaders(method, options.notification),
@@ -82,47 +83,68 @@ export class ClientTransport extends EventEmitter implements RpcTransport {
             requestId: v4()
         }
 
-        const unary = new UnaryCall<I, O>(
-            method,
-            {},
-            input,
-            defHeader.promise,
-            defMessage.promise,
-            defStatus.promise,
-            defTrailer.promise,
-        )
+        if (options.notification) {
+            const unary = new UnaryCall<I, O>(
+                method,
+                {},
+                input,
+                undefined as unknown as Promise<RpcMetadata>,
+                undefined as unknown as Promise<O>,
+                undefined as unknown as Promise<RpcStatus>,
+                undefined as unknown as Promise<RpcMetadata>,
+            )
+            logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
+            this.emit(Event.RPC_REQUEST, undefined, request, options)
+            return unary
 
-        const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
-        const deferred: ResultParts = {
-            message: defMessage,
-            header: defHeader,
-            trailer: defTrailer,
-            status: defStatus,
-            messageParser: deferredParser
+        } else {
+            const defHeader = new Deferred<RpcMetadata>()
+            const defMessage = new Deferred<O>()
+            const defStatus = new Deferred<RpcStatus>()
+            const defTrailer = new Deferred<RpcMetadata>()
+
+            const unary = new UnaryCall<I, O>(
+                method,
+                {},
+                input,
+                defHeader.promise,
+                defMessage.promise,
+                defStatus.promise,
+                defTrailer.promise,
+            )
+
+            const deferredParser = (bytes: Uint8Array) => method.O.fromBinary(bytes)
+            const deferred: ResultParts = {
+                message: defMessage,
+                header: defHeader,
+                trailer: defTrailer,
+                status: defStatus,
+                messageParser: deferredParser
+            }
+            logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
+            this.emit(Event.RPC_REQUEST, deferred, request, options)
+            return unary
         }
-        logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-        this.emit(Event.RPC_REQUEST, deferred, request, options)
-        return unary
     }
 
     clientStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ClientStreamingCall<I, O> {
         const e = new RpcError('Client streaming is not supported by DhtTransport')
         e.methodName = method.name
-        e.serviceName  = method.service.typeName
+        e.serviceName = method.service.typeName
         throw e
     }
 
     duplex<I extends object, O extends object>(method: MethodInfo<I, O>): DuplexStreamingCall<I, O> {
         const e = new RpcError('Duplex streaming is not supported by DhtTransport')
         e.methodName = method.name
-        e.serviceName  = method.service.typeName
+        e.serviceName = method.service.typeName
         throw e
     }
 
     serverStreaming<I extends object, O extends object>(method: MethodInfo<I, O>): ServerStreamingCall<I, O> {
         const e = new RpcError('Server streaming is not supported by DhtTransport')
         e.methodName = method.name
-        e.serviceName  = method.service.typeName
+        e.serviceName = method.service.typeName
         throw e
     }
 

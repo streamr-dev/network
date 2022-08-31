@@ -8,6 +8,7 @@ import {
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { DhtRpcOptions } from '@streamr/dht/dist/src/rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 interface HandshakeResponse {
     accepted: boolean
@@ -18,10 +19,10 @@ const logger = new Logger(module)
 
 export class RemoteRandomGraphNode {
     private remotePeerDescriptor: PeerDescriptor
-    private client: INetworkRpcClient
+    private client: ProtoRpcClient<INetworkRpcClient>
     private graphId: string
     private neighbors: PeerDescriptor[]
-    constructor(peerDescriptor: PeerDescriptor, graphId: string, client: INetworkRpcClient) {
+    constructor(peerDescriptor: PeerDescriptor, graphId: string, client: ProtoRpcClient<INetworkRpcClient>) {
         this.remotePeerDescriptor = peerDescriptor
         this.client = client
         this.graphId = graphId
@@ -51,8 +52,7 @@ export class RemoteRandomGraphNode {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor
         }
         try {
-            const result = await this.client.handshake(request, options)
-            const response = await result.response
+            const response = await this.client.handshake(request, options)
             return {
                 accepted: response.accepted,
                 interleaveTarget: response.interleaveTarget
@@ -72,7 +72,7 @@ export class RemoteRandomGraphNode {
             notification: true
         }
         try {
-            await this.client.sendData(dataMessage, options)
+            this.client.sendData(dataMessage, options)
         } catch (err) {
             logger.debug(err)
         }
@@ -120,8 +120,7 @@ export class RemoteRandomGraphNode {
             neighborDescriptors: neighbors
         }
         try {
-            const result = this.client.neighborUpdate(request, options)
-            const response = await result.response
+            const response = await this.client.neighborUpdate(request, options)
             return response.neighborDescriptors!
         } catch (err) {
             logger.debug(err)
