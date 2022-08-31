@@ -60,7 +60,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.ongoingRequests = new Map()
         
         this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
-            deferredPromises: ResultParts,
+            deferredPromises: ResultParts | undefined,
             rpcMessage: RpcMessage,
             options: ProtoRpcOptions
         ) => {
@@ -117,9 +117,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             return
         }
         const requestOptions = this.rpcClientTransport.mergeOptions(callContext )
-        if (deferredPromises && rpcMessage.header.notification) {
-            this.resolveDeferredPromises(deferredPromises, this.createNotificationResponse(rpcMessage.requestId))
-        } else if (deferredPromises) {
+        if (deferredPromises) {
             this.registerRequest(rpcMessage.requestId, deferredPromises, requestOptions!.timeout as number)
         }
         const msg = RpcMessage.toBinary(rpcMessage)
@@ -264,16 +262,5 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
             requestId: request.requestId,
             responseError
         }
-    }
-
-    private createNotificationResponse(requestId: string): RpcMessage {
-        const ret: Empty = {}
-
-        const wrapper: RpcMessage = {
-            body: Empty.toBinary(ret),
-            header: {},
-            requestId,
-        }
-        return wrapper
     }
 }

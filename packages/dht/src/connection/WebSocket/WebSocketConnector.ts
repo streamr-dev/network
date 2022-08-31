@@ -31,6 +31,7 @@ import { ConnectivityChecker } from '../ConnectivityChecker'
 import { NatType } from '../ConnectionManager'
 import { PeerIDKey } from '../../helpers/PeerID'
 import { ServerWebSocket } from './ServerWebSocket'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
@@ -147,7 +148,7 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
-                new WebSocketConnectorClient(this.rpcCommunicator.getRpcClientTransport())
+                toProtoRpcClient(new WebSocketConnectorClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
