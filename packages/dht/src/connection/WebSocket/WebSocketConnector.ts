@@ -45,6 +45,7 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
     private ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
 
     constructor(
+        private protocolVersion: string,
         private rpcTransport: ITransport,
         fnCanConnect: (peerDescriptor: PeerDescriptor, _ip: string, port: number) => boolean,
         private webSocketPort?: number,
@@ -137,7 +138,7 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
             address = 'ws://' + host + ':' + port
         }
 
-        const managedConnection = new ManagedConnection(ownPeerDescriptor!, 'TODO', ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
+        const managedConnection = new ManagedConnection(ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_CLIENT, socket, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor!)
         socket.connect(address)
 
@@ -152,7 +153,7 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })
-        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, 'TODO', ConnectionType.WEBSOCKET_SERVER)
+        const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey(), managedConnection)
         return managedConnection
@@ -175,7 +176,8 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
 
         if (this.webSocketServer) {
             this.webSocketServer.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
-                const managedConnection = new ManagedConnection(ownPeerDescriptor, 'TODO', ConnectionType.WEBSOCKET_SERVER, undefined, connection)
+                const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion, 
+                    ConnectionType.WEBSOCKET_SERVER, undefined, connection)
                 managedConnection.once(ManagedConnectionEvents.HANDSHAKE_COMPLETED, (peerDescriptor: PeerDescriptor) => {
 
                     this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
