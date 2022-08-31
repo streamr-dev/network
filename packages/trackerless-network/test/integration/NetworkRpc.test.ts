@@ -1,5 +1,11 @@
 import { PeerDescriptor } from '@streamr/dht'
-import { RpcCommunicator, CallContext, RpcCommunicatorEvent } from '@streamr/proto-rpc'
+import {
+    RpcCommunicator,
+    CallContext,
+    RpcCommunicatorEvent,
+    ProtoRpcClient,
+    toProtoRpcClient
+} from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -13,7 +19,7 @@ describe('Network RPC', () => {
     }
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client: NetworkRpcClient
+    let client: ProtoRpcClient<NetworkRpcClient>
 
     let recvCounter = 0
 
@@ -23,7 +29,7 @@ describe('Network RPC', () => {
         rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
-        client = new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport())
+        client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))
         rpcCommunicator2.registerRpcNotification(
             DataMessage,
             'sendData',

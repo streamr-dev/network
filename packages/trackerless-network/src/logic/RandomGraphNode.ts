@@ -16,6 +16,7 @@ import { Empty } from '../proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DuplicateMessageDetector, NumberPair } from '@streamr/utils'
 import { Logger } from '@streamr/utils'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 export enum Event {
     MESSAGE = 'streamr:layer2:random-graph-node:onmessage'
@@ -133,7 +134,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                     const interleaveTarget = new RemoteRandomGraphNode(
                         res.interleaveTarget,
                         this.randomGraphId,
-                        new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
+                        toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
                     )
                     await interleaveTarget.handshake(
                         this.layer1!.getPeerDescriptor(),
@@ -200,7 +201,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
-            new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
+            new RemoteRandomGraphNode(
+                descriptor,
+                this.randomGraphId,
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            )
+        ))
     }
 
     private removedContact(_removedContact: PeerDescriptor, closestTen: PeerDescriptor[]): void {
@@ -209,7 +215,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             return
         }
         this.contactPool.replaceAll(closestTen.map((descriptor) =>
-            new RemoteRandomGraphNode(descriptor, this.randomGraphId, new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))))
+            new RemoteRandomGraphNode(
+                descriptor,
+                this.randomGraphId,
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            )
+        ))
     }
 
     private getNewNeighborCandidates(): PeerDescriptor[] {
@@ -257,7 +268,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         const newRemotePeer = new RemoteRandomGraphNode(
             request.senderDescriptor!,
             request.randomGraphId,
-            new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
+            toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
         )
 
         // Add checking for connection handshakes
@@ -331,7 +342,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             const newContact = new RemoteRandomGraphNode(
                 message.interleaveTarget!,
                 this.randomGraphId,
-                new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
             )
             newContact.handshake(
                 this.layer1!.getPeerDescriptor(),
@@ -361,7 +372,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                         const targetNeighbor = new RemoteRandomGraphNode(
                             targetPeerDescriptor!,
                             this.randomGraphId,
-                            new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport())
+                            toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
                         )
                         this.ongoingHandshakes.add(targetStringId)
                         const result = await targetNeighbor.handshake(
