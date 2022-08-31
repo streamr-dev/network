@@ -7,12 +7,13 @@ import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
+import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
 export class RemoteWebSocketConnector {
     private peerId: PeerID
-    constructor(private peerDescriptor: PeerDescriptor, private client: IWebSocketConnectorClient) {
+    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebSocketConnectorClient>) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
     }
 
@@ -29,8 +30,8 @@ export class RemoteWebSocketConnector {
             targetDescriptor: this.peerDescriptor as PeerDescriptor
         }
         try {
-            const results = this.client.requestConnection(request, options)
-            const res = await results.response
+            const res = await this.client.requestConnection(request, options)
+            
             if (res.reason) {
                 // TODO: Log warning?
                 logger.debug('WebSocketConnectionRequest Rejected', new Err.WebSocketConnectionRequestRejected(res.reason).stack)

@@ -1,5 +1,5 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { RpcCommunicator, RpcCommunicatorEvent } from '@streamr/proto-rpc'
+import { RpcCommunicator, RpcCommunicatorEvent, toProtoRpcClient } from '@streamr/proto-rpc'
 import { createWrappedClosestPeersRequest, getMockPeers, MockDhtRpc } from '../utils'
 import {
     ClosestPeersRequest,
@@ -45,7 +45,7 @@ describe('DhtPeer', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
-        const client = new DhtRpcClient(clientRpcCommunicator.getRpcClientTransport())
+        const client = toProtoRpcClient(new DhtRpcClient(clientRpcCommunicator.getRpcClientTransport()))
         dhtPeer = new DhtPeer(serverPeerDescriptor, client)
     })
 

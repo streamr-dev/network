@@ -23,6 +23,7 @@ import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { jsFormatPeerDescriptor } from '../helpers/common'
 import { IDhtRpc } from '../proto/DhtRpc.server'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 export interface RouteMessageParams {
     message: Uint8Array
@@ -366,7 +367,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.ongoingClosestPeersRequests.has(peerId.toMapKey())) {
             this.ongoingClosestPeersRequests.delete(peerId.toMapKey())
             const dhtPeers = contacts.map((peer) => {
-                return new DhtPeer(peer, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+                return new DhtPeer(peer, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
             })
 
             const oldClosestContact = this.neighborList!.getClosestContactId()
@@ -411,7 +412,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.noProgressCounter = 0
 
         logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
-        const entryPoint = new DhtPeer(entryPointDescriptor, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+        const entryPoint = new DhtPeer(entryPointDescriptor, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return new Promise((resolve, _reject) => resolve())
@@ -463,7 +464,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             )
         ) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
-            const dhtPeer = new DhtPeer(contact, new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
             const peerId = PeerID.fromValue(contact.peerId)
             if (!this.neighborList!.hasContact(peerId)) {
                 this.neighborList!.addContact(dhtPeer)
