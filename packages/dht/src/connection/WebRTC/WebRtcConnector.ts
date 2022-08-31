@@ -29,7 +29,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 const logger = new Logger(module)
 
 export interface WebRtcConnectorConfig {
-    rpcTransport: ITransport,
+    rpcTransport: ITransport
     protocolVersion: string
 }
 

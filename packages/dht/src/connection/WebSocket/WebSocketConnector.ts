@@ -176,7 +176,8 @@ export class WebSocketConnector extends EventEmitter implements IManagedConnecti
 
         if (this.webSocketServer) {
             this.webSocketServer.on(ConnectionSourceEvent.CONNECTED, (connection: IConnection) => {
-                const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER, undefined, connection)
+                const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion, 
+                    ConnectionType.WEBSOCKET_SERVER, undefined, connection)
                 managedConnection.once(ManagedConnectionEvents.HANDSHAKE_COMPLETED, (peerDescriptor: PeerDescriptor) => {
 
                     this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
