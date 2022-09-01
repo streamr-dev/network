@@ -3,28 +3,28 @@
 // tslint:disable
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { WakeUpRpc } from "./WakeUpRpc";
+import { WakeUpRpcService } from "./WakeUpRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { Empty } from "./google/protobuf/empty";
 import type { WakeUpRequest } from "./WakeUpRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service WakeUpRpc
+ * @generated from protobuf service WakeUpRpcService
  */
-export interface IWakeUpRpcClient {
+export interface IWakeUpRpcServiceClient {
     /**
      * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (google.protobuf.Empty);
      */
     wakeUp(input: WakeUpRequest, options?: RpcOptions): UnaryCall<WakeUpRequest, Empty>;
 }
 /**
- * @generated from protobuf service WakeUpRpc
+ * @generated from protobuf service WakeUpRpcService
  */
-export class WakeUpRpcClient implements IWakeUpRpcClient, ServiceInfo {
-    typeName = WakeUpRpc.typeName;
-    methods = WakeUpRpc.methods;
-    options = WakeUpRpc.options;
+export class WakeUpRpcServiceClient implements IWakeUpRpcServiceClient, ServiceInfo {
+    typeName = WakeUpRpcService.typeName;
+    methods = WakeUpRpcService.methods;
+    options = WakeUpRpcService.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

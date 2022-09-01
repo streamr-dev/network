@@ -16,9 +16,9 @@ import {
     WebSocketConnectionRequest,
     WebSocketConnectionResponse
 } from '../../proto/DhtRpc'
-import { WebSocketConnectorClient } from '../../proto/DhtRpc.client'
+import { WebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { Logger } from '@streamr/utils'
-import { IWebSocketConnector } from '../../proto/DhtRpc.server'
+import { IWebSocketConnectorService } from '../../proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { WebSocketServer } from './WebSocketServer'
@@ -30,7 +30,7 @@ import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 const logger = new Logger(module)
 
-export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnector {
+export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebSocketConnectorService {
     private static WEBSOCKET_CONNECTOR_SERVICE_ID = 'websocketconnector'
     private rpcCommunicator: RoutingRpcCommunicator
     private ownPeerDescriptor?: PeerDescriptor
@@ -144,7 +144,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         setImmediate(() => {
             const remoteConnector = new RemoteWebSocketConnector(
                 targetPeerDescriptor,
-                toProtoRpcClient(new WebSocketConnectorClient(this.rpcCommunicator.getRpcClientTransport()))
+                toProtoRpcClient(new WebSocketConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
             )
             remoteConnector.requestConnection(ownPeerDescriptor, ownPeerDescriptor.websocket!.ip, ownPeerDescriptor.websocket!.port)
         })

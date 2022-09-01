@@ -2,7 +2,7 @@ import {
     PeerDescriptor,
     WebSocketConnectionRequest
 } from '../../proto/DhtRpc'
-import { IWebSocketConnectorClient } from '../../proto/DhtRpc.client'
+import { IWebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
@@ -13,7 +13,7 @@ const logger = new Logger(module)
 
 export class RemoteWebSocketConnector {
     private peerId: PeerID
-    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebSocketConnectorClient>) {
+    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebSocketConnectorServiceClient>) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
     }
 

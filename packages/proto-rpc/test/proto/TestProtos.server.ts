@@ -9,9 +9,9 @@ import { ClosestPeersResponse } from "./TestProtos";
 import { ClosestPeersRequest } from "./TestProtos";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service DhtRpc
+ * @generated from protobuf service DhtRpcService
  */
-export interface IDhtRpc<T = ServerCallContext> {
+export interface IDhtRpcService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: getClosestPeers(ClosestPeersRequest) returns (ClosestPeersResponse);
      */

@@ -5,9 +5,9 @@ import { HelloResponse } from "./HelloRpc";
 import { HelloRequest } from "./HelloRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service HelloRpc
+ * @generated from protobuf service HelloRpcService
  */
-export interface IHelloRpc<T = ServerCallContext> {
+export interface IHelloRpcService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: sayHello(HelloRequest) returns (HelloResponse);
      */

@@ -1,11 +1,11 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RpcCommunicator, CallContext, toProtoRpcClient } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/HelloRpc'
-import { IHelloRpc } from './proto/HelloRpc.server'
-import { HelloRpcClient } from './proto/HelloRpc.client'
+import { IHelloRpcService } from './proto/HelloRpc.server'
+import { HelloRpcServiceClient } from './proto/HelloRpc.client'
 
 // Rpc service
-class HelloService implements IHelloRpc {
+class HelloService implements IHelloRpcService {
     async sayHello(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return { greeting: 'Hello ' + request.myName + '!' }
     }
@@ -19,7 +19,7 @@ const run = async () => {
 
     // Setup client
     const communicator2 = new RpcCommunicator()
-    const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
+    const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
     communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {

@@ -5,9 +5,9 @@ import { Empty } from "./google/protobuf/empty";
 import { WakeUpRequest } from "./WakeUpRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service WakeUpRpc
+ * @generated from protobuf service WakeUpRpcService
  */
-export interface IWakeUpRpc<T = ServerCallContext> {
+export interface IWakeUpRpcService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: wakeUp(WakeUpRequest) returns (google.protobuf.Empty);
      */

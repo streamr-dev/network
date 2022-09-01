@@ -1,12 +1,12 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RpcCommunicator, CallContext, toProtoRpcClient, ProtoRpcClient } from '@streamr/proto-rpc'
-import { IWakeUpRpc } from './proto/WakeUpRpc.server'
+import { IWakeUpRpcService } from './proto/WakeUpRpc.server'
 import { WakeUpRequest } from './proto/WakeUpRpc'
-import { WakeUpRpcClient } from './proto/WakeUpRpc.client'
+import { WakeUpRpcServiceClient } from './proto/WakeUpRpc.client'
 import { Empty } from './proto/google/protobuf/empty'
 
 // Rpc service
-class WakeUpService implements IWakeUpRpc {
+class WakeUpService implements IWakeUpRpcService {
     constructor(public nodeId: string) {
         this.wakeUp = this.wakeUp.bind(this)
     }
@@ -21,12 +21,12 @@ class WakeUpService implements IWakeUpRpc {
 
 class Node {
     public communicator: RpcCommunicator
-    private client: ProtoRpcClient<WakeUpRpcClient>
+    private client: ProtoRpcClient<WakeUpRpcServiceClient>
     private service: WakeUpService
 
     constructor(public nodeId: string) {
         this.communicator = new RpcCommunicator()
-        this.client = toProtoRpcClient(new WakeUpRpcClient(this.communicator.getRpcClientTransport()))
+        this.client = toProtoRpcClient(new WakeUpRpcServiceClient(this.communicator.getRpcClientTransport()))
         this.service = new WakeUpService(nodeId)
         this.communicator.registerRpcNotification(WakeUpRequest, 'wakeUp', this.service.wakeUp)
     }

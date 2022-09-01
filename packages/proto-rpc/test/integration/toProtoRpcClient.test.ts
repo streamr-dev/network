@@ -4,14 +4,14 @@ import { CallContext, RpcCommunicator } from '../../src'
 import { toProtoRpcClient } from '../../src/toProtoRpcClient'
 import { Empty } from '../proto/google/protobuf/empty'
 import { HelloRequest, HelloResponse } from '../proto/HelloRpc'
-import { HelloRpcClient } from '../proto/HelloRpc.client'
-import { IHelloRpc } from '../proto/HelloRpc.server'
+import { HelloRpcServiceClient } from '../proto/HelloRpc.client'
+import { IHelloRpcService } from '../proto/HelloRpc.server'
 import { WakeUpRequest } from '../proto/WakeUpRpc'
-import { WakeUpRpcClient } from '../proto/WakeUpRpc.client'
-import { IWakeUpRpc } from '../proto/WakeUpRpc.server'
+import { WakeUpRpcServiceClient } from '../proto/WakeUpRpc.client'
+import { IWakeUpRpcService } from '../proto/WakeUpRpc.server'
 
 // Rpc call service
-class HelloService implements IHelloRpc {
+class HelloService implements IHelloRpcService {
     async sayHello(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return { greeting: 'Hello ' + request.myName + '!' }
     }
@@ -21,7 +21,7 @@ interface WakeUpEvent {
     WAKE_UP_CALLED: (reason: string) => void
 }
 // Rpc notification service
-class WakeUpService extends EventEmitter<WakeUpEvent> implements IWakeUpRpc {
+class WakeUpService extends EventEmitter<WakeUpEvent> implements IWakeUpRpcService {
     wakeUp = async (request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> => {
         this.emit('WAKE_UP_CALLED', request.reason)
         const ret: Empty = {}
@@ -38,7 +38,7 @@ describe('toProtoRpcClient', () => {
 
         // Setup client
         const communicator2 = new RpcCommunicator()
-        const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
+        const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
         communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
@@ -63,7 +63,7 @@ describe('toProtoRpcClient', () => {
 
         // Setup client
         const communicator2 = new RpcCommunicator()
-        const wakeUpClient = toProtoRpcClient(new WakeUpRpcClient(communicator2.getRpcClientTransport()))
+        const wakeUpClient = toProtoRpcClient(new WakeUpRpcServiceClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
         communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
@@ -91,7 +91,7 @@ describe('toProtoRpcClient', () => {
 
         // Setup client
         const communicator2 = new RpcCommunicator()
-        const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
+        const helloClient = new HelloRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
         communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
@@ -120,7 +120,7 @@ describe('toProtoRpcClient', () => {
 
         // Setup client
         const communicator2 = new RpcCommunicator()
-        const wakeUpClient = new WakeUpRpcClient(communicator2.getRpcClientTransport())
+        const wakeUpClient = new WakeUpRpcServiceClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
         communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
