@@ -1,7 +1,7 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
-service HelloRpc {
+service HelloRpcService {
   rpc sayHello (HelloRequest) returns (HelloResponse);
 }
 

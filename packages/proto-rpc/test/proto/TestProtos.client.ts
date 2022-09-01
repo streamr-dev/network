@@ -3,7 +3,7 @@
 // tslint:disable
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { DhtRpc } from "./TestProtos";
+import { DhtRpcService } from "./TestProtos";
 import type { RouteMessageAck } from "./TestProtos";
 import type { RouteMessageWrapper } from "./TestProtos";
 import type { PingResponse } from "./TestProtos";
@@ -14,9 +14,9 @@ import type { ClosestPeersRequest } from "./TestProtos";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service DhtRpc
+ * @generated from protobuf service DhtRpcService
  */
-export interface IDhtRpcClient {
+export interface IDhtRpcServiceClient {
     /**
      * @generated from protobuf rpc: getClosestPeers(ClosestPeersRequest) returns (ClosestPeersResponse);
      */
@@ -31,12 +31,12 @@ export interface IDhtRpcClient {
     routeMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
- * @generated from protobuf service DhtRpc
+ * @generated from protobuf service DhtRpcService
  */
-export class DhtRpcClient implements IDhtRpcClient, ServiceInfo {
-    typeName = DhtRpc.typeName;
-    methods = DhtRpc.methods;
-    options = DhtRpc.options;
+export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
+    typeName = DhtRpcService.typeName;
+    methods = DhtRpcService.methods;
+    options = DhtRpcService.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

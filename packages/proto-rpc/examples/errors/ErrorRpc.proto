@@ -1,7 +1,7 @@
 syntax = "proto3";
 option optimize_for = CODE_SIZE;
 
-service ErrorRpc {
+service ErrorRpcService {
   rpc timeout (HelloRequest) returns (HelloResponse);
   rpc serverError (HelloRequest) returns (HelloResponse);
   rpc unknownMethod (HelloRequest) returns (HelloResponse);

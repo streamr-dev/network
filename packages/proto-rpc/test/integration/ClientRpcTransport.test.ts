@@ -1,7 +1,7 @@
 import { ClosestPeersResponse, PeerDescriptor } from '../proto/TestProtos'
 import { RpcMessage } from '../../src/proto/ProtoRpc'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
-import { DhtRpcClient } from '../proto/TestProtos.client'
+import { DhtRpcServiceClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
 import { CallContext } from '../../src/ServerRegistry'
 import { toProtoRpcClient } from '../../src'
@@ -27,7 +27,7 @@ describe('DhtClientRpcTransport', () => {
             rpcCommunicator.handleIncomingMessage(RpcMessage.toBinary(response))
         })
 
-        const client =  toProtoRpcClient(new DhtRpcClient(rpcCommunicator.getRpcClientTransport()))
+        const client =  toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator.getRpcClientTransport()))
 
         const peerDescriptor: PeerDescriptor = {
             peerId: new Uint8Array([1, 2, 3]),

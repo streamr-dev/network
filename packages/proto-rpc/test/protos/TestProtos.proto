@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option optimize_for = CODE_SIZE;
 
-service DhtRpc {
+service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);

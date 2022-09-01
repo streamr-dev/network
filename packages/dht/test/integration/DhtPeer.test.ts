@@ -9,7 +9,7 @@ import {
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     RpcMessage
 } from '../../src/proto/DhtRpc'
-import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -45,7 +45,7 @@ describe('DhtPeer', () => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
-        const client = toProtoRpcClient(new DhtRpcClient(clientRpcCommunicator.getRpcClientTransport()))
+        const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
         dhtPeer = new DhtPeer(serverPeerDescriptor, client)
     })
 
