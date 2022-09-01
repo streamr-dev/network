@@ -1,9 +1,10 @@
-import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType } from 'streamr-client-protocol'
+import { NodeId } from 'streamr-network'
 import { FakeNetworkNode } from './FakeNetworkNode'
 
 export class FakeNetwork {
 
-    private readonly nodes: Map<EthereumAddress, FakeNetworkNode> = new Map()
+    private readonly nodes: Map<NodeId, FakeNetworkNode> = new Map()
     private sentMessages: StreamMessage[] = []
 
     addNode(node: FakeNetworkNode): void {
@@ -14,12 +15,12 @@ export class FakeNetwork {
         }
     }
 
-    removeNode(address: EthereumAddress): void {
-        this.nodes.delete(address)
+    removeNode(id: NodeId): void {
+        this.nodes.delete(id)
     }
 
-    getNode(address: EthereumAddress): FakeNetworkNode | undefined {
-        return this.nodes.get(address)
+    getNode(id: NodeId): FakeNetworkNode | undefined {
+        return this.nodes.get(id)
     }
 
     getNodes(): FakeNetworkNode[] {
