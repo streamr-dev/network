@@ -8,6 +8,8 @@ import RelayMessage, {
     RtcAnswerMessage
 } from "./relay_message/RelayMessage"
 import StatusMessage from "./status_message/StatusMessage"
+import UnicastMessage from './unicast_message/UnicastMessage'
+import MulticastMessage from './multicast_message/MulticastMessage'
 import TrackerMessage from "./TrackerMessage"
 import { TrackerMessageType } from "./TrackerMessage"
 import { Originator } from "./Originator"
@@ -17,6 +19,8 @@ import './error_message/ErrorMessageSerializerV2'
 import './instruction_message/InstructionMessageSerializerV2'
 import './relay_message/RelayMessageSerializerV2'
 import './status_message/StatusMessageSerializerV2'
+import './unicast_message/UnicastMessageSerializerV2'
+import './multicast_message/MulticastMessageSerializerV2'
 
 export {
     InstructionMessage,
@@ -30,5 +34,7 @@ export {
     RtcIceCandidateMessage,
     RtcConnectMessage,
     RtcOfferMessage,
-    RtcAnswerMessage
+    RtcAnswerMessage,
+    UnicastMessage,
+    MulticastMessage
 }
