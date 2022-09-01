@@ -5,7 +5,7 @@ import { FakeNetworkNode } from './FakeNetworkNode'
 
 interface Send {
     message: StreamMessage
-    sender: NodeId
+    sender?: NodeId
     recipients: NodeId[]
 }
 

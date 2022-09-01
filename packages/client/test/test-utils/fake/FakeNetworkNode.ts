@@ -56,7 +56,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
         this.network.send(msg, undefined, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
-    sendUnicastMessage(msg: StreamMessage, recipient: NodeID): void {
+    sendUnicastMessage(msg: StreamMessage, recipient: NodeId): void {
         this.network.send(msg, this.id, (node: FakeNetworkNode) => node.id === recipient)
     }
 
