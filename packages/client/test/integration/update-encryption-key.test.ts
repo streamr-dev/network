@@ -18,9 +18,10 @@ describe('update encryption key', () => {
     let subscriber: StreamrClient
     let streamPartId: StreamPartID
     let sub: Subscription
+    let environment = new FakeEnvironment()
 
     beforeEach(async () => {
-        const environment = new FakeEnvironment()
+        environment = new FakeEnvironment()
         publisher = environment.createClient()
         subscriber = environment.createClient()
         const stream = await publisher.createStream('/path')
@@ -30,6 +31,10 @@ describe('update encryption key', () => {
         })
         streamPartId = stream.getStreamParts()[0]
         sub = await subscriber.subscribe(streamPartId)
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     it('rotate', async () => {

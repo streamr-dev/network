@@ -29,6 +29,7 @@ export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
     private dependencyContainer: DependencyContainer
+    private clients: StreamrClient[] = []
 
     constructor() {
         this.network = new FakeNetwork()
@@ -54,7 +55,9 @@ export class FakeEnvironment {
             }
         }
         const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, authOpts, opts)
-        return new StreamrClient(configWithDefaults, this.dependencyContainer)
+        const client = new StreamrClient(configWithDefaults, this.dependencyContainer)
+        this.clients.push(client)
+        return client
     }
 
     startNode(nodeId: EthereumAddress): FakeNetworkNode {
@@ -74,5 +77,9 @@ export class FakeEnvironment {
 
     getNetwork(): FakeNetwork {
         return this.network
+    }
+
+    destroy(): Promise<unknown> {
+        return Promise.all(this.clients.map((client) => client.destroy()))
     }
 }

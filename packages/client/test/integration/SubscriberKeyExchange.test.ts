@@ -80,6 +80,10 @@ describe('SubscriberKeyExchange', () => {
         stream = await createStream()
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('requests a group key', () => {
 
         /*

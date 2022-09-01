@@ -39,6 +39,10 @@ describe('resend and subscribe', () => {
         subscriber.addStreamToStorageNode(stream.id, storageNode.id)
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('happy path', async () => {
         const groupKey = GroupKey.generate()
         const publisher = environment.createClient({

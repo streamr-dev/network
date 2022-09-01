@@ -104,6 +104,10 @@ describe('resend with existing key', () => {
         }
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('no keys available', () => {
         it('can\'t decrypt', async () => {
             await assertNonDecryptable(1000, 6000)
