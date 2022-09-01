@@ -24,8 +24,6 @@ import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
-import { TransformStream } from 'node:stream/web'
-import { NetworkNodeStub } from '../../src/NetworkNodeFacade'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 
@@ -139,18 +137,6 @@ export const createMockMessage = (
     }
     msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
     return msg
-}
-
-export const addSubscriber = <T>(networkNodeStub: NetworkNodeStub, ...streamPartIds: StreamPartID[]): AsyncIterableIterator<StreamMessage<T>> => {
-    const messages = new TransformStream()
-    const messageWriter = messages.writable.getWriter()
-    networkNodeStub.addMessageListener((msg: StreamMessage) => {
-        if (streamPartIds.includes(msg.getStreamPartID())) {
-            messageWriter.write(msg)
-        }
-    })
-    streamPartIds.forEach((id) => networkNodeStub.subscribe(id))
-    return messages.readable[Symbol.asyncIterator]()
 }
 
 export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyStore => {
