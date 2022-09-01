@@ -45,3 +45,7 @@ export {
     ServerWsEndpoint,
     startHttpServer
 } from './connection/ws/ServerWsEndpoint'
+export {
+    UserId,
+    parseUserIdFromNodeId
+} from './logic/UserId'

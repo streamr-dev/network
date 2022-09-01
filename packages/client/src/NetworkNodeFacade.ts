@@ -2,13 +2,13 @@
  * Wrap a network node.
  */
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext } from 'streamr-network'
+import { NetworkNodeOptions, createNetworkNode as _createNetworkNode, MetricsContext, NodeId, UserId } from 'streamr-network'
 import { uuid } from './utils/uuid'
 import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
@@ -40,6 +40,10 @@ export interface NetworkNodeStub {
     openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
     /** @internal */
     closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    sendUnicastMessage: (streamMessage: StreamMessage, recipient: NodeId) => Promise<void>
+    addUnicastMessageListener: (listener: (streamMessage: StreamMessage) => void) => void
+    sendMulticastMessage: (streamMessage: StreamMessage, recipient: UserId) => Promise<void>
+    addMulticastMessageListener: (listener: (streamMessage: StreamMessage) => void) => void
 }
 
 export const getEthereumAddressFromNodeId = (nodeId: string): string => {
