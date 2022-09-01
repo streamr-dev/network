@@ -117,22 +117,22 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async sendUnicastMessage() {
+    async sendUnicastMessage(): Promise<void> {
         throw new Error('not implemented')
     }
     
     // eslint-disable-next-line class-methods-use-this
-    addUnicastMessageListener() {
+    addUnicastMessageListener(): void {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    async sendMulticastMessage() {
+    async sendMulticastMessage(): Promise<void> {
         throw new Error('not implemented')
     }
 
     // eslint-disable-next-line class-methods-use-this
-    addMulticastMessageListener() {
+    addMulticastMessageListener(): void {
         throw new Error('not implemented')
     }
 }
