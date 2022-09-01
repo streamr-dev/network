@@ -10,10 +10,8 @@ import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { 
-    addSubscriber,
     createMockMessage,
     createRelativeTestStreamId,
     getGroupKeyStore,
@@ -82,6 +80,10 @@ describe('SubscriberKeyExchange', () => {
         streamPartId = stream.getStreamParts()[0]
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('requests a group key', () => {
 
         /*
@@ -103,15 +105,16 @@ describe('SubscriberKeyExchange', () => {
             })
             await startPublisherKeyExchangeSubscription(publisher)
             const publisherNode = await publisher.getNode()
-            const groupKeyRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
             await subscriber.subscribe(streamPartId, () => {})
 
             triggerGroupKeyRequest(groupKey, publisherNode)
             
-            const request = await nextValue(groupKeyRequests)
-            assertGroupKeyRequest(request!, [groupKey.id])
+            const request = await environment.getNetwork().waitForSentMessage({
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            })
+            await assertGroupKeyRequest(request!, [groupKey.id])
             const keyPersistence = getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), subscriberWallet.address)
             await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
-        })
+        }) 
     })
 })

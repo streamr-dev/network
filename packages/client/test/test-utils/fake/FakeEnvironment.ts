@@ -9,7 +9,6 @@ import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
 import { FakeStreamRegistry } from './FakeStreamRegistry'
 import { FakeHttpUtil } from './FakeHttpUtil'
 import { HttpUtil } from '../../../src/HttpUtil'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { StreamStorageRegistry } from '../../../src/registry/StreamStorageRegistry'
 import { FakeStreamStorageRegistry } from './FakeStreamStorageRegistry'
 import { FakeNetworkNodeFactory, FakeNetworkNode } from './FakeNetworkNode'
@@ -17,6 +16,7 @@ import { NetworkNodeFactory } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
 import { FakeChain } from './FakeChain'
 import { FakeStorageNode } from './FakeStorageNode'
+import { NodeId } from 'streamr-network'
 
 const DEFAULT_CLIENT_OPTIONS: StreamrClientConfig = {
     network: {
@@ -29,6 +29,7 @@ export class FakeEnvironment {
     private network: FakeNetwork
     private chain: FakeChain
     private dependencyContainer: DependencyContainer
+    private clients: StreamrClient[] = []
 
     constructor() {
         this.network = new FakeNetwork()
@@ -54,10 +55,12 @@ export class FakeEnvironment {
             }
         }
         const configWithDefaults = merge({}, DEFAULT_CLIENT_OPTIONS, authOpts, opts)
-        return new StreamrClient(configWithDefaults, this.dependencyContainer)
+        const client = new StreamrClient(configWithDefaults, this.dependencyContainer)
+        this.clients.push(client)
+        return client
     }
 
-    startNode(nodeId: EthereumAddress): FakeNetworkNode {
+    startNode(nodeId: NodeId): FakeNetworkNode {
         const node = new FakeNetworkNode({
             id: nodeId
         } as any, this.network)
@@ -74,5 +77,9 @@ export class FakeEnvironment {
 
     getNetwork(): FakeNetwork {
         return this.network
+    }
+
+    destroy(): Promise<unknown> {
+        return Promise.all(this.clients.map((client) => client.destroy()))
     }
 }

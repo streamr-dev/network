@@ -44,8 +44,7 @@ describe('sequential resend subscribe', () => {
     })
 
     afterAll(async () => {
-        await publisher?.destroy()
-        await subscriber?.destroy()
+        await environment.destroy()
     })
 
     afterEach(async () => {

@@ -36,10 +36,7 @@ describe('client behaviour on invalid message', () => {
     })
 
     afterEach(async () => {
-        await Promise.allSettled([
-            publisherClient?.destroy(),
-            subscriberClient?.destroy()
-        ])
+        await environment.destroy()
     })
 
     it('publishing with insufficient permissions prevents message from being sent to network (NET-773)', async () => {

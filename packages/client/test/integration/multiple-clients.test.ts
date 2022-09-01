@@ -50,7 +50,7 @@ describe('PubSub with multiple clients', () => {
     })
 
     afterEach(async () => {
-        await mainClient?.destroy()
+        await environment.destroy()
     })
 
     async function createPublisher() {
@@ -113,8 +113,6 @@ describe('PubSub with multiple clients', () => {
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
-
-            await otherClient.destroy()
         })
     })
 
@@ -174,9 +172,6 @@ describe('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-
-            await otherClient.destroy()
-            await Promise.all(publishers.map((p) => p.destroy()))
         })
 
         // late subscriber test is super unreliable. Doesn't seem to be a good way to make the
