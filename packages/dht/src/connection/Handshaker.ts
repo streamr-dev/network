@@ -3,7 +3,7 @@ import { EventEmitter } from "eventemitter3"
 import { v4 } from "uuid"
 import { PeerID } from "../helpers/PeerID"
 import { Message, HandshakeMessage, MessageType, PeerDescriptor } from "../proto/DhtRpc"
-import { IConnection, Event as ConnectionEvents } from "./IConnection"
+import { IConnection } from "./IConnection"
 
 const logger = new Logger(module)
 
@@ -20,7 +20,7 @@ export class Handshaker extends EventEmitter<HandshakerEvent> {
         private protocolVersion: string, 
         private connection: IConnection) {
         super()
-        this.connection.on(ConnectionEvents.DATA, this.onData)
+        this.connection.on('DATA', this.onData)
     }
 
     public run(): void {

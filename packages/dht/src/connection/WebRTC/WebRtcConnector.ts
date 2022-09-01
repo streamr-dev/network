@@ -1,6 +1,6 @@
 import 'setimmediate'
-import { EventEmitter } from "events"
-import { Event as ManagedConnectionSourceEvents, IManagedConnectionSource } from '../IManagedConnectionSource'
+import EventEmitter from 'eventemitter3'
+import { ManagedConnectionSourceEvent } from '../IManagedConnectionSource'
 import {
     IceCandidate,
     PeerDescriptor,
@@ -10,11 +10,9 @@ import {
 import { Empty } from '../../proto/google/protobuf/empty'
 import { ITransport } from '../../transport/ITransport'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
-import { Event as ConnectionEvents } from '../IConnection'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
 import { WebRtcConnectorClient } from '../../proto/DhtRpc.client'
-import { Event as IWebRtcEvent } from './IWebRtcConnection'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
@@ -33,7 +31,7 @@ export interface WebRtcConnectorConfig {
     protocolVersion: string
 }
 
-export class WebRtcConnector extends EventEmitter implements IManagedConnectionSource, IWebRtcConnector {
+export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnector {
     private static WEBRTC_CONNECTOR_SERVICE_ID = 'webrtc_connector'
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RoutingRpcCommunicator
@@ -102,7 +100,7 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.bindListenersAndStartConnection(remotePeer, connection)
 
-            this.emit(ManagedConnectionSourceEvents.CONNECTED, managedConnection)
+            this.emit('CONNECTED', managedConnection)
         }
         // Always use offerers connectionId
         connection.setConnectionId(connectionId)
@@ -132,7 +130,7 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.emit(ManagedConnectionSourceEvents.CONNECTED, managedConnection)
+        this.emit('CONNECTED', managedConnection)
     }
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,
@@ -171,18 +169,18 @@ export class WebRtcConnector extends EventEmitter implements IManagedConnectionS
             toProtoRpcClient(new WebRtcConnectorClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         if (offering) {
-            connection.once(IWebRtcEvent.LOCAL_DESCRIPTION, async (description, _type) => {
+            connection.once('LOCAL_DESCRIPTION', (description: string, _type: string) => {
                 remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         } else {
-            connection.once(IWebRtcEvent.LOCAL_DESCRIPTION, async (description, _type) => {
+            connection.once('LOCAL_DESCRIPTION', (description: string, _type: string) => {
                 remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         }
-        connection.on(IWebRtcEvent.LOCAL_CANDIDATE, async (candidate, mid) => {
+        connection.on('LOCAL_CANDIDATE', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
-        connection.on(ConnectionEvents.CONNECTED, () => {
+        connection.on('CONNECTED', () => {
             // Sending Connected event is now handled by ManagedConnection
             // this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
         })

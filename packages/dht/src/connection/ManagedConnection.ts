@@ -1,60 +1,110 @@
-import { Connection } from "./Connection"
-import { ConnectionType, Event as ConnectionEvents, IConnection } from "./IConnection"
+import { ConnectionEvent, ConnectionID, ConnectionType, IConnection } from "./IConnection"
 import * as Err from '../helpers/errors'
 import { Handshaker } from "./Handshaker"
 import { PeerDescriptor } from "../proto/DhtRpc"
-import { IManagedConnection, Event as ManagedConnectionEvents } from "./IManagedConnection"
 import { Logger } from "@streamr/utils"
+import EventEmitter from "eventemitter3"
+
+export interface ManagedConnectionEvent {
+    MANAGED_DATA: (bytes: Uint8Array, remotePeerDescriptor: PeerDescriptor) => void
+    HANDSHAKE_COMPLETED: (peerDescriptor: PeerDescriptor) => void
+}
 
 const logger = new Logger(module)
 
-export class ManagedConnection extends Connection implements IConnection, IManagedConnection {
+type Events = ManagedConnectionEvent & ConnectionEvent
+export class ManagedConnection extends EventEmitter<Events> {
 
     private static objectCounter = 0
-    private objectId = 0
+    public objectId = 0
     private implementation?: IConnection
-    
+
     private outputBuffer: Uint8Array[] = []
     private inputBuffer: [data: Uint8Array, remotePeerDescriptor: PeerDescriptor][] = []
-   
+
+    public connectionId: ConnectionID
+    private peerDescriptor?: PeerDescriptor
+    public connectionType: ConnectionType
+
     constructor(private ownPeerDescriptor: PeerDescriptor,
         private protocolVersion: string,
         connectionType: ConnectionType,
         protected connectingConnection?: IConnection,
         connectedConnection?: IConnection,
     ) {
-        super(connectionType)
-
+        super()
         this.objectId = ManagedConnection.objectCounter
         ManagedConnection.objectCounter++
+
+        this.connectionType = connectionType
+        this.connectionId = new ConnectionID()
 
         logger.trace('creating ManagedConnection of type: ' + connectionType + ' objectId: ' + this.objectId)
         if (connectedConnection && connectingConnection) {
             throw new Err.IllegalArguments('Managed connection constructor only accepts either a conncting connection OR a connected connection')
         }
 
-        this.on('newListener', (event, listener) => {
-            // empty the input buffer to the first DATA listener added
-
-            if (event == ManagedConnectionEvents.DATA && this.listenerCount(ManagedConnectionEvents.DATA) == 0) {
-                while (this.inputBuffer.length > 0) {
-                    logger.trace('emptying inputBuffer objectId: ' + this.objectId)
-                    const data = (this.inputBuffer.shift()!)
-                    listener(data[0], data[1])
-                }
-            }
-        })
-
         if (connectingConnection) {
-            connectingConnection.once(ConnectionEvents.CONNECTED, () => {
+            connectingConnection.once('CONNECTED', () => {
                 this.attachImplementation(connectingConnection)
-                this.emit(ConnectionEvents.CONNECTED)
+                this.emit('CONNECTED')
             })
         } else {
             if (connectedConnection) {
                 this.attachImplementation(connectedConnection!)
             }
         }
+    }
+
+    // eventemitter3 does not implement the standard 'newListener' event, so we need to override
+    
+    override on(
+        event: keyof Events,
+        fn: (...args: any) => void,
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+        context?: any
+    ): this {
+        if (event == 'MANAGED_DATA' && this.listenerCount('MANAGED_DATA') == 0) {
+            while (this.inputBuffer.length > 0) {
+                logger.trace('emptying inputBuffer objectId: ' + this.objectId)
+                const data = (this.inputBuffer.shift()!)
+                fn(data[0], data[1])
+            }
+        }
+        super.on(event, fn, context)
+        return this
+    }
+
+    override once(
+        event: keyof Events,
+        fn: (...args: any) => void,
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+        context?: any
+    ): this {
+        logger.trace('overridden once objectId: ' + this.objectId)
+        if (event == 'MANAGED_DATA' && this.listenerCount('MANAGED_DATA') == 0) {
+            if (this.inputBuffer.length > 0) {
+                while (this.inputBuffer.length > 0) {
+                    logger.trace('emptying inputBuffer objectId: ' + this.objectId)
+                    const data = (this.inputBuffer.shift()!)
+                    fn(data[0], data[1])
+                }
+            } else {
+                super.once(event, fn, context)
+            }
+        } else {
+            super.once(event, fn, context)
+        }
+
+        return this
+    }
+
+    public setPeerDescriptor(peerDescriptor: PeerDescriptor): void {
+        this.peerDescriptor = peerDescriptor
+    }
+
+    public getPeerDescriptor(): PeerDescriptor | undefined {
+        return this.peerDescriptor
     }
 
     private onHandshakeCompleted = (peerDescriptor: PeerDescriptor) => {
@@ -65,33 +115,34 @@ export class ManagedConnection extends Connection implements IConnection, IManag
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
             this.implementation!.send(this.outputBuffer.shift()!)
         }
-        this.emit(ManagedConnectionEvents.HANDSHAKE_COMPLETED, peerDescriptor)
+        logger.trace('emitting handshake_completed, objectId: ' + this.objectId)
+        this.emit('HANDSHAKE_COMPLETED', peerDescriptor)
     }
 
     public attachImplementation(impl: IConnection, peerDescriptor?: PeerDescriptor): void {
         logger.trace('attachImplementation() objectId: ' + this.objectId)
-        impl.on(ConnectionEvents.DATA, (bytes: Uint8Array) => {
+        impl.on('DATA', (bytes: Uint8Array) => {
             logger.trace('received data objectId: ' + this.objectId)
-           
-            if (this.listenerCount(ManagedConnectionEvents.DATA) < 1) {
+
+            if (this.listenerCount('MANAGED_DATA') < 1) {
                 logger.trace('pushing data to inputbuffer objectId: ' + this.objectId)
                 this.inputBuffer.push([bytes, this.getPeerDescriptor()!])
             } else {
                 logger.trace('emitting data as ManagedConnectionEvents.DATA objectId: ' + this.objectId)
-                this.emit(ManagedConnectionEvents.DATA, bytes, this.getPeerDescriptor())
+                this.emit('MANAGED_DATA', bytes, this.getPeerDescriptor()!)
             }
 
-            this.emit(ConnectionEvents.DATA, bytes)
+            //this.emit(ConnectionEvents.DATA, bytes)
         })
 
-        impl.on(ConnectionEvents.ERROR, (name: string) => {
-            this.emit(ConnectionEvents.ERROR, name)
+        impl.on('ERROR', (name: string) => {
+            this.emit('ERROR', name)
         })
-        impl.on(ConnectionEvents.CONNECTED, () => {
-            this.emit(ConnectionEvents.CONNECTED)
+        impl.on('CONNECTED', () => {
+            this.emit('CONNECTED')
         })
-        impl.on(ConnectionEvents.DISCONNECTED, (code: number, reason: string) => {
-            this.emit(ConnectionEvents.DISCONNECTED, code, reason)
+        impl.on('DISCONNECTED', (code?: number, reason?: string) => {
+            this.emit('DISCONNECTED', code, reason)
         })
 
         this.implementation = impl
