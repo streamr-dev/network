@@ -53,7 +53,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     publish(msg: StreamMessage): void {
-        this.network.sendMessage(msg)
+        this.network.send(msg, this.id, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
     // eslint-disable-next-line class-methods-use-this
