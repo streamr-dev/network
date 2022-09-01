@@ -3,7 +3,7 @@
  * */ 
 
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcCommunicator, RpcCommunicatorEvent, CallContext, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator, CallContext, toProtoRpcClient } from '@streamr/proto-rpc'
 import { RoutedHelloRequest, RoutedHelloResponse } from './proto/RoutedHelloRpc'
 import { IRoutedHelloRpc } from './proto/RoutedHelloRpc.server'
 import { RoutedHelloRpcClient } from './proto/RoutedHelloRpc.client'
@@ -56,7 +56,7 @@ const run = async () => {
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
 
-    serverCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
+    serverCommunicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, callContext?: CallContext) => {
 
         // Send the reply message to the calling client based on sourceId passed 
         // through the network stack in the context information
@@ -66,14 +66,14 @@ const run = async () => {
         }
     })
 
-    serverCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, callContext?: CallContext) => {
+    serverCommunicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, callContext?: CallContext) => {
         if (callContext!.sourceId) {
             const clientId = callContext!["sourceId"] as string
             clientCommunicators[clientId].handleIncomingMessage(msgBody)
         }
     })
 
-    communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, clientContext?: CallContext) => {
+    communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, clientContext?: CallContext) => {
        
         // Choose the server to send the message to based on context information passed
         // through the RPC stack as client context information
@@ -101,7 +101,7 @@ const run = async () => {
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
-    communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, clientContext?: CallContext) => {
+    communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, clientContext?: CallContext) => {
         let server: RpcCommunicator
 
         if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId'] == '2') {

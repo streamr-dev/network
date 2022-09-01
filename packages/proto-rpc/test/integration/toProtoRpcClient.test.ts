@@ -1,6 +1,6 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import EventEmitter from 'events'
-import { CallContext, RpcCommunicator, RpcCommunicatorEvent } from '../../src'
+import EventEmitter from 'eventemitter3'
+import { CallContext, RpcCommunicator } from '../../src'
 import { toProtoRpcClient } from '../../src/toProtoRpcClient'
 import { Empty } from '../proto/google/protobuf/empty'
 import { HelloRequest, HelloResponse } from '../proto/HelloRpc'
@@ -17,8 +17,11 @@ class HelloService implements IHelloRpc {
     }
 }
 
+interface WakeUpEvent {
+    WAKE_UP_CALLED: (reason: string) => void
+}
 // Rpc notification service
-class WakeUpService extends EventEmitter implements IWakeUpRpc {
+class WakeUpService extends EventEmitter<WakeUpEvent> implements IWakeUpRpc {
     wakeUp = async (request: WakeUpRequest, _context: ServerCallContext): Promise<Empty> => {
         this.emit('WAKE_UP_CALLED', request.reason)
         const ret: Empty = {}
@@ -38,10 +41,10 @@ describe('toProtoRpcClient', () => {
         const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -63,10 +66,10 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = toProtoRpcClient(new WakeUpRpcClient(communicator2.getRpcClientTransport()))
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -91,10 +94,10 @@ describe('toProtoRpcClient', () => {
         const helloClient = new HelloRpcClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
@@ -120,10 +123,10 @@ describe('toProtoRpcClient', () => {
         const wakeUpClient = new WakeUpRpcClient(communicator2.getRpcClientTransport())
 
         // Simulate a network connection, in real life the message blobs would be transferred over a network
-        communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator2.handleIncomingMessage(msgBody)
         })
-        communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _callContext?: CallContext) => {
+        communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _callContext?: CallContext) => {
             communicator1.handleIncomingMessage(msgBody)
         })
 
