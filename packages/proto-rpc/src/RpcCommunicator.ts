@@ -3,16 +3,15 @@ import { ErrorCode } from './errors'
 import {
     ClientTransport,
     ResultParts,
-    ProtoRpcOptions,
-    Event as DhtTransportClientEvent
+    ProtoRpcOptions
 } from './ClientTransport'
 import {
     RpcMessage,
     RpcResponseError
 } from './proto/ProtoRpc'
 import { Empty } from './proto/google/protobuf/empty'
-import { CallContext, ServerRegistryEvent as ServerRegistryEvent, Parser, Serializer, ServerRegistry } from './ServerRegistry'
-import { EventEmitter } from 'events'
+import { CallContext, Parser, Serializer, ServerRegistry } from './ServerRegistry'
+import EventEmitter from 'eventemitter3'
 import { DeferredState } from '@protobuf-ts/runtime-rpc'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Logger } from '@streamr/utils'
@@ -24,8 +23,8 @@ export enum StatusCode {
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
-export enum RpcCommunicatorEvent {
-    OUTGOING_MESSAGE = 'outgoing-message',
+interface RpcCommunicatorEvent {
+    OUTGOING_MESSAGE: (message: Uint8Array, callContext?: CallContext) => void
 }
 
 export interface RpcCommunicatorConfig {
@@ -34,7 +33,6 @@ export interface RpcCommunicatorConfig {
 
 interface IRpcIo {
     handleIncomingMessage(message: Uint8Array, callContext?: CallContext): Promise<void> 
-    on(event: RpcCommunicatorEvent.OUTGOING_MESSAGE, listener: (message: Uint8Array, callContext?: CallContext) => void): this
 }
 
 interface OngoingRequest {
@@ -44,7 +42,7 @@ interface OngoingRequest {
 
 const logger = new Logger(module)
 
-export class RpcCommunicator extends EventEmitter implements IRpcIo {
+export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvent> implements IRpcIo {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
@@ -59,14 +57,14 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
         this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
         
-        this.rpcClientTransport.on(DhtTransportClientEvent.RPC_REQUEST, (
-            deferredPromises: ResultParts | undefined,
+        this.rpcClientTransport.on('RPC_REQUEST', (
             rpcMessage: RpcMessage,
-            options: ProtoRpcOptions
+            options: ProtoRpcOptions,
+            deferredPromises: ResultParts | undefined
         ) => {
             this.onOutgoingMessage(rpcMessage, deferredPromises, options as CallContext)
         })
-        this.rpcServerRegistry.on(ServerRegistryEvent.RPC_RESPONSE, (rpcMessage: RpcMessage) => {
+        this.rpcServerRegistry.on('RPC_RESPONSE', (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
     }
@@ -124,7 +122,7 @@ export class RpcCommunicator extends EventEmitter implements IRpcIo {
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
         
-        this.emit(RpcCommunicatorEvent.OUTGOING_MESSAGE, msg, callContext)
+        this.emit('OUTGOING_MESSAGE', msg, callContext)
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: CallContext): Promise<void> {

@@ -1,11 +1,12 @@
 import { UUID } from "../helpers/UUID"
 
-export enum Event {
-    DATA = 'streamr:dht:connection:data',
-    CONNECTED = 'streamr:dht:connection:connected',
-    DISCONNECTED = 'streamr:dht:connection:disconnected',
-    ERROR = 'streamr:dht:connection:error'
+export interface ConnectionEvent {
+    DATA: (bytes: Uint8Array) => void
+    CONNECTED: () => void
+    DISCONNECTED: (code?: number, reason?: string) => void 
+    ERROR: (name: string) => void
 }
+
 export enum ConnectionType {
     WEBSOCKET_SERVER = 'websocket-server',
     WEBSOCKET_CLIENT = 'websocket-client',
@@ -23,21 +24,21 @@ export class ConnectionID extends UUID {
 
 export interface IConnection {
     
-    on(event: Event.DATA, listener: (bytes: Uint8Array) => void): this
-    on(event: Event.ERROR, listener: (name: string) => void): this
-    on(event: Event.CONNECTED, listener: () => void): this
-    on(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
+    on(event: 'DATA', listener: (bytes: Uint8Array) => void): this
+    on(event: 'ERROR', listener: (name: string) => void): this
+    on(event: 'CONNECTED', listener: () => void): this
+    on(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): this
     
-    once(event: Event.DATA, listener: (bytes: Uint8Array) => void): this
-    once(event: Event.ERROR, listener: (name: string) => void): this
-    once(event: Event.CONNECTED, listener: () => void): this
-    once(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): this
+    once(event: 'DATA', listener: (bytes: Uint8Array) => void): this
+    once(event: 'ERROR', listener: (name: string) => void): this
+    once(event: 'CONNECTED', listener: () => void): this
+    once(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): this
 
-    off(event: Event.DATA, listener: (bytes: Uint8Array) => void): void
-    off(event: Event.ERROR, listener: (name: string) => void): void
-    off(event: Event.CONNECTED, listener: () => void): void
-    off(event: Event.DISCONNECTED, listener: (code: number, reason: string) => void): void
-
+    off(event: 'DATA', listener: (bytes: Uint8Array) => void): void
+    off(event: 'ERROR', listener: (name: string) => void): void
+    off(event: 'CONNECTED', listener: () => void): void
+    off(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): void
+    
     send(data: Uint8Array): void
     close(): void
 }

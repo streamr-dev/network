@@ -1,7 +1,6 @@
 import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
-import { waitForEvent } from '@streamr/utils'
-import { Event as ConnectionEvent } from '../../src/connection/IConnection'
+import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
 import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -174,7 +173,7 @@ describe('ConnectionManager', () => {
         await promise
         await Promise.all([
             // @ts-expect-error private
-            waitForEvent(connectionManager2.getConnection(peerDescriptor!).implementation as ClientWebSocket, ConnectionEvent.DISCONNECTED),
+            waitForEvent3(connectionManager2.getConnection(peerDescriptor!).implementation as ClientWebSocket, 'DISCONNECTED'),
             connectionManager1.disconnect(peerDescriptor2!, undefined, 100)
         ])
         await connectionManager1.stop()

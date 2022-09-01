@@ -77,10 +77,10 @@ const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClie
   but here we will simulate the connection using method calls.
 
 ```typescript
-communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
     communicator2.handleIncomingMessage(msgBody)
 })
-communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
     communicator1.handleIncomingMessage(msgBody)
 })
 ```

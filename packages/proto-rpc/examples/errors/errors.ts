@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcCommunicator, RpcCommunicatorEvent, CallContext, toProtoRpcClient, RpcError } from '@streamr/proto-rpc'
+import { RpcCommunicator, CallContext, toProtoRpcClient, RpcError } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/ErrorRpc'
 import { IErrorRpc } from './proto/ErrorRpc.server'
 import { ErrorRpcClient } from './proto/ErrorRpc.client'
@@ -35,10 +35,10 @@ const run = async () => {
     const helloClient = toProtoRpcClient(new ErrorRpcClient(communicator2.getRpcClientTransport()))
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
-    communicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+    communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator2.handleIncomingMessage(msgBody)
     })
-    communicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+    communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
         communicator1.handleIncomingMessage(msgBody)
     })
 
