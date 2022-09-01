@@ -101,8 +101,8 @@ export class NetworkNode extends Node {
         await this.trackerManager.sendUnicastMessage(streamMessage, this.peerInfo.peerId, recipient)
     }
 
-    addUnicastMessageListener(listener: (streamMessage: StreamMessage) => void): void {
-        const wrappedListener = (from: UnicastMessage) => listener(from.payload)
+    addUnicastMessageListener(listener: (streamMessage: StreamMessage, sender: NodeId) => void): void {
+        const wrappedListener = (from: UnicastMessage) => listener(from.payload, from.senderNodeId)
         this.trackerManager.nodeToTracker.on(NodeToTrackerEvent.UNICAST_MESSAGE_RECEIVED, wrappedListener)
     }
 
@@ -110,8 +110,8 @@ export class NetworkNode extends Node {
         await this.trackerManager.sendMulticastMessage(streamMessage, this.peerInfo.peerId, recipient)
     }
 
-    addMulticastMessageListener(listener: (streamMessage: StreamMessage) => void): void {
-        const wrappedListener = (from: MulticastMessage) => listener(from.payload)
+    addMulticastMessageListener(listener: (streamMessage: StreamMessage, sender: NodeId) => void): void {
+        const wrappedListener = (from: MulticastMessage) => listener(from.payload, from.senderNodeId)
         this.trackerManager.nodeToTracker.on(NodeToTrackerEvent.MULTICAST_MESSAGE_RECEIVED, wrappedListener)
     }
 }
