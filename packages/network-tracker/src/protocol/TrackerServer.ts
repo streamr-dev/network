@@ -7,7 +7,8 @@ import {
     StreamPartID,
     StreamPartIDUtils,
     TrackerMessage,
-    TrackerMessageType
+    TrackerMessageType,
+    UnicastMessage
 } from 'streamr-client-protocol'
 import {
     decode,
@@ -26,18 +27,24 @@ export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
     NODE_DISCONNECTED = 'streamr:tracker:node-disconnected',
     NODE_STATUS_RECEIVED = 'streamr:tracker:peer-status',
-    RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received'
+    RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received',
+    UNICAST_MESSAGE_RECEIVED = 'streamr:tracker:unicast-message-received',
+    MULTICAST_MESSAGE_RECEIVED = 'streamr:tracker:multicast-message-received'
 }
 
 const eventPerType: Record<number, string> = {}
 eventPerType[TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
 eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
+eventPerType[TrackerMessage.TYPES.UnicastMessage] = Event.UNICAST_MESSAGE_RECEIVED
+eventPerType[TrackerMessage.TYPES.MulticastMessage] = Event.MULTICAST_MESSAGE_RECEIVED
 
 export interface NodeToTracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: StatusMessage, nodeId: NodeId) => void): this
     on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, nodeId: NodeId) => void): this
+    on(event: Event.UNICAST_MESSAGE_RECEIVED, listener: (msg: UnicastMessage) => void): this
+    on(event: Event.MULTICAST_MESSAGE_RECEIVED, listener: (msg: UnicastMessage) => void): this
 }
 
 export class TrackerServer extends EventEmitter {

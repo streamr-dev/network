@@ -6,7 +6,10 @@ import {
     RelayMessage,
     RelayMessageSubType,
     StatusMessage,
-    TrackerMessage
+    StreamMessage,
+    TrackerMessage,
+    UnicastMessage,
+    MulticastMessage
 } from 'streamr-client-protocol'
 import { Logger } from "@streamr/utils"
 import { decode } from './utils'
@@ -16,6 +19,7 @@ import { NameDirectory } from '../NameDirectory'
 import { DisconnectionReason, Event as WsEndpointEvent } from "../connection/ws/AbstractWsEndpoint"
 import { AbstractClientWsEndpoint } from "../connection/ws/AbstractClientWsEndpoint"
 import { AbstractWsConnection } from "../connection/ws/AbstractWsConnection"
+import { UserId } from '../logic/UserId'
 
 export enum Event {
     CONNECTED_TO_TRACKER = 'streamr:tracker-node:send-status',
@@ -23,12 +27,16 @@ export enum Event {
     TRACKER_INSTRUCTION_RECEIVED = 'streamr:tracker-node:tracker-instruction-received',
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker-node:relay-message-received',
     RTC_ERROR_RECEIVED = 'streamr:tracker-node:rtc-error-received',
+    UNICAST_MESSAGE_RECEIVED = 'streamr:tracker-node:unicast-message-received',
+    MULTICAST_MESSAGE_RECEIVED = 'streamr:tracker-node:multicast-message-received'
 }
 
 const eventPerType: Record<number, string> = {}
 eventPerType[TrackerMessage.TYPES.InstructionMessage] = Event.TRACKER_INSTRUCTION_RECEIVED
 eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 eventPerType[TrackerMessage.TYPES.ErrorMessage] = Event.RTC_ERROR_RECEIVED
+eventPerType[TrackerMessage.TYPES.UnicastMessage] = Event.UNICAST_MESSAGE_RECEIVED
+eventPerType[TrackerMessage.TYPES.MulticastMessage] = Event.MULTICAST_MESSAGE_RECEIVED
 
 export interface NodeToTracker {
     on(event: Event.CONNECTED_TO_TRACKER, listener: (trackerId: TrackerId) => void): this
@@ -36,6 +44,8 @@ export interface NodeToTracker {
     on(event: Event.TRACKER_INSTRUCTION_RECEIVED, listener: (msg: InstructionMessage, trackerId: TrackerId) => void): this
     on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, trackerId: TrackerId) => void): this
     on(event: Event.RTC_ERROR_RECEIVED, listener: (msg: ErrorMessage, trackerId: TrackerId) => void): this
+    on(event: Event.UNICAST_MESSAGE_RECEIVED, listener: (msg: UnicastMessage, trackerId: TrackerId) => void): this
+    on(event: Event.MULTICAST_MESSAGE_RECEIVED, listener: (msg: MulticastMessage, trackerId: TrackerId) => void): this
 }
 
 export type UUID = string
@@ -135,6 +145,28 @@ export class NodeToTracker extends EventEmitter {
             targetNode,
             subType: RelayMessageSubType.RTC_CONNECT,
             data: {}
+        }))
+        return requestId
+    }
+
+    async sendUnicastMessage(trackerId: TrackerId, streamMessage: StreamMessage, sender: NodeId, recipient: NodeId): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new UnicastMessage({
+            requestId,
+            senderNodeId: sender,
+            recipientNodeId: recipient,
+            payload: streamMessage
+        }))
+        return requestId
+    }
+
+    async sendMulticastMessage(trackerId: TrackerId, streamMessage: StreamMessage, sender: NodeId, recipient: UserId): Promise<UUID> {
+        const requestId = uuidv4()
+        await this.send(trackerId, new MulticastMessage({
+            requestId,
+            senderNodeId: sender,
+            recipientUserId: recipient,
+            payload: streamMessage
         }))
         return requestId
     }

@@ -91,6 +91,10 @@ export class OverlayTopology {
         return this.nodes
     }
 
+    getNodeIds(predicate: (nodeId: NodeId) => boolean): NodeId[] {
+        return Object.keys(this.nodes).filter(predicate)
+    }
+
     state(): TopologyState {
         const objects = Object.entries(this.nodes).map(([nodeId, neighbors]) => {
             return {

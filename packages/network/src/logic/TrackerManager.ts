@@ -1,6 +1,7 @@
 import {
     createTrackerRegistry, InstructionMessage,
     SmartContractRecord,
+    StreamMessage,
     StreamPartID,
     TrackerRegistry
 } from 'streamr-client-protocol'
@@ -13,6 +14,7 @@ import { Logger } from "@streamr/utils"
 import { InstructionThrottler } from './InstructionThrottler'
 import { InstructionRetryManager } from './InstructionRetryManager'
 import { NameDirectory } from '../NameDirectory'
+import { UserId } from '../logic/UserId'
 
 const logger = new Logger(module)
 
@@ -49,7 +51,7 @@ export class TrackerManager {
     private readonly rttUpdateTimeoutsOnTrackers: Record<TrackerId, NodeJS.Timeout> = {}
     private readonly trackerRegistry: TrackerRegistry<SmartContractRecord>
     private readonly trackerConnector: TrackerConnector
-    private readonly nodeToTracker: NodeToTracker
+    public readonly nodeToTracker: NodeToTracker // TODO private?
     private readonly streamPartManager: StreamPartManager
     private readonly rttUpdateInterval: number
     private readonly instructionThrottler: InstructionThrottler
@@ -249,5 +251,19 @@ export class TrackerManager {
 
     getTrackerAddress(streamPartId: StreamPartID): TrackerId {
         return this.trackerRegistry.getTracker(streamPartId).ws
+    }
+
+    async sendUnicastMessage(streamMessage: StreamMessage, sender: NodeId, recipient: NodeId): Promise<void> {
+        const tracker = this.trackerRegistry.getTracker(streamMessage.getStreamPartID())
+        await this.trackerConnector.createSignallingOnlyTrackerConnection(tracker.id, tracker.ws)
+        await this.nodeToTracker.sendUnicastMessage(tracker.id, streamMessage, sender, recipient)
+        this.trackerConnector.removeSignallingOnlyTrackerConnection(tracker.id)
+    }
+
+    async sendMulticastMessage(streamMessage: StreamMessage, sender: NodeId, recipient: UserId): Promise<void> {
+        const tracker = this.trackerRegistry.getTracker(streamMessage.getStreamPartID())
+        await this.trackerConnector.createSignallingOnlyTrackerConnection(tracker.id, tracker.ws)
+        await this.nodeToTracker.sendMulticastMessage(tracker.id, streamMessage, sender, recipient)
+        this.trackerConnector.removeSignallingOnlyTrackerConnection(tracker.id)
     }
 }

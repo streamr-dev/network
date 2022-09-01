@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { MulticastMessage, SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID, UnicastMessage } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
@@ -20,7 +20,8 @@ import {
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
-    RateMetric
+    RateMetric,
+    parseUserIdFromNodeId
 } from 'streamr-network'
 import { Logger } from '@streamr/utils'
 import { InstructionSender } from './InstructionSender'
@@ -161,6 +162,26 @@ export class Tracker extends EventEmitter {
             }
         })
         attachMessageRelaying(this.trackerServer)
+        this.trackerServer.on(TrackerServerEvent.UNICAST_MESSAGE_RECEIVED, async (message: UnicastMessage) => {
+            try {
+                await this.trackerServer.send(message.recipientNodeId, message)
+            } catch (e) {
+                this.logger.warn('Unable to send unicast message to %s, reason: %s', message.recipientNodeId, e)
+            }
+        })
+        this.trackerServer.on(TrackerServerEvent.MULTICAST_MESSAGE_RECEIVED, async (message: MulticastMessage) => {
+            const overlay = this.overlayPerStreamPart[message.payload.getStreamPartID()]
+            const recipientNodeIds = overlay.getNodeIds((nodeId: NodeId) => {
+                return parseUserIdFromNodeId(nodeId) === message.recipientUserId 
+            })
+            for (const recipientNodeId of recipientNodeIds) {
+                try {
+                    await this.trackerServer.send(recipientNodeId, message)
+                } catch (e) {
+                    this.logger.warn('Unable to send multicast message to %s, reason: %s', recipientNodeId, e)
+                }
+            }
+        })
 
         this.metrics = {
             nodeDisconnected: new RateMetric(),
