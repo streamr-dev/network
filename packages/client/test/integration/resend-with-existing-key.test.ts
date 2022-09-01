@@ -52,7 +52,10 @@ describe('resend with existing key', () => {
 
     const assertDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
         const messageStream = await resendRange(fromTimestamp, toTimestamp)
+        const onError = jest.fn()
+        messageStream.onError.listen(onError)
         const messages = await collect(messageStream)
+        expect(onError).not.toBeCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
     }
@@ -102,6 +105,10 @@ describe('resend with existing key', () => {
         for (const msg of allMessages) {
             storeMessage(msg.timestamp, msg.groupKey, msg.nextGroupKey, storageNode)
         }
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('no keys available', () => {

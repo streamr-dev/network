@@ -39,6 +39,10 @@ describe('resend and subscribe', () => {
         subscriber.addStreamToStorageNode(stream.id, storageNode.id)
     })
 
+    afterAll(async () => {
+        await environment.destroy()
+    })
+
     it('happy path', async () => {
         const groupKey = GroupKey.generate()
         const publisher = environment.createClient({
@@ -86,8 +90,8 @@ describe('resend and subscribe', () => {
             mockId: 2
         })
         expect(receivedMessage2!.groupKeyId).toBe(groupKey.id)
-        const groupKeyRequests = environment.getNetwork().getSentMessages().filter((m) => {
-            return m.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+        const groupKeyRequests = environment.getNetwork().getSentMessages({
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
     })

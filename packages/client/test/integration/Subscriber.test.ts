@@ -30,6 +30,10 @@ describe('Subscriber', () => {
         stream = await subscriber.createStream('/path')
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     it('without encryption', async () => {
         await stream.grantPermissions({
             permissions: [StreamPermission.PUBLISH],

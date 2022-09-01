@@ -1,7 +1,7 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import { pull } from 'lodash'
 import { ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
-import { MetricsContext } from 'streamr-network'
+import { MetricsContext, NodeId } from 'streamr-network'
 import { NetworkNodeOptions } from 'streamr-network'
 import { NetworkNodeFactory, NetworkNodeStub } from '../../../src/NetworkNodeFacade'
 import { FakeNetwork } from './FakeNetwork'
@@ -10,7 +10,7 @@ type MessageListener = (msg: StreamMessage) => void
 
 export class FakeNetworkNode implements NetworkNodeStub {
 
-    public readonly id: string
+    public readonly id: NodeId
     readonly subscriptions: Set<StreamPartID> = new Set()
     readonly messageListeners: MessageListener[] = []
     private readonly network: FakeNetwork
@@ -53,7 +53,7 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     publish(msg: StreamMessage): void {
-        this.network.sendMessage(msg)
+        this.network.send(msg, this.id, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
     // eslint-disable-next-line class-methods-use-this

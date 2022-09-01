@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import {
     KeyExchangeStreamIDUtils,
     StreamMessage,
+    StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
@@ -9,10 +10,8 @@ import { Wallet } from 'ethers'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
-import { nextValue } from '../../src/utils/iterators'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { 
-    addSubscriber,
     createMockMessage,
     createRelativeTestStreamId,
     getGroupKeyStore,
@@ -26,7 +25,7 @@ describe('SubscriberKeyExchange', () => {
     let publisherWallet: Wallet
     let subscriberWallet: Wallet
     let subscriber: StreamrClient
-    let stream: Stream
+    let streamPartId: StreamPartID
     let environment: FakeEnvironment
 
     const createStream = async (): Promise<Stream> => {
@@ -40,7 +39,7 @@ describe('SubscriberKeyExchange', () => {
 
     const triggerGroupKeyRequest = (key: GroupKey, publisherNode: NetworkNodeStub): void => {
         publisherNode.publish(createMockMessage({
-            stream,
+            streamPartId,
             publisher: publisherWallet,
             encryptionKey: key
         }))
@@ -62,7 +61,7 @@ describe('SubscriberKeyExchange', () => {
         })
         expect(request!.getParsedContent()).toEqual([
             expect.any(String),
-            stream.id,
+            StreamPartIDUtils.getStreamID(streamPartId),
             expect.any(String),
             expectedRequestedKeyIds
         ])
@@ -77,7 +76,12 @@ describe('SubscriberKeyExchange', () => {
                 privateKey: subscriberWallet.privateKey
             }
         })
-        stream = await createStream()
+        const stream = await createStream()
+        streamPartId = stream.getStreamParts()[0]
+    })
+
+    afterEach(async () => {
+        await environment.destroy()
     })
 
     describe('requests a group key', () => {
@@ -94,22 +98,23 @@ describe('SubscriberKeyExchange', () => {
                     privateKey: publisherWallet.privateKey
                 },
                 encryptionKeys: {
-                    [stream.id]: {
+                    [StreamPartIDUtils.getStreamID(streamPartId)]: {
                         [groupKey.id]: groupKey
                     }
                 }
             })
             await startPublisherKeyExchangeSubscription(publisher)
             const publisherNode = await publisher.getNode()
-            const groupKeyRequests = addSubscriber(publisherNode, KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address))
-            await subscriber.subscribe(stream.id, () => {})
+            await subscriber.subscribe(streamPartId, () => {})
 
             triggerGroupKeyRequest(groupKey, publisherNode)
             
-            const request = await nextValue(groupKeyRequests)
-            assertGroupKeyRequest(request!, [groupKey.id])
-            const keyPersistence = getGroupKeyStore(stream.id, subscriberWallet.address)
+            const request = await environment.getNetwork().waitForSentMessage({
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            })
+            await assertGroupKeyRequest(request!, [groupKey.id])
+            const keyPersistence = getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), subscriberWallet.address)
             await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
-        })
+        }) 
     })
 })
