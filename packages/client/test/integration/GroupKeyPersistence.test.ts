@@ -132,16 +132,10 @@ describe('Group Key Persistence', () => {
                 stream: stream.id,
             })
 
-            // this will be called if group key request is sent
-            // @ts-expect-error private
-            const publisherKeyExchange = publisher.container.resolve(PublisherKeyExchange)
-            const onKeyExchangeMessage = jest.spyOn(publisherKeyExchange, 'onKeyExchangeMessage' as any)
-
             // this should set up group key
             const published = await publishTestMessages(1)
 
             const received = await sub.collect(1)
-            expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
             await subscriber.destroy()
 
             const subscriber2 = environment.createClient({
@@ -161,7 +155,10 @@ describe('Group Key Persistence', () => {
                 published.push(...await publishTestMessages(3)),
             ])
 
-            expect(onKeyExchangeMessage).toHaveBeenCalledTimes(1)
+            const groupKeyRequests = environment.getNetwork().getSentMessages({
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            })
+            expect(groupKeyRequests.length).toBe(1)
             expect(received.map((m) => m.signature)).toEqual(published.slice(0, 1).map((m) => m.signature))
         })
 
