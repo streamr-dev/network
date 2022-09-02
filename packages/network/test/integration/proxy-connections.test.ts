@@ -307,36 +307,41 @@ describe('Proxy connection tests', () => {
         ])
     }, 20100)
 
-    it('will receive messages after lost connectivity', async () => {
-        let receivedMessages = 0
-        contactNode.on(NodeEvent.MESSAGE_RECEIVED, (_message) => {
-            receivedMessages += 1
+    describe('propagation after reconnect', () => {
+
+        it('will receive messages after lost connectivity', async () => {
+            let receivedMessages = 0
+            contactNode.on(NodeEvent.MESSAGE_RECEIVED, (_message) => {
+                receivedMessages += 1
+            })
+            await Promise.all([
+                waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
+                contactNode2.unsubscribe(defaultStreamPartId)
+            ])
+            await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
+
+            // @ts-expect-error private
+            contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
+
+            await waitForEvent(onewayNode, NodeEvent.NODE_DISCONNECTED)
+            await Promise.all([
+                waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED),
+                onewayNode.publish(new StreamMessage({
+                    messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                    content: {
+                        hello: 'world 1'
+                    },
+                })),
+                onewayNode.publish(new StreamMessage({
+                    messageId: new MessageID(toStreamID('stream-0'), 0, 120, 1, 'publisher', 'session'),
+                    content: {
+                        hello: 'world 2'
+                    },
+                }))
+            ])
+            await waitForCondition(() => receivedMessages === 2, 10000)
         })
-        await Promise.all([
-            waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
-            contactNode2.unsubscribe(defaultStreamPartId)
-        ])
-        await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
 
-        // @ts-expect-error private
-        contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
-
-        await waitForEvent(onewayNode, NodeEvent.NODE_DISCONNECTED)
-        await Promise.all([
-            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED),
-            onewayNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
-                content: {
-                    hello: 'world 1'
-                },
-            })),
-            onewayNode.publish(new StreamMessage({
-                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 1, 'publisher', 'session'),
-                content: {
-                    hello: 'world 2'
-                },
-            }))
-        ])
-        await waitForCondition(() => receivedMessages === 2, 10000)
     })
+
 })
