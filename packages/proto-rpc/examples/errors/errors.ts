@@ -3,11 +3,11 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { RpcCommunicator, CallContext, toProtoRpcClient, RpcError } from '@streamr/proto-rpc'
 import { HelloRequest, HelloResponse } from './proto/ErrorRpc'
-import { IErrorRpc } from './proto/ErrorRpc.server'
-import { ErrorRpcClient } from './proto/ErrorRpc.client'
+import { IErrorRpcService } from './proto/ErrorRpc.server'
+import { ErrorRpcServiceClient } from './proto/ErrorRpc.client'
 
 // Rpc service
-class ErrorService implements IErrorRpc {
+class ErrorService implements IErrorRpcService {
     async timeout(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return new Promise((resolve, _reject) => {
             setTimeout(() => {
@@ -32,7 +32,7 @@ const run = async () => {
 
     // Setup client
     const communicator2 = new RpcCommunicator()
-    const helloClient = toProtoRpcClient(new ErrorRpcClient(communicator2.getRpcClientTransport()))
+    const helloClient = toProtoRpcClient(new ErrorRpcServiceClient(communicator2.getRpcClientTransport()))
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
     communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {

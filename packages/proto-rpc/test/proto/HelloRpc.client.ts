@@ -3,28 +3,28 @@
 // tslint:disable
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
-import { HelloRpc } from "./HelloRpc";
+import { HelloRpcService } from "./HelloRpc";
 import { stackIntercept } from "@protobuf-ts/runtime-rpc";
 import type { HelloResponse } from "./HelloRpc";
 import type { HelloRequest } from "./HelloRpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service HelloRpc
+ * @generated from protobuf service HelloRpcService
  */
-export interface IHelloRpcClient {
+export interface IHelloRpcServiceClient {
     /**
      * @generated from protobuf rpc: sayHello(HelloRequest) returns (HelloResponse);
      */
     sayHello(input: HelloRequest, options?: RpcOptions): UnaryCall<HelloRequest, HelloResponse>;
 }
 /**
- * @generated from protobuf service HelloRpc
+ * @generated from protobuf service HelloRpcService
  */
-export class HelloRpcClient implements IHelloRpcClient, ServiceInfo {
-    typeName = HelloRpc.typeName;
-    methods = HelloRpc.methods;
-    options = HelloRpc.options;
+export class HelloRpcServiceClient implements IHelloRpcServiceClient, ServiceInfo {
+    typeName = HelloRpcService.typeName;
+    methods = HelloRpcService.methods;
+    options = HelloRpcService.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

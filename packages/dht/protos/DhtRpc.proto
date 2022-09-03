@@ -3,17 +3,17 @@ option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
 
-service DhtRpc {
+service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
-service WebSocketConnector {
+service WebSocketConnectorService {
   rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
 }
 
-service WebRtcConnector {
+service WebRtcConnectorService {
   rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
   rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
   rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);

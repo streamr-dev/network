@@ -12,14 +12,14 @@ import { ITransport } from '../../transport/ITransport'
 import { RoutingRpcCommunicator } from '../../transport/RoutingRpcCommunicator'
 import { NodeWebRtcConnection } from './NodeWebRtcConnection'
 import { RemoteWebrtcConnector } from './RemoteWebrtcConnector'
-import { WebRtcConnectorClient } from '../../proto/DhtRpc.client'
+import { WebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import { DescriptionType } from 'node-datachannel'
 import crypto from "crypto"
 import { ManagedWebRtcConnection } from '../ManagedWebRtcConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
-import { IWebRtcConnector } from "../../proto/DhtRpc.server"
+import { IWebRtcConnectorService } from "../../proto/DhtRpc.server"
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { ManagedConnection } from '../ManagedConnection'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
@@ -31,7 +31,7 @@ export interface WebRtcConnectorConfig {
     protocolVersion: string
 }
 
-export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnector {
+export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
     private static WEBRTC_CONNECTOR_SERVICE_ID = 'webrtc_connector'
     private ownPeerDescriptor: PeerDescriptor | null = null
     private rpcCommunicator: RoutingRpcCommunicator
@@ -166,7 +166,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         const offering = this.isOffering(targetPeerDescriptor)
         const remoteConnector = new RemoteWebrtcConnector(
             targetPeerDescriptor,
-            toProtoRpcClient(new WebRtcConnectorClient(this.rpcCommunicator.getRpcClientTransport()))
+            toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         if (offering) {
             connection.once('LOCAL_DESCRIPTION', (description: string, _type: string) => {

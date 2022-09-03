@@ -1,5 +1,5 @@
 import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebSocketConnectorClient } from '../../src/proto/DhtRpc.client'
+import { WebSocketConnectorServiceClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import {
     PeerDescriptor,
@@ -12,8 +12,8 @@ import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 describe('WebSocketConnectorRpc', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client1: ProtoRpcClient<WebSocketConnectorClient>
-    let client2: ProtoRpcClient<WebSocketConnectorClient>
+    let client1: ProtoRpcClient<WebSocketConnectorServiceClient>
+    let client2: ProtoRpcClient<WebSocketConnectorServiceClient>
 
     const peerDescriptor1: PeerDescriptor = {
         peerId: generateId('peer1'),
@@ -50,8 +50,8 @@ describe('WebSocketConnectorRpc', () => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client1 = toProtoRpcClient(new WebSocketConnectorClient(rpcCommunicator1.getRpcClientTransport()))
-        client2 = toProtoRpcClient(new WebSocketConnectorClient(rpcCommunicator2.getRpcClientTransport()))
+        client1 = toProtoRpcClient(new WebSocketConnectorServiceClient(rpcCommunicator1.getRpcClientTransport()))
+        client2 = toProtoRpcClient(new WebSocketConnectorServiceClient(rpcCommunicator2.getRpcClientTransport()))
     })
 
     afterEach(async () => {
