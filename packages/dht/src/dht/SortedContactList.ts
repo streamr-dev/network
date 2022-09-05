@@ -1,16 +1,17 @@
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { DhtPeer } from './DhtPeer'
 
-class ContactState {
+class ContactState<Contact> {
     public contacted = false
     public active = false
-    constructor(public contact: DhtPeer) {
+    constructor(public contact: Contact) {
     }
 }
 
-export class SortedContactList {
-    private contactsById: Map<PeerIDKey, ContactState> = new Map()
+interface IContact { peerId: PeerID }
+
+export class SortedContactList<Contact extends IContact> {
+    private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number) {
@@ -26,7 +27,7 @@ export class SortedContactList {
         return this.contactIds
     }
 
-    public addContact(contact: DhtPeer): void {
+    public addContact(contact: Contact): void {
         if (this.ownId.equals(contact.peerId)) {
             return
         }
@@ -46,7 +47,7 @@ export class SortedContactList {
         }  
     }
 
-    public addContacts(contacts: DhtPeer[]): void {
+    public addContacts(contacts: Contact[]): void {
         contacts.forEach( (contact) => this.addContact(contact))
     }
 
@@ -62,8 +63,8 @@ export class SortedContactList {
         }
     }
 
-    public getUncontactedContacts(num: number): DhtPeer[] {
-        const ret: DhtPeer[] = []
+    public getUncontactedContacts(num: number): Contact[] {
+        const ret: Contact[] = []
         for (const contactId of this.contactIds) {
             if (this.contactsById.has(contactId.toMapKey()) && !this.contactsById.get(contactId.toMapKey())!.contacted) {
                 ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
@@ -75,8 +76,8 @@ export class SortedContactList {
         return ret
     }
 
-    public getActiveContacts(): DhtPeer[] {
-        const ret: DhtPeer[] = []
+    public getActiveContacts(): Contact[] {
+        const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             if (this.isActive(contactId)) {
                 ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
@@ -99,7 +100,7 @@ export class SortedContactList {
         return this.contactIds.length
     }
 
-    public getContact(id: PeerID): ContactState {
+    public getContact(id: PeerID): ContactState<Contact> {
         return this.contactsById.get(id.toMapKey())!
     }
 
@@ -121,7 +122,7 @@ export class SortedContactList {
         return this.contactsById.has(id.toMapKey()) ? this.contactsById.get(id.toMapKey())!.active : false
     }
 
-    public getAllContacts(): DhtPeer[] {
+    public getAllContacts(): Contact[] {
         return [...this.contactsById.values()].map((contact) => contact.contact)
     }
 
