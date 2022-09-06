@@ -3,7 +3,8 @@ import { DescriptionType } from 'node-datachannel'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { NodeWebRtcConnection } from '../../src/connection/webrtc/NodeWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'
-import { runAndWaitForEvents, wait, waitForCondition } from 'streamr-test-utils'
+import { runAndWaitForEvents, waitForCondition } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 /**
  * Test that Connections can be established and message sent between them successfully. Tracker
@@ -48,6 +49,7 @@ describe('Connection', () => {
             selfId: 'one',
             targetPeerId: 'two',
             routerId: 'routerId',
+            pingInterval: 5000,
             stunUrls: [],
             messageQueue: messageQueueOne,
             deferredConnectionAttempt: deferredConnectionAttemptOne
@@ -59,6 +61,7 @@ describe('Connection', () => {
             selfId: 'two',
             targetPeerId: 'one',
             routerId: 'routerId',
+            pingInterval: 5000,
             stunUrls: [],
             messageQueue: messageQueueTwo,
             deferredConnectionAttempt: deferredConnectionAttemptTwo

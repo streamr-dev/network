@@ -1,8 +1,8 @@
 import WebSocket from 'ws'
-import { waitForEvent } from 'streamr-test-utils'
+import { Queue } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { Message } from '../../../../src/helpers/PayloadFormat'
 import { createMessagingPluginTest } from '../../createMessagingPluginTest'
-import { Queue } from '../../../utils'
 
 jest.setTimeout(30000)
 
@@ -11,7 +11,7 @@ const TRACKER_PORT = 12402
 
 createMessagingPluginTest('websocket', 
     {
-        createClient: async (action: 'publish'|'subscribe', streamId: string, apiKey: string): Promise<WebSocket> => {
+        createClient: async (action: 'publish' | 'subscribe', streamId: string, apiKey: string): Promise<WebSocket> => {
             const client = new WebSocket(`ws://localhost:${WEBSOCKET_PORT}/streams/${encodeURIComponent(streamId)}/${action}?apiKey=${apiKey}`)
             await waitForEvent(client, 'open')
             return client

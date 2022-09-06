@@ -1,7 +1,7 @@
 import { ReadyState, AbstractWsConnection } from './AbstractWsConnection'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import WebSocket from 'ws'
 import util from 'util'
 import stream from 'stream'

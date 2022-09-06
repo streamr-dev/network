@@ -1,7 +1,8 @@
 import WebSocket from 'ws'
 import qs from 'qs'
 import StreamrClient from 'streamr-client'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 import { WebsocketServer } from '../../../../src/plugins/websocket/WebsocketServer'
 import { PlainPayloadFormat } from '../../../../src/helpers/PayloadFormat'
 
@@ -137,15 +138,6 @@ describe('WebsocketServer', () => {
                 wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM, queryParams)
                 await assertConnectionError(400)
             })
-        })
-
-        it('invalid json', async () => {
-            wsClient = createTestClient(PATH_PUBLISH_MOCK_STREAM)
-            await waitForEvent(wsClient, 'open')
-            wsClient.send('{ "x": invalid-payload } ')
-            const closeEvent = await waitForEvent(wsClient, 'close')
-            expect(closeEvent[0]).toBeTruthy()
-            expect(closeEvent[1]).toBe('Unable to publish: Payload is not a JSON string: Unexpected token i in JSON at position 7')
         })
 
     })

@@ -12,7 +12,7 @@ interface Options {
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-type GroupKeyResponseSerialized = [string, string,EncryptedGroupKeySerialized[]]
+export type GroupKeyResponseSerialized = [string, string, EncryptedGroupKeySerialized[]]
 
 export default class GroupKeyResponse extends GroupKeyMessage {
 
@@ -42,7 +42,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         return [this.requestId, this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey) => it.toArray())]
     }
 
-    static fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
+    static override fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
         const [requestId, streamId, encryptedGroupKeys] = arr
         return new GroupKeyResponse({
             requestId,

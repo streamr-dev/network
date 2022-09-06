@@ -3,13 +3,10 @@ import toArray from 'stream-to-array'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from "../../../utils"
 import { startCassandraStorage, Storage } from '../../../../src/plugins/storage/Storage'
-import { Protocol } from 'streamr-network'
-import { toStreamID } from 'streamr-client-protocol'
+import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
 jest.setTimeout(30000)
-
-const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const { TimeUuid } = cassandraTypes
 

@@ -1,9 +1,9 @@
-import { Status, NodeId } from 'streamr-network/dist/src/identifiers'
-import { runAndWaitForEvents, wait } from 'streamr-test-utils'
+import { runAndWaitForEvents } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { Tracker } from '../../src/logic/Tracker'
 import { startTracker } from '../../src/startTracker'
 
-import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint } from 'streamr-network'
+import { NodeToTracker, NodeToTrackerEvent, PeerInfo, NodeClientWsEndpoint, Status, NodeId } from 'streamr-network'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { getTopology } from '../../src/logic/trackerSummaryUtils'
 import { toStreamID } from 'streamr-client-protocol'

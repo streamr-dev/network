@@ -11,7 +11,7 @@ import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
 
-const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
+const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
 const BYE_KEY = '_bye'
 const LATEST_VERSION = 32
 
@@ -19,7 +19,6 @@ export enum StreamMessageType {
     MESSAGE = 27,
     GROUP_KEY_REQUEST = 28,
     GROUP_KEY_RESPONSE = 29,
-    GROUP_KEY_ANNOUNCE = 30,
     GROUP_KEY_ERROR_RESPONSE = 31
 }
 
@@ -29,7 +28,6 @@ export enum ContentType {
 
 export enum SignatureType {
     NONE = 0,
-    ETH_LEGACY = 1,
     ETH = 2
 }
 
@@ -39,7 +37,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-export type StreamMessageOptions<T> = {
+export interface StreamMessageOptions<T> {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: T | string
@@ -62,17 +60,10 @@ export interface ObjectType<T> {
     messageType: StreamMessageType
     contentType: ContentType
     encryptionType: EncryptionType
-    groupKeyId: string|null
-    content: string|T
-    signatureType: SignatureType;
-    signature: string|null
-}
-/**
- * Any object that contains a toStreamMessage interface.
- * e.g. GroupKeyMessage
- */
-export type StreamMessageContainer<T = unknown> = {
-    toStreamMessage: (messageId: MessageID, prevMsgRef: MessageRef | null) => StreamMessage<T>
+    groupKeyId: string | null
+    content: string | T
+    signatureType: SignatureType
+    signature: string | null
 }
 
 /**
@@ -87,7 +78,7 @@ export type StreamMessageUnsigned<T> = StreamMessage<T> & {
  * Signed StreamMessage.
  */
 export type StreamMessageSigned<T> = StreamMessage<T> & {
-    signatureType: SignatureType.ETH | SignatureType.ETH_LEGACY
+    signatureType: SignatureType.ETH
     signature: string
 }
 
@@ -330,12 +321,7 @@ export default class StreamMessage<T = unknown> {
             return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
                 + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
         }
-
-        if (signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY) {
-            // verification of messages signed by old clients
-            return `${this.getStreamId()}${this.getTimestamp()}${this.getPublisherId().toLowerCase()}${this.getSerializedContent()}`
-        }
-
+        
         throw new ValidationError(`Unrecognized signature type: ${signatureType}`)
     }
 
@@ -417,7 +403,7 @@ export default class StreamMessage<T = unknown> {
         return streamMessageVersion >= 31
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null}): void {
+    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }
@@ -453,11 +439,6 @@ export default class StreamMessage<T = unknown> {
 
     static isUnencrypted<T = unknown>(msg: StreamMessage<T>): msg is StreamMessageUnencrypted<T> {
         return !this.isEncrypted(msg)
-    }
-
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static isStreamMessageContainer<T = unknown>(content: any): content is StreamMessageContainer<T> {
-        return !!(content && typeof content === 'object' && 'toStreamMessage' in content && typeof content.toStreamMessage === 'function')
     }
 
     toObject(): ObjectType<T> {

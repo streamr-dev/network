@@ -1,20 +1,20 @@
 import _ from 'lodash'
 import { StreamrClient, Subscription } from 'streamr-client'
-import { StreamPartIDUtils } from 'streamr-client-protocol'
-import { Logger, Protocol } from 'streamr-network'
+import { StreamMessage, StreamPartIDUtils } from 'streamr-client-protocol'
+import { Logger } from '@streamr/utils'
 import { PayloadFormat } from '../../helpers/PayloadFormat'
 import { MqttServer, MqttServerListener } from './MqttServer'
 
 const logger = new Logger(module)
 
 interface StreamSubscription {
-    streamrClientSubscription: Subscription,
+    streamrClientSubscription: Subscription
     clientIds: string[]
 }
 
 type MessageChainKey = string
 
-const createMessageChainKey = (message: Protocol.StreamMessage<any>) => {
+const createMessageChainKey = (message: StreamMessage<any>) => {
     const DELIMITER = '-'
     const { messageId } = message
     return [messageId.streamId, messageId.streamPartition, messageId.publisherId, messageId.msgChainId].join(DELIMITER)
@@ -45,11 +45,15 @@ export class Bridge implements MqttServerListener {
             return
         }
         const { content, metadata } = message
-        const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
-            timestamp: metadata.timestamp,
-            msgChainId: clientId
-        })
-        this.publishMessageChains.add(createMessageChainKey(publishedMessage))
+        try {
+            const publishedMessage = await this.streamrClient.publish(this.getStreamId(topic), content, {
+                timestamp: metadata.timestamp,
+                msgChainId: clientId
+            })
+            this.publishMessageChains.add(createMessageChainKey(publishedMessage))
+        } catch (err: any) {
+            logger.warn('Unable to publish, reason: %s', err)
+        }
     }
 
     async onSubscribed(topic: string, clientId: string): Promise<void> {
@@ -57,7 +61,7 @@ export class Bridge implements MqttServerListener {
         const streamId = this.getStreamId(topic)
         const existingSubscription = this.getSubscription(streamId) 
         if (existingSubscription === undefined) {
-            const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: Protocol.StreamMessage) => {
+            const streamrClientSubscription = await this.streamrClient.subscribe(streamId, (content: any, metadata: StreamMessage) => {
                 if (!this.isSelfPublishedMessage(metadata)) {
                     const payload = this.payloadFormat.createPayload(content, metadata.messageId)
                     this.mqttServer.publish(topic, payload)    
@@ -92,7 +96,7 @@ export class Bridge implements MqttServerListener {
      * Here we simply check if the incoming message belongs to one of the publish chains. If it 
      * does, it must have been published by this Bridge. 
      */
-    private isSelfPublishedMessage(message: Protocol.StreamMessage<any>): boolean {
+    private isSelfPublishedMessage(message: StreamMessage<any>): boolean {
         const messageChainKey = createMessageChainKey(message)
         return this.publishMessageChains.has(messageChainKey)
     }
@@ -118,7 +122,7 @@ export class Bridge implements MqttServerListener {
         }
     }
 
-    private getSubscription(streamId: string): StreamSubscription|undefined {
+    private getSubscription(streamId: string): StreamSubscription | undefined {
         return this.subscriptions.find((s: StreamSubscription) => {
             // TODO take partition into consideration?
             return StreamPartIDUtils.getStreamID(s.streamrClientSubscription.streamPartId) === streamId

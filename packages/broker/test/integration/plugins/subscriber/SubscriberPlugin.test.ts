@@ -1,11 +1,11 @@
 import { Tracker } from '@streamr/network-tracker'
 import { createClient, startTestTracker } from '../../../utils'
-import { Wallet } from 'ethers'
 import { SubscriberPlugin } from '../../../../src/plugins/subscriber/SubscriberPlugin'
 import StreamrClient from 'streamr-client'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 
 const TRACKER_PORT = 12465
-const wallet = Wallet.createRandom()
+const wallet = fastWallet()
 
 const createMockPlugin = async (streamrClient: StreamrClient) => {
     const brokerConfig: any = {
@@ -62,7 +62,14 @@ describe('Subscriber Plugin', () => {
     })
 
     it('subscribes to the configured list of streams', async () => {
-        expect(await plugin.streamrClient.getSubscriptions('stream-0')).toBeArrayOfSize(2)
-        expect(await plugin.streamrClient.getSubscriptions('stream-1')).toBeArrayOfSize(1)
+        const nodeId = (await client.getNode()).getNodeId()
+        await waitForCondition(() => {
+            const overlays = tracker.getOverlayPerStreamPart() as any
+            return (overlays["stream-0#0"]?.nodes[nodeId] !== undefined)
+                && (overlays["stream-0#1"]?.nodes[nodeId] !== undefined)
+                && (overlays["stream-1#0"]?.nodes[nodeId] !== undefined)
+        })
+        // If waitForCondition succeeds we are okay
+        expect(true).toEqual(true)
     })
 })

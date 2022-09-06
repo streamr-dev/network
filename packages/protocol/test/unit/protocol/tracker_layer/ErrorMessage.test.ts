@@ -9,7 +9,7 @@ describe('ErrorMessage', () => {
         it('throws on null targetNode', () => {
             assert.throws(() => new ErrorMessage({
                 requestId: 'requestId',
-                errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+                errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
                 targetNode: null as any
             }), ValidationError)
         })
@@ -30,20 +30,20 @@ describe('ErrorMessage', () => {
         it('throws on null requestId', () => {
             assert.throws(() => new ErrorMessage({
                 requestId: null as any,
-                errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+                errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
                 targetNode: 'targetNode'
             }), ValidationError)
         })
         it('should create the latest version', () => {
             const msg = new ErrorMessage({
                 requestId: 'requestId',
-                errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+                errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
                 targetNode: 'targetNode'
             })
             assert(msg instanceof ErrorMessage)
             assert.strictEqual(msg.version, TrackerMessage.LATEST_VERSION)
             assert.strictEqual(msg.requestId, 'requestId')
-            assert.strictEqual(msg.errorCode, ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER)
+            assert.strictEqual(msg.errorCode, ErrorMessage.ERROR_CODES.UNKNOWN_PEER)
             assert.strictEqual(msg.targetNode, 'targetNode')
         })
     })

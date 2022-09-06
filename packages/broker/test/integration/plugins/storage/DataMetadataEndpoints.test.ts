@@ -5,11 +5,11 @@ import StreamrClient, { Stream } from 'streamr-client'
 import {
     createClient,
     createTestStream,
-    fetchPrivateKeyWithGas,
     startTestTracker,
     startStorageNode
 } from '../../../utils'
 import { Broker } from "../../../../src/broker"
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 
 jest.setTimeout(30000)
 const httpPort1 = 12371

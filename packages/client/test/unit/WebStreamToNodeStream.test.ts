@@ -1,9 +1,10 @@
+import 'reflect-metadata'
 // eslint-disable-next-line import/no-unresolved
 import { finished } from 'stream/promises'
 // eslint-disable-next-line import/no-unresolved
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
 // eslint-disable-next-line import/no-unresolved
-import { Msg } from '../test-utils/utils'
+import { Msg } from '../test-utils/publish'
 
 const version = process.version.slice(1).split('.').map((v) => Number.parseInt(v, 10))
 describe('WebStreamToNodeStream', () => {

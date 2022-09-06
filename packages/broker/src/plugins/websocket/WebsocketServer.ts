@@ -7,7 +7,7 @@ import { once } from 'events'
 import { Socket } from 'net'
 import qs, { ParsedQs } from 'qs'
 import StreamrClient from 'streamr-client'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { Connection } from './Connection'
 import { ApiAuthenticator } from '../../apiAuthenticator'
 import { SslCertificateConfig } from './WebsocketPlugin'
@@ -36,7 +36,7 @@ interface ConnectionUrl {
 export class WebsocketServer {
 
     private wss?: WebSocket.Server
-    private httpServer?: http.Server|https.Server
+    private httpServer?: http.Server | https.Server
     private streamrClient: StreamrClient
 
     constructor(streamrClient: StreamrClient) {
@@ -68,7 +68,7 @@ export class WebsocketServer {
                 sendHttpError('400 Bad Request', socket)
                 return
             }
-            const apiKey = connectionUrl.queryParams.apiKey as string|undefined
+            const apiKey = connectionUrl.queryParams.apiKey as string | undefined
             if (!apiAuthenticator.isValidAuthentication(apiKey)) {
                 sendHttpError((apiKey === undefined) ? '401 Unauthorized' : '403 Forbidden', socket)
                 return
@@ -87,7 +87,7 @@ export class WebsocketServer {
         logger.info('Websocket server listening on ' + port)
     }
 
-    private createConnection(connectionUrl: ConnectionUrl): Connection|never {
+    private createConnection(connectionUrl: ConnectionUrl): Connection | never {
         switch (connectionUrl.action) {
             case Action.PUBLISH:
                 return new PublishConnection(connectionUrl.streamId, connectionUrl.queryParams)
@@ -105,7 +105,7 @@ export class WebsocketServer {
             return {
                 streamId: decodeURIComponent(groups[1]),
                 action: groups[2] as Action,
-                queryParams: qs.parse(groups[3], { ignoreQueryPrefix: true})
+                queryParams: qs.parse(groups[3], { ignoreQueryPrefix: true })
             }
         } else {
             throw new Error('Malformed path')

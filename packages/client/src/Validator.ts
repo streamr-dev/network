@@ -4,18 +4,19 @@
 import { inject, Lifecycle, scoped, delay } from 'tsyringe'
 import {
     StreamMessage,
-    StreamMessageValidator,
-    SigningUtil,
     StreamMessageError,
     StreamID,
     EthereumAddress
 } from 'streamr-client-protocol'
 
-import { pOrderedResolve, instanceId, CacheFn } from './utils'
-import { Stoppable } from './utils/Stoppable'
+import { instanceId } from './utils/utils'
+import { pOrderedResolve } from './utils/promises'
+import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
-import { StreamRegistryCached } from './StreamRegistryCached'
+import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
+import StreamMessageValidator from './StreamMessageValidator'
+import { verify } from './utils/signingUtils'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {
@@ -29,11 +30,12 @@ export class SignatureRequiredError extends StreamMessageError {
  * Handles caching remote calls
  */
 @scoped(Lifecycle.ContainerScoped)
-export class Validator extends StreamMessageValidator implements Stoppable, Context {
-    id
-    debug
-    isStopped = false
+export class Validator extends StreamMessageValidator implements Context {
+    readonly id
+    readonly debug
+    private isStopped = false
     private doValidation: StreamMessageValidator['validate']
+
     constructor(
         context: Context,
         @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
@@ -62,7 +64,7 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
 
     private cachedVerify = CacheFn( (address: EthereumAddress, payload: string, signature: string) => {
         if (this.isStopped) { return true }
-        return SigningUtil.verify(address, payload, signature)
+        return verify(address, payload, signature)
     }, {
         // forcibly use small cache otherwise keeps n serialized messages in memory
         ...this.cacheOptions,
@@ -95,14 +97,13 @@ export class Validator extends StreamMessageValidator implements Stoppable, Cont
         })
     })
 
-    async validate(msg: StreamMessage): Promise<void> {
+    override async validate(msg: StreamMessage): Promise<void> {
         if (this.isStopped) { return }
         await this.orderedValidate(msg)
     }
 
     stop(): void {
         this.isStopped = true
-        this.cachedVerify.clear()
         this.orderedValidate.clear()
     }
 }

@@ -1,10 +1,13 @@
-import { wait, waitForCondition } from 'streamr-test-utils'
-import { counterId } from '../../src/utils'
+import { wait } from '@streamr/utils'
+import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
-import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
+import { Debug } from '../test-utils/utils'
+import { Msg } from '../test-utils/publish'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-protocol'
 import { Readable } from 'stream'
+import { waitForCondition } from 'streamr-test-utils'
 
 const MOCK_ERROR = new Error('mock-error-message')
 
@@ -214,47 +217,6 @@ describe('MessageStream', () => {
 
         expect(received).toEqual([streamMessage])
     })
-    /*
-    describe('when not started', () => {
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end + error with throw', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            const onMessageStreamError = jest.fn()
-            s.on('end', onEnd)
-            s.on('error', onMessageStreamError)
-            const err = new Error(counterId('expected error'))
-            await expect(async () => {
-                await s.throw(err)
-            }).rejects.toThrow(err)
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-            expect(onMessageStreamError).toHaveBeenCalledTimes(1)
-        })
-    })
-    */
 
     it('can collect', async () => {
         const testMessage = Msg()
@@ -326,7 +288,7 @@ describe('MessageStream', () => {
             expect(onMessage).toBeCalledTimes(1)
             expect(onMessage).toHaveBeenNthCalledWith(1, msg.getParsedContent(), msg)
         })
-        
+
         it('from readable', async () => {
             const msg1 = createMockMessage(streamId)
             const msg2 = createMockMessage(streamId)
@@ -354,7 +316,7 @@ describe('MessageStream', () => {
             expect(onMessage).toHaveBeenCalledWith(msg1.getParsedContent(), msg1)
             expect(onMessage).toHaveBeenCalledWith(msg2.getParsedContent(), msg2)
         })
-        
+
         it('from readable with onMessage handler', async () => {
             const msgA1 = createMockMessage(streamId)
             const msgA2 = createMockMessage(streamId)
@@ -409,7 +371,7 @@ describe('MessageStream', () => {
             for await (const msg of merged) {
                 received.push(msg)
             }
-            expect(received).toIncludeSameMembers([msgA1, msgA3, msgB1, msgB2])            
+            expect(received).toIncludeSameMembers([msgA1, msgA3, msgB1, msgB2])
             expect(onError).toBeCalledWith(MOCK_ERROR)
         })
     })

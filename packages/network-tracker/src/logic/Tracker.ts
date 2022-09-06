@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
-import { attachRtcSignalling } from './rtcSignallingHandlers'
+import { attachMessageRelaying } from './attachMessageRelaying'
 import {
     PeerId,
     PeerInfo,
@@ -16,13 +16,13 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     MetricsContext,
-    Logger,
     COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
     RateMetric
 } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { InstructionSender } from './InstructionSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 
@@ -43,7 +43,7 @@ export interface TrackerOptions {
     protocols: {
         trackerServer: TrackerServer
     }
-    metricsContext?: MetricsContext,
+    metricsContext?: MetricsContext
     topologyStabilization?: TopologyStabilizationOptions
 }
 
@@ -160,7 +160,7 @@ export class Tracker extends EventEmitter {
                 )
             }
         })
-        attachRtcSignalling(this.trackerServer)
+        attachMessageRelaying(this.trackerServer)
 
         this.metrics = {
             nodeDisconnected: new RateMetric(),
@@ -185,7 +185,7 @@ export class Tracker extends EventEmitter {
         this.removeNode(node)
     }
 
-    processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+    processNodeStatus(statusMessage: StatusMessage, source: NodeId): void {
         if (this.stopped) {
             return
         }

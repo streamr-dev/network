@@ -85,6 +85,9 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
+                },
+                "encryptionKeyRequest": {
+                    "type": "number"
                 }
             }
         },
@@ -112,9 +115,6 @@
             "type": "boolean"
         },
         "maxGapRequests": {
-            "type": "number"
-        },
-        "maxRetries": {
             "type": "number"
         },
         "verifySignatures": {

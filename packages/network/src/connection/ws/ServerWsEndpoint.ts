@@ -10,8 +10,8 @@ import { once } from 'events'
 import { v4 } from 'uuid'
 import { Duplex } from "stream"
 
-type HostPort = {
-    hostname: string,
+interface HostPort {
+    hostname: string
     port: number
 }
 type UnixSocket = string

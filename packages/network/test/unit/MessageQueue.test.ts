@@ -1,5 +1,5 @@
 import { MessageQueue } from '../../src/connection/MessageQueue'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 describe(MessageQueue, () => {
     let messageQueue: MessageQueue<string>
@@ -44,7 +44,7 @@ describe(MessageQueue, () => {
     })
 
     it('drops message in FIFO order when adding to full queue', async () => {
-        const recordedErrors: {i: number, err: Error}[] = []
+        const recordedErrors: { i: number, err: Error }[] = []
         for (let i = 1; i <= 10; ++i) {
             messageQueue.add(`message ${i}`).catch((err: Error) => {
                 recordedErrors.push({

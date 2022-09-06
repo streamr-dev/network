@@ -5,7 +5,8 @@ import Ajv, { ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
 import merge from 'lodash/merge'
 
-import type { AuthConfig, EthereumConfig } from './Ethereum'
+import type { AuthConfig } from './Authentication'
+import type { EthereumConfig } from './Ethereum'
 import type { EncryptionConfig } from './encryption/KeyExchangeStream'
 
 import CONFIG_SCHEMA from './config.schema.json'
@@ -15,12 +16,12 @@ import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 
-export type CacheConfig = {
-    maxSize: number,
+export interface CacheConfig {
+    maxSize: number
     maxAge: number
 }
 
-type TimeoutsConfig = {
+export interface TimeoutsConfig {
     theGraph: {
         timeout: number
         retryInterval: number
@@ -33,32 +34,33 @@ type TimeoutsConfig = {
         timeout: number
         retryInterval: number
     }
+    /** @internal */
+    encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
-export type SubscribeConfig = {
+export interface SubscribeConfig {
     /** Attempt to order messages */
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
-    maxRetries: number
     verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
 
-export type ConnectionConfig = {
+export interface ConnectionConfig {
     /** Some TheGraph instance, that indexes the streamr registries */
     theGraphUrl: string
 }
 
-export type TrackerRegistrySmartContract = { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
+export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo, contractAddress: EthereumAddress }
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
 }
 
-export type DebugConfig = {
+export interface DebugConfig {
     inspectOpts: InspectOptions
 }
 
@@ -76,19 +78,14 @@ export type MetricsConfig = {
  */
 export type StrictStreamrClientConfig = {
     /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
-    id?: string,
+    id?: string
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
     */
     auth: AuthConfig
-    streamRegistryChainAddress: EthereumAddress, // this saves streams and permissions
-    streamStorageRegistryChainAddress: EthereumAddress, // this ueses the streamregistry and
-    // noderegistry contracts and saves what streams are stored by which storagenodes
-    storageNodeRegistryChainAddress: EthereumAddress, // this saves storage nodes with their urls
-    ensCacheChainAddress: EthereumAddress,
     network: NetworkConfig
-    cache: CacheConfig,
+    cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
     /** @internal */
@@ -125,7 +122,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     gapFillTimeout: 5000,
     gapFill: true,
     maxGapRequests: 5,
-    maxRetries: 5,
 
     // Encryption options
     verifySignatures: 'auto',
@@ -280,4 +276,5 @@ export const ConfigInjectionToken = {
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
     Encryption: Symbol('Config.Encryption'),
+    Timeouts: Symbol('Config.Timeouts')
 }

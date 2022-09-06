@@ -1,4 +1,4 @@
-import { Protocol, MetricsContext } from 'streamr-network'
+import { MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
 import { toReadableStream } from 'streamr-test-utils'
@@ -9,10 +9,7 @@ import {
 } from '../../../../src/plugins/storage/DataQueryEndpoints'
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
-import { toStreamID } from 'streamr-client-protocol'
-
-const { MessageLayer } = Protocol
-const { MessageID } = MessageLayer
+import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
@@ -31,8 +28,8 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Bearer ${sessionToken}`)
     }
 
-    function createStreamMessage(content: any): Protocol.StreamMessage {
-        return new Protocol.StreamMessage({
+    function createStreamMessage(content: any): StreamMessage {
+        return new StreamMessage({
             messageId: new MessageID(
                 toStreamID('streamId'),
                 0,
@@ -52,7 +49,7 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('Getting last events', () => {
-        let streamMessages: Protocol.StreamMessage[]
+        let streamMessages: StreamMessage[]
 
         beforeEach(() => {
             streamMessages = [
@@ -120,7 +117,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with latest version protocol serialization of messages given format=protocol', (done) => {
                 testGetRequest('/streams/streamId/data/partitions/0/last?format=protocol')
-                    .expect(streamMessages.map((msg) => msg.serialize(Protocol.StreamMessage.LATEST_VERSION)), done)
+                    .expect(streamMessages.map((msg) => msg.serialize(StreamMessage.LATEST_VERSION)), done)
             })
 
             it('responds with specific version protocol serialization of messages given format=protocol&version=32', (done) => {
@@ -166,7 +163,7 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('From queries', () => {
-        let streamMessages: Protocol.StreamMessage[]
+        let streamMessages: StreamMessage[]
 
         beforeEach(() => {
             streamMessages = [
@@ -301,7 +298,7 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            let streamMessages: Protocol.StreamMessage[]
+            let streamMessages: StreamMessage[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),
@@ -383,7 +380,7 @@ describe('DataQueryEndpoints', () => {
             // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId'
 
-            let streamMessages: Protocol.StreamMessage[]
+            let streamMessages: StreamMessage[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),

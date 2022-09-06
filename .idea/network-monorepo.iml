@@ -9,6 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/protocol/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/test-utils/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/client/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/network-tracker/dist" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

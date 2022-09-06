@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
-import RelayMessage from '../../../../src/protocol/tracker_layer/relay_message/RelayMessage'
+import RelayMessage, { RelayMessageSubType } from '../../../../src/protocol/tracker_layer/relay_message/RelayMessage'
 
 describe('RelayMessage', () => {
     describe('constructor', () => {
@@ -17,8 +17,8 @@ describe('RelayMessage', () => {
                     location: null
                 },
                 targetNode: 'targetNode',
-                subType: 'offer',
-                data: null
+                subType: RelayMessageSubType.RTC_OFFER,
+                data: null as any
             }), ValidationError)
         })
         it('throws on null subType', () => {
@@ -49,10 +49,8 @@ describe('RelayMessage', () => {
                     location: null
                 },
                 targetNode: null as any,
-                subType: 'offer',
-                data: {
-                    hello: 'world'
-                }
+                subType: RelayMessageSubType.RTC_CONNECT,
+                data: {}
             }), ValidationError)
         })
         it('throws on null originatorId', () => {
@@ -60,10 +58,8 @@ describe('RelayMessage', () => {
                 requestId: 'requestId',
                 originator: null as any,
                 targetNode: 'targetNode',
-                subType: 'offer',
-                data: {
-                    hello: 'world'
-                }
+                subType: RelayMessageSubType.RTC_CONNECT,
+                data: {}
             }), ValidationError)
         })
         it('throws on null requestId', () => {
@@ -77,10 +73,8 @@ describe('RelayMessage', () => {
                     location: null
                 },
                 targetNode: 'targetNode',
-                subType: 'offer',
-                data: {
-                    hello: 'world'
-                }
+                subType: RelayMessageSubType.RTC_CONNECT,
+                data: {}
             }), ValidationError)
         })
         it('should create the latest version', () => {
@@ -94,9 +88,10 @@ describe('RelayMessage', () => {
                     location: null
                 },
                 targetNode: 'targetNode',
-                subType: 'offer',
+                subType: RelayMessageSubType.RTC_OFFER,
                 data: {
-                    hello: 'world'
+                    connectionId: 'connectionId',
+                    description: 'foobar'
                 }
             })
             assert(msg instanceof RelayMessage)
@@ -110,9 +105,10 @@ describe('RelayMessage', () => {
                 location: null
             })
             assert.strictEqual(msg.targetNode, 'targetNode')
-            assert.deepStrictEqual(msg.subType, 'offer')
+            assert.deepStrictEqual(msg.subType, RelayMessageSubType.RTC_OFFER)
             assert.deepStrictEqual(msg.data, {
-                hello: 'world'
+                connectionId: 'connectionId',
+                description: 'foobar'
             })
         })
     })

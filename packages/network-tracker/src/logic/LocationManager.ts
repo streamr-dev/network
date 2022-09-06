@@ -1,5 +1,6 @@
 import { lookup, Lookup } from 'geoip-lite'
-import { Logger, Location, NodeId } from 'streamr-network'
+import { Location, NodeId } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 function isValidNodeLocation(location?: Location) {
     return (location !== undefined) && (location.country || location.city || location.latitude || location.longitude)

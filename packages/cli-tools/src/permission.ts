@@ -4,7 +4,7 @@ import { createClientCommand } from './command'
 
 const PUBLIC_USER_ID = 'public'
 
-export const PERMISSIONS = new Map<string,StreamPermission>([
+export const PERMISSIONS = new Map<string, StreamPermission>([
     ['subscribe', StreamPermission.SUBSCRIBE],
     ['publish', StreamPermission.PUBLISH],
     ['edit', StreamPermission.EDIT],

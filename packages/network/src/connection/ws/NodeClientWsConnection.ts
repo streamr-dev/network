@@ -3,7 +3,7 @@ import WebSocket from 'ws'
 import { PeerInfo } from '../PeerInfo'
 import { DisconnectionCode, DisconnectionReason } from './AbstractWsEndpoint'
 import util from 'util'
-import { Logger } from '../../helpers/Logger'
+import { Logger } from "@streamr/utils"
 import { WebSocketConnectionFactory } from "./AbstractClientWsEndpoint"
 
 const staticLogger = new Logger(module)

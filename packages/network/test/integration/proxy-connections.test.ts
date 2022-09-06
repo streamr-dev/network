@@ -1,13 +1,18 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageLayer, ProxyDirection, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForEvent } from 'streamr-test-utils'
+import {
+    MessageID,
+    ProxyDirection,
+    SmartContractRecord,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
+import { waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { TrackerInfo } from '../../src/identifiers'
-
-const { StreamMessage, MessageID } = MessageLayer
 
 const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 
@@ -16,7 +21,7 @@ describe('Proxy connection tests', () => {
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
     let onewayNode: NetworkNode
-    let trackerInfo: TrackerInfo
+    let trackerInfo: SmartContractRecord
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -99,7 +104,7 @@ describe('Proxy connection tests', () => {
             waitForEvent(contactNode, NodeEvent.ONE_WAY_CONNECTION_CLOSED),
             onewayNode.closeProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH),
         ])
-        
+
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.hasOutOnlyConnection(defaultStreamPartId, 'contact-node')).toBeFalse()
         // @ts-expect-error private
@@ -191,7 +196,7 @@ describe('Proxy connection tests', () => {
         // @ts-expect-error private
         expect(onewayNode.streamPartManager.getOutboundNodesForStreamPart(defaultStreamPartId)).toContainValue('contact-node')
     })
-    
+
     it('Published data is received using proxy publish stream connections', async () => {
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
         await Promise.all([
@@ -258,6 +263,7 @@ describe('Proxy connection tests', () => {
         try {
             await onewayNode.openProxyConnection(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node', ProxyDirection.PUBLISH)
         } catch (err) {
+            // no-op
         }
 
         // @ts-expect-error private
@@ -284,7 +290,7 @@ describe('Proxy connection tests', () => {
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
 
         await Promise.all([
-            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 20000),
+            waitForEvent(contactNode, NodeEvent.NODE_CONNECTED, 20000),
             // @ts-expect-error private
             contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
         ])
@@ -300,4 +306,37 @@ describe('Proxy connection tests', () => {
             }))
         ])
     }, 20100)
+
+    it('will receive messages after lost connectivity', async () => {
+        let receivedMessages = 0
+        contactNode.on(NodeEvent.MESSAGE_RECEIVED, (_message) => {
+            receivedMessages += 1
+        })
+        await Promise.all([
+            waitForEvent(contactNode, NodeEvent.NODE_UNSUBSCRIBED),
+            contactNode2.unsubscribe(defaultStreamPartId)
+        ])
+        await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
+
+        // @ts-expect-error private
+        contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
+
+        await waitForEvent(onewayNode, NodeEvent.NODE_DISCONNECTED)
+        await Promise.all([
+            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED),
+            onewayNode.publish(new StreamMessage({
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 0, 'publisher', 'session'),
+                content: {
+                    hello: 'world 1'
+                },
+            })),
+            onewayNode.publish(new StreamMessage({
+                messageId: new MessageID(toStreamID('stream-0'), 0, 120, 1, 'publisher', 'session'),
+                content: {
+                    hello: 'world 2'
+                },
+            }))
+        ])
+        await waitForCondition(() => receivedMessages === 2, 10000)
+    })
 })

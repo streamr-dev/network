@@ -1,6 +1,12 @@
 import InstructionMessage from "./instruction_message/InstructionMessage"
 import ErrorMessage from "./error_message/ErrorMessage"
-import RelayMessage from "./relay_message/RelayMessage"
+import RelayMessage, {
+    RelayMessageSubType,
+    RtcIceCandidateMessage,
+    RtcConnectMessage,
+    RtcOfferMessage,
+    RtcAnswerMessage
+} from "./relay_message/RelayMessage"
 import StatusMessage from "./status_message/StatusMessage"
 import TrackerMessage from "./TrackerMessage"
 import { TrackerMessageType } from "./TrackerMessage"
@@ -15,9 +21,14 @@ import './status_message/StatusMessageSerializerV2'
 export {
     InstructionMessage,
     ErrorMessage,
-    RelayMessage,
     StatusMessage,
     TrackerMessage,
     TrackerMessageType,
-    Originator
+    Originator,
+    RelayMessage,
+    RelayMessageSubType,
+    RtcIceCandidateMessage,
+    RtcConnectMessage,
+    RtcOfferMessage,
+    RtcAnswerMessage
 }

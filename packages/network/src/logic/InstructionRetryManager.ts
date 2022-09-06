@@ -1,5 +1,5 @@
 import { StreamPartID, InstructionMessage } from "streamr-client-protocol"
-import { Logger } from "../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { TrackerId } from '../identifiers'
 
 type HandleFn = (
@@ -14,8 +14,8 @@ export class InstructionRetryManager {
     private readonly intervalInMs: number
     private readonly statusSendCounterLimit: number
     private instructionRetryIntervals: Record<StreamPartID, {
-        interval: NodeJS.Timeout,
-        counter: number,
+        interval: NodeJS.Timeout
+        counter: number
     }>
     private stopped: boolean
 
