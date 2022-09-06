@@ -1,7 +1,8 @@
-import { ConnectionManager, DhtNode, PeerDescriptor } from '@streamr/dht/dist/src'
+import { ConnectionManager, DhtNode, PeerDescriptor, PeerID } from '@streamr/dht/dist/src'
 import { NodeType } from '@streamr/dht/dist/src/proto/DhtRpc'
-import { RandomGraphNode } from '../../src/logic/RandomGraphNode'
+import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { waitForCondition } from 'streamr-test-utils'
+import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
 describe('random graph with real connections', () => {
 
@@ -93,7 +94,7 @@ describe('random graph with real connections', () => {
         ])
     })
 
-    it('happy paths', async () => {
+    it('can fully connected topologies ', async () => {
 
         await waitForCondition(() => {
             return randomGraphNode1.getSelectedNeighborIds().length >= 4
@@ -108,6 +109,35 @@ describe('random graph with real connections', () => {
         expect(randomGraphNode3.getSelectedNeighborIds().length).toEqual(4)
         expect(randomGraphNode4.getSelectedNeighborIds().length).toEqual(4)
         expect(randomGraphNode5.getSelectedNeighborIds().length).toEqual(4)
+    })
 
+    it('can propagate messages', async () => {
+        let numOfMessagesReceived = 0
+        randomGraphNode2.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+        randomGraphNode3.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+        randomGraphNode4.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+        randomGraphNode5.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
+
+        await waitForCondition(() => {
+            return randomGraphNode1.getSelectedNeighborIds().length >= 4
+                && randomGraphNode2.getSelectedNeighborIds().length >= 4
+                && randomGraphNode3.getSelectedNeighborIds().length >= 4
+                && randomGraphNode4.getSelectedNeighborIds().length >= 4
+                && randomGraphNode5.getSelectedNeighborIds().length >= 4
+        })
+
+        const messageRef: MessageRef = {
+            sequenceNumber: 1,
+            timestamp: 123123
+        }
+        const message: DataMessage = {
+            content: JSON.stringify({ hello: "WORLD" }),
+            senderId: PeerID.fromValue(epDhtNode.getPeerDescriptor().peerId).toString(),
+            messageRef,
+            streamPartId: randomGraphId
+        }
+
+        randomGraphNode1.broadcast(message)
+        await waitForCondition(() => numOfMessagesReceived >= 4)
     })
 })
