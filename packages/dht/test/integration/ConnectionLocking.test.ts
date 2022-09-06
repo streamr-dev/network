@@ -1,7 +1,6 @@
 import { PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '../../src'
-import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
+import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType } from '../../src/proto/DhtRpc'
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 
 describe('Connection Locking', () => {
