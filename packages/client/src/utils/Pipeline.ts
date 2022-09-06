@@ -67,8 +67,8 @@ class PipelineDefinition<InType, OutType = InType> {
     }
 
     clearTransforms() {
-        this.transforms.length = 0
-        this.transformsBefore.length = 0
+        this.transforms = []
+        this.transformsBefore = []
     }
 
     setSource(source: AsyncGenerator<InType> | AsyncGeneratorWithId<InType>) {

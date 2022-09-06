@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { toStreamID } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { createMockMessage, createRelativeTestStreamId, getGroupKeyPersistence } from '../test-utils/utils'
+import { createMockMessage, createRelativeTestStreamId, getGroupKeyStore } from '../test-utils/utils'
 import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
@@ -52,7 +52,10 @@ describe('resend with existing key', () => {
 
     const assertDecryptable = async (fromTimestamp: number, toTimestamp: number) => {
         const messageStream = await resendRange(fromTimestamp, toTimestamp)
+        const onError = jest.fn()
+        messageStream.onError.listen(onError)
         const messages = await collect(messageStream)
+        expect(onError).not.toBeCalled()
         const expectedTimestamps = allMessages.map((m) => m.timestamp).filter((ts) => ts >= fromTimestamp && ts <= toTimestamp)
         expect(messages.map((m) => m.getTimestamp())).toEqual(expectedTimestamps)
     }
@@ -104,6 +107,10 @@ describe('resend with existing key', () => {
         }
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     describe('no keys available', () => {
         it('can\'t decrypt', async () => {
             await assertNonDecryptable(1000, 6000)
@@ -112,7 +119,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(initialKey)
+            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(initialKey)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -130,7 +137,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(rotatedKey)
+            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rotatedKey)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -145,7 +152,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getGroupKeyPersistence(stream.id, await subscriber.getAddress()).add(rekeyedKey)
+            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rekeyedKey)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

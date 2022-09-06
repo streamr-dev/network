@@ -39,6 +39,10 @@ describe('revoke permissions', () => {
         environment = new FakeEnvironment()
     })
 
+    afterEach(async () => {
+        await environment.destroy()
+    })
+
     async function setupStream() {
         stream = await createTestStream(publisher, module)
         const storageNode = environment.startStorageNode()

@@ -1,10 +1,9 @@
 import 'reflect-metadata'
-import { startPublisherNode } from './../test-utils/fake/fakePublisherNode'
 import { GroupKey } from './../../src/encryption/GroupKey'
 import { StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamPermission } from './../../src/permission'
-import { createMockMessage } from './../test-utils/utils'
+import { createMockMessage, startPublisherKeyExchangeSubscription } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet } from "streamr-test-utils"
 import { SubscribePipeline } from "../../src/subscribe/SubscribePipeline"
@@ -95,26 +94,13 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: no encryption key available', async () => {
-        await startPublisherNode(publisher, [], environment)
-        const encryptionKey = GroupKey.generate()
-        await input.push(createMockMessage({
-            publisher,
-            streamPartId,
-            content: CONTENT,
-            encryptionKey
-        }))
-        input.endWrite()
-        const onError = jest.fn()
-        pipeline.onError.listen(onError)
-        const output = await collect(pipeline)
-        expect(onError).toBeCalledTimes(1)
-        const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Unable to decrypt')
-        expect(output).toEqual([])
-    })
-
-    it('error: group key request failed', async () => {
-        await startPublisherNode(publisher, [], environment, async () => 'mock-error')
+        const publisherClient = environment.createClient({
+            auth: {
+                privateKey: publisher.privateKey
+            }
+        })
+        // start publisher to serve keys, but no key has been added to the store
+        await startPublisherKeyExchangeSubscription(publisherClient)
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,

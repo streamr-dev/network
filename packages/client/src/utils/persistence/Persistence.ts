@@ -1,4 +1,4 @@
-export interface PersistentStore<K, V> {
+export interface Persistence<K, V> {
     get(key: K): Promise<V | undefined>
     set(key: K, value: V): Promise<boolean>
     has(key: K): Promise<boolean>
