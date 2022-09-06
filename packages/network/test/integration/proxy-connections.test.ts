@@ -307,7 +307,6 @@ describe('Proxy connection tests', () => {
         ])
     }, 20100)
 
-
     it('will receive messages after lost connectivity', async () => {
         let receivedMessages = 0
         contactNode.on(NodeEvent.MESSAGE_RECEIVED, (_message) => {
@@ -318,8 +317,7 @@ describe('Proxy connection tests', () => {
             contactNode2.unsubscribe(defaultStreamPartId)
         ])
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
-
-
+        
         await Promise.all([
             waitForEvent(contactNode, NodeEvent.NODE_CONNECTED, 20000),
             // @ts-expect-error private
