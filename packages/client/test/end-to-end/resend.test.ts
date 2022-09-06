@@ -1,8 +1,9 @@
-import { fastPrivateKey, wait, waitForCondition } from 'streamr-test-utils'
-import { createTestStream, fetchPrivateKeyWithGas } from '../test-utils/utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas, waitForCondition } from 'streamr-test-utils'
+import { createTestStream } from '../test-utils/utils'
 import { ConfigTest, Stream, StreamPermission, StreamrClient } from '../../src'
 import { range } from 'lodash'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
+import { wait } from '@streamr/utils'
 
 const NUM_OF_MESSAGES = 20
 const MESSAGE_STORE_TIMEOUT = 9 * 1000
