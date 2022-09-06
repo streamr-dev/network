@@ -1,5 +1,12 @@
 import { EventEmitter } from 'eventemitter3'
-import { ConnectivityResponseMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
+import {
+    ConnectivityResponseMessage,
+    LockRequest,
+    Message,
+    MessageType,
+    PeerDescriptor,
+    UnlockRequest
+} from '../proto/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import { ITransport, TransportEvents } from '../transport/ITransport'
@@ -23,6 +30,8 @@ export enum NatType {
     OPEN_INTERNET = 'open_internet',
     UNKNOWN = 'unknown'
 }
+
+type ServiceId = string
 
 export type PeerDescriptorGeneratorCallback = (connectivityResponse: ConnectivityResponseMessage) => PeerDescriptor
 
@@ -52,7 +61,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
 
-    private lockedConnections: Map<PeerIDKey, Set<string>> = new Map()
+    private localLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
+    private remoteLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
 
     constructor(private config: ConnectionManagerConfig) {
         super()
@@ -172,9 +182,22 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.connections.has(hexId)
     }
 
-    public hasLockedConnection(peerDescriptor: PeerDescriptor): boolean {
+    public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        return this.lockedConnections.has(hexId)
+        if (!serviceId) {
+            return this.localLockedConnections.has(hexId)
+        } else {
+            return this.localLockedConnections.has(hexId) ? this.localLockedConnections.get(hexId)!.has(serviceId) : false
+        }
+    }
+
+    public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        if (!serviceId) {
+            return this.remoteLockedConnections.has(hexId)
+        } else {
+            return this.remoteLockedConnections.has(hexId) ? this.remoteLockedConnections.get(hexId)!.has(serviceId) : false
+        }
     }
 
     public canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
@@ -188,6 +211,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace('Received message of type ' + message.messageType)
             if (message.messageType === MessageType.RPC) {
                 this.emit('DATA', message, peerDescriptor)
+            } else if (message.messageType === MessageType.LOCK) {
+                const lockRequest = LockRequest.fromBinary(message.body)
+                this.onLockRequest(lockRequest)
+            } else if (message.messageType === MessageType.UNLOCK) {
+                const unlockRequest = LockRequest.fromBinary(message.body)
+                this.onUnlockRequest(unlockRequest)
             } else {
                 logger.trace('Filtered out message of type ' + message.messageType)
             }
@@ -224,31 +253,78 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
+    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
         this.clearDisconnectionTimeout(hexKey)
-        if (!this.lockedConnections.has(hexKey)) {
+        if (!this.localLockedConnections.has(hexKey)) {
             const newSet = new Set<string>()
             newSet.add(serviceId)
-            this.lockedConnections.set(hexKey, newSet)
-        } else if (!this.lockedConnections.get(hexKey)?.has(serviceId)) {
-            this.lockedConnections.get(hexKey)?.add(serviceId)
+            this.localLockedConnections.set(hexKey, newSet)
+        } else if (!this.localLockedConnections.get(hexKey)?.has(serviceId)) {
+            this.localLockedConnections.get(hexKey)?.add(serviceId)
         }
-        const connectMessage: Message = {
+
+        const lockRequest: LockRequest = {
+            peerDescriptor: this.ownPeerDescriptor!,
+            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+            serviceId
+        }
+        const message: Message = {
             messageId: new UUID().toString(),
             serviceId: 'connection-manager',
-            messageType: MessageType.RPC,
-            body: new Uint8Array([0, 1, 2])
+            messageType: MessageType.LOCK,
+            body: LockRequest.toBinary(lockRequest)
         }
-        this.send(connectMessage, targetDescriptor).catch((err) => {console.error(err)})
+
+        this.send(message, targetDescriptor).catch((err) => {console.error(err)})
     }
 
-    public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void {
+    public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
-        this.lockedConnections.get(hexKey)?.delete(serviceId)
-        if (this.lockedConnections.get(hexKey)?.size === 0) {
-            this.lockedConnections.delete(hexKey)
-            this.disconnect(targetDescriptor, 'connection is no longer locked by any services')
+        this.localLockedConnections.get(hexKey)?.delete(serviceId)
+
+        const unlockRequest: UnlockRequest = {
+            peerDescriptor: this.ownPeerDescriptor!,
+            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
+            serviceId
+        }
+
+        const message: Message = {
+            messageId: new UUID().toString(),
+            serviceId: 'connection-manager',
+            messageType: MessageType.UNLOCK,
+            body: UnlockRequest.toBinary(unlockRequest)
+        }
+        this.send(message, targetDescriptor).catch((err) => {console.error(err)})
+
+        if (this.localLockedConnections.get(hexKey)?.size === 0) {
+            this.localLockedConnections.delete(hexKey)
+            if (!this.hasRemoteLockedConnection(targetDescriptor)) {
+                this.disconnect(targetDescriptor, 'connection is no longer locked by any services')
+            }
+        }
+    }
+
+    private onLockRequest(lockRequest: LockRequest): void {
+        const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toMapKey()
+        this.clearDisconnectionTimeout(hexKey)
+        if (!this.remoteLockedConnections.has(hexKey)) {
+            const newSet = new Set<string>()
+            newSet.add(lockRequest.serviceId)
+            this.remoteLockedConnections.set(hexKey, newSet)
+        } else if (!this.remoteLockedConnections.get(hexKey)?.has(lockRequest.serviceId)) {
+            this.remoteLockedConnections.get(hexKey)?.add(lockRequest.serviceId)
+        }
+    }
+
+    private onUnlockRequest(unlockRequest: UnlockRequest): void {
+        const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.peerId).toMapKey()
+        this.remoteLockedConnections.get(hexKey)?.delete(unlockRequest.serviceId)
+        if (this.remoteLockedConnections.get(hexKey)?.size === 0) {
+            this.remoteLockedConnections.delete(hexKey)
+            if (!this.hasLocalLockedConnection(unlockRequest.peerDescriptor!)) {
+                this.disconnect(unlockRequest.peerDescriptor!, 'connection is no longer locked by any services')
+            }
         }
     }
 }

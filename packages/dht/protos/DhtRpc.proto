@@ -128,6 +128,8 @@ enum MessageType {
   RPC = 3;
   WEBSOCKET_CONNECTOR = 4;
   WEBRTC_CONNECTOR = 5;
+  LOCK = 6;
+  UNLOCK = 7;
 }
 
 message Message {
@@ -183,4 +185,16 @@ message IceCandidate {
   string connectionId = 3;
   PeerDescriptor requester = 4;
   PeerDescriptor target = 5;
+}
+
+message LockRequest {
+  string protocolVersion = 1;
+  PeerDescriptor peerDescriptor = 2;
+  string serviceId = 3;
+}
+
+message UnlockRequest {
+  string protocolVersion = 1;
+  PeerDescriptor peerDescriptor = 2;
+  string serviceId = 3;
 }

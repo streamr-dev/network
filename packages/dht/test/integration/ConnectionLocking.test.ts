@@ -2,6 +2,7 @@ import { PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '../../src
 import { ConnectionManager, Events as ConnectionManagerEvents } from '../../src/connection/ConnectionManager'
 import { NodeType } from '../../src/proto/DhtRpc'
 import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
+import { waitForCondition } from 'streamr-test-utils'
 
 describe('Connection Locking', () => {
 
@@ -50,57 +51,61 @@ describe('Connection Locking', () => {
 
     it('can lock connections', async () => {
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(mockPeerDescriptor2)).toEqual(true)
-        expect(connectionManager1.hasLockedConnection(mockPeerDescriptor2)).toEqual(true)
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(true)
+        expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
     })
 
     it('Multiple services on the same peer', async () => {
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1, 'testLock2')),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
         expect(connectionManager1.hasConnection(mockPeerDescriptor2)).toEqual(true)
-        expect(connectionManager1.hasLockedConnection(mockPeerDescriptor2)).toEqual(true)
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(true)
+        expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
     })
 
     it('can unlock connections', async () => {
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock')
         ])
         expect(connectionManager1.hasConnection(mockPeerDescriptor2))
-        expect(connectionManager2.hasLockedConnection(mockPeerDescriptor2))
+        expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor2))
+        expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)).toEqual(true)
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock')
-        expect(connectionManager1.hasLockedConnection(mockPeerDescriptor2)).toEqual(false)
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(false)
+        await waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1) === false)
         expect(connectionManager1.hasConnection(mockPeerDescriptor1)).toEqual(false)
     })
 
     it('unlocking multiple services', async () => {
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1')
         ])
         await Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(connectionManager2, 'DATA'),
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1, 'testLock2')),
             connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock2')
         ])
 
         expect(connectionManager1.hasConnection(mockPeerDescriptor2))
-        expect(connectionManager2.hasLockedConnection(mockPeerDescriptor2))
+        expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor2))
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock1')
-        expect(connectionManager1.hasLockedConnection(mockPeerDescriptor2)).toEqual(true)
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(true)
 
         connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock2')
-        expect(connectionManager1.hasLockedConnection(mockPeerDescriptor2)).toEqual(false)
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(false)
         expect(connectionManager1.hasConnection(mockPeerDescriptor1)).toEqual(false)
     })
 })
