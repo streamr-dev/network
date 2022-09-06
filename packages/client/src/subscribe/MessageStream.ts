@@ -131,7 +131,7 @@ export async function pullManyToOne<T>(
     let onFinallyCount = 0
     let onFinallyError: Error | undefined
     for (const sub of inputStreams) {
-        sub.onFinally.listen((err?: Error | void) => {
+        sub.onFinally.listen((err) => {
             if (err && (onFinallyError === undefined)) {
                 onFinallyError = err
             }

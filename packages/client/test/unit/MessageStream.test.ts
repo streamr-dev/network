@@ -34,7 +34,7 @@ const fromReadable = async (readable: Readable, context: Context, onMessage?: Me
 }
 
 const fromArray = async (arr: StreamMessage<any>[], context: Context, onMessage?: MessageStreamOnMessage<any>) => {
-    return fromReadable(Readable.from(arr, { objectMode: true}), context, onMessage)
+    return fromReadable(Readable.from(arr, { objectMode: true }), context, onMessage)
 }
 
 const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
@@ -292,7 +292,7 @@ describe('MessageStream', () => {
         it('from readable', async () => {
             const msg1 = createMockMessage(streamId)
             const msg2 = createMockMessage(streamId)
-            const readable = Readable.from([msg1, msg2], { objectMode: true})
+            const readable = Readable.from([msg1, msg2], { objectMode: true })
             const onMessage = jest.fn()
             fromReadable(readable, context, onMessage)
             await waitForCalls(onMessage, 2)
