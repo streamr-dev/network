@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import {
     ErrorMessage,
     InstructionMessage,
-    RelayMessage, StatusMessage,
+    RelayMessage, StatusAckMessage, StatusMessage,
     StreamPartID,
     StreamPartIDUtils,
     TrackerMessage,
@@ -74,7 +74,7 @@ export class TrackerServer extends EventEmitter {
         streamPartId: StreamPartID
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(receiverNodeId, new TrackerLayer.StatusAckMessage({
+        await this.send(receiverNodeId, new StatusAckMessage({
             requestId: uuidv4(),
             streamId,
             streamPartition

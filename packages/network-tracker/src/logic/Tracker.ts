@@ -16,8 +16,6 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     MetricsContext,
-    Logger,
-    COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
