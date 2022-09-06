@@ -1,9 +1,7 @@
 import assert from 'assert'
 
-import { toStreamID, TrackerLayer } from '../../../../src'
+import { StatusAckMessage, toStreamID } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
-
-const { StatusAckMessage } = TrackerLayer
 
 const VERSION = 2
 

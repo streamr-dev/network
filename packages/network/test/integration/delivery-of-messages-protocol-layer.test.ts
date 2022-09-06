@@ -6,6 +6,7 @@ import {
     MessageRef,
     RelayMessage,
     RelayMessageSubType,
+    StatusAckMessage,
     StatusMessage,
     StreamMessage,
     StreamPartIDUtils,
@@ -161,7 +162,7 @@ describe('delivery of messages in protocol layer', () => {
         const [msg, trackerId]: any = await messagePromise
 
         expect(trackerId).toEqual('trackerServer')
-        expect(msg).toBeInstanceOf(TrackerLayer.StatusAckMessage)
+        expect(msg).toBeInstanceOf(StatusAckMessage)
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
