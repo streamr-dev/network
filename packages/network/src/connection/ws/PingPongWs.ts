@@ -1,4 +1,4 @@
-import { Logger } from "../../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { Rtts } from "../../identifiers"
 import { AbstractWsConnection } from "./AbstractWsConnection"
 

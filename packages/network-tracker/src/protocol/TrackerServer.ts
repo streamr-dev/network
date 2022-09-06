@@ -1,23 +1,26 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import {
+    ErrorMessage,
+    InstructionMessage,
+    RelayMessage, StatusMessage,
     StreamPartID,
     StreamPartIDUtils,
-    TrackerLayer,
+    TrackerMessage,
     TrackerMessageType
 } from 'streamr-client-protocol'
 import {
     decode,
     DisconnectionCode,
     DisconnectionReason,
-    Logger,
     NameDirectory,
     NodeId,
     PeerId,
     PeerInfo,
-    ServerWsEndpoint,
     WsEndpointEvent
 } from 'streamr-network'
+import type { ServerWsEndpoint } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
@@ -26,15 +29,15 @@ export enum Event {
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received'
 }
 
-const eventPerType: { [key: number]: string } = {}
-eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
-eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
+const eventPerType: Record<number, string> = {}
+eventPerType[TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
+eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 
 export interface NodeToTracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
-    on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: TrackerLayer.StatusMessage, nodeId: NodeId) => void): this
-    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: TrackerLayer.RelayMessage, nodeId: NodeId) => void): this
+    on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: StatusMessage, nodeId: NodeId) => void): this
+    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, nodeId: NodeId) => void): this
 }
 
 export class TrackerServer extends EventEmitter {
@@ -57,7 +60,7 @@ export class TrackerServer extends EventEmitter {
         counter: number
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
+        await this.send(receiverNodeId, new InstructionMessage({
             requestId: uuidv4(),
             streamId,
             streamPartition,
@@ -79,14 +82,14 @@ export class TrackerServer extends EventEmitter {
     }
 
     async sendUnknownPeerError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.ErrorMessage({
+        await this.send(receiverNodeId, new ErrorMessage({
             requestId,
-            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
+            errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             targetNode
         }))
     }
 
-    async send<T>(receiverNodeId: NodeId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
+    async send<T>(receiverNodeId: NodeId, message: T & TrackerMessage): Promise<void> {
         this.logger.debug(`Send ${TrackerMessageType[message.type]} to ${NameDirectory.getName(receiverNodeId)}`)
         await this.endpoint.send(receiverNodeId, message.serialize())
     }
@@ -127,7 +130,7 @@ export class TrackerServer extends EventEmitter {
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
         if (peerInfo.isNode()) {
-            const message = decode<TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+            const message = decode<TrackerMessage>(rawMessage, TrackerMessage.deserialize)
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {

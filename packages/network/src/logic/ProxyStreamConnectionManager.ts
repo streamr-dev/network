@@ -10,19 +10,18 @@ import {
     StreamPartID,
     UnsubscribeRequest
 } from 'streamr-client-protocol'
-import { promiseTimeout } from '../helpers/PromiseTools'
-import { Logger } from '../helpers/logger/LoggerNode'
+import { Logger, withTimeout } from "@streamr/utils"
 import { Propagation } from './propagation/Propagation'
 
 const logger = new Logger(module)
 
 export interface ProxyStreamConnectionManagerOptions {
-    trackerManager: TrackerManager,
-    streamPartManager: StreamPartManager,
-    nodeToNode: NodeToNode,
-    propagation: Propagation,
-    node: Node,
-    nodeConnectTimeout: number,
+    trackerManager: TrackerManager
+    streamPartManager: StreamPartManager
+    nodeToNode: NodeToNode
+    propagation: Propagation
+    node: Node
+    nodeConnectTimeout: number
     acceptProxyConnections: boolean
 }
 
@@ -33,8 +32,8 @@ enum State {
 }
 
 interface ProxyConnection {
-    state?: State,
-    reconnectionTimer?: NodeJS.Timeout,
+    state?: State
+    reconnectionTimer?: NodeJS.Timeout
     direction: ProxyDirection
 }
 
@@ -136,7 +135,7 @@ export class ProxyStreamConnectionManager {
         const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
 
         await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
-        await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(targetNodeId, trackerId, false))
+        await withTimeout(this.nodeToNode.connectToNode(targetNodeId, trackerId, false), this.nodeConnectTimeout)
         await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction)
 
     }
@@ -144,8 +143,7 @@ export class ProxyStreamConnectionManager {
     async closeProxyConnection(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection): Promise<void> {
         if (this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)
-            && this.getConnection(targetNodeId, streamPartId)?.direction === direction)
-        {
+            && this.getConnection(targetNodeId, streamPartId)?.direction === direction) {
             clearTimeout(this.getConnection(targetNodeId, streamPartId)!.reconnectionTimer!)
             this.removeConnection(streamPartId, targetNodeId)
             await this.nodeToNode.leaveStreamOnNode(targetNodeId, streamPartId)

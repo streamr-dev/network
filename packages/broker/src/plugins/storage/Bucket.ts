@@ -1,4 +1,4 @@
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 export type BucketId = string
 

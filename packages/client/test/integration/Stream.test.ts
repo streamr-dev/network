@@ -1,29 +1,32 @@
 import { StreamrClient } from '../../src/StreamrClient'
+import { createTestStream } from '../test-utils/utils'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { Stream } from '../../src/Stream'
-import { getPublishTestMessages, createTestStream } from '../test-utils/utils'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
-
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
 
 const DUMMY_ADDRESS = '0x1230000000000000000000000000000000000000'
 
 describe('Stream', () => {
     let client: StreamrClient
+    let storageNode: FakeStorageNode
 
     beforeEach(() => {
-        client = createClientFactory().createClient()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
+        storageNode = environment.startStorageNode()
     })
 
     afterEach(async () => {
         await Promise.allSettled([client?.destroy()])
     })
 
-    describe('addToStorageNode()', () => {
+    describe('addToStorageNode', () => {
+
         it('single partition stream', async () => {
             const stream = await createTestStream(client, module, {
                 partitions: 1
             })
-            await expect(stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -32,7 +35,7 @@ describe('Stream', () => {
             const stream = await createTestStream(client, module, {
                 partitions: 5
             })
-            await expect(stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)) // resolves after assignment stream messages have arrived
+            await expect(stream.addToStorageNode(storageNode.id)) // resolves after assignment stream messages have arrived
                 .resolves
                 .toEqual(undefined)
         })
@@ -47,16 +50,17 @@ describe('Stream', () => {
         })
     })
 
-    describe('detectFields()', () => {
+    describe('detectFields', () => {
+
         let stream: Stream
 
         beforeEach(async () => {
             stream = await createTestStream(client, module)
-            await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
+            await stream.addToStorageNode(storageNode.id)
         })
 
-        it('does detect primitive types', async () => {
-            const msg = {
+        it('primitive types', async () => {
+            const msg = await stream.publish({
                 number: 123,
                 boolean: true,
                 object: {
@@ -64,16 +68,12 @@ describe('Stream', () => {
                     v: 2,
                 },
                 array: [1, 2, 3],
-                string: 'test',
-            }
-            const publishTestMessages = getPublishTestMessages(client, stream, {
-                waitForLast: true,
-                createMessage: () => msg,
+                string: 'test'
             })
-            await publishTestMessages(1)
+            await client.waitForStorage(msg)
 
-            expect(stream.config.fields).toEqual([])
             await stream.detectFields()
+
             const expectedFields = [
                 {
                     name: 'number',
@@ -96,29 +96,24 @@ describe('Stream', () => {
                     type: 'string',
                 },
             ]
-
             expect(stream.config.fields).toEqual(expectedFields)
             const loadedStream = await client.getStream(stream.id)
             expect(loadedStream.config.fields).toEqual(expectedFields)
         })
 
         it('skips unsupported types', async () => {
-            const msg = {
+            const msg = await stream.publish({
                 null: null,
                 empty: {},
                 func: () => null,
                 nonexistent: undefined,
                 symbol: Symbol('test'),
                 // TODO: bigint: 10n,
-            }
-            const publishTestMessages = getPublishTestMessages(client, stream, {
-                waitForLast: true,
-                createMessage: () => msg,
             })
-            await publishTestMessages(1)
+            await client.waitForStorage(msg)
 
-            expect(stream.config.fields).toEqual([])
             await stream.detectFields()
+
             const expectedFields = [
                 {
                     name: 'null',
@@ -129,9 +124,7 @@ describe('Stream', () => {
                     type: 'map',
                 },
             ]
-
             expect(stream.config.fields).toEqual(expectedFields)
-
             const loadedStream = await client.getStream(stream.id)
             expect(loadedStream.config.fields).toEqual(expectedFields)
         })

@@ -1,7 +1,7 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { PushBuffer, pull } from '../../src/utils/PushBuffer'
 import { counterId } from '../../src/utils/utils'
-import { LeaksDetector } from '../test-utils/utils'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
 
 import { expected, IteratorTest } from './IteratorTest'
 

@@ -1,26 +1,20 @@
 import 'reflect-metadata'
-import './utils/PatchTsyringe'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
-
-import { Ethereum } from './Ethereum'
-import { uuid } from './utils/uuid'
-import { counterId } from './utils/utils'
+import { generateEthereumAccount as _generateEthereumAccount } from './Ethereum'
 import { pOnce } from './utils/promises'
 import { Debug } from './utils/log'
 import { Context } from './utils/Context'
-import { ConfigInjectionToken, StrictStreamrClientConfig, StreamrClientConfig, createStrictConfig } from './Config'
-import { BrubeckContainer } from './Container'
-
+import { StreamrClientConfig, createStrictConfig } from './Config'
 import { Publisher } from './publish/Publisher'
 import { Subscriber } from './subscribe/Subscriber'
 import { ProxyPublishSubscribe } from './ProxyPublishSubscribe'
 import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
-import { BrubeckNode, NetworkNodeStub } from './BrubeckNode'
+import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
 import { DestroySignal } from './DestroySignal'
 import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
-import { StorageNodeMetadata, StorageNodeRegistry } from './StorageNodeRegistry'
-import { StreamRegistry } from './StreamRegistry'
+import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
+import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
@@ -28,23 +22,19 @@ import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
 import { EthereumAddress, ProxyDirection, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
-import { SearchStreamsPermissionFilter } from './searchStreams'
+import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
 import { MessageMetadata } from './index-exports'
-
-let uid: string = process.pid != null
-    // Use process id in node uid.
-    ? `${process.pid}`
-    // Fall back to `uuid()` later (see initContainer). Doing it here will break browser projects
-    // that utilize server-side rendering (no `window` while build's target is `web`).
-    : ''
+import { initContainer } from './Container'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 
 /**
  * @category Important
  */
 export class StreamrClient implements Context {
-    static generateEthereumAccount = Ethereum.generateEthereumAccount.bind(Ethereum)
+    static generateEthereumAccount = _generateEthereumAccount
 
     /** @internal */
     readonly id
@@ -52,8 +42,8 @@ export class StreamrClient implements Context {
     readonly debug
 
     private container: DependencyContainer
-    private node: BrubeckNode
-    private ethereum: Ethereum
+    private node: NetworkNodeFacade
+    private authentication: Authentication
     private resends: Resends
     private publisher: Publisher
     private subscriber: Subscriber
@@ -61,6 +51,7 @@ export class StreamrClient implements Context {
     private groupKeyStoreFactory: GroupKeyStoreFactory
     private destroySignal: DestroySignal
     private streamRegistry: StreamRegistry
+    private streamStorageRegistry: StreamStorageRegistry
     private storageNodeRegistry: StorageNodeRegistry
     private streamIdBuilder: StreamIDBuilder
     private eventEmitter: StreamrClientEventEmitter
@@ -71,8 +62,8 @@ export class StreamrClient implements Context {
         initContainer(config, container)
 
         this.container = container
-        this.node = container.resolve<BrubeckNode>(BrubeckNode)
-        this.ethereum = container.resolve<Ethereum>(Ethereum)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
+        this.authentication = container.resolve<Authentication>(AuthenticationInjectionToken)
         this.resends = container.resolve<Resends>(Resends)
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
@@ -80,6 +71,7 @@ export class StreamrClient implements Context {
         this.groupKeyStoreFactory = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
+        this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
         this.storageNodeRegistry = container.resolve<StorageNodeRegistry>(StorageNodeRegistry)
         this.streamIdBuilder = container.resolve<StreamIDBuilder>(StreamIDBuilder)
         this.eventEmitter = container.resolve<StreamrClientEventEmitter>(StreamrClientEventEmitter)
@@ -115,12 +107,12 @@ export class StreamrClient implements Context {
         const store = await this.groupKeyStoreFactory.getStore(streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
-                return store.rotateGroupKey()
+                await store.rotateGroupKey()
             } else { // eslint-disable-line no-else-return
-                return store.setNextGroupKey(opts.key)
+                await store.setNextGroupKey(opts.key)
             }
         } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
-            return store.rekey(opts.key)
+            await store.rekey(opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
@@ -290,7 +282,7 @@ export class StreamrClient implements Context {
     }
 
     setPermissions(...items: {
-        streamId: string,
+        streamId: string
         assignments: PermissionAssignment[]
     }[]): Promise<void> {
         return this.streamRegistry.setPermissions(...items)
@@ -307,6 +299,26 @@ export class StreamrClient implements Context {
     // --------------------------------------------------------------------------------------------
     // Storage
     // --------------------------------------------------------------------------------------------
+    
+    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
+        return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
+    }
+    
+    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
+        return this.streamStorageRegistry.isStoredStream(streamIdOrPath, nodeAddress)
+    }
+    
+    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
+        return this.streamStorageRegistry.getStoredStreams(nodeAddress)
+    }
+    
+    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
+        return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
+    }
 
     setStorageNodeMetadata(metadata: StorageNodeMetadata | undefined): Promise<void> {
         return this.storageNodeRegistry.setStorageNodeMetadata(metadata)
@@ -315,33 +327,13 @@ export class StreamrClient implements Context {
     getStorageNodeMetadata(nodeAddress: EthereumAddress): Promise<StorageNodeMetadata> {
         return this.storageNodeRegistry.getStorageNodeMetadata(nodeAddress)
     }
-    
-    addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.storageNodeRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
-    }
-    
-    removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
-        return this.storageNodeRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
-    }
-    
-    isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
-        return this.storageNodeRegistry.isStoredStream(streamIdOrPath, nodeAddress)
-    }
-    
-    getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
-        return this.storageNodeRegistry.getStoredStreams(nodeAddress)
-    }
-    
-    getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
-        return this.storageNodeRegistry.getStorageNodes(streamIdOrPath)
-    }
 
     // --------------------------------------------------------------------------------------------
     // Authentication
     // --------------------------------------------------------------------------------------------
 
     getAddress(): Promise<EthereumAddress> {
-        return this.ethereum.getAddress()
+        return this.authentication.getAddress()
     }
 
     // --------------------------------------------------------------------------------------------
@@ -422,58 +414,3 @@ export class StreamrClient implements Context {
     }
 }
 
-/**
- * @internal
- */
-export function initContainer(
-    config: StrictStreamrClientConfig, 
-    c: DependencyContainer
-): Context {
-    uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-    const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
-    const debug = Debug(id)
-    // @ts-expect-error not in types
-    if (!debug.inspectOpts) {
-        // @ts-expect-error not in types
-        debug.inspectOpts = {}
-    }
-    // @ts-expect-error not in types
-    Object.assign(debug.inspectOpts, {
-        // @ts-expect-error not in types
-        ...debug.inspectOpts,
-        ...config.debug.inspectOpts
-    })
-    debug('create')
-
-    const rootContext = {
-        id,
-        debug
-    }
-
-    c.register(Context as any, {
-        useValue: rootContext
-    })
-
-    c.register(BrubeckContainer, {
-        useValue: c
-    })
-
-    // associate values to config tokens
-    const configTokens: [symbol, object][] = [
-        [ConfigInjectionToken.Root, config],
-        [ConfigInjectionToken.Auth, config.auth],
-        [ConfigInjectionToken.Ethereum, config],
-        [ConfigInjectionToken.Network, config.network],
-        [ConfigInjectionToken.Connection, config],
-        [ConfigInjectionToken.Subscribe, config],
-        [ConfigInjectionToken.Publish, config],
-        [ConfigInjectionToken.Encryption, config],
-        [ConfigInjectionToken.Cache, config.cache],
-    ]
-
-    configTokens.forEach(([token, useValue]) => {
-        c.register(token, { useValue })
-    })
-
-    return rootContext
-}

@@ -1,14 +1,14 @@
 import { Plugin, PluginOptions } from '../../Plugin'
-import { Logger } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 
-type ConfigStream = {
-    streamId: string,
+interface ConfigStream {
+    streamId: string
     streamPartition: number
 }
 
 export interface SubscriberPluginConfig {
-    streams: ConfigStream[],
+    streams: ConfigStream[]
     subscriptionRetryInterval: number
 }
 
@@ -30,12 +30,10 @@ export class SubscriberPlugin extends Plugin<SubscriberPluginConfig> {
     }
 
     private async subscribeToStreamParts(): Promise<void> {
+        const node = await this.streamrClient!.getNode()
         await Promise.all([
             ...this.streamParts.map(async (streamPart) => {
-                const isAlreadySubscribed = (await this.streamrClient!.getSubscriptions(streamPart)).length > 0
-                if (!isAlreadySubscribed) {
-                    await this.streamrClient!.subscribe(streamPart, (_message: any) => {})
-                }
+                node.subscribe(streamPart)
             })
         ])
     }

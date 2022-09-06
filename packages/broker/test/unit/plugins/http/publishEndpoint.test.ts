@@ -32,9 +32,9 @@ describe('PublishEndpoint', () => {
         expectedPartition,
         expectedPartitionKey
     }: { 
-        queryParams: any,
-        expectedTimestamp?: number,
-        expectedPartition?: number,
+        queryParams: any
+        expectedTimestamp?: number
+        expectedPartition?: number
         expectedPartitionKey?: string
     }) => {
         await postMessage({

@@ -18,7 +18,7 @@ export const NodeWebSocketConnectionFactory: WebSocketConnectionFactory<NodeClie
 
 export class NodeClientWsConnection extends AbstractWsConnection {
     
-    private readyState: ReadyState = 1;
+    private readyState: ReadyState = 1
     
     constructor(private ownAddress: string, 
         private ownPeerInfo: PeerInfo, 
@@ -35,7 +35,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     }
 
     terminate(): void {
-        Simulator.instance().wsDisconnect(this.ownAddress,this.ownPeerInfo, this.remoteAddress, 
+        Simulator.instance().wsDisconnect(this.ownAddress, this.ownPeerInfo, this.remoteAddress, 
             DisconnectionCode.GRACEFUL_SHUTDOWN, DisconnectionReason.GRACEFUL_SHUTDOWN)
         this.readyState = 3
         this.endpoint.doOnClose(this, DisconnectionCode.DEAD_CONNECTION, '')

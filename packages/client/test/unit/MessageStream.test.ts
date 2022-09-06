@@ -1,7 +1,9 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
-import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
+import { Debug } from '../test-utils/utils'
+import { Msg } from '../test-utils/publish'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { MessageStream } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
 
@@ -179,47 +181,6 @@ describe('MessageStream', () => {
 
         expect(received).toEqual([streamMessage])
     })
-    /*
-    describe('when not started', () => {
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end + error with throw', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            const onMessageStreamError = jest.fn()
-            s.on('end', onEnd)
-            s.on('error', onMessageStreamError)
-            const err = new Error(counterId('expected error'))
-            await expect(async () => {
-                await s.throw(err)
-            }).rejects.toThrow(err)
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-            expect(onMessageStreamError).toHaveBeenCalledTimes(1)
-        })
-    })
-    */
 
     it('can collect', async () => {
         const testMessage = Msg()

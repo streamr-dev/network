@@ -39,7 +39,7 @@ describe('WebRTC multisignaller test', () => {
         nodeToTracker2 = new NodeToTracker(ep2)
 
         await runAndWaitForEvents(
-            () => {nodeToTracker1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))},[
+            () => {nodeToTracker1.connectToTracker(tracker1.getUrl(), PeerInfo.newTracker(tracker1.getConfigRecord().id))}, [
                 [tracker1, TrackerEvent.NODE_CONNECTED]
             ])
         
@@ -54,7 +54,7 @@ describe('WebRTC multisignaller test', () => {
             ])
         
         await runAndWaitForEvents(
-            () => {nodeToTracker2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))},[
+            () => {nodeToTracker2.connectToTracker(tracker2.getUrl(), PeerInfo.newTracker(tracker2.getConfigRecord().id))}, [
                 [tracker2, TrackerEvent.NODE_CONNECTED]
             ])
 
@@ -92,7 +92,7 @@ describe('WebRTC multisignaller test', () => {
     it('WebRTC connection is established and signalling works if endpoints use different trackers for signalling', async () => {
         await runAndWaitForEvents([
             () => { endpoint1.connect('node-2', tracker1.getConfigRecord().id, true).catch(() => null) },
-            () => {endpoint2.connect('node-1', tracker2.getConfigRecord().id, false).catch(() => null)}],[
+            () => {endpoint2.connect('node-1', tracker2.getConfigRecord().id, false).catch(() => null)}], [
             [endpoint1, EndpointEvent.PEER_CONNECTED],
             [endpoint2, EndpointEvent.PEER_CONNECTED]
         ])

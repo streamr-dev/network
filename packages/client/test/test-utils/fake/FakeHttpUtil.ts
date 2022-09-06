@@ -1,33 +1,38 @@
 import { Readable } from 'stream'
-import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { URLSearchParams } from 'url'
-
-import { FakeStorageNodeRegistry } from './FakeStorageNodeRegistry'
-import { StorageNodeRegistry } from '../../../src/StorageNodeRegistry'
 import { HttpUtil } from '../../../src/HttpUtil'
+import { FakeNetwork } from './FakeNetwork'
+import { FakeStorageNode, parseNodeIdFromStorageNodeUrl } from './FakeStorageNode'
 
-type ResendRequest = { resendType: string, streamPartId: StreamPartID, query?: URLSearchParams }
+const MAX_TIMESTAMP_VALUE = 8640000000000000 // https://262.ecma-international.org/5.1/#sec-15.9.1.1
+const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 
-@scoped(Lifecycle.ContainerScoped)
+interface ResendRequest {
+    nodeId: EthereumAddress
+    resendType: string
+    streamPartId: StreamPartID
+    query?: URLSearchParams
+}
+
 export class FakeHttpUtil implements HttpUtil {
+    private readonly network: FakeNetwork
     private readonly realHttpUtil: HttpUtil
-    private readonly storageNodeRegistry: FakeStorageNodeRegistry
 
     constructor(
-        @inject(StorageNodeRegistry) storageNodeRegistry: StorageNodeRegistry
+        network: FakeNetwork
     ) {
+        this.network = network
         this.realHttpUtil = new HttpUtil()
-        this.storageNodeRegistry = storageNodeRegistry as unknown as FakeStorageNodeRegistry
     }
 
     async fetchHttpStream(url: string): Promise<Readable> {
         const request = FakeHttpUtil.getResendRequest(url)
         if (request !== undefined) {
+            const storageNode = this.network.getNode(request.nodeId) as FakeStorageNode
             const format = request.query!.get('format')
             if (format === 'raw') {
                 const count = Number(request.query!.get('count'))
-                const storageNode = await this.storageNodeRegistry.getRandomStorageNodeFor(request.streamPartId)
                 let msgs: StreamMessage<unknown>[]
                 if (request.resendType === 'last') {
                     msgs = await storageNode.getLast(request.streamPartId, count)
@@ -37,11 +42,20 @@ export class FakeHttpUtil implements HttpUtil {
                         fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
                         toTimestamp: Number(request.query!.get('toTimestamp')),
                         toSequenceNumber: Number(request.query!.get('toSequenceNumber')),
-                        publisherId: request.query!.get('publisherId')!,
-                        msgChainId: request.query!.get('msgChainId')!
+                        publisherId: request.query!.get('publisherId') ?? undefined,
+                        msgChainId: request.query!.get('msgChainId') ?? undefined
+                    })
+                } else if (request.resendType === 'from') {
+                    msgs = await storageNode.getRange(request.streamPartId, {
+                        fromTimestamp: Number(request.query!.get('fromTimestamp')),
+                        fromSequenceNumber: Number(request.query!.get('fromSequenceNumber')),
+                        toTimestamp: MAX_TIMESTAMP_VALUE,
+                        toSequenceNumber: MAX_SEQUENCE_NUMBER_VALUE,
+                        publisherId: request.query!.get('publisherId') ?? undefined,
+                        msgChainId: undefined
                     })
                 } else {
-                    throw new Error('not implemented: ' + JSON.stringify(request))
+                    throw new Error(`assertion failed: resendType=${request.resendType}`)
                 }
                 return Readable.from(msgs)
             }
@@ -61,6 +75,7 @@ export class FakeHttpUtil implements HttpUtil {
             const streamId = decodeURIComponent(encodedStreamId) as StreamID
             const streamPartId = toStreamPartID(streamId, Number(partition))
             return {
+                nodeId: parseNodeIdFromStorageNodeUrl(url),
                 resendType,
                 streamPartId,
                 query: (queryParams !== undefined) ? new URLSearchParams(queryParams.substring(1)) : undefined

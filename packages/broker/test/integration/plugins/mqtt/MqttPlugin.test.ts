@@ -11,7 +11,7 @@ jest.setTimeout(30000)
 
 createMessagingPluginTest('mqtt',
     {
-        createClient: async (_action: 'publish'|'subscribe', _streamId: string, apiKey: string): Promise<AsyncMqttClient> => {
+        createClient: async (_action: 'publish' | 'subscribe', _streamId: string, apiKey: string): Promise<AsyncMqttClient> => {
             return mqtt.connectAsync('mqtt://localhost:' + MQTT_PORT, {
                 username: '',
                 password: apiKey,

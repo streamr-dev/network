@@ -205,7 +205,7 @@ export class Signal<ArgsType extends any[] = []> {
      * Remove all callback listeners from this Signal.
      */
     unlistenAll(): void {
-        this.listeners.length = 0
+        this.listeners = []
     }
 
     // TODO better return type?
@@ -238,7 +238,7 @@ export class Signal<ArgsType extends any[] = []> {
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
             // remove all listeners
-            this.listeners.length = 0
+            this.listeners = []
             this.end(...args)
         }
 
@@ -291,7 +291,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
     protected ignoredErrors = new WeakSet<Error>()
     private minListeners = 1
 
-    protected async execTrigger(
+    protected override async execTrigger(
         ...args: ArgsType
     ): Promise<void> {
         if (this.isEnded) {
@@ -304,7 +304,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
         const tasks = this.listeners.slice()
         if (this.triggerType === TRIGGER_TYPE.ONCE) {
             // remove all listeners
-            this.listeners.length = 0
+            this.listeners = []
             this.end(...args)
         }
 
@@ -326,7 +326,7 @@ export class ErrorSignal<ArgsType extends [Error] = [Error]> extends Signal<Args
         }, Promise.resolve())
     }
 
-    async trigger(...args: ArgsType): Promise<void> {
+    override async trigger(...args: ArgsType): Promise<void> {
         const err = args[0]
         // don't double-handle errors
         if (this.ignoredErrors.has(err)) {

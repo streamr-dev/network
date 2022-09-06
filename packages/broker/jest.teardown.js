@@ -1,5 +1,5 @@
 const { KeyServer } = require('streamr-test-utils')
 
-export default async () => {
+module.exports = async () => {
     await KeyServer.stopIfRunning()
 }

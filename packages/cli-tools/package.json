@@ -7,8 +7,8 @@
   },
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
-    "prepare": "npm run eslint && npm run build",
     "build": "tsc -b tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -30,19 +30,16 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
+    "@streamr/utils": "^0.0.1",
     "commander": "^8.3.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
     "lodash": "^4.17.21",
-    "streamr-client": "^6.0.0",
-    "streamr-client-protocol": "^12.0.0",
-    "streamr-test-utils": "^2.0.0"
+    "streamr-client": "^6.0.1"
   },
   "devDependencies": {
-    "@streamr/dev-config": "^1.0.0",
     "@types/easy-table": "0.0.32",
     "@types/event-stream": "^3.3.34",
-    "@types/lodash": "^4.14.175",
-    "typescript": "^4.5.2"
+    "@types/lodash": "^4.14.175"
   }
 }

@@ -1,12 +1,22 @@
 import 'reflect-metadata'
 import { container as rootContainer } from 'tsyringe'
 import { toStreamID } from 'streamr-client-protocol'
-import { initContainer } from '../../src/StreamrClient'
+import { initContainer } from '../../src/Container'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/StreamRegistry'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { createStrictConfig } from '../../src/Config'
 
 describe('Stream', () => {
+    
+    it('initial fields', () => {
+        const mockContainer = rootContainer.createChildContainer()
+        initContainer(createStrictConfig({}), mockContainer)
+        const stream = new Stream({
+            id: toStreamID('mock-id')
+        }, mockContainer as any)
+        expect(stream.config.fields).toEqual([])
+    })
+
     describe('update', () => {
         it('fields not updated if transaction fails', async () => {
             const config = createStrictConfig({})

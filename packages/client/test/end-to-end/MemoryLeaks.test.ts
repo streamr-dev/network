@@ -1,27 +1,32 @@
-import { wait } from 'streamr-test-utils'
-import { getPublishTestMessages, fetchPrivateKeyWithGas, snapshot, LeaksDetector } from '../test-utils/utils'
-import { StreamrClient, initContainer } from '../../src/StreamrClient'
+import 'reflect-metadata'
+import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
+import { StreamrClient } from '../../src/StreamrClient'
+import { initContainer } from '../../src/Container'
 import { container as rootContainer, DependencyContainer } from 'tsyringe'
+import { writeHeapSnapshot } from 'v8'
 import { Subscription } from '../../src/subscribe/Subscription'
 import { counterId } from '../../src/utils/utils'
 import { Defer } from '../../src/utils/Defer'
-
 import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 import { Context } from '../../src/utils/Context'
-import { BrubeckNode } from '../../src/BrubeckNode'
-import { StorageNodeRegistry } from '../../src/StorageNodeRegistry'
-import { StreamRegistryCached } from '../../src/StreamRegistryCached'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
+import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { DestroySignal } from '../../src/DestroySignal'
+import { Debug } from '../test-utils/utils'
 
 const Dependencies = {
     Context,
-    BrubeckNode,
+    NetworkNodeFacade,
     StorageNodeRegistry,
     StreamRegistryCached,
     Resends,
@@ -31,8 +36,22 @@ const Dependencies = {
     DestroySignal
 }
 
+const debug = Debug('test')
+
+/**
+ * Write a heap snapshot file if WRITE_SNAPSHOTS env var is set.
+ */
+function snapshot(): string {
+    if (!process.env.WRITE_SNAPSHOTS) { return '' }
+    debug('heap snapshot >>')
+    const value = writeHeapSnapshot()
+    debug('heap snapshot <<', value)
+    return value
+}
+
 const MAX_MESSAGES = 5
 const TIMEOUT = 30000
+
 describe('MemoryLeaks', () => {
     let leaksDetector: LeaksDetector
 
@@ -57,9 +76,10 @@ describe('MemoryLeaks', () => {
         let createContainer: (opts?: any) => Promise<any>
         beforeAll(() => {
             createContainer = async (opts: any = {}): Promise<{
-                config: StrictStreamrClientConfig;
-                childContainer: DependencyContainer;
-                rootContext: any;}> => {
+                config: StrictStreamrClientConfig
+                childContainer: DependencyContainer
+                rootContext: any
+            }> => {
                 const config = createStrictConfig({
                     ...ConfigTest,
                     auth: {
@@ -171,7 +191,7 @@ describe('MemoryLeaks', () => {
                 const stream = await client.createStream({
                     id: `/${counterId('stream')}-${Date.now()}`
                 })
-                const publishTestMessages = getPublishTestMessages(client, stream, {
+                const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                     retainMessages: false,
                 })
 
@@ -188,7 +208,7 @@ describe('MemoryLeaks', () => {
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -201,7 +221,7 @@ describe('MemoryLeaks', () => {
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -221,7 +241,7 @@ describe('MemoryLeaks', () => {
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const received: any[] = []
@@ -241,12 +261,11 @@ describe('MemoryLeaks', () => {
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
-                    // leaksDetector = new LeaksDetector()
                     const stream = await client.createStream({
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const sub1Done = Defer()

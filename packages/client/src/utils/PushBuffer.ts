@@ -22,7 +22,7 @@ function isError(err: any): err is Error {
     )
 }
 
-export type PushBufferOptions = {
+export interface PushBufferOptions {
     name?: string
 }
 
@@ -48,7 +48,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     readonly id
     readonly debug
 
-    protected readonly buffer: (T | Error)[] = []
+    protected buffer: (T | Error)[] = []
     readonly bufferSize: number
 
     /** open when writable */
@@ -229,7 +229,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
                 throw error
             }
         } finally {
-            this.buffer.length = 0
+            this.buffer = []
             this.lock()
         }
     }
@@ -240,7 +240,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
 
     // clears any pending items in buffer
     clear(): void {
-        this.buffer.length = 0
+        this.buffer = []
     }
 
     // AsyncGenerator implementation
@@ -281,7 +281,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     }
 }
 
-export type PullOptions = {
+export interface PullOptions {
     /** end dest when src ends */
     endDest: boolean
 }

@@ -1,7 +1,7 @@
 /**
  * Subscription message processing pipeline
  */
-import { 
+import {
     StreamMessage,
     StreamMessageError,
     GroupKeyErrorResponse,
@@ -17,7 +17,8 @@ import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { MsgChainUtil } from './MsgChainUtil'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -34,16 +35,6 @@ export function SubscribePipeline<T = unknown>(
 
     const gapFillMessages = new OrderMessages<T>(
         container.resolve(ConfigInjectionToken.Subscribe),
-        container.resolve(Context as any),
-        container.resolve(Resends),
-        streamPartId,
-    )
-
-    const orderMessages = new OrderMessages<T>(
-        {
-            ...container.resolve(ConfigInjectionToken.Subscribe),
-            gapFill: false,
-        },
         container.resolve(Context as any),
         container.resolve(Resends),
         streamPartId,
@@ -70,7 +61,9 @@ export function SubscribePipeline<T = unknown>(
         container.resolve(DestroySignal),
     )
 
-    // collect messages that fail validation/parsing, do not push out of pipeline
+    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)
+
+    // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
@@ -93,20 +86,26 @@ export function SubscribePipeline<T = unknown>(
             await validate.validate(streamMessage)
         })
         // decrypt
-        .map(decrypt.decrypt)
+        .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
+            setImmediate(async () => {
+                for await (const msg of src) {
+                    msgChainUtil.addMessage(msg)
+                }
+                await msgChainUtil.flush()
+                msgChainUtil.stop()
+            })
+            yield* msgChainUtil
+        })
         // parse content
         .forEach(async (streamMessage: StreamMessage) => {
             streamMessage.getParsedContent()
         })
-        // re-order messages (ignore gaps)
-        .pipe(orderMessages.transform())
         // ignore any failed messages
         .filter(async (streamMessage: StreamMessage) => {
             return !ignoreMessages.has(streamMessage)
         })
         .onBeforeFinally.listen(async () => {
             const tasks = [
-                orderMessages.stop(),
                 gapFillMessages.stop(),
                 decrypt.stop(),
                 validate.stop(),

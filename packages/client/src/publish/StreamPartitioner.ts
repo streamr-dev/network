@@ -1,11 +1,12 @@
 /**
  * Derive partitions for StreamMessages.
  */
-import { StreamID, Utils } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { CacheFn } from '../utils/caches'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
 import { inject, Lifecycle, scoped } from 'tsyringe'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { keyToArrayIndex } from '@streamr/utils'
 
 export type PartitionKey = string | number | undefined
 
@@ -32,10 +33,6 @@ export class StreamPartitioner {
         return this.computeStreamPartition(stream.id, stream.partitions, partitionKey)
     }
 
-    public clear(): void {
-        this.computeStreamPartition.clear()
-    }
-
     protected computeStreamPartition = CacheFn((_streamId: StreamID, partitionCount: number, partitionKey: PartitionKey) => {
         if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
             throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
@@ -46,7 +43,7 @@ export class StreamPartitioner {
             return Math.floor(Math.random() * partitionCount)
         }
 
-        return Utils.keyToArrayIndex(partitionCount, partitionKey)
+        return keyToArrayIndex(partitionCount, partitionKey)
     }, {
         ...this.cacheOptions,
         cacheKey([streamId, partitionCount, partitionKey]) {

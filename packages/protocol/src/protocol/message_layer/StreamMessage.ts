@@ -11,7 +11,7 @@ import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
 
-const serializerByVersion: {[version: string]: Serializer<StreamMessage> } = {}
+const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
 const BYE_KEY = '_bye'
 const LATEST_VERSION = 32
 
@@ -19,7 +19,6 @@ export enum StreamMessageType {
     MESSAGE = 27,
     GROUP_KEY_REQUEST = 28,
     GROUP_KEY_RESPONSE = 29,
-    GROUP_KEY_ANNOUNCE = 30,
     GROUP_KEY_ERROR_RESPONSE = 31
 }
 
@@ -38,7 +37,7 @@ export enum EncryptionType {
     AES = 2
 }
 
-export type StreamMessageOptions<T> = {
+export interface StreamMessageOptions<T> {
     messageId: MessageID
     prevMsgRef?: MessageRef | null
     content: T | string
@@ -61,10 +60,10 @@ export interface ObjectType<T> {
     messageType: StreamMessageType
     contentType: ContentType
     encryptionType: EncryptionType
-    groupKeyId: string|null
-    content: string|T
-    signatureType: SignatureType;
-    signature: string|null
+    groupKeyId: string | null
+    content: string | T
+    signatureType: SignatureType
+    signature: string | null
 }
 
 /**
@@ -404,7 +403,7 @@ export default class StreamMessage<T = unknown> {
         return streamMessageVersion >= 31
     }
 
-    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null}): void {
+    static validateSequence({ messageId, prevMsgRef }: { messageId: MessageID, prevMsgRef?: MessageRef | null }): void {
         if (!prevMsgRef) {
             return
         }

@@ -4,7 +4,7 @@ import { validateIsInteger, validateIsString } from '../../utils/validations'
 import { Serializer } from '../../Serializer'
 
 // TODO use ControlMessageType instead of number when we have real enums
-const serializerByVersionAndType: {[version: string]: { [type: number]: Serializer<TrackerMessage> }} = {}
+const serializerByVersionAndType: Record<string, Record<number, Serializer<TrackerMessage>>> = {}
 const LATEST_VERSION = 2
 
 export enum TrackerMessageType {
@@ -30,6 +30,7 @@ export default class TrackerMessage {
     type: TrackerMessageType
     requestId: string
 
+    // eslint-disable-next-line @typescript-eslint/default-param-last
     constructor(version = LATEST_VERSION, type: TrackerMessageType, requestId: string) {
         if (new.target === TrackerMessage) {
             throw new TypeError('TrackerMessage is abstract.')

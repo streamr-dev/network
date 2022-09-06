@@ -17,7 +17,7 @@ export interface TrackerOptions extends AbstractNodeOptions {
     attachHttpEndpoints?: boolean
     maxNeighborsPerNode?: number
     privateKeyFileName?: string
-    certFileName?: string,
+    certFileName?: string
     topologyStabilization?: TopologyStabilizationOptions
 }
 

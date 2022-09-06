@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Method signatures of `client.publish` and `stream.publish` have changed: optional `metadata` is given an object instead of positional arguments
-  - new metadata fields: `sequenceNumber` and `msgChainId`
+  - new metadata field: `msgChainId`
 - Method `getStorageNodesOf()` renamed to `getStorageNodes()`
 - Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
 - Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - resends support multiple storage nodes (the data is fetched from a random storage node)
 - Configuration parameter `groupKeys` renamed to `encryptionKeys`
 - Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
+- When a `MessageStream` is returned from `resend()`, it doesn't reject if an encryption key is not available
 
 ### Deprecated
 

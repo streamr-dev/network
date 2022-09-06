@@ -5,7 +5,7 @@ import { StreamMessage } from 'streamr-client-protocol'
 
 import { EncryptionUtil, UnableToDecryptError } from '../encryption/EncryptionUtil'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 import { instanceId } from '../utils/utils'
@@ -46,14 +46,14 @@ export class Decrypt<T> implements Context {
 
         try {
             const groupKey = await this.keyExchange.getGroupKey(streamMessage).catch((err) => {
-                throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.stack}`, streamMessage)
+                throw new UnableToDecryptError(streamMessage, `Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.stack}`)
             })
 
             if (!groupKey) {
-                throw new UnableToDecryptError([
+                throw new UnableToDecryptError(streamMessage, [
                     `Could not get GroupKey: ${streamMessage.groupKeyId}`,
                     'Publisher is offline, key does not exist or no permission to access key.',
-                ].join(' '), streamMessage)
+                ].join(' '))
             }
 
             if (this.isStopped) { 

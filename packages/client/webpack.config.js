@@ -54,13 +54,8 @@ module.exports = (env, argv) => {
                             cacheDirectory: true,
                         }
                     }
-                },
-                {
-                    test: /(\.jsx|\.js|\.ts)$/,
-                    loader: 'eslint-loader',
-                    exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
-                },
-            ],
+                }
+            ]
         },
         resolve: {
             modules: ['node_modules', ...require.resolve.paths(''), path.resolve('./vendor')],
@@ -117,10 +112,9 @@ module.exports = (env, argv) => {
                 [path.join(__dirname, '../network/src/connection/webrtc/NodeWebRtcConnection.ts$')]: require.resolve('streamr-network/src/connection/webrtc/BrowserWebRtcConnection.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsEndpoint.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsEndpoint.ts'),
                 [path.join(__dirname, '../network/src/connection/ws/NodeClientWsConnection.ts$')]: require.resolve('streamr-network/src/connection/ws/BrowserClientWsConnection.ts'),
-                [path.join(__dirname, '../network/src/helpers/logger/LoggerNode.ts$')]: require.resolve('streamr-network/src/helpers/logger/LoggerBrowser.ts'),
-                // swap out ServerPersistentStore for BrowserPersistentStore
-                [path.resolve('./src/encryption/ServerPersistentStore')]: (
-                    path.resolve('./src/encryption/BrowserPersistentStore.ts')
+                // swap out ServerPersistence for BrowserPersistence
+                [path.resolve('./src/utils/persistence/ServerPersistence.ts')]: (
+                    path.resolve('./src/utils/persistence/BrowserPersistence.ts')
                 ),
             },
             fallback: {

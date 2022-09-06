@@ -52,7 +52,7 @@ export abstract class Plugin<T> {
      */
     abstract stop(): Promise<unknown>
 
-    getConfigSchema(): Schema|undefined {
+    getConfigSchema(): Schema | undefined {
         return undefined
     }
 }

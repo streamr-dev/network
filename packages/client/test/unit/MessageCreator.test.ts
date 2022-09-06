@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { EthereumAddress, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { Ethereum } from '../../src/Ethereum'
+import { Authentication } from '../../src/Authentication'
 import { MessageCreateOptions, MessageCreator } from '../../src/publish/MessageCreator'
 import { StreamPartitioner } from '../../src/publish/StreamPartitioner'
 
@@ -13,7 +13,7 @@ const MOCK_USER_ADDRESS = '0xAbcdeabCDE123456789012345678901234567890'
 describe('MessageCreator', () => {
 
     let creator: MessageCreator
-    let streamPartitioner: Pick<StreamPartitioner, 'compute' | 'clear'>
+    let streamPartitioner: Pick<StreamPartitioner, 'compute'>
 
     const createMockMessage = async (
         opts: Omit<MessageCreateOptions<any>, 'content' | 'timestamp'> = {}
@@ -27,17 +27,16 @@ describe('MessageCreator', () => {
 
     beforeEach(() => {
         streamPartitioner = {
-            compute: jest.fn().mockResolvedValue(MOCK_STREAM_PARTITION),
-            clear: () => {}
+            compute: jest.fn().mockResolvedValue(MOCK_STREAM_PARTITION)
         }
-        const ethereum: Pick<Ethereum, 'getAddress'> = {
+        const authentication: Pick<Authentication, 'getAddress'> = {
             getAddress: async (): Promise<EthereumAddress> => {
                 return MOCK_USER_ADDRESS
             }
         }
         creator = new MessageCreator(
             streamPartitioner as any, 
-            ethereum as any,
+            authentication as any,
             {
                 maxSize: 1,
                 maxAge: 0

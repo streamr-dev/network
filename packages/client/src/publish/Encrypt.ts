@@ -3,7 +3,7 @@
  */
 import { StreamMessage } from 'streamr-client-protocol'
 import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 

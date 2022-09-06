@@ -1,5 +1,6 @@
 import { once } from 'events'
-import { waitForCondition, wait } from 'streamr-test-utils'
+import { waitForCondition } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { BrowserWebRtcConnection } from '../../src/connection/webrtc/BrowserWebRtcConnection'
 import { DeferredConnectionAttempt } from '../../src/connection/webrtc/DeferredConnectionAttempt'

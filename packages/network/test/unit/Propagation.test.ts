@@ -1,7 +1,7 @@
 import { MessageID, StreamPartID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { NodeId } from '../../src/identifiers'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     return new StreamMessage({

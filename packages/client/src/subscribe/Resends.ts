@@ -5,41 +5,42 @@ import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
 import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
-import { wait } from '../utils/promises'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
 import { SubscribePipeline } from './SubscribePipeline'
 
-import { StorageNodeRegistry } from '../StorageNodeRegistry'
+import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random, range } from 'lodash'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
+import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
+import { wait } from '@streamr/utils'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 
 type QueryDict = Record<string, string | number | boolean | null | undefined>
 
 export type ResendRef = MessageRef | {
-    timestamp: number | Date | string,
-    sequenceNumber?: number,
+    timestamp: number | Date | string
+    sequenceNumber?: number
 }
 
-export type ResendLastOptions = {
+export interface ResendLastOptions {
     last: number
 }
 
-export type ResendFromOptions = {
+export interface ResendFromOptions {
     from: ResendRef
     publisherId?: EthereumAddress
 }
 
-export type ResendRangeOptions = {
+export interface ResendRangeOptions {
     from: ResendRef
     to: ResendRef
     msgChainId?: string
@@ -67,12 +68,13 @@ export class Resends implements Context {
 
     constructor(
         context: Context,
+        @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(BrubeckContainer) private container: DependencyContainer,
-        @inject(ConfigInjectionToken.Root) private config: StrictStreamrClientConfig,
-        @inject(HttpUtil) private httpUtil: HttpUtil
+        @inject(HttpUtil) private httpUtil: HttpUtil,
+        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -148,7 +150,7 @@ export class Resends implements Context {
     ) {
         const debug = this.debug.extend(counterId(`resend-${endpointSuffix}`))
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
-        const nodeAddresses = await this.storageNodeRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
+        const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAddresses.length) {
             const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
             err.code = 'NO_STORAGE_NODES'
@@ -199,8 +201,8 @@ export class Resends implements Context {
         fromSequenceNumber = MIN_SEQUENCE_NUMBER_VALUE,
         publisherId
     }: {
-        fromTimestamp: number,
-        fromSequenceNumber?: number,
+        fromTimestamp: number
+        fromSequenceNumber?: number
         publisherId?: EthereumAddress
     }): Promise<MessageStream<T>> {
         return this.fetchStream('from', streamPartId, {
@@ -218,11 +220,11 @@ export class Resends implements Context {
         publisherId,
         msgChainId
     }: {
-        fromTimestamp: number,
-        fromSequenceNumber?: number,
-        toTimestamp: number,
-        toSequenceNumber?: number,
-        publisherId?: EthereumAddress,
+        fromTimestamp: number
+        fromSequenceNumber?: number
+        toTimestamp: number
+        toSequenceNumber?: number
+        publisherId?: EthereumAddress
         msgChainId?: string
     }): Promise<MessageStream<T>> {
         return this.fetchStream('range', streamPartId, {
@@ -236,10 +238,8 @@ export class Resends implements Context {
     }
 
     async waitForStorage(streamMessage: StreamMessage, {
-        // eslint-disable-next-line no-underscore-dangle
-        interval = this.config._timeouts.storageNode.retryInterval,
-        // eslint-disable-next-line no-underscore-dangle
-        timeout = this.config._timeouts.storageNode.timeout,
+        interval = this.timeoutsConfig.storageNode.retryInterval,
+        timeout = this.timeoutsConfig.storageNode.timeout,
         count = 100,
         messageMatchFn = (msgTarget: StreamMessage, msgGot: StreamMessage) => {
             return msgTarget.signature === msgGot.signature

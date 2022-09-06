@@ -1,21 +1,18 @@
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { StreamrClientConfig } from '../../src/Config'
 import { Stream } from '../../src/Stream'
 import { Subscriber } from '../../src/subscribe/Subscriber'
 import { Subscription } from '../../src/subscribe/Subscription'
-
-import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
-import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { ClientFactory, createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src'
+import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
 const MAX_MESSAGES = 10
-jest.setTimeout(50000)
 
-function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => void | null)) {
+function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0
     // eslint-disable-next-line no-param-reassign
     // @ts-expect-error private
@@ -24,7 +21,6 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
             const result = fn(msg, count)
             count += 1
             if (result === null) {
-                sub.debug('(%o) << Test Dropped Message %s: %o', count, msg)
                 continue
             }
             yield msg
@@ -33,17 +29,16 @@ function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: Str
 }
 
 describe('GapFill', () => {
-    let expectErrors = 0 // check no errors by default
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
-    let onError = jest.fn()
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
-    let clientFactory: ClientFactory
+    let storageNode: FakeStorageNode
+    let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
         // eslint-disable-next-line require-atomic-updates
-        client = clientFactory.createClient({
+        client = environment.createClient({
             maxGapRequests: 20,
             gapFillTimeout: 500,
             retryResendAfter: 1000,
@@ -51,19 +46,16 @@ describe('GapFill', () => {
         })
         // @ts-expect-error private
         subscriber = client.subscriber
-        client.debug('connecting before test >>')
         stream = await createTestStream(client, module)
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
-        await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
-        client.debug('connecting before test <<')
+        await stream.addToStorageNode(storageNode.id)
         publishTestMessages = getPublishTestStreamMessages(client, stream.id, { waitForLast: true })
         return client
     }
 
     beforeEach(async () => {
-        clientFactory = createClientFactory()
-        expectErrors = 0
-        onError = jest.fn()
+        environment = new FakeEnvironment()
+        storageNode = environment.startStorageNode()
     })
 
     afterEach(async () => {
@@ -72,12 +64,6 @@ describe('GapFill', () => {
         if (!client) { return }
         const subscriptions = await subscriber.getSubscriptions()
         expect(subscriptions).toHaveLength(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     let subs: Subscription<any>[] = []
@@ -96,7 +82,6 @@ describe('GapFill', () => {
                 gapFillTimeout: 200,
                 retryResendAfter: 200,
             })
-            await client.connect()
         })
 
         describe('realtime (uses resend)', () => {
@@ -106,7 +91,6 @@ describe('GapFill', () => {
                 const sub = await client.subscribe(stream.id)
                 monkeypatchMessageHandler(sub, (msg, count) => {
                     if (count === 2) {
-                        sub.debug('test dropping message %d:', count, msg)
                         return null
                     }
                     return undefined
@@ -309,8 +293,6 @@ describe('GapFill', () => {
                 maxGapRequests: 3
             })
 
-            await client.connect()
-
             // @ts-expect-error private
             const calledResend = jest.spyOn(client.resends, 'range')
             const node = await client.getNode()
@@ -348,195 +330,3 @@ describe('GapFill', () => {
         })
     })
 })
-
-// it('can fill gaps between resend and realtime', async () => {
-// // publish 5 messages into storage
-// const published = await publishTestMessages(5, {
-// waitForLast: true,
-// waitForLastCount: 5,
-// })
-
-// // then simultaneously subscribe with resend & start publishing realtime messages
-// const [sub, publishedLater] = await Promise.all([
-// client.subscribe({
-// stream,
-// resend: {
-// last: 5
-// }
-// }),
-// publishTestMessages(5)
-// ])
-
-// const received = []
-// for await (const m of sub) {
-// received.push(m.getParsedContent())
-// if (received.length === (published.length + publishedLater.length)) {
-// break
-// }
-// }
-
-// expect(received).toEqual([...published, ...publishedLater])
-// await sub.unsubscribe()
-// }, 15000)
-
-// it('rejects resend if no storage assigned', async () => {
-// // new stream, assign to storage node not called
-// stream = await createTestStream(client, module, {
-// requireSignedData: true,
-// })
-
-// await expect(async () => {
-// await client.resend({
-// stream,
-// last: MAX_MESSAGES,
-// })
-// }).rejects.toThrow('storage')
-// }, 15000)
-// })
-// })
-
-// describe('client settings', () => {
-// it('can gapfill subscribe', async () => {
-// await setupClient({
-// gapFillTimeout: 200,
-// retryResendAfter: 200,
-// })
-// await client.connect()
-// const { parse } = client.connection
-// let count = 0
-// let droppedMsgRef: MessageRef
-// client.connection.parse = (...args) => {
-// const msg: any = parse.call(client.connection, ...args)
-// if (!msg.streamMessage) {
-// return msg
-// }
-
-// count += 1
-// if (count === 3) {
-// if (!droppedMsgRef) {
-// droppedMsgRef = msg.streamMessage.getMessageRef()
-// }
-// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-// return null
-// }
-// // allow resend request response through
-
-// return msg
-// }
-
-// const sub = await client.subscribe({
-// stream,
-// })
-
-// const publishedTask = publishTestMessages(MAX_MESSAGES, {
-// stream,
-// })
-
-// const received: any[] = []
-// for await (const m of sub) {
-// received.push(m.getParsedContent())
-// if (received.length === MAX_MESSAGES) {
-// break
-// }
-// }
-// const published = await publishedTask
-// expect(received).toEqual(published)
-// }, 20000)
-
-// it('subscribe does not crash if gaps found but no storage assigned', async () => {
-// await setupClient({
-// gapFillTimeout: 200,
-// retryResendAfter: 2000,
-// maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
-// })
-
-// await client.connect()
-// const { parse } = client.connection
-// // new stream, assign to storage node not called
-// stream = await createTestStream(client, module, {
-// requireSignedData: true,
-// })
-// const calledResend = jest.fn()
-// let count = 0
-// let droppedMsgRef: MessageRef
-// client.connection.parse = (...args) => {
-// const msg: any = parse.call(client.connection, ...args)
-// if (!msg.streamMessage) {
-// return msg
-// }
-
-// count += 1
-// if (count === 3) {
-// if (!droppedMsgRef) {
-// droppedMsgRef = msg.streamMessage.getMessageRef()
-// }
-// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-// return null
-// }
-
-// if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
-// calledResend()
-// client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
-// return null
-// }
-
-// return msg
-// }
-
-// const sub = await client.subscribe({
-// stream,
-// })
-
-// const publishedTask = publishTestMessages(MAX_MESSAGES, {
-// stream,
-// })
-
-// const received: any[] = []
-// for await (const m of sub) {
-// received.push(m.getParsedContent())
-// if (received.length === MAX_MESSAGES - 1) {
-// break
-// }
-// }
-// const published = await publishedTask
-// expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-// expect(client.connection.getState()).toBe('connected')
-// // shouldn't retry if encountered no storage error
-// expect(calledResend).toHaveBeenCalledTimes(0)
-// }, 20000)
-
-// it('subscribe+resend does not crash if no storage assigned', async () => {
-// await setupClient({
-// gapFillTimeout: 200,
-// retryResendAfter: 2000,
-// maxGapRequests: 99 // would time out test if doesn't give up when seeing no storage assigned
-// })
-
-// await client.connect()
-// // new stream, assign to storage node not called
-// stream = await createTestStream(client, module, {
-// requireSignedData: true,
-// })
-
-// const sub = await client.subscribe({
-// stream,
-// resend: { last: 2 }
-// })
-
-// const publishedTask = publishTestMessages(MAX_MESSAGES, {
-// stream,
-// })
-
-// const received: any[] = []
-// for await (const m of sub) {
-// received.push(m.getParsedContent())
-// if (received.length === MAX_MESSAGES) {
-// break
-// }
-// }
-// const published = await publishedTask
-// expect(received).toEqual(published)
-// }, 20000)
-
-// })
-// })

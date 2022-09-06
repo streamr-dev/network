@@ -2,7 +2,8 @@ import { MetricsContext } from '../../src/composition'
 import { NodeToTracker } from '../../src/protocol/NodeToTracker'
 import { Tracker, TrackerEvent, startTracker } from '@streamr/network-tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { waitForCondition, waitForEvent, wait, runAndWaitForEvents } from 'streamr-test-utils'
+import { waitForCondition, runAndWaitForEvents } from 'streamr-test-utils'
+import { wait, waitForEvent } from '@streamr/utils'
 import { Event as EndpointEvent } from '../../src/connection/webrtc/IWebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 import { NegotiatedProtocolVersions } from '../../src/connection/NegotiatedProtocolVersions'
@@ -462,7 +463,7 @@ describe('WebRtcEndpoint', () => {
                 2 ** 17,  // webrtcDatachannelBufferThresholdHigh
                 webrtcDisallowPrivateAddresses
             )
-            return {webRtcEndpoint: endpoint, wsEndpoint: ep, nodeToTracker: nodeToTracker}
+            return { webRtcEndpoint: endpoint, wsEndpoint: ep, nodeToTracker: nodeToTracker }
         }
 
         it('does not allow local addresses in ICE candidtates if local address support is disabled', async () => {

@@ -6,8 +6,8 @@ import { NameDirectory } from 'streamr-network'
 const log = debug('Streamr:contract')
 
 export interface ContractEvent {
-    onMethodExecute: (methodName: string) => void,
-    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void,
+    onMethodExecute: (methodName: string) => void
+    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void
     onTransactionConfirm: (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => void
 }
 

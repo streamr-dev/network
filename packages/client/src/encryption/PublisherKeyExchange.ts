@@ -23,7 +23,7 @@ import { GroupKey } from './GroupKey'
 import { EncryptionUtil, UnableToDecryptError } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Subscription } from '../subscribe/Subscription'
 import { GroupKeyStore } from './GroupKeyStore'
 import { Debugger } from '../utils/log'
@@ -46,13 +46,13 @@ export const createGroupKeyResponse = async (
     const { requestId, streamId, rsaPublicKey, groupKeyIds } = request
 
     const isSubscriber = await isStreamSubscriber(streamId, subscriberId)
-    
+
     const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
         const groupKey = await getGroupKey(id, streamId)
         if (!groupKey) {
             return null // will be filtered out
         }
-        const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
+        const key = EncryptionUtil.encryptWithRSAPublicKey(groupKey.data, rsaPublicKey, true)
         return new EncryptedGroupKey(id, key)
     }))).filter((item) => item !== null) as EncryptedGroupKey[]
 

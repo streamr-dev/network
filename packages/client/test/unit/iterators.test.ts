@@ -1,4 +1,4 @@
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 import { iteratorFinally, CancelableGenerator, nextValue } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils/Defer'
@@ -17,6 +17,7 @@ async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
 }
 
+// eslint-disable-next-line @typescript-eslint/default-param-last
 async function* generateThrow(items = expected, { max = MAX_ITEMS, err = new Error('expected') }) {
     let index = 0
     await wait(WAIT * 0.1)

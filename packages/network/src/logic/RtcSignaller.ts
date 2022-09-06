@@ -2,28 +2,28 @@ import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTr
 import { PeerId, PeerInfo } from '../connection/PeerInfo'
 import { RtcErrorMessage, TrackerId } from '../identifiers'
 import { RelayMessage, Originator } from 'streamr-client-protocol'
-import { Logger } from "../helpers/Logger"
+import { Logger } from "@streamr/utils"
 import { NodeId } from '../identifiers'
 
 export interface OfferOptions {
-    routerId: string,
-    originatorInfo: Originator,
-    connectionId: string,
+    routerId: string
+    originatorInfo: Originator
+    connectionId: string
     description: string
 }
 
 export interface AnswerOptions {
-    routerId: string,
-    originatorInfo: Originator,
-    connectionId: string,
+    routerId: string
+    originatorInfo: Originator
+    connectionId: string
     description: string
 }
 
 export interface IceCandidateOptions {
-    routerId: string,
+    routerId: string
     originatorInfo: Originator
-    connectionId: string,
-    candidate: string,
+    connectionId: string
+    candidate: string
     mid: string
 }
 

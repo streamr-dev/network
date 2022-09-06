@@ -1,21 +1,21 @@
 import { Wallet } from '@ethersproject/wallet'
 import { Stream, StreamrClient } from 'streamr-client'
 import { Tracker } from '@streamr/network-tracker'
-import { Queue } from 'streamr-test-utils'
+import { fetchPrivateKeyWithGas, Queue } from 'streamr-test-utils'
 import { Broker } from '../../src/broker'
 import { Message } from '../../src/helpers/PayloadFormat'
-import { createClient, startBroker, createTestStream, fetchPrivateKeyWithGas, startTestTracker } from '../utils'
-import { wait } from 'streamr-test-utils'
+import { createClient, startBroker, createTestStream, startTestTracker } from '../utils'
+import { wait } from '@streamr/utils'
 
 interface MessagingPluginApi<T> {
-    createClient: (action: 'publish'|'subscribe', streamId: string, apiKey: string) => Promise<T>
+    createClient: (action: 'publish' | 'subscribe', streamId: string, apiKey: string) => Promise<T>
     closeClient: (client: T) => Promise<void>
-    publish: (message: Message, streamId: string, client: T) => Promise<void>,
+    publish: (message: Message, streamId: string, client: T) => Promise<void>
     subscribe: (messageQueue: Queue<Message>, streamId: string, client: T) => Promise<void>
 }
 
 interface Ports {
-    plugin: number,
+    plugin: number
     tracker: number
 }
 

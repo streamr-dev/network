@@ -339,9 +339,9 @@ describe('Storage', () => {
             for (const msg of messages.sort(() => .5 - Math.random())) { // biased, "semi-random" shuffle
                 storePromises.push(storage.store(msg))
             }
-            const firstQuarter = Math.floor(storePromises.length * (1/4))
-            const halfPoint = Math.floor(storePromises.length * (2/4))
-            const lastQuarter = Math.floor(storePromises.length * (3/4))
+            const firstQuarter = Math.floor(storePromises.length * (1 / 4))
+            const halfPoint = Math.floor(storePromises.length * (2 / 4))
+            const lastQuarter = Math.floor(storePromises.length * (3 / 4))
             await Promise.all(storePromises.slice(0, firstQuarter))
             await Promise.all(storePromises.slice(firstQuarter, halfPoint))
             await Promise.all(storePromises.slice(halfPoint, lastQuarter))

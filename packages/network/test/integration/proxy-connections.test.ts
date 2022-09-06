@@ -1,13 +1,18 @@
 import { NetworkNode } from '../../src/logic/NetworkNode'
 import { Tracker, startTracker } from '@streamr/network-tracker'
-import { MessageLayer, ProxyDirection, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import {
+    MessageID,
+    ProxyDirection,
+    SmartContractRecord,
+    StreamMessage,
+    StreamPartIDUtils,
+    toStreamID
+} from 'streamr-client-protocol'
+import { waitForCondition } from 'streamr-test-utils'
+import { waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
-import { TrackerInfo } from '../../src/identifiers'
-
-const { StreamMessage, MessageID } = MessageLayer
 
 const defaultStreamPartId = StreamPartIDUtils.parse('stream-0#0')
 
@@ -16,7 +21,7 @@ describe('Proxy connection tests', () => {
     let contactNode: NetworkNode
     let contactNode2: NetworkNode
     let onewayNode: NetworkNode
-    let trackerInfo: TrackerInfo
+    let trackerInfo: SmartContractRecord
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -258,6 +263,7 @@ describe('Proxy connection tests', () => {
         try {
             await onewayNode.openProxyConnection(StreamPartIDUtils.parse('stream-5#0'), 'non-existing-node', ProxyDirection.PUBLISH)
         } catch (err) {
+            // no-op
         }
 
         // @ts-expect-error private
@@ -284,7 +290,7 @@ describe('Proxy connection tests', () => {
         await onewayNode.openProxyConnection(defaultStreamPartId, 'contact-node', ProxyDirection.PUBLISH)
 
         await Promise.all([
-            waitForEvent(onewayNode, NodeEvent.NODE_CONNECTED, 20000),
+            waitForEvent(contactNode, NodeEvent.NODE_CONNECTED, 20000),
             // @ts-expect-error private
             contactNode.nodeToNode.disconnectFromNode('publisher', 'testing')
         ])

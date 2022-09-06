@@ -1,15 +1,15 @@
 import { PeerId, PeerInfo } from "./PeerInfo"
-import { ControlLayer, MessageLayer } from "streamr-client-protocol"
+import { ControlMessage, StreamMessage } from 'streamr-client-protocol'
 
-const defaultControlLayerVersions = ControlLayer.ControlMessage.getSupportedVersions()
-const defaultMessageLayerVersions = MessageLayer.StreamMessage.getSupportedVersions()
+const defaultControlLayerVersions = ControlMessage.getSupportedVersions()
+const defaultMessageLayerVersions = StreamMessage.getSupportedVersions()
 
-type NegotiatedProtocolVersion = { controlLayerVersion: number, messageLayerVersion: number }
+interface NegotiatedProtocolVersion { controlLayerVersion: number, messageLayerVersion: number }
 
 export class NegotiatedProtocolVersions {
 
     private readonly peerInfo: PeerInfo
-    private readonly negotiatedProtocolVersions: Record<PeerId,NegotiatedProtocolVersion>
+    private readonly negotiatedProtocolVersions: Record<PeerId, NegotiatedProtocolVersion>
     private readonly defaultProtocolVersions: NegotiatedProtocolVersion
     constructor(peerInfo: PeerInfo) {
         this.negotiatedProtocolVersions = Object.create(null)
@@ -21,14 +21,10 @@ export class NegotiatedProtocolVersions {
     }
 
     negotiateProtocolVersion(peerId: PeerId, controlLayerVersions: number[], messageLayerVersions: number[]): void | never {
-        try {
-            const [controlLayerVersion, messageLayerVersion] = this.validateProtocolVersions(controlLayerVersions, messageLayerVersions)
-            this.negotiatedProtocolVersions[peerId] = {
-                controlLayerVersion,
-                messageLayerVersion
-            }
-        } catch (err) {
-            throw err
+        const [controlLayerVersion, messageLayerVersion] = this.validateProtocolVersions(controlLayerVersions, messageLayerVersions)
+        this.negotiatedProtocolVersions[peerId] = {
+            controlLayerVersion,
+            messageLayerVersion
         }
     }
 

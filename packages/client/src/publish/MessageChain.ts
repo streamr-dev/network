@@ -10,17 +10,16 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
-import { randomString } from '../utils/utils'
 import { CacheFn } from '../utils/caches'
+import { randomString } from '@streamr/utils'
 
-export type MessageChainOptions = {
+export interface MessageChainOptions {
     publisherId: EthereumAddress
     msgChainId?: string
 }
 
 export function getCachedMessageChain(cacheConfig: CacheConfig):
     ((streamPartId: StreamPartID, msgChainOptions: MessageChainOptions) => MessageChain) & {
-    clear: () => void,
     clearMatching: (matchFn: (key: string) => boolean) => void
 } {
     // one chainer per streamId + streamPartition + publisherId + msgChainId

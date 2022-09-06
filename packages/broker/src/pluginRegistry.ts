@@ -8,7 +8,7 @@ import { BrubeckMinerPlugin } from './plugins/brubeckMiner/BrubeckMinerPlugin'
 import { SubscriberPlugin } from './plugins/subscriber/SubscriberPlugin'
 import { InfoPlugin } from './plugins/info/InfoPlugin'
 
-export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any>|never => {
+export const createPlugin = (name: string, pluginOptions: PluginOptions): Plugin<any> | never => {
     switch (name) {
         case 'http':
             return new HttpPlugin(pluginOptions)

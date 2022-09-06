@@ -1,5 +1,5 @@
 import { webRtcConnectionFactory } from "../../src/connection/webrtc/NodeWebRtcConnection"
-import { MessageQueue} from "../../src/connection/MessageQueue"
+import { MessageQueue } from "../../src/connection/MessageQueue"
 import { ConstructorOptions } from "../../src/connection/webrtc/WebRtcConnection"
 import { DeferredConnectionAttempt } from "../../src/connection/webrtc/DeferredConnectionAttempt"
 

@@ -13,39 +13,39 @@ export enum RelayMessageSubType {
     ICE_CANDIDATE = 'iceCandidate',
 }
 
-export type RtcOfferMessage = {
+export interface RtcOfferMessage {
     subType: RelayMessageSubType.RTC_OFFER
     data: {
-        connectionId: string,
-        description: string,
-    }
-}
-
-export type RtcAnswerMessage = {
-    subType: RelayMessageSubType.RTC_ANSWER
-    data: {
-        connectionId: string,
+        connectionId: string
         description: string
     }
 }
 
-export type RtcConnectMessage = {
+export interface RtcAnswerMessage {
+    subType: RelayMessageSubType.RTC_ANSWER
+    data: {
+        connectionId: string
+        description: string
+    }
+}
+
+export interface RtcConnectMessage {
     subType: RelayMessageSubType.RTC_CONNECT
 }
 
-export type RtcIceCandidateMessage = {
+export interface RtcIceCandidateMessage {
     subType: RelayMessageSubType.ICE_CANDIDATE
     data: {
-        connectionId: string,
+        connectionId: string
         candidate: string
         mid: string
     }
 }
 
 export interface SharedOptions extends TrackerMessageOptions {
-    originator: Originator,
-    targetNode: string,
-    subType: RelayMessageSubType,
+    originator: Originator
+    targetNode: string
+    subType: RelayMessageSubType
     data: object
 }
 
