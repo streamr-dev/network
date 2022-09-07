@@ -15,14 +15,14 @@ describe('Kademlia correctness', () => {
 
     const nodeIndicesById: Record<string, number> = {}
 
-    if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
+    if (!fs.existsSync('test/data/nodeids.json')) {
         console.log('gound truth data does not exist yet, generating..')
-        execSync("npm run prepare-dht-simulation")
+        execSync("npm run prepare-kademlia-simulation")
     }
 
-    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
+    const dhtIds: Array<{ type: string, data: Array<number> }> = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
     const groundTruth: Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
-        = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
+        = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
 
     beforeEach(async () => {
 

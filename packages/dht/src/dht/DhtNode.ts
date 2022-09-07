@@ -82,8 +82,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private ongoingJoinOperation = false
 
     private bucket?: KBucket<DhtPeer>
-    private neighborList?: SortedContactList
-    private openInternetPeers?: SortedContactList
+    private neighborList?: SortedContactList<DhtPeer>
+    private openInternetPeers?: SortedContactList<DhtPeer>
     private rpcCommunicator?: RoutingRpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -213,7 +213,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
     }
 
-    public getNeighborList(): SortedContactList {
+    public getNeighborList(): SortedContactList<DhtPeer> {
         return this.neighborList!
     }
 

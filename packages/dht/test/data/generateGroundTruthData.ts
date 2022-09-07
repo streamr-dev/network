@@ -1,7 +1,5 @@
 import fs from 'fs'
 import crypto from 'crypto'
-//import { SortedContactList } from '../../../src/simulation/SortedContactList'
-//import { Contact } from '../../../src/simulation/Contact'
 import KBucket from 'k-bucket'
 
 const ID_LENGTH = 8
@@ -40,15 +38,11 @@ const neighborWriter = fs.createWriteStream('orderedneighbors.json', {})
 neighborWriter.write("{\n")
 
 const nodes: Array<Uint8Array> = []
-//const nodeNamesById: { [id: string]: number } = {} 
-
-//const neighbors: { [id: string]: Array<{name: number, distance: number, id: Uint8Array}> } = {}
 
 // generate nodeIds
 
 for (let i = 0; i < NUM_NODES; i++) {
     const id = generateId()
-    //nodeNamesById[JSON.stringify(id)] = i
     nodes.push(id)
 }
 
@@ -71,25 +65,6 @@ for (let i = 0; i < NUM_NODES; i++) {
         neighborWriter.write(',\n')
     }
 }
-
-/*
-for (let i=0; i<NUM_NODES; i++) {
-    const list: SortedContactList = new SortedContactList(nodes[i], [])
-   
-    list.addContactsInBulk(nodes) 
-
-    const neighborIds = list.getContactIds()
-    const neighborNames: Array<{name: number, distance: number, id: Uint8Array}> = []
-    for (let j=0; j < neighborIds.length && j < 20; j++) {
-        neighborNames.push({name: nodeNamesById[JSON.stringify(neighborIds[j])], 
-            distance: KBucket.distance(nodes[i], neighborIds[j]), id: neighborIds[j]})
-    }
-    neighbors[i] = neighborNames
-    process.stdout.write('.')
-}
-*/
-
-//neighborWriter.write(JSON.stringify(neighbors, null, 4))
 
 neighborWriter.write("}")
 neighborWriter.end()
