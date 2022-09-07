@@ -18,8 +18,7 @@ const LATEST_VERSION = 32
 export enum StreamMessageType {
     MESSAGE = 27,
     GROUP_KEY_REQUEST = 28,
-    GROUP_KEY_RESPONSE = 29,
-    GROUP_KEY_ERROR_RESPONSE = 31
+    GROUP_KEY_RESPONSE = 29
 }
 
 export enum ContentType {
