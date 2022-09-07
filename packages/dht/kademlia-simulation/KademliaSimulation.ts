@@ -1,27 +1,28 @@
 /* eslint-disable no-console */
 
-import { DhtNode } from './DhtNode'
+import { SimulationNode } from './SimulationNode'
 import crypto from 'crypto'
 import fs from 'fs'
+import { PeerID } from '../src/helpers/PeerID'
 
-export class DhtSimulation {
+export class KademliaSimulation {
     
     private NUM_NODES = 1000
     private ID_LENGTH = 8
 
     private nodeNamesById: Record<string, number> = {} 
-    private nodes: DhtNode[]
+    private nodes: SimulationNode[]
 
     private dhtIds: Array<{ type: string, data: Array<number> }>
     private groundTruth:  Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
 
     constructor() {
         this.nodes = []
-        if (!fs.existsSync('test/kademlia-simulation/data/nodeids.json')) {
-            throw ('Cannot find test/kademlia-simulation/data/nodeids.json, please run "npm run prepare-dht-simulation first"')
+        if (!fs.existsSync('test/data/nodeids.json')) {
+            throw ('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
         }
-        this.dhtIds = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/nodeids.json').toString())
-        this.groundTruth = JSON.parse(fs.readFileSync('test/kademlia-simulation/data/orderedneighbors.json').toString())
+        this.dhtIds = JSON.parse(fs.readFileSync('test/data/nodeids.json').toString())
+        this.groundTruth = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
     }
 
     private generateId(): Uint8Array {
@@ -30,7 +31,7 @@ export class DhtSimulation {
 
     public run(): void {
         for (let i = 0; i < this.NUM_NODES; i++) {
-            const node = new DhtNode(Buffer.from(this.dhtIds[i].data.slice(0, this.ID_LENGTH)))
+            const node = new SimulationNode(PeerID.fromValue(Buffer.from(this.dhtIds[i].data.slice(0, this.ID_LENGTH))))
             this.nodeNamesById[JSON.stringify(node.getContact().id)] = i
             this.nodes.push(node)
             node.joinDht(this.nodes[0])
@@ -95,5 +96,5 @@ export class DhtSimulation {
     }
 }
 
-const simulation = new DhtSimulation()
+const simulation = new KademliaSimulation()
 simulation.run()
