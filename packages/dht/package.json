@@ -32,7 +32,6 @@
     "@streamr/proto-rpc": "^1.1.1",
     "@streamr/utils": "^0.0.1",
     "bloomfilter": "^0.0.18",
-    "fastestsmallesttextencoderdecoder": "^1.0.22",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
     "lodash": "^4.17.21",
