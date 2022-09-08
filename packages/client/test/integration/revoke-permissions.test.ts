@@ -73,6 +73,10 @@ describe('revoke permissions', () => {
             auth: {
                 privateKey: subscriberPrivateKey
             },
+            // eslint-disable-next-line no-underscore-dangle
+            _timeouts: {
+                encryptionKeyRequest: 200
+            } as any,
             ...opts
         })
     }
