@@ -133,8 +133,6 @@ enum MessageType {
   RPC = 3;
   WEBSOCKET_CONNECTOR = 4;
   WEBRTC_CONNECTOR = 5;
-  LOCK = 6;
-  UNLOCK = 7;
 }
 
 message Message {
