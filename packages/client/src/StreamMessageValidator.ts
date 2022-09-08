@@ -98,7 +98,6 @@ export default class StreamMessageValidator {
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST:
                 return this.validateGroupKeyRequest(streamMessage)
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE:
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE:
                 return this.validateGroupKeyResponse(streamMessage)
             default:
                 throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
@@ -221,17 +220,15 @@ export default class StreamMessageValidator {
             )
         }
 
-        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-            // permit publishers to send error responses to invalid subscribers
-            const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
-            // Check that the recipient of the request is a valid subscriber of the stream
-            const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
-            if (!recipientIsSubscriber) {
-                throw new StreamMessageError(
-                    `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
-                    streamMessage
-                )
-            }
+        // permit publishers to send error responses to invalid subscribers
+        const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
+        // Check that the recipient of the request is a valid subscriber of the stream
+        const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
+        if (!recipientIsSubscriber) {
+            throw new StreamMessageError(
+                `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
+                streamMessage
+            )
         }
     }
 }
