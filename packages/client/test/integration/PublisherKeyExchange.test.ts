@@ -117,15 +117,5 @@ describe('PublisherKeyExchange', () => {
             })
             await testSuccessResponse(response!, [key])
         })
-
-        it('no group key in store', async () => {
-            const request = createGroupKeyRequest(GroupKey.generate().id)
-            subscriberNode.publish(request)
-
-            const response = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
-            })
-            await testSuccessResponse(response!, [])
-        })
     })
 })

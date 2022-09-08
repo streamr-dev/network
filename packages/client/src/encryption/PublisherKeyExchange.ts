@@ -96,8 +96,10 @@ export class PublisherKeyExchange implements Context {
             this.debug
         )
 
-        const subscriberId = streamMessage.getPublisherId()
-        await this.keyExchangeStream.response(subscriberId, response)
+        if (response.encryptedGroupKeys.length > 0) {
+            const subscriberId = streamMessage.getPublisherId()
+            await this.keyExchangeStream.response(subscriberId, response)
+        }
     }
 
     private async subscribe(): Promise<Subscription<unknown> | undefined> {
