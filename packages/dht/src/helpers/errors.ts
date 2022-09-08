@@ -11,7 +11,8 @@ export enum ErrorCode {
     NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
     ILLEGAL_RTC_PEER_CONNECTION_STATE = 'ILLEGAL_RTC_PEER_CONNECTION_STATE',
     ILLEGAL_ARGUMENTS = 'ILLEGAL_ARGUMENTS',
-    CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT = 'CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT' 
+    CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT = 'CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT',
+    CONNECTION_LOCKER = 'CONNECTION_LOCKER'
 }
 
 class Err extends Error {
@@ -31,3 +32,4 @@ export class NotImplemented extends Err { constructor(message?: string, original
 export class IllegalRTCPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
 export class IllegalArguments extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_ARGUMENTS, message, originalError) } }
 export class ConnectivityResponseTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT, message, originalError) } }
+export class ConnectionLocker extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_LOCKER, message, originalError) } }

@@ -20,6 +20,11 @@ service WebRtcConnector {
   rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
 }
 
+service ConnectionLocker {
+  rpc lockRequest (LockRequest) returns (LockResponse);
+  rpc unlockRequest (UnlockRequest) returns (google.protobuf.Empty);
+}
+
 // Used inside RpcMessage
 
 message ClosestPeersRequest {
@@ -197,4 +202,9 @@ message UnlockRequest {
   string protocolVersion = 1;
   PeerDescriptor peerDescriptor = 2;
   string serviceId = 3;
+}
+
+message LockResponse {
+  bool accepted = 1;
+  optional bool reason = 2; // if accepted = false
 }

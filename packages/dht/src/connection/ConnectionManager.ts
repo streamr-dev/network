@@ -1,7 +1,7 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
-    LockRequest,
+    LockRequest, LockResponse,
     Message,
     MessageType,
     PeerDescriptor,
@@ -17,7 +17,12 @@ import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
 import { Event as ManagedConnectionEvents } from './IManagedConnection'
 import { Event as ManagedConnectionSourceEvents } from './IManagedConnectionSource'
-import { UUID } from '..'
+import { RoutingRpcCommunicator } from '..'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { ConnectionLockerClient } from '../proto/DhtRpc.client'
+import { RemoteConnectionLocker } from './RemoteConnectionLocker'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Empty } from '../proto/google/protobuf/empty'
 
 export interface ConnectionManagerConfig {
     transportLayer: ITransport
@@ -64,6 +69,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private localLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
     private remoteLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
 
+    private rpcCommunicator: RoutingRpcCommunicator
+
     constructor(private config: ConnectionManagerConfig) {
         super()
 
@@ -74,6 +81,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: this.config.transportLayer
+        })
+        this.rpcCommunicator = new RoutingRpcCommunicator('ConnectionManager', this, {
+            rpcRequestTimeout: 10000
         })
     }
 
@@ -101,6 +111,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.webrtcConnector.on(ManagedConnectionSourceEvents.CONNECTED, (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
+
+        this.lockRequest = this.lockRequest.bind(this)
+        this.unlockRequest = this.unlockRequest.bind(this)
+
+        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
+        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
     }
 
     public async stop(): Promise<void> {
@@ -211,12 +227,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace('Received message of type ' + message.messageType)
             if (message.messageType === MessageType.RPC) {
                 this.emit('DATA', message, peerDescriptor)
-            } else if (message.messageType === MessageType.LOCK) {
-                const lockRequest = LockRequest.fromBinary(message.body)
-                this.onLockRequest(lockRequest)
-            } else if (message.messageType === MessageType.UNLOCK) {
-                const unlockRequest = LockRequest.fromBinary(message.body)
-                this.onUnlockRequest(unlockRequest)
             } else {
                 logger.trace('Filtered out message of type ' + message.messageType)
             }
@@ -256,46 +266,35 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
         this.clearDisconnectionTimeout(hexKey)
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator.getRpcClientTransport()))
+        )
         if (!this.localLockedConnections.has(hexKey)) {
-            const newSet = new Set<string>()
+            const newSet = new Set<ServiceId>()
             newSet.add(serviceId)
             this.localLockedConnections.set(hexKey, newSet)
         } else if (!this.localLockedConnections.get(hexKey)?.has(serviceId)) {
             this.localLockedConnections.get(hexKey)?.add(serviceId)
         }
 
-        const lockRequest: LockRequest = {
-            peerDescriptor: this.ownPeerDescriptor!,
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-            serviceId
-        }
-        const message: Message = {
-            messageId: new UUID().toString(),
-            serviceId: 'connection-manager',
-            messageType: MessageType.LOCK,
-            body: LockRequest.toBinary(lockRequest)
-        }
-
-        this.send(message, targetDescriptor).catch((err) => {console.error(err)})
+        remoteConnectionLocker.lockRequest(this.ownPeerDescriptor!, serviceId)
+            .then((_accepted) => logger.trace('LockRequest successful'))
+            .catch((err) => {logger.error(err)})
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
         const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
         this.localLockedConnections.get(hexKey)?.delete(serviceId)
 
-        const unlockRequest: UnlockRequest = {
-            peerDescriptor: this.ownPeerDescriptor!,
-            protocolVersion: ConnectionManager.PROTOCOL_VERSION,
-            serviceId
-        }
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator.getRpcClientTransport()))
+        )
 
-        const message: Message = {
-            messageId: new UUID().toString(),
-            serviceId: 'connection-manager',
-            messageType: MessageType.UNLOCK,
-            body: UnlockRequest.toBinary(unlockRequest)
-        }
-        this.send(message, targetDescriptor).catch((err) => {console.error(err)})
+        remoteConnectionLocker.unlockRequest(this.ownPeerDescriptor!, serviceId)
 
         if (this.localLockedConnections.get(hexKey)?.size === 0) {
             this.localLockedConnections.delete(hexKey)
@@ -305,7 +304,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
-    private onLockRequest(lockRequest: LockRequest): void {
+    // IConnectionLocker server implementation
+    private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
         const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toMapKey()
         this.clearDisconnectionTimeout(hexKey)
         if (!this.remoteLockedConnections.has(hexKey)) {
@@ -315,9 +315,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         } else if (!this.remoteLockedConnections.get(hexKey)?.has(lockRequest.serviceId)) {
             this.remoteLockedConnections.get(hexKey)?.add(lockRequest.serviceId)
         }
+        const response: LockResponse = {
+            accepted: true
+        }
+        return response
     }
 
-    private onUnlockRequest(unlockRequest: UnlockRequest): void {
+    // IConnectionLocker server implementation
+    private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
         const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.peerId).toMapKey()
         this.remoteLockedConnections.get(hexKey)?.delete(unlockRequest.serviceId)
         if (this.remoteLockedConnections.get(hexKey)?.size === 0) {
@@ -326,5 +331,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.disconnect(unlockRequest.peerDescriptor!, 'connection is no longer locked by any services')
             }
         }
+        return {}
     }
 }
