@@ -3,13 +3,9 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     EncryptedGroupKey,
-    GroupKeyErrorResponse,
-    ValidationError,
     StreamID,
     EthereumAddress,
     GroupKeyRequestSerialized,
-    GroupKeyResponseSerialized,
-    GroupKeyErrorResponseSerialized
 } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 
@@ -20,19 +16,13 @@ import { Publisher } from '../publish/Publisher'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
 import { GroupKey } from './GroupKey'
-import { EncryptionUtil, UnableToDecryptError } from './EncryptionUtil'
+import { EncryptionUtil } from './EncryptionUtil'
 import { KeyExchangeStream } from './KeyExchangeStream'
 
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Subscription } from '../subscribe/Subscription'
 import { GroupKeyStore } from './GroupKeyStore'
 import { Debugger } from '../utils/log'
-
-class InvalidGroupKeyRequestError extends ValidationError {
-    constructor(msg: string) {
-        super(msg, 'INVALID_GROUP_KEY_REQUEST')
-    }
-}
 
 export const createGroupKeyResponse = async (
     streamMessage: StreamMessage<GroupKeyRequestSerialized>,
@@ -89,37 +79,8 @@ export class PublisherKeyExchange implements Context {
         this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
     }
 
-    private getWrapError(
-        streamMessage: StreamMessage
-    ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponseSerialized | GroupKeyErrorResponseSerialized> | undefined> {
-        return async (error: ValidationError) => {
-            try {
-                const subscriberId = streamMessage.getPublisherId()
-                if (!GroupKeyRequest.is(streamMessage)) {
-                    // ignore weird message
-                    return undefined
-                }
-
-                const msg = streamMessage.getParsedContent()
-                const { streamId, requestId, groupKeyIds } = GroupKeyRequest.fromArray(msg)
-                const response = new GroupKeyErrorResponse({
-                    requestId,
-                    streamId,
-                    errorCode: error.code ?? 'UNEXPECTED_ERROR',
-                    errorMessage: error.message,
-                    groupKeyIds
-                })
-                return await this.keyExchangeStream.response(subscriberId, response)
-            } catch (err) {
-                this.debug('unexpected error responding with error', err)
-                return undefined
-            }
-        }
-    }
-
     private async onKeyExchangeMessage(streamMessage?: StreamMessage): Promise<void> {
         if (!streamMessage) { return }
-        const wrapError = this.getWrapError(streamMessage)
         try {
             if (!GroupKeyRequest.is(streamMessage)) {
                 return
@@ -138,12 +99,7 @@ export class PublisherKeyExchange implements Context {
             const subscriberId = streamMessage.getPublisherId()
             await this.keyExchangeStream.response(subscriberId, response)
         } catch (err: any) {
-            if (!('streamMessage' in err)) {
-                this.debug('unexpected', err)
-                return // do nothing, supress.
-            }
-
-            await wrapError(err)
+            console.log('Warn: Unable to process group key request', err)
         }
     }
 
@@ -158,18 +114,6 @@ export class PublisherKeyExchange implements Context {
         }
 
         sub.consume(this.onKeyExchangeMessage).catch(() => {})
-        sub.onError.listen(async (err: Error | UnableToDecryptError) => {
-            if (!('streamMessage' in err)) {
-                this.debug('unexpected', err)
-                return // do nothing, supress.
-            }
-
-            // eslint-disable-next-line promise/no-promise-in-callback
-            await this.getWrapError(err.streamMessage)(new InvalidGroupKeyRequestError(err.message)).catch((error) => {
-                this.debug('unexpected error sending error', error)
-            })
-
-        })
 
         return sub
     }

@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import { v4 as uuid } from 'uuid'
 import {
-    GroupKeyErrorResponse,
     KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartID,
@@ -80,32 +79,6 @@ describe('PublisherKeyExchange', () => {
         expect(actualKeys).toEqual(expectedGroupKeys)
     }
 
-    const testErrorResponse = async (
-        actualResponse: StreamMessage,
-        expectedGroupKeyIds: string[],
-        expectedRecipientAddress = subscriberWallet.address
-    ): Promise<void> => {
-        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(expectedRecipientAddress)
-        expect(actualResponse).toMatchObject({
-            messageId: {
-                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
-                publisherId: publisherWallet.address.toLowerCase(),
-            },
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-            signature: expect.any(String)
-        })
-        expect(GroupKeyErrorResponse.fromArray(actualResponse!.getParsedContent() as any)).toMatchObject({
-            requestId: expect.any(String),
-            errorCode: expect.any(String),
-            errorMessage: expect.any(String),
-            groupKeyIds: expectedGroupKeyIds
-        })
-    }
-
     beforeEach(async () => {
         publisherWallet = fastWallet()
         subscriberWallet = fastWallet()
@@ -153,33 +126,6 @@ describe('PublisherKeyExchange', () => {
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
             })
             await testSuccessResponse(response!, [])
-        })
-
-        it('request from non-subscriber', async () => {
-            const groupKey = GroupKey.generate()
-            const otherWallet = fastWallet()
-            const otherNode = environment.startNode(otherWallet.address)
-
-            const request = createGroupKeyRequest(groupKey.id, otherWallet, (await RSAKeyPair.create()).getPublicKey())
-            otherNode.publish(request)
-
-            const response = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
-            })
-            await testErrorResponse(response!, [ groupKey.id ], otherWallet.address)
-        })
-
-        it('invalid request', async () => {
-            const groupKey = GroupKey.generate()
-
-            const request: any = createGroupKeyRequest(groupKey.id)
-            delete request.signature
-            subscriberNode.publish(request)
-
-            const response = await environment.getNetwork().waitForSentMessage({
-                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
-            })
-            await testErrorResponse(response!, [ groupKey.id ])
         })
     })
 })
