@@ -158,5 +158,5 @@ describe('update encryption key', () => {
             await waitForCondition(() => onError.mock.calls.length > 0)
             expect(onError.mock.calls[0][0].message).toContain('Unable to decrypt')
         })
-    })
+    }, 20 * 1000)
 })
