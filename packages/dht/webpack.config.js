@@ -74,7 +74,7 @@ module.exports = (env, argv) => {
                 includeAliases: ['process']
             }),
             new webpack.ProvidePlugin({
-                process: 'process/browser',
+                process: 'process/browser'
             })
         ],
         resolve: {
