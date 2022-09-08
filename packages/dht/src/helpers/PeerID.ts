@@ -4,6 +4,10 @@ import { IllegalArguments } from './errors'
 export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
 
 export class PeerID {
+    // avoid creating a new instance for every operation
+    private static textEncoder = new TextEncoder() 
+    private static textDecoder = new TextDecoder()
+    
     private data!: Uint8Array
     private key: PeerIDKey  // precompute often-used form of data
 
@@ -18,7 +22,7 @@ export class PeerID {
         } else if (value) {
             this.data = new Uint8Array(value.slice(0))
         } else if (stringValue) {
-            const ab = new TextEncoder().encode(stringValue) //toUTF8Array(stringValue)
+            const ab = PeerID.textEncoder.encode(stringValue) //toUTF8Array(stringValue)
             this.data = ab
         } else {
             throw new IllegalArguments('Constructor of PeerID must be given either ip, value or stringValue')
@@ -47,22 +51,12 @@ export class PeerID {
         })
     }
 
-    // TODO: use this function to convert ip based peerIds back to their ip form
-    private int2Ip(value: number) {
-        return [
-            (value >> 24) & 0xff,
-            (value >> 16) & 0xff,
-            (value >> 8) & 0xff,
-            value & 0xff
-        ].join('.')
-    }
-
     equals(other: PeerID): boolean {
         return (Buffer.compare(this.data, other.value) == 0)
     }
 
     toString(): string {
-        return new TextDecoder().decode(this.data) //utf8ArrayToString(this.data)
+        return PeerID.textDecoder.decode(this.data) //utf8ArrayToString(this.data)
     }
 
     toMapKey(): PeerIDKey {
