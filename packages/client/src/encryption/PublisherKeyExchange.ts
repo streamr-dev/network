@@ -81,26 +81,23 @@ export class PublisherKeyExchange implements Context {
 
     private async onKeyExchangeMessage(streamMessage?: StreamMessage): Promise<void> {
         if (!streamMessage) { return }
-        try {
-            if (!GroupKeyRequest.is(streamMessage)) {
-                return
-            }
 
-            const response = await createGroupKeyResponse(
-                streamMessage,
-                async (groupKeyId: string, streamId: StreamID) => {
-                    const store = await this.groupKeyStoreFactory.getStore(streamId)
-                    return store.get(groupKeyId)
-                },
-                (streamId: StreamID, address: EthereumAddress) => this.streamRegistryCached.isStreamSubscriber(streamId, address),
-                this.debug
-            )
-
-            const subscriberId = streamMessage.getPublisherId()
-            await this.keyExchangeStream.response(subscriberId, response)
-        } catch (err: any) {
-            console.log('Warn: Unable to process group key request', err)
+        if (!GroupKeyRequest.is(streamMessage)) {
+            return
         }
+
+        const response = await createGroupKeyResponse(
+            streamMessage,
+            async (groupKeyId: string, streamId: StreamID) => {
+                const store = await this.groupKeyStoreFactory.getStore(streamId)
+                return store.get(groupKeyId)
+            },
+            (streamId: StreamID, address: EthereumAddress) => this.streamRegistryCached.isStreamSubscriber(streamId, address),
+            this.debug
+        )
+
+        const subscriberId = streamMessage.getPublisherId()
+        await this.keyExchangeStream.response(subscriberId, response)
     }
 
     private async subscribe(): Promise<Subscription<unknown> | undefined> {
