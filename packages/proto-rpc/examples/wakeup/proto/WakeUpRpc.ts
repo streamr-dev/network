@@ -26,8 +26,8 @@ class WakeUpRequest$Type extends MessageType<WakeUpRequest> {
  */
 export const WakeUpRequest = new WakeUpRequest$Type();
 /**
- * @generated ServiceType for protobuf service WakeUpRpc
+ * @generated ServiceType for protobuf service WakeUpRpcService
  */
-export const WakeUpRpc = new ServiceType("WakeUpRpc", [
+export const WakeUpRpcService = new ServiceType("WakeUpRpcService", [
     { name: "wakeUp", options: {}, I: WakeUpRequest, O: Empty }
 ]);

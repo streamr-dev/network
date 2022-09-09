@@ -46,8 +46,8 @@ class HelloResponse$Type extends MessageType<HelloResponse> {
  */
 export const HelloResponse = new HelloResponse$Type();
 /**
- * @generated ServiceType for protobuf service HelloRpc
+ * @generated ServiceType for protobuf service HelloRpcService
  */
-export const HelloRpc = new ServiceType("HelloRpc", [
+export const HelloRpcService = new ServiceType("HelloRpcService", [
     { name: "sayHello", options: {}, I: HelloRequest, O: HelloResponse }
 ]);

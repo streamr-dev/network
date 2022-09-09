@@ -1,5 +1,5 @@
-import { ProtoRpcClient, RpcCommunicator, RpcCommunicatorEvent, toProtoRpcClient } from '@streamr/proto-rpc'
-import { WebRtcConnectorClient } from '../../src/proto/DhtRpc.client'
+import { ProtoRpcClient, RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
+import { WebRtcConnectorServiceClient } from '../../src/proto/DhtRpc.client'
 import {
     IceCandidate,
     PeerDescriptor,
@@ -10,14 +10,14 @@ import {
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { generateId } from '../utils'
 import { waitForCondition } from 'streamr-test-utils'
-import { IWebRtcConnector } from '../../src/proto/DhtRpc.server'
+import { IWebRtcConnectorService } from '../../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
 describe('WebRTC rpc messages', () => {
     let rpcCommunicator1: RpcCommunicator
     let rpcCommunicator2: RpcCommunicator
-    let client: ProtoRpcClient<WebRtcConnectorClient>
+    let client: ProtoRpcClient<WebRtcConnectorServiceClient>
 
     let requestConnectionCounter: number
     let rtcOfferCounter: number
@@ -41,7 +41,7 @@ describe('WebRTC rpc messages', () => {
         iceCandidateCounter = 0
 
         rpcCommunicator1 = new RpcCommunicator()
-        const serverFunctions: IWebRtcConnector = {
+        const serverFunctions: IWebRtcConnectorService = {
 
             requestConnection: async (_urequest: WebRtcConnectionRequest, _context: ServerCallContext): Promise<Empty> => {
                 requestConnectionCounter += 1
@@ -74,15 +74,15 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 
-        client = toProtoRpcClient(new WebRtcConnectorClient(rpcCommunicator1.getRpcClientTransport()))
+        client = toProtoRpcClient(new WebRtcConnectorServiceClient(rpcCommunicator1.getRpcClientTransport()))
     })
 
     afterEach(async () => {

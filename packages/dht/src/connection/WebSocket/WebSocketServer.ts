@@ -1,16 +1,11 @@
 import * as http from 'http'
-import { EventEmitter } from 'events'
+import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
 import {
-    IConnectionSource,
-    Event as ConnectionSourceEvent,
+    ConnectionSourceEvent
 } from '../IConnectionSource'
-/*
-import { TODO } from '../../types'
-import { Event as ConnectionEvents, IConnection } from '../IConnection'
-import { ConnectivityRequestMessage, Message, MessageType, PeerDescriptor } from '../../proto/DhtRpc'
-*/
+
 import { Logger } from '@streamr/utils'
 import { StartingWebSocketServerFailed } from '../../helpers/errors'
 
@@ -23,7 +18,7 @@ const logger = new Logger(module)
 
 declare class NodeJsWsServer extends WsServer { }
 
-export class WebSocketServer extends EventEmitter implements IConnectionSource {
+export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
 
     private httpServer: http.Server | null = null
     private wsServer: WsServer | null = null
@@ -66,7 +61,7 @@ export class WebSocketServer extends EventEmitter implements IConnectionSource {
 
                 logger.trace((new Date()) + ' IConnection accepted.')
 
-                this.emit(ConnectionSourceEvent.CONNECTED, new ServerWebSocket(connection))
+                this.emit('CONNECTED', new ServerWebSocket(connection))
             })
 
             this.httpServer.once('error', (err: Error) => {

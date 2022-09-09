@@ -23,7 +23,7 @@ npm install @streamr/proto-rpc
 ```proto
 syntax = "proto3";
 
-service HelloRpc {
+service HelloRpcService {
     rpc sayHello (HelloRequest) returns (HelloResponse);
 }
 
@@ -44,10 +44,10 @@ mkdir -p ./proto
 npx protoc --ts_out $(pwd)/proto --ts_opt server_generic,generate_dependencies --proto_path $(pwd) HelloRpc.proto
 ```
 
-- implement the auto-generated IHelloRpc server interface in TypeScript
+- implement the auto-generated IHelloRpcService server interface in TypeScript
 
 ```typescript
-class HelloService implements IHelloRpc {
+class HelloService implements IHelloRpcService {
     async sayHello(request: HelloRequest, _context: ServerCallContext): Promise<HelloResponse> {
         return { greeting: 'Hello ' + request.myName + '!' }
     }
@@ -63,13 +63,13 @@ const helloService = new HelloService()
 communicator1.registerRpcMethod(HelloRequest, HelloResponse, 'sayHello', helloService.sayHello)
 ```
 
-- start a RPC communicator for the client side, bind it to an instance of the auto-generated HelloClient class, and convert the auto-generated client
-into a ProtoRpcClient<HelloClient> 
+- start a RPC communicator for the client side, bind it to an instance of the auto-generated HelloRpcServiceClient class, and convert the auto-generated client
+into a ProtoRpcClient<HelloRpcServiceClient> 
 
 
 ```typescript
 const communicator2 = new RpcCommunicator()
-const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClientTransport()))
+const helloClient = toProtoRpcClient(new HelloRpcServiceClient(communicator2.getRpcClientTransport()))
 ```
 
 - listen to outgoing packets from the RpcCpommunicators on both the client and server sides, and
@@ -77,10 +77,10 @@ const helloClient = toProtoRpcClient(new HelloRpcClient(communicator2.getRpcClie
   but here we will simulate the connection using method calls.
 
 ```typescript
-communicator1.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
     communicator2.handleIncomingMessage(msgBody)
 })
-communicator2.on(RpcCommunicatorEvents.OUTGOING_MESSAGE, (msgBody: Uint8Array, _ucallContext?: CallContext) => {
+communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: CallContext) => {
     communicator1.handleIncomingMessage(msgBody)
 })
 ```
@@ -119,7 +119,7 @@ Unlike gRPC, proto-rpc supports JSON-RPC style notifications (RPC functions that
 - In the .proto service definitions, the notification functions need to have `google.protobuf.Empty` as their return type.
 
 ```proto
-service WakeUpRpc {
+service WakeUpRpcService {
     rpc wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
 }
 ```

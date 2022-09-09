@@ -260,9 +260,9 @@ class ConnectivityMethod$Type extends MessageType<ConnectivityMethod> {
  */
 export const ConnectivityMethod = new ConnectivityMethod$Type();
 /**
- * @generated ServiceType for protobuf service DhtRpc
+ * @generated ServiceType for protobuf service DhtRpcService
  */
-export const DhtRpc = new ServiceType("DhtRpc", [
+export const DhtRpcService = new ServiceType("DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }

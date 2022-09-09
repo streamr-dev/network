@@ -1,28 +1,30 @@
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
-import { DhtPeer } from './DhtPeer'
 import EventEmitter from 'events'
 import { PeerDescriptor } from '..'
 
-class ContactState {
+
+class ContactState<Contact> {
     public contacted = false
     public active = false
-    constructor(public contact: DhtPeer) {
+    constructor(public contact: Contact) {
     }
 }
+
+interface IContact { peerId: PeerID, getPeerDescriptor: () => PeerDescriptor }
 
 export enum Event {
     NEW_CONTACT = 'new_contact',
     CONTACT_REMOVED = 'contact_removed'
 }
 
-export interface SortedContactList {
+export interface SortedContactList<Contact extends IContact> {
     on(event: Event.NEW_CONTACT, listener: (peerDescriptor: PeerDescriptor, closestActiveContacts: PeerDescriptor[]) => void): this
     on(event: Event.CONTACT_REMOVED, listener: (peerDescriptor: PeerDescriptor, closestActiveContacts: PeerDescriptor[]) => void): this
 }
 
-export class SortedContactList extends EventEmitter {
-    private contactsById: Map<PeerIDKey, ContactState> = new Map()
+export class SortedContactList<Contact extends IContact> extends EventEmitter {
+    private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
     constructor(private ownId: PeerID, private maxSize: number) {
@@ -39,7 +41,7 @@ export class SortedContactList extends EventEmitter {
         return this.contactIds
     }
 
-    public addContact(contact: DhtPeer): void {
+    public addContact(contact: Contact): void {
         if (this.ownId.equals(contact.peerId)) {
             return
         }
@@ -58,15 +60,15 @@ export class SortedContactList extends EventEmitter {
                 this.emit(
                     Event.CONTACT_REMOVED,
                     contact.getPeerDescriptor(),
-                    this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor())
+                    this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor())
                 )
             }
         }
-        this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor(), this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor()))
+        this.emit(Event.NEW_CONTACT, contact.getPeerDescriptor(), this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
 
     }
 
-    public addContacts(contacts: DhtPeer[]): void {
+    public addContacts(contacts: Contact[]): void {
         contacts.forEach( (contact) => this.addContact(contact))
     }
 
@@ -82,8 +84,19 @@ export class SortedContactList extends EventEmitter {
         }
     }
 
-    public getUncontactedContacts(num: number): DhtPeer[] {
-        const ret: DhtPeer[] = []
+    public getClosestContacts(limit = this.maxSize): Contact[] {
+        const ret: Contact[] = []
+        this.contactIds.forEach((contactId) => {
+            const contact = this.contactsById.get(contactId.toMapKey())
+            if (contact) {
+                ret.push(contact.contact)
+            }
+        })
+        return ret.splice(0, limit)
+    }
+
+    public getUncontactedContacts(num: number): Contact[] {
+        const ret: Contact[] = []
         for (const contactId of this.contactIds) {
             const contact = this.contactsById.get(contactId.toMapKey())
             if (contact && !contact.contacted) {
@@ -96,15 +109,15 @@ export class SortedContactList extends EventEmitter {
         return ret
     }
 
-    public getClosestContacts(limit = this.maxSize): DhtPeer[] {
-        const ret: DhtPeer[] = []
+    public getActiveContacts(): Contact[] {
+        const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toMapKey())
             if (contact) {
                 ret.push(contact.contact)
             }
         })
-        return ret.splice(0, limit)
+        return ret
     }
 
     public compareIds(id1: PeerID, id2: PeerID): number {
@@ -121,7 +134,7 @@ export class SortedContactList extends EventEmitter {
         return this.contactIds.length
     }
 
-    public getContact(id: PeerID): ContactState {
+    public getContact(id: PeerID): ContactState<Contact> {
         return this.contactsById.get(id.toMapKey())!
     }
 
@@ -131,7 +144,7 @@ export class SortedContactList extends EventEmitter {
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toMapKey())
-            this.emit(Event.CONTACT_REMOVED, removedDescriptor, this.getClosestContacts(10).map((contact: DhtPeer) => contact.getPeerDescriptor()))
+            this.emit(Event.CONTACT_REMOVED, removedDescriptor, this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
             return true
         }
         return false
@@ -145,7 +158,7 @@ export class SortedContactList extends EventEmitter {
         return this.contactsById.has(id.toMapKey()) ? this.contactsById.get(id.toMapKey())!.active : false
     }
 
-    public getAllContacts(): DhtPeer[] {
+    public getAllContacts(): Contact[] {
         return [...this.contactsById.values()].map((contact) => contact.contact)
     }
 

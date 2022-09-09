@@ -1,5 +1,5 @@
 import { ConnectivityRequestMessage, ConnectivityResponseMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
-import { Event as ConnectionEvents, IConnection } from './IConnection'
+import { IConnection } from './IConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { ClientWebSocket } from './WebSocket/ClientWebSocket'
@@ -53,11 +53,11 @@ export class ConnectivityChecker {
                         return
                     }
                     const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
-                    outgoingConnection!.off(ConnectionEvents.DATA, listener)
+                    outgoingConnection!.off('DATA', listener)
                     clearTimeout(timeoutId)
                     resolve(connectivityResponseMessage) //(connectivityResponseMessage)
                 }
-                outgoingConnection!.on(ConnectionEvents.DATA, listener)
+                outgoingConnection!.on('DATA', listener)
             })
         }
         try {
@@ -76,7 +76,7 @@ export class ConnectivityChecker {
 
     public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
 
-        connectionToListenTo.on(ConnectionEvents.DATA, async (data: Uint8Array) => {
+        connectionToListenTo.on('DATA', async (data: Uint8Array) => {
             logger.trace('server received data')
             const message = Message.fromBinary(data)
 
@@ -141,7 +141,7 @@ export class ConnectivityChecker {
 
             const connectHandler = () => {
                 clearTimeout(timeout)
-                socket.off(ConnectionEvents.ERROR, errorHandler)
+                socket.off('ERROR', errorHandler)
                 resolve(socket)
             }
 
@@ -151,14 +151,14 @@ export class ConnectivityChecker {
             }
 
             const timeoutHandler = () => {
-                socket.off(ConnectionEvents.ERROR, errorHandler)
+                socket.off('ERROR', errorHandler)
                 reject(new Err.ConnectionFailed('WebSocket connection timed out'))
             }
 
             const timeout = setTimeout(timeoutHandler, timeoutMs)
 
-            socket.once(ConnectionEvents.CONNECTED, connectHandler)
-            socket.once(ConnectionEvents.ERROR, errorHandler)
+            socket.once('CONNECTED', connectHandler)
+            socket.once('ERROR', errorHandler)
 
             let address = ''
             if (url) {

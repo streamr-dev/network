@@ -2,9 +2,9 @@ import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, R
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from './PeerID'
 import { NodeType, PeerDescriptor } from './proto/TestProtos'
-import { IDhtRpc } from './proto/TestProtos.server'
+import { IDhtRpcService } from './proto/TestProtos.server'
 
-interface IDhtRpcWithError extends IDhtRpc {
+interface IDhtRpcWithError extends IDhtRpcService {
     throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse>
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>

@@ -3,7 +3,7 @@ option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
 
-service WakeUpRpc {
+service WakeUpRpcService {
   rpc  wakeUp (WakeUpRequest) returns (google.protobuf.Empty);
 }
 

@@ -22,11 +22,11 @@ import { DuplicateDetector } from './DuplicateDetector'
 import * as Err from '../helpers/errors'
 import { ITransport, TransportEvents } from '../transport/ITransport'
 import { ConnectionManager, ConnectionManagerConfig } from '../connection/ConnectionManager'
-import { DhtRpcClient } from '../proto/DhtRpc.client'
+import { DhtRpcServiceClient } from '../proto/DhtRpc.client'
 import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { jsFormatPeerDescriptor } from '../helpers/common'
-import { IDhtRpc } from '../proto/DhtRpc.server'
+import { IDhtRpcService } from '../proto/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 export interface RouteMessageParams {
@@ -79,7 +79,7 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
-export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc {
+export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpcService {
     private readonly config: DhtNodeConfig
     private readonly peers: Map<string, DhtPeer> = new Map()
     private readonly routerDuplicateDetector: DuplicateDetector = new DuplicateDetector()
@@ -90,8 +90,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private ongoingJoinOperation = false
 
     private bucket?: KBucket<DhtPeer>
-    private neighborList?: SortedContactList
-    private openInternetPeers?: SortedContactList
+    private neighborList?: SortedContactList<DhtPeer>
+    private openInternetPeers?: SortedContactList<DhtPeer>
     private rpcCommunicator?: RoutingRpcCommunicator
     private transportLayer?: ITransport
     private ownPeerDescriptor?: PeerDescriptor
@@ -240,7 +240,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         )
     }
 
-    public getNeighborList(): SortedContactList {
+    public getNeighborList(): SortedContactList<DhtPeer> {
         return this.neighborList!
     }
 
@@ -394,7 +394,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (this.ongoingClosestPeersRequests.has(peerId.toMapKey())) {
             this.ongoingClosestPeersRequests.delete(peerId.toMapKey())
             const dhtPeers = contacts.map((peer) => {
-                return new DhtPeer(peer, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
+                return new DhtPeer(peer, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
             })
 
             const oldClosestContact = this.neighborList!.getClosestContactId()
@@ -439,7 +439,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.noProgressCounter = 0
 
         logger.info(`Joining The Streamr Network via entrypoint ${entryPointDescriptor.peerId.toString()}`)
-        const entryPoint = new DhtPeer(entryPointDescriptor, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
+        const entryPoint = new DhtPeer(entryPointDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
 
         if (this.ownPeerId!.equals(entryPoint.peerId)) {
             return new Promise((resolve, _reject) => resolve())
@@ -491,7 +491,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             )
         ) {
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
-            const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcClient(this.rpcCommunicator!.getRpcClientTransport())))
+            const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
             const peerId = PeerID.fromValue(contact.peerId)
             if (!this.neighborList!.hasContact(peerId)) {
                 this.neighborList!.addContact(dhtPeer)
