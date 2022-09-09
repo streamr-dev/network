@@ -2,7 +2,7 @@ import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
 import PQueue from 'p-queue'
 import { EventEmitter } from 'eventemitter3'
-import { SortedContactList, Event as ContactListEvent } from './SortedContactList'
+import { SortedContactList } from './SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { PeerID } from '../helpers/PeerID'
@@ -225,17 +225,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             // TODO: Update contact info to the connection manager and reconnect
         })
         this.neighborList = new SortedContactList(selfId, this.config.maxNeighborListSize)
-        this.neighborList.on(ContactListEvent.CONTACT_REMOVED, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.neighborList.on('CONTACT_REMOVED', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('CONTACT_REMOVED', peerDescriptor, activeContacts)
         )
-        this.neighborList.on(ContactListEvent.NEW_CONTACT, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.neighborList.on('NEW_CONTACT', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('NEW_CONTACT', peerDescriptor, activeContacts)
         )
         this.openInternetPeers = new SortedContactList(selfId, this.config.maxNeighborListSize / 2)
-        this.openInternetPeers.on(ContactListEvent.CONTACT_REMOVED, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.openInternetPeers.on('CONTACT_REMOVED', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('OPEN_INTERNET_CONTACT_REMOVED', peerDescriptor, activeContacts)
         )
-        this.openInternetPeers.on(ContactListEvent.NEW_CONTACT, (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
+        this.openInternetPeers.on('NEW_CONTACT', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('NEW_OPEN_INTERNET_CONTACT', peerDescriptor, activeContacts)
         )
     }
