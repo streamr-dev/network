@@ -7,7 +7,7 @@ import {
     RpcMessage, WebSocketConnectionRequest, WebSocketConnectionResponse
 } from '../src/proto/DhtRpc'
 import { PeerID } from '../src/helpers/PeerID'
-import { IDhtRpc, IWebSocketConnector } from '../src/proto/DhtRpc.server'
+import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator'
 
@@ -69,7 +69,7 @@ export const createWrappedClosestPeersRequest = (
     return rpcWrapper
 }
 
-interface IDhtRpcWithError extends IDhtRpc {
+interface IDhtRpcWithError extends IDhtRpcService {
     throwPingError: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
     respondPingWithTimeout: (request: PingRequest, _context: ServerCallContext) => Promise<PingResponse> 
     throwGetClosestPeersError: (request: ClosestPeersRequest, _context: ServerCallContext) => Promise<ClosestPeersResponse>
@@ -119,7 +119,7 @@ export const MockDhtRpc: IDhtRpcWithError = {
     }
 }
 
-export const MockWebSocketConnectorRpc: IWebSocketConnector = {
+export const MockWebSocketConnectorRpc: IWebSocketConnectorService = {
     async requestConnection(request: WebSocketConnectionRequest, _context: ServerCallContext): Promise<WebSocketConnectionResponse> {
         const responseConnection: WebSocketConnectionResponse = {
             target: request.target,

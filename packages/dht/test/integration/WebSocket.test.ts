@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
 
 import { WebSocketServer } from "../../src/connection/WebSocket/WebSocketServer"
-import { Event as ConnectionEvents } from '../../src/connection/IConnection'
-import { Event as ConnectionSourceEvents } from '../../src/connection/IConnectionSource'
-import { IConnection, Event as ConnectionEvent } from "../../src/connection/IConnection"
+import { IConnection } from "../../src/connection/IConnection"
 import { ClientWebSocket } from "../../src/connection/WebSocket/ClientWebSocket"
 
 describe('WebSocket', () => {
@@ -17,7 +15,7 @@ describe('WebSocket', () => {
 
     it('Happy path', (done) => {
             
-        webSocketServer.on(ConnectionSourceEvents.CONNECTED, (serverConnection: IConnection) => {
+        webSocketServer.on('CONNECTED', (serverConnection: IConnection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
@@ -25,7 +23,7 @@ describe('WebSocket', () => {
             const time2 = Date.now()
             console.log('server side setting listeners at ' + time2)
             
-            serverConnection.on(ConnectionEvent.DATA, (bytes: Uint8Array) => {
+            serverConnection.on('DATA', (bytes: Uint8Array) => {
                 const time = Date.now()
                 console.log('server side receiving message at ' + time)
 
@@ -37,11 +35,11 @@ describe('WebSocket', () => {
             })
         })
         
-        clientWebSocket.on(ConnectionEvents.CONNECTED, () => {
+        clientWebSocket.on('CONNECTED', () => {
             const time = Date.now()
             console.log('client side setting listeners at ' + time)
             
-            clientWebSocket.on(ConnectionEvents.DATA, (bytes: Uint8Array) => {
+            clientWebSocket.on('DATA', (bytes: Uint8Array) => {
                 const time = Date.now()
                 console.log('client side receiving message at ' + time)
 
@@ -60,5 +58,4 @@ describe('WebSocket', () => {
     afterAll(async () => {
         await webSocketServer.stop()
     })
-
 })

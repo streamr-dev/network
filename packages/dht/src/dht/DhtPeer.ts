@@ -1,4 +1,4 @@
-import { IDhtRpcClient } from '../proto/DhtRpc.client'
+import { IDhtRpcServiceClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
@@ -27,9 +27,9 @@ export class DhtPeer implements KBucketContact {
 
     private peerDescriptor: PeerDescriptor
     public vectorClock: number
-    private readonly dhtClient: ProtoRpcClient<IDhtRpcClient>
+    private readonly dhtClient: ProtoRpcClient<IDhtRpcServiceClient>
     
-    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcClient>) {
+    constructor(peerDescriptor: PeerDescriptor, client: ProtoRpcClient<IDhtRpcServiceClient>) {
         this.peerId = PeerID.fromValue(peerDescriptor.peerId)
         this.peerDescriptor = peerDescriptor
         this.vectorClock = DhtPeer.counter++

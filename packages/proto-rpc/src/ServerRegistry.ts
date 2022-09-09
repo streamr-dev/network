@@ -1,5 +1,5 @@
 import { RpcMessage } from './proto/ProtoRpc'
-import EventEmitter from 'events'
+import EventEmitter from 'eventemitter3'
 import { RpcMetadata, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
@@ -9,14 +9,9 @@ import { ProtoRpcOptions } from './ClientTransport'
 import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 
-export enum ServerRegistryEvent {
-    RPC_RESPONSE = 'rpcResponse',
-    RPC_REQUEST = 'rpcRequest',
-}
-
-export interface ServerRegistry {
-    on(event: ServerRegistryEvent.RPC_RESPONSE, listener: (rpcMessage: RpcMessage) => void): this
-    on(event: ServerRegistryEvent.RPC_REQUEST, listener: (rpcMessage: RpcMessage) => void): this
+interface ServerRegistryEvent {
+    RPC_RESPONSE: (rpcMessage: RpcMessage) => void
+    RPC_REQUEST: (rpcMessage: RpcMessage) => void
 }
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
@@ -43,7 +38,7 @@ export function serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | n
     }
 }
 
-export class ServerRegistry extends EventEmitter {
+export class ServerRegistry extends EventEmitter<ServerRegistryEvent> {
     private methods = new Map<string, RegisteredMethod | RegisteredNotification>()
     private stopped = false
 

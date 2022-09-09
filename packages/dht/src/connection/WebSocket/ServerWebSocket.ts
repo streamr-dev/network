@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events'
-import { IConnection, ConnectionID, Event as ConnectionEvent, ConnectionType } from '../IConnection'
+import EventEmitter from 'eventemitter3'
+import { IConnection, ConnectionID, ConnectionEvent, ConnectionType } from '../IConnection'
 import { connection as WsConnection } from 'websocket'
 import { Logger } from '@streamr/utils'
 
@@ -12,7 +12,7 @@ enum MessageType {
     BINARY = 'binary'
 }
 
-export class ServerWebSocket extends EventEmitter implements IConnection {
+export class ServerWebSocket extends EventEmitter<ConnectionEvent> implements IConnection {
    
     public connectionId: ConnectionID
     private socket: WsConnection
@@ -29,18 +29,18 @@ export class ServerWebSocket extends EventEmitter implements IConnection {
                 logger.debug('Received string Message: ' + message.utf8Data)
             } else if (message.type === MessageType.BINARY) {
                 logger.trace('Received Binary Message of ' + message.binaryData.length + ' bytes')
-                this.emit(ConnectionEvent.DATA,
+                this.emit('DATA',
                     new Uint8Array(message.binaryData.buffer, message.binaryData.byteOffset, 
                         message.binaryData.byteLength / Uint8Array.BYTES_PER_ELEMENT))
             }
         })
         socket.on('close', (reasonCode, description) => {
             logger.trace(' Peer ' + socket.remoteAddress + ' disconnected.')
-            this.emit(ConnectionEvent.DISCONNECTED, reasonCode, description)
+            this.emit('DISCONNECTED', reasonCode, description)
         })
 
         socket.on('error', (error) => {
-            this.emit(ConnectionEvent.ERROR, error.name)
+            this.emit('ERROR', error.name)
         })
 
         this.socket = socket

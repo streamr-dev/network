@@ -25,8 +25,8 @@
     "test-integration": "jest test/integration",
     "test-end-to-end": "jest test/end-to-end",
     "benchmark": "jest test/benchmark",
-    "prepare-dht-simulation": "cd test/kademlia-simulation/data && node --max-old-space-size=8096 -- ../../../../../node_modules/.bin/ts-node -P ../../../tsconfig.node.json generatedhtids.ts",
-    "run-dht-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION test/kademlia-simulation/DhtSimulation.ts",
+    "prepare-kademlia-simulation": "cd test/data && node --max-old-space-size=8096 -- ../../../../node_modules/.bin/ts-node -P ../../tsconfig.node.json generateGroundTruthData.ts",
+    "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION kademlia-simulation/KademliaSimulation.ts",
     "preinstall": "./proto.sh"
   },
   "dependencies": {
@@ -35,7 +35,6 @@
     "@streamr/proto-rpc": "^1.1.1",
     "@streamr/utils": "^0.0.1",
     "bloomfilter": "^0.0.18",
-    "fastestsmallesttextencoderdecoder": "^1.0.22",
     "k-bucket": "^5.1.0",
     "karma-mocha-reporter": "^2.2.5",
     "lodash": "^4.17.21",

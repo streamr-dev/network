@@ -15,8 +15,6 @@ import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
-import { Event as ManagedConnectionEvents } from './IManagedConnection'
-import { Event as ManagedConnectionSourceEvents } from './IManagedConnectionSource'
 import { RoutingRpcCommunicator } from '..'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionLockerClient } from '../proto/DhtRpc.client'
@@ -75,12 +73,14 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
 
         logger.trace(`Creating WebSocket Connector`)
-        this.webSocketConnector = new WebSocketConnector(this.config.transportLayer, 
-            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, this.config.entryPoints)
+        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer, 
+            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, 
+            this.config.entryPoints)
         
         logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
-            rpcTransport: this.config.transportLayer
+            rpcTransport: this.config.transportLayer,
+            protocolVersion: ConnectionManager.PROTOCOL_VERSION
         })
         this.rpcCommunicator = new RoutingRpcCommunicator('ConnectionManager', this, {
             rpcRequestTimeout: 10000
@@ -102,13 +102,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.ownPeerDescriptor = ownPeerDescriptor
 
         this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-        this.webSocketConnector.on(ManagedConnectionSourceEvents.CONNECTED, (connection: ManagedConnection) => {
+        this.webSocketConnector.on('CONNECTED', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
         this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
 
-        this.webrtcConnector.on(ManagedConnectionSourceEvents.CONNECTED, (connection: ManagedConnection) => {
+        this.webrtcConnector.on('CONNECTED', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
@@ -239,8 +239,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
-
-        connection.on(ManagedConnectionEvents.DATA, this.onData) 
+        logger.trace('onNewConnection() objectId ' + connection.objectId)
+        connection.on('MANAGED_DATA', this.onData) 
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toMapKey(), connection)
         
         this.emit('NEW_CONNECTION', connection)

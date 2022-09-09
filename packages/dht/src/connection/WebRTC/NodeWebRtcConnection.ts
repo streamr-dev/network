@@ -1,7 +1,7 @@
-import { IWebRtcConnection, Event as IWebRtcEvent } from './IWebRtcConnection'
-import { ConnectionType, IConnection, ConnectionID, Event as ConnectionEvent, } from '../IConnection'
+import { IWebRtcConnection, WebRtcConnectionEvent } from './IWebRtcConnection'
+import { ConnectionType, IConnection, ConnectionID, ConnectionEvent } from '../IConnection'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import EventEmitter from 'events'
+import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
 import { IWebRtcCleanUp } from './IWebRtcCleanUp'
@@ -32,7 +32,9 @@ export interface Params {
 enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
-export class NodeWebRtcConnection extends EventEmitter implements IConnection, IWebRtcConnection {
+type Events = WebRtcConnectionEvent | ConnectionEvent
+
+export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 
     public connectionId: ConnectionID
     public connectionType: ConnectionType = ConnectionType.WEBRTC
@@ -72,10 +74,10 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         this.connection.onStateChange((state) => this.onStateChange(state))
         this.connection.onGatheringStateChange((_state) => {})
         this.connection.onLocalDescription((description: string, type: DescriptionType) => {
-            this.emit(IWebRtcEvent.LOCAL_DESCRIPTION, description, type.toString())
+            this.emit('LOCAL_DESCRIPTION', description, type.toString())
         })
         this.connection.onLocalCandidate((candidate: string, mid: string) => {
-            this.emit(IWebRtcEvent.LOCAL_CANDIDATE, candidate, mid)
+            this.emit('LOCAL_CANDIDATE', candidate, mid)
         })
         if (isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
@@ -129,7 +131,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         if (this.connectingTimeoutRef) {
             clearTimeout(this.connectingTimeoutRef)
         }
-        this.emit(ConnectionEvent.DISCONNECTED)
+        this.emit('DISCONNECTED')
         if (this.dataChannel) {
             this.dataChannel.close()
         }
@@ -164,7 +166,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
 
         dataChannel.onMessage((msg) => {
             logger.trace(`dc.onMessage`)
-            this.emit(ConnectionEvent.DATA, msg as Buffer)
+            this.emit('DATA', msg as Buffer)
         })
     }
 
@@ -174,7 +176,7 @@ export class NodeWebRtcConnection extends EventEmitter implements IConnection, I
         }
         this.dataChannel = dataChannel
         logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.peerId.toString()}`)
-        this.emit(ConnectionEvent.CONNECTED)
+        this.emit('CONNECTED')
     }
 
     private onStateChange(state: string): void {

@@ -6,12 +6,12 @@ import {
     RtcOffer,
     WebRtcConnectionRequest
 } from '../../proto/DhtRpc'
-import { IWebRtcConnectorClient } from '../../proto/DhtRpc.client'
+import { IWebRtcConnectorServiceClient } from '../../proto/DhtRpc.client'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 
 export class RemoteWebrtcConnector {
-    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebRtcConnectorClient>) {
+    constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebRtcConnectorServiceClient>) {
     }
 
     requestConnection(sourceDescriptor: PeerDescriptor, connectionId: string): void {

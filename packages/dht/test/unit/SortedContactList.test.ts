@@ -2,7 +2,7 @@ import { SortedContactList } from '../../src/dht/SortedContactList'
 import type { ServiceInfo, MethodInfo } from "@protobuf-ts/runtime-rpc"
 import { PeerID } from '../../src/helpers/PeerID'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { IDhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { IDhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
 import { NodeType, PeerDescriptor, RouteMessageAck, RouteMessageWrapper } from "../../src/proto/DhtRpc"
 import type { PingResponse } from "../../src/proto//DhtRpc"
 import type { PingRequest } from "../../src/proto//DhtRpc"
@@ -13,7 +13,7 @@ import type { RpcOptions } from "@protobuf-ts/runtime-rpc"
 import { DhtPeer } from '../../src/dht/DhtPeer'
 import { IMessageType } from '@protobuf-ts/runtime'
 
-class MockRpcClient implements IDhtRpcClient, ServiceInfo {
+class MockRpcClient implements IDhtRpcServiceClient, ServiceInfo {
     typeName = 'MockRpcClient'
     methods: MethodInfo<any, any> [] = [
         { name: 'getClosestPeers', O: {} as IMessageType<ClosestPeersResponse> } as MethodInfo<any, any>,

@@ -1,5 +1,5 @@
 import { DhtPeer } from '../../src/dht/DhtPeer'
-import { RpcCommunicator, RpcCommunicatorEvent, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator, toProtoRpcClient } from '@streamr/proto-rpc'
 import { createWrappedClosestPeersRequest, getMockPeers, MockDhtRpc } from '../utils'
 import {
     ClosestPeersRequest,
@@ -9,7 +9,7 @@ import {
     PeerDescriptor, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper,
     RpcMessage
 } from '../../src/proto/DhtRpc'
-import { DhtRpcClient } from '../../src/proto/DhtRpc.client'
+import { DhtRpcServiceClient } from '../../src/proto/DhtRpc.client'
 import { generateId } from '../utils'
 import { DhtCallContext } from '../../src/rpc-protocol/DhtCallContext'
 
@@ -36,16 +36,16 @@ describe('DhtPeer', () => {
         serverRpcCommunicator.registerRpcMethod(PingRequest, PingResponse, 'ping', MockDhtRpc.ping)
         serverRpcCommunicator.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', MockDhtRpc.routeMessage)
 
-        clientRpcCommunicator.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        clientRpcCommunicator.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
        
             serverRpcCommunicator.handleIncomingMessage(message)
         })
 
-        serverRpcCommunicator.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        serverRpcCommunicator.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             clientRpcCommunicator.handleIncomingMessage(message)
         })
 
-        const client = toProtoRpcClient(new DhtRpcClient(clientRpcCommunicator.getRpcClientTransport()))
+        const client = toProtoRpcClient(new DhtRpcServiceClient(clientRpcCommunicator.getRpcClientTransport()))
         dhtPeer = new DhtPeer(serverPeerDescriptor, client)
     })
 

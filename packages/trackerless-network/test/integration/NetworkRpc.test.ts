@@ -2,7 +2,6 @@ import { PeerDescriptor } from '@streamr/dht'
 import {
     RpcCommunicator,
     CallContext,
-    RpcCommunicatorEvent,
     ProtoRpcClient,
     toProtoRpcClient
 } from '@streamr/proto-rpc'
@@ -26,7 +25,7 @@ describe('Network RPC', () => {
     beforeEach(() => {
         rpcCommunicator1 = new RpcCommunicator()
         rpcCommunicator2 = new RpcCommunicator()
-        rpcCommunicator1.on(RpcCommunicatorEvent.OUTGOING_MESSAGE, (message: Uint8Array, _ucallContext?: CallContext) => {
+        rpcCommunicator1.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: CallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
         client = toProtoRpcClient(new NetworkRpcClient(rpcCommunicator1.getRpcClientTransport()))
