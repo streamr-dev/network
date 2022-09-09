@@ -406,6 +406,53 @@ export interface IceCandidate {
     target?: PeerDescriptor;
 }
 /**
+ * @generated from protobuf message LockRequest
+ */
+export interface LockRequest {
+    /**
+     * @generated from protobuf field: string protocolVersion = 1;
+     */
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 2;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: string serviceId = 3;
+     */
+    serviceId: string;
+}
+/**
+ * @generated from protobuf message UnlockRequest
+ */
+export interface UnlockRequest {
+    /**
+     * @generated from protobuf field: string protocolVersion = 1;
+     */
+    protocolVersion: string;
+    /**
+     * @generated from protobuf field: PeerDescriptor peerDescriptor = 2;
+     */
+    peerDescriptor?: PeerDescriptor;
+    /**
+     * @generated from protobuf field: string serviceId = 3;
+     */
+    serviceId: string;
+}
+/**
+ * @generated from protobuf message LockResponse
+ */
+export interface LockResponse {
+    /**
+     * @generated from protobuf field: bool accepted = 1;
+     */
+    accepted: boolean;
+    /**
+     * @generated from protobuf field: optional bool reason = 2;
+     */
+    reason?: boolean; // if accepted = false
+}
+/**
  * @generated from protobuf enum NodeType
  */
 export enum NodeType {
@@ -772,6 +819,47 @@ class IceCandidate$Type extends MessageType$<IceCandidate> {
  * @generated MessageType for protobuf message IceCandidate
  */
 export const IceCandidate = new IceCandidate$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class LockRequest$Type extends MessageType$<LockRequest> {
+    constructor() {
+        super("LockRequest", [
+            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message LockRequest
+ */
+export const LockRequest = new LockRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UnlockRequest$Type extends MessageType$<UnlockRequest> {
+    constructor() {
+        super("UnlockRequest", [
+            { no: 1, name: "protocolVersion", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
+            { no: 3, name: "serviceId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UnlockRequest
+ */
+export const UnlockRequest = new UnlockRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class LockResponse$Type extends MessageType$<LockResponse> {
+    constructor() {
+        super("LockResponse", [
+            { no: 1, name: "accepted", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "reason", kind: "scalar", opt: true, T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message LockResponse
+ */
+export const LockResponse = new LockResponse$Type();
 /**
  * @generated ServiceType for protobuf service DhtRpc
  */
@@ -794,4 +882,11 @@ export const WebRtcConnector = new ServiceType("WebRtcConnector", [
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
     { name: "iceCandidate", options: {}, I: IceCandidate, O: Empty }
+]);
+/**
+ * @generated ServiceType for protobuf service ConnectionLocker
+ */
+export const ConnectionLocker = new ServiceType("ConnectionLocker", [
+    { name: "lockRequest", options: {}, I: LockRequest, O: LockResponse },
+    { name: "unlockRequest", options: {}, I: UnlockRequest, O: Empty }
 ]);
