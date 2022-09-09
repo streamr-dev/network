@@ -16,9 +16,9 @@ import { ClosestPeersResponse } from "./DhtRpc";
 import { ClosestPeersRequest } from "./DhtRpc";
 import { ServerCallContext } from "@protobuf-ts/runtime-rpc";
 /**
- * @generated from protobuf service DhtRpc
+ * @generated from protobuf service DhtRpcService
  */
-export interface IDhtRpc<T = ServerCallContext> {
+export interface IDhtRpcService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: getClosestPeers(ClosestPeersRequest) returns (ClosestPeersResponse);
      */
@@ -33,18 +33,18 @@ export interface IDhtRpc<T = ServerCallContext> {
     routeMessage(request: RouteMessageWrapper, context: T): Promise<RouteMessageAck>;
 }
 /**
- * @generated from protobuf service WebSocketConnector
+ * @generated from protobuf service WebSocketConnectorService
  */
-export interface IWebSocketConnector<T = ServerCallContext> {
+export interface IWebSocketConnectorService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: requestConnection(WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
      */
     requestConnection(request: WebSocketConnectionRequest, context: T): Promise<WebSocketConnectionResponse>;
 }
 /**
- * @generated from protobuf service WebRtcConnector
+ * @generated from protobuf service WebRtcConnectorService
  */
-export interface IWebRtcConnector<T = ServerCallContext> {
+export interface IWebRtcConnectorService<T = ServerCallContext> {
     /**
      * @generated from protobuf rpc: requestConnection(WebRtcConnectionRequest) returns (google.protobuf.Empty);
      */

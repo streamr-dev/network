@@ -773,23 +773,23 @@ class IceCandidate$Type extends MessageType$<IceCandidate> {
  */
 export const IceCandidate = new IceCandidate$Type();
 /**
- * @generated ServiceType for protobuf service DhtRpc
+ * @generated ServiceType for protobuf service DhtRpcService
  */
-export const DhtRpc = new ServiceType("DhtRpc", [
+export const DhtRpcService = new ServiceType("DhtRpcService", [
     { name: "getClosestPeers", options: {}, I: ClosestPeersRequest, O: ClosestPeersResponse },
     { name: "ping", options: {}, I: PingRequest, O: PingResponse },
     { name: "routeMessage", options: {}, I: RouteMessageWrapper, O: RouteMessageAck }
 ]);
 /**
- * @generated ServiceType for protobuf service WebSocketConnector
+ * @generated ServiceType for protobuf service WebSocketConnectorService
  */
-export const WebSocketConnector = new ServiceType("WebSocketConnector", [
+export const WebSocketConnectorService = new ServiceType("WebSocketConnectorService", [
     { name: "requestConnection", options: {}, I: WebSocketConnectionRequest, O: WebSocketConnectionResponse }
 ]);
 /**
- * @generated ServiceType for protobuf service WebRtcConnector
+ * @generated ServiceType for protobuf service WebRtcConnectorService
  */
-export const WebRtcConnector = new ServiceType("WebRtcConnector", [
+export const WebRtcConnectorService = new ServiceType("WebRtcConnectorService", [
     { name: "requestConnection", options: {}, I: WebRtcConnectionRequest, O: Empty },
     { name: "rtcOffer", options: {}, I: RtcOffer, O: Empty },
     { name: "rtcAnswer", options: {}, I: RtcAnswer, O: Empty },
