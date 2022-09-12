@@ -107,4 +107,27 @@ describe('Connection Locking', () => {
         expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2)).toEqual(false)
         expect(connectionManager1.hasConnection(mockPeerDescriptor1)).toEqual(false)
     })
+
+    it('maintains connection if both sides initially lock and then one end unlocks', async () => {
+        await Promise.all([
+            waitForCondition(() => connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1)),
+            waitForCondition(() => connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2)),
+            connectionManager1.lockConnection(mockPeerDescriptor2, 'testLock1'),
+            connectionManager2.lockConnection(mockPeerDescriptor1, 'testLock1')
+        ])
+
+        expect(connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2))
+        expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor1))
+
+        connectionManager1.unlockConnection(mockPeerDescriptor2, 'testLock1')
+        await waitForCondition(() =>
+            connectionManager1.hasRemoteLockedConnection(mockPeerDescriptor2, 'testLock1')
+            && !connectionManager1.hasLocalLockedConnection(mockPeerDescriptor2, 'testLock1')
+        )
+
+        expect(connectionManager2.hasRemoteLockedConnection(mockPeerDescriptor1, 'testLock1')).toEqual(false)
+        expect(connectionManager2.hasLocalLockedConnection(mockPeerDescriptor1, 'testLock1')).toEqual(true)
+        expect(connectionManager2.hasConnection(mockPeerDescriptor1)).toEqual(true)
+        expect(connectionManager1.hasConnection(mockPeerDescriptor2)).toEqual(true)
+    })
 })
