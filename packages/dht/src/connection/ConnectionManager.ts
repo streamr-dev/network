@@ -1,9 +1,11 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
+    LockRequest, LockResponse,
     Message,
     MessageType,
-    PeerDescriptor
+    PeerDescriptor,
+    UnlockRequest
 } from '../proto/DhtRpc'
 import { WebSocketConnector } from './WebSocket/WebSocketConnector'
 import { PeerID, PeerIDKey } from '../helpers/PeerID'
@@ -13,6 +15,12 @@ import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
+import { RoutingRpcCommunicator } from '..'
+import { toProtoRpcClient } from '@streamr/proto-rpc'
+import { ConnectionLockerClient } from '../proto/DhtRpc.client'
+import { RemoteConnectionLocker } from './RemoteConnectionLocker'
+import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
+import { Empty } from '../proto/google/protobuf/empty'
 
 export interface ConnectionManagerConfig {
     transportLayer: ITransport
@@ -26,6 +34,8 @@ export enum NatType {
     UNKNOWN = 'unknown'
 }
 
+type ServiceId = string
+
 export type PeerDescriptorGeneratorCallback = (connectivityResponse: ConnectivityResponseMessage) => PeerDescriptor
 
 const DEFAULT_DISCONNECTION_TIMEOUT = 10000
@@ -35,9 +45,14 @@ interface ConnectionManagerEvents {
     NEW_CONNECTION: (connection: ManagedConnection) => void   
 }
 
+export interface ConnectionLocker {
+    lockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+    unlockConnection(targetDescriptor: PeerDescriptor, serviceId: string): void
+}
+
 export type Events = TransportEvents & ConnectionManagerEvents
 
-export class ConnectionManager extends EventEmitter<Events> implements ITransport {
+export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
     public static PROTOCOL_VERSION = '1.0'
     private stopped = false
     private started = false
@@ -48,6 +63,11 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
     private webSocketConnector: WebSocketConnector
     private webrtcConnector: WebRtcConnector
+
+    private localLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
+    private remoteLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
+
+    private rpcCommunicator: RoutingRpcCommunicator
 
     constructor(private config: ConnectionManagerConfig) {
         super()
@@ -61,6 +81,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: this.config.transportLayer,
             protocolVersion: ConnectionManager.PROTOCOL_VERSION
+        })
+        this.rpcCommunicator = new RoutingRpcCommunicator('ConnectionManager', this, {
+            rpcRequestTimeout: 10000
         })
     }
 
@@ -88,6 +111,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.webrtcConnector.on('CONNECTED', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
+
+        this.lockRequest = this.lockRequest.bind(this)
+        this.unlockRequest = this.unlockRequest.bind(this)
+
+        this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
+        this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
     }
 
     public async stop(): Promise<void> {
@@ -169,6 +198,24 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return this.connections.has(hexId)
     }
 
+    public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        if (!serviceId) {
+            return this.localLockedConnections.has(hexId)
+        } else {
+            return this.localLockedConnections.has(hexId) ? this.localLockedConnections.get(hexId)!.has(serviceId) : false
+        }
+    }
+
+    public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        if (!serviceId) {
+            return this.remoteLockedConnections.has(hexId)
+        } else {
+            return this.remoteLockedConnections.has(hexId) ? this.remoteLockedConnections.get(hexId)!.has(serviceId) : false
+        }
+    }
+
     public canConnect(peerDescriptor: PeerDescriptor, _ip: string, _port: number): boolean {
         // Perhaps the connection's state should be checked here
         return !this.hasConnection(peerDescriptor) // TODO: Add port range check
@@ -207,5 +254,83 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
             this.connections.get(id)!.close()
         }
+    }
+
+    private clearDisconnectionTimeout(hexId: PeerIDKey): void {
+        if (this.disconnectionTimeouts.has(hexId)) {
+            clearTimeout(this.disconnectionTimeouts.get(hexId))
+            this.disconnectionTimeouts.delete(hexId)
+        }
+    }
+
+    public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        this.clearDisconnectionTimeout(hexKey)
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator.getRpcClientTransport()))
+        )
+        if (!this.localLockedConnections.has(hexKey)) {
+            const newSet = new Set<ServiceId>()
+            newSet.add(serviceId)
+            this.localLockedConnections.set(hexKey, newSet)
+        } else if (!this.localLockedConnections.get(hexKey)?.has(serviceId)) {
+            this.localLockedConnections.get(hexKey)?.add(serviceId)
+        }
+
+        remoteConnectionLocker.lockRequest(this.ownPeerDescriptor!, serviceId)
+            .then((_accepted) => logger.trace('LockRequest successful'))
+            .catch((err) => {logger.error(err)})
+    }
+
+    public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        this.localLockedConnections.get(hexKey)?.delete(serviceId)
+
+        const remoteConnectionLocker = new RemoteConnectionLocker(
+            targetDescriptor,
+            ConnectionManager.PROTOCOL_VERSION,
+            toProtoRpcClient(new ConnectionLockerClient(this.rpcCommunicator.getRpcClientTransport()))
+        )
+
+        remoteConnectionLocker.unlockRequest(this.ownPeerDescriptor!, serviceId)
+
+        if (this.localLockedConnections.get(hexKey)?.size === 0) {
+            this.localLockedConnections.delete(hexKey)
+            if (!this.hasRemoteLockedConnection(targetDescriptor)) {
+                this.disconnect(targetDescriptor, 'connection is no longer locked by any services')
+            }
+        }
+    }
+
+    // IConnectionLocker server implementation
+    private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
+        const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toMapKey()
+        this.clearDisconnectionTimeout(hexKey)
+        if (!this.remoteLockedConnections.has(hexKey)) {
+            const newSet = new Set<string>()
+            newSet.add(lockRequest.serviceId)
+            this.remoteLockedConnections.set(hexKey, newSet)
+        } else if (!this.remoteLockedConnections.get(hexKey)?.has(lockRequest.serviceId)) {
+            this.remoteLockedConnections.get(hexKey)?.add(lockRequest.serviceId)
+        }
+        const response: LockResponse = {
+            accepted: true
+        }
+        return response
+    }
+
+    // IConnectionLocker server implementation
+    private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
+        const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.peerId).toMapKey()
+        this.remoteLockedConnections.get(hexKey)?.delete(unlockRequest.serviceId)
+        if (this.remoteLockedConnections.get(hexKey)?.size === 0) {
+            this.remoteLockedConnections.delete(hexKey)
+            if (!this.hasLocalLockedConnection(unlockRequest.peerDescriptor!)) {
+                this.disconnect(unlockRequest.peerDescriptor!, 'connection is no longer locked by any services')
+            }
+        }
+        return {}
     }
 }
