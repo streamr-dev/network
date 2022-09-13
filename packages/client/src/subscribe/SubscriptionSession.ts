@@ -1,6 +1,6 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
 
 import { Scaffold } from '../utils/Scaffold'
 import { instanceId } from '../utils/utils'
@@ -85,6 +85,10 @@ export class SubscriptionSession<T> implements Context {
         }
 
         if (msg.getStreamPartID() !== this.streamPartId) {
+            return
+        }
+
+        if (msg.messageType !== StreamMessageType.MESSAGE) {
             return
         }
 
