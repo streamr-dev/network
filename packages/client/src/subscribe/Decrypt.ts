@@ -107,8 +107,8 @@ export class Decrypt<T> implements Context {
                     streamMessage.getStreamPartID()
                 )
                 try {
-                    await waitForCondition(() => {  // TODO and implement without polling (and wrap with "withTimeout")
-                        return store.has(groupKeyId) || this.isStopped
+                    await waitForCondition(async () => {  // TODO and implement without polling (and wrap with "withTimeout")
+                        return (await store.has(groupKeyId)) || this.isStopped
                     }, this.timeoutsConfig.encryptionKeyRequest)
                 } catch (e: any) {
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
