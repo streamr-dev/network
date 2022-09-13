@@ -115,6 +115,7 @@ export class ManagedConnection extends EventEmitter<Events> {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
             this.implementation!.send(this.outputBuffer.shift()!)
         }
+        
         logger.trace('emitting handshake_completed, objectId: ' + this.objectId)
         this.emit('HANDSHAKE_COMPLETED', peerDescriptor)
     }
@@ -131,8 +132,6 @@ export class ManagedConnection extends EventEmitter<Events> {
                 logger.trace('emitting data as ManagedConnectionEvents.DATA objectId: ' + this.objectId)
                 this.emit('MANAGED_DATA', bytes, this.getPeerDescriptor()!)
             }
-
-            //this.emit(ConnectionEvents.DATA, bytes)
         })
 
         impl.on('ERROR', (name: string) => {

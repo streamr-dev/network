@@ -1,8 +1,8 @@
-import { CallContext } from "@streamr/proto-rpc"
+import { ProtoCallContext } from "@streamr/proto-rpc"
 import { PeerDescriptor } from "../proto/DhtRpc"
 import { DhtRpcOptions } from "./DhtRpcOptions"
 
-export class DhtCallContext extends CallContext implements DhtRpcOptions {
+export class DhtCallContext extends ProtoCallContext implements DhtRpcOptions {
     // used by client
     targetDescriptor?: PeerDescriptor
     sourceDescriptor?: PeerDescriptor

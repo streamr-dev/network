@@ -1,6 +1,5 @@
 import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerID } from './PeerID'
 import { NodeType, PeerDescriptor } from './proto/TestProtos'
 import { IDhtRpcService } from './proto/TestProtos.server'
 
@@ -69,7 +68,7 @@ export function clearMockTimeouts(): void {
 }
 
 export const generateId = (stringId: string): Uint8Array => {
-    return PeerID.fromString(stringId).value
+    return new TextEncoder().encode(stringId)
 }
 
 export const getMockPeers = (): PeerDescriptor[] => {

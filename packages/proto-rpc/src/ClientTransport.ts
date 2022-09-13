@@ -6,7 +6,6 @@ import {
     RpcTransport,
     MethodInfo,
     RpcError,
-    RpcOptions,
     RpcMetadata,
     RpcStatus,
     UnaryCall,
@@ -16,6 +15,7 @@ import { v4 } from 'uuid'
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { ProtoRpcOptions } from './ProtoCallContext'
 
 interface ClientTransportEvent {
     RPC_REQUEST: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
@@ -27,11 +27,6 @@ export interface ResultParts {
     status: Deferred<RpcStatus>
     trailer: Deferred<RpcMetadata>
     messageParser: (bytes: Uint8Array) => object
-}
-
-export interface ProtoRpcOptions extends RpcOptions {
-    notification?: boolean
-    isProtoRpc?: boolean
 }
 
 const logger = new Logger(module)

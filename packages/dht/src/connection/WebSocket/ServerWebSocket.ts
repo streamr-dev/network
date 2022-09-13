@@ -5,6 +5,10 @@ import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
+// NodeJsBuffer is global defined in preload.js of Karma
+// It is used to make Karma/Electron tests to use the NodeJS
+// implementation of Buffer instead of the browser polyfill
+
 declare let NodeJsBuffer: BufferConstructor
 
 enum MessageType {
@@ -47,8 +51,10 @@ export class ServerWebSocket extends EventEmitter<ConnectionEvent> implements IC
     }
 
     send(data: Uint8Array): void {
+        logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
+        // If in an Karma / Electron test, use the NodeJS implementation
+        // of Buffer instead of the browser polyfill
         if (typeof NodeJsBuffer !== 'undefined') {
-            logger.trace('serverwebsocket trying to send ' + JSON.stringify(data))
             this.socket.sendBytes(NodeJsBuffer.from(data))
         } else {
             this.socket.sendBytes(Buffer.from(data))

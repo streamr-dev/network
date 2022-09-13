@@ -20,8 +20,8 @@ declare class NodeJsWsServer extends WsServer { }
 
 export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
 
-    private httpServer: http.Server | null = null
-    private wsServer: WsServer | null = null
+    private httpServer?: http.Server
+    private wsServer?: WsServer
     
     public start(port: number, host?: string): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -31,24 +31,12 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
                 response.end()
             })
 
-            // Use the real nodejs WebSocket server in Electron tests
-
-            if (typeof NodeJsWsServer !== 'undefined') {
-                this.wsServer = new NodeJsWsServer({
-                    httpServer: this.httpServer,
-                    autoAcceptConnections: false
-                })
-            } else {
-                this.wsServer = new WsServer({
-                    httpServer: this.httpServer,
-                    autoAcceptConnections: false
-                })
-            }
-
             function originIsAllowed(_uorigin: string) {
                 return true
             }
 
+            this.wsServer = this.createWsServer(this.httpServer)
+            
             this.wsServer.on('request', (request) => {
                 if (!originIsAllowed(request.origin)) {
                     // Make sure we only accept requests from an allowed origin
@@ -89,5 +77,21 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
                 resolve()
             })
         })
+    }
+
+    private createWsServer(httpServer: http.Server): WsServer {
+        // Use the real nodejs WebSocket server in Electron tests
+
+        if (typeof NodeJsWsServer !== 'undefined') {
+            return new NodeJsWsServer({
+                httpServer: httpServer,
+                autoAcceptConnections: false
+            })
+        } else {
+            return this.wsServer = new WsServer({
+                httpServer: httpServer,
+                autoAcceptConnections: false
+            })
+        }
     }
 }

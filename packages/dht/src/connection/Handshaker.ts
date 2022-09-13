@@ -14,7 +14,7 @@ interface HandshakerEvent {
 
 export class Handshaker extends EventEmitter<HandshakerEvent> {
 
-    private static HANDSHAKER_SERVICE_ID = 'handshaker'
+    private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
 
     constructor(private ownPeerDescriptor: PeerDescriptor, 
         private protocolVersion: string, 

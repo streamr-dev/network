@@ -1,23 +1,21 @@
 /* eslint-disable no-console */
 
 import { SimulationNode } from './SimulationNode'
-import crypto from 'crypto'
 import fs from 'fs'
-import { PeerID } from '../src/helpers/PeerID'
+import { PeerID } from '../helpers/PeerID'
 
 export class KademliaSimulation {
     
-    private NUM_NODES = 1000
-    private ID_LENGTH = 8
+    private static readonly NUM_NODES = 1000
+    private static readonly ID_LENGTH = 8
 
-    private nodeNamesById: Record<string, number> = {} 
-    private nodes: SimulationNode[]
+    private readonly nodeNamesById: Record<string, number> = {} 
+    private readonly nodes: SimulationNode[] = []
 
-    private dhtIds: Array<{ type: string, data: Array<number> }>
-    private groundTruth:  Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
+    private readonly dhtIds: Array<{ type: string, data: Array<number> }>
+    private readonly groundTruth:  Record<string, Array<{ name: string, distance: number, id: { type: string, data: Array<number> } }>>
 
     constructor() {
-        this.nodes = []
         if (!fs.existsSync('test/data/nodeids.json')) {
             throw ('Cannot find test/data/nodeids.json, please run "npm run prepare-kademlia-simulation first"')
         }
@@ -25,13 +23,9 @@ export class KademliaSimulation {
         this.groundTruth = JSON.parse(fs.readFileSync('test/data/orderedneighbors.json').toString())
     }
 
-    private generateId(): Uint8Array {
-        return crypto.randomBytes(this.ID_LENGTH)
-    }
-
     public run(): void {
-        for (let i = 0; i < this.NUM_NODES; i++) {
-            const node = new SimulationNode(PeerID.fromValue(Buffer.from(this.dhtIds[i].data.slice(0, this.ID_LENGTH))))
+        for (let i = 0; i < KademliaSimulation.NUM_NODES; i++) {
+            const node = new SimulationNode(PeerID.fromValue(Buffer.from(this.dhtIds[i].data.slice(0, KademliaSimulation.ID_LENGTH))))
             this.nodeNamesById[JSON.stringify(node.getContact().id)] = i
             this.nodes.push(node)
             node.joinDht(this.nodes[0])
@@ -83,9 +77,9 @@ export class KademliaSimulation {
             }
         }
 
-        const avgCorrectNeighbors = sumCorrectNeighbors / (this.NUM_NODES - 1)
-        const avgKbucketSize = sumKbucketSize / (this.NUM_NODES - 1)
-        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (this.NUM_NODES - 1)
+        const avgCorrectNeighbors = sumCorrectNeighbors / (KademliaSimulation.NUM_NODES - 1)
+        const avgKbucketSize = sumKbucketSize / (KademliaSimulation.NUM_NODES - 1)
+        const avgNumberOfOutgoingRpcCalls = sumOutgoingRpcCalls / (KademliaSimulation.NUM_NODES - 1)
 
         console.log('----------- Simulation results ------------------')
         console.log('Minimum correct neighbors: ' + minimumCorrectNeighbors)

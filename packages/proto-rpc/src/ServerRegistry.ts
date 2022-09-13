@@ -1,13 +1,12 @@
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter from 'eventemitter3'
-import { RpcMetadata, ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { BinaryReadOptions, BinaryWriteOptions } from '@protobuf-ts/runtime'
 import { promiseTimeout } from './common'
 import * as Err from './errors'
 import UnknownRpcMethod = Err.UnknownRpcMethod
-import { ProtoRpcOptions } from './ClientTransport'
 import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
+import { ProtoCallContext } from './ProtoCallContext'
 
 interface ServerRegistryEvent {
     RPC_RESPONSE: (rpcMessage: RpcMessage) => void
@@ -17,8 +16,8 @@ interface ServerRegistryEvent {
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
 export interface Serializer<Target> { toBinary: (message: Target, options?: Partial<BinaryWriteOptions>) => Uint8Array }
 
-type RegisteredMethod = (request: Uint8Array, callContext: CallContext) => Promise<Uint8Array>
-type RegisteredNotification = (request: Uint8Array, callContext: CallContext) => Promise<Empty>
+type RegisteredMethod = (request: Uint8Array, callContext: ProtoCallContext) => Promise<Uint8Array>
+type RegisteredNotification = (request: Uint8Array, callContext: ProtoCallContext) => Promise<void>
 
 const logger = new Logger(module)
 
@@ -39,49 +38,44 @@ export function serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | n
 }
 
 export class ServerRegistry extends EventEmitter<ServerRegistryEvent> {
-    private methods = new Map<string, RegisteredMethod | RegisteredNotification>()
-    private stopped = false
+    private methods = new Map<string, RegisteredMethod>()
+    private notifications = new Map<string, RegisteredNotification>()
 
-    public async onRequest(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Uint8Array> {
-        if (this.stopped) {
-            return new Uint8Array()
-        }
-        logger.trace(`Server processing request ${rpcMessage.requestId}`)
-        const methodName = rpcMessage.header.method
-        if (methodName === undefined) {
+    private getImplementation<T extends RegisteredMethod | RegisteredNotification>(rpcMessage: RpcMessage, map: Map<string, T>): T {
+        if (!rpcMessage || !rpcMessage.header || !rpcMessage.header.method) {
             throw new UnknownRpcMethod('Header "method" missing from RPC message')
         }
-        const fn = this.methods.get(methodName) as RegisteredMethod
-        if (!fn) {
-            throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
+
+        if (!map.has(rpcMessage.header.method)) {
+            throw new UnknownRpcMethod(`RPC Method ${rpcMessage.header.method} is not provided`)
         }
 
-        return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new CallContext()))
+        return map.get(rpcMessage.header.method)!
     }
 
-    public async onNotification(rpcMessage: RpcMessage, callContext?: CallContext): Promise<Empty> {
-        if (this.stopped) {
-            return {} as Empty
-        }
-        logger.trace(`Server processing notification ${rpcMessage.requestId}`)
-        const methodName = rpcMessage.header.method
-        if (methodName === undefined) {
-            throw new UnknownRpcMethod('Header "method" missing from RPC message')
-        }
-        const fn = this.methods.get(methodName) as RegisteredNotification
-        if (!fn) {
-            throw new UnknownRpcMethod(`RPC Method ${methodName} is not provided`)
-        }
-        return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new CallContext()))
+    public async handleRequest(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<Uint8Array> {
+
+        logger.trace(`Server processing RPC call ${rpcMessage.requestId}`)
+
+        const fn = this.getImplementation(rpcMessage, this.methods)
+        return await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new ProtoCallContext()))
+    }
+
+    public async handleNotification(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {
+       
+        logger.trace(`Server processing RPC notification ${rpcMessage.requestId}`)
+        
+        const fn = this.getImplementation(rpcMessage, this.notifications)
+        await promiseTimeout(1000, fn!(rpcMessage.body, callContext ? callContext : new ProtoCallContext()))
     }
 
     public registerRpcMethod<RequestClass extends Parser<RequestType>, ReturnClass extends Serializer<ReturnType>, RequestType, ReturnType>(
         requestClass: RequestClass,
         returnClass: ReturnClass,
         name: string,
-        fn: (rq: RequestType, _context: CallContext) => Promise<ReturnType>
+        fn: (rq: RequestType, _context: ProtoCallContext) => Promise<ReturnType>
     ): void {
-        this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext) => {
+        this.methods.set(name, async (bytes: Uint8Array, callContext: ProtoCallContext) => {
             const request = parseWrapper(() => requestClass.fromBinary(bytes))
             const response = await fn(request, callContext)
             return returnClass.toBinary(response)
@@ -91,36 +85,12 @@ export class ServerRegistry extends EventEmitter<ServerRegistryEvent> {
     public registerRpcNotification<RequestClass extends Parser<RequestType>, RequestType>(
         requestClass: RequestClass,
         name: string,
-        fn: (rq: RequestType, _context: CallContext) => Promise<Empty>
+        fn: (rq: RequestType, _context: ProtoCallContext) => Promise<Empty>
     ): void {
-        this.methods.set(name, async (bytes: Uint8Array, callContext: CallContext): Promise<Empty> => {
+        this.notifications.set(name, async (bytes: Uint8Array, callContext: ProtoCallContext): Promise<void> => {
             const request = parseWrapper(() => requestClass.fromBinary(bytes))
-            const response = await fn(request, callContext)
-            return Empty.toBinary(response)
+            await fn(request, callContext)
         })
     }
-
-    public stop(): void {
-        this.stopped = true
-        this.methods.clear()
-    }
 }
 
-export class CallContext implements ServerCallContext, ProtoRpcOptions {
-    method = undefined as unknown as any
-    headers = undefined as unknown as any
-    deadline = undefined as unknown as any
-    trailers = undefined as unknown as any
-    status = undefined as unknown as any
-    sendResponseHeaders(_data: RpcMetadata): void {
-        throw new Err.NotImplemented('Method not implemented.')
-    }
-    cancelled = undefined as unknown as any
-    onCancel(_cb: () => void): () => void {
-        throw new Err.NotImplemented('Method not implemented.')
-    }
-
-    // own extensions
-    [extra: string]: unknown
-    notification?: boolean
-}
