@@ -6,8 +6,7 @@ import { GroupKey } from './GroupKey'
 import { Persistence } from '../utils/persistence/Persistence'
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
-
-type GroupKeyId = string
+import { GroupKeyId } from './KeyExchangeStream'
 
 interface GroupKeyStoreOptions {
     context: Context
