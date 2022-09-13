@@ -11,6 +11,7 @@ import { FakeEnvironment } from "../test-utils/fake/FakeEnvironment"
 import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
 
 const CONTENT = {
     foo: 'bar'
@@ -114,7 +115,7 @@ describe('SubscribePipeline', () => {
         const output = await collect(pipeline)
         expect(onError).toBeCalledTimes(1)
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Unable to decrypt')
+        expect(error).toBeInstanceOf(DecryptError)
         expect(output).toEqual([])
     })
 })

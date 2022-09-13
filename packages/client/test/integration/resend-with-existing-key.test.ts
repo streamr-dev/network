@@ -6,7 +6,7 @@ import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -67,7 +67,7 @@ describe('resend with existing key', () => {
         await collect(messageStream)
         expect(onError).toBeCalled()
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Unable to decrypt')
+        expect(error).toBeInstanceOf(DecryptError)
     }
 
     beforeEach(async () => {
