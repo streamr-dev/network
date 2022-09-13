@@ -1,7 +1,7 @@
 /* eslint-disable no-undef, @typescript-eslint/no-require-imports */
 const { v4: uuidv4 } = require('uuid')
 
-describe('StreamrClient Resend', () => {
+describe('StreamrClient', () => {
     const streamName = uuidv4()
 
     before(async (browser) => {
@@ -12,7 +12,7 @@ describe('StreamrClient Resend', () => {
         return browser.url(browserUrl)
     })
 
-    test('Test StreamrClient in Chrome Browser', async (browser) => {
+    test('Test StreamrClient in Chrome Browser', (browser) => {
         // Make viewport huge to ensure that all buttons are inside it
         browser.resizeWindow(4000, 4000)
         browser
