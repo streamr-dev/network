@@ -70,7 +70,7 @@ describe('Subscriber', () => {
                 }
             }
         })
-        await startPublisherKeyExchangeSubscription(publisher)
+        await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
 
         const sub = await subscriber.subscribe(stream.id)
 

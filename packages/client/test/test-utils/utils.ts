@@ -25,7 +25,6 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -148,8 +147,9 @@ export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddres
     })
 }
 
-export const startPublisherKeyExchangeSubscription = async (publisherClient: StreamrClient): Promise<void> => {
-    // @ts-expect-error private
-    const publisherKeyExchange = publisherClient.container.resolve(PublisherKeyExchange)
-    await publisherKeyExchange.useGroupKey(`mock-${Date.now()}` as StreamID)
+export const startPublisherKeyExchangeSubscription = async (
+    publisherClient: StreamrClient,
+    streamPartId: StreamPartID): Promise<void> => {
+    const node = await publisherClient.getNode()
+    node.subscribe(streamPartId)
 }

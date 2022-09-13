@@ -1,40 +1,43 @@
-import {
-    StreamMessage,
-    GroupKeyRequest,
-    GroupKeyResponse,
+import { 
     EncryptedGroupKey,
-    StreamID,
     EthereumAddress,
+    GroupKeyRequest,
     GroupKeyRequestSerialized,
+    GroupKeyResponse,
+    MessageID,
+    StreamID,
+    StreamMessage,
+    StreamMessageType
 } from 'streamr-client-protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-
-import { instanceId } from '../utils/utils'
-import { pOnce } from '../utils/promises'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { createRandomMsgChainId } from '../publish/MessageChain'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Context } from '../utils/Context'
-import { Publisher } from '../publish/Publisher'
+import { Debugger } from '../utils/log'
+import { instanceId } from '../utils/utils'
+import { Validator } from '../Validator'
+import { EncryptionUtil } from './EncryptionUtil'
+import { GroupKey } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
-import { GroupKey } from './GroupKey'
-import { EncryptionUtil } from './EncryptionUtil'
-import { KeyExchangeStream } from './KeyExchangeStream'
+/*
+ * Sends group key responses
+ */
 
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { Subscription } from '../subscribe/Subscription'
-import { GroupKeyStore } from './GroupKeyStore'
-import { Debugger } from '../utils/log'
-
-export const createGroupKeyResponse = async (
+const createGroupKeyResponse = async (
     streamMessage: StreamMessage<GroupKeyRequestSerialized>,
     getGroupKey: (groupKeyId: string, streamId: StreamID) => Promise<GroupKey | undefined>,
     isStreamSubscriber: (streamId: StreamID, ethAddress: EthereumAddress) => Promise<boolean>,
-    debug?: Debugger
 ): Promise<GroupKeyResponse> => {
     const request = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
+    const streamId = streamMessage.getStreamId()
     const subscriberId = streamMessage.getPublisherId()
     // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-    const { requestId, streamId, rsaPublicKey, groupKeyIds } = request
+    const { requestId, rsaPublicKey, groupKeyIds } = request
 
+    // TODO remove this check?, seems that is already checked in StreamMessageValidator:186
     const isSubscriber = await isStreamSubscriber(streamId, subscriberId)
 
     const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
@@ -46,86 +49,88 @@ export const createGroupKeyResponse = async (
         return new EncryptedGroupKey(id, key)
     }))).filter((item) => item !== null) as EncryptedGroupKey[]
 
-    debug?.('Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
-        subscriberId,
-        groupKeyIds,
-        responseKeys: encryptedGroupKeys.map(({ groupKeyId }) => groupKeyId),
-    })
-
     return new GroupKeyResponse({
-        streamId,
+        recipient: subscriberId,
         requestId,
         encryptedGroupKeys,
     })
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublisherKeyExchange implements Context {
-    private enabled = true
-    readonly id
-    readonly debug
-    private getSubscription: (() => Promise<Subscription<unknown> | undefined>) & { reset(): void, isStarted(): boolean }
+export class PublisherKeyExchange {
+
+    private readonly groupKeyStoreFactory: GroupKeyStoreFactory
+    private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly authentication: Authentication
+    private readonly validator: Validator
+    private readonly debug: Debugger
 
     constructor(
-        @inject(delay(() => Publisher)) private publisher: Publisher,
-        private groupKeyStoreFactory: GroupKeyStoreFactory,
-        private streamRegistryCached: StreamRegistryCached,
-        @inject(delay(() => KeyExchangeStream)) private keyExchangeStream: KeyExchangeStream,
+        context: Context,
+        groupKeyStoreFactory: GroupKeyStoreFactory,
+        networkNodeFacade: NetworkNodeFacade,
+        streamRegistryCached: StreamRegistryCached,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        validator: Validator
     ) {
-        this.id = instanceId(this)
-        this.debug = this.publisher.debug.extend(this.id)
-        const getSubscription = pOnce(this.subscribe.bind(this))
-        this.getSubscription = getSubscription
-        this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
+        this.debug = context.debug.extend(instanceId(this))
+        this.groupKeyStoreFactory = groupKeyStoreFactory
+        this.networkNodeFacade = networkNodeFacade
+        this.streamRegistryCached = streamRegistryCached
+        this.authentication = authentication
+        this.validator = validator
+        networkNodeFacade.once('start', async () => {
+            const node = await networkNodeFacade.getNode()
+            this.debug('Started')
+            node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
+        })
     }
 
-    private async onKeyExchangeMessage(streamMessage?: StreamMessage): Promise<void> {
-        if (!streamMessage) { return }
-
-        if (!GroupKeyRequest.is(streamMessage)) {
-            return
+    private async onMessage(request: StreamMessage<any>): Promise<void> {
+        if (GroupKeyRequest.is(request)) {
+            try {
+                const authenticatedUser = await this.authentication.getAddress()
+                const { recipient, requestId } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
+                if (recipient.toLowerCase() === authenticatedUser) {
+                    this.debug('Handling group key request %s', requestId)
+                    await this.validator.validate(request)
+                    const responseContent = await createGroupKeyResponse(
+                        request,
+                        async (groupKeyId: string, streamId: StreamID) => {
+                            const store = await this.groupKeyStoreFactory.getStore(streamId)
+                            return store.get(groupKeyId)
+                        },
+                        (streamId: StreamID, address: EthereumAddress) => this.streamRegistryCached.isStreamSubscriber(streamId, address)
+                    )
+                    if (responseContent.encryptedGroupKeys.length > 0) {
+                        const response = new StreamMessage({
+                            messageId: new MessageID(
+                                request.getMessageID().streamId,
+                                request.getMessageID().streamPartition,
+                                Date.now(),
+                                0,
+                                authenticatedUser,
+                                createRandomMsgChainId()
+                            ),
+                            messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+                            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+                            content: responseContent.toArray(),
+                            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+                        })
+                        response.signature = await this.authentication.createMessagePayloadSignature(response.getPayloadToSign())
+                        const node = await this.networkNodeFacade.getNode()
+                        node.publish(response)
+                        this.debug('Sent group keys %s to %s',
+                            responseContent.encryptedGroupKeys.map((k) => k.groupKeyId).join(),
+                            request.getPublisherId())
+                    } else {
+                        this.debug('No group keys')
+                    }
+                }
+            } catch (e: any) {
+                this.debug('Error in PublisherKeyExchange: %s', e.message)
+            }
         }
-
-        const response = await createGroupKeyResponse(
-            streamMessage,
-            async (groupKeyId: string, streamId: StreamID) => {
-                const store = await this.groupKeyStoreFactory.getStore(streamId)
-                return store.get(groupKeyId)
-            },
-            (streamId: StreamID, address: EthereumAddress) => this.streamRegistryCached.isStreamSubscriber(streamId, address),
-            this.debug
-        )
-
-        if (response.encryptedGroupKeys.length > 0) {
-            const subscriberId = streamMessage.getPublisherId()
-            await this.keyExchangeStream.response(subscriberId, response)
-        }
-    }
-
-    private async subscribe(): Promise<Subscription<unknown> | undefined> {
-        if (!this.enabled) { return undefined }
-        const sub = await this.keyExchangeStream.subscribe()
-        if (!sub) { return undefined }
-
-        if (!this.enabled) {
-            await sub.unsubscribe()
-            return undefined
-        }
-
-        sub.consume(this.onKeyExchangeMessage).catch(() => {})
-
-        return sub
-    }
-
-    private async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
-        return this.groupKeyStoreFactory.getStore(streamId)
-    }
-
-    async useGroupKey(streamId: StreamID): Promise<never[] | [GroupKey | undefined, GroupKey | undefined]> {
-        await this.getSubscription()
-        if (!this.enabled) { return [] }
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return [] }
-        return groupKeyStore.useGroupKey()
     }
 }

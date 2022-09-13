@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 import { v4 as uuid } from 'uuid'
 import {
-    KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
@@ -47,11 +46,11 @@ describe('PublisherKeyExchange', () => {
         rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
     ): StreamMessage => {
         return createMockMessage({
-            streamPartId: KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address),
+            streamPartId,
             publisher,
             content: JSON.stringify([
                 uuid(),
-                StreamPartIDUtils.getStreamID(streamPartId),
+                publisherWallet.address,
                 rsaPublicKey,
                 [groupKeyId]
             ]),
@@ -62,11 +61,10 @@ describe('PublisherKeyExchange', () => {
     }
 
     const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {
-        const subscriberKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(subscriberWallet.address)
         expect(actualResponse).toMatchObject({
             messageId: {
-                streamId: StreamPartIDUtils.getStreamID(subscriberKeyExchangeStreamPartId),
-                streamPartition: StreamPartIDUtils.getStreamPartition(subscriberKeyExchangeStreamPartId),
+                streamId: StreamPartIDUtils.getStreamID(streamPartId),
+                streamPartition: StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: publisherWallet.address.toLowerCase(),
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
@@ -92,7 +90,7 @@ describe('PublisherKeyExchange', () => {
         const stream = await createStream()
         streamPartId = stream.getStreamParts()[0]
         subscriberNode = environment.startNode(subscriberWallet.address)
-        await startPublisherKeyExchangeSubscription(publisherClient)
+        await startPublisherKeyExchangeSubscription(publisherClient, streamPartId)
     })
 
     afterEach(async () => {

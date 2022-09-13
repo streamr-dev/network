@@ -56,7 +56,7 @@ describe('resend and subscribe', () => {
             }
         })
     
-        await startPublisherKeyExchangeSubscription(publisher)
+        await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
 
         const historicalMessage = createMockMessage({
             timestamp: 1000,

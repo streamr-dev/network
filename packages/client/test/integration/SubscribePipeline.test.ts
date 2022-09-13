@@ -3,7 +3,7 @@ import { GroupKey } from './../../src/encryption/GroupKey'
 import { StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamPermission } from './../../src/permission'
-import { createMockMessage, startPublisherKeyExchangeSubscription } from './../test-utils/utils'
+import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
 import { fastWallet } from "streamr-test-utils"
 import { SubscribePipeline } from "../../src/subscribe/SubscribePipeline"
@@ -28,7 +28,12 @@ describe('SubscribePipeline', () => {
 
     beforeEach(async () => {
         environment = new FakeEnvironment()
-        subscriber = environment.createClient()
+        subscriber = environment.createClient({
+            // eslint-disable-next-line no-underscore-dangle
+            _timeouts: {
+                encryptionKeyRequest: 50
+            } as any
+        })
         const stream = await subscriber.createStream('/path')
         streamPartId = stream.getStreamParts()[0]
         publisher = fastWallet()
@@ -95,13 +100,6 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: no encryption key available', async () => {
-        const publisherClient = environment.createClient({
-            auth: {
-                privateKey: publisher.privateKey
-            }
-        })
-        // start publisher to serve keys, but no key has been added to the store
-        await startPublisherKeyExchangeSubscription(publisherClient)
         const encryptionKey = GroupKey.generate()
         await input.push(createMockMessage({
             publisher,

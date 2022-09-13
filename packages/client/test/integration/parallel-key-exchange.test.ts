@@ -50,7 +50,7 @@ describe('parallel key exchange', () => {
                     }
                 }
             })
-            await startPublisherKeyExchangeSubscription(publisher.client)
+            await startPublisherKeyExchangeSubscription(publisher.client, stream.getStreamParts()[0])
         }))
     }, 20000)
 

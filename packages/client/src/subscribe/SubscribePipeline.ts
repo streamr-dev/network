@@ -10,7 +10,6 @@ import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { Context } from '../utils/Context'
 import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
@@ -18,6 +17,8 @@ import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
+import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -55,9 +56,11 @@ export function SubscribePipeline<T = unknown>(
 
     const decrypt = new Decrypt<T>(
         context,
-        container.resolve(StreamRegistryCached),
+        container.resolve(GroupKeyStoreFactory),
         container.resolve(SubscriberKeyExchange),
+        container.resolve(StreamRegistryCached),
         container.resolve(DestroySignal),
+        container.resolve(ConfigInjectionToken.Timeouts),
     )
 
     const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)

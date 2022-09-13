@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import {
-    KeyExchangeStreamIDUtils,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
@@ -18,7 +17,6 @@ import {
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { NetworkNodeStub } from '../../src'
 
 describe('SubscriberKeyExchange', () => {
 
@@ -37,7 +35,8 @@ describe('SubscriberKeyExchange', () => {
         return s
     }
 
-    const triggerGroupKeyRequest = (key: GroupKey, publisherNode: NetworkNodeStub): void => {
+    const triggerGroupKeyRequest = async (key: GroupKey, publisher: StreamrClient): Promise<void> => {
+        const publisherNode = await publisher.getNode()
         publisherNode.publish(createMockMessage({
             streamPartId,
             publisher: publisherWallet,
@@ -46,11 +45,10 @@ describe('SubscriberKeyExchange', () => {
     }
 
     const assertGroupKeyRequest = async (request: StreamMessage, expectedRequestedKeyIds: string[]): Promise<void> => {
-        const publisherKeyExchangeStreamPartId = KeyExchangeStreamIDUtils.formStreamPartID(publisherWallet.address)
         expect(request).toMatchObject({
             messageId: {
-                streamId: StreamPartIDUtils.getStreamID(publisherKeyExchangeStreamPartId),
-                streamPartition:  StreamPartIDUtils.getStreamPartition(publisherKeyExchangeStreamPartId),
+                streamId: StreamPartIDUtils.getStreamID(streamPartId),
+                streamPartition:  StreamPartIDUtils.getStreamPartition(streamPartId),
                 publisherId: subscriberWallet.address.toLowerCase()
             },
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
@@ -61,7 +59,7 @@ describe('SubscriberKeyExchange', () => {
         })
         expect(request!.getParsedContent()).toEqual([
             expect.any(String),
-            StreamPartIDUtils.getStreamID(streamPartId),
+            expect.toEqualCaseInsensitive(publisherWallet.address),
             expect.any(String),
             expectedRequestedKeyIds
         ])
@@ -103,11 +101,10 @@ describe('SubscriberKeyExchange', () => {
                     }
                 }
             })
-            await startPublisherKeyExchangeSubscription(publisher)
-            const publisherNode = await publisher.getNode()
+            await startPublisherKeyExchangeSubscription(publisher, streamPartId)
             await subscriber.subscribe(streamPartId, () => {})
 
-            triggerGroupKeyRequest(groupKey, publisherNode)
+            await triggerGroupKeyRequest(groupKey, publisher)
             
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
