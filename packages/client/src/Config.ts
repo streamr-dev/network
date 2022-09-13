@@ -34,7 +34,7 @@ export interface TimeoutsConfig {
         timeout: number
         retryInterval: number
     }
-    encryptionKeyRequest?: number
+    encryptionKeyRequest: number
     httpFetchTimeout: number
 }
 
