@@ -11,7 +11,7 @@ describe('Decrypt', () => {
     it('group key not available: timeout while waiting', async () => {
         const groupKeyStoreFactory = {
             getStore: () => ({
-                has: async () => false
+                get: async () => undefined
             })
         }
         const keyExchange = {
