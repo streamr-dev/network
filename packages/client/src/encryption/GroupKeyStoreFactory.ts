@@ -54,12 +54,18 @@ export class GroupKeyStoreFactory implements Context {
         }
 
         const clientId = await this.authentication.getAddress()
+        const initialKeys = [...parseGroupKeys(this.initialGroupKeys[streamId]).entries()]
         const store = new GroupKeyStore({
             context: this,
             clientId,
             streamId,
-            groupKeys: [...parseGroupKeys(this.initialGroupKeys[streamId]).entries()]
+            groupKeys: initialKeys
         })
+        if (initialKeys.length > 0) {
+            // TODO this hack stores the initial keys (could improve this in NET-878)
+            // @ts-expect-error private
+            await store.persistence.init()
+        }
         this.cleanupFns.push(async () => {
             try {
                 await store.close()
