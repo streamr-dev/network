@@ -99,8 +99,8 @@ export class Decrypt<T> implements Context {
             const groupKeyId = streamMessage.groupKeyId!
             const store = await this.groupKeyStoreFactory.getStore(streamMessage.getStreamId())
 
-            const hasGroupKey = await store.has(groupKeyId)
-            if (!hasGroupKey) {
+            let groupKey = await store.get(groupKeyId)
+            if (groupKey === undefined) {
                 await this.keyExchange.requestGroupKey(
                     streamMessage.groupKeyId,
                     streamMessage.getPublisherId(),
@@ -108,7 +108,8 @@ export class Decrypt<T> implements Context {
                 )
                 try {
                     await waitForCondition(async () => {  // TODO and implement without polling (and wrap with "withTimeout")
-                        return (await store.has(groupKeyId)) || this.isStopped
+                        groupKey = await store.get(groupKeyId)
+                        return (groupKey !== undefined) || this.isStopped
                     }, this.timeoutsConfig.encryptionKeyRequest)
                 } catch (e: any) {
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
@@ -117,10 +118,9 @@ export class Decrypt<T> implements Context {
                     return streamMessage
                 }
             }
-            const groupKey = (await store.get(streamMessage.groupKeyId!))!
 
             const clone = StreamMessage.deserialize(streamMessage.serialize())
-            EncryptionUtil.decryptStreamMessage(clone, groupKey)
+            EncryptionUtil.decryptStreamMessage(clone, groupKey!)
             if (streamMessage.newGroupKey) {
                 // newGroupKey has been converted into GroupKey
                 await store.add(clone.newGroupKey as unknown as GroupKey)
