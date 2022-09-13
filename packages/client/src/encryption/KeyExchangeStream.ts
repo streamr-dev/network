@@ -3,8 +3,6 @@ import {
     GroupKeyRequest,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
-    GroupKeyErrorResponse,
-    GroupKeyErrorResponseSerialized,
     EthereumAddress,
     KeyExchangeStreamIDUtils
 } from 'streamr-client-protocol'
@@ -38,7 +36,7 @@ export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKe
     }).filter(Boolean) as [])
 }
 
-const { GROUP_KEY_RESPONSE, GROUP_KEY_ERROR_RESPONSE } = StreamMessage.MESSAGE_TYPES
+const { GROUP_KEY_RESPONSE } = StreamMessage.MESSAGE_TYPES
 
 @scoped(Lifecycle.ContainerScoped)
 export class KeyExchangeStream implements Context {
@@ -80,7 +78,7 @@ export class KeyExchangeStream implements Context {
 
         const matchFn = (streamMessage: StreamMessage) => {
             const { messageType } = streamMessage
-            if (messageType !== GROUP_KEY_RESPONSE && messageType !== GROUP_KEY_ERROR_RESPONSE) {
+            if (messageType !== GROUP_KEY_RESPONSE) {
                 return false
             }
             const content = streamMessage.getContent() as any
@@ -102,8 +100,8 @@ export class KeyExchangeStream implements Context {
 
     async response(
         subscriberId: EthereumAddress, 
-        response: GroupKeyResponse | GroupKeyErrorResponse
-    ): Promise<StreamMessage<GroupKeyResponseSerialized | GroupKeyErrorResponseSerialized>> {
+        response: GroupKeyResponse
+    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
         const content = response.toArray()
         const encryptionType = (response.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) 
             ? StreamMessage.ENCRYPTION_TYPES.RSA 
