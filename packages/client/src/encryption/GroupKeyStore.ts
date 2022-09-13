@@ -1,9 +1,9 @@
+/* eslint-disable padding-line-between-statements */
 import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { Persistence } from '../utils/persistence/Persistence'
-
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
 
@@ -38,7 +38,6 @@ export class GroupKeyStore implements Context {
             initialData,
             migrationsPath: join(__dirname, 'migrations')
         })
-
         groupKeys.forEach(([groupKeyId, groupKey]) => {
             if (groupKeyId !== groupKey.id) {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
@@ -57,27 +56,23 @@ export class GroupKeyStore implements Context {
                     groupKey
                 )
             }
-
             await this.persistence.set(groupKey.id, existingKey.hex)
             return existingKey
         }
-
+        this.debug('Store key %s', groupKey.id)
         await this.persistence.set(groupKey.id, groupKey.hex)
         return groupKey
     }
 
     async has(id: GroupKeyId): Promise<boolean> {
         if (this.currentGroupKey?.id === id) { return true }
-
         if (this.queuedGroupKey?.id === id) { return true }
-
         return this.persistence.has(id)
     }
 
     async isEmpty(): Promise<boolean> {
         // a queued key means it's not empty
         if (this.queuedGroupKey) { return false }
-
         return (await this.persistence.size()) === 0
     }
 
@@ -87,25 +82,22 @@ export class GroupKeyStore implements Context {
             this.currentGroupKey = this.queuedGroupKey || await this.rekey()
             this.queuedGroupKey = undefined
         }
-
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
         const result: [GroupKey, GroupKey | undefined] = [
             this.currentGroupKey!,
             this.queuedGroupKey,
         ]
-
         // Perform the rotate if there's a next key queued
         if (this.queuedGroupKey) {
             this.currentGroupKey = this.queuedGroupKey
             this.queuedGroupKey = undefined
         }
-
         return result
     }
 
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
-        if (!value) { return undefined }
+        if (value === undefined) { return undefined }
         return GroupKey.from([id, value])
     }
 
@@ -116,19 +108,14 @@ export class GroupKeyStore implements Context {
     async clear(): Promise<boolean> {
         this.currentGroupKey = undefined
         this.queuedGroupKey = undefined
-
         return this.persistence.clear()
-    }
-
-    async rotateGroupKey(): Promise<GroupKey> {
-        return this.setNextGroupKey(GroupKey.generate())
     }
 
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
 
-    async setNextGroupKey(newKey: GroupKey): Promise<GroupKey> {
+    async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
         this.queuedGroupKey = newKey
         await this.storeKey(newKey)
         return newKey
