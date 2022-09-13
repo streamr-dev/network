@@ -1,6 +1,7 @@
 import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
+import { Logger } from '@streamr/utils'
 
 type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 
@@ -16,6 +17,7 @@ interface ConstructorOptions {
 
 const DEFAULT_MAX_MESSAGES = 10000
 const DEFAULT_TTL = 30 * 1000
+const logger = new Logger(module)
 
 /**
  * Message propagation logic of a node. Given a message, this class will actively attempt to propagate it to
@@ -57,6 +59,12 @@ export class Propagation {
         const neighbors = this.getNeighbors(message.getStreamPartID())
         for (const neighborId of neighbors) {
             this.sendAndAwaitThenMark(task, neighborId)
+        }
+        if (neighbors.length === 0) {
+            logger.warn(
+                `Message queued in stream ${message.getStreamPartID()} due to no connected neighbors.`
+                + ` It will be delivered once there is at least one neighbor.`
+            )
         }
     }
 

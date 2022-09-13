@@ -236,7 +236,9 @@ export class TrackerManager {
         logger.trace('subscribed to %j and unsubscribed from %j (streamPartId=%s, counter=%d)',
             subscribedNodeIds, unsubscribedNodeIds, streamPartId, counter)
 
-        if (subscribedNodeIds.length !== nodeIds.length) {
+        if (nodeIds.length > 0 && subscribedNodeIds.length === 0) {
+            logger.warn('error: failed to open any stream connections on (streamPartId=%s, counter=%d)', streamPartId, counter)
+        } else if (subscribedNodeIds.length !== nodeIds.length) {
             logger.trace('error: failed to fulfill all tracker instructions (streamPartId=%s, counter=%d)', streamPartId, counter)
         } else {
             logger.trace('Tracker instructions fulfilled (streamPartId=%s, counter=%d)', streamPartId, counter)

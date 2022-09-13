@@ -1,6 +1,9 @@
 import { MessageID, StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { FifoMapWithTtl } from './FifoMapWithTtl'
 import { NodeId } from '../../identifiers'
+import { Logger } from '@streamr/utils'
+
+const logger = new Logger(module)
 
 export interface PropagationTask {
     message: StreamMessage
@@ -33,6 +36,11 @@ export class PropagationTaskStore {
                         this.streamPartLookup.delete(streamPartId)
                     }
                 }
+                logger.warn(
+                    `ERROR - failed to propagate message from buffer on stream ${streamPartId}.`
+                    + ` No peers successfully connected before timeout or buffer max size exceeded`
+                )
+
             }
         })
     }
