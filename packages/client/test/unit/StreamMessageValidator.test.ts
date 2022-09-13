@@ -88,20 +88,20 @@ describe('StreamMessageValidator', () => {
 
         groupKeyRequest = groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
-            streamId: toStreamID('streamId'),
+            recipient: publisher.toLowerCase(),
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
-        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null)
         sign(groupKeyRequest, subscriberPrivateKey)
 
         groupKeyResponse = groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
-            streamId: toStreamID('streamId'),
+            recipient: subscriber.toLowerCase(),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
-        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null)
         sign(groupKeyResponse, publisherPrivateKey)
     })
 

@@ -1,7 +1,7 @@
 import { validateIsString } from '../../utils/validations'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { StreamID } from '../../utils/StreamID'
+import { EthereumAddress } from '../../utils'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
 //
@@ -11,12 +11,12 @@ export default abstract class GroupKeyMessage {
     // messageType -> class mapping
     static classByMessageType: Record<number, GroupKeyMessageType> = {}
 
-    streamId: StreamID
+    recipient: EthereumAddress
     messageType: StreamMessageType
 
-    protected constructor(streamId: StreamID, messageType: StreamMessageType) {
-        validateIsString('streamId', streamId)
-        this.streamId = streamId
+    protected constructor(recipient: EthereumAddress, messageType: StreamMessageType) {
+        validateIsString('recipient', recipient)
+        this.recipient = recipient
 
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
