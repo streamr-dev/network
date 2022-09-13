@@ -19,6 +19,7 @@ import { Stoppable } from '../utils/Stoppable'
 
 import { GroupKey, GroupKeyish } from './Encryption'
 import BrubeckNode from '../BrubeckNode'
+import { Config, StrictStreamrClientConfig } from '../Config'
 
 export type GroupKeyId = string
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
@@ -35,8 +36,6 @@ export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKe
 }
 
 type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
-
-const GROUP_KEY_RESPONSE_TIMEOUT = 45 * 1000
 
 function waitForSubMessage(
     sub: Subscription<unknown>,
@@ -83,7 +82,8 @@ export class KeyExchangeStream implements Context, Stoppable {
         private subscriber: Subscriber,
         private destroySignal: DestroySignal,
         private brubeckNode: BrubeckNode,
-        @inject(delay(() => Publisher)) private publisher: Publisher
+        @inject(delay(() => Publisher)) private publisher: Publisher,
+        @inject(Config.Root) private config: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -134,7 +134,8 @@ export class KeyExchangeStream implements Context, Stoppable {
                 }
 
                 return GroupKeyResponse.fromArray(content).requestId === request.requestId
-            }, GROUP_KEY_RESPONSE_TIMEOUT)
+                // eslint-disable-next-line no-underscore-dangle
+            }, this.config._timeouts.groupKeyResponseTimeout)
 
             if (this.isStopped) { return undefined }
 

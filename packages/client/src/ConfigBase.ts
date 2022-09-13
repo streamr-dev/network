@@ -36,6 +36,7 @@ type TimeoutsConfig = {
         retryInterval: number
     }
     httpFetchTimeout: number
+    groupKeyResponseTimeout: number
 }
 
 export type SubscribeConfig = {
@@ -202,7 +203,8 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             timeout: 30 * 1000,
             retryInterval: 1000
         },
-        httpFetchTimeout: 30 * 1000
+        httpFetchTimeout: 30 * 1000,
+        groupKeyResponseTimeout: 15 * 1000,
     }
 }
 
