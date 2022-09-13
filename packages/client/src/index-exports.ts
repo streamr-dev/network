@@ -27,6 +27,7 @@ export {
     StreamrClientConfig,
     StrictStreamrClientConfig,
     SubscribeConfig,
+    EncryptionConfig,
     ConnectionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
@@ -49,8 +50,7 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
-export { GroupKey as EncryptionKey } from './encryption/GroupKey'
+export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'

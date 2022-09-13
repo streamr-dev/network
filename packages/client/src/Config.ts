@@ -7,7 +7,6 @@ import merge from 'lodash/merge'
 
 import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
-import type { EncryptionConfig } from './encryption/KeyExchangeStream'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
@@ -15,6 +14,7 @@ import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
+import { GroupKeysSerialized } from './encryption/GroupKeyStoreFactory'
 
 export interface CacheConfig {
     maxSize: number
@@ -46,6 +46,10 @@ export interface SubscribeConfig {
     verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
+}
+
+export interface EncryptionConfig {
+    encryptionKeys: Record<string, GroupKeysSerialized>
 }
 
 export interface ConnectionConfig {

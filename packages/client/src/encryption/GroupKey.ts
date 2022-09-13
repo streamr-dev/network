@@ -3,12 +3,8 @@ import { ValidationError } from 'streamr-client-protocol'
 import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
 
-class InvalidGroupKeyError extends ValidationError {
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, public groupKey?: GroupKeyish) {
-        super(message)
-    }
-}
+export type GroupKeyId = string
+export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
 export interface GroupKeyObject {
     id: string
@@ -22,6 +18,13 @@ interface GroupKeyProps {
     groupKeyData: Uint8Array
 }
 
+class InvalidGroupKeyError extends ValidationError {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, public groupKey?: GroupKeyish) {
+        super(message)
+    }
+}
+
 function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {
     if ('groupKeyId' in data) {
         return {
@@ -33,8 +36,6 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKey
 
     return data
 }
-
-export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
 /**
  * GroupKeys are AES cipher keys, which are used to encrypt/decrypt StreamMessages (when encryptionType is AES).
