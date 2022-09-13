@@ -4,7 +4,6 @@
 import {
     StreamMessage,
     StreamMessageError,
-    GroupKeyErrorResponse,
     StreamPartID
 } from 'streamr-client-protocol'
 import { OrderMessages } from './OrderMessages'
@@ -71,16 +70,6 @@ export function SubscribePipeline<T = unknown>(
     messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
-        // convert group key error responses into errors
-        // (only for subscribe pipeline, not publish pipeline)
-        .forEach((streamMessage: StreamMessage) => {
-            if ((streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE)) {
-                const errMsg = streamMessage as StreamMessage<any>
-                const res = GroupKeyErrorResponse.fromArray(errMsg.getParsedContent())
-                const err = new StreamMessageError(`GroupKeyErrorResponse: ${res.errorMessage}`, streamMessage, res.errorCode)
-                throw err
-            }
-        })
         // validate
         .forEach(async (streamMessage: StreamMessage) => {
             await validate.validate(streamMessage)

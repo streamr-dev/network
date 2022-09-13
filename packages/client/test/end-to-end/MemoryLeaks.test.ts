@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
 import { StreamrClient } from '../../src/StreamrClient'
 import { initContainer } from '../../src/Container'
@@ -14,7 +14,7 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { createStrictConfig, StrictStreamrClientConfig } from '../../src/Config'
 import { ethers } from 'ethers'
 import { Context } from '../../src/utils/Context'
-import { BrubeckNode } from '../../src/BrubeckNode'
+import { NetworkNodeFacade } from '../../src/NetworkNodeFacade'
 import { StorageNodeRegistry } from '../../src/registry/StorageNodeRegistry'
 import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
@@ -26,7 +26,7 @@ import { Debug } from '../test-utils/utils'
 
 const Dependencies = {
     Context,
-    BrubeckNode,
+    NetworkNodeFacade,
     StorageNodeRegistry,
     StreamRegistryCached,
     Resends,
@@ -191,7 +191,7 @@ describe('MemoryLeaks', () => {
                 const stream = await client.createStream({
                     id: `/${counterId('stream')}-${Date.now()}`
                 })
-                const publishTestMessages = getPublishTestMessages(client, stream, {
+                const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                     retainMessages: false,
                 })
 
@@ -208,7 +208,7 @@ describe('MemoryLeaks', () => {
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -221,7 +221,7 @@ describe('MemoryLeaks', () => {
                     })
                     const sub = await client.subscribe(stream)
                     leaksDetector.addAll(sub.id, sub)
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
 
@@ -241,7 +241,7 @@ describe('MemoryLeaks', () => {
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const received: any[] = []
@@ -261,12 +261,11 @@ describe('MemoryLeaks', () => {
                 }, TIMEOUT)
 
                 test('subscriptions can be collected before all subscriptions removed', async () => {
-                    // leaksDetector = new LeaksDetector()
                     const stream = await client.createStream({
                         id: `/${counterId('stream')}-${Date.now()}`
                     })
 
-                    const publishTestMessages = getPublishTestMessages(client, stream, {
+                    const publishTestMessages = getPublishTestStreamMessages(client, stream, {
                         retainMessages: false,
                     })
                     const sub1Done = Defer()

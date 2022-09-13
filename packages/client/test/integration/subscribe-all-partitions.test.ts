@@ -1,40 +1,38 @@
-import { waitForCondition } from 'streamr-test-utils'
+import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
-import { createTestStream, getCreateClient } from '../test-utils/utils'
-import { getPublishTestMessages } from '../test-utils/publish'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
 import { range } from 'lodash'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { StreamPermission } from './../../src/permission'
 
 const NUM_MESSAGES = 8
 const MAX_MESSAGES = 4
 const PARTITIONS = 3
-jest.setTimeout(60000)
 
-describe('SubscribeAll', () => {
-    let expectErrors = 0 // check no errors by default
-    let onError = jest.fn()
+describe('subscribe all partitions', () => {
     let client: StreamrClient
     let stream: Stream
-    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
-
-    const createClient = getCreateClient()
+    let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>
 
     beforeEach(async () => {
-        expectErrors = 0
-        onError = jest.fn()
-    })
-
-    beforeEach(async () => {
-        // eslint-disable-next-line require-atomic-updates
-        client = await createClient()
-        await client.connect()
+        const environment = new FakeEnvironment()
+        client = environment.createClient()
         stream = await createTestStream(client, module, {
             partitions: PARTITIONS,
         })
-        publishTestMessages = getPublishTestMessages(client, stream)
+        const publisherWallet = fastWallet()
+        await stream.grantPermissions({
+            user: publisherWallet.address,
+            permissions: [StreamPermission.PUBLISH]
+        })
+        publishTestMessages = getPublishTestStreamMessages(environment.createClient({
+            auth: {
+                privateKey: publisherWallet.privateKey
+            }
+        }), stream)
     })
 
     afterEach(async () => {
@@ -44,18 +42,12 @@ describe('SubscribeAll', () => {
         expect(await client.subscriber.count(stream.id)).toBe(0)
         // @ts-expect-error private
         expect(client.subscriber.countSubscriptionSessions()).toBe(0)
-    })
-
-    afterEach(async () => {
-        await wait(0)
         await client?.destroy()
-        // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
     })
 
     it('subscribes to all partitions', async () => {
         const subMsgs: any[] = []
-        await client.subscribeAll(stream.id, (msg) => {
+        await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
         const pubs = await Promise.all(range(PARTITIONS).map((streamPartition) => {
@@ -64,9 +56,7 @@ describe('SubscribeAll', () => {
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         await waitForCondition(() => subMsgs.length >= (PARTITIONS * NUM_MESSAGES), 25000)
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
         await client.unsubscribe()
         expect(await client.getSubscriptions()).toHaveLength(0)
     })
@@ -76,9 +66,9 @@ describe('SubscribeAll', () => {
         stream = await createTestStream(client, module, {
             partitions: 1
         })
-        publishTestMessages = getPublishTestMessages(client, stream)
+        publishTestMessages = getPublishTestStreamMessages(client, stream)
 
-        await client.subscribeAll(stream.id, (msg) => {
+        await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
 
@@ -88,16 +78,15 @@ describe('SubscribeAll', () => {
         const publishedMsgs = pubs.flat()
         expect(publishedMsgs.length).toBe(NUM_MESSAGES)
         await waitForCondition(() => subMsgs.length >= (NUM_MESSAGES), 25000)
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
+
         await client.unsubscribe()
         expect(await client.getSubscriptions()).toHaveLength(0)
     })
 
     it('can stop prematurely', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
             if (subMsgs.length === MAX_MESSAGES) {
                 sub.return()
@@ -118,7 +107,7 @@ describe('SubscribeAll', () => {
 
     it('stops with unsubscribeAll', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
             if (subMsgs.length === MAX_MESSAGES) {
                 client.unsubscribe()
@@ -138,7 +127,7 @@ describe('SubscribeAll', () => {
 
     it('stops only when all subs are unsubbed', async () => {
         const subMsgs: any[] = []
-        const sub = await client.subscribeAll(stream.id, (msg) => {
+        const sub = await client.subscribeAll(stream.id, (_content, msg) => {
             subMsgs.push(msg)
         })
         const onFinallyCalled = jest.fn()
@@ -162,9 +151,7 @@ describe('SubscribeAll', () => {
         // should have ended after last partition unsubbed
         expect(onFinallyCalled).toHaveBeenCalledTimes(1)
 
-        for (const msg of publishedMsgs) {
-            expect(subMsgs).toContainEqual(msg)
-        }
+        expect(subMsgs.map((m) => m.signature)).toIncludeSameMembers(publishedMsgs.map((m) => m.signature))
         // got the messages
         expect(subMsgs.length).toBe(PARTITIONS * NUM_MESSAGES)
         // unsubscribed from everything

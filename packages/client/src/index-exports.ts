@@ -54,7 +54,7 @@ export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'
-export { NetworkNodeStub } from './BrubeckNode'
+export { NetworkNodeStub } from './NetworkNodeFacade'
 export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'

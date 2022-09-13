@@ -1,5 +1,5 @@
 import {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, GroupKeyAnnounce, StreamID
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, EncryptedGroupKey, StreamID
 } from 'streamr-client-protocol'
 
 import { uuid } from '../utils/uuid'
@@ -25,9 +25,6 @@ export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage
     let encryptedGroupKeys: EncryptedGroupKey[] = []
     if (GroupKeyResponse.is(streamMessage)) {
         encryptedGroupKeys = GroupKeyResponse.fromArray(streamMessage.getParsedContent() || []).encryptedGroupKeys || []
-    } else if (GroupKeyAnnounce.is(streamMessage)) {
-        const msg = GroupKeyAnnounce.fromArray(streamMessage.getParsedContent() || [])
-        encryptedGroupKeys = msg.encryptedGroupKeys || []
     }
 
     const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (

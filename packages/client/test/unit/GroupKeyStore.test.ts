@@ -86,13 +86,54 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
-    it('can set next in parallel and use', async () => {
+    it('generates a new key on first use', async () => {
+        const [generatedKey, nextKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(nextKey).toBeUndefined()
+    })
+
+    it('only keeps the latest unused key', async () => {
         const groupKey = GroupKey.generate()
         const groupKey2 = GroupKey.generate()
-        await Promise.all([
-            store.setNextGroupKey(groupKey),
-            store.setNextGroupKey(groupKey2),
-        ])
-        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
+        await store.setNextGroupKey(groupKey)
+        await store.setNextGroupKey(groupKey2)
+        expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
+    })
+
+    it('replaces unused rotations', async () => {
+        const [generatedKey, queuedKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(queuedKey).toEqual(undefined)
+
+        const groupKey = await store.rotateGroupKey()
+        expect(groupKey).toBeTruthy()
+        const groupKey2 = await store.rotateGroupKey()
+        expect(await store.useGroupKey()).toEqual([generatedKey, groupKey2])
+    })
+
+    it('handles rotate then rekey', async () => {
+        // Set some initial key
+        const [generatedKey, queuedKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(queuedKey).toEqual(undefined)
+
+        const rotatedKey = await store.rotateGroupKey()
+        expect(rotatedKey).toBeTruthy()
+        const rekey = await store.rekey()
+        expect(rekey).toBeTruthy()
+        expect(await store.useGroupKey()).toEqual([rekey, undefined])
+    })
+
+    it('handles rekey then rotate', async () => {
+        // Set some initial key
+        const [generatedKey, queuedKey] = await store.useGroupKey()
+        expect(generatedKey).toBeTruthy()
+        expect(queuedKey).toEqual(undefined)
+
+        const rekey = await store.rekey()
+        expect(rekey).toBeTruthy()
+        const rotatedKey = await store.rotateGroupKey()
+        expect(rotatedKey).toBeTruthy()
+        expect(await store.useGroupKey()).toEqual([rekey, rotatedKey])
     })
 })
