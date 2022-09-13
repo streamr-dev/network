@@ -16,7 +16,7 @@ import { createRandomMsgChainId } from '../publish/MessageChain'
 import { pOnce } from '../utils/promises'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKey } from './GroupKey'
+import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { RSAKeyPair } from './RSAKeyPair'
 import { v4 as uuidv4 } from 'uuid'
@@ -76,7 +76,7 @@ export class SubscriberKeyExchange {
         })
     }
 
-    async requestGroupKey(groupKeyId: string, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+    async requestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
         const requestId = uuidv4()
         this.debug('Request group key %s, requestId=%s', groupKeyId, requestId)
         await this.ensureStarted()

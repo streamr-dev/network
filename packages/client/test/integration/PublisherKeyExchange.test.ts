@@ -5,7 +5,7 @@ import {
     StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
+import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { StreamPermission } from '../../src/permission'
@@ -41,7 +41,7 @@ describe('PublisherKeyExchange', () => {
     }
 
     const createGroupKeyRequest = (
-        groupKeyId: string,
+        groupKeyId: GroupKeyId,
         publisher = subscriberWallet,
         rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
     ): StreamMessage => {

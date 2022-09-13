@@ -13,7 +13,7 @@ export interface GroupKeyObject {
 }
 
 interface GroupKeyProps {
-    groupKeyId: string
+    groupKeyId: GroupKeyId
     groupKeyHex: string
     groupKeyData: Uint8Array
 }
@@ -51,13 +51,13 @@ export class GroupKey {
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     /** @internal */
-    readonly id: string
+    readonly id: GroupKeyId
     /** @internal */
     readonly hex: string
     /** @internal */
     readonly data: Uint8Array
 
-    constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
+    constructor(groupKeyId: GroupKeyId, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
         if (!groupKeyId) {
             throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)

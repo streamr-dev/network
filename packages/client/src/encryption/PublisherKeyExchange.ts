@@ -19,7 +19,7 @@ import { Debugger } from '../utils/log'
 import { instanceId } from '../utils/utils'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKey } from './GroupKey'
+import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
 /*
@@ -28,7 +28,7 @@ import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 
 const createGroupKeyResponse = async (
     streamMessage: StreamMessage<GroupKeyRequestSerialized>,
-    getGroupKey: (groupKeyId: string, streamId: StreamID) => Promise<GroupKey | undefined>,
+    getGroupKey: (groupKeyId: GroupKeyId, streamId: StreamID) => Promise<GroupKey | undefined>,
     isStreamSubscriber: (streamId: StreamID, ethAddress: EthereumAddress) => Promise<boolean>,
 ): Promise<GroupKeyResponse> => {
     const request = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
@@ -97,7 +97,7 @@ export class PublisherKeyExchange {
                     await this.validator.validate(request)
                     const responseContent = await createGroupKeyResponse(
                         request,
-                        async (groupKeyId: string, streamId: StreamID) => {
+                        async (groupKeyId: GroupKeyId, streamId: StreamID) => {
                             const store = await this.groupKeyStoreFactory.getStore(streamId)
                             return store.get(groupKeyId)
                         },

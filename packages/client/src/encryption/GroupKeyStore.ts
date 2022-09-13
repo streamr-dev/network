@@ -18,7 +18,7 @@ interface GroupKeyStoreOptions {
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    private persistence: Persistence<string, string>
+    private persistence: Persistence<GroupKeyId, string>
     private currentGroupKey: GroupKey | undefined // current key id if any
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
 
