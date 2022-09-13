@@ -9,7 +9,7 @@ const BINARY_TYPE = 'arraybuffer'
 
 export class ClientWebSocket extends EventEmitter<ConnectionEvent> implements IConnection {
     public readonly connectionId: ConnectionID
-    private socket: WebSocket | null = null
+    private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
 
     constructor() {

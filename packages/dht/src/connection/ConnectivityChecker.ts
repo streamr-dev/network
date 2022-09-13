@@ -15,15 +15,15 @@ const logger = new Logger(module)
 
 export class ConnectivityChecker {
 
-    private static CONNECTIVITY_CHECKER_SERVICE_ID = 'connectivitychecker'
-    private static CONNECTIVITY_CHECKER_TIMEOUT = 5000
+    private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
+    private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private stopped = false
 
     constructor(private webSocketPort?: number) {
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponseMessage> {
-        let outgoingConnection: IConnection | null = null
+        let outgoingConnection: IConnection
 
         try {
             outgoingConnection = await this.connectAsync({
@@ -94,8 +94,8 @@ export class ConnectivityChecker {
         if (this.stopped) {
             return
         }
-        let outgoingConnection: IConnection | null = null
-        let connectivityResponseMessage: ConnectivityResponseMessage | null = null
+        let outgoingConnection: IConnection | undefined
+        let connectivityResponseMessage: ConnectivityResponseMessage | undefined
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
