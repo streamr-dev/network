@@ -32,12 +32,12 @@ export interface WebRtcConnectorConfig {
 }
 
 export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
-    private static WEBRTC_CONNECTOR_SERVICE_ID = 'webrtc_connector'
-    private ownPeerDescriptor: PeerDescriptor | null = null
-    private rpcCommunicator: RoutingRpcCommunicator
-    private rpcTransport: ITransport
-    private ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
-
+    private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
+    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
+    private readonly rpcTransport: ITransport
+    private ownPeerDescriptor?: PeerDescriptor
+   
     constructor(private config: WebRtcConnectorConfig) {
         super()
         this.rpcTransport = config.rpcTransport

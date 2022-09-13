@@ -51,14 +51,14 @@ describe('DhtRpc', () => {
 
     it('Happy path', async () => {
         const response1 = client1.getClosestPeers(
-            { peerDescriptor: peerDescriptor1, nonce: '1' },
+            { peerDescriptor: peerDescriptor1, requestId: '1' },
             { targetDescriptor: peerDescriptor2 }
         )
         const res1 = await response1
         expect(res1.peers).toEqual(getMockPeers())
 
         const response2 = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { peerDescriptor: peerDescriptor2, requestId: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
         const res2 = await response2
@@ -71,7 +71,7 @@ describe('DhtRpc', () => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { peerDescriptor: peerDescriptor2, requestId: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response2).rejects.toEqual(
@@ -86,7 +86,7 @@ describe('DhtRpc', () => {
             const neighbors = getMockPeers()
             const response: ClosestPeersResponse = {
                 peers: neighbors,
-                nonce: 'why am i still here'
+                requestId: 'why am i still here'
             }
             return new Promise((resolve, _reject) => {
                 timeout = setTimeout(() => {
@@ -97,7 +97,7 @@ describe('DhtRpc', () => {
         
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', respondGetClosestPeersWithTimeout)
         const response = client2.getClosestPeers(
-            { peerDescriptor: peerDescriptor2, nonce: '1' },
+            { peerDescriptor: peerDescriptor2, requestId: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response).rejects.toEqual(
@@ -108,7 +108,7 @@ describe('DhtRpc', () => {
 
     it('Server responds with error on unknown method', async () => {
         const response = client2.ping(
-            { nonce: '1' },
+            { requestId: '1' },
             { targetDescriptor: peerDescriptor1 }
         )
         await expect(response).rejects.toEqual(

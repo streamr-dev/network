@@ -37,18 +37,19 @@ type Events = WebRtcConnectionEvent | ConnectionEvent
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 
     public connectionId: ConnectionID
-    public connectionType: ConnectionType = ConnectionType.WEBRTC
     private connection?: PeerConnection
     private dataChannel?: DataChannel
-    private stunUrls: string[]
-    private bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
-    private bufferThresholdLow: number
     private lastState: RTCPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
-    private connectingTimeoutRef: NodeJS.Timeout | null = null
-    private connectingTimeout: number
-    private remotePeerDescriptor: PeerDescriptor
-    
+    private connectingTimeoutRef?: NodeJS.Timeout
+
+    public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
+    private readonly stunUrls: string[]
+    private readonly bufferThresholdHigh: number // TODO: buffer handling must be implemented before production use
+    private readonly bufferThresholdLow: number
+    private readonly connectingTimeout: number
+    private readonly remotePeerDescriptor: PeerDescriptor
+
     constructor(params: Params) {
         super()
         this.connectionId = new ConnectionID()
