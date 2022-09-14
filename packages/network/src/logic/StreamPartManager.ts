@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
+ import { MessageID, MessageRef, StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
 import { StreamPartStatus } from '../identifiers'
 import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
 import { NodeId } from '../identifiers'

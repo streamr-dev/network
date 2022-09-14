@@ -1,6 +1,7 @@
 import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
+import { add } from 'husky/lib'
 
 type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 
@@ -47,14 +48,14 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new message
      */
-    feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
+    feedUnseenMessage(message: StreamMessage, source: NodeId | null, additionalTargets: NodeId[] = []): void {
         const task = {
             message,
             source,
             handledNeighbors: new Set<NodeId>()
         }
         this.activeTaskStore.add(task)
-        const neighbors = this.getNeighbors(message.getStreamPartID())
+        const neighbors = [...this.getNeighbors(message.getStreamPartID()), ...additionalTargets]
         for (const neighborId of neighbors) {
             this.sendAndAwaitThenMark(task, neighborId)
         }

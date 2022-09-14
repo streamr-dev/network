@@ -1,10 +1,6 @@
 import { EventEmitter } from 'events'
-import {
-    StreamPartID,
-    StreamMessage,
-    ProxyDirection
-} from 'streamr-client-protocol'
-import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
+import { GroupKeyRequest, GroupKeyResponse, ProxyDirection, StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { StreamPartManager } from './StreamPartManager'
@@ -238,7 +234,7 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
         await Promise.all([
@@ -259,7 +255,7 @@ export class Node extends EventEmitter {
                 this.on(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
                 this.on(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
             }),
-            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction)
+            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, identity)
         ]).finally(() => {
             this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
@@ -274,14 +270,14 @@ export class Node extends EventEmitter {
     onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         const streamPartId = streamMessage.getStreamPartID()
         // Check if the stream is set as one-directional and has inbound connection
-        if (source
-            && this.streamPartManager.isSetUp(streamPartId)
-            && this.streamPartManager.isBehindProxy(streamPartId)
-            && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
-            logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
-            // Perhaps the node should be disconnected here if bad behaviour is repeated
-            return
-        }
+        // if (source
+        //     && this.streamPartManager.isSetUp(streamPartId)
+        //     && this.streamPartManager.isBehindProxy(streamPartId)
+        //     && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
+        //     logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
+        //     // Perhaps the node should be disconnected here if bad behaviour is repeated
+        //     return
+        // }
 
         this.emit(Event.MESSAGE_RECEIVED, streamMessage, source)
         this.subscribeToStreamIfHaveNotYet(streamPartId)
@@ -307,9 +303,21 @@ export class Node extends EventEmitter {
         }
 
         if (isUnseen) {
+            let groupKeyPropagationTargets
+            if (this.acceptProxyConnections) {
+                if (GroupKeyRequest.is(streamMessage)) {
+                    const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest
+                    groupKeyPropagationTargets = this.proxyStreamConnectionManager.getNodeIdsOfConnections(streamPartId, recipient)
+                } else if (GroupKeyResponse.is(streamMessage)) {
+                    const { recipient } = GroupKeyResponse.fromStreamMessage(streamMessage) as GroupKeyResponse
+                    groupKeyPropagationTargets = this.proxyStreamConnectionManager.getNodeIdsOfConnections(streamPartId, recipient)
+                }
+            } else if (this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())) {
+                groupKeyPropagationTargets = [...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)]
+            }
             logger.trace('received from %s data %j', source, streamMessage.messageId)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
-            this.propagation.feedUnseenMessage(streamMessage, source)
+            this.propagation.feedUnseenMessage(streamMessage, source, groupKeyPropagationTargets)
             if (source === null) {
                 this.metrics.publishMessagesPerSecond.record(1)
                 this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)

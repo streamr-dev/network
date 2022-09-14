@@ -16,7 +16,8 @@ export default class ProxyConnectionRequestSerializerV2 extends Serializer<Proxy
             proxyConnectionRequest.streamId,
             proxyConnectionRequest.streamPartition,
             proxyConnectionRequest.senderId,
-            proxyConnectionRequest.direction
+            proxyConnectionRequest.direction,
+            proxyConnectionRequest.identity
         ]
     }
 
@@ -29,6 +30,7 @@ export default class ProxyConnectionRequestSerializerV2 extends Serializer<Proxy
             streamPartition,
             senderId,
             direction,
+            identity
         ] = arr
 
         return new ProxyConnectionRequest({
@@ -38,6 +40,7 @@ export default class ProxyConnectionRequestSerializerV2 extends Serializer<Proxy
             streamPartition,
             senderId,
             direction,
+            identity
         })
     }
 }

@@ -143,13 +143,14 @@ export class NodeToNode extends EventEmitter {
         return [controlLayerVersion, messageLayerVersion]
     }
 
-    async requestProxyConnection(nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection): Promise<void> {
+    async requestProxyConnection(nodeId: NodeId, streamPartId: StreamPartID, direction: ProxyDirection, identity: string): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(nodeId, new ProxyConnectionRequest({
             requestId: '',
             senderId: nodeId,
             streamId,
             streamPartition,
+            identity,
             direction
         }))
     }

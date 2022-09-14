@@ -34,7 +34,8 @@ enum State {
 interface ProxyConnection {
     state?: State
     reconnectionTimer?: NodeJS.Timeout
-    direction: ProxyDirection
+    direction: ProxyDirection,
+    identity?: string
 }
 
 const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
@@ -60,13 +61,14 @@ export class ProxyStreamConnectionManager {
         this.connections = new Map()
     }
 
-    private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection): void {
+    private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, identity?: string): void {
         if (!this.connections.has(streamPartId)) {
             this.connections.set(streamPartId, new Map())
         }
         this.connections.get(streamPartId)!.set(nodeId, {
             state: State.NEGOTIATING,
-            direction
+            direction,
+            identity
         })
     }
 
@@ -99,7 +101,17 @@ export class ProxyStreamConnectionManager {
         return this.connections.get(streamPartId)!.get(nodeId)!
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection): Promise<void> {
+    public getNodeIdsOfConnections(streamPartId: StreamPartID, identity: string): NodeId[] {
+        const connections = this.connections.get(streamPartId)!
+        const returnedNodeIds: NodeId[] = []
+        connections.forEach((connection, nodeId) => {
+            if (connection.identity === identity)
+                returnedNodeIds.push(nodeId)
+        })
+        return returnedNodeIds
+    }
+
+    async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
             if (!this.streamPartManager.isSetUp(streamPartId)) {
@@ -120,7 +132,7 @@ export class ProxyStreamConnectionManager {
                 return
             }
             this.addConnection(streamPartId, targetNodeId, direction)
-            await this.connectAndNegotiate(streamPartId, targetNodeId, direction)
+            await this.connectAndNegotiate(streamPartId, targetNodeId, direction, identity)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
             this.removeConnection(streamPartId, targetNodeId)
@@ -130,13 +142,13 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    private async connectAndNegotiate(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection): Promise<void> {
+    private async connectAndNegotiate(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, identity: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
 
         await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
         await withTimeout(this.nodeToNode.connectToNode(targetNodeId, trackerId, false), this.nodeConnectTimeout)
-        await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction)
+        await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction, identity)
 
     }
 
@@ -176,8 +188,10 @@ export class ProxyStreamConnectionManager {
             if (message.direction === ProxyDirection.PUBLISH) {
                 // The receiver of the PUBLISH request will only receive data from the connection
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.identity)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.identity)
                 this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
             }
         }
@@ -219,7 +233,7 @@ export class ProxyStreamConnectionManager {
         }
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
-            await this.connectAndNegotiate(streamPartId, targetNodeId, connection.direction)
+            await this.connectAndNegotiate(streamPartId, targetNodeId, connection.direction, connection.identity!)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
             connection.state = State.ACCEPTED
             if (connection.reconnectionTimer !== undefined) {

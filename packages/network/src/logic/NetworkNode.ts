@@ -18,15 +18,11 @@ export class NetworkNode extends Node {
     }
 
     publish(streamMessage: StreamMessage): void | never {
-        const streamPartId = streamMessage.getStreamPartID()
-        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
-        }
         this.onDataReceived(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
-        await this.addProxyConnection(streamPartId, contactNodeId, direction)
+    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
+        await this.addProxyConnection(streamPartId, contactNodeId, direction, identity)
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
