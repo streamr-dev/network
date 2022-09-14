@@ -1,4 +1,4 @@
-import { TimeoutError, withTimeout } from '../src/withTimeout'
+import { AbortError, TimeoutError, withTimeout } from '../src/withTimeout'
 
 describe(withTimeout, () => {
     it('resolves if given promise resolves before timeout', () => {
@@ -24,5 +24,21 @@ describe(withTimeout, () => {
                 'no connection available'
             )
         ).rejects.toEqual(new TimeoutError(10, 'no connection available'))
+    })
+
+    it('rejects if aborted during wait', () => {
+        const abortController = new AbortController()
+        setTimeout(() => {
+            abortController.abort()
+        }, 10)
+        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController))
+            .rejects.toEqual(new AbortError('context'))
+    })
+
+    it('rejects if initally aborted', () => {
+        const abortController = new AbortController()
+        abortController.abort()
+        return expect(withTimeout(new Promise<unknown>(() => {}), 20, 'context', abortController))
+            .rejects.toEqual(new AbortError('context'))
     })
 })

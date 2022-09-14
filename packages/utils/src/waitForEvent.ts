@@ -14,7 +14,8 @@ export async function waitForEvent(
     emitter: EventEmitter,
     eventName: string,
     timeout = 5000,
-    predicate: (eventArgs: unknown[]) => boolean = () => true
+    predicate: (eventArgs: unknown[]) => boolean = () => true,
+    abortController?: AbortController
 ): Promise<unknown[]> {
     let listener: (eventArgs: unknown[]) => void
     // eslint-disable-next-line no-async-promise-executor
@@ -29,7 +30,8 @@ export async function waitForEvent(
     return withTimeout(
         task,
         timeout,
-        'waitForEvent'
+        'waitForEvent',
+        abortController
     ).finally(() => {
         emitter.off(eventName, listener)
     })
