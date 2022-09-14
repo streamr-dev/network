@@ -2,7 +2,7 @@
 import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
-import { GroupKey } from './GroupKey'
+import { GroupKey, GroupKeyError } from './GroupKey'
 import { Persistence } from '../utils/persistence/Persistence'
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
@@ -50,7 +50,7 @@ export class GroupKeyStore implements Context {
         const existingKey = await this.get(groupKey.id)
         if (existingKey) {
             if (!existingKey.equals(groupKey)) {
-                throw new GroupKey.InvalidGroupKeyError(
+                throw new GroupKeyError(
                     `Trying to add groupKey ${groupKey.id} but key exists & is not equivalent to new GroupKey: ${groupKey}.`,
                     groupKey
                 )
