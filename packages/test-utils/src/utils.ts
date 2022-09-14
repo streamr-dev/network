@@ -8,7 +8,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { waitForEvent } from '@streamr/utils'
 import fetch from 'node-fetch'
 
-export type Event = string | symbol
+export type Event = string
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a
