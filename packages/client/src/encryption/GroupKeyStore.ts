@@ -1,5 +1,6 @@
 /* eslint-disable padding-line-between-statements */
 import { join } from 'path'
+import EventEmitter from 'eventemitter3'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey, GroupKeyError } from './GroupKey'
@@ -15,12 +16,17 @@ interface GroupKeyStoreOptions {
     groupKeys: [GroupKeyId, GroupKey][]
 }
 
+export interface Events {
+    store: (groupKey: GroupKey) => void
+}
+
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
     private persistence: Persistence<GroupKeyId, string>
     private currentGroupKey: GroupKey | undefined // current key id if any
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
+    public eventEmitter: EventEmitter<Events> = new EventEmitter()
 
     constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
@@ -59,7 +65,10 @@ export class GroupKeyStore implements Context {
             return existingKey
         }
         this.debug('Store key %s', groupKey.id)
-        await this.persistence.set(groupKey.id, groupKey.hex)
+        const success = await this.persistence.set(groupKey.id, groupKey.hex)
+        if (success) {
+            this.eventEmitter.emit('store', groupKey)
+        }
         return groupKey
     }
 

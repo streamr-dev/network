@@ -1,3 +1,4 @@
+import { EventEmitter } from 'eventemitter3'
 import 'reflect-metadata'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
@@ -11,7 +12,8 @@ describe('Decrypt', () => {
     it('group key not available: timeout while waiting', async () => {
         const groupKeyStoreFactory = {
             getStore: () => ({
-                get: async () => undefined
+                get: async () => undefined,
+                eventEmitter: new EventEmitter()
             })
         }
         const keyExchange = {
