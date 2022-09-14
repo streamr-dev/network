@@ -1,6 +1,6 @@
 import crypto, { CipherKey } from 'crypto'
 import { arrayify, hexlify } from '@ethersproject/bytes'
-import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageError } from 'streamr-client-protocol'
 import { GroupKey } from './GroupKey'
 
 export class DecryptError extends StreamMessageError {
@@ -70,7 +70,7 @@ export class EncryptionUtil {
         streamMessage.groupKeyId = groupKey.id
         streamMessage.serializedContent = this.encryptWithAES(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey.data)
         if (nextGroupKey) {
-            streamMessage.newGroupKey = EncryptionUtil.encryptGroupKeyWithAES(nextGroupKey, groupKey)
+            streamMessage.newGroupKey = groupKey.encryptNextGroupKey(nextGroupKey)
         }
         streamMessage.parsedContent = undefined
         /* eslint-enable no-param-reassign */
@@ -97,31 +97,13 @@ export class EncryptionUtil {
             if (newGroupKey) {
                 // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
                 // @ts-expect-error expecting EncryptedGroupKey
-                streamMessage.newGroupKey = EncryptionUtil.decryptGroupKeyWithAES(newGroupKey, groupKey)
+                streamMessage.newGroupKey = groupKey.decryptNextGroupKey(newGroupKey)
             }
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
             throw new DecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
         }
         /* eslint-enable no-param-reassign */
-    }
-
-    static encryptGroupKeyWithAES(nextGroupKey: GroupKey, currentGroupKey: GroupKey): EncryptedGroupKey {
-        return new EncryptedGroupKey(nextGroupKey.id, this.encryptWithAES(nextGroupKey.data, currentGroupKey.data))
-    }
-
-    static decryptGroupKeyWithAES(newGroupKey: EncryptedGroupKey, currentGroupKey: GroupKey): GroupKey {
-        return new GroupKey(
-            newGroupKey.groupKeyId,
-            this.decryptWithAES(newGroupKey.encryptedGroupKeyHex, currentGroupKey.data)
-        )
-    }
-
-    static decryptGroupKeyWithRSAPrivateKey(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
-        return new GroupKey(
-            encryptedKey.groupKeyId,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.encryptedGroupKeyHex, rsaPrivateKey, true)
-        )
     }
 }
 

@@ -19,8 +19,7 @@ import { Debugger } from '../utils/log'
 import { pOnce } from '../utils/promises'
 import { instanceId } from '../utils/utils'
 import { Validator } from '../Validator'
-import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKeyId } from './GroupKey'
+import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { RSAKeyPair } from './RSAKeyPair'
 
@@ -117,7 +116,7 @@ export class SubscriberKeyExchange {
                     await this.validator.validate(msg)
                     const store = await this.groupKeyStoreFactory.getStore(msg.getStreamId())
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
-                        const key = EncryptionUtil.decryptGroupKeyWithRSAPrivateKey(encryptedKey, this.rsaKeyPair!.getPrivateKey())
+                        const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
                         await store.add(key)
                     }))
                 }

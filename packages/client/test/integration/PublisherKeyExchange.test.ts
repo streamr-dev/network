@@ -20,7 +20,6 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 
 describe('PublisherKeyExchange', () => {
 
@@ -75,7 +74,7 @@ describe('PublisherKeyExchange', () => {
             signature: expect.any(String)
         })
         const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
-        const actualKeys = encryptedGroupKeys.map((encryptedKey) => EncryptionUtil.decryptGroupKeyWithRSAPrivateKey(encryptedKey, subscriberRSAKeyPair.getPrivateKey()))
+        const actualKeys = encryptedGroupKeys.map((encryptedKey) => GroupKey.decryptRSAEncrypted(encryptedKey, subscriberRSAKeyPair.getPrivateKey()))
         expect(actualKeys).toEqual(expectedGroupKeys)
     }
 

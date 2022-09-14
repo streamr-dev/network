@@ -1,7 +1,8 @@
 import crypto from 'crypto'
-import { ValidationError } from 'streamr-client-protocol'
+import { EncryptedGroupKey, ValidationError } from 'streamr-client-protocol'
 import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
+import { EncryptionUtil } from './EncryptionUtil'
 
 export type GroupKeyId = string
 export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
@@ -159,5 +160,23 @@ export class GroupKey {
             }
             throw err
         }
+    }
+
+    encryptNextGroupKey(nextGroupKey: GroupKey): EncryptedGroupKey {
+        return new EncryptedGroupKey(nextGroupKey.id, EncryptionUtil.encryptWithAES(nextGroupKey.data, this.data))
+    }
+
+    decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
+        return new GroupKey(
+            nextGroupKey.groupKeyId,
+            EncryptionUtil.decryptWithAES(nextGroupKey.encryptedGroupKeyHex, this.data)
+        )
+    }
+
+    static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
+        return new GroupKey(
+            encryptedKey.groupKeyId,
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+        )
     }
 }
