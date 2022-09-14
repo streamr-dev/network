@@ -34,7 +34,7 @@ enum State {
 interface ProxyConnection {
     state?: State
     reconnectionTimer?: NodeJS.Timeout
-    direction: ProxyDirection,
+    direction: ProxyDirection
     identity?: string
 }
 
@@ -101,12 +101,13 @@ export class ProxyStreamConnectionManager {
         return this.connections.get(streamPartId)!.get(nodeId)!
     }
 
-    public getNodeIdsOfConnections(streamPartId: StreamPartID, identity: string): NodeId[] {
+    public getAllConnectionNodeIds(streamPartId: StreamPartID, identity: string): NodeId[] {
         const connections = this.connections.get(streamPartId)!
         const returnedNodeIds: NodeId[] = []
         connections.forEach((connection, nodeId) => {
-            if (connection.identity === identity)
+            if (connection.identity === identity) {
                 returnedNodeIds.push(nodeId)
+            }
         })
         return returnedNodeIds
     }

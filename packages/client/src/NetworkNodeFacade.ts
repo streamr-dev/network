@@ -38,7 +38,7 @@ export interface NetworkNodeStub {
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
+    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, identity: string) => Promise<void>
     /** @internal */
     closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
 }
@@ -249,7 +249,7 @@ export class NetworkNodeFacade implements Context {
             if (this.isStarting()) {
                 await this.startNodeTask()
             }
-            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction)
+            await this.cachedNode!.openProxyConnection(streamPartId, nodeId, direction, (await this.authentication.getAddress()))
         } finally {
             this.debug('openProxyConnectionOnStream << %o', streamPartId, nodeId)
         }

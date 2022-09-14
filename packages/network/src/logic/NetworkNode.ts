@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, StreamMessageType } from 'streamr-client-protocol'
 import { Event as NodeEvent, Node, NodeOptions } from './Node'
 import { NodeId } from '../identifiers'
 
@@ -18,6 +18,10 @@ export class NetworkNode extends Node {
     }
 
     publish(streamMessage: StreamMessage): void | never {
+        const streamPartId = streamMessage.getStreamPartID()
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
+            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
+        }
         this.onDataReceived(streamMessage)
     }
 

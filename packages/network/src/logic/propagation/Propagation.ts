@@ -1,7 +1,6 @@
 import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
-import { add } from 'husky/lib'
 
 type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
 

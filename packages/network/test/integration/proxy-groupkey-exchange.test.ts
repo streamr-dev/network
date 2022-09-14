@@ -11,7 +11,7 @@ import {
 import { waitForEvent } from '@streamr/utils'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
-describe('GroupKey exchange via proxy connections' , () => {
+describe('GroupKey exchange via proxy connections', () => {
     let publisher: NetworkNode
     let subscriber: NetworkNode
     let proxy: NetworkNode
@@ -24,6 +24,7 @@ describe('GroupKey exchange via proxy connections' , () => {
     const streamPartId = StreamPartIDUtils.parse('stream-0#0')
 
     beforeEach(async () => {
+
         tracker = await startTracker({
             listen: {
                 hostname: '127.0.0.1',
@@ -31,6 +32,7 @@ describe('GroupKey exchange via proxy connections' , () => {
             }
         })
         trackerInfo = tracker.getConfigRecord()
+
         proxy = createNetworkNode({
             id: 'proxy-node',
             trackers: [trackerInfo],
@@ -55,6 +57,7 @@ describe('GroupKey exchange via proxy connections' , () => {
             webrtcDisallowPrivateAddresses: false
         })
         await subscriber.start()
+
         await proxy.subscribeAndWaitForJoin(streamPartId)
     })
 
@@ -98,8 +101,8 @@ describe('GroupKey exchange via proxy connections' , () => {
             waitForEvent(publisher, NodeEvent.UNSEEN_MESSAGE_RECEIVED),
             subscriber.publish(request)
         ])
-    })
 
+    })
 
     it('happy path response', async () => {
         await publisher.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.PUBLISH, publisherIdentity)
