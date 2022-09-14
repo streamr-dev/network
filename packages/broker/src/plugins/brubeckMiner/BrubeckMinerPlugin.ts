@@ -29,6 +29,7 @@ export interface BrubeckMinerPluginConfig {
     claimServerUrl: string
     maxClaimDelay: number
     stunServerHost: string|null
+    beneficiaryAddress: string | null
 }
 
 interface Peer {
@@ -136,6 +137,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
+            beneficiaryAddress: this.pluginConfig.beneficiaryAddress,
             peers
         }
         try {
