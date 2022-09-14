@@ -32,7 +32,7 @@ describe('resend with existing key', () => {
         const message = createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
-            newGroupKey: (nextGroupKey !== undefined) ? EncryptionUtil.encryptGroupKey(nextGroupKey, currentGroupKey) : null,
+            newGroupKey: (nextGroupKey !== undefined) ? EncryptionUtil.encryptGroupKeyWithAES(nextGroupKey, currentGroupKey) : null,
             stream,
             publisher: publisherWallet,
         })

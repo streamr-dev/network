@@ -1,7 +1,7 @@
-import { 
-    EncryptedGroupKey,
+import {
     EthereumAddress,
     GroupKeyRequest,
+    GroupKeyRequestSerialized,
     GroupKeyResponse,
     MessageID,
     StreamMessage,
@@ -10,39 +10,23 @@ import {
     StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { inject, Lifecycle, scoped } from 'tsyringe'
+import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/MessageChain'
+import { Context } from '../utils/Context'
+import { Debugger } from '../utils/log'
 import { pOnce } from '../utils/promises'
+import { instanceId } from '../utils/utils'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
-import { GroupKey, GroupKeyId } from './GroupKey'
+import { GroupKeyId } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { RSAKeyPair } from './RSAKeyPair'
-import { v4 as uuidv4 } from 'uuid'
-import { Debugger } from '../utils/log'
-import { Context } from '../utils/Context'
-import { instanceId } from '../utils/utils'
 
 /*
  * Sends group key requests and receives group key responses
  */
-
-export async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, rsaPrivateKey: string): Promise<GroupKey[]> {
-    let encryptedGroupKeys: EncryptedGroupKey[] = []
-    if (GroupKeyResponse.is(streamMessage)) {
-        encryptedGroupKeys = GroupKeyResponse.fromArray(streamMessage.getParsedContent() || []).encryptedGroupKeys || []
-    }
-
-    const tasks = encryptedGroupKeys.map(async (encryptedGroupKey) => (
-        new GroupKey(
-            encryptedGroupKey.groupKeyId,
-            EncryptionUtil.decryptWithRSAPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, rsaPrivateKey, true)
-        )
-    ))
-    await Promise.allSettled(tasks)
-    return Promise.all(tasks)
-}
 
 @scoped(Lifecycle.ContainerScoped)
 export class SubscriberKeyExchange {
@@ -77,10 +61,27 @@ export class SubscriberKeyExchange {
     }
 
     async requestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+        await this.ensureStarted()
         const requestId = uuidv4()
         this.debug('Request group key %s, requestId=%s', groupKeyId, requestId)
-        await this.ensureStarted()
-        const rsaPublicKey = this.rsaKeyPair!.getPublicKey()
+        const request = await this.createRequest(
+            groupKeyId,
+            streamPartId,
+            publisherId,
+            this.rsaKeyPair!.getPublicKey(),
+            requestId)
+        const node = await this.networkNodeFacade.getNode()
+        node.publish(request)
+        this.pendingRequests.add(requestId)
+    }
+
+    private async createRequest(
+        groupKeyId: GroupKeyId,
+        streamPartId: StreamPartID,
+        publisherId: EthereumAddress,
+        rsaPublicKey: string,
+        requestId: string
+    ): Promise<StreamMessage<GroupKeyRequestSerialized>> {
         const requestContent = new GroupKeyRequest({
             recipient: publisherId,
             requestId,
@@ -102,23 +103,23 @@ export class SubscriberKeyExchange {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         })
         request.signature = await this.authentication.createMessagePayloadSignature(request.getPayloadToSign())
-        const node = await this.networkNodeFacade.getNode()
-        node.publish(request)
-        this.pendingRequests.add(requestId)
+        return request
     }
 
     private async onMessage(msg: StreamMessage<any>): Promise<void> {
         if (GroupKeyResponse.is(msg)) {
             try {
                 const authenticatedUser = await this.authentication.getAddress()
-                const { requestId, recipient } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
+                const { requestId, recipient, encryptedGroupKeys } = GroupKeyResponse.fromStreamMessage(msg) as GroupKeyResponse
                 if ((recipient.toLowerCase() === authenticatedUser) && (this.pendingRequests.has(requestId))) {
                     this.debug('Handling group key response %s', requestId)
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)
-                    const keys = await getGroupKeysFromStreamMessage(msg, this.rsaKeyPair!.getPrivateKey())
                     const store = await this.groupKeyStoreFactory.getStore(msg.getStreamId())
-                    await Promise.all(keys.map((key) => store.add(key)))
+                    await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
+                        const key = EncryptionUtil.decryptGroupKeyWithRSAPrivateKey(encryptedKey, this.rsaKeyPair!.getPrivateKey())
+                        await store.add(key)
+                    }))
                 }
             } catch (e: any) {
                 this.debug('Error in SubscriberKeyExchange: %s', e.message)

@@ -70,7 +70,7 @@ export class EncryptionUtil {
         streamMessage.groupKeyId = groupKey.id
         streamMessage.serializedContent = this.encryptWithAES(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey.data)
         if (nextGroupKey) {
-            streamMessage.newGroupKey = EncryptionUtil.encryptGroupKey(nextGroupKey, groupKey)
+            streamMessage.newGroupKey = EncryptionUtil.encryptGroupKeyWithAES(nextGroupKey, groupKey)
         }
         streamMessage.parsedContent = undefined
         /* eslint-enable no-param-reassign */
@@ -97,7 +97,7 @@ export class EncryptionUtil {
             if (newGroupKey) {
                 // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
                 // @ts-expect-error expecting EncryptedGroupKey
-                streamMessage.newGroupKey = EncryptionUtil.decryptGroupKey(newGroupKey, groupKey)
+                streamMessage.newGroupKey = EncryptionUtil.decryptGroupKeyWithAES(newGroupKey, groupKey)
             }
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
@@ -106,15 +106,22 @@ export class EncryptionUtil {
         /* eslint-enable no-param-reassign */
     }
 
-    static encryptGroupKey(nextGroupKey: GroupKey, currentGroupKey: GroupKey): EncryptedGroupKey {
+    static encryptGroupKeyWithAES(nextGroupKey: GroupKey, currentGroupKey: GroupKey): EncryptedGroupKey {
         return new EncryptedGroupKey(nextGroupKey.id, this.encryptWithAES(nextGroupKey.data, currentGroupKey.data))
     }
 
-    static decryptGroupKey(newGroupKey: EncryptedGroupKey, currentGroupKey: GroupKey): GroupKey {
+    static decryptGroupKeyWithAES(newGroupKey: EncryptedGroupKey, currentGroupKey: GroupKey): GroupKey {
         return GroupKey.from([
             newGroupKey.groupKeyId,
             this.decryptWithAES(newGroupKey.encryptedGroupKeyHex, currentGroupKey.data)
         ])
+    }
+
+    static decryptGroupKeyWithRSAPrivateKey(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
+        return new GroupKey(
+            encryptedKey.groupKeyId,
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+        )
     }
 }
 
