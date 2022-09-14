@@ -26,6 +26,7 @@ export const withTimeout = <T>(
         return Promise.reject(new AbortError(customErrorContext))
     }
     let timeoutRef: NodeJS.Timeout
+    let abortListener: () => void
     return Promise.race([
         task,
         new Promise<T>((_resolve, reject) => {
@@ -34,12 +35,16 @@ export const withTimeout = <T>(
             }, timeoutInMs)
             if (abortController !== undefined) {
                 // TODO remove the type casting when type definition for abortController has been updated to include addEventListener
-                (abortController.signal as any).addEventListener('abort', () => {
+                abortListener = () => {
                     reject(new AbortError(customErrorContext))
-                })
+                }
+                (abortController.signal as any).addEventListener('abort', abortListener)
             }
         })
     ]).finally(() => {
         clearTimeout(timeoutRef) // clear timeout if promise wins race
+        if (abortListener !== undefined) {
+            (abortController!.signal as any).removeEventListener('abort', abortListener)
+        }
     })
 }
