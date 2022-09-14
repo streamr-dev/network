@@ -41,7 +41,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
     rewardSubscriptionRetryRef: NodeJS.Timeout | null
     subscriptionRetryInterval: number
     streamId: StreamID
-    beneficiaryAddress: string | null
 
     constructor(options: PluginOptions) {
         super(options)
@@ -49,7 +48,6 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
         this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random() * this.pluginConfig.rewardStreamIds.length)])
-        this.beneficiaryAddress = this.pluginConfig.beneficiaryAddress
     }
 
     async start(): Promise<void> {
@@ -127,7 +125,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
-            beneficiaryAddress: this.beneficiaryAddress,
+            beneficiaryAddress: this.pluginConfig.beneficiaryAddress,
             peers
         }
         try {
