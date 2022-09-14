@@ -23,7 +23,7 @@ describe(waitForEvent, () => {
         setTimeout(() => {
             emitter.emit("eventName", 1337, "leet")
         }, 5)
-        const recordedArgs = await waitForEvent(emitter, "eventName", 100, (args: unknown[]) => (args[0] as number) > 1000)
+        const recordedArgs = await waitForEvent(emitter, "eventName", 100, (value: number) => value > 1000)
         expect(recordedArgs).toEqual([1337, "leet"])
     })
 

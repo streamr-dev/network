@@ -14,14 +14,14 @@ export async function waitForEvent(
     emitter: EventEmitter,
     eventName: string,
     timeout = 5000,
-    predicate: (eventArgs: unknown[]) => boolean = () => true,
+    predicate: (...eventArgs: any[]) => boolean = () => true,
     abortController?: AbortController
 ): Promise<unknown[]> {
-    let listener: (eventArgs: unknown[]) => void
+    let listener: (eventArgs: any[]) => void
     // eslint-disable-next-line no-async-promise-executor
     const task: Promise<unknown[]> = new Promise(async (resolve) => {
-        listener = (...eventArgs: unknown[]) => {
-            if (predicate(eventArgs)) {
+        listener = (...eventArgs: any[]) => {
+            if (predicate(...eventArgs)) {
                 resolve(eventArgs)
             }
         }
