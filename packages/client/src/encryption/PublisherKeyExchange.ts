@@ -15,7 +15,6 @@ import { inject, Lifecycle, scoped } from 'tsyringe'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/MessageChain'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
 import { instanceId } from '../utils/utils'
@@ -33,7 +32,6 @@ export class PublisherKeyExchange {
 
     private readonly storeFactory: GroupKeyStoreFactory
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly streamRegistryCached: StreamRegistryCached
     private readonly authentication: Authentication
     private readonly validator: Validator
     private readonly debug: Debugger
@@ -42,14 +40,12 @@ export class PublisherKeyExchange {
         context: Context,
         storeFactory: GroupKeyStoreFactory,
         networkNodeFacade: NetworkNodeFacade,
-        streamRegistryCached: StreamRegistryCached,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator
     ) {
         this.debug = context.debug.extend(instanceId(this))
         this.storeFactory = storeFactory
         this.networkNodeFacade = networkNodeFacade
-        this.streamRegistryCached = streamRegistryCached
         this.authentication = authentication
         this.validator = validator
         networkNodeFacade.once('start', async () => {
@@ -67,11 +63,6 @@ export class PublisherKeyExchange {
                 if (recipient.toLowerCase() === authenticatedUser) {
                     this.debug('Handling group key request %s', requestId)
                     await this.validator.validate(request)
-                    // TODO remove this check?, seems that is already checked in StreamMessageValidator:186
-                    const isSubscriber = await this.streamRegistryCached.isStreamSubscriber(request.getStreamId(), request.getPublisherId())
-                    if (!isSubscriber) {
-                        return
-                    }
                     const store = await this.storeFactory.getStore(request.getStreamId())
                     const keys = without(
                         await Promise.all(groupKeyIds.map((id: GroupKeyId) => store.get(id))),
