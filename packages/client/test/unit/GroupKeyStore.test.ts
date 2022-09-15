@@ -2,7 +2,7 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid, mockContext } from '../test-utils/utils'
+import { uid, getGroupKeyStore } from '../test-utils/utils'
 import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 
@@ -15,13 +15,7 @@ describeRepeats('GroupKeyStore', () => {
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = toStreamID(uid('stream'))
-        store = new GroupKeyStore({
-            context: mockContext(),
-            clientId,
-            streamId,
-            groupKeys: [],
-        })
-
+        store = getGroupKeyStore(streamId, clientId)
         leakDetector = new LeakDetector(store)
     })
 
