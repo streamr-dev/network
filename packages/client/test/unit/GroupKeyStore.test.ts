@@ -2,7 +2,7 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid, mockContext } from '../test-utils/utils'
+import { uid, getGroupKeyStore } from '../test-utils/utils'
 import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 
@@ -15,19 +15,13 @@ describeRepeats('GroupKeyStore', () => {
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = toStreamID(uid('stream'))
-        store = new GroupKeyStore({
-            context: mockContext(),
-            clientId,
-            streamId,
-            groupKeys: [],
-        })
-
+        store = getGroupKeyStore(streamId, clientId)
         leakDetector = new LeakDetector(store)
     })
 
     afterEach(async () => {
         if (!store) { return }
-        await store.clear()
+        await store.destroy()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -36,12 +30,11 @@ describeRepeats('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get set and delete', async () => {
+    it('can get and set', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.close()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
@@ -49,22 +42,14 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.add(groupKey)).toBeTruthy()
         expect(await store.exists()).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
-        expect(await store.clear()).toBeTruthy()
-        expect(await store.clear()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
     })
 
     it('does not exist until write', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
-
-        expect(await store.isEmpty()).toBeTruthy()
-        expect(await store.exists()).toBeFalsy()
         expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.close()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()

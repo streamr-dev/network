@@ -6,7 +6,7 @@ import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
-import { DecryptError, EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -32,7 +32,7 @@ describe('resend with existing key', () => {
         const message = createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
-            newGroupKey: (nextGroupKey !== undefined) ? EncryptionUtil.encryptGroupKey(nextGroupKey, currentGroupKey) : null,
+            newGroupKey: (nextGroupKey !== undefined) ? currentGroupKey.encryptNextGroupKey(nextGroupKey) : null,
             stream,
             publisher: publisherWallet,
         })

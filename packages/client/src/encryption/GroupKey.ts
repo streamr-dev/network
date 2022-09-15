@@ -1,14 +1,11 @@
 import crypto from 'crypto'
-import { ValidationError } from 'streamr-client-protocol'
+import { EncryptedGroupKey } from 'streamr-client-protocol'
 import { uuid } from '../utils/uuid'
 import { inspect } from '../utils/log'
+import { EncryptionUtil } from './EncryptionUtil'
 
-class InvalidGroupKeyError extends ValidationError {
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, public groupKey?: GroupKeyish) {
-        super(message)
-    }
-}
+export type GroupKeyId = string
+export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
 
 export interface GroupKeyObject {
     id: string
@@ -17,9 +14,16 @@ export interface GroupKeyObject {
 }
 
 interface GroupKeyProps {
-    groupKeyId: string
+    groupKeyId: GroupKeyId
     groupKeyHex: string
     groupKeyData: Uint8Array
+}
+
+export class GroupKeyError extends Error {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    constructor(message: string, public groupKey?: GroupKeyish) {
+        super(message)
+    }
 }
 
 function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {
@@ -34,8 +38,6 @@ function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKey
     return data
 }
 
-export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
-
 /**
  * GroupKeys are AES cipher keys, which are used to encrypt/decrypt StreamMessages (when encryptionType is AES).
  * Each group key contains 256 random bits of key data and an UUID.
@@ -46,24 +48,22 @@ export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<type
  */
 
 export class GroupKey {
-    /** @internal */
-    static InvalidGroupKeyError = InvalidGroupKeyError
 
     /** @internal */
-    readonly id: string
+    readonly id: GroupKeyId
     /** @internal */
     readonly hex: string
     /** @internal */
     readonly data: Uint8Array
 
-    constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
+    constructor(groupKeyId: GroupKeyId, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
         if (!groupKeyId) {
-            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)
+            throw new GroupKeyError(`groupKeyId must not be falsey ${inspect(groupKeyId)}`)
         }
 
         if (!groupKeyBufferOrHexString) {
-            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${inspect(groupKeyBufferOrHexString)}`)
+            throw new GroupKeyError(`groupKeyBufferOrHexString must not be falsey ${inspect(groupKeyBufferOrHexString)}`)
         }
 
         if (typeof groupKeyBufferOrHexString === 'string') {
@@ -79,34 +79,34 @@ export class GroupKey {
 
     private static validate(maybeGroupKey: GroupKey): void | never {
         if (!maybeGroupKey) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new GroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!(maybeGroupKey instanceof this)) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new GroupKeyError(`value must be a ${this.name}: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new GroupKeyError(`${this.name} id must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (maybeGroupKey.id.includes('---BEGIN')) {
-            throw new InvalidGroupKeyError(
+            throw new GroupKeyError(
                 `${this.name} public/private key is not a valid group key id: ${inspect(maybeGroupKey)}`,
                 maybeGroupKey
             )
         }
 
         if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
-            throw new InvalidGroupKeyError(`${this.name} data must be a Buffer: ${inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new GroupKeyError(`${this.name} data must be a Buffer: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
+            throw new GroupKeyError(`${this.name} hex must be a string: ${inspect(maybeGroupKey)}`, maybeGroupKey)
         }
 
         if (maybeGroupKey.data.length !== 32) {
-            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
+            throw new GroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
         }
     }
 
@@ -137,7 +137,7 @@ export class GroupKey {
 
     static from(maybeGroupKey: GroupKeyish): GroupKey {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
-            throw new InvalidGroupKeyError('Group key must be object', maybeGroupKey)
+            throw new GroupKeyError('Group key must be object', maybeGroupKey)
         }
 
         if (maybeGroupKey instanceof GroupKey) {
@@ -152,11 +152,29 @@ export class GroupKey {
             const groupKeyObj = GroupKeyObjectFromProps(maybeGroupKey)
             return new GroupKey(groupKeyObj.id, groupKeyObj.hex || groupKeyObj.data)
         } catch (err) {
-            if (err instanceof InvalidGroupKeyError) {
+            if (err instanceof GroupKeyError) {
                 // wrap err with logging of original object
-                throw new InvalidGroupKeyError(`${err.stack}:`, maybeGroupKey)
+                throw new GroupKeyError(`${err.stack}:`, maybeGroupKey)
             }
             throw err
         }
+    }
+
+    encryptNextGroupKey(nextGroupKey: GroupKey): EncryptedGroupKey {
+        return new EncryptedGroupKey(nextGroupKey.id, EncryptionUtil.encryptWithAES(nextGroupKey.data, this.data))
+    }
+
+    decryptNextGroupKey(nextGroupKey: EncryptedGroupKey): GroupKey {
+        return new GroupKey(
+            nextGroupKey.groupKeyId,
+            EncryptionUtil.decryptWithAES(nextGroupKey.encryptedGroupKeyHex, this.data)
+        )
+    }
+
+    static decryptRSAEncrypted(encryptedKey: EncryptedGroupKey, rsaPrivateKey: string): GroupKey {
+        return new GroupKey(
+            encryptedKey.groupKeyId,
+            EncryptionUtil.decryptWithRSAPrivateKey(encryptedKey.encryptedGroupKeyHex, rsaPrivateKey, true)
+        )
     }
 }

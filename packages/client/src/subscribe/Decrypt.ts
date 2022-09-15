@@ -12,78 +12,34 @@ import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
-
-// TODO remove this when we implement the non-polling key retrieval
-const waitForCondition = async (
-    conditionFn: () => (boolean | Promise<boolean>),
-    timeout = 5000,
-    retryInterval = 100,
-    onTimeoutContext?: () => string,
-): Promise<void> => {
-    // create error beforehand to capture more usable stack
-    const err = new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`)
-    return new Promise((resolve, reject) => {
-        let poller: NodeJS.Timeout | undefined = undefined
-        const clearPoller = () => {
-            if (poller !== undefined) {
-                clearInterval(poller)
-            }
-        }
-        const maxTime = Date.now() + timeout
-        const poll = async () => {
-            if (Date.now() < maxTime) {
-                let result
-                try {
-                    result = await conditionFn()
-                } catch (e) {
-                    clearPoller()
-                    reject(e)
-                }
-                if (result) {
-                    clearPoller()
-                    resolve()
-                }
-            } else {
-                clearPoller()
-                if (onTimeoutContext) {
-                    err.message += `\n${onTimeoutContext()}`
-                }
-                reject(err)
-            }
-        }
-        setTimeout(poll, 0)
-        poller = setInterval(poll, retryInterval)
-    })
-}
+import { waitForEvent } from '@streamr/utils'
+import { StreamrClientEventEmitter } from '../events'
 
 export class Decrypt<T> implements Context {
     readonly id
     readonly debug
-    private isStopped = false
+    private abortController: AbortController = new AbortController()
 
     constructor(
         context: Context,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
-        private destroySignal: DestroySignal,
+        destroySignal: DestroySignal,
+        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
-        this.destroySignal.onDestroy.listen(async () => {
-            if (!this.isStopped) {
-                await this.stop()
-            }
-        })
+        destroySignal.onDestroy.listen(async () => this.stop())
     }
 
     // TODO if this.isStopped is true, would it make sense to reject the promise
     // and not to return the original encrypted message?
     // - e.g. StoppedError, which is not visible to end-user
     async decrypt(streamMessage: StreamMessage<T>): Promise<StreamMessage<T>> {
-        if (this.isStopped) {
+        if (this.abortController.signal.aborted) {
             return streamMessage
         }
 
@@ -107,14 +63,21 @@ export class Decrypt<T> implements Context {
                     streamMessage.getStreamPartID()
                 )
                 try {
-                    await waitForCondition(async () => {  // TODO and implement without polling (and wrap with "withTimeout")
-                        groupKey = await store.get(groupKeyId)
-                        return (groupKey !== undefined) || this.isStopped
-                    }, this.timeoutsConfig.encryptionKeyRequest)
+                    const groupKeys = await waitForEvent(
+                        // TODO remove "as any" type casing in NET-889
+                        this.eventEmitter as any,
+                        'addGroupKey',
+                        this.timeoutsConfig.encryptionKeyRequest,
+                        (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
+                        this.abortController)
+                    groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
-                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
+                    if (this.abortController.signal.aborted) {
+                        return streamMessage
+                    }
+                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
                 }
-                if (this.isStopped) {
+                if (this.abortController.signal.aborted) {
                     return streamMessage
                 }
             }
@@ -135,7 +98,6 @@ export class Decrypt<T> implements Context {
     }
 
     async stop(): Promise<void> {
-        this.debug('stop')
-        this.isStopped = true
+        this.abortController.abort()
     }
 }

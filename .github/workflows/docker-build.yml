@@ -76,7 +76,7 @@ jobs:
 
       - name: Build
         if: ${{!inputs.push_image}}
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.1
         with:
           context: .
           file: ${{inputs.docker_file}}
@@ -101,7 +101,7 @@ jobs:
 
       - name: Build & Push
         if: ${{inputs.push_image}}
-        uses: docker/build-push-action@v3.0.0
+        uses: docker/build-push-action@v3.1.1
         with:
           context: .
           file: ${{inputs.docker_file}}

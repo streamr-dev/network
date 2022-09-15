@@ -1,11 +1,12 @@
 import 'reflect-metadata'
 import { v4 as uuid } from 'uuid'
 import {
+    GroupKeyResponse,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { GroupKey } from '../../src/encryption/GroupKey'
+import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { StreamPermission } from '../../src/permission'
@@ -15,7 +16,6 @@ import {
     getGroupKeyStore,
     startPublisherKeyExchangeSubscription
 } from '../test-utils/utils'
-import { getGroupKeysFromStreamMessage } from '../../src/encryption/SubscriberKeyExchange'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
@@ -41,7 +41,7 @@ describe('PublisherKeyExchange', () => {
     }
 
     const createGroupKeyRequest = (
-        groupKeyId: string,
+        groupKeyId: GroupKeyId,
         publisher = subscriberWallet,
         rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
     ): StreamMessage => {
@@ -73,7 +73,8 @@ describe('PublisherKeyExchange', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: expect.any(String)
         })
-        const actualKeys = await getGroupKeysFromStreamMessage(actualResponse, subscriberRSAKeyPair.getPrivateKey())
+        const encryptedGroupKeys = (GroupKeyResponse.fromStreamMessage(actualResponse) as GroupKeyResponse).encryptedGroupKeys
+        const actualKeys = encryptedGroupKeys.map((encryptedKey) => GroupKey.decryptRSAEncrypted(encryptedKey, subscriberRSAKeyPair.getPrivateKey()))
         expect(actualKeys).toEqual(expectedGroupKeys)
     }
 

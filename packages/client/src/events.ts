@@ -1,12 +1,14 @@
 import { Lifecycle, scoped } from 'tsyringe'
 import EventEmitter3 from 'eventemitter3'
 import { StorageNodeAssignmentEvent } from './registry/StreamStorageRegistry'
+import { GroupKey } from './encryption/GroupKey'
 
 type Events<T> = { [K in keyof T]: (payload: any) => void }
 
 export interface StreamrClientEvents {
     addToStorageNode: (payload: StorageNodeAssignmentEvent) => void
     removeFromStorageNode: (payload: StorageNodeAssignmentEvent) => void
+    addGroupKey: (groupKey: GroupKey) => void
 }
 
 // events for internal communication between StreamrClient components

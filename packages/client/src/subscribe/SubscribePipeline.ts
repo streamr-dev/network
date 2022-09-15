@@ -19,6 +19,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
 import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../events'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -60,6 +61,7 @@ export function SubscribePipeline<T = unknown>(
         container.resolve(SubscriberKeyExchange),
         container.resolve(StreamRegistryCached),
         container.resolve(DestroySignal),
+        container.resolve(StreamrClientEventEmitter),
         container.resolve(ConfigInjectionToken.Timeouts),
     )
 
