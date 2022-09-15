@@ -273,7 +273,7 @@ describe('PubSub with multiple clients', () => {
     })
 
     test('works with multiple publishers on one stream', async () => {
-        otherClient = environment.createClient()
+        otherClient = await createSubscriber()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
