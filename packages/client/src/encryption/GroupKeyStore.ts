@@ -52,10 +52,8 @@ export class GroupKeyStore implements Context {
 
     private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
         this.debug('Store key %s', groupKey.id)
-        const success = await this.persistence.set(groupKey.id, groupKey.hex)
-        if (success) {
-            this.eventEmitter.emit('addGroupKey', groupKey)
-        }
+        await this.persistence.set(groupKey.id, groupKey.hex)
+        this.eventEmitter.emit('addGroupKey', groupKey)
         return groupKey
     }
 
