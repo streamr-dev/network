@@ -74,13 +74,6 @@ export class GroupKeyStore implements Context {
         return this.persistence.has(id)
     }
 
-    async isEmpty(): Promise<boolean> {
-        // a queued key means it's not empty
-        if (this.queuedGroupKey) { return false }
-
-        return (await this.persistence.size()) === 0
-    }
-
     async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
