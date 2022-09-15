@@ -56,7 +56,7 @@ describe('PubSub with multiple clients', () => {
 
     async function createPublisher(id: number) {
         const pubClient = environment.createClient({
-            id: `publisher-${id}`
+            id: `publisher${id}`
         })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
