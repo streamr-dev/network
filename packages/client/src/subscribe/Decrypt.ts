@@ -72,7 +72,10 @@ export class Decrypt<T> implements Context {
                         this.abortController)
                     groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
-                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}`)
+                    if (this.abortController.signal.aborted) {
+                        return streamMessage
+                    }
+                    throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
                 }
                 if (this.abortController.signal.aborted) {
                     return streamMessage
