@@ -63,8 +63,8 @@ export class Decrypt<T> implements Context {
                     streamMessage.getStreamPartID()
                 )
                 try {
-                    // TODO remove "as any" type casing in NET-889
                     const groupKeys = await waitForEvent(
+                        // TODO remove "as any" type casing in NET-889
                         this.eventEmitter as any,
                         'addGroupKey',
                         this.timeoutsConfig.encryptionKeyRequest,
