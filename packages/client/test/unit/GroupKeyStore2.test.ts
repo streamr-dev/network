@@ -47,16 +47,12 @@ describe('GroupKeyStore', () => {
         expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.size()).toBe(0)
         expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
 
         expect(await store.add(groupKey)).toBe(groupKey)
         expect(await store.add(groupKey)).toEqual(groupKey)
         expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
         expect(await store.size()).toBe(1)
-
-        expect(await store.clear()).toBeTruthy()
-        expect(await store.size()).toBe(0)
     })
 
     it('can add with multiple instances in parallel', async () => {

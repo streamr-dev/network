@@ -113,13 +113,6 @@ export class GroupKeyStore implements Context {
         return this.persistence.exists()
     }
 
-    async clear(): Promise<boolean> {
-        this.currentGroupKey = undefined
-        this.queuedGroupKey = undefined
-
-        return this.persistence.clear()
-    }
-
     async rotateGroupKey(): Promise<GroupKey> {
         return this.setNextGroupKey(GroupKey.generate())
     }

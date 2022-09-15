@@ -26,7 +26,7 @@ export default class BrowserPersistence implements Persistence<string, string> {
         return had
     }
 
-    async clear(): Promise<boolean> {
+    private async clear(): Promise<boolean> {
         const size = await this.size()
         await clear(this.store)
         return !!size

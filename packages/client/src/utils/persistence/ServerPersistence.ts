@@ -189,7 +189,7 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return this.setKeyValue(key, value)
     }
 
-    async clear(): Promise<boolean> {
+    private async clear(): Promise<boolean> {
         this.debug('clear')
         if (!this.initCalled) {
             // nothing to clear if doesn't exist

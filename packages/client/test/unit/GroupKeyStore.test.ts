@@ -27,7 +27,8 @@ describeRepeats('GroupKeyStore', () => {
 
     afterEach(async () => {
         if (!store) { return }
-        await store.clear()
+        // @ts-expect-error private
+        await store.persistence.destroy()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -41,7 +42,6 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.close()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
@@ -49,9 +49,6 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.add(groupKey)).toBeTruthy()
         expect(await store.exists()).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
-        expect(await store.clear()).toBeTruthy()
-        expect(await store.clear()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
     })
 
     it('does not exist until write', async () => {
@@ -63,8 +60,6 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.close()).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
