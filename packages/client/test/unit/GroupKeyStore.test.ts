@@ -27,8 +27,7 @@ describeRepeats('GroupKeyStore', () => {
 
     afterEach(async () => {
         if (!store) { return }
-        // @ts-expect-error private
-        await store.persistence.destroy()
+        await store.destroy()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })

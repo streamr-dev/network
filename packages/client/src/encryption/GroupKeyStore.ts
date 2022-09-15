@@ -130,4 +130,8 @@ export class GroupKeyStore implements Context {
         this.queuedGroupKey = undefined
         return newKey
     }
+
+    async destroy(): Promise<void> {
+        return this.persistence.destroy()
+    }
 }
