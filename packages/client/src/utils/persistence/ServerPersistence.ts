@@ -189,17 +189,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return this.setKeyValue(key, value)
     }
 
-    async delete(key: string): Promise<boolean> {
-        if (!this.initCalled) {
-            // can't delete if if db doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
-        await this.init()
-        const result = await this.store!.run(`DELETE FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return !!result?.changes
-    }
-
     async clear(): Promise<boolean> {
         this.debug('clear')
         if (!this.initCalled) {

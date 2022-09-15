@@ -36,7 +36,7 @@ describeRepeats('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get set and delete', async () => {
+    it('can get and set', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()

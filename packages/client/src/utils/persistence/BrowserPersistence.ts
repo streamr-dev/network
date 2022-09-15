@@ -1,4 +1,4 @@
-import { get, set, del, clear, keys, createStore, UseStore } from 'idb-keyval'
+import { get, set,  clear, keys, createStore, UseStore } from 'idb-keyval'
 import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
 
@@ -24,15 +24,6 @@ export default class BrowserPersistence implements Persistence<string, string> {
         const had = await this.has(key)
         await set(key, value, this.store)
         return had
-    }
-
-    async delete(key: string): Promise<boolean> {
-        if (!await this.has(key)) {
-            return false
-        }
-
-        await del(key, this.store)
-        return true
     }
 
     async clear(): Promise<boolean> {
