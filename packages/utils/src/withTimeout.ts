@@ -11,7 +11,9 @@ export class TimeoutError extends Error {
 export class AbortError extends Error {
     readonly code = 'AbortError'
     constructor(customErrorContext?: string) {
-        super(customErrorContext)
+        super(customErrorContext === undefined
+            ? `aborted`
+            : `${customErrorContext} aborted`)
         Error.captureStackTrace(this, AbortError)
     }
 }
@@ -44,6 +46,7 @@ export const withTimeout = <T>(
     ]).finally(() => {
         clearTimeout(timeoutRef) // clear timeout if promise wins race
         if (abortListener !== undefined) {
+            // TODO remove the type casting when type definition for abortController has been updated to include removeEventListener
             (abortController!.signal as any).removeEventListener('abort', abortListener)
         }
     })

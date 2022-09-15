@@ -8,6 +8,7 @@ import { withTimeout } from './withTimeout'
  * @param eventName event to wait for
  * @param timeout amount of time in milliseconds to wait for
  * @param predicate function that gets passed the event arguments, should return true if event accepted
+ * @param abortController
  * @returns {Promise<unknown[]>} resolves with event arguments if event occurred within timeout else rejects
  */
 export async function waitForEvent(
