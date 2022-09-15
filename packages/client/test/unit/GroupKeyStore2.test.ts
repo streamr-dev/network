@@ -23,8 +23,7 @@ describe('GroupKeyStore', () => {
 
     afterEach(async () => {
         if (!store) { return }
-        // @ts-expect-error private
-        await store.persistence.destroy()
+        await store.destroy()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -33,36 +32,18 @@ describe('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get set and delete', async () => {
+    it('can get and set', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.has(groupKey.id)).toBeFalsy()
-        expect(await store.size()).toBe(0)
         expect(await store.get(groupKey.id)).toBeFalsy()
-        // @ts-expect-error private
-        expect(await store.persistence.delete(groupKey.id)).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
 
         expect(await store.add(groupKey)).toBe(groupKey)
         expect(await store.add(groupKey)).toEqual(groupKey)
         expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
-        expect(await store.size()).toBe(1)
-        // @ts-expect-error private
-        expect(await store.persistence.delete(groupKey.id)).toBeTruthy()
-
-        expect(await store.has(groupKey.id)).toBeFalsy()
-        expect(await store.size()).toBe(0)
-
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        // @ts-expect-error private
-        expect(await store.persistence.delete(groupKey.id)).toBeFalsy()
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.size()).toBe(1)
-        expect(await store.clear()).toBeTruthy()
-        expect(await store.size()).toBe(0)
     })
 
-    it('can get set and delete with multiple instances in parallel', async () => {
+    it('can add with multiple instances in parallel', async () => {
         const store2 = getGroupKeyStore(streamId, clientId)
         // @ts-expect-error private
         addAfter(() => store2.persistence.destroy())
@@ -106,11 +87,6 @@ describe('GroupKeyStore', () => {
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
-        expect(await store2.size()).toBe(0)
-        // @ts-expect-error private
-        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
@@ -125,11 +101,6 @@ describe('GroupKeyStore', () => {
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
-        expect(await store2.size()).toBe(0)
-        // @ts-expect-error private
-        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
@@ -144,11 +115,6 @@ describe('GroupKeyStore', () => {
         await store.add(groupKey)
         expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
-        expect(await store2.size()).toBe(0)
-        // @ts-expect-error private
-        expect(await store2.persistence.delete(groupKey.id)).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
-        expect(await store2.clear()).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
