@@ -130,8 +130,4 @@ export class GroupKeyStore implements Context {
         this.queuedGroupKey = undefined
         return newKey
     }
-
-    async size(): Promise<number> {
-        return this.persistence.size()
-    }
 }
