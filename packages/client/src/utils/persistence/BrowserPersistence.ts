@@ -1,4 +1,4 @@
-import { get, set,  clear, keys, createStore, UseStore } from 'idb-keyval'
+import { get, set,  clear, createStore, UseStore } from 'idb-keyval'
 import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
 
@@ -26,15 +26,8 @@ export default class BrowserPersistence implements Persistence<string, string> {
         return had
     }
 
-    private async clear(): Promise<boolean> {
-        const size = await this.size()
+    private async clear(): Promise<void> {
         await clear(this.store)
-        return !!size
-    }
-
-    async size(): Promise<number> {
-        const allKeys = await keys(this.store)
-        return allKeys.length
     }
 
     // eslint-disable-next-line class-methods-use-this
