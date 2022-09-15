@@ -18,8 +18,8 @@ describe('GroupKey exchange via proxy connections', () => {
     let tracker: Tracker
     let trackerInfo: SmartContractRecord
 
-    const publisherIdentity = 'publisher-ethereum-address'
-    const subscriberIdentity = 'subscriber-ethereum-address'
+    const publisherUserId = 'publisher-ethereum-address'
+    const subscriberUserId = 'subscriber-ethereum-address'
 
     const streamPartId = StreamPartIDUtils.parse('stream-0#0')
 
@@ -63,19 +63,19 @@ describe('GroupKey exchange via proxy connections', () => {
 
     afterEach(async () => {
         await Promise.all([
-            tracker.stop(),
-            proxy.stop(),
-            publisher.stop(),
-            subscriber.stop()
+            tracker?.stop(),
+            proxy?.stop(),
+            publisher?.stop(),
+            subscriber?.stop()
         ])
     })
 
     it('happy path request', async () => {
-        await publisher.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.PUBLISH, publisherIdentity)
-        await subscriber.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.SUBSCRIBE, subscriberIdentity)
+        await publisher.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const requestContent = new GroupKeyRequest({
-            recipient: publisherIdentity,
+            recipient: publisherUserId,
             requestId: 'requestId',
             rsaPublicKey: 'mockKey',
             groupKeyIds: [
@@ -88,7 +88,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                subscriberIdentity,
+                subscriberUserId,
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_REQUEST,
@@ -105,11 +105,11 @@ describe('GroupKey exchange via proxy connections', () => {
     })
 
     it('happy path response', async () => {
-        await publisher.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.PUBLISH, publisherIdentity)
-        await subscriber.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.SUBSCRIBE, subscriberIdentity)
+        await publisher.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.PUBLISH, publisherUserId)
+        await subscriber.openProxyConnection(streamPartId, 'proxy-node', ProxyDirection.SUBSCRIBE, subscriberUserId)
 
         const responseContent = new GroupKeyResponse({
-            recipient: publisherIdentity,
+            recipient: publisherUserId,
             requestId: 'requestId',
             encryptedGroupKeys: []
         }).toArray()
@@ -119,7 +119,7 @@ describe('GroupKey exchange via proxy connections', () => {
                 StreamPartIDUtils.getStreamPartition(streamPartId),
                 Date.now(),
                 0,
-                publisherIdentity,
+                publisherUserId,
                 '0'
             ),
             messageType: StreamMessageType.GROUP_KEY_RESPONSE,

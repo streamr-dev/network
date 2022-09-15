@@ -116,7 +116,6 @@ export class Node extends EventEmitter {
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
-            getNeighbors: this.streamPartManager.getOutboundNodesForStreamPart.bind(this.streamPartManager),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -241,7 +240,7 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
+    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
         await Promise.all([
@@ -262,7 +261,7 @@ export class Node extends EventEmitter {
                 this.on(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
                 this.on(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
             }),
-            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, identity)
+            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, userId)
         ]).finally(() => {
             this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
@@ -311,25 +310,9 @@ export class Node extends EventEmitter {
 
         if (isUnseen) {
             logger.trace('received from %s data %j', source, streamMessage.messageId)
-
-            let groupKeyPropagationTargets
-            if (this.acceptProxyConnections) {
-                if (GroupKeyRequest.is(streamMessage)) {
-                    const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest
-                    groupKeyPropagationTargets = this.proxyStreamConnectionManager.getAllConnectionNodeIds(streamPartId, recipient)
-                } else if (GroupKeyResponse.is(streamMessage)) {
-                    const { recipient } = GroupKeyResponse.fromStreamMessage(streamMessage) as GroupKeyResponse
-                    groupKeyPropagationTargets = this.proxyStreamConnectionManager.getAllConnectionNodeIds(streamPartId, recipient)
-                }
-            } else if (
-                this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())
-                && this.proxyStreamConnectionManager.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
-            ) {
-                groupKeyPropagationTargets = [...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)]
-            }
-
+            const propagationTargets = this.getPropagationTargets(streamMessage)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
-            this.propagation.feedUnseenMessage(streamMessage, source, groupKeyPropagationTargets)
+            this.propagation.feedUnseenMessage(streamMessage, propagationTargets, source)
             if (source === null) {
                 this.metrics.publishMessagesPerSecond.record(1)
                 this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
@@ -345,6 +328,25 @@ export class Node extends EventEmitter {
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
+    }
+
+    private getPropagationTargets(streamMessage: StreamMessage): NodeId[] {
+        const streamPartId = streamMessage.getStreamPartID()
+        let propagationTargets: NodeId[] = []
+        propagationTargets = propagationTargets.concat([...this.streamPartManager.getOutboundNodesForStreamPart(streamPartId)])
+
+        if (this.acceptProxyConnections) {
+            if (GroupKeyRequest.is(streamMessage) || GroupKeyResponse.is(streamMessage)) {
+                const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest | GroupKeyResponse
+                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionManager.getNodeIdsForUserId(streamPartId, recipient))
+            }
+        } else if (
+            this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())
+            && this.proxyStreamConnectionManager.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
+        ) {
+            propagationTargets = propagationTargets.concat([...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)])
+        }
+        return propagationTargets
     }
 
     private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {

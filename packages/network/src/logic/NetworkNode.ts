@@ -25,8 +25,8 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
-        await this.addProxyConnection(streamPartId, contactNodeId, direction, identity)
+    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
+        await this.addProxyConnection(streamPartId, contactNodeId, direction, userId)
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {

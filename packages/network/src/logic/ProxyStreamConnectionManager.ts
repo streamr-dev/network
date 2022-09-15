@@ -35,7 +35,7 @@ interface ProxyConnection {
     state?: State
     reconnectionTimer?: NodeJS.Timeout
     direction: ProxyDirection
-    identity?: string
+    userId: string
 }
 
 const DEFAULT_RECONNECTION_TIMEOUT = 10 * 1000
@@ -61,14 +61,14 @@ export class ProxyStreamConnectionManager {
         this.connections = new Map()
     }
 
-    private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, identity?: string): void {
+    private addConnection(streamPartId: StreamPartID, nodeId: NodeId, direction: ProxyDirection, userId: string): void {
         if (!this.connections.has(streamPartId)) {
             this.connections.set(streamPartId, new Map())
         }
         this.connections.get(streamPartId)!.set(nodeId, {
             state: State.NEGOTIATING,
             direction,
-            identity
+            userId
         })
     }
 
@@ -101,18 +101,18 @@ export class ProxyStreamConnectionManager {
         return this.connections.get(streamPartId)!.get(nodeId)!
     }
 
-    public getAllConnectionNodeIds(streamPartId: StreamPartID, identity: string): NodeId[] {
+    public getNodeIdsForUserId(streamPartId: StreamPartID, userId: string): NodeId[] {
         const connections = this.connections.get(streamPartId)!
         const returnedNodeIds: NodeId[] = []
         connections.forEach((connection, nodeId) => {
-            if (connection.identity === identity) {
+            if (connection.userId === userId) {
                 returnedNodeIds.push(nodeId)
             }
         })
         return returnedNodeIds
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, identity: string): Promise<void> {
+    async openProxyConnection(streamPartId: StreamPartID, targetNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
             if (!this.streamPartManager.isSetUp(streamPartId)) {
@@ -120,20 +120,20 @@ export class ProxyStreamConnectionManager {
             } else if (!this.streamPartManager.isBehindProxy(streamPartId)) {
                 const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, bidirectional stream already exists`
                 logger.warn(reason)
-                this.node.emit( Event.PROXY_CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
+                this.node.emit(Event.PROXY_CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
                 return
             } else if (this.streamPartManager.hasOnewayConnection(streamPartId, targetNodeId)) {
                 const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, proxy stream connection already exists`
                 logger.warn(reason)
-                this.node.emit( Event.PROXY_CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
+                this.node.emit(Event.PROXY_CONNECTION_REJECTED, targetNodeId, streamPartId, direction, reason)
                 return
             } else if (this.hasConnection(targetNodeId, streamPartId)) {
                 const reason = `Could not open a proxy ${direction} stream connection ${streamPartId}, a connection already exists`
                 logger.warn(reason)
                 return
             }
-            this.addConnection(streamPartId, targetNodeId, direction)
-            await this.connectAndNegotiate(streamPartId, targetNodeId, direction, identity)
+            this.addConnection(streamPartId, targetNodeId, direction, userId)
+            await this.connectAndNegotiate(streamPartId, targetNodeId, direction, userId)
         } catch (err) {
             logger.warn(`Failed to create a proxy ${direction} stream connection to ${targetNodeId} for stream ${streamPartId}:\n${err}`)
             this.removeConnection(streamPartId, targetNodeId)
@@ -143,13 +143,13 @@ export class ProxyStreamConnectionManager {
         }
     }
 
-    private async connectAndNegotiate(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, identity: string): Promise<void> {
+    private async connectAndNegotiate(streamPartId: StreamPartID, targetNodeId: NodeId, direction: ProxyDirection, userId: string): Promise<void> {
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         const trackerAddress = this.trackerManager.getTrackerAddress(streamPartId)
 
         await this.trackerManager.connectToSignallingOnlyTracker(trackerId, trackerAddress)
         await withTimeout(this.nodeToNode.connectToNode(targetNodeId, trackerId, false), this.nodeConnectTimeout)
-        await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction, identity)
+        await this.nodeToNode.requestProxyConnection(targetNodeId, streamPartId, direction, userId)
 
     }
 
@@ -189,10 +189,10 @@ export class ProxyStreamConnectionManager {
             if (message.direction === ProxyDirection.PUBLISH) {
                 // The receiver of the PUBLISH request will only receive data from the connection
                 this.streamPartManager.addInOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.identity)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.PUBLISH, message.userId)
             } else {
                 this.streamPartManager.addOutOnlyNeighbor(streamPartId, nodeId)
-                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.identity)
+                this.addConnection(streamPartId, nodeId, ProxyDirection.SUBSCRIBE, message.userId)
                 this.propagation.onNeighborJoined(nodeId, streamPartId) // TODO: maybe should not be marked as full propagation in Propagation.ts?
             }
         }
@@ -234,7 +234,7 @@ export class ProxyStreamConnectionManager {
         }
         const trackerId = this.trackerManager.getTrackerId(streamPartId)
         try {
-            await this.connectAndNegotiate(streamPartId, targetNodeId, connection.direction, connection.identity!)
+            await this.connectAndNegotiate(streamPartId, targetNodeId, connection.direction, connection.userId)
             logger.trace(`Successful proxy stream reconnection to ${targetNodeId}`)
             connection.state = State.ACCEPTED
             if (connection.reconnectionTimer !== undefined) {

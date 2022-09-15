@@ -9,7 +9,7 @@ describe('ProxyConnectionRequest', () => {
     const streamPartition = 0
     const senderId = 'node'
     const direction = ProxyDirection.PUBLISH
-    const identity = 'mockIdentity'
+    const userId = 'mockUser'
 
     it('should create the latest version', () => {
         const msg = new ProxyConnectionRequest({
@@ -18,7 +18,7 @@ describe('ProxyConnectionRequest', () => {
             streamPartition,
             direction,
             senderId,
-            identity
+            userId
         })
         assert(msg instanceof ProxyConnectionRequest)
         assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
@@ -27,6 +27,7 @@ describe('ProxyConnectionRequest', () => {
         assert.strictEqual(msg.streamPartition, streamPartition)
         assert.strictEqual(msg.direction, direction)
         assert.strictEqual(msg.senderId, senderId)
+        assert.strictEqual(msg.userId, userId)
     })
 
     it('throws on null streamId', () => {
@@ -36,7 +37,7 @@ describe('ProxyConnectionRequest', () => {
             streamPartition,
             senderId,
             direction,
-            identity
+            userId
         }), ValidationError)
     })
 
@@ -47,7 +48,7 @@ describe('ProxyConnectionRequest', () => {
             streamPartition: null as any,
             senderId,
             direction,
-            identity
+            userId
         }), ValidationError)
     })
 
@@ -58,7 +59,7 @@ describe('ProxyConnectionRequest', () => {
             streamPartition,
             senderId: null as any,
             direction,
-            identity
+            userId
         }), ValidationError)
     })
 })

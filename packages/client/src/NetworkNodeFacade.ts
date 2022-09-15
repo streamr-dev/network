@@ -38,7 +38,7 @@ export interface NetworkNodeStub {
     /** @internal */
     stop: () => Promise<unknown>
     /** @internal */
-    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, identity: string) => Promise<void>
+    openProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection, userId: string) => Promise<void>
     /** @internal */
     closeProxyConnection: (streamPartId: StreamPartID, nodeId: string, direction: ProxyDirection) => Promise<void>
 }
