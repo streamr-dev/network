@@ -1,6 +1,5 @@
 /* eslint-disable padding-line-between-statements */
 import { join } from 'path'
-import EventEmitter from 'eventemitter3'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey, GroupKeyError } from './GroupKey'
@@ -8,16 +7,14 @@ import { Persistence } from '../utils/persistence/Persistence'
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
 import { GroupKeyId } from './GroupKey'
+import { StreamrClientEventEmitter } from '../events'
 
 interface GroupKeyStoreOptions {
     context: Context
     clientId: string
     streamId: StreamID
     groupKeys: [GroupKeyId, GroupKey][]
-}
-
-export interface Events {
-    store: (groupKey: GroupKey) => void
+    eventEmitter: StreamrClientEventEmitter
 }
 
 export class GroupKeyStore implements Context {
@@ -26,9 +23,9 @@ export class GroupKeyStore implements Context {
     private persistence: Persistence<GroupKeyId, string>
     private currentGroupKey: GroupKey | undefined // current key id if any
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
-    public eventEmitter: EventEmitter<Events> = new EventEmitter()
+    private eventEmitter: StreamrClientEventEmitter
 
-    constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
+    constructor({ context, clientId, streamId, groupKeys, eventEmitter }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         const initialData = groupKeys.reduce((o, [, groupKey]) => Object.assign(o, {
@@ -43,6 +40,7 @@ export class GroupKeyStore implements Context {
             initialData,
             migrationsPath: join(__dirname, 'migrations')
         })
+        this.eventEmitter = eventEmitter
         groupKeys.forEach(([groupKeyId, groupKey]) => {
             if (groupKeyId !== groupKey.id) {
                 throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
@@ -67,7 +65,7 @@ export class GroupKeyStore implements Context {
         this.debug('Store key %s', groupKey.id)
         const success = await this.persistence.set(groupKey.id, groupKey.hex)
         if (success) {
-            this.eventEmitter.emit('store', groupKey)
+            this.eventEmitter.emit('addGroupKey', groupKey)
         }
         return groupKey
     }

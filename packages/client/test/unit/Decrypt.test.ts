@@ -3,6 +3,7 @@ import 'reflect-metadata'
 import { StreamPartIDUtils } from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
+import { StreamrClientEventEmitter } from '../../src/events'
 import { Decrypt } from '../../src/subscribe/Decrypt'
 import { Signal } from '../../src/utils/Signal'
 import { createMockMessage, mockContext } from '../test-utils/utils'
@@ -29,6 +30,7 @@ describe('Decrypt', () => {
             {
                 onDestroy: Signal.create()
             } as any,
+            new StreamrClientEventEmitter(),
             {
                 encryptionKeyRequest: 50
             } as any

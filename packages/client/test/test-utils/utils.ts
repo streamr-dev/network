@@ -25,6 +25,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -143,7 +144,8 @@ export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddres
         context: mockContext(), 
         clientId: userAddress.toLowerCase(), 
         streamId, 
-        groupKeys: []
+        groupKeys: [],
+        eventEmitter: new StreamrClientEventEmitter()
     })
 }
 

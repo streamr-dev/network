@@ -13,6 +13,7 @@ import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
 import { waitForEvent } from '@streamr/utils'
+import { StreamrClientEventEmitter } from '../events'
 
 export class Decrypt<T> implements Context {
     readonly id
@@ -25,6 +26,7 @@ export class Decrypt<T> implements Context {
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
         destroySignal: DestroySignal,
+        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
@@ -63,8 +65,8 @@ export class Decrypt<T> implements Context {
                 try {
                     // TODO remove "as any" type casing in NET-889
                     const groupKeys = await waitForEvent(
-                        store.eventEmitter as any,
-                        'store',
+                        this.eventEmitter as any,
+                        'addGroupKey',
                         this.timeoutsConfig.encryptionKeyRequest,
                         (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
                         this.abortController)

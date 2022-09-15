@@ -9,6 +9,7 @@ import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { StreamrClientEventEmitter } from '../events'
 
 export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
 
@@ -41,7 +42,8 @@ export class GroupKeyStoreFactory implements Context {
         context: Context,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
-        @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig
+        @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig,
+        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -66,7 +68,8 @@ export class GroupKeyStoreFactory implements Context {
             context: this,
             clientId,
             streamId,
-            groupKeys: initialKeys
+            groupKeys: initialKeys,
+            eventEmitter: this.eventEmitter
         })
         if (initialKeys.length > 0) {
             // TODO this hack stores the initial keys (could improve this in NET-878)
