@@ -170,9 +170,9 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
     }
 
-    private async setKeyValue(key: string, value: string): Promise<boolean> {
+    private async setKeyValue(key: string, value: string): Promise<void> {
         // set, but without init so init can insert initialData
-        const result = await this.store!.run(
+        await this.store!.run(
             `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`, 
             {
                 $id: key,
@@ -180,11 +180,9 @@ export default class ServerPersistence implements Persistence<string, string>, C
                 $streamId: this.streamId,
             }
         )
-
-        return !!result?.changes
     }
 
-    async set(key: string, value: string): Promise<boolean> {
+    async set(key: string, value: string): Promise<void> {
         await this.init()
         return this.setKeyValue(key, value)
     }

@@ -20,10 +20,8 @@ export default class BrowserPersistence implements Persistence<string, string> {
         return get(key, this.store)
     }
 
-    async set(key: string, value: string): Promise<boolean> {
-        const had = await this.has(key)
+    async set(key: string, value: string): Promise<void> {
         await set(key, value, this.store)
-        return had
     }
 
     private async clear(): Promise<void> {
