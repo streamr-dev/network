@@ -15,8 +15,7 @@ export function waitForEvent(emitter: EventEmitter, event: string | symbol, time
     return withTimeout(
         once(emitter, event, { signal: abortController.signal }),
         timeout,
-        'waitForEvent'
-    ).finally(() => {
-        abortController.abort()
-    })
+        'waitForEvent',
+        abortController
+    )
 }
