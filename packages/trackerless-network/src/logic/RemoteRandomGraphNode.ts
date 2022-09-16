@@ -57,7 +57,7 @@ export class RemoteRandomGraphNode {
                 accepted: response.accepted,
                 interleaveTarget: response.interleaveTarget
             }
-        } catch (err) {
+        } catch (err: any) {
             logger.debug(err)
             return {
                 accepted: false
@@ -73,8 +73,8 @@ export class RemoteRandomGraphNode {
         }
         try {
             this.client.sendData(dataMessage, options)
-        } catch (err) {
-            logger.debug(err)
+        } catch (err: any) {
+            logger.warn(err)
         }
     }
 
@@ -122,7 +122,7 @@ export class RemoteRandomGraphNode {
         try {
             const response = await this.client.neighborUpdate(request, options)
             return response.neighborDescriptors!
-        } catch (err) {
+        } catch (err: any) {
             logger.debug(err)
             return []
         }

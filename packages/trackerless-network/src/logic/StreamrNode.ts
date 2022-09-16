@@ -59,15 +59,22 @@ export class StreamrNode extends EventEmitter {
     }
 
     subscribeToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor): void {
-        this.joinStream(streamPartID, entryPointDescriptor)
-            .then(() => this.streams.get(streamPartID)?.layer2.on(
+        if (this.streams.has(streamPartID)) {
+            this.streams.get(streamPartID)!.layer2.on(
                 RandomGraphEvent.MESSAGE,
                 (message: DataMessage) =>
                     this.emit(Event.NEW_MESSAGE, message, message.senderId))
-            )
-            .catch((err) => {
-                logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
-            })
+        } else {
+            this.joinStream(streamPartID, entryPointDescriptor)
+                .then(() => this.streams.get(streamPartID)?.layer2.on(
+                    RandomGraphEvent.MESSAGE,
+                    (message: DataMessage) =>
+                        this.emit(Event.NEW_MESSAGE, message, message.senderId))
+                )
+                .catch((err) => {
+                    logger.warn(`Failed to subscribe to stream ${streamPartID} with error: ${err}`)
+                })
+        }
     }
 
     publishToStream(streamPartID: string, entryPointDescriptor: PeerDescriptor, msg: DataMessage): void {

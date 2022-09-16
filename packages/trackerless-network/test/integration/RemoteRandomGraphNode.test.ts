@@ -107,7 +107,7 @@ describe('RemoteRandomGraphNode', () => {
     it('sendData', async  () => {
         const messageRef: MessageRef = {
             sequenceNumber: 0,
-            timestamp: 0
+            timestamp: BigInt(0)
         }
         const dataMessage: DataMessage = {
             content: JSON.stringify({ hello: 'WORLD' }),

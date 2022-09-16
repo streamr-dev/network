@@ -64,7 +64,7 @@ describe('Propagation', () => {
         )
         const messageRef: MessageRef = {
             sequenceNumber: 1,
-            timestamp: 123123
+            timestamp: BigInt(123123)
         }
         const message: DataMessage = {
             content: JSON.stringify({ hello: "WORLD" }),
