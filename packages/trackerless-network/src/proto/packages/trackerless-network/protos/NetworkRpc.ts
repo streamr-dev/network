@@ -10,9 +10,9 @@ import { PeerDescriptor } from "../../dht/protos/DhtRpc";
  */
 export interface MessageRef {
     /**
-     * @generated from protobuf field: int32 timestamp = 1;
+     * @generated from protobuf field: int64 timestamp = 1;
      */
-    timestamp: number;
+    timestamp: bigint;
     /**
      * @generated from protobuf field: int32 sequenceNumber = 2;
      */
@@ -170,7 +170,7 @@ export enum Layer2Type {
 class MessageRef$Type extends MessageType<MessageRef> {
     constructor() {
         super("MessageRef", [
-            { no: 1, name: "timestamp", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 1, name: "timestamp", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 2, name: "sequenceNumber", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }

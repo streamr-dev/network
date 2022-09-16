@@ -14,7 +14,7 @@ service NetworkRpc {
 }
 
 message MessageRef {
-  int32 timestamp = 1;
+  int64 timestamp = 1;
   int32 sequenceNumber = 2;
 }
 

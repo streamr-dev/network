@@ -26,7 +26,7 @@ describe('StreamrNode', () => {
     const STREAM_ID = 'test'
     const messageRef: MessageRef = {
         sequenceNumber: 1,
-        timestamp: 123123
+        timestamp: BigInt(123123)
     }
     const msg: DataMessage = {
         content: JSON.stringify({ hello: "WORLD" }),

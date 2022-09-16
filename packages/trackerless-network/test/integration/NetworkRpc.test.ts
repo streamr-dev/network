@@ -47,7 +47,7 @@ describe('Network RPC', () => {
     it('sends Data', async () => {
         const messageRef: MessageRef = {
             sequenceNumber: 0,
-            timestamp: 0
+            timestamp: BigInt(0)
         }
         const data: DataMessage = {
             content: 'data',

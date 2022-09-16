@@ -244,9 +244,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
         const previousNumberPair = previousMessageRef ?
-            new NumberPair(previousMessageRef!.timestamp, previousMessageRef!.sequenceNumber)
+            new NumberPair(Number(previousMessageRef!.timestamp), previousMessageRef!.sequenceNumber)
             : null
-        const currentNumberPair = new NumberPair(currentMessageRef.timestamp, currentMessageRef.sequenceNumber)
+        const currentNumberPair = new NumberPair(Number(currentMessageRef.timestamp), currentMessageRef.sequenceNumber)
         return this.duplicateDetector.markAndCheck(previousNumberPair, currentNumberPair)
     }
 
