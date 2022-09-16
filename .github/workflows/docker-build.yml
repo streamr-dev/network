@@ -33,7 +33,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.0.2
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
