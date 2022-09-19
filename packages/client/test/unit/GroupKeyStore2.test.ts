@@ -1,19 +1,10 @@
 import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid, mockContext } from '../test-utils/utils'
+import { getGroupKeyStore, uid } from '../test-utils/utils'
 import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
-
-const createStore = (clientId: string, streamId: StreamID): GroupKeyStore => {
-    return new GroupKeyStore({
-        context: mockContext(),
-        clientId,
-        streamId,
-        groupKeys: []
-    })
-}
 
 describe('GroupKeyStore', () => {
     let clientId: string
@@ -26,7 +17,7 @@ describe('GroupKeyStore', () => {
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = toStreamID(uid('stream'))
-        store = createStore(clientId, streamId)
+        store = getGroupKeyStore(streamId, clientId)
         leakDetector = new LeakDetector(store)
     })
 
@@ -53,7 +44,7 @@ describe('GroupKeyStore', () => {
     })
 
     it('can add with multiple instances in parallel', async () => {
-        const store2 = createStore(clientId, streamId)
+        const store2 = getGroupKeyStore(streamId, clientId)
         // @ts-expect-error private
         addAfter(() => store2.persistence.destroy())
 
@@ -87,7 +78,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other streamIds', async () => {
         const streamId2 = toStreamID(uid('stream'))
-        const store2 = createStore(clientId, streamId2)
+        const store2 = getGroupKeyStore(streamId2, clientId)
 
         // @ts-expect-error private
         addAfter(() => store2.persistence.destroy())
@@ -101,7 +92,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = createStore(clientId2, streamId)
+        const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
         addAfter(() => store2.persistence.destroy())
@@ -115,7 +106,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = createStore(clientId2, streamId)
+        const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
         addAfter(() => store2.persistence.destroy())
@@ -129,12 +120,12 @@ describe('GroupKeyStore', () => {
 
     it('can read previously persisted data', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = createStore(clientId2, streamId)
+        const store2 = getGroupKeyStore(streamId, clientId2)
         const groupKey = GroupKey.generate()
 
         await store2.add(groupKey)
 
-        const store3 = createStore(clientId2, streamId)
+        const store3 = getGroupKeyStore(streamId, clientId2)
         expect(await store3.get(groupKey.id)).toEqual(groupKey)
     })
 })

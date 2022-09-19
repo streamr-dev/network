@@ -51,8 +51,7 @@ export class GroupKeyStoreFactory implements Context {
         const store = new GroupKeyStore({
             context: this,
             clientId,
-            streamId,
-            groupKeys: [] // TODO remove
+            streamId
         })
         this.cleanupFns.push(async () => {
             try {
