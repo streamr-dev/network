@@ -2,7 +2,7 @@
 
 import { SimulationNode } from './SimulationNode'
 import fs from 'fs'
-import { PeerID } from '../helpers/PeerID'
+import { PeerID } from '../../../src/helpers/PeerID'
 
 export class KademliaSimulation {
     

@@ -7,12 +7,12 @@ import { IConnection } from "./IConnection"
 
 const logger = new Logger(module)
 
-interface HandshakerEvent {
-    HANDSHAKE_COMPLETED: (peerDescriptor: PeerDescriptor) => void
-    HANDSHAKE_FAILED: (peerId: PeerID) => void
+interface HandshakerEvents {
+    handshakeCompleted: (peerDescriptor: PeerDescriptor) => void
+    handshakeFailed: (peerId: PeerID) => void
 }
 
-export class Handshaker extends EventEmitter<HandshakerEvent> {
+export class Handshaker extends EventEmitter<HandshakerEvents> {
 
     private static readonly HANDSHAKER_SERVICE_ID = 'system/handshaker'
 
@@ -20,7 +20,7 @@ export class Handshaker extends EventEmitter<HandshakerEvent> {
         private protocolVersion: string, 
         private connection: IConnection) {
         super()
-        this.connection.on('DATA', this.onData)
+        this.connection.on('data', this.onData)
     }
 
     public run(): void {
@@ -35,7 +35,7 @@ export class Handshaker extends EventEmitter<HandshakerEvent> {
             logger.trace('handshake message received')
             const handshake = HandshakeMessage.fromBinary(message.body)
             //this.connection.off(this.onData)
-            this.emit('HANDSHAKE_COMPLETED', handshake.peerDescriptor!)
+            this.emit('handshakeCompleted', handshake.peerDescriptor!)
         }
     }
 

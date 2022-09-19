@@ -1,10 +1,10 @@
 import { UUID } from "../helpers/UUID"
 
-export interface ConnectionEvent {
-    DATA: (bytes: Uint8Array) => void
-    CONNECTED: () => void
-    DISCONNECTED: (code?: number, reason?: string) => void 
-    ERROR: (name: string) => void
+export interface ConnectionEvents {
+    data: (bytes: Uint8Array) => void
+    connected: () => void
+    disconnected: (code?: number, reason?: string) => void 
+    error: (name: string) => void
 }
 
 export enum ConnectionType {
@@ -24,20 +24,20 @@ export class ConnectionID extends UUID {
 
 export interface IConnection {
     
-    on(event: 'DATA', listener: (bytes: Uint8Array) => void): this
-    on(event: 'ERROR', listener: (name: string) => void): this
-    on(event: 'CONNECTED', listener: () => void): this
-    on(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): this
+    on(event: 'data', listener: (bytes: Uint8Array) => void): this
+    on(event: 'error', listener: (name: string) => void): this
+    on(event: 'connected', listener: () => void): this
+    on(event: 'disconnected', listener: (code?: number, reason?: string) => void): this
     
-    once(event: 'DATA', listener: (bytes: Uint8Array) => void): this
-    once(event: 'ERROR', listener: (name: string) => void): this
-    once(event: 'CONNECTED', listener: () => void): this
-    once(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): this
+    once(event: 'data', listener: (bytes: Uint8Array) => void): this
+    once(event: 'error', listener: (name: string) => void): this
+    once(event: 'connected', listener: () => void): this
+    once(event: 'disconnected', listener: (code?: number, reason?: string) => void): this
 
-    off(event: 'DATA', listener: (bytes: Uint8Array) => void): void
-    off(event: 'ERROR', listener: (name: string) => void): void
-    off(event: 'CONNECTED', listener: () => void): void
-    off(event: 'DISCONNECTED', listener: (code?: number, reason?: string) => void): void
+    off(event: 'data', listener: (bytes: Uint8Array) => void): void
+    off(event: 'error', listener: (name: string) => void): void
+    off(event: 'connected', listener: () => void): void
+    off(event: 'disconnected', listener: (code?: number, reason?: string) => void): void
     
     send(data: Uint8Array): void
     close(): void

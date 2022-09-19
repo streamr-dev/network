@@ -1,6 +1,6 @@
 import { IConnection } from './IConnection'
 
-export interface ConnectionSourceEvent {
-    CONNECTED: ((connection: IConnection) => void) 
+export interface ConnectionSourceEvents {
+    connected: ((connection: IConnection) => void) 
 }
 

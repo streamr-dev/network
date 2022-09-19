@@ -23,8 +23,8 @@ export enum StatusCode {
     SERVER_ERROR = 'SERVER_ERROR'
 }
 
-interface RpcCommunicatorEvent {
-    OUTGOING_MESSAGE: (message: Uint8Array, callContext?: ProtoCallContext) => void
+interface RpcCommunicatorEvents {
+    outgoingMessage: (message: Uint8Array, callContext?: ProtoCallContext) => void
 }
 
 export interface RpcCommunicatorConfig {
@@ -82,7 +82,7 @@ class OngoingRequest {
 
 const logger = new Logger(module)
 
-export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvent> implements IRpcIo {
+export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvents> implements IRpcIo {
     private stopped = false
     private readonly rpcClientTransport: ClientTransport
     private readonly rpcServerRegistry: ServerRegistry
@@ -97,14 +97,14 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvent> implemen
         this.rpcServerRegistry = new ServerRegistry()
         this.ongoingRequests = new Map()
 
-        this.rpcClientTransport.on('RPC_REQUEST', (
+        this.rpcClientTransport.on('rpcRequest', (
             rpcMessage: RpcMessage,
             options: ProtoRpcOptions,
             deferredPromises: ResultParts | undefined
         ) => {
             this.onOutgoingMessage(rpcMessage, deferredPromises, options as ProtoCallContext)
         })
-        this.rpcServerRegistry.on('RPC_RESPONSE', (rpcMessage: RpcMessage) => {
+        this.rpcServerRegistry.on('rpcResponse', (rpcMessage: RpcMessage) => {
             this.onOutgoingMessage(rpcMessage)
         })
     }
@@ -160,7 +160,7 @@ export class RpcCommunicator extends EventEmitter<RpcCommunicatorEvent> implemen
 
         logger.trace(`onOutGoingMessage, messageId: ${rpcMessage.requestId}`)
 
-        this.emit('OUTGOING_MESSAGE', msg, callContext)
+        this.emit('outgoingMessage', msg, callContext)
     }
 
     private async onIncomingMessage(rpcMessage: RpcMessage, callContext?: ProtoCallContext): Promise<void> {

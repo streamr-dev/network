@@ -3,7 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { server as WsServer } from 'websocket'
 import { ServerWebSocket } from './ServerWebSocket'
 import {
-    ConnectionSourceEvent
+    ConnectionSourceEvents
 } from '../IConnectionSource'
 
 import { Logger } from '@streamr/utils'
@@ -18,7 +18,7 @@ const logger = new Logger(module)
 
 declare class NodeJsWsServer extends WsServer { }
 
-export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
+export class WebSocketServer extends EventEmitter<ConnectionSourceEvents> {
 
     private httpServer?: http.Server
     private wsServer?: WsServer
@@ -49,7 +49,7 @@ export class WebSocketServer extends EventEmitter<ConnectionSourceEvent> {
 
                 logger.trace((new Date()) + ' IConnection accepted.')
 
-                this.emit('CONNECTED', new ServerWebSocket(connection))
+                this.emit('connected', new ServerWebSocket(connection))
             })
 
             this.httpServer.once('error', (err: Error) => {

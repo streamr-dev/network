@@ -31,16 +31,16 @@ export class SortedContactList<Contact extends IContact> {
         if (this.ownId.equals(contact.peerId)) {
             return
         }
-        if (!this.contactsById.has(contact.peerId.toMapKey())) {
+        if (!this.contactsById.has(contact.peerId.toKey())) {
             if (this.contactIds.length < this.maxSize) {
-                this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
+                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
-                this.contactsById.delete(removed!.toMapKey())
-                this.contactsById.set(contact.peerId.toMapKey(), new ContactState(contact))
+                this.contactsById.delete(removed!.toKey())
+                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
             }
@@ -52,22 +52,22 @@ export class SortedContactList<Contact extends IContact> {
     }
 
     public setContacted(contactId: PeerID): void {
-        if (this.contactsById.has(contactId.toMapKey())) {
-            this.contactsById.get(contactId.toMapKey())!.contacted = true
+        if (this.contactsById.has(contactId.toKey())) {
+            this.contactsById.get(contactId.toKey())!.contacted = true
         }
     }
 
     public setActive(contactId: PeerID): void {
-        if (this.contactsById.has(contactId.toMapKey())) {
-            this.contactsById.get(contactId.toMapKey())!.active = true
+        if (this.contactsById.has(contactId.toKey())) {
+            this.contactsById.get(contactId.toKey())!.active = true
         }
     }
 
     public getUncontactedContacts(num: number): Contact[] {
         const ret: Contact[] = []
         for (const contactId of this.contactIds) {
-            if (this.contactsById.has(contactId.toMapKey()) && !this.contactsById.get(contactId.toMapKey())!.contacted) {
-                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
+            if (this.contactsById.has(contactId.toKey()) && !this.contactsById.get(contactId.toKey())!.contacted) {
+                ret.push(this.contactsById.get(contactId.toKey())!.contact)
                 if (ret.length >= num) {
                     return ret
                 }
@@ -80,7 +80,7 @@ export class SortedContactList<Contact extends IContact> {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             if (this.isActive(contactId)) {
-                ret.push(this.contactsById.get(contactId.toMapKey())!.contact)
+                ret.push(this.contactsById.get(contactId.toKey())!.contact)
             }
         })
         return ret
@@ -93,7 +93,7 @@ export class SortedContactList<Contact extends IContact> {
     }
 
     public getStringIds(): string[] {
-        return this.contactIds.map((peerId) => peerId.toMapKey())
+        return this.contactIds.map((peerId) => peerId.toKey())
     }
 
     public getSize(): number {
@@ -101,25 +101,25 @@ export class SortedContactList<Contact extends IContact> {
     }
 
     public getContact(id: PeerID): ContactState<Contact> {
-        return this.contactsById.get(id.toMapKey())!
+        return this.contactsById.get(id.toKey())!
     }
 
     public removeContact(id: PeerID): boolean {
-        if (this.contactsById.has(id.toMapKey())) {
+        if (this.contactsById.has(id.toKey())) {
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
-            this.contactsById.delete(id.toMapKey())
+            this.contactsById.delete(id.toKey())
             return true
         }
         return false
     }
 
     public hasContact(id: PeerID): boolean {
-        return this.contactsById.has(id.toMapKey())
+        return this.contactsById.has(id.toKey())
     }
 
     public isActive(id: PeerID): boolean {
-        return this.contactsById.has(id.toMapKey()) ? this.contactsById.get(id.toMapKey())!.active : false
+        return this.contactsById.has(id.toKey()) ? this.contactsById.get(id.toKey())!.active : false
     }
 
     public getAllContacts(): Contact[] {

@@ -64,7 +64,7 @@ describe('Route Message With Mock Connections', () => {
             body: RpcMessage.toBinary(rpcWrapper)
         }
         await Promise.all([
-            waitForEvent3<DhtNodeEvents>(destinationNode, 'DATA'),
+            waitForEvent3<DhtNodeEvents>(destinationNode, 'data'),
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
@@ -98,7 +98,7 @@ describe('Route Message With Mock Connections', () => {
         await destinationNode.joinDht(entryPointDescriptor)
 
         let receivedMessages = 0
-        destinationNode.on('DATA', () => {
+        destinationNode.on('data', () => {
             receivedMessages += 1
         })
         const rpcWrapper = createWrappedClosestPeersRequest(sourceNode.getPeerDescriptor(), destinationNode.getPeerDescriptor())
@@ -126,9 +126,9 @@ describe('Route Message With Mock Connections', () => {
         await Promise.all(
             routers.map((node) => {
                 node.joinDht(entryPointDescriptor)
-                numsOfReceivedMessages[node.getNodeId().toMapKey()] = 0
-                node.on('DATA', () => {
-                    numsOfReceivedMessages[node.getNodeId().toMapKey()] = numsOfReceivedMessages[node.getNodeId().toMapKey()] + 1
+                numsOfReceivedMessages[node.getNodeId().toKey()] = 0
+                node.on('data', () => {
+                    numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
                 })
             })
         )
@@ -153,7 +153,7 @@ describe('Route Message With Mock Connections', () => {
                 }))
             )
         )
-        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toMapKey()] >= routers.length - 1, 30000)
+        await waitForCondition(() => numsOfReceivedMessages[PeerID.fromString('1').toKey()] >= routers.length - 1, 30000)
         await Promise.allSettled(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 await waitForCondition(() => {

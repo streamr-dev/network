@@ -3,16 +3,17 @@ import { RpcMessage } from '../../src/proto/ProtoRpc'
 import { RpcCommunicator } from '../../src/RpcCommunicator'
 import { DhtRpcServiceClient } from '../proto/TestProtos.client'
 import { getMockPeers } from '../utils'
-import { ProtoCallContext, toProtoRpcClient } from '../../src'
+import { ProtoCallContext } from '../../src/ProtoCallContext'
+import { toProtoRpcClient } from '../../src/toProtoRpcClient'
 
 describe('DhtClientRpcTransport', () => {
     it('Happy Path getClosestNeighbors', async () => {
         const rpcCommunicator = new RpcCommunicator()
-        rpcCommunicator.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
+        rpcCommunicator.on('outgoingMessage', (message: Uint8Array, _ucallContext?: ProtoCallContext) => {
             const request = RpcMessage.fromBinary(message)
             const responseBody: ClosestPeersResponse = {
                 peers: getMockPeers(),
-                nonce: 'TO BE REMOVED'
+                requestId: 'TO BE REMOVED'
             }
             
             const response: RpcMessage = {
@@ -32,7 +33,7 @@ describe('DhtClientRpcTransport', () => {
             peerId: new Uint8Array([56, 59, 77]),
             type: 0
         }
-        const res = await client.getClosestPeers({ peerDescriptor, nonce: '1' })
+        const res = await client.getClosestPeers({ peerDescriptor, requestId: '1' })
         expect(res.peers.length).toEqual(4)
         expect(res.peers[0]).toEqual(getMockPeers()[0])
         expect(res.peers[1]).toEqual(getMockPeers()[1])

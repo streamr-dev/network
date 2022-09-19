@@ -70,7 +70,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
     public async start(): Promise<void> {
         if (this.webSocketServer) {
-            this.webSocketServer.on('CONNECTED', (connection: IConnection) => {
+            this.webSocketServer.on('connected', (connection: IConnection) => {
                 this.connectivityChecker.listenToIncomingConnectivityRequests(connection as unknown as ServerWebSocket)
             })
             await this.webSocketServer.start(this.webSocketPort!, this.webSocketHost)
@@ -141,7 +141,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         })
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion, ConnectionType.WEBSOCKET_SERVER)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey(), managedConnection)
+        this.ongoingConnectRequests.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), managedConnection)
         return managedConnection
     }
 
@@ -150,9 +150,9 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
 
         logger.trace('serversocket handshake completed')
         const peerId = PeerID.fromValue(peerDescriptor.peerId)
-        if (this.ongoingConnectRequests.has(peerId.toMapKey())) {
-            this.ongoingConnectRequests.get(peerId.toMapKey())?.attachImplementation(serverWebSocket, peerDescriptor)
-            this.ongoingConnectRequests.delete(peerId.toMapKey())
+        if (this.ongoingConnectRequests.has(peerId.toKey())) {
+            this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)
+            this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
             this.emit('CONNECTED', managedConnection)
         }
@@ -161,11 +161,11 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         this.ownPeerDescriptor = ownPeerDescriptor
 
         if (this.webSocketServer) {
-            this.webSocketServer.on('CONNECTED', (connection: IConnection) => {
+            this.webSocketServer.on('connected', (connection: IConnection) => {
                 const managedConnection = new ManagedConnection(ownPeerDescriptor, this.protocolVersion,
                     ConnectionType.WEBSOCKET_SERVER, undefined, connection)
                 logger.trace('connected, objectId: ' + managedConnection.objectId)
-                managedConnection.once('HANDSHAKE_COMPLETED', (peerDescriptor: PeerDescriptor) => {
+                managedConnection.once('handshakeCompleted', (peerDescriptor: PeerDescriptor) => {
                     logger.trace('handshake completed objectId: ' + managedConnection.objectId)
                     this.onServerSocketHandshakeCompleted(peerDescriptor, connection, managedConnection)
                 })

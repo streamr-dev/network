@@ -36,9 +36,6 @@ describe('ConnectionManager', () => {
         await connectionManager.stop()
     })
 
-    // The await expect(doSomething()).rejects.toThrow('someError') method does not work
-    // in browsers, use the old non-async way
-
     it('Throws an async exception if fails to connect to entrypoints', async () => {
 
         const connectionManager = new ConnectionManager({
@@ -117,7 +114,7 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('DATA', async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('data', async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
@@ -163,7 +160,7 @@ describe('ConnectionManager', () => {
         }
 
         const promise = new Promise<void>((resolve, _reject) => {
-            connectionManager2.on('DATA', async (message: Message, _peerDescriptor: PeerDescriptor) => {
+            connectionManager2.on('data', async (message: Message, _peerDescriptor: PeerDescriptor) => {
                 expect(message.messageType).toBe(MessageType.RPC)
                 resolve()
             })
@@ -173,7 +170,7 @@ describe('ConnectionManager', () => {
         await promise
         await Promise.all([
             // @ts-expect-error private
-            waitForEvent3(connectionManager2.getConnection(peerDescriptor!).implementation as ClientWebSocket, 'DISCONNECTED'),
+            waitForEvent3(connectionManager2.getConnection(peerDescriptor!).implementation as ClientWebSocket, 'disconnected'),
             connectionManager1.disconnect(peerDescriptor2!, undefined, 100)
         ])
         await connectionManager1.stop()
