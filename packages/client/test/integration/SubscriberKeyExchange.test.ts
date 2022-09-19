@@ -13,8 +13,7 @@ import { fastWallet, waitForCondition } from 'streamr-test-utils'
 import { 
     createMockMessage,
     createRelativeTestStreamId,
-    getGroupKeyStore,
-    startPublisherKeyExchangeSubscription
+    getGroupKeyStore
 } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
@@ -101,7 +100,6 @@ describe('SubscriberKeyExchange', () => {
                     }
                 }
             })
-            await startPublisherKeyExchangeSubscription(publisher, streamPartId)
             await subscriber.subscribe(streamPartId, () => {})
 
             await triggerGroupKeyRequest(groupKey, publisher)

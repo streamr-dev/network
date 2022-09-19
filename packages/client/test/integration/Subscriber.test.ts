@@ -3,7 +3,7 @@ import { Wallet } from '@ethersproject/wallet'
 import { Stream } from '../../src/Stream'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import StreamrClient, { StreamPermission } from '../../src'
-import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
+import { createMockMessage } from '../test-utils/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { nextValue } from '../../src/utils/iterators'
 import { fastWallet } from 'streamr-test-utils'
@@ -70,7 +70,6 @@ describe('Subscriber', () => {
                 }
             }
         })
-        await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
 
         const sub = await subscriber.subscribe(stream.id)
 
