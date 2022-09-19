@@ -99,7 +99,7 @@ export class GroupKeyStore implements Context {
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
         if (!value) { return undefined }
-        return GroupKey.from([id, value])
+        return new GroupKey(id, value)
     }
 
     async exists(): Promise<boolean> {
