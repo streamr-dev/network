@@ -62,16 +62,15 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(onewayClient, module)
-        // eslint-disable-next-line no-underscore-dangle
-        const _proxyUser1 = await proxyClient1.getAddress()
-        // eslint-disable-next-line no-underscore-dangle
-        const _proxyUser2 = await proxyClient2.getAddress()
+
+        const proxyUser1 = await proxyClient1.getAddress()
+        const proxyUser2 = await proxyClient2.getAddress()
+
         await onewayClient.setPermissions({
             streamId: stream.id,
             assignments: [
-                // TODO revert this to use private streams when the feature is available
-                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], public: true },
-                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], public: true }
+                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser1 },
+                { permissions: [StreamPermission.PUBLISH, StreamPermission.SUBSCRIBE], user: proxyUser2 }
             ]
         })
     }, 60000)
