@@ -5,8 +5,6 @@ import { CacheAsyncFn } from '../utils/caches'
 import { inspect } from '../utils/log'
 import { Context, ContextError } from '../utils/Context'
 import { ConfigInjectionToken, CacheConfig } from '../Config'
-
-import { EncryptionConfig, GroupKeysSerialized, parseGroupKeys } from './KeyExchangeStream'
 import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
@@ -27,14 +25,12 @@ export class GroupKeyStoreFactory implements Context {
     readonly id
     readonly debug
     private cleanupFns: ((...args: any[]) => any)[] = []
-    private initialGroupKeys: Record<string, GroupKeysSerialized>
     public getStore: ((streamId: StreamID) => Promise<GroupKeyStore>)
 
     constructor(
         context: Context,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
-        @inject(ConfigInjectionToken.Encryption) encryptionConfig: EncryptionConfig
+        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -44,8 +40,6 @@ export class GroupKeyStoreFactory implements Context {
                 return streamId
             }
         })
-        // TODO the streamIds in encryptionConfig.encryptionKeys should support path-format?
-        this.initialGroupKeys = encryptionConfig.encryptionKeys
     }
 
     private async getNewStore(streamId: StreamID): Promise<GroupKeyStore> {
@@ -58,7 +52,7 @@ export class GroupKeyStoreFactory implements Context {
             context: this,
             clientId,
             streamId,
-            groupKeys: [...parseGroupKeys(this.initialGroupKeys[streamId]).entries()]
+            groupKeys: [] // TODO remove
         })
         this.cleanupFns.push(async () => {
             try {
