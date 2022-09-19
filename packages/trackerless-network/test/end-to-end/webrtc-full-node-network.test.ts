@@ -73,7 +73,7 @@ describe('Full node network with WebRTC connections', () => {
     it('happy path', async () => {
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 15000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => streamrNode.getStream(randomGraphId).layer2.getTargetNeighborStringIds().length >= 3, 15000)
+            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3, 15000)
         )])
 
         let numOfMessagesReceived = 0
