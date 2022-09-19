@@ -17,7 +17,7 @@ program
 async function run(): Promise<void> {
 
     const streamPartId = 'stream#0'
-    const port = parseInt(program.opts().wsPort, 10)
+    // const port = parseInt(program.opts().wsPort, 10)
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(program.opts().entrypointId).value,
@@ -25,7 +25,11 @@ async function run(): Promise<void> {
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
-    const layer0 = new DhtNode({ peerIdString: program.opts().id, webSocketPort: port, entryPoints: [epPeerDescriptor] })
+    const peerDescriptor: PeerDescriptor = {
+        peerId: PeerID.fromString(program.opts().id).value,
+        type: NodeType.NODEJS
+    }
+    const layer0 = new DhtNode({ peerDescriptor })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
@@ -34,7 +38,6 @@ async function run(): Promise<void> {
     const streamrNode = new StreamrNode()
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
-    await streamrNode.joinStream(streamPartId, epPeerDescriptor)
     streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)
 
     streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, (msg: DataMessage, _nodeId: string) => {
@@ -56,7 +59,7 @@ async function run(): Promise<void> {
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++
-    }, 5000)
+    }, 10000)
 }
 
 run()

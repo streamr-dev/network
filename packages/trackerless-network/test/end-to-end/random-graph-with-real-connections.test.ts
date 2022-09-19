@@ -97,18 +97,18 @@ describe('random graph with real connections', () => {
     it('can fully connected topologies ', async () => {
 
         await waitForCondition(() => {
-            return randomGraphNode1.getSelectedNeighborIds().length >= 4
-                && randomGraphNode2.getSelectedNeighborIds().length >= 4
-                && randomGraphNode3.getSelectedNeighborIds().length >= 4
-                && randomGraphNode4.getSelectedNeighborIds().length >= 4
-                && randomGraphNode5.getSelectedNeighborIds().length >= 4
+            return randomGraphNode1.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode2.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode3.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode4.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode5.getTargetNeighborStringIds().length >= 4
         })
 
-        expect(randomGraphNode1.getSelectedNeighborIds().length).toEqual(4)
-        expect(randomGraphNode2.getSelectedNeighborIds().length).toEqual(4)
-        expect(randomGraphNode3.getSelectedNeighborIds().length).toEqual(4)
-        expect(randomGraphNode4.getSelectedNeighborIds().length).toEqual(4)
-        expect(randomGraphNode5.getSelectedNeighborIds().length).toEqual(4)
+        expect(randomGraphNode1.getTargetNeighborStringIds().length).toEqual(4)
+        expect(randomGraphNode2.getTargetNeighborStringIds().length).toEqual(4)
+        expect(randomGraphNode3.getTargetNeighborStringIds().length).toEqual(4)
+        expect(randomGraphNode4.getTargetNeighborStringIds().length).toEqual(4)
+        expect(randomGraphNode5.getTargetNeighborStringIds().length).toEqual(4)
     })
 
     it('can propagate messages', async () => {
@@ -119,11 +119,11 @@ describe('random graph with real connections', () => {
         randomGraphNode5.on(Event.MESSAGE, () => numOfMessagesReceived += 1)
 
         await waitForCondition(() => {
-            return randomGraphNode1.getSelectedNeighborIds().length >= 4
-                && randomGraphNode2.getSelectedNeighborIds().length >= 4
-                && randomGraphNode3.getSelectedNeighborIds().length >= 4
-                && randomGraphNode4.getSelectedNeighborIds().length >= 4
-                && randomGraphNode5.getSelectedNeighborIds().length >= 4
+            return randomGraphNode1.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode2.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode3.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode4.getTargetNeighborStringIds().length >= 4
+                && randomGraphNode5.getTargetNeighborStringIds().length >= 4
         })
 
         const messageRef: MessageRef = {

@@ -78,17 +78,17 @@ describe('StreamrNode', () => {
     it('Joining stream', async () => {
         await node1.joinStream(STREAM_ID, peer1)
         await node2.joinStream(STREAM_ID, peer1)
-        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
-        await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
-        expect(node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length).toEqual(1)
-        expect(node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length).toEqual(1)
+        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
+        await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
+        expect(node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length).toEqual(1)
+        expect(node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length).toEqual(1)
     })
 
     it('Publishing after joining and waiting for neighbors', async () => {
         node1.subscribeToStream(STREAM_ID, peer1)
         await node2.joinStream(STREAM_ID, peer1)
-        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
-        await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
+        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
+        await waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
 
         await Promise.all([
             waitForEvent(node1, NodeEvent.NEW_MESSAGE),
@@ -108,10 +108,10 @@ describe('StreamrNode', () => {
         node2.subscribeToStream(stream2, peer1)
 
         await Promise.all([
-            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1),
-            waitForCondition(() => node1.getStream(stream2)!.layer2.getSelectedNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(stream2)!.layer2.getSelectedNeighborIds().length === 1)
+            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node1.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node2.getStream(stream2)!.layer2.getTargetNeighborStringIds().length === 1)
         ])
 
         const msg2: DataMessage = {
@@ -132,11 +132,11 @@ describe('StreamrNode', () => {
         await node1.joinStream(STREAM_ID, peer1)
         await node2.joinStream(STREAM_ID, peer1)
         await Promise.all([
-            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1),
-            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 1)
+            waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1),
+            waitForCondition(() => node2.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 1)
         ])
         node2.leaveStream(STREAM_ID)
-        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getSelectedNeighborIds().length === 0)
+        await waitForCondition(() => node1.getStream(STREAM_ID)!.layer2.getTargetNeighborStringIds().length === 0)
     })
 
     // TODO: make this work

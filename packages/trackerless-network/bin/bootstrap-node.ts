@@ -21,7 +21,7 @@ async function run(): Promise<void> {
         websocket: { ip: 'localhost', port: 23123 }
     }
 
-    const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor })
+    const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
     await layer0.start()
     await layer0.joinDht(epPeerDescriptor)
 
@@ -51,7 +51,7 @@ async function run(): Promise<void> {
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++
-    }, 5000)
+    }, 10000)
 }
 
 run()

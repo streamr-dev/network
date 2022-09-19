@@ -43,7 +43,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         this.rpcTransport = config.rpcTransport
 
         this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
-            rpcRequestTimeout: 10000
+            rpcRequestTimeout: 15000
         })
 
         this.rtcOffer = this.rtcOffer.bind(this)

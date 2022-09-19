@@ -234,7 +234,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         })
     }
 
-    getSelectedNeighborIds(): string[] {
+    getTargetNeighborStringIds(): string[] {
         return this.targetNeighbors.getStringIds()
     }
 

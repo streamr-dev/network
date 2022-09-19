@@ -62,6 +62,7 @@ export class DhtNodeConfig {
     maxNeighborListSize = 100
     numberOfNodesPerKBucket = 1
     joinNoProgressLimit = 4
+    routeMessageTimeout = 4000
 
     constructor(conf: Partial<DhtNodeConfig>) {
         // assign given non-undefined config vars over defaults
@@ -307,7 +308,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         logger.trace(`Routing message ${params.messageId}`)
         let successAcks = 0
-        const queue = new PQueue({ concurrency: this.config.parallelism, timeout: 4000 })
+        const queue = new PQueue({ concurrency: this.config.parallelism, timeout: this.config.routeMessageTimeout })
         const closest = this.bucket!.closest(params.destinationPeer.peerId, this.config.parallelism).filter((peer: DhtPeer) =>
             this.routeCheck(peer.getPeerDescriptor(), params.sourcePeer, params.previousPeer)
         )
