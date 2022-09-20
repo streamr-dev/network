@@ -96,9 +96,4 @@ export class MessageStream<
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.forEachBefore(fn) as MessageStream<T, InType, OutType>
     }
-
-    async unsubscribe(): Promise<void> {
-        this.end()
-        await this.return()
-    }
 }
