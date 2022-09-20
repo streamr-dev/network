@@ -95,5 +95,5 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-    }, 15000)
+    }, 30000)
 })

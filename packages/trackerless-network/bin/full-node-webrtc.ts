@@ -17,7 +17,6 @@ program
 async function run(): Promise<void> {
 
     const streamPartId = 'stream#0'
-    // const port = parseInt(program.opts().wsPort, 10)
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: PeerID.fromString(program.opts().entrypointId).value,

@@ -38,7 +38,7 @@ type ServiceId = string
 
 export type PeerDescriptorGeneratorCallback = (connectivityResponse: ConnectivityResponseMessage) => PeerDescriptor
 
-const DEFAULT_DISCONNECTION_TIMEOUT = 10000
+const DEFAULT_DISCONNECTION_TIMEOUT = 15000
 const logger = new Logger(module)
 
 interface ConnectionManagerEvents {
@@ -302,6 +302,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
                 this.disconnect(targetDescriptor, 'connection is no longer locked by any services')
             }
         }
+    }
+
+    public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
+        return [...this.connections.values()]
+            .filter((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor() !== undefined)
+            .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor() as PeerDescriptor)
     }
 
     // IConnectionLocker server implementation

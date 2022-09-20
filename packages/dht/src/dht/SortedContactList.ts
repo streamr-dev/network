@@ -21,7 +21,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number) {
+    constructor(private ownId: PeerID, private maxSize: number, private allowOwnPeerId = false) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
@@ -36,7 +36,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public addContact(contact: Contact): void {
-        if (this.ownId.equals(contact.peerId)) {
+        if (!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) {
             return
         }
         if (!this.contactsById.has(contact.peerId.toMapKey())) {
@@ -153,7 +153,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public getAllContacts(): Contact[] {
-        return [...this.contactsById.values()].map((contact) => contact.contact)
+        return this.contactIds.map((peerId) => this.contactsById.get(peerId.toMapKey())!.contact)
     }
 
     public getMaxSize(): number {
