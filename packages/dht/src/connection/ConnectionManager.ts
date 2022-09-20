@@ -42,7 +42,7 @@ const DEFAULT_DISCONNECTION_TIMEOUT = 10000
 const logger = new Logger(module)
 
 interface ConnectionManagerEvents {
-    NEW_CONNECTION: (connection: ManagedConnection) => void   
+    newConnection: (connection: ManagedConnection) => void
 }
 
 export interface ConnectionLocker {
@@ -57,7 +57,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private stopped = false
     private started = false
 
-    private ownPeerDescriptor: PeerDescriptor | null = null
+    private ownPeerDescriptor?: PeerDescriptor
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
 
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
@@ -73,10 +73,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
 
         logger.trace(`Creating WebSocket Connector`)
-        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer, 
-            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, 
+        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer,
+            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost,
             this.config.entryPoints)
-        
+
         logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: this.config.transportLayer,
@@ -141,7 +141,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
@@ -151,25 +151,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.connections.get(hexId)!.send(Message.toBinary(message))
         } else {
             let connection: ManagedConnection | undefined
-            if (peerDescriptor.websocket) {
-                connection = this.webSocketConnector!.connect({
-                    ownPeerDescriptor: this.ownPeerDescriptor!,
-                    targetPeerDescriptor: peerDescriptor,
-                    host: peerDescriptor.websocket.ip,
-                    port: peerDescriptor.websocket.port,
-                })
-            } else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
-                connection = this.webSocketConnector!.connect({
-                    ownPeerDescriptor: this.ownPeerDescriptor!,
-                    targetPeerDescriptor: peerDescriptor
-                })
-            } else if (this.webrtcConnector) {
+            if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
+                connection = this.webSocketConnector!.connect(peerDescriptor)
+            } else {
                 connection = this.webrtcConnector.connect(peerDescriptor)
             }
-            if (connection) {
-                this.onNewConnection(connection)
-                connection.send(Message.toBinary(message))
-            }
+            this.onNewConnection(connection)
+            connection.send(Message.toBinary(message))
         }
     }
 
@@ -177,16 +165,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         this.disconnectionTimeouts.set(hexId, setTimeout(() => {
             this.closeConnection(hexId, reason)
             this.disconnectionTimeouts.delete(hexId)
         }, timeout))
     }
 
-    public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | null {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        return this.connections.get(hexId) || null
+    public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
+        return this.connections.get(hexId)
     }
 
     public getPeerDescriptor(): PeerDescriptor {
@@ -194,7 +182,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         return this.connections.has(hexId)
     }
 
@@ -226,7 +214,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             const message = Message.fromBinary(data)
             logger.trace('Received message of type ' + message.messageType)
             if (message.messageType === MessageType.RPC) {
-                this.emit('DATA', message, peerDescriptor)
+                this.emit('data', message, peerDescriptor)
             } else {
                 logger.trace('Filtered out message of type ' + message.messageType)
             }
@@ -240,10 +228,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
-        connection.on('MANAGED_DATA', this.onData) 
-        this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toMapKey(), connection)
-        
-        this.emit('NEW_CONNECTION', connection)
+        connection.on('managedData', this.onData)
+        this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey(), connection)
+
+        this.emit('newConnection', connection)
     }
 
     private closeConnection(id: PeerIDKey, reason?: string): void {

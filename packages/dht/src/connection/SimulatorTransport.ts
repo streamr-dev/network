@@ -20,6 +20,6 @@ export class SimulatorTransport extends EventEmitter<TransportEvents> implements
     }
 
     handleIncomingMessage(peerDescriptor: PeerDescriptor, msg: Message): void {
-        this.emit('DATA', msg, peerDescriptor)
+        this.emit('data', msg, peerDescriptor)
     }
 }

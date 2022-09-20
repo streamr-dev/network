@@ -1,11 +1,12 @@
 import { ConnectivityRequestMessage, ConnectivityResponseMessage, Message, MessageType, PeerDescriptor } from '../proto/DhtRpc'
-import { IConnection } from './IConnection'
+import { ConnectionEvents, IConnection } from './IConnection'
 import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { ClientWebSocket } from './WebSocket/ClientWebSocket'
 import { v4 } from 'uuid'
 import { NatType } from './ConnectionManager'
 import { ServerWebSocket } from './WebSocket/ServerWebSocket'
+import { runAndRaceEvents3, RunAndRaceEventsReturnType } from '../helpers/waitForEvent3'
 
 const logger = new Logger(module)
 
@@ -15,15 +16,15 @@ const logger = new Logger(module)
 
 export class ConnectivityChecker {
 
-    private static CONNECTIVITY_CHECKER_SERVICE_ID = 'connectivitychecker'
-    private static CONNECTIVITY_CHECKER_TIMEOUT = 5000
+    private static readonly CONNECTIVITY_CHECKER_SERVICE_ID = 'system/connectivitychecker'
+    private static readonly CONNECTIVITY_CHECKER_TIMEOUT = 5000
     private stopped = false
 
     constructor(private webSocketPort?: number) {
     }
 
     public async sendConnectivityRequest(entryPoint: PeerDescriptor): Promise<ConnectivityResponseMessage> {
-        let outgoingConnection: IConnection | null = null
+        let outgoingConnection: IConnection
 
         try {
             outgoingConnection = await this.connectAsync({
@@ -53,11 +54,11 @@ export class ConnectivityChecker {
                         return
                     }
                     const connectivityResponseMessage = ConnectivityResponseMessage.fromBinary(message.body)
-                    outgoingConnection!.off('DATA', listener)
+                    outgoingConnection!.off('data', listener)
                     clearTimeout(timeoutId)
                     resolve(connectivityResponseMessage) //(connectivityResponseMessage)
                 }
-                outgoingConnection!.on('DATA', listener)
+                outgoingConnection!.on('data', listener)
             })
         }
         try {
@@ -76,7 +77,7 @@ export class ConnectivityChecker {
 
     public listenToIncomingConnectivityRequests(connectionToListenTo: ServerWebSocket): void {
 
-        connectionToListenTo.on('DATA', async (data: Uint8Array) => {
+        connectionToListenTo.on('data', async (data: Uint8Array) => {
             logger.trace('server received data')
             const message = Message.fromBinary(data)
 
@@ -94,8 +95,8 @@ export class ConnectivityChecker {
         if (this.stopped) {
             return
         }
-        let outgoingConnection: IConnection | null = null
-        let connectivityResponseMessage: ConnectivityResponseMessage | null = null
+        let outgoingConnection: IConnection | undefined
+        let connectivityResponseMessage: ConnectivityResponseMessage | undefined
         try {
             outgoingConnection = await this.connectAsync({
                 host: connection.getRemoteAddress(),
@@ -133,41 +134,32 @@ export class ConnectivityChecker {
         connection.send(Message.toBinary(msg))
     }
 
-    private connectAsync({ host, port, url, timeoutMs }:
+    private async connectAsync({ host, port, url, timeoutMs }:
         { host?: string, port?: number, url?: string, timeoutMs: number } = { timeoutMs: 1000 }): Promise<IConnection> {
 
-        return new Promise((resolve, reject) => {
-            const socket = new ClientWebSocket()
+        const socket = new ClientWebSocket()
+        let address = ''
+        if (url) {
+            address = url
+        } else if (host && port) {
+            address = 'ws://' + host + ':' + port
+        }
 
-            const connectHandler = () => {
-                clearTimeout(timeout)
-                socket.off('ERROR', errorHandler)
-                resolve(socket)
-            }
+        let result: RunAndRaceEventsReturnType<ConnectionEvents>
 
-            const errorHandler = () => {
-                clearTimeout(timeout)
-                reject(new Err.ConnectionFailed('Could not open WebSocket connection'))
-            }
+        try {
+            result = await runAndRaceEvents3<ConnectionEvents>([
+                () => { socket.connect(address) }],
+            socket, ['connected', 'error'],
+            timeoutMs)
+        } catch (e) {
+            throw (new Err.ConnectionFailed('WebSocket connection timed out'))
+        }
 
-            const timeoutHandler = () => {
-                socket.off('ERROR', errorHandler)
-                reject(new Err.ConnectionFailed('WebSocket connection timed out'))
-            }
+        if (result.winnerName == 'error') {
+            throw (new Err.ConnectionFailed('Could not open WebSocket connection'))
+        }
 
-            const timeout = setTimeout(timeoutHandler, timeoutMs)
-
-            socket.once('CONNECTED', connectHandler)
-            socket.once('ERROR', errorHandler)
-
-            let address = ''
-            if (url) {
-                address = url
-            } else if (host && port) {
-                address = 'ws://' + host + ':' + port
-            }
-
-            socket.connect(address)
-        })
+        return socket
     }
 }

@@ -9,17 +9,17 @@ export class Simulator {
     private latenciesEnabled = false
 
     addConnectionManager(manager: SimulatorTransport): void {
-        this.connectionManagers.set(PeerID.fromValue(manager.getPeerDescriptor().peerId).toMapKey(), manager)
+        this.connectionManagers.set(PeerID.fromValue(manager.getPeerDescriptor().peerId).toKey(), manager)
     }
 
     send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
         if (this.latenciesEnabled) {
             setTimeout(() => {
-                this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
+                this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
             }
             , Math.random() * (250 - 5) + 5)
         } else {
-            this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toMapKey())!.handleIncomingMessage(sourceDescriptor, msg)
+            this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
         }
     }
 

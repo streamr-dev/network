@@ -74,11 +74,11 @@ describe('WebRTC rpc messages', () => {
         rpcCommunicator2.registerRpcNotification(IceCandidate, 'iceCandidate', serverFunctions.iceCandidate)
         rpcCommunicator2.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', serverFunctions.requestConnection)
 
-        rpcCommunicator1.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator1.handleIncomingMessage(message)
         })
 

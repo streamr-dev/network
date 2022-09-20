@@ -2,7 +2,6 @@ import { IDhtRpcServiceClient } from '../proto/DhtRpc.client'
 import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper } from '../proto/DhtRpc'
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
-import { jsFormatPeerDescriptor } from '../helpers/common'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
 import { RouteMessageParams } from './DhtNode'
 import { Logger } from '@streamr/utils'
@@ -41,7 +40,7 @@ export class DhtPeer implements KBucketContact {
     async getClosestPeers(sourceDescriptor: PeerDescriptor): Promise<PeerDescriptor[]> {
         const request: ClosestPeersRequest = {
             peerDescriptor: sourceDescriptor,
-            nonce: v4()
+            requestId: v4()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: sourceDescriptor as PeerDescriptor,
@@ -50,7 +49,7 @@ export class DhtPeer implements KBucketContact {
 
         try {
             const peers = await this.dhtClient.getClosestPeers(request, options)
-            return peers.peers.map((peer) => jsFormatPeerDescriptor(peer))
+            return peers.peers
         } catch (err) {
             logger.debug(err)
             return []
@@ -60,7 +59,7 @@ export class DhtPeer implements KBucketContact {
 
     async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
         const request: PingRequest = {
-            nonce: v4()
+            requestId: v4()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: sourceDescriptor as PeerDescriptor,
@@ -68,7 +67,7 @@ export class DhtPeer implements KBucketContact {
         }
         try {
             const pong = await this.dhtClient.ping(request, options)
-            if (pong.nonce === request.nonce) {
+            if (pong.requestId === request.requestId) {
                 return true
             }
         } catch (err) {
@@ -83,7 +82,7 @@ export class DhtPeer implements KBucketContact {
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            nonce: params.messageId || v4()
+            requestId: params.messageId || v4()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,

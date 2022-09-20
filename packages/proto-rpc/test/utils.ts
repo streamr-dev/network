@@ -1,6 +1,5 @@
 import { ClosestPeersRequest, ClosestPeersResponse, PingRequest, PingResponse, RouteMessageAck, RouteMessageWrapper } from './proto/TestProtos'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerID } from './PeerID'
 import { NodeType, PeerDescriptor } from './proto/TestProtos'
 import { IDhtRpcService } from './proto/TestProtos.server'
 
@@ -18,19 +17,19 @@ export const MockDhtRpc: IDhtRpcWithError = {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
             peers: neighbors,
-            nonce: 'why am i still here'
+            requestId: 'why am i still here'
         }
         return response
     },
     async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
-            nonce: request.nonce
+            requestId: request.requestId
         }
         return response
     },
     async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            nonce: routed.nonce,
+            requestId: routed.requestId,
             destinationPeer: routed.sourcePeer,
             sourcePeer: routed.destinationPeer,
             error: ''
@@ -43,7 +42,7 @@ export const MockDhtRpc: IDhtRpcWithError = {
     respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         return new Promise((resolve, _reject) => {
             const response: PingResponse = {
-                nonce: request.nonce
+                requestId: request.requestId
             }
             timeoutCounter++
             const timeoutId = '' + timeoutCounter
@@ -69,7 +68,7 @@ export function clearMockTimeouts(): void {
 }
 
 export const generateId = (stringId: string): Uint8Array => {
-    return PeerID.fromString(stringId).value
+    return new TextEncoder().encode(stringId)
 }
 
 export const getMockPeers = (): PeerDescriptor[] => {

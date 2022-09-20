@@ -15,7 +15,7 @@ describe('WebSocket', () => {
 
     it('Happy path', (done) => {
             
-        webSocketServer.on('CONNECTED', (serverConnection: IConnection) => {
+        webSocketServer.on('connected', (serverConnection: IConnection) => {
             const time = Date.now()
             console.log('server side sendind msg at ' + time)
             serverConnection.send(Uint8Array.from([1, 2, 3, 4]))
@@ -23,7 +23,7 @@ describe('WebSocket', () => {
             const time2 = Date.now()
             console.log('server side setting listeners at ' + time2)
             
-            serverConnection.on('DATA', (bytes: Uint8Array) => {
+            serverConnection.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 console.log('server side receiving message at ' + time)
 
@@ -35,11 +35,11 @@ describe('WebSocket', () => {
             })
         })
         
-        clientWebSocket.on('CONNECTED', () => {
+        clientWebSocket.on('connected', () => {
             const time = Date.now()
             console.log('client side setting listeners at ' + time)
             
-            clientWebSocket.on('DATA', (bytes: Uint8Array) => {
+            clientWebSocket.on('data', (bytes: Uint8Array) => {
                 const time = Date.now()
                 console.log('client side receiving message at ' + time)
 

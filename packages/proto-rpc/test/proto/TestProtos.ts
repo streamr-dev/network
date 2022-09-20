@@ -12,9 +12,9 @@ export interface RouteMessageWrapper {
      */
     sourcePeer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string nonce = 2;
+     * @generated from protobuf field: string requestId = 2;
      */
-    nonce: string;
+    requestId: string;
     /**
      * @generated from protobuf field: PeerDescriptor destinationPeer = 3;
      */
@@ -37,9 +37,9 @@ export interface RouteMessageAck {
      */
     sourcePeer?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string nonce = 2;
+     * @generated from protobuf field: string requestId = 2;
      */
-    nonce: string;
+    requestId: string;
     /**
      * @generated from protobuf field: PeerDescriptor destinationPeer = 3;
      */
@@ -54,18 +54,18 @@ export interface RouteMessageAck {
  */
 export interface PingRequest {
     /**
-     * @generated from protobuf field: string nonce = 1;
+     * @generated from protobuf field: string requestId = 1;
      */
-    nonce: string;
+    requestId: string;
 }
 /**
  * @generated from protobuf message PingResponse
  */
 export interface PingResponse {
     /**
-     * @generated from protobuf field: string nonce = 1;
+     * @generated from protobuf field: string requestId = 1;
      */
-    nonce: string;
+    requestId: string;
 }
 /**
  * @generated from protobuf message ClosestPeersRequest
@@ -76,9 +76,9 @@ export interface ClosestPeersRequest {
      */
     peerDescriptor?: PeerDescriptor;
     /**
-     * @generated from protobuf field: string nonce = 2;
+     * @generated from protobuf field: string requestId = 2;
      */
-    nonce: string; // requestId
+    requestId: string;
 }
 /**
  * @generated from protobuf message ClosestPeersResponse
@@ -89,9 +89,9 @@ export interface ClosestPeersResponse {
      */
     peers: PeerDescriptor[];
     /**
-     * @generated from protobuf field: string nonce = 2;
+     * @generated from protobuf field: string requestId = 2;
      */
-    nonce: string; // requestId
+    requestId: string;
 }
 /**
  * @generated from protobuf message PeerDescriptor
@@ -153,7 +153,7 @@ class RouteMessageWrapper$Type extends MessageType<RouteMessageWrapper> {
     constructor() {
         super("RouteMessageWrapper", [
             { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
             { no: 4, name: "previousPeer", kind: "message", T: () => PeerDescriptor },
             { no: 5, name: "message", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
@@ -169,7 +169,7 @@ class RouteMessageAck$Type extends MessageType<RouteMessageAck> {
     constructor() {
         super("RouteMessageAck", [
             { no: 1, name: "sourcePeer", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "destinationPeer", kind: "message", T: () => PeerDescriptor },
             { no: 4, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
@@ -183,7 +183,7 @@ export const RouteMessageAck = new RouteMessageAck$Type();
 class PingRequest$Type extends MessageType<PingRequest> {
     constructor() {
         super("PingRequest", [
-            { no: 1, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -195,7 +195,7 @@ export const PingRequest = new PingRequest$Type();
 class PingResponse$Type extends MessageType<PingResponse> {
     constructor() {
         super("PingResponse", [
-            { no: 1, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -208,7 +208,7 @@ class ClosestPeersRequest$Type extends MessageType<ClosestPeersRequest> {
     constructor() {
         super("ClosestPeersRequest", [
             { no: 1, name: "peerDescriptor", kind: "message", T: () => PeerDescriptor },
-            { no: 2, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -221,7 +221,7 @@ class ClosestPeersResponse$Type extends MessageType<ClosestPeersResponse> {
     constructor() {
         super("ClosestPeersResponse", [
             { no: 1, name: "peers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PeerDescriptor },
-            { no: 2, name: "nonce", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "requestId", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

@@ -4,7 +4,7 @@ import { BloomFilter } from 'bloomfilter'
 // https://www.di-mgt.com.au/bloom-calculator.html
 export class DuplicateDetector {
     currentFilter: BloomFilter
-    nextFilter: BloomFilter | null
+    nextFilter?: BloomFilter
     counter: number
 
     // False positives at 0.05% at maximum capacity with default values
@@ -15,12 +15,11 @@ export class DuplicateDetector {
         private resetLimit = 2100
     ) {
         this.currentFilter = new BloomFilter(numOfBits, numOfHashFunctions)
-        this.nextFilter = null
         this.counter = 0
     }
 
     add(value: string): void {
-        if (this.nextFilter === null
+        if (!this.nextFilter
             && this.counter >= this.nextFilterFillingLimit
             && this.counter < this.resetLimit
         ) {
@@ -28,7 +27,7 @@ export class DuplicateDetector {
         } else if (this.counter >= this.resetLimit) {
             this.counter = 0
             this.currentFilter = this.nextFilter!
-            this.nextFilter = null
+            this.nextFilter = undefined
         }
         this.currentFilter.add(value)
         if (this.nextFilter) {

@@ -8,9 +8,19 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { toStreamID } from 'streamr-client-protocol'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { fetchPrivateKeyWithGas, randomEthereumAddress } from 'streamr-test-utils'
+import { TimeoutsConfig } from '../../src/Config'
 
-jest.setTimeout(40000)
+jest.setTimeout(20000)
 const PARTITION_COUNT = 3
+
+const TIMEOUT_CONFIG: TimeoutsConfig = {
+    // eslint-disable-next-line no-underscore-dangle
+    ...ConfigTest._timeouts!,
+    jsonRpc: {
+        timeout: 5000,
+        retryInterval: 200
+    }
+}
 
 /**
  * These tests should be run in sequential order!
@@ -27,7 +37,8 @@ describe('StreamRegistry', () => {
             ...ConfigTest,
             auth: {
                 privateKey: wallet.privateKey,
-            }
+            },
+            _timeouts: TIMEOUT_CONFIG
         })
     })
 
@@ -39,7 +50,7 @@ describe('StreamRegistry', () => {
 
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
-            const path = await createRelativeTestStreamId(module)
+            const path = createRelativeTestStreamId(module)
             const stream = await client.createStream({
                 id: path
             })
@@ -86,6 +97,7 @@ describe('StreamRegistry', () => {
                         // The ownership is preloaded by docker-dev-chain-init (https://github.com/streamr-dev/network-contracts)
                         privateKey: '0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb'
                     },
+                    _timeouts: TIMEOUT_CONFIG
                 })
                 const newStream = await ensOwnerClient.createStream({
                     id: streamId,
@@ -177,7 +189,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamPublisher(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid address', async () => {
             return expect(() => client.isStreamPublisher(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid publishers', async () => {
@@ -200,7 +212,7 @@ describe('StreamRegistry', () => {
             const valid = await client.isStreamSubscriber(createdStream.id, address)
             return expect(valid).toBe(true)
         })
-        it('throws error for invalid udseraddress', async () => {
+        it('throws error for invalid address', async () => {
             return expect(() => client.isStreamSubscriber(createdStream.id, 'some-invalid-address')).rejects.toThrow()
         })
         it('returns false for invalid subscribers', async () => {
@@ -229,7 +241,7 @@ describe('StreamRegistry', () => {
 
     describe('delete', () => {
         it('happy path', async () => {
-            const props = { id: await createRelativeTestStreamId(module) }
+            const props = { id: createRelativeTestStreamId(module) }
             const stream = await client.createStream(props)
             await stream.delete()
             await until(async () => {

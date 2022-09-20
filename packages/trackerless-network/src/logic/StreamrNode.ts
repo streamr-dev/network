@@ -1,11 +1,8 @@
-import { DhtNode } from '@streamr/dht'
 import { RandomGraphNode, Event as RandomGraphEvent } from './RandomGraphNode'
-import { PeerDescriptor } from '@streamr/dht'
-import { ITransport } from '@streamr/dht/dist/src'
+import { PeerDescriptor, ConnectionLocker, DhtNode, ITransport } from '@streamr/dht'
 import { DataMessage } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { EventEmitter } from 'events'
 import { Logger } from '@streamr/utils'
-import { ConnectionLocker } from '../../../dht/src'
 
 interface StreamObject {
     layer1: DhtNode

@@ -32,12 +32,12 @@ export interface WebRtcConnectorConfig {
 }
 
 export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> implements IWebRtcConnectorService {
-    private static WEBRTC_CONNECTOR_SERVICE_ID = 'webrtc_connector'
-    private ownPeerDescriptor: PeerDescriptor | null = null
-    private rpcCommunicator: RoutingRpcCommunicator
-    private rpcTransport: ITransport
-    private ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
-
+    private static readonly WEBRTC_CONNECTOR_SERVICE_ID = 'system/webrtc_connector'
+    private readonly rpcCommunicator: RoutingRpcCommunicator
+    private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
+    private readonly rpcTransport: ITransport
+    private ownPeerDescriptor?: PeerDescriptor
+   
     constructor(private config: WebRtcConnectorConfig) {
         super()
         this.rpcTransport = config.rpcTransport
@@ -58,7 +58,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
-        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
+        const peerKey = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
         if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             logger.trace(`Opening WebRTC connection to ${targetPeerDescriptor.peerId.toString()}`)
             const existingConnection = this.ongoingConnectAttempts.get(peerKey)
@@ -91,7 +91,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeer.peerId).toMapKey()
+        const peerKey = PeerID.fromValue(remotePeer.peerId).toKey()
         let connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
         if (!connection) {
             connection = new NodeWebRtcConnection({ remotePeerDescriptor: remotePeer })
@@ -116,7 +116,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toMapKey()
+        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
         const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
         if (!connection) {
             return
@@ -142,7 +142,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
-        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toMapKey()
+        const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
         const connection = this.ongoingConnectAttempts.get(peerKey)?.getWebRtcConnection()
 
         if (!connection) {
@@ -169,18 +169,18 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             toProtoRpcClient(new WebRtcConnectorServiceClient(this.rpcCommunicator.getRpcClientTransport()))
         )
         if (offering) {
-            connection.once('LOCAL_DESCRIPTION', (description: string, _type: string) => {
+            connection.once('localDescription', (description: string, _type: string) => {
                 remoteConnector.sendRtcOffer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         } else {
-            connection.once('LOCAL_DESCRIPTION', (description: string, _type: string) => {
+            connection.once('localDescription', (description: string, _type: string) => {
                 remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         }
-        connection.on('LOCAL_CANDIDATE', (candidate: string, mid: string) => {
+        connection.on('localCandidate', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
-        connection.on('CONNECTED', () => {
+        connection.on('connected', () => {
             // Sending Connected event is now handled by ManagedConnection
             // this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
         })
@@ -191,8 +191,8 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     public isOffering(targetPeerDescriptor: PeerDescriptor): boolean {
-        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId).toMapKey()
-        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId).toMapKey()
+        const myId = PeerID.fromValue(this.ownPeerDescriptor!.peerId).toKey()
+        const theirId = PeerID.fromValue(targetPeerDescriptor.peerId).toKey()
         return WebRtcConnector.offeringHash(myId + theirId) < WebRtcConnector.offeringHash(theirId + myId)
     }
 

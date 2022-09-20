@@ -3,7 +3,7 @@
  * */ 
 
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcCommunicator, CallContext, toProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator, ProtoCallContext, toProtoRpcClient } from '@streamr/proto-rpc'
 import { RoutedHelloRequest, RoutedHelloResponse } from './proto/RoutedHelloRpc'
 import { IRoutedHelloRpcService } from './proto/RoutedHelloRpc.server'
 import { RoutedHelloRpcServiceClient } from './proto/RoutedHelloRpc.client'
@@ -17,7 +17,7 @@ class HelloService implements IRoutedHelloRpcService {
     async sayHello(request: RoutedHelloRequest, cont: ServerCallContext): Promise<RoutedHelloResponse> {
         // proto-rpc always passes a CallContext instance to the RPC methods
         // type-casting is safe here 
-        const context = cont as CallContext
+        const context = cont as ProtoCallContext
         let sourceId = 'unknown'
 
         if (context && context['sourceId']) {
@@ -56,7 +56,7 @@ const run = async () => {
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
 
-    serverCommunicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, callContext?: CallContext) => {
+    serverCommunicator1.on('outgoingMessage', (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
 
         // Send the reply message to the calling client based on sourceId passed 
         // through the network stack in the context information
@@ -66,14 +66,14 @@ const run = async () => {
         }
     })
 
-    serverCommunicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, callContext?: CallContext) => {
+    serverCommunicator2.on('outgoingMessage', (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
         if (callContext!.sourceId) {
             const clientId = callContext!["sourceId"] as string
             clientCommunicators[clientId].handleIncomingMessage(msgBody)
         }
     })
 
-    communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, clientContext?: CallContext) => {
+    communicator1.on('outgoingMessage', (msgBody: Uint8Array, clientContext?: ProtoCallContext) => {
        
         // Choose the server to send the message to based on context information passed
         // through the RPC stack as client context information
@@ -95,13 +95,13 @@ const run = async () => {
         // The context information gets passed uncahged through the RPC stack, so the reply message can be
         // routed to the correct client. 
 
-        const serverContext = new CallContext()
+        const serverContext = new ProtoCallContext()
         serverContext["sourceId"] = "1"
         
         server.handleIncomingMessage(msgBody, serverContext)
     })
 
-    communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, clientContext?: CallContext) => {
+    communicator2.on('outgoingMessage', (msgBody: Uint8Array, clientContext?: ProtoCallContext) => {
         let server: RpcCommunicator
 
         if (clientContext && clientContext['targetServerId'] && clientContext['targetServerId'] == '2') {
@@ -109,7 +109,7 @@ const run = async () => {
         } else {
             server = serverCommunicator1
         }
-        const serverContext = new CallContext()
+        const serverContext = new ProtoCallContext()
         serverContext["sourceId"] = "2"
         
         server.handleIncomingMessage(msgBody, serverContext)
