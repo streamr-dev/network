@@ -1,16 +1,17 @@
 {
   "name": "@streamr/dht",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Streamr Network DHT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
     "directory": "packages/dht"
   },
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "sandbox": "ts-node src/index.ts",
     "prebuild": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
@@ -18,14 +19,14 @@
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
     "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
-    "test": "jest",
+    "test": "jest test/unit test/integration test/end-to-end",
     "test-browser": "npm run build-browser && karma start karma.config.js",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
     "test-end-to-end": "jest test/end-to-end",
     "benchmark": "jest test/benchmark",
     "prepare-kademlia-simulation": "cd test/data && node --max-old-space-size=8096 -- ../../../../node_modules/.bin/ts-node -P ../../tsconfig.node.json generateGroundTruthData.ts",
-    "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files src/kademlia-simulation/KademliaSimulation.ts"
+    "run-kademlia-simulation": "ts-node --project tsconfig.node.json $NODE_DEBUG_OPTION --files test/benchmark/kademlia-simulation/KademliaSimulation.ts"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.0",

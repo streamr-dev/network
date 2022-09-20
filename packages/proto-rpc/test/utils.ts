@@ -17,19 +17,19 @@ export const MockDhtRpc: IDhtRpcWithError = {
         const neighbors = getMockPeers()
         const response: ClosestPeersResponse = {
             peers: neighbors,
-            nonce: 'why am i still here'
+            requestId: 'why am i still here'
         }
         return response
     },
     async ping(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         const response: PingResponse = {
-            nonce: request.nonce
+            requestId: request.requestId
         }
         return response
     },
     async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         const response: RouteMessageAck = {
-            nonce: routed.nonce,
+            requestId: routed.requestId,
             destinationPeer: routed.sourcePeer,
             sourcePeer: routed.destinationPeer,
             error: ''
@@ -42,7 +42,7 @@ export const MockDhtRpc: IDhtRpcWithError = {
     respondPingWithTimeout(request: PingRequest, _context: ServerCallContext): Promise<PingResponse> {
         return new Promise((resolve, _reject) => {
             const response: PingResponse = {
-                nonce: request.nonce
+                requestId: request.requestId
             }
             timeoutCounter++
             const timeoutId = '' + timeoutCounter

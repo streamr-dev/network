@@ -1,6 +1,6 @@
-export interface WebRtcConnectionEvent {
-    LOCAL_DESCRIPTION: (description: string, type: string) => void
-    LOCAL_CANDIDATE: (candidate: string, mid: string) => void
+export interface WebRtcConnectionEvents {
+    localDescription: (description: string, type: string) => void
+    localCandidate: (candidate: string, mid: string) => void
 }
 
 export enum RtcDescription {
@@ -11,13 +11,13 @@ export enum RtcDescription {
 export interface IWebRtcConnection {
     start(isOffering: boolean): void
 
-    on(event: 'LOCAL_DESCRIPTION', listener: (description: string, type: string) => void): this
-    on(event: 'LOCAL_CANDIDATE', listener: (candidate: string, mid: string) => void): this
-    once(event: 'LOCAL_CANDIDATE', listener: (candidate: string, mid: string) => void): this
-    once(event: 'LOCAL_DESCRIPTION', listener: (description: string, type: string) => void): this
-    off(event: 'LOCAL_CANDIDATE', listener: (candidate: string, mid: string) => void): this
-    off(event: 'LOCAL_DESCRIPTION', listener: (description: string, type: string) => void): this
-
+    on(event: 'localDescription', listener: (description: string, type: string) => void): this
+    on(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
+    once(event: 'localDescription', listener: (description: string, type: string) => void): this
+    once(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
+    off(event: 'localDescription', listener: (description: string, type: string) => void): this 
+    off(event: 'localCandidate', listener: (candidate: string, mid: string) => void): this
+   
     setRemoteDescription(description: string, type: string): Promise<void>
     addRemoteCandidate(candidate: string, mid: string): void
     isOpen(): boolean

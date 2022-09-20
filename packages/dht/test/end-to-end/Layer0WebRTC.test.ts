@@ -44,14 +44,14 @@ describe('Layer0 with WebRTC connections', () => {
             node1.stop(),
             node2.stop(),
             node3.stop(),
-            node4.stop(),
-            epDhtNode.stop()
+            node4.stop()
         ])
+        await epDhtNode.stop()
     })
 
     it('Happy path two peers', async () => {
         const promise =  Promise.all([
-            waitForEvent3<ConnectionManagerEvents>(node1.getTransport() as ConnectionManager, 'NEW_CONNECTION'),
+            waitForEvent3<ConnectionManagerEvents>(node1.getTransport() as ConnectionManager, 'newConnection'),
             node2.joinDht(epPeerDescriptor)
         ])
 

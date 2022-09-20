@@ -34,11 +34,11 @@ describe('DhtRpc', () => {
         rpcCommunicator2 = new RpcCommunicator()
         rpcCommunicator2.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', MockDhtRpc.getClosestPeers)
 
-        rpcCommunicator1.on('OUTGOING_MESSAGE', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator1.on('outgoingMessage', (message: Uint8Array, _ucallContext?: DhtCallContext) => {
             rpcCommunicator2.handleIncomingMessage(message)
         })
 
-        rpcCommunicator2.on('OUTGOING_MESSAGE', outgoingListener2)
+        rpcCommunicator2.on('outgoingMessage', outgoingListener2)
 
         client1 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
         client2 = toProtoRpcClient(new DhtRpcServiceClient(rpcCommunicator1.getRpcClientTransport()))
@@ -66,8 +66,8 @@ describe('DhtRpc', () => {
     })
 
     it('Default RPC timeout, client side', async () => {
-        rpcCommunicator2.off('OUTGOING_MESSAGE', outgoingListener2)
-        rpcCommunicator2.on('OUTGOING_MESSAGE', async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
+        rpcCommunicator2.off('outgoingMessage', outgoingListener2)
+        rpcCommunicator2.on('outgoingMessage', async (_umessage: Uint8Array, _ucallContext?: DhtCallContext) => {
             await wait(3000)
         })
         const response2 = client2.getClosestPeers(

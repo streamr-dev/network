@@ -1,4 +1,4 @@
-#  Starting network-monorepo development from scratch on an M1 Mac
+#  Starting network-monorepo development from scratch on an Apple Silicon Mac
 
 These instructions were tested on 
 
@@ -11,13 +11,13 @@ npm 8.5.0
 
 ## Introduction
 
-The current (April 19th 2022) main branch of streamr-network-monorepo does not install out-of-the-box on an M1 Mac using `npm ci`, but rather requires deleting the 
+The current (April 19th 2022) main branch of streamr-network-monorepo does not install out-of-the-box on an Apple Silicon Mac using `npm ci`, but rather requires deleting the 
 `package-lock.json` file, and installing from scratch using `npm install`. 
 
 Running `npm install` also requires a couple of preparations, because 
 
 * Python 2 is not available by default on macOS 12.3 (which prevents the package weak-napi from compiling)
-* Package node-datachannel does not come with pre-compiled M1 binaries, and gets recompiled
+* Package node-datachannel does not come with pre-compiled Apple Silicon binaries, and gets recompiled
 
 
 ## Installation

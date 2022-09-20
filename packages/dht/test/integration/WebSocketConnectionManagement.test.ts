@@ -68,7 +68,7 @@ describe('WebSocket Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        noWsServerManager.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
+        noWsServerManager.on('data', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(wsServerManager.getConnection(noWsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_SERVER)
             expect(noWsServerManager.getConnection(wsServerConnectorPeerDescriptor)!.connectionType).toEqual(ConnectionType.WEBSOCKET_CLIENT)

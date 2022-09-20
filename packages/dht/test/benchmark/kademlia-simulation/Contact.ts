@@ -1,4 +1,4 @@
-import { PeerID } from '../helpers/PeerID'
+import { PeerID } from '../../../src/helpers/PeerID'
 import type { SimulationNode } from './SimulationNode'
 export class Contact {	
     private static counter = 0

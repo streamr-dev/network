@@ -5,11 +5,11 @@ export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal ty
 
 export class PeerID {
     // avoid creating a new instance for every operation
-    private static textEncoder = new TextEncoder() 
-    private static textDecoder = new TextDecoder()
+    private static readonly textEncoder = new TextEncoder() 
+    private static readonly textDecoder = new TextDecoder()
     
-    private data!: Uint8Array
-    private key: PeerIDKey  // precompute often-used form of data
+    private readonly data!: Uint8Array
+    private readonly key: PeerIDKey  // precompute often-used form of data
 
     protected constructor({ ip, value, stringValue }: { ip?: string, value?: Uint8Array, stringValue?: string } = {}) {
         if (ip) {
@@ -59,7 +59,7 @@ export class PeerID {
         return PeerID.textDecoder.decode(this.data) //utf8ArrayToString(this.data)
     }
 
-    toMapKey(): PeerIDKey {
+    toKey(): PeerIDKey {
         return this.key
     }
 

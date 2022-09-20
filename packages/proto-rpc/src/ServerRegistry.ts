@@ -8,9 +8,9 @@ import { Empty } from './proto/google/protobuf/empty'
 import { Logger } from '@streamr/utils'
 import { ProtoCallContext } from './ProtoCallContext'
 
-interface ServerRegistryEvent {
-    RPC_RESPONSE: (rpcMessage: RpcMessage) => void
-    RPC_REQUEST: (rpcMessage: RpcMessage) => void
+interface ServerRegistryEvents {
+    rpcRequest: (rpcMessage: RpcMessage) => void
+    rpcResponse: (rpcMessage: RpcMessage) => void
 }
 
 export interface Parser<Target> { fromBinary: (data: Uint8Array, options?: Partial<BinaryReadOptions>) => Target }
@@ -37,7 +37,7 @@ export function serializeWrapper(serializerFn: () => Uint8Array): Uint8Array | n
     }
 }
 
-export class ServerRegistry extends EventEmitter<ServerRegistryEvent> {
+export class ServerRegistry extends EventEmitter<ServerRegistryEvents> {
     private methods = new Map<string, RegisteredMethod>()
     private notifications = new Map<string, RegisteredNotification>()
 

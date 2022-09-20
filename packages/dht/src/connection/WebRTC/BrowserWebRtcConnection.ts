@@ -1,17 +1,16 @@
 import EventEmitter from "eventemitter3"
-import { WebRtcConnectionEvent, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
-import { IConnection, ConnectionID, ConnectionEvent, ConnectionType } from "../IConnection"
-import { IWebRtcCleanUp } from './IWebRtcCleanUp'
+import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
+import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from "../IConnection"
 import { Logger } from '@streamr/utils'
 
 const logger = new Logger(module)
 
-export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
+export const WEB_RTC_CLEANUP = new class {
     cleanUp(): void {
     }
 }
 
-type Events =  WebRtcConnectionEvent & ConnectionEvent
+type Events =  WebRtcConnectionEvents & ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRtcConnection, IConnection {
 
@@ -36,7 +35,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate && event.candidate.sdpMid) {
-                this.emit('LOCAL_CANDIDATE', event.candidate.candidate, event.candidate.sdpMid)
+                this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
             }
         }
 
@@ -55,7 +54,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
                             logger.warn(err)
                         }
                         if (this.peerConnection.localDescription) {
-                            this.emit('LOCAL_DESCRIPTION', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
+                            this.emit('localDescription', this.peerConnection.localDescription?.sdp, this.peerConnection.localDescription?.type)
                         }
                     }
                 } catch (err) {
@@ -97,7 +96,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
                 logger.warn(err)
             }
             if (this.peerConnection.localDescription) {
-                this.emit('LOCAL_DESCRIPTION', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
+                this.emit('localDescription', this.peerConnection.localDescription.sdp, this.peerConnection.localDescription.type)
             }
         }
     }
@@ -170,14 +169,14 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         dataChannel.onmessage = (msg) => {
             logger.trace('dc.onmessage')
-            this.emit('DATA', new Uint8Array(msg.data))
+            this.emit('data', new Uint8Array(msg.data))
         }
     }
 
     private openDataChannel(dataChannel: RTCDataChannel): void {
         this.dataChannel = dataChannel
         this.lastState = 'connected'
-        this.emit('CONNECTED')
+        this.emit('connected')
     }
 
     public setConnectionId(connectionID: string): void {

@@ -1,10 +1,9 @@
-import { IWebRtcConnection, WebRtcConnectionEvent } from './IWebRtcConnection'
-import { ConnectionType, IConnection, ConnectionID, ConnectionEvent } from '../IConnection'
+import { IWebRtcConnection, WebRtcConnectionEvents } from './IWebRtcConnection'
+import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
 import { PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
-import { IWebRtcCleanUp } from './IWebRtcCleanUp'
 import { Logger } from '@streamr/utils'
 import { IllegalRTCPeerConnectionState } from '../../helpers/errors'
 
@@ -12,7 +11,7 @@ const logger = new Logger(module)
 
 const MAX_MESSAGE_SIZE = 1048576
 
-export const WEB_RTC_CLEANUP = new class implements IWebRtcCleanUp {
+export const WEB_RTC_CLEANUP = new class {
     cleanUp(): void {
         nodeDatachannel.cleanup()
     }
@@ -32,7 +31,7 @@ export interface Params {
 enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum  
 
-type Events = WebRtcConnectionEvent | ConnectionEvent
+type Events = WebRtcConnectionEvents | ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 
@@ -62,7 +61,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     start(isOffering: boolean): void {
         logger.trace(`Staring new connection for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
-        const hexId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()
         this.connection = new PeerConnection(hexId, {
             iceServers: [...this.stunUrls],
             maxMessageSize: MAX_MESSAGE_SIZE
@@ -75,10 +74,10 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         this.connection.onStateChange((state) => this.onStateChange(state))
         this.connection.onGatheringStateChange((_state) => {})
         this.connection.onLocalDescription((description: string, type: DescriptionType) => {
-            this.emit('LOCAL_DESCRIPTION', description, type.toString())
+            this.emit('localDescription', description, type.toString())
         })
         this.connection.onLocalCandidate((candidate: string, mid: string) => {
-            this.emit('LOCAL_CANDIDATE', candidate, mid)
+            this.emit('localCandidate', candidate, mid)
         })
         if (isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
@@ -132,7 +131,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         if (this.connectingTimeoutRef) {
             clearTimeout(this.connectingTimeoutRef)
         }
-        this.emit('DISCONNECTED')
+        this.emit('disconnected')
         if (this.dataChannel) {
             this.dataChannel.close()
         }
@@ -167,7 +166,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
         dataChannel.onMessage((msg) => {
             logger.trace(`dc.onMessage`)
-            this.emit('DATA', msg as Buffer)
+            this.emit('data', msg as Buffer)
         })
     }
 
@@ -177,7 +176,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         }
         this.dataChannel = dataChannel
         logger.trace(`DataChannel opened for peer ${this.remotePeerDescriptor.peerId.toString()}`)
-        this.emit('CONNECTED')
+        this.emit('connected')
     }
 
     private onStateChange(state: string): void {

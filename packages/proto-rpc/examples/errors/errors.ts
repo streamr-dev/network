@@ -35,10 +35,10 @@ const run = async () => {
     const helloClient = toProtoRpcClient(new ErrorRpcServiceClient(communicator2.getRpcClientTransport()))
 
     // Simulate a network connection, in real life the message blobs would be transferred over a network
-    communicator1.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: ProtoCallContext) => {
+    communicator1.on('outgoingMessage', (msgBody: Uint8Array, _ucallContext?: ProtoCallContext) => {
         communicator2.handleIncomingMessage(msgBody)
     })
-    communicator2.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, _ucallContext?: ProtoCallContext) => {
+    communicator2.on('outgoingMessage', (msgBody: Uint8Array, _ucallContext?: ProtoCallContext) => {
         communicator1.handleIncomingMessage(msgBody)
     })
 

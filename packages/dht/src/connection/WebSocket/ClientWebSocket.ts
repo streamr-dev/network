@@ -1,4 +1,4 @@
-import { IConnection, ConnectionID, ConnectionType, ConnectionEvent } from '../IConnection'
+import { IConnection, ConnectionID, ConnectionType, ConnectionEvents } from '../IConnection'
 import { w3cwebsocket as WebSocket, ICloseEvent, IMessageEvent } from 'websocket'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
@@ -7,7 +7,7 @@ const logger = new Logger(module)
 
 const BINARY_TYPE = 'arraybuffer'
 
-export class ClientWebSocket extends EventEmitter<ConnectionEvent> implements IConnection {
+export class ClientWebSocket extends EventEmitter<ConnectionEvents> implements IConnection {
     public readonly connectionId: ConnectionID
     private socket?: WebSocket
     public connectionType = ConnectionType.WEBSOCKET_CLIENT
@@ -22,26 +22,26 @@ export class ClientWebSocket extends EventEmitter<ConnectionEvent> implements IC
         this.socket.binaryType = BINARY_TYPE
         this.socket.onerror = (error: Error) => {
             logger.trace('WebSocket Client error: ' + error)
-            this.emit('ERROR', error.name)
+            this.emit('error', error.name)
         }
         
         this.socket.onopen = () => {
             logger.trace('WebSocket Client Connected')
             if (this.socket && this.socket.readyState === this.socket.OPEN) {
-                this.emit('CONNECTED')
+                this.emit('connected')
             }  
         }
         
         this.socket.onclose = (event: ICloseEvent ) => {
             logger.trace('Websocket Closed')
-            this.emit('DISCONNECTED', event.code, event.reason)
+            this.emit('disconnected', event.code, event.reason)
         }
         
         this.socket.onmessage = (message: IMessageEvent) => {
             if (typeof message.data === 'string') {
                 logger.debug("Received string: '" + message.data + "'")
             } else {
-                this.emit('DATA', new Uint8Array(message.data))
+                this.emit('data', new Uint8Array(message.data))
                 logger.trace("Received data: '" + message.data + "'")
             }
         }
