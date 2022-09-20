@@ -1,4 +1,4 @@
-import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions, PullOptions } from './PushBuffer'
+import { IPushBuffer, PushBuffer, DEFAULT_BUFFER_SIZE, pull, PushBufferOptions } from './PushBuffer'
 import * as G from './GeneratorUtils'
 import { Pipeline, PipelineTransform } from './Pipeline'
 
@@ -60,8 +60,8 @@ export class PushPipeline<InType, OutType = InType> extends Pipeline<InType, Out
     }
 
     /** @internal */
-    pull(source: AsyncGenerator<InType>, opts?: PullOptions): Promise<void> {
-        return pull(source, this, opts)
+    pull(source: AsyncGenerator<InType>): Promise<void> {
+        return pull(source, this)
     }
 
     // wrapped PushBuffer methods below here
