@@ -40,6 +40,7 @@ describe('PubSub with multiple clients', () => {
         environment = new FakeEnvironment()
         privateKey = fastPrivateKey()
         mainClient = environment.createClient({
+            id: 'subscriber-main',
             auth: {
                 privateKey
             }
@@ -53,8 +54,10 @@ describe('PubSub with multiple clients', () => {
         await environment.destroy()
     })
 
-    async function createPublisher() {
-        const pubClient = environment.createClient()
+    async function createPublisher(id: number) {
+        const pubClient = environment.createClient({
+            id: `publisher${id}`
+        })
         const publisherId = (await pubClient.getAddress()).toLowerCase()
 
         addAfter(async () => {
@@ -71,6 +74,7 @@ describe('PubSub with multiple clients', () => {
 
     async function createSubscriber() {
         const client = environment.createClient({
+            id: 'subscriber-other',
             auth: {
                 privateKey
             }
@@ -146,7 +150,7 @@ describe('PubSub with multiple clients', () => {
             /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
-                publishers.push(await createPublisher())
+                publishers.push(await createPublisher(i))
             }
             /* eslint-enable no-await-in-loop */
             const published: Record<string, StreamMessage[]> = {}
@@ -201,7 +205,7 @@ describe('PubSub with multiple clients', () => {
             /* eslint-disable no-await-in-loop */
             const publishers: StreamrClient[] = []
             for (let i = 0; i < 3; i++) {
-                publishers.push(await createPublisher())
+                publishers.push(await createPublisher(i))
             }
 
             /* eslint-enable no-await-in-loop */
@@ -272,7 +276,7 @@ describe('PubSub with multiple clients', () => {
     })
 
     test('works with multiple publishers on one stream', async () => {
-        otherClient = environment.createClient()
+        otherClient = await createSubscriber()
         await stream.grantPermissions({ permissions: [StreamPermission.SUBSCRIBE], public: true })
 
         const receivedMessagesOther: Record<string, StreamMessage[]> = {}
@@ -300,7 +304,7 @@ describe('PubSub with multiple clients', () => {
         /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 1; i++) {
-            publishers.push(await createPublisher())
+            publishers.push(await createPublisher(i))
         }
 
         /* eslint-enable no-await-in-loop */
@@ -357,7 +361,7 @@ describe('PubSub with multiple clients', () => {
         /* eslint-disable no-await-in-loop */
         const publishers: StreamrClient[] = []
         for (let i = 0; i < 3; i++) {
-            publishers.push(await createPublisher())
+            publishers.push(await createPublisher(i))
         }
 
         let counter = 0
