@@ -27,5 +27,4 @@ export class Contact {
         return peerDescriptor
     }
 
-
 }
