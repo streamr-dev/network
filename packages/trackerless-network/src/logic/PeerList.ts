@@ -53,7 +53,7 @@ export class PeerList {
     }
 
     private toStringId(peerDescriptor: PeerDescriptor): string {
-        return PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        return PeerID.fromValue(peerDescriptor.peerId).toKey()
     }
 
     size(): number {

@@ -1,9 +1,8 @@
-import { DhtNode, PeerDescriptor, NodeType, ConnectionManager } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
 import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerID } from '@streamr/dht/dist/src'
 
 describe('Full node network with WebRTC connections', () => {
 

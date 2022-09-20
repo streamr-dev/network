@@ -30,7 +30,7 @@ describe('Kademlia correctness', () => {
         const entryPointId = '0'
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator, Uint8Array.from(dhtIds[0].data), 8)
         nodes.push(entryPoint)
-        nodeIndicesById[entryPoint.getNodeId().toMapKey()] = 0
+        nodeIndicesById[entryPoint.getNodeId().toKey()] = 0
         entrypointDescriptor = {
             peerId: entryPoint.getNodeId().value,
             type: 0
@@ -40,7 +40,7 @@ describe('Kademlia correctness', () => {
             const nodeId = `${i}`
 
             const node = await createMockConnectionDhtNode(nodeId, simulator, Uint8Array.from(dhtIds[i].data))
-            nodeIndicesById[node.getNodeId().toMapKey()] = i
+            nodeIndicesById[node.getNodeId().toKey()] = i
             nodes.push(node)
         }
     })
@@ -85,13 +85,13 @@ describe('Kademlia correctness', () => {
 
             let kadString = 'kademliaNeighbors: '
             kademliaNeighbors.forEach((neighbor) => {
-                kadString += nodeIndicesById[neighbor.toMapKey()] + ','
+                kadString += nodeIndicesById[neighbor.toKey()] + ','
             })
 
             let correctNeighbors = 0
             try {
                 for (let j = 0; j < groundTruth[i + ''].length; j++) {
-                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toMapKey()] + '')) {
+                    if (groundTruth[i + ''][j].name != (nodeIndicesById[kademliaNeighbors[j].toKey()] + '')) {
                         break
                     }
                     correctNeighbors++

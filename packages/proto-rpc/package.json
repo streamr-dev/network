@@ -1,18 +1,17 @@
 {
   "name": "@streamr/proto-rpc",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Proto-RPC",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
     "directory": "packages/proto-rpc"
   },
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
+  "license": "(Apache-2.0 AND BSD-3-Clause)",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "sandbox": "ts-node src/index.ts",
     "prebuild": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",

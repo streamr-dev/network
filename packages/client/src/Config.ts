@@ -34,7 +34,6 @@ export interface TimeoutsConfig {
         timeout: number
         retryInterval: number
     }
-    /** @internal */
     encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
@@ -177,6 +176,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             timeout: 30 * 1000,
             retryInterval: 1000
         },
+        encryptionKeyRequest: 30 * 1000,
         httpFetchTimeout: 30 * 1000
     },
     debug: {

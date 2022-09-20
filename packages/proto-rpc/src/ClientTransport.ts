@@ -6,7 +6,6 @@ import {
     RpcTransport,
     MethodInfo,
     RpcError,
-    RpcOptions,
     RpcMetadata,
     RpcStatus,
     UnaryCall,
@@ -16,9 +15,10 @@ import { v4 } from 'uuid'
 import { RpcMessage } from './proto/ProtoRpc'
 import EventEmitter from 'eventemitter3'
 import { Logger } from '@streamr/utils'
+import { ProtoRpcOptions } from './ProtoCallContext'
 
-interface ClientTransportEvent {
-    RPC_REQUEST: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
+interface ClientTransportEvents {
+    rpcRequest: (rpcMessage: RpcMessage, options: ProtoRpcOptions, results?: ResultParts) => void
 }
 
 export interface ResultParts {
@@ -29,14 +29,9 @@ export interface ResultParts {
     messageParser: (bytes: Uint8Array) => object
 }
 
-export interface ProtoRpcOptions extends RpcOptions {
-    notification?: boolean
-    isProtoRpc?: boolean
-}
-
 const logger = new Logger(module)
 
-export class ClientTransport extends EventEmitter<ClientTransportEvent> implements RpcTransport {
+export class ClientTransport extends EventEmitter<ClientTransportEvents> implements RpcTransport {
     private static objectCount = 0
     private readonly objectId: number
     protected readonly defaultOptions: ProtoRpcOptions
@@ -90,7 +85,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvent> implemen
                 undefined as unknown as Promise<RpcMetadata>,
             )
             logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-            this.emit('RPC_REQUEST', request, options, undefined)
+            this.emit('rpcRequest', request, options, undefined)
             return unary
 
         } else {
@@ -118,7 +113,7 @@ export class ClientTransport extends EventEmitter<ClientTransportEvent> implemen
                 messageParser: deferredParser
             }
             logger.trace(`New rpc ${options.notification ? 'notification' : 'request'}, ${request.requestId}`)
-            this.emit('RPC_REQUEST', request, options, deferred)
+            this.emit('rpcRequest', request, options, deferred)
             return unary
         }
     }

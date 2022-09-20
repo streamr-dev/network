@@ -69,8 +69,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.started = true
 
         this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
-        this.layer1.on('NEW_CONTACT', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.on('CONTACT_REMOVED', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.on('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.on('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
@@ -90,8 +90,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.targetNeighbors.values().map((remote) => remote.leaveNotice(this.layer1.getPeerDescriptor()))
         this.rpcCommunicator!.stop()
         this.removeAllListeners()
-        this.layer1.off('NEW_CONTACT', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.off('CONTACT_REMOVED', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
+        this.layer1.off('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
         this.contactPool.clear()
         this.targetNeighbors.clear()
         if (this.findNeighborsIntervalRef) {
@@ -121,7 +121,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.targetNeighbors.size() < this.N - 2) {
             const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
             const targetNeighbors = this.contactPool.getClosestAndFurthest(exclude)
-            targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().peerId).toMapKey()))
+            targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().peerId).toKey()))
 
             const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
                 const otherPeer = i === 0 ? targetNeighbors[1] : targetNeighbors[0]
@@ -129,7 +129,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                     this.layer1.getPeerDescriptor(),
                     this.targetNeighbors.getStringIds(),
                     this.contactPool.getStringIds(),
-                    targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().peerId).toMapKey() : undefined
+                    targetNeighbors.length > 1 ? PeerID.fromValue(otherPeer.getPeerDescriptor().peerId).toKey() : undefined
                 )
                 if (res.interleaveTarget) {
                     const interleaveTarget = new RemoteRandomGraphNode(
@@ -150,20 +150,20 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
                 }
 
                 this.targetNeighbors.add(targetNeighbors[i])
-                this.ongoingHandshakes.delete(PeerID.fromValue(target.getPeerDescriptor().peerId).toMapKey())
+                this.ongoingHandshakes.delete(PeerID.fromValue(target.getPeerDescriptor().peerId).toKey())
                 return res
             })
             const results = await Promise.allSettled(promises)
             results.map((res, i) => {
                 if (res.status !== 'fulfilled') {
-                    excludedIds.push(PeerID.fromValue(targetNeighbors[i].getPeerDescriptor().peerId).toMapKey())
+                    excludedIds.push(PeerID.fromValue(targetNeighbors[i].getPeerDescriptor().peerId).toKey())
                 }
             })
         } else {
             const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
             const targetNeighbor = this.contactPool.getClosest(exclude)
             if (targetNeighbor) {
-                const targetId = PeerID.fromValue(targetNeighbor.getPeerDescriptor().peerId).toMapKey()
+                const targetId = PeerID.fromValue(targetNeighbor.getPeerDescriptor().peerId).toKey()
                 this.ongoingHandshakes.add(targetId)
                 const res = await targetNeighbor?.handshake(
                     this.layer1!.getPeerDescriptor(),
@@ -251,7 +251,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     getOwnStringId(): string {
-        return PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toMapKey()
+        return PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toKey()
     }
 
     registerDefaultServerMethods(): void {
@@ -324,7 +324,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     async sendData(message: DataMessage, _context: ServerCallContext): Promise<Empty> {
         if (this.markAndCheckDuplicate(message.messageRef!, message.previousMessageRef)) {
             const { previousPeer } = message
-            message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toMapKey()
+            message["previousPeer"] = PeerID.fromValue(this.layer1.getPeerDescriptor().peerId).toKey()
             this.emit(Event.MESSAGE, message)
             this.broadcast(message, previousPeer)
         }
@@ -379,14 +379,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             if (this.targetNeighbors.size() === 3 && message.neighborDescriptors.length < this.N && this.ongoingHandshakes.size === 0) {
                 setImmediate(async () => {
                     const found = message.neighborDescriptors
-                        .map((desc) => PeerID.fromValue(desc.peerId).toMapKey() as string)
+                        .map((desc) => PeerID.fromValue(desc.peerId).toKey() as string)
                         .find((stringId) => stringId !== this.getOwnStringId() && !this.targetNeighbors.getStringIds().includes(stringId))
 
                     if (found) {
                         const targetPeerDescriptor = message.neighborDescriptors.find(
-                            (descriptor) => PeerID.fromValue(descriptor.peerId).toMapKey() === found
+                            (descriptor) => PeerID.fromValue(descriptor.peerId).toKey() === found
                         )
-                        const targetStringId = PeerID.fromValue(targetPeerDescriptor!.peerId).toMapKey()
+                        const targetStringId = PeerID.fromValue(targetPeerDescriptor!.peerId).toKey()
                         const targetNeighbor = new RemoteRandomGraphNode(
                             targetPeerDescriptor!,
                             this.randomGraphId,

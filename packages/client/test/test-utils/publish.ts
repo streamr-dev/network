@@ -1,14 +1,9 @@
 import { wait } from '@streamr/utils'
 import { StreamMessage } from 'streamr-client-protocol'
-
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
-
-import { Signal } from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
-import { Pipeline } from '../../src/utils/Pipeline'
-import { PublishPipeline } from '../../src/publish/PublishPipeline'
 import { uid } from './utils'
 
 export function Msg<T extends object = object>(opts?: T): any {
@@ -18,30 +13,19 @@ export function Msg<T extends object = object>(opts?: T): any {
     }
 }
 
-export interface CreateMessageOpts {
-    /** index of message in total */
-    index: number
-    /** batch number */
-    batch: number
-    /** index of message in batch */
-    batchIndex: number
-    /** total messages */
-    total: number
-}
-
-type PublishManyOpts = Partial<{
+type TestMessageOptions = Partial<{
     delay: number
     timestamp: number | (() => number)
     partitionKey: number | string | (() => number | string)
     createMessage: (content: any) => any
 }>
 
-export async function* publishManyGenerator(
+export async function* createTestMessages(
     total: number = 5,
-    opts: PublishManyOpts = {}
+    opts: TestMessageOptions = {}
 ): AsyncGenerator<PublishMetadata<any>> {
     const { delay = 10, timestamp, partitionKey, createMessage = Msg } = opts
-    const batchId = counterId('publishMany')
+    const batchId = counterId('createTestMessages')
     for (let i = 0; i < total; i++) {
         yield {
             timestamp: typeof timestamp === 'function' ? timestamp() : timestamp,
@@ -61,31 +45,31 @@ export async function* publishManyGenerator(
     }
 }
 
-type PublishTestMessageOptions = PublishManyOpts & {
+type PublishTestMessageOptions = TestMessageOptions & {
     waitForLast?: boolean
     waitForLastCount?: number
     waitForLastTimeout?: number
     retainMessages?: boolean
-    onSourcePipeline?: Signal<[Pipeline<PublishMetadata<any>>]>
-    onPublishPipeline?: Signal<[Pipeline<StreamMessage>]>
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
-export function publishTestMessagesGenerator(
+export async function* publishTestMessagesGenerator(
     client: StreamrClient,
     streamDefinition: StreamDefinition,
     maxMessages = 5,
     opts: PublishTestMessageOptions = {}
-): Pipeline<StreamMessage<unknown>, StreamMessage<unknown>> {
-    const source = new Pipeline(publishManyGenerator(maxMessages, opts))
-    if (opts.onSourcePipeline) {
-        opts.onSourcePipeline.trigger(source)
+): AsyncGenerator<StreamMessage<unknown>> {
+    const source = createTestMessages(maxMessages, opts)
+    for await (const msg of source) {
+        const published = await client.publish(streamDefinition, msg.content, {
+            timestamp: msg.timestamp,
+            partitionKey: msg.partitionKey
+        })
+        if (opts.afterEach) {
+            await opts.afterEach(published)
+        }
+        yield published
     }
-    const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
-    if (opts.afterEach) {
-        pipeline.forEach(opts.afterEach)
-    }
-    return pipeline
 }
 
 export function getPublishTestStreamMessages(
@@ -105,23 +89,13 @@ export function getPublishTestStreamMessages(
             ...opts,
         }
 
-        const contents = new WeakMap()
-        // @ts-expect-error private
-        const publishPipeline = client.container.resolve(PublishPipeline)
-        // @ts-expect-error private
-        publishPipeline.streamMessageQueue.onMessage.listen(([streamMessage]) => {
-            contents.set(streamMessage, streamMessage.serializedContent)
-        })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
-        if (opts.onPublishPipeline) {
-            opts.onPublishPipeline.trigger(publishStream)
-        }
-        const streamMessages = []
+        let streamMessages = []
         let count = 0
         for await (const streamMessage of publishStream) {
             count += 1
             if (!retainMessages) {
-                streamMessages.length = 0 // only keep last message
+                streamMessages = [] // only keep last message
             }
             streamMessages.push(streamMessage)
             if (count === maxMessages) {
@@ -136,39 +110,7 @@ export function getPublishTestStreamMessages(
             })(streamMessages[streamMessages.length - 1])
         }
 
-        return streamMessages.map((streamMessage) => {
-            const targetStreamMessage = streamMessage.clone()
-            targetStreamMessage.serializedContent = contents.get(streamMessage)
-            targetStreamMessage.encryptionType = 0
-            targetStreamMessage.parsedContent = null
-            targetStreamMessage.getParsedContent()
-            return targetStreamMessage
-        })
-    }
-}
-
-export function getPublishTestMessages(
-    client: StreamrClient,
-    streamDefinition: StreamDefinition,
-    defaultOpts: PublishTestMessageOptions = {}
-): (maxMessages?: number, opts?: PublishTestMessageOptions) => Promise<unknown[]> {
-    const publishTestStreamMessages = getPublishTestStreamMessages(client, streamDefinition, defaultOpts)
-    return async (maxMessages: number = 5, opts: PublishTestMessageOptions = {}) => {
-        const streamMessages = await publishTestStreamMessages(maxMessages, opts)
-        return streamMessages.map((s) => s.getParsedContent())
-    }
-}
-
-export async function* publishFromMetadata<T>(
-    streamDefinition: StreamDefinition, 
-    seq: AsyncIterable<PublishMetadata<T>>,
-    client: StreamrClient
-): AsyncGenerator<StreamMessage<T>, void, unknown> {
-    for await (const msg of seq) {
-        yield await client.publish(streamDefinition, msg.content, {
-            timestamp: msg.timestamp,
-            partitionKey: msg.partitionKey
-        })
+        return streamMessages
     }
 }
 

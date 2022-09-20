@@ -15,7 +15,7 @@ import { Logger } from '@streamr/utils'
 import * as Err from '../helpers/errors'
 import { WEB_RTC_CLEANUP } from './WebRTC/NodeWebRtcConnection'
 import { ManagedConnection } from './ManagedConnection'
-import { RoutingRpcCommunicator } from '..'
+import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { ConnectionLockerClient } from '../proto/DhtRpc.client'
 import { RemoteConnectionLocker } from './RemoteConnectionLocker'
@@ -42,7 +42,7 @@ const DEFAULT_DISCONNECTION_TIMEOUT = 15000
 const logger = new Logger(module)
 
 interface ConnectionManagerEvents {
-    NEW_CONNECTION: (connection: ManagedConnection) => void   
+    newConnection: (connection: ManagedConnection) => void
 }
 
 export interface ConnectionLocker {
@@ -57,7 +57,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private stopped = false
     private started = false
 
-    private ownPeerDescriptor: PeerDescriptor | null = null
+    private ownPeerDescriptor?: PeerDescriptor
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
 
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
@@ -73,10 +73,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         super()
 
         logger.trace(`Creating WebSocket Connector`)
-        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer, 
-            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost, 
+        this.webSocketConnector = new WebSocketConnector(ConnectionManager.PROTOCOL_VERSION, this.config.transportLayer,
+            this.canConnect.bind(this), this.config.webSocketPort, this.config.webSocketHost,
             this.config.entryPoints)
-        
+
         logger.trace(`Creating WebRTC Connector`)
         this.webrtcConnector = new WebRtcConnector({
             rpcTransport: this.config.transportLayer,
@@ -141,7 +141,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
@@ -151,25 +151,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.connections.get(hexId)!.send(Message.toBinary(message))
         } else {
             let connection: ManagedConnection | undefined
-            if (peerDescriptor.websocket) {
-                connection = this.webSocketConnector!.connect({
-                    ownPeerDescriptor: this.ownPeerDescriptor!,
-                    targetPeerDescriptor: peerDescriptor,
-                    host: peerDescriptor.websocket.ip,
-                    port: peerDescriptor.websocket.port,
-                })
-            } else if (this.ownPeerDescriptor!.websocket && !peerDescriptor.websocket) {
-                connection = this.webSocketConnector!.connect({
-                    ownPeerDescriptor: this.ownPeerDescriptor!,
-                    targetPeerDescriptor: peerDescriptor
-                })
-            } else if (this.webrtcConnector) {
+            if (peerDescriptor.websocket || this.ownPeerDescriptor!.websocket) {
+                connection = this.webSocketConnector!.connect(peerDescriptor)
+            } else {
                 connection = this.webrtcConnector.connect(peerDescriptor)
             }
-            if (connection) {
-                this.onNewConnection(connection)
-                connection.send(Message.toBinary(message))
-            }
+            this.onNewConnection(connection)
+            connection.send(Message.toBinary(message))
         }
     }
 
@@ -177,16 +165,16 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         if (!this.started || this.stopped) {
             return
         }
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         this.disconnectionTimeouts.set(hexId, setTimeout(() => {
             this.closeConnection(hexId, reason)
             this.disconnectionTimeouts.delete(hexId)
         }, timeout))
     }
 
-    public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | null {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
-        return this.connections.get(hexId) || null
+    public getConnection(peerDescriptor: PeerDescriptor): ManagedConnection | undefined {
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
+        return this.connections.get(hexId)
     }
 
     public getPeerDescriptor(): PeerDescriptor {
@@ -194,12 +182,12 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasConnection(peerDescriptor: PeerDescriptor): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         return this.connections.has(hexId)
     }
 
     public hasLocalLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         if (!serviceId) {
             return this.localLockedConnections.has(hexId)
         } else {
@@ -208,7 +196,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public hasRemoteLockedConnection(peerDescriptor: PeerDescriptor, serviceId?: ServiceId): boolean {
-        const hexId = PeerID.fromValue(peerDescriptor.peerId).toMapKey()
+        const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         if (!serviceId) {
             return this.remoteLockedConnections.has(hexId)
         } else {
@@ -226,7 +214,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             const message = Message.fromBinary(data)
             logger.trace('Received message of type ' + message.messageType)
             if (message.messageType === MessageType.RPC) {
-                this.emit('DATA', message, peerDescriptor)
+                this.emit('data', message, peerDescriptor)
             } else {
                 logger.trace('Filtered out message of type ' + message.messageType)
             }
@@ -240,10 +228,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             return
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
-        connection.on('MANAGED_DATA', this.onData) 
-        this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toMapKey(), connection)
-        
-        this.emit('NEW_CONNECTION', connection)
+        connection.on('managedData', this.onData)
+        this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey(), connection)
+
+        this.emit('newConnection', connection)
     }
 
     private closeConnection(id: PeerIDKey, reason?: string): void {
@@ -264,7 +252,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public lockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
         this.clearDisconnectionTimeout(hexKey)
         const remoteConnectionLocker = new RemoteConnectionLocker(
             targetDescriptor,
@@ -285,7 +273,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {
-        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toMapKey()
+        const hexKey = PeerID.fromValue(targetDescriptor.peerId).toKey()
         this.localLockedConnections.get(hexKey)?.delete(serviceId)
 
         const remoteConnectionLocker = new RemoteConnectionLocker(
@@ -312,7 +300,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async lockRequest(lockRequest: LockRequest, _context: ServerCallContext): Promise<LockResponse> {
-        const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toMapKey()
+        const hexKey = PeerID.fromValue(lockRequest.peerDescriptor!.peerId).toKey()
         this.clearDisconnectionTimeout(hexKey)
         if (!this.remoteLockedConnections.has(hexKey)) {
             const newSet = new Set<string>()
@@ -329,7 +317,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     // IConnectionLocker server implementation
     private async unlockRequest(unlockRequest: UnlockRequest, _context: ServerCallContext): Promise<Empty> {
-        const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.peerId).toMapKey()
+        const hexKey = PeerID.fromValue(unlockRequest.peerDescriptor!.peerId).toKey()
         this.remoteLockedConnections.get(hexKey)?.delete(unlockRequest.serviceId)
         if (this.remoteLockedConnections.get(hexKey)?.size === 0) {
             this.remoteLockedConnections.delete(hexKey)

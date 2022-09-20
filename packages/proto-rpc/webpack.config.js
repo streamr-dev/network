@@ -51,7 +51,7 @@ module.exports = (env, argv) => {
             type: 'filesystem',
         },
         mode: isProduction ? 'production' : 'development',
-        entry: './src/index.ts',
+        entry: './src/exports.ts',
         devtool: "source-map",
         module: {
             rules: [

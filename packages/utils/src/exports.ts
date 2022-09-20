@@ -7,13 +7,14 @@ import { scheduleAtInterval } from './scheduleAtInterval'
 import { BrandedString } from './types'
 import { wait } from './wait'
 import { waitForEvent } from './waitForEvent'
-import { TimeoutError, withTimeout } from './withTimeout'
 import { DuplicateMessageDetector, NumberPair, GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
+import { AbortError, TimeoutError, withTimeout } from './withTimeout'
 
 export {
     BrandedString,
     Logger,
     Multimap,
+    AbortError,
     TimeoutError,
     keyToArrayIndex,
     randomString,

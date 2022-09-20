@@ -10,7 +10,7 @@ service DhtRpcService {
 
 message RouteMessageWrapper {
   PeerDescriptor sourcePeer = 1;
-  string nonce = 2;
+  string requestId = 2;
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
   bytes message = 5; // Expected to be of type Message
@@ -18,27 +18,27 @@ message RouteMessageWrapper {
 
 message RouteMessageAck {
   PeerDescriptor sourcePeer = 1;
-  string nonce = 2;
+  string requestId = 2;
   PeerDescriptor destinationPeer = 3;
   string error = 4;
 }
 
 message PingRequest {
-    string nonce = 1;
+    string requestId = 1;
   }
   
 message PingResponse {
-    string nonce = 1;
+    string requestId = 1;
   }
 
 message ClosestPeersRequest {
     PeerDescriptor peerDescriptor = 1;
-    string nonce = 2; // requestId
+    string requestId = 2;
   }
   
 message ClosestPeersResponse {
     repeated PeerDescriptor peers = 1;
-    string nonce = 2; // requestId
+    string requestId = 2;
   }
 
 message PeerDescriptor {

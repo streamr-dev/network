@@ -1,7 +1,6 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, NodeType } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
 import { Event as StreamrNodeEvent, StreamrNode } from '../src/logic/StreamrNode'
 import { DataMessage, MessageRef } from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerID } from '@streamr/dht/dist/src'
 import { program } from 'commander'
 
 program

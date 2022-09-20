@@ -8,7 +8,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     
     constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
-        transport.on('DATA', (message: Message, peerDescriptor: PeerDescriptor) => {
+        transport.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
             if (message.serviceId == this.ownServiceId) {
                 const context = new DhtCallContext()
                 context.incomingSourceDescriptor = peerDescriptor
@@ -16,7 +16,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
             }
         })
 
-        this.on('OUTGOING_MESSAGE', (msgBody: Uint8Array, callContext?: DhtCallContext) => {
+        this.on('outgoingMessage', (msgBody: Uint8Array, callContext?: DhtCallContext) => {
             
             let targetDescriptor: PeerDescriptor
             // rpc call message

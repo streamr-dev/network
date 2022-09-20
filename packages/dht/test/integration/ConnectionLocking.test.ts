@@ -1,7 +1,9 @@
-import { PeerDescriptor, PeerID, Simulator, SimulatorTransport } from '../../src'
+import { Simulator } from '../../src/connection/Simulator'
+import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
-import { NodeType } from '../../src/proto/DhtRpc'
+import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
+import { PeerID } from '../../src/helpers/PeerID'
 
 describe('Connection Locking', () => {
 

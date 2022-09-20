@@ -1,5 +1,5 @@
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { RpcCommunicator, CallContext, toProtoRpcClient, ProtoRpcClient } from '@streamr/proto-rpc'
+import { RpcCommunicator, ProtoCallContext, toProtoRpcClient, ProtoRpcClient } from '@streamr/proto-rpc'
 import { IWakeUpRpcService } from './proto/WakeUpRpc.server'
 import { WakeUpRequest } from './proto/WakeUpRpc'
 import { WakeUpRpcServiceClient } from './proto/WakeUpRpc.client'
@@ -45,7 +45,7 @@ const run = async () => {
 
     const nodes: Record<string, Node> = {}
 
-    const emulateNetwork = (msgBody: Uint8Array, callContext?: CallContext) => {
+    const emulateNetwork = (msgBody: Uint8Array, callContext?: ProtoCallContext) => {
 
         // Pass the message to the right based on targetNodeId passed in the context
         if (callContext!.targetNodeId) {
@@ -56,13 +56,13 @@ const run = async () => {
     // Setup nodes
 
     nodes["1"] = new Node("1")
-    nodes["1"].communicator.on('OUTGOING_MESSAGE', emulateNetwork) 
+    nodes["1"].communicator.on('outgoingMessage', emulateNetwork) 
 
     nodes["2"] = new Node("2")
-    nodes["2"].communicator.on('OUTGOING_MESSAGE', emulateNetwork)
+    nodes["2"].communicator.on('outgoingMessage', emulateNetwork)
 
     nodes["3"] = new Node("3")
-    nodes["3"].communicator.on('OUTGOING_MESSAGE', emulateNetwork)
+    nodes["3"].communicator.on('outgoingMessage', emulateNetwork)
 
     nodes["1"].wakeUpOtherNode("2", "Notification from node 1")
     nodes["3"].wakeUpOtherNode("1", "Notification from node 3")

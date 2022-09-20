@@ -55,7 +55,7 @@ describe('WebRTC Connection Management', () => {
             messageId: 'mockerer'
         }
 
-        manager2.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
+        manager2.on('data', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
             expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)
@@ -72,7 +72,7 @@ describe('WebRTC Connection Management', () => {
             messageType: MessageType.RPC,
             messageId: 'mockerer'
         }
-        manager1.on('DATA', (message: Message, _peerDescriptor: PeerDescriptor) => {
+        manager1.on('data', (message: Message, _peerDescriptor: PeerDescriptor) => {
             expect(message.messageId).toEqual('mockerer')
             expect(manager1.getConnection(peerDescriptor2)!.connectionType).toEqual(ConnectionType.WEBRTC)
             expect(manager2.getConnection(peerDescriptor1)!.connectionType).toEqual(ConnectionType.WEBRTC)

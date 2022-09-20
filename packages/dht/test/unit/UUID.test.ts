@@ -25,6 +25,10 @@ describe('UUID', () => {
         expect(uuid.toString() === stringId).toEqual(true)
     })
 
+    it('Throws if incorrect string is given as uuid string parameter', () => {
+        expect(()=> {new UUID('äå%')}).toThrow(TypeError)
+    })
+
     it('Uses passed UUID as id', () => {
         const uuid1 = new UUID()
         const uuid2 = new UUID(uuid1)

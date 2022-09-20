@@ -1,8 +1,8 @@
 import EventEmitter from "eventemitter3"
 import { PeerDescriptor } from "../proto/DhtRpc"
-import { ConnectionID, ConnectionType, ConnectionEvent } from "./IConnection"
+import { ConnectionID, ConnectionType, ConnectionEvents } from "./IConnection"
 
-export class Connection extends EventEmitter<ConnectionEvent> {
+export class Connection extends EventEmitter<ConnectionEvents> {
     public connectionId: ConnectionID
     //public connectionType: ConnectionType
     private peerDescriptor?: PeerDescriptor
