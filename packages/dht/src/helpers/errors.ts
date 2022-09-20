@@ -12,11 +12,8 @@ export enum ErrorCode {
     ILLEGAL_RTC_PEER_CONNECTION_STATE = 'ILLEGAL_RTC_PEER_CONNECTION_STATE',
     ILLEGAL_ARGUMENTS = 'ILLEGAL_ARGUMENTS',
     CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT = 'CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT',
-<<<<<<< HEAD
-    CONNECTION_LOCKER = 'CONNECTION_LOCKER'
-=======
-    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT' 
->>>>>>> NET-763
+    CONNECTION_LOCKER = 'CONNECTION_LOCKER',
+    DHT_JOIN_TIMEOUT = 'DHT_JOIN_TIMEOUT'
 }
 
 class Err extends Error {
@@ -36,8 +33,5 @@ export class NotImplemented extends Err { constructor(message?: string, original
 export class IllegalRTCPeerConnectionState extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_RTC_PEER_CONNECTION_STATE, message, originalError) } }
 export class IllegalArguments extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.ILLEGAL_ARGUMENTS, message, originalError) } }
 export class ConnectivityResponseTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTIVITY_RESPONSE_NOT_RECEIVED_BEFORE_TIMEOUT, message, originalError) } }
-<<<<<<< HEAD
 export class ConnectionLocker extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.CONNECTION_LOCKER, message, originalError) } }
-=======
 export class DhtJoinTimeout extends Err { constructor(message?: string, originalError?: Error | string) { super(ErrorCode.DHT_JOIN_TIMEOUT, message, originalError) } }
->>>>>>> NET-763
