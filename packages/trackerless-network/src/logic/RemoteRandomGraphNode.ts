@@ -40,7 +40,7 @@ export class RemoteRandomGraphNode {
         const request: HandshakeRequest = {
             randomGraphId: this.graphId,
             requestId: new UUID().toString(),
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             neighbors,
             peerView,
             concurrentHandshakeTargetId,
@@ -87,7 +87,7 @@ export class RemoteRandomGraphNode {
         const notification: InterleaveNotice = {
             randomGraphId: this.graphId,
             interleaveTarget: originatorDescriptor,
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey()
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey()
         }
         this.client.interleaveNotice(notification, options)
     }
@@ -99,7 +99,7 @@ export class RemoteRandomGraphNode {
             notification: true
         }
         const notification: LeaveNotice = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             randomGraphId: this.graphId
         }
         this.client.leaveNotice(notification, options)
@@ -115,7 +115,7 @@ export class RemoteRandomGraphNode {
             targetDescriptor: this.remotePeerDescriptor as PeerDescriptor,
         }
         const request: NeighborUpdate = {
-            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toMapKey(),
+            senderId: PeerID.fromValue(ownPeerDescriptor.peerId).toKey(),
             randomGraphId: this.graphId,
             neighborDescriptors: neighbors
         }

@@ -1,9 +1,8 @@
-import { DhtNode, PeerDescriptor, Simulator } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator, PeerID } from '@streamr/dht'
 import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode } from '../utils'
 import { range } from 'lodash'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerID } from '@streamr/dht/dist/src'
 import { waitForCondition } from 'streamr-test-utils'
 
 describe('Propagation', () => {

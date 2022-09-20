@@ -61,7 +61,7 @@ describe('PeerList', () => {
 
     it('removeById', () => {
         const toRemove = peerList.getClosest([])
-        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().peerId).toMapKey()
+        const stringId = PeerID.fromValue(toRemove!.getPeerDescriptor().peerId).toKey()
         peerList.removeById(stringId)
         expect(peerList.hasPeer(toRemove!.getPeerDescriptor())).toEqual(false)
     })

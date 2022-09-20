@@ -30,7 +30,7 @@ describe('StreamrNode', () => {
     }
     const msg: DataMessage = {
         content: JSON.stringify({ hello: "WORLD" }),
-        senderId: PeerID.fromValue(peer2.peerId).toMapKey(),
+        senderId: PeerID.fromValue(peer2.peerId).toKey(),
         messageRef,
         streamPartId: STREAM_ID
     }
@@ -116,7 +116,7 @@ describe('StreamrNode', () => {
 
         const msg2: DataMessage = {
             content: JSON.stringify({ hello: "WORLD" }),
-            senderId: PeerID.fromValue(peer1.peerId).toMapKey(),
+            senderId: PeerID.fromValue(peer1.peerId).toKey(),
             messageRef,
             streamPartId: stream2
         }

@@ -1,4 +1,4 @@
-import { RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerDescriptor } from '@streamr/dht'
+import { RoutingRpcCommunicator, Simulator, SimulatorTransport, PeerDescriptor, PeerID } from '@streamr/dht'
 import { RemoteRandomGraphNode } from '../../src/logic/RemoteRandomGraphNode'
 import { NetworkRpcClient } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc.client'
 import {
@@ -6,12 +6,12 @@ import {
     HandshakeRequest,
     HandshakeResponse,
     LeaveNotice,
-    MessageRef, NeighborUpdate
+    MessageRef,
+    NeighborUpdate
 } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { Empty } from '../../src/proto/google/protobuf/empty'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { waitForCondition } from 'streamr-test-utils'
-import { PeerID } from '@streamr/dht/dist/src'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 
 describe('RemoteRandomGraphNode', () => {
@@ -83,7 +83,7 @@ describe('RemoteRandomGraphNode', () => {
                 }
 
                 const update: NeighborUpdate = {
-                    senderId: PeerID.fromValue(peer.peerId).toMapKey(),
+                    senderId: PeerID.fromValue(peer.peerId).toKey(),
                     randomGraphId: 'testStream',
                     neighborDescriptors: [
                         peer

@@ -10,7 +10,6 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "sandbox": "ts-node src/index.ts",
     "build": "tsc -b tsconfig.node.json",
     "prebuild": "./proto.sh",
     "check": "tsc -p ./tsconfig.jest.json --noEmit",
@@ -24,8 +23,8 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.0",
     "@protobuf-ts/runtime-rpc": "^2.8.0",
-    "@streamr/dht": "0.0.1",
-    "@streamr/proto-rpc": "1.1.1",
+    "@streamr/dht": "1.0.0",
+    "@streamr/proto-rpc": "1.2.0",
     "@streamr/utils": "^0.0.1",
     "lodash": "^4.17.21"
   },

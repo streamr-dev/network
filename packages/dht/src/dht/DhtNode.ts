@@ -44,7 +44,7 @@ export interface DhtNodeEvents {
     joinCompleted: () => void
     newKbucketContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     kbucketContactRemoved: (peerDescriptor: PeerDescriptor) => void
-    newOpenInternetContactAdded: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
+    newOpenInternetContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
     openInternetContactRemoved: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
 }
 

@@ -12,7 +12,6 @@
   "license": "(Apache-2.0 AND BSD-3-Clause)",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {
-    "sandbox": "ts-node src/index.ts",
     "prebuild": "./proto.sh",
     "build": "tsc -b tsconfig.node.json",
     "build-browser": "webpack --mode=development --progress",
