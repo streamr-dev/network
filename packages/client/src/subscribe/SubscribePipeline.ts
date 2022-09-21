@@ -101,7 +101,6 @@ export function SubscribePipeline<T = unknown>(
         .onBeforeFinally.listen(async () => {
             const tasks = [
                 gapFillMessages.stop(),
-                decrypt.stop(),
                 validate.stop(),
             ]
             await Promise.allSettled(tasks)

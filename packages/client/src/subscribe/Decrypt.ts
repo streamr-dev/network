@@ -32,7 +32,7 @@ export class Decrypt<T> implements Context {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
-        destroySignal.onDestroy.listen(async () => this.stop())
+        destroySignal.onDestroy.listen(async () => this.abortController.abort())
     }
 
     // TODO if this.isStopped is true, would it make sense to reject the promise
@@ -95,9 +95,5 @@ export class Decrypt<T> implements Context {
             this.streamRegistryCached.clearStream(streamMessage.getStreamId())
             throw err
         }
-    }
-
-    async stop(): Promise<void> {
-        this.abortController.abort()
     }
 }
