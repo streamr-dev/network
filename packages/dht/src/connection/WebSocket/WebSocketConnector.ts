@@ -38,6 +38,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
     private readonly connectivityChecker: ConnectivityChecker
     private readonly ongoingConnectRequests: Map<PeerIDKey, ManagedConnection> = new Map()
     private ownPeerDescriptor?: PeerDescriptor
+    private stopped = false
 
     constructor(
         private protocolVersion: string,

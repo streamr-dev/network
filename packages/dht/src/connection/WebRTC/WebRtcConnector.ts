@@ -37,7 +37,8 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     private readonly ongoingConnectAttempts: Map<PeerIDKey, ManagedWebRtcConnection> = new Map()
     private readonly rpcTransport: ITransport
     private ownPeerDescriptor?: PeerDescriptor
-   
+    private stopped = false
+
     constructor(private config: WebRtcConnectorConfig) {
         super()
         this.rpcTransport = config.rpcTransport
@@ -88,7 +89,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeer.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeer.peerId).toKey()
@@ -113,7 +114,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         description: string,
         connectionId: string
     ): void {
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
@@ -128,6 +129,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     private onConnectionRequest(targetPeerDescriptor: PeerDescriptor): void {
+        if (this.stopped) {
+            return
+        }
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
         this.emit('CONNECTED', managedConnection)
@@ -139,7 +143,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         mid: string,
         connectionId: string
     ): void {
-        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
+        if (this.stopped || !PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))) {
             return
         }
         const peerKey = PeerID.fromValue(remotePeerDescriptor.peerId).toKey()
@@ -155,6 +159,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     stop(): void {
+        this.stopped = true
         this.rpcCommunicator.stop()
         this.removeAllListeners()
     }

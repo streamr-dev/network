@@ -210,6 +210,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onData = (data: Uint8Array, peerDescriptor: PeerDescriptor) => {
+        if (!this.started || this.stopped) {
+            return
+        }
         try {
             const message = Message.fromBinary(data)
             logger.trace('Received message of type ' + message.messageType)
