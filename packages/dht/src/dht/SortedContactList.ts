@@ -44,7 +44,6 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
                 this.contactIds.push(contact.peerId)
                 this.contactIds.sort(this.compareIds)
-
             } else if (this.compareIds(this.contactIds[this.maxSize - 1], contact.peerId) > 0) {
                 const removed = this.contactIds.pop()
                 this.contactsById.delete(removed!.toKey())
@@ -95,7 +94,6 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             const contact = this.contactsById.get(contactId.toKey())
             if (contact && !contact.contacted) {
                 ret.push(contact.contact)
-
                 if (ret.length >= num) {
                     return ret
                 }
@@ -135,7 +133,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public removeContact(id: PeerID): boolean {
         if (this.contactsById.has(id.toKey())) {
-            const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
+                const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())

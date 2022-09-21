@@ -1,7 +1,8 @@
 import { EventEmitter } from 'eventemitter3'
 import {
     ConnectivityResponseMessage,
-    LockRequest, LockResponse,
+    LockRequest,
+    LockResponse,
     Message,
     MessageType,
     PeerDescriptor,
@@ -53,6 +54,7 @@ export interface ConnectionLocker {
 export type Events = TransportEvents & ConnectionManagerEvents
 
 export class ConnectionManager extends EventEmitter<Events> implements ITransport, ConnectionLocker {
+
     public static PROTOCOL_VERSION = '1.0'
     private stopped = false
     private started = false
@@ -85,6 +87,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.rpcCommunicator = new RoutingRpcCommunicator('ConnectionManager', this, {
             rpcRequestTimeout: 10000
         })
+
     }
 
     public async start(peerDescriptorGeneratorCallback: PeerDescriptorGeneratorCallback): Promise<void> {
@@ -321,4 +324,5 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         return {}
     }
+
 }

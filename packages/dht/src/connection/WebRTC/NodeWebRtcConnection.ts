@@ -40,7 +40,6 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private dataChannel?: DataChannel
     private lastState: RTCPeerConnectionState = 'connecting'
     private remoteDescriptionSet = false
-
     private connectingTimeoutRef?: NodeJS.Timeout
 
     public readonly connectionType: ConnectionType = ConnectionType.WEBRTC
