@@ -17,11 +17,13 @@ import { createRandomMsgChainId } from '../publish/MessageChain'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
 import { pOnce } from '../utils/promises'
-import { instanceId } from '../utils/utils'
+import { instanceId, MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
 import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 import { RSAKeyPair } from './RSAKeyPair'
+
+const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
 
 /*
  * Sends group key requests and receives group key responses
@@ -35,7 +37,7 @@ export class SubscriberKeyExchange {
     private readonly groupKeyStoreFactory: GroupKeyStoreFactory
     private readonly authentication: Authentication
     private readonly validator: Validator
-    private readonly pendingRequests: Set<string> = new Set() // TODO limit the size of the set
+    private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly debug: Debugger
     private readonly ensureStarted: () => Promise<void>
     
