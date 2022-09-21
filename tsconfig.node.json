@@ -15,5 +15,8 @@
         "stripInternal": true,
         "useUnknownInCatchVariables": false,
         "strictBindCallApply": true
-    }
+    }, 
+    "lib": [
+        "DOM"
+    ]
 }
