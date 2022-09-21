@@ -310,7 +310,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             sourcePeer: this.ownPeerDescriptor!
         }
         this.doRouteMessage(params).catch((err) => {
-            logger.warn(`Failed to send (routeMessage) to ${targetPeerDescriptor.peerId.toString()}: ${err}`)
+            logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${targetPeerDescriptor.peerId.toString()}: ${err}`)
         })
     }
 
