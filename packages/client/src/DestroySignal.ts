@@ -39,4 +39,13 @@ export class DestroySignal implements Context {
     isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
     }
+
+    createAbortController(): AbortController {
+        const controller = new AbortController()
+        if (this.isDestroyed()) {
+            controller.abort()
+        }
+        this.onDestroy.listen(async () => controller.abort())
+        return controller
+    }
 }

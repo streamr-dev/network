@@ -18,28 +18,26 @@ import { StreamrClientEventEmitter } from '../events'
 export class Decrypt<T> implements Context {
     readonly id
     readonly debug
-    private abortController: AbortController = new AbortController()
 
     constructor(
         context: Context,
         private groupKeyStoreFactory: GroupKeyStoreFactory,
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
-        destroySignal: DestroySignal,
+        private destroySignal: DestroySignal,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.decrypt = this.decrypt.bind(this)
-        destroySignal.onDestroy.listen(async () => this.abortController.abort())
     }
 
     // TODO if this.isStopped is true, would it make sense to reject the promise
     // and not to return the original encrypted message?
     // - e.g. StoppedError, which is not visible to end-user
     async decrypt(streamMessage: StreamMessage<T>): Promise<StreamMessage<T>> {
-        if (this.abortController.signal.aborted) {
+        if (this.destroySignal.isDestroyed()) {
             return streamMessage
         }
 
@@ -69,15 +67,15 @@ export class Decrypt<T> implements Context {
                         'addGroupKey',
                         this.timeoutsConfig.encryptionKeyRequest,
                         (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
-                        this.abortController)
+                        this.destroySignal.createAbortController())
                     groupKey = groupKeys[0] as GroupKey
                 } catch (e: any) {
-                    if (this.abortController.signal.aborted) {
+                    if (this.destroySignal.isDestroyed()) {
                         return streamMessage
                     }
                     throw new DecryptError(streamMessage, `Could not get GroupKey ${streamMessage.groupKeyId}: ${e.message}`)
                 }
-                if (this.abortController.signal.aborted) {
+                if (this.destroySignal.isDestroyed()) {
                     return streamMessage
                 }
             }
