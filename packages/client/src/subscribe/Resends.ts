@@ -2,13 +2,13 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, StreamID, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
 import { Context, ContextError } from '../utils/Context'
 import { inspect } from '../utils/log'
 
-import { MessageStream, MessageStreamOnMessage, pullManyToOne } from './MessageStream'
+import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { SubscribePipeline } from './SubscribePipeline'
 
 import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
@@ -16,7 +16,7 @@ import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { random, range } from 'lodash'
+import { random } from 'lodash'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
@@ -94,24 +94,6 @@ export class Resends implements Context {
         }
 
         return sub
-    }
-
-    async resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamRegistryCached.getStream(streamId)
-        if (partitions === 1) {
-            // nothing interesting to do, treat as regular subscription
-            return this.resend<T>(streamId, options, onMessage)
-        }
-
-        // create resend for each partition
-        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
-            return this.resend<T>({
-                streamId,
-                partition: streamPartition,
-            }, options)
-        }))
-
-        return pullManyToOne(this, subs, onMessage)
     }
 
     private resendMessages<T>(streamPartId: StreamPartID, options: ResendOptions): Promise<MessageStream<T>> {
