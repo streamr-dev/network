@@ -29,6 +29,7 @@ import { MessageMetadata } from './index-exports'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { GroupKey } from './encryption/GroupKey'
 
 /**
  * @category Important
@@ -116,6 +117,12 @@ export class StreamrClient implements Context {
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
+    }
+
+    async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        const store = await this.groupKeyStoreFactory.getStore(streamId)
+        await store.add(key)
     }
 
     // --------------------------------------------------------------------------------------------
