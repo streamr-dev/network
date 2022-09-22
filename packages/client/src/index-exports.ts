@@ -49,7 +49,7 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
+export { GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
 export { GroupKey as EncryptionKey } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 

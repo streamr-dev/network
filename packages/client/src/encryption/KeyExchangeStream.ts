@@ -16,25 +16,11 @@ import { DestroySignal } from '../DestroySignal'
 import { Subscriber } from '../subscribe/Subscriber'
 import { Publisher } from '../publish/Publisher'
 import { Subscription } from '../subscribe/Subscription'
-
-import { GroupKey, GroupKeyish } from './GroupKey'
 import { publishAndWaitForResponseMessage } from '../utils/waitForMessage'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 
 export type GroupKeyId = string
-export type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
-
-export interface EncryptionConfig {
-    encryptionKeys: Record<string, GroupKeysSerialized>
-}
-
-export function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {
-    return new Map<GroupKeyId, GroupKey>(Object.entries(groupKeys || {}).map(([key, value]) => {
-        if (!value || !key) { return null }
-        return [key, GroupKey.from(value)]
-    }).filter(Boolean) as [])
-}
 
 const { GROUP_KEY_RESPONSE } = StreamMessage.MESSAGE_TYPES
 

@@ -96,13 +96,9 @@ describe('SubscriberKeyExchange', () => {
             const publisher = environment.createClient({
                 auth: {
                     privateKey: publisherWallet.privateKey
-                },
-                encryptionKeys: {
-                    [StreamPartIDUtils.getStreamID(streamPartId)]: {
-                        [groupKey.id]: groupKey
-                    }
                 }
             })
+            await publisher.addEncryptionKey(groupKey, StreamPartIDUtils.getStreamID(streamPartId))
             await startPublisherKeyExchangeSubscription(publisher)
             const publisherNode = await publisher.getNode()
             await subscriber.subscribe(streamPartId, () => {})

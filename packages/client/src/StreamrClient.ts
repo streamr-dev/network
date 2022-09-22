@@ -19,7 +19,7 @@ import { StreamDefinition } from './types'
 import { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 import { StreamIDBuilder } from './StreamIDBuilder'
 import { StreamrClientEventEmitter, StreamrClientEvents } from './events'
-import { EthereumAddress, ProxyDirection, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, ProxyDirection, StreamMessage } from 'streamr-client-protocol'
 import { MessageStream, MessageStreamOnMessage } from './subscribe/MessageStream'
 import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
@@ -29,6 +29,7 @@ import { MessageMetadata } from '../src/publish/Publisher'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { GroupKey } from './encryption/GroupKey'
 
 /**
  * @category Important
@@ -118,6 +119,12 @@ export class StreamrClient implements Context {
         }
     }
 
+    async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        const store = await this.groupKeyStoreFactory.getStore(streamId)
+        await store.add(key)
+    }
+
     // --------------------------------------------------------------------------------------------
     // Subscribe
     // --------------------------------------------------------------------------------------------
@@ -163,13 +170,6 @@ export class StreamrClient implements Context {
     }
 
     /**
-     * Subscribe to all partitions for stream.
-     */
-    subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
-        return this.subscriber.subscribeAll(streamId, onMessage)
-    }
-
-    /**
      * @category Important
      */
     unsubscribe(streamDefinitionOrSubscription?: StreamDefinition | Subscription): Promise<unknown> {
@@ -198,13 +198,6 @@ export class StreamrClient implements Context {
         onMessage?: MessageStreamOnMessage<T>
     ): Promise<MessageStream<T>> {
         return this.resends.resend(streamDefinition, options, onMessage)
-    }
-
-    /**
-     * Resend for all partitions of a stream.
-     */
-    resendAll<T>(streamId: StreamID, options: ResendOptions, onMessage?: MessageStreamOnMessage<T>): Promise<MessageStream<T>> {
-        return this.resends.resendAll(streamId, options, onMessage)
     }
 
     waitForStorage(streamMessage: StreamMessage, options?: {

@@ -152,11 +152,10 @@ export const createMockMessage = (
 }
 
 export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyStore => {
-    return new GroupKeyStore({
-        context: mockContext(),
-        clientId: userAddress.toLowerCase(),
-        streamId,
-        groupKeys: []
+    return new GroupKeyStore({ 
+        context: mockContext(), 
+        clientId: userAddress.toLowerCase(), 
+        streamId
     })
 }
 

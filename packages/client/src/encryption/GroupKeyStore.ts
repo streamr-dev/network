@@ -13,7 +13,6 @@ interface GroupKeyStoreOptions {
     context: Context
     clientId: string
     streamId: StreamID
-    groupKeys: [GroupKeyId, GroupKey][]
 }
 
 export class GroupKeyStore implements Context {
@@ -23,28 +22,16 @@ export class GroupKeyStore implements Context {
     private currentGroupKey: GroupKey | undefined // current key id if any
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
 
-    constructor({ context, clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
+    constructor({ context, clientId, streamId }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        const initialData = groupKeys.reduce((o, [, groupKey]) => Object.assign(o, {
-            [groupKey.id]: groupKey.hex,
-        }), {})
         this.persistence = new ServerPersistence({
             context: this,
             tableName: 'GroupKeys',
             valueColumnName: 'groupKey',
             clientId,
             streamId,
-            initialData,
             migrationsPath: join(__dirname, 'migrations')
-        })
-
-        groupKeys.forEach(([groupKeyId, groupKey]) => {
-            if (groupKeyId !== groupKey.id) {
-                throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
-            }
-            // use last init key as current
-            this.currentGroupKey = groupKey
         })
     }
 
@@ -74,13 +61,6 @@ export class GroupKeyStore implements Context {
         return this.persistence.has(id)
     }
 
-    async isEmpty(): Promise<boolean> {
-        // a queued key means it's not empty
-        if (this.queuedGroupKey) { return false }
-
-        return (await this.persistence.size()) === 0
-    }
-
     async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
@@ -106,18 +86,11 @@ export class GroupKeyStore implements Context {
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
         if (!value) { return undefined }
-        return GroupKey.from([id, value])
+        return new GroupKey(id, value)
     }
 
     async exists(): Promise<boolean> {
         return this.persistence.exists()
-    }
-
-    async clear(): Promise<boolean> {
-        this.currentGroupKey = undefined
-        this.queuedGroupKey = undefined
-
-        return this.persistence.clear()
     }
 
     async rotateGroupKey(): Promise<GroupKey> {
@@ -145,7 +118,7 @@ export class GroupKeyStore implements Context {
         return newKey
     }
 
-    async size(): Promise<number> {
-        return this.persistence.size()
+    async destroy(): Promise<void> {
+        return this.persistence.destroy()
     }
 }

@@ -7,7 +7,6 @@ import merge from 'lodash/merge'
 
 import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
-import type { EncryptionConfig } from './encryption/KeyExchangeStream'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
@@ -94,7 +93,6 @@ export type StrictStreamrClientConfig = {
     EthereumConfig
     & ConnectionConfig
     & SubscribeConfig
-    & EncryptionConfig
 )
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
@@ -124,7 +122,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Encryption options
     verifySignatures: 'auto',
-    encryptionKeys: {},
 
     // Ethereum related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider

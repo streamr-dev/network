@@ -1,0 +1,70 @@
+{
+  "name": "@streamr/proto-rpc",
+  "version": "1.2.0",
+  "description": "Proto-RPC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/proto-rpc"
+  },
+  "main": "dist/src/exports.js",
+  "types": "dist/src/exports.d.ts",
+  "license": "(Apache-2.0 AND BSD-3-Clause)",
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "scripts": {
+    "sandbox": "ts-node src/index.ts",
+    "prebuild": "./proto.sh",
+    "build": "tsc -b tsconfig.node.json",
+    "build-browser": "webpack --mode=development --progress",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto test/proto || true",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
+    "test": "jest",
+    "test-browser": "npm run build-browser && karma start karma.config.js",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration"
+  },
+  "dependencies": {
+    "@protobuf-ts/plugin": "^2.8.0",
+    "@streamr/utils": "^0.0.1",
+    "lodash": "^4.17.21",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/lodash": "^4.14.175",
+    "@types/node": "^16.10.6",
+    "@types/uuid": "^8.3.1",
+    "browserify-fs": "^1.0.0",
+    "console-browserify": "^1.2.0",
+    "electron": "^20.0.3",
+    "electron-rebuild": "^3.2.9",
+    "expect": "^28.1.3",
+    "express": "^4.17.1",
+    "jest-mock": "^28.1.3",
+    "karma": "^6.4.0",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-electron": "^7.3.0",
+    "karma-jasmine": "^5.1.0",
+    "karma-jest": "^1.0.0-beta.0",
+    "karma-sourcemap-loader": "^0.3.8",
+    "karma-spec-reporter": "^0.0.34",
+    "karma-webpack": "^5.0.0",
+    "node-module-polyfill": "^1.0.1",
+    "node-polyfill-webpack-plugin": "^1.1.4",
+    "patch-package": "^6.4.7",
+    "path-browserify": "^1.0.1",
+    "setimmediate": "^1.0.5",
+    "source-map-loader": "^3.0.0",
+    "streamr-test-utils": "^2.0.0",
+    "ts-loader": "^9.3.1",
+    "ts-node": "^10.9.1",
+    "webpack": "^5.64.1",
+    "webpack-cli": "^4.9.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.5",
+    "utf-8-validate": "^5.0.7"
+  }
+}
