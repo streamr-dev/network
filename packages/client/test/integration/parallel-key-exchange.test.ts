@@ -39,17 +39,12 @@ describe('parallel key exchange', () => {
                 user: publisher.wallet.address,
                 permissions: [StreamPermission.PUBLISH]
             })
-            const groupKey = publisher.groupKey
             publisher.client = environment.createClient({
                 auth: {
                     privateKey: publisher.wallet.privateKey
-                },
-                encryptionKeys: {
-                    [stream.id]: {
-                        [groupKey.id]: groupKey
-                    }
                 }
             })
+            await publisher.client.addEncryptionKey(publisher.groupKey, stream.id)
         }))
     }, 20000)
 

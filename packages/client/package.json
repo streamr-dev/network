@@ -94,7 +94,7 @@
         "node-polyfill-webpack-plugin": "^1.1.4",
         "streamr-test-utils": "^2.0.0",
         "terser-webpack-plugin": "^5.2.5",
-        "ts-loader": "^9.2.6",
+        "ts-loader": "^9.3.1",
         "typedoc": "^0.22.5",
         "util": "^0.12.4",
         "weak-napi": "^2.0.2",

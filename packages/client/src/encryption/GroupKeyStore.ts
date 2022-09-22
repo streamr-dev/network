@@ -13,7 +13,6 @@ interface GroupKeyStoreOptions {
     context: Context
     clientId: string
     streamId: StreamID
-    groupKeys: [GroupKeyId, GroupKey][]
     eventEmitter: StreamrClientEventEmitter
 }
 
@@ -25,29 +24,18 @@ export class GroupKeyStore implements Context {
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private eventEmitter: StreamrClientEventEmitter
 
-    constructor({ context, clientId, streamId, groupKeys, eventEmitter }: GroupKeyStoreOptions) {
+    constructor({ context, clientId, streamId, eventEmitter }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
-        const initialData = groupKeys.reduce((o, [, groupKey]) => Object.assign(o, {
-            [groupKey.id]: groupKey.hex,
-        }), {})
         this.persistence = new ServerPersistence({
             context: this,
             tableName: 'GroupKeys',
             valueColumnName: 'groupKey',
             clientId,
             streamId,
-            initialData,
             migrationsPath: join(__dirname, 'migrations')
         })
         this.eventEmitter = eventEmitter
-        groupKeys.forEach(([groupKeyId, groupKey]) => {
-            if (groupKeyId !== groupKey.id) {
-                throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
-            }
-            // use last init key as current
-            this.currentGroupKey = groupKey
-        })
     }
 
     private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
@@ -85,7 +73,7 @@ export class GroupKeyStore implements Context {
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
         if (value === undefined) { return undefined }
-        return GroupKey.from([id, value])
+        return new GroupKey(id, value)
     }
 
     async exists(): Promise<boolean> {

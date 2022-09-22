@@ -10,7 +10,7 @@ import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastWallet, waitForCondition } from 'streamr-test-utils'
-import { 
+import {
     createMockMessage,
     createRelativeTestStreamId,
     getGroupKeyStore
@@ -93,23 +93,19 @@ describe('SubscriberKeyExchange', () => {
             const publisher = environment.createClient({
                 auth: {
                     privateKey: publisherWallet.privateKey
-                },
-                encryptionKeys: {
-                    [StreamPartIDUtils.getStreamID(streamPartId)]: {
-                        [groupKey.id]: groupKey
-                    }
                 }
             })
+            await publisher.addEncryptionKey(groupKey, StreamPartIDUtils.getStreamID(streamPartId))
             await subscriber.subscribe(streamPartId, () => {})
 
             await triggerGroupKeyRequest(groupKey, publisher)
-            
+
             const request = await environment.getNetwork().waitForSentMessage({
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
             const keyPersistence = getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), subscriberWallet.address)
             await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
-        }) 
+        })
     })
 })

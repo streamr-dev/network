@@ -29,6 +29,7 @@ import { MessageMetadata } from './index-exports'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
+import { GroupKey } from './encryption/GroupKey'
 import { PublisherKeyExchange } from './encryption/PublisherKeyExchange'
 
 /**
@@ -116,6 +117,12 @@ export class StreamrClient implements Context {
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
+    }
+
+    async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
+        const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
+        const store = await this.groupKeyStoreFactory.getStore(streamId)
+        await store.add(key)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -291,7 +298,7 @@ export class StreamrClient implements Context {
     isStreamPublisher(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamPublisher(streamIdOrPath, userAddress)
     }
-    
+
     isStreamSubscriber(streamIdOrPath: string, userAddress: EthereumAddress): Promise<boolean> {
         return this.streamRegistry.isStreamSubscriber(streamIdOrPath, userAddress)
     }
@@ -299,23 +306,23 @@ export class StreamrClient implements Context {
     // --------------------------------------------------------------------------------------------
     // Storage
     // --------------------------------------------------------------------------------------------
-    
+
     addStreamToStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         return this.streamStorageRegistry.addStreamToStorageNode(streamIdOrPath, nodeAddress)
     }
-    
+
     removeStreamFromStorageNode(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<void> {
         return this.streamStorageRegistry.removeStreamFromStorageNode(streamIdOrPath, nodeAddress)
     }
-    
+
     isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         return this.streamStorageRegistry.isStoredStream(streamIdOrPath, nodeAddress)
     }
-    
+
     getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         return this.streamStorageRegistry.getStoredStreams(nodeAddress)
     }
-    
+
     getStorageNodes(streamIdOrPath?: string): Promise<EthereumAddress[]> {
         return this.streamStorageRegistry.getStorageNodes(streamIdOrPath)
     }

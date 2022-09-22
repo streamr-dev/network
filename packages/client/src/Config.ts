@@ -14,7 +14,6 @@ import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 import type { NetworkNodeOptions } from 'streamr-network'
 import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
-import { GroupKeysSerialized } from './encryption/GroupKeyStoreFactory'
 
 export interface CacheConfig {
     maxSize: number
@@ -46,10 +45,6 @@ export interface SubscribeConfig {
     verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
-}
-
-export interface EncryptionConfig {
-    encryptionKeys: Record<string, GroupKeysSerialized>
 }
 
 export interface ConnectionConfig {
@@ -98,7 +93,6 @@ export type StrictStreamrClientConfig = {
     EthereumConfig
     & ConnectionConfig
     & SubscribeConfig
-    & EncryptionConfig
 )
 
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
@@ -128,7 +122,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Encryption options
     verifySignatures: 'auto',
-    encryptionKeys: {},
 
     // Ethereum related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider

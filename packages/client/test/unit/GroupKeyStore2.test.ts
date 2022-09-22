@@ -1,10 +1,10 @@
-import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid, getGroupKeyStore } from '../test-utils/utils'
+import { getGroupKeyStore, uid } from '../test-utils/utils'
 import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { randomEthereumAddress } from 'streamr-test-utils'
 
 describe('GroupKeyStore', () => {
     let clientId: string
@@ -15,7 +15,7 @@ describe('GroupKeyStore', () => {
     const addAfter = addAfterFn()
 
     beforeEach(() => {
-        clientId = `0x${crypto.randomBytes(20).toString('hex')}`
+        clientId = randomEthereumAddress()
         streamId = toStreamID(uid('stream'))
         store = getGroupKeyStore(streamId, clientId)
         leakDetector = new LeakDetector(store)
@@ -91,7 +91,7 @@ describe('GroupKeyStore', () => {
     })
 
     it('does not conflict with other clientIds', async () => {
-        const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
+        const clientId2 = randomEthereumAddress()
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
@@ -105,7 +105,7 @@ describe('GroupKeyStore', () => {
     })
 
     it('does not conflict with other clientIds', async () => {
-        const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
+        const clientId2 = randomEthereumAddress()
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
@@ -119,7 +119,7 @@ describe('GroupKeyStore', () => {
     })
 
     it('can read previously persisted data', async () => {
-        const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
+        const clientId2 = randomEthereumAddress()
         const store2 = getGroupKeyStore(streamId, clientId2)
         const groupKey = GroupKey.generate()
 

@@ -5,37 +5,12 @@ import { inspect } from '../utils/log'
 import { EncryptionUtil } from './EncryptionUtil'
 
 export type GroupKeyId = string
-export type GroupKeyish = GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>
-
-export interface GroupKeyObject {
-    id: string
-    hex: string
-    data: Uint8Array
-}
-
-interface GroupKeyProps {
-    groupKeyId: GroupKeyId
-    groupKeyHex: string
-    groupKeyData: Uint8Array
-}
 
 export class GroupKeyError extends Error {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    constructor(message: string, public groupKey?: GroupKeyish) {
+    constructor(message: string, public groupKey?: GroupKey) {
         super(message)
     }
-}
-
-function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject): GroupKeyObject {
-    if ('groupKeyId' in data) {
-        return {
-            id: data.groupKeyId,
-            hex: data.groupKeyHex,
-            data: data.groupKeyData,
-        }
-    }
-
-    return data
 }
 
 /**
@@ -133,31 +108,6 @@ export class GroupKey {
     static generate(id = uuid('GroupKey')): GroupKey {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)
-    }
-
-    static from(maybeGroupKey: GroupKeyish): GroupKey {
-        if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
-            throw new GroupKeyError('Group key must be object', maybeGroupKey)
-        }
-
-        if (maybeGroupKey instanceof GroupKey) {
-            return maybeGroupKey
-        }
-
-        try {
-            if (Array.isArray(maybeGroupKey)) {
-                return new GroupKey(maybeGroupKey[0], maybeGroupKey[1])
-            }
-
-            const groupKeyObj = GroupKeyObjectFromProps(maybeGroupKey)
-            return new GroupKey(groupKeyObj.id, groupKeyObj.hex || groupKeyObj.data)
-        } catch (err) {
-            if (err instanceof GroupKeyError) {
-                // wrap err with logging of original object
-                throw new GroupKeyError(`${err.stack}:`, maybeGroupKey)
-            }
-            throw err
-        }
     }
 
     encryptNextGroupKey(nextGroupKey: GroupKey): EncryptedGroupKey {

@@ -63,13 +63,9 @@ describe('Subscriber', () => {
         const publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
-            },
-            encryptionKeys: {
-                [stream.id]: {
-                    [groupKey.id]: groupKey
-                }
             }
         })
+        await publisher.addEncryptionKey(groupKey, stream.id)
 
         const sub = await subscriber.subscribe(stream.id)
 
