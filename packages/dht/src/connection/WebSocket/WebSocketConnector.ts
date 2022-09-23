@@ -56,7 +56,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         this.canConnectFunction = fnCanConnect.bind(this)
 
         this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
-            rpcRequestTimeout: 10000
+            rpcRequestTimeout: 15000
         })
 
         this.requestConnection = this.requestConnection.bind(this)

@@ -232,6 +232,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
         connection.on('managedData', this.onData)
+        connection.on('disconnected', () => {
+            this.closeConnection(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey())
+        })
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey(), connection)
 
         this.emit('newConnection', connection)
@@ -243,7 +246,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         if (this.connections.has(id)) {
             logger.trace(`Disconnecting from Peer ${id}${reason ? `: ${reason}` : ''}`)
-            this.connections.get(id)!.close()
+            const connectionToClose = this.connections.get(id)!
+            this.connections.delete(id)
+            connectionToClose.close()
         }
     }
 
@@ -297,8 +302,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     public getAllConnectionPeerDescriptors(): PeerDescriptor[] {
         return [...this.connections.values()]
-            .filter((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor() !== undefined)
-            .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor() as PeerDescriptor)
+            .filter((managedConnection: ManagedConnection) => managedConnection.isHandshakeCompleted())
+            .map((managedConnection: ManagedConnection) => managedConnection.getPeerDescriptor()! as PeerDescriptor)
     }
 
     // IConnectionLocker server implementation

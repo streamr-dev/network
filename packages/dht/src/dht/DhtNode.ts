@@ -284,7 +284,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.routerDuplicateDetector.add(routedMessage.requestId)
         const message = Message.fromBinary(routedMessage.message)
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            logger.trace(`RouteMessage ${routedMessage.requestId} successfully arrived to destination`)
             this.emit('data', message, routedMessage.sourcePeer!)
         } else {
             await this.doRouteMessage({
@@ -310,32 +309,36 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             sourcePeer: this.ownPeerDescriptor!
         }
         this.doRouteMessage(params).catch((err) => {
-            logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${targetPeerDescriptor.peerId.toString()}: ${err}`)
+            logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
         })
     }
 
     public async doRouteMessage(params: RouteMessageParams): Promise<void> {
         if (!this.started
             || this.stopped
-            || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer!.peerId))) {
+            || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer.peerId))) {
             return
         }
         logger.trace(`Routing message ${params.messageId}`)
         let successAcks = 0
-        const queue = new PQueue({ concurrency: this.config.parallelism, timeout: this.config.routeMessageTimeout })
+        const queue = new PQueue({ concurrency: 2, timeout: this.config.routeMessageTimeout })
+
         const routingTargets = this.getRoutingCandidates(params.destinationPeer, params.sourcePeer, params.previousPeer)
-        const targetPeerDescriptors = routingTargets.map((target) => target.getPeerDescriptor())
+        let targetPeerDescriptors = routingTargets.map((target) => target.getPeerDescriptor())
+
         if (this.cleanUpHandleForConnectionManager) {
             targetPeerDescriptors.map((peerDescriptor) => {
-                this.cleanUpHandleForConnectionManager!.lockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage')
+                this.cleanUpHandleForConnectionManager!.lockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage::' + params.messageId)
             })
         }
-        const initialLength = routingTargets.length
-        while (successAcks < this.config.parallelism && successAcks < initialLength && routingTargets.length > 0) {
+
+        const initialLength = targetPeerDescriptors.length
+        while (successAcks < 2 && successAcks < initialLength && routingTargets.length > 0) {
             if (this.stopped) {
                 break
             }
             const next = routingTargets.shift()
+
             queue.add(
                 (async () => {
                     const success = await next!.routeMessage({
@@ -353,13 +356,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         queue.removeAllListeners()
         if (this.cleanUpHandleForConnectionManager) {
             targetPeerDescriptors.map((peerDescriptor) => {
-                this.cleanUpHandleForConnectionManager!.unlockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage')
+                this.cleanUpHandleForConnectionManager!.unlockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage::' + params.messageId)
             })
         }
         // Only throw if originator
-        if (successAcks === 0 && this.ownPeerId!.equals(PeerID.fromValue(params.sourcePeer!.peerId))) {
+        if (successAcks === 0 && this.ownPeerId!.equals(PeerID.fromValue(params.sourcePeer.peerId))) {
             throw new Err.CouldNotRoute(
-                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer!.peerId).toKey()}`
+                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer.peerId).toKey()}`
                 + ` from ${this.ownPeerId!.toKey()} failed.`
             )
         }
@@ -367,12 +370,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private getRoutingCandidates(destinationPeer: PeerDescriptor, sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): DhtPeer[] {
 
-        const routingSortedContacts = new SortedContactList(PeerID.fromValue(destinationPeer.peerId), 6, true)
+        const routingSortedContacts = new SortedContactList(PeerID.fromValue(destinationPeer.peerId), this.config.parallelism, true)
 
-        const closestFromKBucket = this.bucket!.closest(destinationPeer.peerId, this.config.parallelism).filter((dhtPeer: DhtPeer) =>
-            this.routeCheck(dhtPeer.getPeerDescriptor(), sourcePeer, destinationPeer, previousPeer)
-        )
-        routingSortedContacts.addContacts(closestFromKBucket)
         if (this.cleanUpHandleForConnectionManager) {
             const closestConnections = this.cleanUpHandleForConnectionManager.getAllConnectionPeerDescriptors()
                 .filter((peerDescriptor) => this.routeCheck(peerDescriptor, sourcePeer, destinationPeer, previousPeer))
@@ -380,6 +379,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
                 )
             routingSortedContacts.addContacts(closestConnections)
+        } else if (routingSortedContacts.getSize() === 0){
+            const closestFromKBucket = this.bucket!.closest(destinationPeer.peerId, this.config.parallelism).filter((dhtPeer: DhtPeer) =>
+                this.routeCheck(dhtPeer.getPeerDescriptor(), sourcePeer, destinationPeer, previousPeer)
+            )
+            routingSortedContacts.addContacts(closestFromKBucket)
         }
         return routingSortedContacts.getAllContacts().map((contact) => contact as DhtPeer)
     }
@@ -425,7 +429,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         const previousPeerChecks = previousPeer ?
             !PeerID.fromValue(previousPeer.peerId).equals(peerIdToRoute)
-                && KBucket.distance(previousPeer.peerId, destinationPeer.peerId) > KBucket.distance(peerToRoute.peerId, destinationPeer.peerId)
+                && KBucket.distance(destinationPeer.peerId, previousPeer.peerId) > KBucket.distance(destinationPeer.peerId, peerToRoute.peerId)
             : true
         return !peerIdToRoute.equals(this.ownPeerId!)
             && !peerIdToRoute.equals(originatorPeerId)
@@ -499,6 +503,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return
         }
 
+        if (this.cleanUpHandleForConnectionManager) {
+            this.cleanUpHandleForConnectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+        }
+
         this.addNewContact(entryPointDescriptor)
         const closest = this.bucket!.closest(this.ownPeerId!.value, this.config.parallelism)
         this.neighborList!.addContacts(closest)
@@ -508,6 +516,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             await waitForEvent3<Events>(this, 'joinCompleted', this.config.dhtJoinTimeout)
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
+        } finally {
+            if (this.cleanUpHandleForConnectionManager) {
+                this.cleanUpHandleForConnectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+            }
         }
     }
 
@@ -670,29 +682,42 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        const converted = {
-            ...routed,
-            destinationPeer: routed.destinationPeer!,
-            sourcePeer: routed.sourcePeer!
+        try {
+            const converted = {
+                ...routed,
+                destinationPeer: routed.destinationPeer!,
+                sourcePeer: routed.sourcePeer!
+            }
+            const routable = this.canRoute(converted)
+            const response: RouteMessageAck = {
+                requestId: routed.requestId,
+                destinationPeer: routed.sourcePeer,
+                sourcePeer: routed.destinationPeer,
+                error: routable ? '' : 'Could not forward the message'
+            }
+            if (routable) {
+                setImmediate(async () => {
+                    try {
+                        await this.onRoutedMessage(converted)
+                    } catch (err) {
+                        // no-op
+                    }
+                })
+            } else {
+                // logger.info(`could not route forward for ${routed.previousPeer?.peerId} from ${this.getPeerDescriptor().peerId}`)
+            }
+            return response
+        } catch (err) {
+            console.error(err)
+            const response: RouteMessageAck = {
+                requestId: routed.requestId,
+                destinationPeer: routed.sourcePeer,
+                sourcePeer: routed.destinationPeer,
+                error: 'Could not forward the message'
+            }
+            return response
         }
-        const routable = this.canRoute(converted)
 
-        const response: RouteMessageAck = {
-            requestId: routed.requestId,
-            destinationPeer: routed.sourcePeer,
-            sourcePeer: routed.destinationPeer,
-            error: routable ? '' : 'Could not forward the message'
-        }
-        if (routable) {
-            setImmediate(async () => {
-                try {
-                    await this.onRoutedMessage(converted)
-                } catch (err) {
-                    // no-op
-                }
-            })
-        }
-        return response
     }
 
 }

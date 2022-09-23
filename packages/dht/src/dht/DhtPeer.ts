@@ -86,7 +86,8 @@ export class DhtPeer implements KBucketContact {
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
-            targetDescriptor: this.peerDescriptor as PeerDescriptor
+            targetDescriptor: this.peerDescriptor as PeerDescriptor,
+            timeout: 10000
         }
         try {
             const ack = await this.dhtClient.routeMessage(message, options)
@@ -94,7 +95,7 @@ export class DhtPeer implements KBucketContact {
                 return false
             }
         } catch (err) {
-            logger.debug(err)
+            logger.debug(`Failed to send routeMessage from ${PeerID.fromValue(params.previousPeer!.peerId).toKey()} to ${this.peerId.toKey()} with: ${err}`)
             return false
         }
         return true

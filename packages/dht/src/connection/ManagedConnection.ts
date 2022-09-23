@@ -25,6 +25,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     public connectionId: ConnectionID
     private peerDescriptor?: PeerDescriptor
     public connectionType: ConnectionType
+    private handshakeCompleted = false
 
     constructor(private ownPeerDescriptor: PeerDescriptor,
         private protocolVersion: string,
@@ -110,6 +111,7 @@ export class ManagedConnection extends EventEmitter<Events> {
     private onHandshakeCompleted = (peerDescriptor: PeerDescriptor) => {
         logger.trace('handshake completed objectId: ' + this.objectId)
         this.setPeerDescriptor(peerDescriptor)
+        this.handshakeCompleted = true
 
         while (this.outputBuffer.length > 0) {
             logger.trace('emptying outputBuffer objectId: ' + this.objectId)
@@ -173,5 +175,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         } else if (this.connectingConnection) {
             this.connectingConnection?.close()
         }
+    }
+
+    isHandshakeCompleted(): boolean {
+        return this.handshakeCompleted
     }
 }
