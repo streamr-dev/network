@@ -1,14 +1,10 @@
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
 import { Message, PeerDescriptor } from "../proto/DhtRpc"
 import { SimulatorTransport } from "./SimulatorTransport"
-import { readFileSync } from 'fs'
 import { Logger } from "@streamr/utils"
+import { getRegionDelayMatrix } from "../../test/data/pings"
 
 const logger = new Logger(module)
-
-export function getRandomRegion(): number {
-    return Math.floor(Math.random() * 15)
-}
 
 export enum LatencyType { NONE = 'NONE', RANDOM = 'RANDOM', REAL = 'REAL' }
 
@@ -20,30 +16,8 @@ export class Simulator {
 
     constructor(private latencyType: LatencyType = LatencyType.NONE) {
         if (this.latencyType == LatencyType.REAL) {
-            this.latencyTable = this.loadRealLatencies()
+            this.latencyTable = getRegionDelayMatrix()
         }
-    }
-
-    private loadRealLatencies(): Array<Array<number>> {
-        const realLatencies: Array<Array<number>> = []
-
-        const data = readFileSync('./test/data/pings.csv', 'utf-8').toString().split('\n')
-        const rows: Array<Array<string>> = []
-
-        for (let i = 1; i < data.length; i++) {
-            rows.push(data[i].split(','))
-        }
-
-        // eslint-disable-next-line @typescript-eslint/prefer-for-of
-        for (let i = 0; i < rows.length; i++) {
-            const latencyRow: Array<number> = []
-            for (let j = 1; j < rows[i].length; j++) {
-                latencyRow.push(parseFloat(rows[i][j]) / 2)
-            }
-            realLatencies.push(latencyRow)
-        }
-
-        return realLatencies
     }
 
     addConnectionManager(manager: SimulatorTransport): void {

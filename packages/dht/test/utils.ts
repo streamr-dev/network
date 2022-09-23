@@ -9,7 +9,8 @@ import {
 import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { getRandomRegion, Simulator } from '../src/connection/Simulator'
+import { Simulator } from '../src/connection/Simulator'
+import { getRandomRegion } from './data/pings'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
