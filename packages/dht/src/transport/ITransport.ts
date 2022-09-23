@@ -8,11 +8,12 @@ export interface TransportEvents {
 
 export interface ITransport {
     on<T extends keyof TransportEvents>(eventName: T, listener: (message: Message, peerDescriptor: PeerDescriptor) => void): void 
+    on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
+    
     once<T extends keyof TransportEvents>(eventName: T, listener: (message: Message, peerDescriptor: PeerDescriptor) => void): void
-    off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message, peerDescriptor: PeerDescriptor) => void): void
-
-    on<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void 
     once<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
+
+    off<T extends keyof TransportEvents>(eventName: T, listener: (message: Message, peerDescriptor: PeerDescriptor) => void): void
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
 
     send(msg: Message, peerDescriptor: PeerDescriptor): void
