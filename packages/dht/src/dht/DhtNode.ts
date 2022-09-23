@@ -324,7 +324,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         const queue = new PQueue({ concurrency: 2, timeout: this.config.routeMessageTimeout })
 
         const routingTargets = this.getRoutingCandidates(params.destinationPeer, params.sourcePeer, params.previousPeer)
-        let targetPeerDescriptors = routingTargets.map((target) => target.getPeerDescriptor())
+        const targetPeerDescriptors = routingTargets.map((target) => target.getPeerDescriptor())
 
         if (this.cleanUpHandleForConnectionManager) {
             targetPeerDescriptors.map((peerDescriptor) => {
@@ -356,7 +356,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         queue.removeAllListeners()
         if (this.cleanUpHandleForConnectionManager) {
             targetPeerDescriptors.map((peerDescriptor) => {
-                this.cleanUpHandleForConnectionManager!.unlockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage::' + params.messageId)
+                this.cleanUpHandleForConnectionManager!.unlockConnection(
+                    peerDescriptor,
+                    this.config.serviceId + '::RouteMessage::' + params.messageId
+                )
             })
         }
         // Only throw if originator
@@ -379,7 +382,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                     new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
                 )
             routingSortedContacts.addContacts(closestConnections)
-        } else if (routingSortedContacts.getSize() === 0){
+        } else if (routingSortedContacts.getSize() === 0) {
             const closestFromKBucket = this.bucket!.closest(destinationPeer.peerId, this.config.parallelism).filter((dhtPeer: DhtPeer) =>
                 this.routeCheck(dhtPeer.getPeerDescriptor(), sourcePeer, destinationPeer, previousPeer)
             )

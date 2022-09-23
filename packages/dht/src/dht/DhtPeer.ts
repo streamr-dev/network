@@ -95,7 +95,10 @@ export class DhtPeer implements KBucketContact {
                 return false
             }
         } catch (err) {
-            logger.debug(`Failed to send routeMessage from ${PeerID.fromValue(params.previousPeer!.peerId).toKey()} to ${this.peerId.toKey()} with: ${err}`)
+            logger.debug(
+                `Failed to send routeMessage from ${PeerID.fromValue(params.previousPeer!.peerId).toKey()}`
+                + ` to ${this.peerId.toKey()} with: ${err}`
+            )
             return false
         }
         return true
