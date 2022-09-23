@@ -6,7 +6,7 @@ import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-ne
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 10
+    const NUM_OF_NODES = 64
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
@@ -27,7 +27,7 @@ describe('Full node network with WebRTC connections', () => {
         streamrNodes = []
         connectionManagers = []
 
-        const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 2 })
+        const layer0Ep = new DhtNode({ peerDescriptor: epPeerDescriptor, numberOfNodesPerKBucket: 3, routeMessageTimeout: 10000 })
         await layer0Ep.start()
         await layer0Ep.joinDht(epPeerDescriptor)
 
@@ -37,28 +37,32 @@ describe('Full node network with WebRTC connections', () => {
 
         await epStreamrNode.joinStream(randomGraphId, epPeerDescriptor)
 
-        range(NUM_OF_NODES).map(async (i) => {
-            setImmediate(async () => {
-                const peerDescriptor: PeerDescriptor = {
-                    peerId: new Uint8Array([i, 1, 1]),
-                    type: NodeType.NODEJS
-                }
+        // range(NUM_OF_NODES).map(async (i) => {
+        //     setImmediate(async () => {
+        for (let i = 0; i < NUM_OF_NODES; i++) {
+            const peerDescriptor: PeerDescriptor = {
+                peerId: new Uint8Array([i, 1, 1]),
+                type: NodeType.NODEJS
+            }
 
-                const layer0 = new DhtNode({ peerDescriptor })
-                await layer0.start()
-                await layer0.joinDht(epPeerDescriptor)
+            const layer0 = new DhtNode({ peerDescriptor, routeMessageTimeout: 10000 })
+            await layer0.start()
+            await layer0.joinDht(epPeerDescriptor)
 
-                const connectionManager = layer0.getTransport() as ConnectionManager
-                const streamrNode = new StreamrNode()
-                await streamrNode.start(layer0, connectionManager, connectionManager)
+            const connectionManager = layer0.getTransport() as ConnectionManager
+            const streamrNode = new StreamrNode()
+            await streamrNode.start(layer0, connectionManager, connectionManager)
 
-                streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
-                connectionManagers.push(connectionManager)
-                streamrNodes.push(streamrNode)
-            })
-        })
+            // await streamrNode.joinStream(randomGraphId, epPeerDescriptor)
+            streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
+            connectionManagers.push(connectionManager)
+            streamrNodes.push(streamrNode)
+            console.log(i)
+        }
+        //     })
+        // })
 
-    })
+    }, 600000)
 
     afterEach(async () => {
         await Promise.all([
@@ -71,9 +75,9 @@ describe('Full node network with WebRTC connections', () => {
 
     it('happy path', async () => {
 
-        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 15000)
+        await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3, 15000)
+            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3 , 600000)
         )])
 
         let numOfMessagesReceived = 0
@@ -95,8 +99,8 @@ describe('Full node network with WebRTC connections', () => {
 
         epStreamrNode.publishToStream(randomGraphId, epPeerDescriptor, message)
 
-        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES)
+        await waitForCondition(() => numOfMessagesReceived === NUM_OF_NODES, 10000)
 
-    }, 30000)
+    }, 300000)
 
 })
