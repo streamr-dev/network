@@ -101,7 +101,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             this.ongoingConnectAttempts.set(peerKey, managedConnection)
             this.bindListenersAndStartConnection(remotePeer, connection)
 
-            this.emit('CONNECTED', managedConnection)
+            this.emit('newConnection', managedConnection)
         }
         // Always use offerers connectionId
         connection.setConnectionId(connectionId)
@@ -134,7 +134,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         }
         const managedConnection = this.connect(targetPeerDescriptor)
         managedConnection.setPeerDescriptor(targetPeerDescriptor)
-        this.emit('CONNECTED', managedConnection)
+        this.emit('newConnection', managedConnection)
     }
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,
@@ -185,10 +185,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         connection.on('localCandidate', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
-        connection.on('connected', () => {
-            // Sending Connected event is now handled by ManagedConnection
-            // this.emit(ManagedConnectionSourceEvents.CONNECTED, connection)
-        })
+        
         connection.start(offering)
         if (offering === false && sendRequest) {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())

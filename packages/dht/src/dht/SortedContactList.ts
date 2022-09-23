@@ -21,7 +21,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number, private allowOwnPeerId = false) {
+    constructor(private ownId: PeerID, private maxSize: number, private allowOwnPeerId = false, private peerIdDistanceLimit?: PeerID) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
@@ -36,7 +36,8 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     public addContact(contact: Contact): void {
-        if (!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) {
+        if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) || 
+        (this.peerIdDistanceLimit && this.compareIds(this.peerIdDistanceLimit, contact.peerId) <= 0)) {
             return
         }
         if (!this.contactsById.has(contact.peerId.toKey())) {

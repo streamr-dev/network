@@ -1,6 +1,9 @@
 import { ManagedConnection } from './ManagedConnection'
 
 export interface ManagedConnectionSourceEvent {
-    CONNECTED: (connection: ManagedConnection) => void
+    // emitted when new connection has been created, 
+    // does not mean that the connection would have been connected
+    
+    newConnection: (connection: ManagedConnection) => void
 }
 

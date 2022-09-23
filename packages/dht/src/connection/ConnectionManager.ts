@@ -102,13 +102,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.ownPeerDescriptor = ownPeerDescriptor
 
         this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-        this.webSocketConnector.on('CONNECTED', (connection: ManagedConnection) => {
+        this.webSocketConnector.on('newConnection', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
         this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
 
-        this.webrtcConnector.on('CONNECTED', (connection: ManagedConnection) => {
+        this.webrtcConnector.on('newConnection', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
@@ -226,15 +226,28 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
+    private onConnected = (connection: ManagedConnection) => {
+        this.emit('connected', connection.getPeerDescriptor()!)
+    }
+
+    private onDisconnected = (connection: ManagedConnection) => {
+        this.closeConnection(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey())
+        this.emit('disconnected', connection.getPeerDescriptor()!)
+    }
+
     private onNewConnection = (connection: ManagedConnection) => {
         if (!this.started || this.stopped) {
             return
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
         connection.on('managedData', this.onData)
-        connection.on('disconnected', () => {
-            this.closeConnection(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey())
+        connection.on('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
+            this.onConnected(connection)
         })
+        connection.on('disconnected', (_code?: number, _reason?: string) => {
+            this.onDisconnected(connection)
+        })
+        
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey(), connection)
 
         this.emit('newConnection', connection)
