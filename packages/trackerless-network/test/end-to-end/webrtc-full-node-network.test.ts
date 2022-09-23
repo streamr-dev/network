@@ -1,6 +1,6 @@
 import { DhtNode, PeerDescriptor, NodeType, ConnectionManager, PeerID } from '@streamr/dht'
 import { StreamrNode, Event as StreamrNodeEvent } from '../../src/logic/StreamrNode'
-import { range } from 'lodash'
+// import { range } from 'lodash'
 import { waitForCondition } from 'streamr-test-utils'
 import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-network/protos/NetworkRpc'
 
@@ -57,7 +57,7 @@ describe('Full node network with WebRTC connections', () => {
             streamrNode.subscribeToStream(randomGraphId, epPeerDescriptor)
             connectionManagers.push(connectionManager)
             streamrNodes.push(streamrNode)
-            console.log(i)
+            // console.log(i)
         }
         //     })
         // })
@@ -77,7 +77,7 @@ describe('Full node network with WebRTC connections', () => {
 
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
-            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3 , 600000)
+            waitForCondition(() => streamrNode.getStream(randomGraphId)!.layer2.getTargetNeighborStringIds().length >= 3, 600000)
         )])
 
         let numOfMessagesReceived = 0
