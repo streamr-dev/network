@@ -162,7 +162,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
-        this.onData(data, peerDescriptor)    
+        this.onData(data, peerDescriptor)
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -245,13 +245,17 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
         logger.trace('onNewConnection() objectId ' + connection.objectId)
         connection.on('managedData', this.onData)
-        connection.on('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
+        if (connection.isHandshakeCompleted()) {
             this.onConnected(connection)
-        })
+        } else {
+            connection.once('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
+                this.onConnected(connection)
+            })
+        }
         connection.on('disconnected', (_code?: number, _reason?: string) => {
             this.onDisconnected(connection)
         })
-        
+
         this.connections.set(PeerID.fromValue(connection.getPeerDescriptor()!.peerId).toKey(), connection)
 
         this.emit('newConnection', connection)
@@ -294,7 +298,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         remoteConnectionLocker.lockRequest(this.ownPeerDescriptor!, serviceId)
             .then((_accepted) => logger.trace('LockRequest successful'))
-            .catch((err) => {logger.error(err)})
+            .catch((err) => { logger.error(err) })
     }
 
     public unlockConnection(targetDescriptor: PeerDescriptor, serviceId: ServiceId): void {

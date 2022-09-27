@@ -74,7 +74,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 
-        return await contact.routeMessage({
+        return contact.routeMessage({
             ...this.messageToRoute,
             previousPeer: this.ownPeerDescriptor
         })
@@ -109,6 +109,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     public start(): void {
+        logger.info("start()")
         const contacts = this.findMoreContacts()
         if (contacts.length < 1) {
             this.emit('noCandidatesFound', this.sessionId)
