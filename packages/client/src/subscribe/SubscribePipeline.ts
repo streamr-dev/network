@@ -65,7 +65,10 @@ export function SubscribePipeline<T = unknown>(
         container.resolve(ConfigInjectionToken.Timeouts),
     )
 
-    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)
+    const msgChainUtil = new MsgChainUtil<T>(async (msg) => {
+        await validate.validate(msg)
+        return decrypt.decrypt(msg)
+    }, messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
@@ -75,11 +78,7 @@ export function SubscribePipeline<T = unknown>(
     messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
-        // validate
-        .forEach(async (streamMessage: StreamMessage) => {
-            await validate.validate(streamMessage)
-        })
-        // decrypt
+        // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
             setImmediate(async () => {
                 for await (const msg of src) {
