@@ -31,7 +31,7 @@ describe('Decrypt', () => {
             new DestroySignal(context),
             new StreamrClientEventEmitter(),
             {
-                encryptionKeyRequest: 50
+                keyRequestTimeout: 50
             } as any
         )
         const groupKey = GroupKey.generate()

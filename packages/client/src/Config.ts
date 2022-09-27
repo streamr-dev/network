@@ -33,7 +33,6 @@ export interface TimeoutsConfig {
         timeout: number
         retryInterval: number
     }
-    encryptionKeyRequest: number
     httpFetchTimeout: number
 }
 
@@ -59,6 +58,7 @@ export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContex
 }
 
 export interface DecryptionConfig {
+    keyRequestTimeout: number
     maxKeyRequestsPerSecond: number
 }
 
@@ -163,6 +163,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         }
     },
     decryption: {
+        keyRequestTimeout: 30 * 1000,
         maxKeyRequestsPerSecond: 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
     },
     cache: {
@@ -182,7 +183,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             timeout: 30 * 1000,
             retryInterval: 1000
         },
-        encryptionKeyRequest: 30 * 1000,
         httpFetchTimeout: 30 * 1000
     },
     debug: {

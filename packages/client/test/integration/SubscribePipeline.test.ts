@@ -29,10 +29,9 @@ describe('SubscribePipeline', () => {
     beforeEach(async () => {
         environment = new FakeEnvironment()
         subscriber = environment.createClient({
-            // eslint-disable-next-line no-underscore-dangle
-            _timeouts: {
-                encryptionKeyRequest: 50
-            } as any
+            decryption: {
+                keyRequestTimeout: 50
+            }
         })
         const stream = await subscriber.createStream('/path')
         streamPartId = stream.getStreamParts()[0]

@@ -77,10 +77,9 @@ describe('resend with existing key', () => {
             auth: {
                 privateKey: subscriberWallet.privateKey
             },
-            // eslint-disable-next-line no-underscore-dangle
-            _timeouts: {
-                encryptionKeyRequest: 50
-            } as any
+            decryption: {
+                keyRequestTimeout: 50
+            }
         })
         stream = await subscriber.createStream({
             id: streamId

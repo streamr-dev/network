@@ -9,7 +9,7 @@ import { DestroySignal } from '../DestroySignal'
 import { instanceId } from '../utils/utils'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
-import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
+import { ConfigInjectionToken, DecryptionConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
 import { waitForEvent } from '@streamr/utils'
@@ -26,7 +26,7 @@ export class Decrypt<T> implements Context {
         private streamRegistryCached: StreamRegistryCached,
         private destroySignal: DestroySignal,
         @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter,
-        @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig
+        @inject(ConfigInjectionToken.Decryption) private decryptionConfig: DecryptionConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -65,7 +65,7 @@ export class Decrypt<T> implements Context {
                         // TODO remove "as any" type casing in NET-889
                         this.eventEmitter as any,
                         'addGroupKey',
-                        this.timeoutsConfig.encryptionKeyRequest,
+                        this.decryptionConfig.keyRequestTimeout,
                         (storedGroupKey: GroupKey) => storedGroupKey.id === groupKeyId,
                         this.destroySignal.createAbortController())
                     groupKey = groupKeys[0] as GroupKey

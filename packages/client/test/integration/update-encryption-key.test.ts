@@ -25,10 +25,9 @@ describe('update encryption key', () => {
         environment = new FakeEnvironment()
         publisher = environment.createClient()
         subscriber = environment.createClient({
-            // eslint-disable-next-line no-underscore-dangle
-            _timeouts: {
-                encryptionKeyRequest: 200
-            } as any
+            decryption: {
+                keyRequestTimeout: 200
+            }
         })
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({

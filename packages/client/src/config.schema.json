@@ -85,9 +85,6 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
-                },
-                "encryptionKeyRequest": {
-                    "type": "number"
                 }
             }
         },
@@ -244,6 +241,9 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "keyRequestTimeout": {
+                    "type": "number"
+                },
                 "maxKeyRequestsPerSecond": {
                     "type": "number"
                 }
