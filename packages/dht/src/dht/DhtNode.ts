@@ -750,7 +750,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.routerDuplicateDetector.add(routedMessage.requestId)
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+            this.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             return this.createRouteMessageAck(routedMessage)
         } else {
             return this.doRouteMessage(routedMessage)
