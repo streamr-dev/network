@@ -10,7 +10,7 @@ import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
+import { waitForTx, createDecoratedContract } from '../utils/contract'
 import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
 import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -74,7 +74,7 @@ export class StreamStorageRegistry {
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
-        this.streamStorageRegistryContractReadonly = withErrorHandlingAndLogging(
+        this.streamStorageRegistryContractReadonly = createDecoratedContract(
             new Contract(this.ethereumConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract

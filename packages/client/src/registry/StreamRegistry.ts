@@ -22,7 +22,7 @@ import { omit } from 'lodash'
 import { createWriteContract, SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
+import { ObservableContract, waitForTx, createDecoratedContract } from '../utils/contract'
 import {
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -90,7 +90,7 @@ export class StreamRegistry implements Context {
         this.debug('create')
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
-            return withErrorHandlingAndLogging<StreamRegistryContract>(
+            return createDecoratedContract<StreamRegistryContract>(
                 new Contract(this.ethereumConfig.streamRegistryChainAddress, StreamRegistryArtifact, provider),
                 'streamRegistry'
             )

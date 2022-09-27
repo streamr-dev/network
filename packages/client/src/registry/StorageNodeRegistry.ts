@@ -7,7 +7,7 @@ import { ConfigInjectionToken } from '../Config'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
 import { EthereumAddress } from 'streamr-client-protocol'
-import { waitForTx, withErrorHandlingAndLogging } from '../utils/contract'
+import { waitForTx, createDecoratedContract } from '../utils/contract'
 import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 
@@ -33,7 +33,7 @@ export class StorageNodeRegistry {
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
-        this.nodeRegistryContractReadonly = withErrorHandlingAndLogging(
+        this.nodeRegistryContractReadonly = createDecoratedContract(
             new Contract(this.ethereumConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
             'storageNodeRegistry'
         ) as NodeRegistryContract

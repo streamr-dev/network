@@ -3,7 +3,7 @@ import { Contract, ContractInterface, ContractReceipt, ContractTransaction } fro
 import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
-import { ObservableContract, withErrorHandlingAndLogging } from './contract'
+import { ObservableContract, createDecoratedContract } from './contract'
 import { EthereumAddress } from 'streamr-client-protocol'
 import { Gate } from './Gate'
 import { Context } from './Context'
@@ -36,7 +36,7 @@ export const createWriteContract = <T extends Contract>(
     name: string,
     graphQLClient: SynchronizedGraphQLClient
 ): ObservableContract<T> => {
-    const contract = withErrorHandlingAndLogging<T>(
+    const contract = createDecoratedContract<T>(
         new Contract(address, contractInterface, signer),
         name
     )

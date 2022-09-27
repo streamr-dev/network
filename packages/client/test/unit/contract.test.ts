@@ -1,6 +1,6 @@
 import { wait } from '@streamr/utils'
 import { range } from 'lodash'
-import { withErrorHandlingAndLogging } from '../../src/utils/contract'
+import { createDecoratedContract, ObservableContract } from '../../src/utils/contract'
 
 interface MockContract {
     foo: () => Promise<number>
@@ -9,20 +9,20 @@ interface MockContract {
     }
 }
 
-const createWrappedContract = (fooFn: () => Promise<number>, maxConcurrentInvocations?: number) => {
+const createContract = (fooFn: () => Promise<number>, maxConcurrentInvocations?: number): ObservableContract<any> => {
     const mockContract: MockContract = {
         foo: fooFn,
         functions: {
             foo: 'mock-artifact-definition'
         }
     } as any
-    return withErrorHandlingAndLogging(mockContract as any, 'mock-contract', maxConcurrentInvocations)
+    return createDecoratedContract(mockContract as any, 'mock-contract', maxConcurrentInvocations)
 }
 
 describe('contracts', () => {
 
     it('happy path', async () => {
-        const wrappedContract = createWrappedContract(async () => 123)
+        const wrappedContract = createContract(async () => 123)
         expect(await wrappedContract.foo()).toBe(123)
     })
 
@@ -30,7 +30,7 @@ describe('contracts', () => {
         const INVOCATION_DURATION = 50
         const startTime = Date.now()
         const invocationSlots: number[] = []
-        const wrappedContract = createWrappedContract(async () => {
+        const wrappedContract = createContract(async () => {
             invocationSlots.push(Math.round((Date.now() - startTime) / INVOCATION_DURATION))
             await wait(INVOCATION_DURATION)
             return 123

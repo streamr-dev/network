@@ -93,13 +93,15 @@ const createWrappedContractMethod = (
 }
 
 /**
- * You can use the wrapped contract normally, e.g.:
+ * Adds error handling and logging for each method call. Optionally limits concurrency.
+ * 
+ * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
  *     return await tx.wait()
  * or
  *     await contract.getFoobar(456)
  */
-export const withErrorHandlingAndLogging = <T extends Contract>(  // TODO rename as we do throttling, too
+export const createDecoratedContract = <T extends Contract>(
     contract: Contract,
     contractName: string,
     maxConcurrentInvocations = 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
