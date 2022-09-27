@@ -240,6 +240,15 @@
                 }
             }
         },
+        "decryption": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "maxKeyRequestsPerSecond": {
+                    "type": "number"
+                }
+            }
+        },
         "debug": {
             "type": "object",
             "additionalProperties": false,

@@ -12,11 +12,12 @@ import {
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { v4 as uuidv4 } from 'uuid'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ConfigInjectionToken, DecryptionConfig } from '../Config'
 import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { createRandomMsgChainId } from '../publish/MessageChain'
 import { Context } from '../utils/Context'
 import { Debugger } from '../utils/log'
-import { pOnce } from '../utils/promises'
+import { withThrottling, pOnce } from '../utils/promises'
 import { instanceId, MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
 import { GroupKey, GroupKeyId } from './GroupKey'
@@ -40,13 +41,15 @@ export class SubscriberKeyExchange {
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
     private readonly debug: Debugger
     private readonly ensureStarted: () => Promise<void>
+    requestGroupKey: (groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => Promise<void>
     
     constructor(
         context: Context,
         networkNodeFacade: NetworkNodeFacade,
         groupKeyStoreFactory: GroupKeyStoreFactory,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
-        validator: Validator
+        validator: Validator,
+        @inject(ConfigInjectionToken.Decryption) decryptionConfig: DecryptionConfig
     ) {
         this.debug = context.debug.extend(instanceId(this))
         this.networkNodeFacade = networkNodeFacade
@@ -59,9 +62,13 @@ export class SubscriberKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.debug('Started')
         })
+        // eslint-disable-next-line max-len
+        this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => { 
+            return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
+        }, decryptionConfig.maxKeyRequestsPerSecond)
     }
 
-    async requestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
+    private async doRequestGroupKey(groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID): Promise<void> {
         await this.ensureStarted()
         const requestId = uuidv4()
         this.debug('Request group key %s, requestId=%s', groupKeyId, requestId)

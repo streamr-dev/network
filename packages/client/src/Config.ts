@@ -58,6 +58,10 @@ export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContex
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
 }
 
+export interface DecryptionConfig {
+    maxKeyRequestsPerSecond: number
+}
+
 export interface DebugConfig {
     inspectOpts: InspectOptions
 }
@@ -83,6 +87,7 @@ export type StrictStreamrClientConfig = {
     */
     auth: AuthConfig
     network: NetworkConfig
+    decryption: DecryptionConfig
     cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
@@ -95,8 +100,9 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
     network: Partial<StrictStreamrClientConfig['network']>
+    decryption: Partial<StrictStreamrClientConfig['decryption']>
     /** @internal */
     debug: Partial<StrictStreamrClientConfig['debug']>
 }>
@@ -155,6 +161,9 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             chainId: 137,
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
+    },
+    decryption: {
+        maxKeyRequestsPerSecond: 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
     },
     cache: {
         maxSize: 10000,
@@ -216,6 +225,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             ...merge(defaults.network || {}, opts.network),
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
+        decryption: merge(defaults.decryption || {}, opts.decryption),
         debug: merge(defaults.debug || {}, opts.debug),
         cache: {
             ...defaults.cache,
@@ -272,6 +282,6 @@ export const ConfigInjectionToken = {
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
-    Encryption: Symbol('Config.Encryption'),
+    Decryption: Symbol('Config.Decryption'),
     Timeouts: Symbol('Config.Timeouts')
 }
