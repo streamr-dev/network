@@ -2,6 +2,7 @@ import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/c
 import EventEmitter from 'eventemitter3'
 import debug from 'debug'
 import { NameDirectory } from 'streamr-network'
+import pLimit from 'p-limit'
 
 const log = debug('Streamr:contract')
 
@@ -71,11 +72,12 @@ const withErrorHandling = async <T>(
 const createWrappedContractMethod = (
     originalMethod: (...args: any) => Promise<any>,
     methodName: string,
-    eventEmitter: EventEmitter<ContractEvent>
+    eventEmitter: EventEmitter<ContractEvent>,
+    concurrencyLimit: pLimit.Limit
 ) => {
     return async (...args: any) => {
         eventEmitter.emit('onMethodExecute', methodName)
-        const returnValue = await withErrorHandling(() => originalMethod(...args), methodName)
+        const returnValue = await withErrorHandling(() => concurrencyLimit(() => originalMethod(...args)), methodName)
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
@@ -97,12 +99,13 @@ const createWrappedContractMethod = (
  * or
  *     await contract.getFoobar(456)
  */
-export const withErrorHandlingAndLogging = <T extends Contract>(
+export const withErrorHandlingAndLogging = <T extends Contract>(  // TODO rename as we do throttling, too
     contract: Contract,
     contractName: string,
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
+    const concurrencyLimit = pLimit(999999) // TODO just a placeholder value, define a valid value by executing some benchmarks
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
@@ -114,7 +117,8 @@ export const withErrorHandlingAndLogging = <T extends Contract>(
         methods[methodName] = createWrappedContractMethod(
             contract[methodName],
             `${contractName}.${methodName}`,
-            eventEmitter
+            eventEmitter,
+            concurrencyLimit
         )
     })
     createLogger(eventEmitter)
