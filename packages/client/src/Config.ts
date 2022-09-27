@@ -156,6 +156,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
+    maxConcurrentContractCalls: 10, // TODO just a placeholder value, define a valid value by executing some benchmarks
     cache: {
         maxSize: 10000,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours

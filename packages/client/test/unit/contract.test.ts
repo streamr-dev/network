@@ -9,14 +9,14 @@ interface MockContract {
     }
 }
 
-const createContract = (fooFn: () => Promise<number>, maxConcurrentInvocations?: number): ObservableContract<any> => {
+const createContract = (fooFn: () => Promise<number>, maxConcurrentCalls = 999999): ObservableContract<any> => {
     const mockContract: MockContract = {
         foo: fooFn,
         functions: {
             foo: 'mock-artifact-definition'
         }
     } as any
-    return createDecoratedContract(mockContract as any, 'mock-contract', maxConcurrentInvocations)
+    return createDecoratedContract(mockContract as any, 'mock-contract', maxConcurrentCalls)
 }
 
 describe('contracts', () => {

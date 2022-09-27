@@ -93,7 +93,7 @@ const createWrappedContractMethod = (
 }
 
 /**
- * Adds error handling and logging for each method call. Optionally limits concurrency.
+ * Adds error handling, logging and limits concurrency.
  * 
  * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
@@ -104,11 +104,11 @@ const createWrappedContractMethod = (
 export const createDecoratedContract = <T extends Contract>(
     contract: Contract,
     contractName: string,
-    maxConcurrentInvocations = 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
+    maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
-    const concurrencyLimit = pLimit(maxConcurrentInvocations) 
+    const concurrencyLimit = pLimit(maxConcurrentCalls)
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
