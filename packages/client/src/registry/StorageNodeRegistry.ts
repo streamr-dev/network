@@ -1,4 +1,3 @@
-import { Contract } from '@ethersproject/contracts'
 import debug from 'debug'
 import type { NodeRegistry as NodeRegistryContract } from '../ethereumArtifacts/NodeRegistry'
 import NodeRegistryArtifact from '../ethereumArtifacts/NodeRegistryAbi.json'
@@ -7,9 +6,9 @@ import { ConfigInjectionToken } from '../Config'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { NotFoundError } from '../HttpUtil'
 import { EthereumAddress } from 'streamr-client-protocol'
-import { waitForTx, createDecoratedContract } from '../utils/contract'
-import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
+import { waitForTx } from '../utils/contract'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ContractFactory } from '../ContractFactory'
 
 /**
  * Store a mapping of storage node addresses <-> storage node URLs
@@ -28,13 +27,15 @@ export class StorageNodeRegistry {
     private nodeRegistryContractReadonly: NodeRegistryContract
 
     constructor(
-        @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
+        private contractFactory: ContractFactory,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
-        this.nodeRegistryContractReadonly = createDecoratedContract(
-            new Contract(this.ethereumConfig.storageNodeRegistryChainAddress, NodeRegistryArtifact, chainProvider),
+        this.nodeRegistryContractReadonly = this.contractFactory.createReadContract(
+            this.ethereumConfig.storageNodeRegistryChainAddress,
+            NodeRegistryArtifact,
+            chainProvider,
             'storageNodeRegistry'
         ) as NodeRegistryContract
     }
@@ -42,12 +43,11 @@ export class StorageNodeRegistry {
     private async connectToContract() {
         if (!this.nodeRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
-            this.nodeRegistryContract = createWriteContract<NodeRegistryContract>(
+            this.nodeRegistryContract = this.contractFactory.createWriteContract<NodeRegistryContract>(
                 this.ethereumConfig.storageNodeRegistryChainAddress,
                 NodeRegistryArtifact,
                 chainSigner,
-                'storageNodeRegistry',
-                this.graphQLClient
+                'storageNodeRegistry'
             )
         }
     }

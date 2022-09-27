@@ -1,4 +1,4 @@
-import { Contract, ContractTransaction } from '@ethersproject/contracts'
+import { ContractTransaction } from '@ethersproject/contracts'
 import type { StreamRegistryV3 as StreamRegistryContract } from '../ethereumArtifacts/StreamRegistryV3'
 import StreamRegistryArtifact from '../ethereumArtifacts/StreamRegistryV3Abi.json'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -19,10 +19,10 @@ import {
 } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { omit } from 'lodash'
-import { createWriteContract, SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
+import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { searchStreams as _searchStreams, SearchStreamsPermissionFilter } from './searchStreams'
 import { filter, map } from '../utils/GeneratorUtils'
-import { ObservableContract, waitForTx, createDecoratedContract } from '../utils/contract'
+import { ObservableContract, waitForTx } from '../utils/contract'
 import {
     StreamPermission,
     convertChainPermissionsToStreamPermissions,
@@ -39,6 +39,7 @@ import {
 } from '../permission'
 import { StreamRegistryCached } from './StreamRegistryCached'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ContractFactory } from '../ContractFactory'
 
 /* 
  * On-chain registry of stream metadata and permissions.
@@ -77,6 +78,7 @@ export class StreamRegistry implements Context {
 
     constructor(
         context: Context,
+        private contractFactory: ContractFactory,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
@@ -90,8 +92,10 @@ export class StreamRegistry implements Context {
         this.debug('create')
         const chainProviders = getAllStreamRegistryChainProviders(ethereumConfig)
         this.streamRegistryContractsReadonly = chainProviders.map((provider: Provider) => {
-            return createDecoratedContract<StreamRegistryContract>(
-                new Contract(this.ethereumConfig.streamRegistryChainAddress, StreamRegistryArtifact, provider),
+            return this.contractFactory.createReadContract<StreamRegistryContract>(
+                this.ethereumConfig.streamRegistryChainAddress,
+                StreamRegistryArtifact,
+                provider,
                 'streamRegistry'
             )
         })
@@ -105,12 +109,11 @@ export class StreamRegistry implements Context {
     private async connectToContract(): Promise<void> {
         if (!this.streamRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
-            this.streamRegistryContract = createWriteContract<StreamRegistryContract>(
+            this.streamRegistryContract = this.contractFactory.createWriteContract<StreamRegistryContract>(
                 this.ethereumConfig.streamRegistryChainAddress,
                 StreamRegistryArtifact,
                 chainSigner,
-                'streamRegistry',
-                this.graphQLClient
+                'streamRegistry'
             )
         }
     }

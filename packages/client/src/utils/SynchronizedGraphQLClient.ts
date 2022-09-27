@@ -1,10 +1,6 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
-import { ObservableContract, createDecoratedContract } from './contract'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
@@ -28,23 +24,6 @@ import { wait } from '@streamr/utils'
  * We can use the helper method `createWriteContract` to create a contract which automatically
  * updates the client when something is written to the blockchain via that contract.
  */
-
-export const createWriteContract = <T extends Contract>(
-    address: EthereumAddress,
-    contractInterface: ContractInterface,
-    signer: Signer,
-    name: string,
-    graphQLClient: SynchronizedGraphQLClient
-): ObservableContract<T> => {
-    const contract = createDecoratedContract<T>(
-        new Contract(address, contractInterface, signer),
-        name
-    )
-    contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
-        graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
-    })
-    return contract
-}
 
 class BlockNumberGate extends Gate {
     blockNumber: number

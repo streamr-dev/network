@@ -1,4 +1,3 @@
-import { Contract } from '@ethersproject/contracts'
 import debug from 'debug'
 import type { StreamStorageRegistry as StreamStorageRegistryContract } from '../ethereumArtifacts/StreamStorageRegistry'
 import StreamStorageRegistryArtifact from '../ethereumArtifacts/StreamStorageRegistry.json'
@@ -10,10 +9,11 @@ import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
 import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { waitForTx, createDecoratedContract } from '../utils/contract'
-import { SynchronizedGraphQLClient, createWriteContract } from '../utils/SynchronizedGraphQLClient'
+import { waitForTx } from '../utils/contract'
+import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { ContractFactory } from '../ContractFactory'
 
 /**
  * Stores storage node assignments (mapping of streamIds <-> storage nodes addresses)
@@ -66,6 +66,7 @@ export class StreamStorageRegistry {
     private streamStorageRegistryContractReadonly: StreamStorageRegistryContract
 
     constructor(
+        private contractFactory: ContractFactory,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
         @inject(SynchronizedGraphQLClient) private graphQLClient: SynchronizedGraphQLClient,
@@ -74,8 +75,10 @@ export class StreamStorageRegistry {
         @inject(ConfigInjectionToken.Ethereum) private ethereumConfig: EthereumConfig,
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
-        this.streamStorageRegistryContractReadonly = createDecoratedContract(
-            new Contract(this.ethereumConfig.streamStorageRegistryChainAddress, StreamStorageRegistryArtifact, chainProvider),
+        this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
+            this.ethereumConfig.streamStorageRegistryChainAddress,
+            StreamStorageRegistryArtifact,
+            chainProvider,
             'streamStorageRegistry'
         ) as StreamStorageRegistryContract
         this.initStreamAssignmentEventListener('addToStorageNode', 'Added', eventEmitter)
@@ -111,12 +114,11 @@ export class StreamStorageRegistry {
     private async connectToContract() {
         if (!this.streamStorageRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
-            this.streamStorageRegistryContract = createWriteContract<StreamStorageRegistryContract>(
+            this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
                 this.ethereumConfig.streamStorageRegistryChainAddress,
                 StreamStorageRegistryArtifact,
                 chainSigner,
-                'streamStorageRegistry',
-                this.graphQLClient
+                'streamStorageRegistry'
             )
         }
     }
