@@ -102,10 +102,11 @@ const createWrappedContractMethod = (
 export const withErrorHandlingAndLogging = <T extends Contract>(  // TODO rename as we do throttling, too
     contract: Contract,
     contractName: string,
+    maxConcurrentInvocations = 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
-    const concurrencyLimit = pLimit(999999) // TODO just a placeholder value, define a valid value by executing some benchmarks
+    const concurrencyLimit = pLimit(maxConcurrentInvocations) 
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
