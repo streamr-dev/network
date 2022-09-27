@@ -73,11 +73,10 @@ describe('DhtPeer', () => {
             body: RpcMessage.toBinary(rpcWrapper)
         }
         const routable = await dhtPeer.routeMessage({
-            messageId: 'routed',
+            requestId: 'routed',
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
-            serviceId: 'unit-test'
         })
         expect(routable).toEqual(true)
     })
@@ -104,11 +103,10 @@ describe('DhtPeer', () => {
             body: RpcMessage.toBinary(rpcWrapper)
         }
         const routable = await dhtPeer.routeMessage({
-            messageId: 'routed',
+            requestId: 'routed',
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor,
-            serviceId: 'unit-test'
+            destinationPeer: serverPeerDescriptor
         })
         expect(routable).toEqual(false)
     })

@@ -17,5 +17,6 @@ export interface ITransport {
     off<T extends keyof TransportEvents>(eventName: T, listener: (peerDescriptor: PeerDescriptor) => void): void
 
     send(msg: Message, peerDescriptor: PeerDescriptor): void
+    handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void
     getPeerDescriptor(): PeerDescriptor
 }

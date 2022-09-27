@@ -68,7 +68,7 @@ describe('Route Message With Mock Connections', () => {
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                serviceId: SERVICE_ID,
+                requestId: 'tsatsa',
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         ])
@@ -87,7 +87,7 @@ describe('Route Message With Mock Connections', () => {
         await expect(sourceNode.doRouteMessage({
             message: Message.toBinary(message),
             destinationPeer: destinationNode.getPeerDescriptor(),
-            serviceId: SERVICE_ID,
+            requestId: 'tsutsu',
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toThrow()
     })
@@ -112,7 +112,7 @@ describe('Route Message With Mock Connections', () => {
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
-                serviceId: SERVICE_ID,
+                requestId: 'tsutsu',
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         }
@@ -146,8 +146,8 @@ describe('Route Message With Mock Connections', () => {
                         await node.doRouteMessage({
                             message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
-                            serviceId: SERVICE_ID,
-                            sourcePeer: node.getPeerDescriptor()
+                            sourcePeer: node.getPeerDescriptor(),
+                            requestId: 'tsutsu'
                         })
                     }
                 }))

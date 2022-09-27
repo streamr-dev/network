@@ -1,16 +1,16 @@
 import { DhtPeer } from './DhtPeer'
 import KBucket from 'k-bucket'
-import PQueue from 'p-queue'
 import { EventEmitter } from 'eventemitter3'
 import { SortedContactList } from './SortedContactList'
 import { RoutingRpcCommunicator } from '../transport/RoutingRpcCommunicator'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
-import { PeerID } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../helpers/PeerID'
 import {
     ClosestPeersRequest,
     ClosestPeersResponse,
     ConnectivityResponseMessage,
     Message,
+    MessageType,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -27,16 +27,8 @@ import { Logger } from '@streamr/utils'
 import { v4 } from 'uuid'
 import { IDhtRpcService } from '../proto/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
-import { waitForEvent3 } from '../helpers/waitForEvent3'
-
-export interface RouteMessageParams {
-    message: Uint8Array
-    destinationPeer: PeerDescriptor
-    sourcePeer: PeerDescriptor
-    serviceId: string
-    previousPeer?: PeerDescriptor
-    messageId?: string
-}
+import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
+import { RoutingSession, RoutingSessionEvents } from './RoutingSession'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -96,6 +88,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private ongoingJoinOperation = false
 
     private bucket?: KBucket<DhtPeer>
+    private connections: Map<PeerIDKey, DhtPeer> = new Map()  
     private neighborList?: SortedContactList<DhtPeer>
     private openInternetPeers?: SortedContactList<DhtPeer>
     private rpcCommunicator?: RoutingRpcCommunicator
@@ -104,9 +97,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
     private outgoingClosestPeersRequestsCounter = 0
 
-    private cleanUpHandleForConnectionManager?: ConnectionManager
+    private connectionManager?: ConnectionManager
     private started = false
     private stopped = false
+
+    private ongoingRoutingSessions: Map<string, RoutingSession> = new Map()
 
     constructor(conf: Partial<DhtNodeConfig>) {
         super()
@@ -142,14 +137,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
             const connectionManager = new ConnectionManager(connectionManagerConfig)
             await connectionManager.start(this.generatePeerDescriptorCallBack)
-            this.cleanUpHandleForConnectionManager = connectionManager
+            this.connectionManager = connectionManager
             this.transportLayer = connectionManager
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer)
 
         this.bindDefaultServerMethods()
-        this.initKBucket(this.ownPeerId!)
+        this.initKBuckets(this.ownPeerId!)
     }
 
     private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponseMessage) => {
@@ -190,7 +185,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ret
     }
 
-    private initKBucket(selfId: PeerID): void {
+    private initKBuckets(selfId: PeerID): void {
         this.bucket = new KBucket({
             localNodeId: selfId.value,
             numberOfNodesPerKBucket: this.config.numberOfNodesPerKBucket
@@ -214,7 +209,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
         })
         this.bucket.on('removed', (contact: DhtPeer) => {
-            this.cleanUpHandleForConnectionManager?.unlockConnection(contact.getPeerDescriptor(), this.config.serviceId)
+            this.connectionManager?.unlockConnection(contact.getPeerDescriptor(), this.config.serviceId)
             logger.trace(`Removed contact ${contact.peerId.value.toString()}`)
             this.emit(
                 'kbucketContactRemoved',
@@ -224,7 +219,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.bucket.on('added', async (contact: DhtPeer) => {
             if (!this.stopped && !contact.peerId.equals(this.ownPeerId!)) {
                 if (await contact.ping(this.ownPeerDescriptor!)) {
-                    this.cleanUpHandleForConnectionManager?.lockConnection(contact.getPeerDescriptor(), this.config.serviceId)
+                    this.connectionManager?.lockConnection(contact.getPeerDescriptor(), this.config.serviceId)
                     logger.trace(`Added new contact ${contact.peerId.value.toString()}`)
                     this.emit(
                         'newKbucketContact',
@@ -254,6 +249,19 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.openInternetPeers.on('newContact', (peerDescriptor: PeerDescriptor, activeContacts: PeerDescriptor[]) =>
             this.emit('newOpenInternetContact', peerDescriptor, activeContacts)
         )
+
+        this.transportLayer!.on('connected', (peerDescriptor: PeerDescriptor) => {
+            const dhtPeer = new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
+            if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
+                this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
+            }
+            this.emit('connected', peerDescriptor)
+        })
+
+        this.transportLayer!.on('disconnected', (peerDescriptor: PeerDescriptor) => {
+            this.connections.delete(PeerID.fromValue(peerDescriptor.peerId).toKey())
+            this.emit('disconnected', peerDescriptor)
+        })
     }
 
     public getNeighborList(): SortedContactList<DhtPeer> {
@@ -275,37 +283,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ret
     }
 
-    public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
-        if (!this.started || this.stopped || this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            return
-        }
-        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        this.addNewContact(routedMessage.sourcePeer!, true)
-        this.routerDuplicateDetector.add(routedMessage.requestId)
-        const message = Message.fromBinary(routedMessage.message)
-        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            this.emit('data', message, routedMessage.sourcePeer!)
-        } else {
-            await this.doRouteMessage({
-                message: routedMessage.message,
-                previousPeer: routedMessage.previousPeer as PeerDescriptor,
-                destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
-                sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
-                serviceId: message.serviceId,
-                messageId: routedMessage.requestId
-            })
-        }
-    }
-
     public send(msg: Message, targetPeerDescriptor: PeerDescriptor): void {
         if (!this.started || this.stopped) {
             return
         }
-        const params: RouteMessageParams = {
+        const params: RouteMessageWrapper = {
             message: Message.toBinary(msg),
-            messageId: v4(),
+            requestId: v4(),
             destinationPeer: targetPeerDescriptor,
-            serviceId: msg.serviceId ? msg.serviceId : 'layer0',
             sourcePeer: this.ownPeerDescriptor!
         }
         this.doRouteMessage(params).catch((err) => {
@@ -313,6 +298,27 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
     }
 
+    // Called by an upper layer in case of routeMessage targeted to us
+
+    public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
+        try {
+            const message = Message.fromBinary(data)
+            logger.trace('Received message of type ' + message.messageType)
+            if (message.messageType === MessageType.RPC) {
+                if (message.serviceId != this.config.serviceId) {
+                    this.emit('data', message, peerDescriptor)
+                } else {
+                    this.rpcCommunicator?.handleIncomingData(message, peerDescriptor)
+                }
+            } else {
+                logger.trace('Filtered out message of type ' + message.messageType)
+            }
+        } catch (e) {
+            logger.error('Parsing "Message" from protobuf failed')
+        }
+    }
+
+    /*
     public async doRouteMessage(params: RouteMessageParams): Promise<void> {
         if (!this.started
             || this.stopped
@@ -371,6 +377,28 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
     }
 
+    public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
+        if (!this.started || this.stopped || this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
+            return
+        }
+        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
+        this.addNewContact(routedMessage.sourcePeer!, true)
+        this.routerDuplicateDetector.add(routedMessage.requestId)
+        const message = Message.fromBinary(routedMessage.message)
+        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
+            this.emit('data', message, routedMessage.sourcePeer!)
+        } else {
+            await this.doRouteMessage({
+                message: routedMessage.message,
+                previousPeer: routedMessage.previousPeer as PeerDescriptor,
+                destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
+                sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
+                serviceId: message.serviceId,
+                messageId: routedMessage.requestId
+            })
+        }
+    }
+    
     private getRoutingCandidates(destinationPeer: PeerDescriptor, sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): DhtPeer[] {
 
         const routingSortedContacts = new SortedContactList(PeerID.fromValue(destinationPeer.peerId), this.config.parallelism, true)
@@ -432,13 +460,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         const previousPeerChecks = previousPeer ?
             !PeerID.fromValue(previousPeer.peerId).equals(peerIdToRoute)
-                && KBucket.distance(destinationPeer.peerId, previousPeer.peerId) > KBucket.distance(destinationPeer.peerId, peerToRoute.peerId)
+            && KBucket.distance(destinationPeer.peerId, previousPeer.peerId) > KBucket.distance(destinationPeer.peerId, peerToRoute.peerId)
             : true
         return !peerIdToRoute.equals(this.ownPeerId!)
             && !peerIdToRoute.equals(originatorPeerId)
             && previousPeerChecks
     }
-
+    */
     private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
         if (!this.started || this.stopped) {
             return []
@@ -506,8 +534,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return
         }
 
-        if (this.cleanUpHandleForConnectionManager) {
-            this.cleanUpHandleForConnectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+        if (this.connectionManager) {
+            this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
 
         this.addNewContact(entryPointDescriptor)
@@ -520,8 +548,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         } catch (_e) {
             throw (new Err.DhtJoinTimeout('join timed out'))
         } finally {
-            if (this.cleanUpHandleForConnectionManager) {
-                this.cleanUpHandleForConnectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
+            if (this.connectionManager) {
+                this.connectionManager.unlockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
             }
         }
     }
@@ -662,7 +690,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.bucket!.removeAllListeners()
         this.rpcCommunicator?.stop()
         this.removeAllListeners()
-        await this.cleanUpHandleForConnectionManager?.stop()
+        await this.connectionManager?.stop()
     }
 
     // IDHTRpcService implementation
@@ -684,6 +712,51 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return response
     }
 
+    private createRouteMessageAck(routedMessage: RouteMessageWrapper, error?: string): RouteMessageAck {
+        const ack: RouteMessageAck = {
+            requestId: routedMessage.requestId,
+            destinationPeer: routedMessage.sourcePeer,
+            sourcePeer: routedMessage.destinationPeer,
+            error: error ? error : ''
+        }
+        return ack
+    }
+
+    public async doRouteMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+        logger.trace(`Routing message ${routedMessage.requestId}`)
+
+        const session = new RoutingSession(this.ownPeerDescriptor!, routedMessage, this.connections, 5, 1000)
+
+        const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
+            session.start()
+        }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
+
+        if (result.winnerName == 'noCandidatesFound') {
+            return this.createRouteMessageAck(routedMessage, 'No routing candidates found')
+        } else {
+            return this.createRouteMessageAck(routedMessage)
+        }
+    }
+
+    public async routeMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        if (!this.started || this.stopped) {
+            return this.createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
+        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
+            return this.createRouteMessageAck(routedMessage, 'message given routeMessage() service is likely a duplicate')
+        }
+
+        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
+        this.addNewContact(routedMessage.sourcePeer!, true)
+        this.routerDuplicateDetector.add(routedMessage.requestId)
+
+        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
+            this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+            return this.createRouteMessageAck(routedMessage)
+        } else {
+            return this.doRouteMessage(routedMessage)
+        }
+    }
+    /*
     public async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         try {
             const converted = {
@@ -720,7 +793,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             }
             return response
         }
-
     }
-
+    */
 }

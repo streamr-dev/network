@@ -9,11 +9,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
         transport.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
-            if (message.serviceId == this.ownServiceId) {
-                const context = new DhtCallContext()
-                context.incomingSourceDescriptor = peerDescriptor
-                this.handleIncomingMessage(message.body, context)
-            }
+            this.handleIncomingData(message, peerDescriptor)
         })
 
         this.on('outgoingMessage', (msgBody: Uint8Array, callContext?: DhtCallContext) => {
@@ -30,6 +26,13 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
             const message: Message = { messageId: v4(), serviceId: this.ownServiceId, body: msgBody, messageType: MessageType.RPC }
             this.transport.send(message, targetDescriptor!)
         })
+    }
 
+    public handleIncomingData(message: Message, peerDescriptor: PeerDescriptor): void {
+        if (message.serviceId == this.ownServiceId) {
+            const context = new DhtCallContext()
+            context.incomingSourceDescriptor = peerDescriptor
+            this.handleIncomingMessage(message.body, context)
+        }
     }
 }

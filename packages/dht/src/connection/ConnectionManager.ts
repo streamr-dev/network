@@ -161,6 +161,10 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         }
     }
 
+    public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
+        this.onData(data, peerDescriptor)    
+    }
+
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
         if (!this.started || this.stopped) {
             return

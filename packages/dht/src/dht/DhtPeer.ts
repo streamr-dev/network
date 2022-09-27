@@ -3,7 +3,6 @@ import { ClosestPeersRequest, PeerDescriptor, PingRequest, RouteMessageWrapper }
 import { v4 } from 'uuid'
 import { PeerID } from '../helpers/PeerID'
 import { DhtRpcOptions } from '../rpc-protocol/DhtRpcOptions'
-import { RouteMessageParams } from './DhtNode'
 import { Logger } from '@streamr/utils'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 
@@ -13,6 +12,15 @@ const logger = new Logger(module)
 interface KBucketContact {
     id: Uint8Array
     vectorClock: number
+}
+
+export interface RouteMessageParams {
+    message: Uint8Array
+    destinationPeer: PeerDescriptor
+    sourcePeer: PeerDescriptor
+    serviceId: string
+    previousPeer?: PeerDescriptor
+    messageId?: string
 }
 
 export class DhtPeer implements KBucketContact {
@@ -54,7 +62,6 @@ export class DhtPeer implements KBucketContact {
             logger.debug(err)
             return []
         }
-
     }
 
     async ping(sourceDescriptor: PeerDescriptor): Promise<boolean> {
@@ -76,13 +83,13 @@ export class DhtPeer implements KBucketContact {
         return false
     }
 
-    async routeMessage(params: RouteMessageParams): Promise<boolean> {
+    async routeMessage(params: RouteMessageWrapper): Promise<boolean> {
         const message: RouteMessageWrapper = {
             destinationPeer: params.destinationPeer,
             sourcePeer: params.sourcePeer,
             previousPeer: params.previousPeer,
             message: params.message,
-            requestId: params.messageId || v4()
+            requestId: params.requestId || v4()
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: params.previousPeer as PeerDescriptor,
