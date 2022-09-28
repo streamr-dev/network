@@ -3,6 +3,7 @@ import { PeerList } from './PeerList'
 import { RemoteRandomGraphNode } from './RemoteRandomGraphNode'
 import { ProtoRpcClient } from '@streamr/proto-rpc'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
+import { HandshakeRequest, HandshakeResponse } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 
 interface HandshakerParams {
     ownPeerDescriptor: PeerDescriptor
@@ -107,6 +108,45 @@ export class Handshaker {
         this.ongoingHandshakes.delete(targetStringId)
 
         return result.accepted
+    }
+
+    public interleavingResponse(request: HandshakeRequest, requester: RemoteRandomGraphNode): HandshakeResponse {
+        const exclude = request.neighbors
+        exclude.push(request.senderId)
+        const furthest = this.targetNeighbors.getFurthest(exclude)
+        const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
+
+        if (furthest) {
+            furthest.interleaveNotice(this.ownPeerDescriptor, request.senderDescriptor!)
+            this.targetNeighbors.remove(furthest.getPeerDescriptor())
+            this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
+        }
+        this.targetNeighbors.add(requester)
+        const res: HandshakeResponse = {
+            requestId: request.requestId,
+            accepted: true,
+            interleaveTarget: furthestPeerDescriptor
+        }
+        this.connectionLocker.lockConnection(request.senderDescriptor!, this.randomGraphId)
+        return res
+    }
+
+    public unacceptedResponse(request: HandshakeRequest): HandshakeResponse {
+        const res: HandshakeResponse = {
+            requestId: request.requestId,
+            accepted: false
+        }
+        return res
+    }
+
+    public acceptedResponse(request: HandshakeRequest, requester: RemoteRandomGraphNode): HandshakeResponse {
+        const res: HandshakeResponse = {
+            requestId: request.requestId,
+            accepted: true
+        }
+        this.targetNeighbors.add(requester)
+        this.connectionLocker.lockConnection(request.senderDescriptor!, this.randomGraphId)
+        return res
     }
 
     public getOngoingHandshakes(): Set<string> {
