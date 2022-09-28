@@ -231,14 +231,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         // Add checking for connection handshakes
         if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
-            return this.handshaker.interleavingResponse(request, requester)
+            return this.handshaker!.interleavingResponse(request, requester)
         } else if (this.targetNeighbors.size() === this.N && request.neighbors.length > this.N - 2) {
-            return this.handshaker.unacceptedResponse(request)
+            return this.handshaker!.unacceptedResponse(request)
         } else if (this.targetNeighbors.size() < this.N && request.neighbors.length < this.N) {
-            return this.handshaker.acceptedResponse(request, requester)
+            return this.handshaker!.acceptedResponse(request, requester)
         }
 
-        return this.handshaker.unacceptedResponse(request)
+        return this.handshaker!.unacceptedResponse(request)
     }
 
     // INetworkRpc server method
