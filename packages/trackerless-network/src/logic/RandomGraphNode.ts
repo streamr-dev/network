@@ -223,7 +223,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     // INetworkRpc server method
     async handshake(request: HandshakeRequest, _context: ServerCallContext): Promise<HandshakeResponse> {
-        const newRemotePeer = new RemoteRandomGraphNode(
+        const requester = new RemoteRandomGraphNode(
             request.senderDescriptor!,
             request.randomGraphId,
             toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
@@ -231,46 +231,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
         // Add checking for connection handshakes
         if (this.targetNeighbors.size() >= this.N && request.neighbors.length <= this.N - 2) {
-            const exclude = request.neighbors
-            exclude.push(request.senderId)
-            const furthest = this.targetNeighbors.getFurthest(exclude)
-            const furthestPeerDescriptor = furthest ? furthest.getPeerDescriptor() : undefined
-
-            if (furthest) {
-                furthest.interleaveNotice(this.layer1.getPeerDescriptor(), request.senderDescriptor!)
-                this.targetNeighbors.remove(furthest.getPeerDescriptor())
-                this.connectionLocker.unlockConnection(furthestPeerDescriptor!, this.randomGraphId)
-            }
-            this.targetNeighbors.add(newRemotePeer)
-            const res: HandshakeResponse = {
-                requestId: request.requestId,
-                accepted: true,
-                interleaveTarget: furthestPeerDescriptor
-            }
-            this.connectionLocker.lockConnection(request.senderDescriptor!, this.randomGraphId)
-            return res
+            return this.handshaker!.interleavingResponse(request, requester)
         } else if (this.targetNeighbors.size() === this.N && request.neighbors.length > this.N - 2) {
-            // Add connection recommendation, requires knowledge of the neighbors of neighbors
-            const res: HandshakeResponse = {
-                requestId: request.requestId,
-                accepted: false
-            }
-            return res
+            return this.handshaker!.unacceptedResponse(request)
         } else if (this.targetNeighbors.size() < this.N && request.neighbors.length < this.N) {
-            const res: HandshakeResponse = {
-                requestId: request.requestId,
-                accepted: true
-            }
-            this.targetNeighbors.add(newRemotePeer)
-            this.connectionLocker.lockConnection(request.senderDescriptor!, this.randomGraphId)
-            return res
+            return this.handshaker!.acceptedResponse(request, requester)
         }
 
-        const res: HandshakeResponse = {
-            requestId: request.requestId,
-            accepted: false,
-        }
-        return res
+        return this.handshaker!.unacceptedResponse(request)
     }
 
     // INetworkRpc server method
