@@ -759,7 +759,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing found message targeted to self ${routedMessage.requestId}`)
-            this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+            //this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+            this.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             return this.createRouteMessageAck(routedMessage)
         } else {
             return this.doRouteMessage(routedMessage)
