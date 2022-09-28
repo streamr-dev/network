@@ -16,6 +16,8 @@ describe('Propagation', () => {
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
 
+    const NUM_OF_NODES = 32
+
     beforeEach(async () => {
         totalReceived = 0
         const simulator = new Simulator()
@@ -30,7 +32,7 @@ describe('Propagation', () => {
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
-        range(9).map(async (i) => {
+        range(NUM_OF_NODES).map(async (i) => {
             const descriptor: PeerDescriptor = {
                 peerId: new Uint8Array([0, 0, i]),
                 type: 1
@@ -72,6 +74,6 @@ describe('Propagation', () => {
             streamPartId: STREAM_ID
         }
         randomGraphNodes[0].broadcast(message)
-        await waitForCondition(() => totalReceived >= 9)
+        await waitForCondition(() => totalReceived >= NUM_OF_NODES)
     }, 10000)
 })
