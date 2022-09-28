@@ -143,8 +143,7 @@ export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddres
     return new GroupKeyStore({ 
         context: mockContext(), 
         clientId: userAddress.toLowerCase(), 
-        streamId, 
-        groupKeys: []
+        streamId
     })
 }
 

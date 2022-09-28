@@ -4,12 +4,10 @@ import { Context } from '../../src/utils/Context'
 import { Debug } from '../test-utils/utils'
 import { Msg } from '../test-utils/publish'
 import { LeaksDetector } from '../test-utils/LeaksDetector'
-import { MessageStream, MessageStreamOnMessage, pullManyToOne } from '../../src/subscribe/MessageStream'
+import { MessageStream, MessageStreamOnMessage } from '../../src/subscribe/MessageStream'
 import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-protocol'
 import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
-
-const MOCK_ERROR = new Error('mock-error-message')
 
 const createMockMessage = (streamId: StreamID) => {
     return new StreamMessage({
@@ -31,10 +29,6 @@ const fromReadable = async (readable: Readable, context: Context, onMessage?: Me
         }
     }()))
     return result
-}
-
-const fromArray = async (arr: StreamMessage<any>[], context: Context, onMessage?: MessageStreamOnMessage<any>) => {
-    return fromReadable(Readable.from(arr, { objectMode: true }), context, onMessage)
 }
 
 const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
@@ -298,81 +292,6 @@ describe('MessageStream', () => {
             await waitForCalls(onMessage, 2)
             expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), msg1)
             expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), msg2)
-        })
-    })
-
-    describe('pullManyToOne', () => {
-        it('push', async () => {
-            const source1 = new MessageStream<any>(context)
-            const source2 = new MessageStream<any>(context)
-            const onMessage = jest.fn()
-            await pullManyToOne(context, [source1, source2], onMessage)
-            const msg1 = createMockMessage(streamId)
-            source1.push(msg1)
-            const msg2 = createMockMessage(streamId)
-            source2.push(msg2)
-            await waitForCalls(onMessage, 2)
-            expect(onMessage).toBeCalledTimes(2)
-            expect(onMessage).toHaveBeenCalledWith(msg1.getParsedContent(), msg1)
-            expect(onMessage).toHaveBeenCalledWith(msg2.getParsedContent(), msg2)
-        })
-
-        it('from readable with onMessage handler', async () => {
-            const msgA1 = createMockMessage(streamId)
-            const msgA2 = createMockMessage(streamId)
-            const msgB1 = createMockMessage(streamId)
-            const msgB2 = createMockMessage(streamId)
-            const onMessage = jest.fn()
-            const sourceA = await fromArray([msgA1, msgA2], context)
-            const sourceB = await fromArray([msgB1, msgB2], context)
-            await pullManyToOne(context, [sourceA, sourceB], onMessage)
-            await waitForCalls(onMessage, 4)
-            expect(onMessage).toBeCalledTimes(4)
-            expect(onMessage).toHaveBeenCalledWith(msgA1.getParsedContent(), msgA1)
-            expect(onMessage).toHaveBeenCalledWith(msgA2.getParsedContent(), msgA2)
-            expect(onMessage).toHaveBeenCalledWith(msgB1.getParsedContent(), msgB1)
-            expect(onMessage).toHaveBeenCalledWith(msgB2.getParsedContent(), msgB2)
-        })
-
-        it('from readable without onMessage', async () => {
-            const msgA1 = createMockMessage(streamId)
-            const msgA2 = createMockMessage(streamId)
-            const msgB1 = createMockMessage(streamId)
-            const msgB2 = createMockMessage(streamId)
-            const sourceA = await fromArray([msgA1, msgA2], context)
-            const sourceB = await fromArray([msgB1, msgB2],  context)
-            const merged = await pullManyToOne(context, [sourceA, sourceB])
-            const received: any[] = []
-            for await (const msg of merged) {
-                received.push(msg)
-            }
-            expect(received).toIncludeSameMembers([msgA1, msgA2, msgB1, msgB2])
-        })
-
-        it('input error', async () => {
-            const msgA1 = createMockMessage(streamId)
-            const msgA2 = createMockMessage(streamId)
-            const msgA3 = createMockMessage(streamId)
-            const msgB1 = createMockMessage(streamId)
-            const msgB2 = createMockMessage(streamId)
-            const ERROR_INDEX = 1
-            const sourceA = (await fromArray([msgA1, msgA2, msgA3], context)).map((value: StreamMessage<any>, index: number): StreamMessage<any> => {
-                if (index === ERROR_INDEX) {
-                    throw MOCK_ERROR
-                } else {
-                    return value
-                }
-            })
-            const sourceB = await fromArray([msgB1, msgB2], context)
-            const onError = jest.fn()
-            const merged = await pullManyToOne(context, [sourceA, sourceB], undefined, onError)
-            merged.onError.listen = onError
-            const received: any[] = []
-            for await (const msg of merged) {
-                received.push(msg)
-            }
-            expect(received).toIncludeSameMembers([msgA1, msgA3, msgB1, msgB2])
-            expect(onError).toBeCalledWith(MOCK_ERROR)
         })
     })
 })

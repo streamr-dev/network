@@ -111,10 +111,10 @@ export class EncryptionUtil {
     }
 
     static decryptGroupKey(newGroupKey: EncryptedGroupKey, currentGroupKey: GroupKey): GroupKey {
-        return GroupKey.from([
+        return new GroupKey(
             newGroupKey.groupKeyId,
             this.decryptWithAES(newGroupKey.encryptedGroupKeyHex, currentGroupKey.data)
-        ])
+        )
     }
 }
 

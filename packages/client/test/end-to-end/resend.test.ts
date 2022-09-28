@@ -44,20 +44,13 @@ describe('resend', () => {
                 permissions: [StreamPermission.SUBSCRIBE],
                 user: await resendClient.getAddress()
             })
-            /*await stream.grantPermissions({
-                permissions: [StreamPermission.SUBSCRIBE],
-                public: true
-            })*/
             await stream.addToStorageNode(DOCKER_DEV_STORAGE_NODE)
 
             for (const idx of range(NUM_OF_MESSAGES)) {
-                const partition = idx % 3
                 await publisherClient.publish({
                     id: stream.id,
-                    partition,
+                    partition: 0,
                 }, {
-                    messageNoInPartition: Math.floor(idx / 3),
-                    partition,
                     messageNo: idx
                 })
             }
@@ -66,7 +59,10 @@ describe('resend', () => {
 
         it('can request resend for all messages', async () => {
             const messages: unknown[] = []
-            await resendClient.resendAll(stream.id, { last: NUM_OF_MESSAGES }, (msg) => {
+            await resendClient.resend({
+                streamId: stream.id,
+                partition: 0
+            }, { last: NUM_OF_MESSAGES }, (msg) => {
                 messages.push(msg)
             })
             await waitForCondition(
