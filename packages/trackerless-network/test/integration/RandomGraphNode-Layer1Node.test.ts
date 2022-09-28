@@ -123,10 +123,18 @@ describe('RandomGraphNode-DhtNode', () => {
                 waitForCondition(() => node.getSelectedNeighborIds().length >= 3)
             ])
         ))
+
+        await waitForCondition(() => {
+            const avg = graphNodes.reduce((acc, curr) => {
+                return acc + curr.getSelectedNeighborIds().length
+            }, 0) / numOfNodes
+            return avg >= 3.9
+        })
+
         const avg = graphNodes.reduce((acc, curr) => {
             return acc + curr.getSelectedNeighborIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
-    })
+    }, 10000)
 })
