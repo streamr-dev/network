@@ -16,7 +16,7 @@ describe('Propagation', () => {
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
 
-    const NUM_OF_NODES = 32
+    const NUM_OF_NODES = 128
 
     beforeEach(async () => {
         totalReceived = 0
@@ -34,7 +34,7 @@ describe('Propagation', () => {
 
         range(NUM_OF_NODES).map(async (i) => {
             const descriptor: PeerDescriptor = {
-                peerId: new Uint8Array([0, 0, i]),
+                peerId: PeerID.fromString(`peer-${i}`).value,
                 type: 1
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(
