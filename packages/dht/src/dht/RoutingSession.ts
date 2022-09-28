@@ -48,7 +48,6 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         }
         if (this.ongoingRequests.has(peerId.toKey())) {
             this.ongoingRequests.delete(peerId.toKey())
-            this.contactList!.removeContact(peerId)
         }
 
         const contacts = this.findMoreContacts()
@@ -70,7 +69,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     }
 
     private async sendRouteMessageRequest(contact: DhtPeer): Promise<boolean> {
-        logger.trace(`Sending routeMessage request to contact: ${contact.peerId.toKey()}`)
+        logger.trace(`Sending routeMessage request from ${this.ownPeerDescriptor.peerId} to contact: ${contact.peerId}`)
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 
@@ -105,11 +104,9 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     }
                 }).catch((_e) => { })
         }
-
     }
 
     public start(): void {
-        logger.info("start()")
         const contacts = this.findMoreContacts()
         if (contacts.length < 1) {
             this.emit('noCandidatesFound', this.sessionId)

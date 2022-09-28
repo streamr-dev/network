@@ -73,6 +73,8 @@ describe('Route Message With Mock Connections', () => {
             })
         ])
     })
+    /* ToDo: replace this with a case where no candidates
+    can be found 
 
     it('Destination node does not exist after first hop', async () => {
         await sourceNode.joinDht(entryPointDescriptor)
@@ -91,6 +93,8 @@ describe('Route Message With Mock Connections', () => {
             sourcePeer: sourceNode.getPeerDescriptor()
         })).rejects.toThrow()
     })
+
+    */
 
     it('Receives multiple messages', async () => {
         const numOfMessages = 100
@@ -116,7 +120,7 @@ describe('Route Message With Mock Connections', () => {
                 sourcePeer: sourceNode.getPeerDescriptor()
             })
         }
-        await waitForCondition(() => receivedMessages === numOfMessages)
+        await waitForCondition(() => receivedMessages >= numOfMessages)
     })
 
     it('From all to all', async () => {

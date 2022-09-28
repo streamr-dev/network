@@ -8,6 +8,7 @@ export class RoutingRpcCommunicator extends RpcCommunicator {
     
     constructor(private ownServiceId: string, private transport: ITransport, config?: RpcCommunicatorConfig) {
         super(config)
+        
         transport.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
             this.handleIncomingData(message, peerDescriptor)
         })

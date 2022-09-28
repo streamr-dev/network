@@ -37,7 +37,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public addContact(contact: Contact): void {
         if ((!this.allowOwnPeerId && this.ownId.equals(contact.peerId)) || 
-        (this.peerIdDistanceLimit && this.compareIds(this.peerIdDistanceLimit, contact.peerId) <= 0)) {
+        (this.peerIdDistanceLimit !== undefined && this.compareIds(this.peerIdDistanceLimit, contact.peerId) < 0)) {
             return
         }
         if (!this.contactsById.has(contact.peerId.toKey())) {

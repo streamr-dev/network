@@ -27,26 +27,26 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
     let entryPoint1Descriptor: PeerDescriptor
 
     beforeEach(async () => {
-        
+
         layer0EntryPoint = await createMockConnectionDhtNode(layer0EntryPointId, simulator)
         layer0Node1 = await createMockConnectionDhtNode(layer1EntryPointId, simulator)
-       
+
         const layer0Node2Id = 'layer0Node2'
         layer0Node2 = await createMockConnectionDhtNode(layer0Node2Id, simulator)
-    
+
         const layer0Node3Id = 'layer0Node3'
         layer0Node3 = await createMockConnectionDhtNode(layer0Node3Id, simulator)
-       
+
         const layer0Node4Id = 'layer0Node4'
         layer0Node4 = await createMockConnectionDhtNode(layer0Node4Id, simulator)
-        
+
         layer1EntryPoint = await createMockConnectionLayer1Node(layer1EntryPointId, layer0Node1)
-       
+
         layer1Node1 = await createMockConnectionLayer1Node(layer0EntryPointId, layer0EntryPoint)
         layer1Node2 = await createMockConnectionLayer1Node(layer0Node2Id, layer0Node2)
         layer1Node3 = await createMockConnectionLayer1Node(layer0Node3Id, layer0Node3)
         layer1Node4 = await createMockConnectionLayer1Node(layer0Node4Id, layer0Node4)
-       
+
         entryPoint0Descriptor = {
             peerId: layer0EntryPoint.getNodeId().value,
             type: 0
@@ -84,16 +84,16 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
             layer0Node4.joinDht(entryPoint0Descriptor)
         ])
 
-        await Promise.all([
-            layer1Node1.joinDht(entryPoint1Descriptor),
-            layer1Node2.joinDht(entryPoint1Descriptor),
-            layer1Node3.joinDht(entryPoint1Descriptor),
-            layer1Node4.joinDht(entryPoint1Descriptor)
-        ])
+        //await Promise.all([
+        await layer1Node1.joinDht(entryPoint1Descriptor)
+        await layer1Node2.joinDht(entryPoint1Descriptor)
+        await layer1Node3.joinDht(entryPoint1Descriptor)
+        await layer1Node4.joinDht(entryPoint1Descriptor)
+        //])
 
         expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node3.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node4.getBucketSize()).toBeGreaterThanOrEqual(2)
-    }, 15000)
+    }, 30000)
 })

@@ -88,7 +88,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     private ongoingJoinOperation = false
 
     private bucket?: KBucket<DhtPeer>
-    private connections: Map<PeerIDKey, DhtPeer> = new Map()  
+    private connections: Map<PeerIDKey, DhtPeer> = new Map()
     private neighborList?: SortedContactList<DhtPeer>
     private openInternetPeers?: SortedContactList<DhtPeer>
     private rpcCommunicator?: RoutingRpcCommunicator
@@ -142,6 +142,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
 
         this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer)
+
+        this.transportLayer.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
+            this.emit('data', message, peerDescriptor)
+        })
 
         this.bindDefaultServerMethods()
         this.initKBuckets(this.ownPeerId!)
@@ -255,6 +259,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             if (!this.connections.has(PeerID.fromValue(dhtPeer.id).toKey())) {
                 this.connections.set(PeerID.fromValue(dhtPeer.id).toKey(), dhtPeer)
             }
+            //console.info('connected, ' +PeerID.fromValue(dhtPeer.id).toKey() +', '+ dhtPeer.id)
             this.emit('connected', peerDescriptor)
         })
 
@@ -723,7 +728,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     }
 
     public async doRouteMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
-        logger.trace(`Routing message ${routedMessage.requestId}`)
+        logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
+            from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId}`)
 
         const session = new RoutingSession(this.ownPeerDescriptor!, routedMessage, this.connections, 5, 1000)
 
@@ -742,7 +748,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return this.createRouteMessageAck(routedMessage, 'routeMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            return this.createRouteMessageAck(routedMessage, 'message given routeMessage() service is likely a duplicate')
+            logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
+                from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId} is likely a duplicate`)
+            return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
 
         logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
@@ -750,6 +758,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.routerDuplicateDetector.add(routedMessage.requestId)
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
+            logger.trace(`Peer ${this.ownPeerId?.value} routing found message targeted to self ${routedMessage.requestId}`)
             this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             return this.createRouteMessageAck(routedMessage)
         } else {

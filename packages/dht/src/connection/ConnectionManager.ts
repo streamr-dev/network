@@ -232,6 +232,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private onConnected = (connection: ManagedConnection) => {
         this.emit('connected', connection.getPeerDescriptor()!)
+        logger.info('connectedPeerId: ' + connection.getPeerDescriptor()!.peerId)
     }
 
     private onDisconnected = (connection: ManagedConnection) => {
