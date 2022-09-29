@@ -6,7 +6,7 @@ import { DataMessage, MessageRef } from '../../src/proto/packages/trackerless-ne
 
 describe('Full node network with WebRTC connections', () => {
 
-    const NUM_OF_NODES = 64
+    const NUM_OF_NODES = 20
 
     const epPeerDescriptor: PeerDescriptor = {
         peerId: Uint8Array.from([1, 2, 3]),
@@ -40,8 +40,9 @@ describe('Full node network with WebRTC connections', () => {
         // range(NUM_OF_NODES).map(async (i) => {
         //     setImmediate(async () => {
         for (let i = 0; i < NUM_OF_NODES; i++) {
+            const peerId = PeerID.fromString(`${i}`).value
             const peerDescriptor: PeerDescriptor = {
-                peerId: new Uint8Array([i, 1, 1]),
+                peerId,
                 type: NodeType.NODEJS
             }
 

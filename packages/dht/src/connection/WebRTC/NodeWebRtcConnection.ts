@@ -57,6 +57,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
+    private closed = false
 
     constructor(params: Params) {
         super()
@@ -64,7 +65,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         this.stunUrls = params.stunUrls || []
         this.bufferThresholdHigh = params.bufferThresholdHigh || 2 ** 17
         this.bufferThresholdLow = params.bufferThresholdLow || 2 ** 15
-        this.connectingTimeout = params.connectingTimeout || 10000
+        this.connectingTimeout = params.connectingTimeout || 20000
         this.remotePeerDescriptor = params.remotePeerDescriptor
     }
 
@@ -106,7 +107,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.peerId.toString()}`)
             }
         } else {
-            this.close()
+            this.close(`Tried to set description for non-existent connection`)
         }
     }
 
@@ -121,34 +122,53 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     // this.close()
                 }
             } else {
-                this.close()
+                this.close(`Tried to set candidate before description`)
             }
         } else {
-            this.close()
+            this.close(`Tried to set candidate for non-existent connection`)
         }
     }
 
     send(data: Uint8Array): void {
         if (this.isOpen()) {
-            this.dataChannel?.sendMessageBinary(data as Buffer)
+            try {
+                this.dataChannel?.sendMessageBinary(data as Buffer)
+            } catch (err) {
+                logger.warn('Failed to send binary message')
+                // this.close()
+            }
         } else {
-            logger.warn('Tried to send data on a non-open connection ' + this.lastState + " " + !!this.dataChannel)
+            // if (this.lastState === 'closed'
+            //     || this.lastState === RTCPeerConnectionStateEnum.disconnected
+            //     || this.lastState === RTCPeerConnectionStateEnum.failed
+            // ) {
+            //     this.close()
+            // }
+            logger.warn(
+                `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
+                + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
+
         }
     }
 
-    close(): void {
-        logger.trace(`Closing Node WebRTC Connection`)
-        if (this.connectingTimeoutRef) {
-            clearTimeout(this.connectingTimeoutRef)
+    close(reason?: string): void {
+        if (this.closed === false) {
+            logger.info(
+                `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()} ${reason ? `, reason: ${reason}` : ''}`
+            )
+            this.closed = true
+            if (this.connectingTimeoutRef) {
+                clearTimeout(this.connectingTimeoutRef)
+            }
+            this.emit('disconnected')
+            if (this.dataChannel) {
+                this.dataChannel.close()
+            }
+            if (this.connection) {
+                this.connection.close()
+            }
+            this.removeAllListeners()
         }
-        this.emit('disconnected')
-        if (this.dataChannel) {
-            this.dataChannel.close()
-        }
-        if (this.connection) {
-            this.connection.close()
-        }
-        this.removeAllListeners()
     }
 
     private onDataChannel(dataChannel: DataChannel): void {
@@ -165,7 +185,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
         dataChannel.onClosed(() => {
             logger.trace(`dc.closed`)
-            this.close()
+            this.close('DataChannel closed')
         })
 
         dataChannel.onError((err) => logger.error(err))
@@ -195,16 +215,16 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         } else {
             this.lastState = state as RTCPeerConnectionState
         }
-        if (this.lastState === RTCPeerConnectionStateEnum.closed
-            || this.lastState === RTCPeerConnectionStateEnum.disconnected
-            || this.lastState === RTCPeerConnectionStateEnum.failed
+        if (state === RTCPeerConnectionStateEnum.closed
+            || state === RTCPeerConnectionStateEnum.disconnected
+            || state === RTCPeerConnectionStateEnum.failed
         ) {
-            this.close()
+            this.close(`Connection state change to ${state}`)
         }
     }
 
     isOpen(): boolean {
-        return this.lastState === 'connected' && !!this.dataChannel
+        return !this.closed && this.lastState === 'connected' && !!this.dataChannel
     }
 
     public setConnectionId(connectionID: string): void {
