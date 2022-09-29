@@ -19,7 +19,9 @@ export class SimulatorTransport extends EventEmitter<TransportEvents> implements
     send(msg: Message, peerDescriptor: PeerDescriptor): void {
         if (!this.peers.has(PeerID.fromValue(peerDescriptor.peerId).toKey())) {
             this.peers.add(PeerID.fromValue(peerDescriptor.peerId).toKey())
-            this.emit('connected', peerDescriptor)
+            setImmediate(() => {
+                this.emit('connected', peerDescriptor)
+            })
         }
         this.simulator.send(this.ownPeerDescriptor, peerDescriptor, msg)
     }
