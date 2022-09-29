@@ -164,7 +164,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     },
     decryption: {
         keyRequestTimeout: 30 * 1000,
-        maxKeyRequestsPerSecond: 999999 // TODO just a placeholder value, define a valid value by executing some benchmarks
+        maxKeyRequestsPerSecond: 20
     },
     cache: {
         maxSize: 10000,
