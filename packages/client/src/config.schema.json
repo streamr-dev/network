@@ -105,6 +105,9 @@
         "ethereumNetworks": {
             "type": "object"
         },
+        "maxConcurrentContractCalls": {
+            "type": "number"
+        },
         "orderMessages": {
             "type": "boolean"
         },

@@ -93,19 +93,22 @@ const createWrappedContractMethod = (
 }
 
 /**
- * You can use the wrapped contract normally, e.g.:
+ * Adds error handling, logging and limits concurrency.
+ * 
+ * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
  *     return await tx.wait()
  * or
  *     await contract.getFoobar(456)
  */
-export const withErrorHandlingAndLogging = <T extends Contract>(  // TODO rename as we do throttling, too
+export const createDecoratedContract = <T extends Contract>(
     contract: Contract,
     contractName: string,
+    maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
-    const concurrencyLimit = pLimit(999999) // TODO just a placeholder value, define a valid value by executing some benchmarks
+    const concurrencyLimit = pLimit(maxConcurrentCalls)
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical

@@ -166,6 +166,7 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         keyRequestTimeout: 30 * 1000,
         maxKeyRequestsPerSecond: 20
     },
+    maxConcurrentContractCalls: 10,
     cache: {
         maxSize: 10000,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
