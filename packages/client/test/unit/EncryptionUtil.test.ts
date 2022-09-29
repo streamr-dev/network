@@ -43,7 +43,7 @@ describe('EncryptionUtil', () => {
                 foo: 'bar'
             },
             encryptionKey: key,
-            newGroupKey: EncryptionUtil.encryptGroupKey(nextKey, key)
+            newGroupKey: key.encryptNextGroupKey(nextKey)
         })
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')

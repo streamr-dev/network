@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Method `updateEncryptionKey` to update stream encryption key
 - The client publishes metrics to the network at regular intervals (configurable with `metrics` config option)
+- There is a limit for concurrent smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
 
 ### Changed
 
+- Group keys are delivered in-stream, not in a separate key exchange stream
+  - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
 - Method signatures of `client.publish` and `stream.publish` have changed: optional `metadata` is given an object instead of positional arguments
   - new metadata field: `msgChainId`
 - Method `getStorageNodesOf()` renamed to `getStorageNodes()`

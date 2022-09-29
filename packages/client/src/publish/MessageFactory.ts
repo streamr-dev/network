@@ -70,10 +70,7 @@ export class MessageFactory {
         const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
-        const encryptionType = metadata.encryptionType
-            ?? (this.isPublicStream
-                ? StreamMessage.ENCRYPTION_TYPES.NONE
-                : StreamMessage.ENCRYPTION_TYPES.AES)
+        const encryptionType = this.isPublicStream ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
         let groupKeyId: string | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
@@ -85,14 +82,7 @@ export class MessageFactory {
             serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), groupKey.data)
             groupKeyId = groupKey.id
             if (nextGroupKey) {
-                newGroupKey = EncryptionUtil.encryptGroupKey(nextGroupKey, groupKey)
-            }
-        } else if (encryptionType === EncryptionType.RSA) {
-            if (metadata.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
-                // no-op, there is an exception for encrypting GroupKeyResponses:
-                // https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md
-            } else {
-                throw new Error('Not implemented')
+                newGroupKey = groupKey.encryptNextGroupKey(nextGroupKey)
             }
         }
 
@@ -100,7 +90,6 @@ export class MessageFactory {
             content: serializedContent,
             messageId,
             prevMsgRef,
-            messageType: metadata.messageType,
             encryptionType,
             groupKeyId,
             newGroupKey,

@@ -175,7 +175,7 @@
     window.addEventListener('unhandledrejection', onError)
 
     const urlParams = new URLSearchParams(window.location.search)
-    const streamName = urlParams.get('streamName')
+    const streamName = urlParams.get('streamName') || Date.now()
     const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v2/ws'
     let firstTime
     let lastTime

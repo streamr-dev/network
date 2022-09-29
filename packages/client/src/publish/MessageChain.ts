@@ -30,6 +30,8 @@ export function getCachedMessageChain(
     )
 }
 
+export const createRandomMsgChainId = (): string => randomString(20)
+
 /**
  * Manage sequenceNumber & msgChainId for StreamMessages
  */
@@ -40,7 +42,7 @@ export class MessageChain {
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 
-    constructor(streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId = randomString(20)) {
+    constructor(streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId = createRandomMsgChainId()) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId

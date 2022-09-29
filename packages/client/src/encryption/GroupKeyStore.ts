@@ -1,28 +1,30 @@
+/* eslint-disable padding-line-between-statements */
 import { join } from 'path'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { GroupKey } from './GroupKey'
 import { Persistence } from '../utils/persistence/Persistence'
-
 import ServerPersistence from '../utils/persistence/ServerPersistence'
 import { StreamID } from 'streamr-client-protocol'
-
-type GroupKeyId = string
+import { GroupKeyId } from './GroupKey'
+import { StreamrClientEventEmitter } from '../events'
 
 interface GroupKeyStoreOptions {
     context: Context
     clientId: string
     streamId: StreamID
+    eventEmitter: StreamrClientEventEmitter
 }
 
 export class GroupKeyStore implements Context {
     readonly id
     readonly debug
-    private persistence: Persistence<string, string>
+    private persistence: Persistence<GroupKeyId, string>
     private currentGroupKey: GroupKey | undefined // current key id if any
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
+    private eventEmitter: StreamrClientEventEmitter
 
-    constructor({ context, clientId, streamId }: GroupKeyStoreOptions) {
+    constructor({ context, clientId, streamId, eventEmitter }: GroupKeyStoreOptions) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.persistence = new ServerPersistence({
@@ -33,31 +35,19 @@ export class GroupKeyStore implements Context {
             streamId,
             migrationsPath: join(__dirname, 'migrations')
         })
+        this.eventEmitter = eventEmitter
     }
 
     private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
-        const existingKey = await this.get(groupKey.id)
-        if (existingKey) {
-            if (!existingKey.equals(groupKey)) {
-                throw new GroupKey.InvalidGroupKeyError(
-                    `Trying to add groupKey ${groupKey.id} but key exists & is not equivalent to new GroupKey: ${groupKey}.`,
-                    groupKey
-                )
-            }
-
-            await this.persistence.set(groupKey.id, existingKey.hex)
-            return existingKey
-        }
-
+        this.debug('Store key %s', groupKey.id)
         await this.persistence.set(groupKey.id, groupKey.hex)
+        this.eventEmitter.emit('addGroupKey', groupKey)
         return groupKey
     }
 
     async has(id: GroupKeyId): Promise<boolean> {
         if (this.currentGroupKey?.id === id) { return true }
-
         if (this.queuedGroupKey?.id === id) { return true }
-
         return this.persistence.has(id)
     }
 
@@ -67,25 +57,22 @@ export class GroupKeyStore implements Context {
             this.currentGroupKey = this.queuedGroupKey || await this.rekey()
             this.queuedGroupKey = undefined
         }
-
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
         const result: [GroupKey, GroupKey | undefined] = [
             this.currentGroupKey!,
             this.queuedGroupKey,
         ]
-
         // Perform the rotate if there's a next key queued
         if (this.queuedGroupKey) {
             this.currentGroupKey = this.queuedGroupKey
             this.queuedGroupKey = undefined
         }
-
         return result
     }
 
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
-        if (!value) { return undefined }
+        if (value === undefined) { return undefined }
         return new GroupKey(id, value)
     }
 
@@ -93,15 +80,11 @@ export class GroupKeyStore implements Context {
         return this.persistence.exists()
     }
 
-    async rotateGroupKey(): Promise<GroupKey> {
-        return this.setNextGroupKey(GroupKey.generate())
-    }
-
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
 
-    async setNextGroupKey(newKey: GroupKey): Promise<GroupKey> {
+    async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
         this.queuedGroupKey = newKey
         await this.storeKey(newKey)
         return newKey

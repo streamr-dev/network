@@ -1,5 +1,5 @@
-import { EncryptionType, KeyExchangeStreamIDUtils, StreamID, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
-import { scoped, Lifecycle, delay, inject } from 'tsyringe'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { scoped, Lifecycle, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
 import { InspectOptions } from 'util'
 import { instanceId } from '../utils/utils'
@@ -12,9 +12,9 @@ import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
-import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
 import { pLimitFn } from '../utils/promises'
 import { inspect } from '../utils/log'
+import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
 
 export class PublishError extends Error {
 
@@ -50,10 +50,6 @@ export interface MessageMetadata {
     timestamp?: string | number | Date
     partitionKey?: string | number
     msgChainId?: string
-    /** @internal */
-    messageType?: StreamMessageType
-    /** @internal */
-    encryptionType?: EncryptionType
 }
 
 const parseTimestamp = (metadata?: MessageMetadata): number => {
@@ -75,7 +71,7 @@ export class Publisher implements Context {
     private streamIdBuilder: StreamIDBuilder
     private authentication: Authentication
     private streamRegistryCached: StreamRegistryCached
-    private keyExchange: PublisherKeyExchange
+    private groupKeyStoreFactory: GroupKeyStoreFactory
     private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
@@ -85,7 +81,7 @@ export class Publisher implements Context {
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
-        @inject(delay(() => PublisherKeyExchange)) keyExchange: PublisherKeyExchange,
+        groupKeyStoreFactory: GroupKeyStoreFactory,
         node: NetworkNodeFacade,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
     ) {
@@ -94,7 +90,7 @@ export class Publisher implements Context {
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
-        this.keyExchange = keyExchange
+        this.groupKeyStoreFactory = groupKeyStoreFactory
         this.node = node
         this.cacheConfig = cacheConfig
         this.getMessageFactory = pLimitFn(pMemoize(async (streamId: StreamID) => {  // TODO is it better to use pMemoize or CacheAsyncFn (e.g. after revoked publish permissions?)
@@ -105,20 +101,6 @@ export class Publisher implements Context {
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
-        // TODO if the publish() calls in KeyExchangeStream use BrubeckNode directly, we can remove this exception
-        // In that case we can also remove the 2 internal fields of MessageMetadata as there is no need to support those in normal publishing
-        if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
-            const authenticatedUser = await this.authentication.getAddress()
-            return new MessageFactory({
-                streamId: streamId,
-                partitionCount: 1,
-                isPublicStream: true,
-                publisherId: authenticatedUser.toLowerCase(),
-                createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-                useGroupKey: () => Promise.reject(),
-                cacheConfig: this.cacheConfig
-            })
-        }
         const [ stream, authenticatedUser ] = await Promise.all([
             this.streamRegistryCached.getStream(streamId),
             this.authentication.getAddress()
@@ -128,13 +110,14 @@ export class Publisher implements Context {
             throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
         }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
+        const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
         return new MessageFactory({
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
             publisherId: authenticatedUser.toLowerCase(),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            useGroupKey: pLimitFn(() => this.keyExchange.useGroupKey(streamId), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
+            useGroupKey: pLimitFn(() => groupKeyStore.useGroupKey(), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
             cacheConfig: this.cacheConfig
         })
     }

@@ -1,7 +1,6 @@
 import { random } from 'lodash'
 import { StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { keyToArrayIndex } from '@streamr/utils'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { createMockAddress } from '../test-utils/utils'
@@ -72,22 +71,16 @@ describe('MessageFactory', () => {
         const messageFactory = createMessageFactory()
         const partitionKey = 'mock-partitionKey'
         const msgChainId = 'mock-msgChainId'
-        const messageType = StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
-        const encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
         const msg = await messageFactory.createMessage(CONTENT, {
             timestamp: TIMESTAMP,
             partitionKey,
-            msgChainId,
-            messageType,
-            encryptionType
+            msgChainId
         })
         expect(msg).toMatchObject({
-            encryptionType,
             messageId: {
                 msgChainId,
                 streamPartition: keyToArrayIndex(PARTITION_COUNT, partitionKey)
-            },
-            messageType
+            }
         })
     })
 
@@ -112,7 +105,7 @@ describe('MessageFactory', () => {
             groupKeyId: nextGroupKey.id,
             encryptedGroupKeyHex: expect.any(String)
         })
-        expect(EncryptionUtil.decryptGroupKey(msg.newGroupKey!, GROUP_KEY)).toEqual(nextGroupKey)
+        expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
     })
 
     describe('partitions', () => {

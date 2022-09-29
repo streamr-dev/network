@@ -1,5 +1,4 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-
 import { instanceId } from '../utils/utils'
 import { CacheAsyncFn } from '../utils/caches'
 import { inspect } from '../utils/log'
@@ -9,6 +8,7 @@ import { GroupKeyStore } from './GroupKeyStore'
 import { GroupKey } from './GroupKey'
 import { StreamID } from 'streamr-client-protocol'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { StreamrClientEventEmitter } from '../events'
 
 // In the client API we use the term EncryptionKey instead of GroupKey.
 // The GroupKey name comes from the protocol. TODO: we could rename all classes
@@ -30,7 +30,8 @@ export class GroupKeyStoreFactory implements Context {
     constructor(
         context: Context,
         @inject(AuthenticationInjectionToken) private authentication: Authentication,
-        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
+        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig,
+        @inject(StreamrClientEventEmitter) private eventEmitter: StreamrClientEventEmitter
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -51,7 +52,8 @@ export class GroupKeyStoreFactory implements Context {
         const store = new GroupKeyStore({
             context: this,
             clientId,
-            streamId
+            streamId,
+            eventEmitter: this.eventEmitter
         })
         this.cleanupFns.push(async () => {
             try {

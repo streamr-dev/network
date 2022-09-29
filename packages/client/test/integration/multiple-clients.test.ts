@@ -19,7 +19,7 @@ const MAX_MESSAGES = 10
 
 const waitMessagesReceived = async (
     received: Record<string, StreamMessage[]>,
-    published: Record<string, StreamMessage[]>,
+    published: Record<string, StreamMessage[]>
 ) => {
     await waitForCondition(() => {
         const receivedCount = Object.values(received).flat().length
@@ -160,13 +160,10 @@ describe('PubSub with multiple clients', () => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
                 const publishTestMessages = getPublishTestStreamMessages(pubClient, stream, {
-                    waitForLast: true,
-                    waitForLastTimeout: 20000,
-                    waitForLastCount: MAX_MESSAGES * publishers.length,
                     createMessage: ({ batchId }) => ({
                         batchId,
                         value: counterId(publisherId),
-                    }),
+                    })
                 })
                 published[publisherId] = await publishTestMessages(MAX_MESSAGES)
             }))

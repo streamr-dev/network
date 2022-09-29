@@ -10,7 +10,6 @@ import { OrderMessages } from './OrderMessages'
 import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
-import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { Context } from '../utils/Context'
 import { ConfigInjectionToken } from '../Config'
 import { Resends } from './Resends'
@@ -18,6 +17,9 @@ import { DestroySignal } from '../DestroySignal'
 import { DependencyContainer } from 'tsyringe'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
+import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamrClientEventEmitter } from '../events'
 
 export function SubscribePipeline<T = unknown>(
     messageStream: MessageStream<T>,
@@ -55,12 +57,18 @@ export function SubscribePipeline<T = unknown>(
 
     const decrypt = new Decrypt<T>(
         context,
-        container.resolve(StreamRegistryCached),
+        container.resolve(GroupKeyStoreFactory),
         container.resolve(SubscriberKeyExchange),
+        container.resolve(StreamRegistryCached),
         container.resolve(DestroySignal),
+        container.resolve(StreamrClientEventEmitter),
+        container.resolve(ConfigInjectionToken.Timeouts),
     )
 
-    const msgChainUtil = new MsgChainUtil<T>((msg) => decrypt.decrypt(msg), messageStream.onError)
+    const msgChainUtil = new MsgChainUtil<T>(async (msg) => {
+        await validate.validate(msg)
+        return decrypt.decrypt(msg)
+    }, messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
@@ -70,11 +78,7 @@ export function SubscribePipeline<T = unknown>(
     messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
-        // validate
-        .forEach(async (streamMessage: StreamMessage) => {
-            await validate.validate(streamMessage)
-        })
-        // decrypt
+        // validate & decrypt
         .pipe(async function* (src: AsyncGenerator<StreamMessage<T>>) {
             setImmediate(async () => {
                 for await (const msg of src) {
@@ -96,7 +100,6 @@ export function SubscribePipeline<T = unknown>(
         .onBeforeFinally.listen(async () => {
             const tasks = [
                 gapFillMessages.stop(),
-                decrypt.stop(),
                 validate.stop(),
             ]
             await Promise.allSettled(tasks)
