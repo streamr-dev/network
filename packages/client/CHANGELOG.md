@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Method `updateEncryptionKey` to update stream encryption key
 - The client publishes metrics to the network at regular intervals (configurable with `metrics` config option)
-- There is a limit for concurrent contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- There is a limit for concurrent smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
 
 ### Changed
 
