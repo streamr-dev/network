@@ -11,8 +11,8 @@ import { ConfigInjectionToken } from './Config'
 @scoped(Lifecycle.ContainerScoped)
 export class ContractFactory {
 
-    private graphQLClient: SynchronizedGraphQLClient
-    private ethereumConfig: EthereumConfig
+    private readonly graphQLClient: SynchronizedGraphQLClient
+    private readonly ethereumConfig: EthereumConfig
 
     constructor(
         graphQLClient: SynchronizedGraphQLClient,
