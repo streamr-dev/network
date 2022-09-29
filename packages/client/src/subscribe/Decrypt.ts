@@ -33,7 +33,7 @@ export class Decrypt<T> implements Context {
         this.decrypt = this.decrypt.bind(this)
     }
 
-    // TODO if this.isStopped is true, would it make sense to reject the promise
+    // TODO if this.destroySignal.isDestroyed() is true, would it make sense to reject the promise
     // and not to return the original encrypted message?
     // - e.g. StoppedError, which is not visible to end-user
     async decrypt(streamMessage: StreamMessage<T>): Promise<StreamMessage<T>> {
