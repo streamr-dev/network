@@ -85,9 +85,6 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
-                },
-                "encryptionKeyRequest": {
-                    "type": "number"
                 }
             }
         },
@@ -240,6 +237,18 @@
                 },
                 "acceptProxyConnections": {
                     "type": "boolean"
+                }
+            }
+        },
+        "decryption": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "keyRequestTimeout": {
+                    "type": "number"
+                },
+                "maxKeyRequestsPerSecond": {
+                    "type": "number"
                 }
             }
         },

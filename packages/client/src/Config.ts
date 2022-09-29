@@ -33,7 +33,6 @@ export interface TimeoutsConfig {
         timeout: number
         retryInterval: number
     }
-    encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
@@ -56,6 +55,11 @@ export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
+}
+
+export interface DecryptionConfig {
+    keyRequestTimeout: number
+    maxKeyRequestsPerSecond: number
 }
 
 export interface DebugConfig {
@@ -83,6 +87,7 @@ export type StrictStreamrClientConfig = {
     */
     auth: AuthConfig
     network: NetworkConfig
+    decryption: DecryptionConfig
     cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
@@ -95,8 +100,9 @@ export type StrictStreamrClientConfig = {
     & SubscribeConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
     network: Partial<StrictStreamrClientConfig['network']>
+    decryption: Partial<StrictStreamrClientConfig['decryption']>
     /** @internal */
     debug: Partial<StrictStreamrClientConfig['debug']>
 }>
@@ -156,6 +162,10 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
+    decryption: {
+        keyRequestTimeout: 30 * 1000,
+        maxKeyRequestsPerSecond: 20
+    },
     maxConcurrentContractCalls: 10,
     cache: {
         maxSize: 10000,
@@ -174,7 +184,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             timeout: 30 * 1000,
             retryInterval: 1000
         },
-        encryptionKeyRequest: 30 * 1000,
         httpFetchTimeout: 30 * 1000
     },
     debug: {
@@ -217,6 +226,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             ...merge(defaults.network || {}, opts.network),
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
+        decryption: merge(defaults.decryption || {}, opts.decryption),
         debug: merge(defaults.debug || {}, opts.debug),
         cache: {
             ...defaults.cache,
@@ -273,6 +283,6 @@ export const ConfigInjectionToken = {
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
-    Encryption: Symbol('Config.Encryption'),
+    Decryption: Symbol('Config.Decryption'),
     Timeouts: Symbol('Config.Timeouts')
 }

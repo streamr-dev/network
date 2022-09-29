@@ -62,8 +62,10 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(onewayClient, module)
+
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
+
         await onewayClient.setPermissions({
             streamId: stream.id,
             assignments: [

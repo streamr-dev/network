@@ -13,7 +13,7 @@ export default class BrowserPersistence implements Persistence<string, string> {
 
     async has(key: string): Promise<boolean> {
         const val = await this.get(key)
-        return val == null
+        return val !== undefined
     }
 
     async get(key: string): Promise<string | undefined> {

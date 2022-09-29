@@ -1,10 +1,13 @@
 import { EventEmitter } from 'events'
 import {
-    StreamPartID,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    ProxyDirection,
     StreamMessage,
-    ProxyDirection
+    StreamMessageType,
+    StreamPartID
 } from 'streamr-client-protocol'
-import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
+import { Event as NodeToNodeEvent, NodeToNode } from '../protocol/NodeToNode'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Metric, MetricsContext, MetricsDefinition, RateMetric } from '../helpers/Metric'
 import { StreamPartManager } from './StreamPartManager'
@@ -113,7 +116,6 @@ export class Node extends EventEmitter {
             cleanUpIntervalInMs: 2 * 60 * 1000
         })
         this.propagation = new Propagation({
-            getNeighbors: this.streamPartManager.getOutboundNodesForStreamPart.bind(this.streamPartManager),
             sendToNeighbor: async (neighborId: NodeId, streamMessage: StreamMessage) => {
                 try {
                     await this.nodeToNode.sendData(neighborId, streamMessage)
@@ -238,7 +240,7 @@ export class Node extends EventEmitter {
         return Promise.allSettled(subscribePromises)
     }
 
-    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
+    async addProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
         let resolveHandler: any
         let rejectHandler: any
         await Promise.all([
@@ -259,7 +261,7 @@ export class Node extends EventEmitter {
                 this.on(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
                 this.on(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
             }),
-            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction)
+            this.proxyStreamConnectionManager.openProxyConnection(streamPartId, contactNodeId, direction, userId)
         ]).finally(() => {
             this.off(Event.PROXY_CONNECTION_ACCEPTED, resolveHandler)
             this.off(Event.PROXY_CONNECTION_REJECTED, rejectHandler)
@@ -273,13 +275,13 @@ export class Node extends EventEmitter {
     // Null source is used when a message is published by the node itself
     onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         const streamPartId = streamMessage.getStreamPartID()
-        // Check if the stream is set as one-directional and has inbound connection
+        // Check if the stream is set as one-directional and has inbound connection if message is content typed
         if (source
             && this.streamPartManager.isSetUp(streamPartId)
             && this.streamPartManager.isBehindProxy(streamPartId)
+            && streamMessage.messageType === StreamMessageType.MESSAGE
             && !this.streamPartManager.hasInboundConnection(streamPartId, source)) {
             logger.warn(`Unexpected message received on outbound proxy stream from node ${source} on stream ${streamPartId}`)
-            // Perhaps the node should be disconnected here if bad behaviour is repeated
             return
         }
 
@@ -308,8 +310,9 @@ export class Node extends EventEmitter {
 
         if (isUnseen) {
             logger.trace('received from %s data %j', source, streamMessage.messageId)
+            const propagationTargets = this.getPropagationTargets(streamMessage)
             this.emit(Event.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
-            this.propagation.feedUnseenMessage(streamMessage, source)
+            this.propagation.feedUnseenMessage(streamMessage, propagationTargets, source)
             if (source === null) {
                 this.metrics.publishMessagesPerSecond.record(1)
                 this.metrics.publishBytesPerSecond.record(streamMessage.getSerializedContent().length)
@@ -325,6 +328,25 @@ export class Node extends EventEmitter {
         this.disconnectionManager.stop()
         this.nodeToNode.stop()
         return this.trackerManager.stop()
+    }
+
+    private getPropagationTargets(streamMessage: StreamMessage): NodeId[] {
+        const streamPartId = streamMessage.getStreamPartID()
+        let propagationTargets: NodeId[] = []
+        propagationTargets = propagationTargets.concat([...this.streamPartManager.getOutboundNodesForStreamPart(streamPartId)])
+
+        if (this.acceptProxyConnections) {
+            if (GroupKeyRequest.is(streamMessage) || GroupKeyResponse.is(streamMessage)) {
+                const { recipient } = GroupKeyRequest.fromStreamMessage(streamMessage) as GroupKeyRequest | GroupKeyResponse
+                propagationTargets = propagationTargets.concat(this.proxyStreamConnectionManager.getNodeIdsForUserId(streamPartId, recipient))
+            }
+        } else if (
+            this.streamPartManager.isBehindProxy(streamMessage.getStreamPartID())
+            && this.proxyStreamConnectionManager.isProxiedStreamPart(streamMessage.getStreamPartID(), ProxyDirection.SUBSCRIBE)
+        ) {
+            propagationTargets = propagationTargets.concat([...this.streamPartManager.getInboundNodesForStreamPart(streamPartId)])
+        }
+        return propagationTargets
     }
 
     private subscribeToStreamPartOnNode(node: NodeId, streamPartId: StreamPartID, sendStatus = true): NodeId {
@@ -413,6 +435,6 @@ export class Node extends EventEmitter {
     }
 
     isProxiedStreamPart(streamPartId: StreamPartID, direction: ProxyDirection): boolean {
-        return this.proxyStreamConnectionManager.isProxiedStreamPart(streamPartId, direction)
+        return this.streamPartManager.isBehindProxy(streamPartId) && this.proxyStreamConnectionManager.isProxiedStreamPart(streamPartId, direction)
     }
 }

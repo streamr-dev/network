@@ -53,6 +53,9 @@ export class FakeNetworkNode implements NetworkNodeStub {
     }
 
     publish(msg: StreamMessage): void {
+        // by adding a subscription we emulate the functionality of real network node, which subscribes to 
+        // the stream topology when it publishes a message to a stream
+        this.subscriptions.add(msg.getStreamPartID())
         this.network.send(msg, this.id, (node: FakeNetworkNode) => node.subscriptions.has(msg.getStreamPartID()))
     }
 
