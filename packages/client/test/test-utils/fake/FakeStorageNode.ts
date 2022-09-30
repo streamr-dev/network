@@ -4,6 +4,7 @@ import {
     MessageID,
     StreamID,
     StreamMessage,
+    StreamMessageType,
     StreamPartID,
     toStreamID,
     toStreamPartID
@@ -28,6 +29,10 @@ export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
     } else {
         throw new Error(`unknown storage node url: ${url}`)
     }
+}
+
+const isStorableMessage = (msg: StreamMessage): boolean => {
+    return msg.messageType === StreamMessageType.MESSAGE
 }
 
 export class FakeStorageNode extends FakeNetworkNode {
@@ -60,7 +65,7 @@ export class FakeStorageNode extends FakeNetworkNode {
         streamParts.forEach(async (streamPartId, idx) => {
             if (!this.subscriptions.has(streamPartId)) {
                 this.addMessageListener((msg: StreamMessage) => {
-                    if (msg.getStreamPartID() === streamPartId) {
+                    if ((msg.getStreamPartID() === streamPartId) && isStorableMessage(msg)) {
                         this.storeMessage(msg)
                     }
                 })

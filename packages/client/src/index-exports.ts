@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export { UnableToDecryptError } from './encryption/EncryptionUtil'
+export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
@@ -49,8 +49,7 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
-export { GroupKey as EncryptionKey } from './encryption/GroupKey'
+export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
 export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
 
 export { ConfigTest } from './ConfigTest'

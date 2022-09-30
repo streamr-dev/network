@@ -62,7 +62,6 @@ export const ConfigTest: StreamrClientConfig = {
             timeout: 20 * 1000,
             retryInterval: 500
         },
-        encryptionKeyRequest: 30 * 1000,
         httpFetchTimeout: 30 * 1000
     },
     metrics: false

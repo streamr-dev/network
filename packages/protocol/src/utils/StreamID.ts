@@ -1,4 +1,3 @@
-import { KeyExchangeStreamIDUtils } from './KeyExchangeStreamID'
 import { EthereumAddress, ENSName } from './types'
 import { BrandedString } from '@streamr/utils'
 
@@ -10,7 +9,6 @@ export type StreamID = BrandedString<'StreamID'>
  * Supported formats:
  *  - full stream id format, e.g., '0x0000000000000000000000000000000000000000/foo/bar' or 'name.eth/foo/bar'
  *  - path-only format, e.g. , '/foo/bar'
- *  - key-exchange format, e.g., SYSTEM/keyexchange/0x0000000000000000000000000000000000000000
  *  - legacy format, e.g., '7wa7APtlTq6EC5iTCBy6dw'
  *
  *  If `streamIdOrPath` is not in path-only format, `domain` can be left undefined.
@@ -21,8 +19,6 @@ export function toStreamID(streamIdOrPath: string, domain?: EthereumAddress | EN
     }
     const firstSlashIdx = streamIdOrPath.indexOf('/')
     if (firstSlashIdx === -1) { // legacy format
-        return streamIdOrPath as StreamID
-    } else if (KeyExchangeStreamIDUtils.isKeyExchangeStream(streamIdOrPath)) { // key-exchange format
         return streamIdOrPath as StreamID
     } else if (firstSlashIdx === 0) { // path-only format
         if (domain === undefined) {
@@ -63,7 +59,7 @@ export class StreamIDUtils {
     
     static getDomainAndPath(streamId: StreamID): [EthereumAddress | ENSName, string] | undefined {
         const firstSlashIdx = streamId.indexOf('/')
-        if (firstSlashIdx !== -1 && !KeyExchangeStreamIDUtils.isKeyExchangeStream(streamId)) {
+        if (firstSlashIdx !== -1) {
             return [streamId.substring(0, firstSlashIdx), streamId.substring(firstSlashIdx)]
         } else {
             return undefined

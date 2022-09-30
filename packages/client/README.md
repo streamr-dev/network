@@ -667,6 +667,12 @@ publisher.updateEncryptionKey({
 subscriber.addEncryptionKey(key, streamId)
 ```
 
+#### Configuration
+
+There are two optional configuration options related to encryption keys:
+- `decryption.keyRequestTimeout`: max time (in milliseconds) to wait before a key request timeouts
+- `decryption.maxKeyRequestsPerSecond`: max count of key request to be sent within a second (i.e. it throttles the requests if it receives messages from many new publishers within a short period of time)
+
 ### Proxy publishing and subscribing
 
 In some cases the client might be interested in publishing messages without participating in the stream's message propagation. With this option the nodes can sign all messages they publish by themselves. Alternatively, a client could open a WS connection to a broker node and allow the broker to handle signing with its private key.

@@ -81,11 +81,6 @@ describe('StreamRegistry', () => {
             await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
         })
 
-        it('key-exchange format', async () => {
-            const streamId = 'SYSTEM/keyexchange/0x0000000000000000000000000000000000000000'
-            await expect(async () => client.createStream({ id: streamId })).rejects.toThrow(`stream id "${streamId}" not valid`)
-        })
-
         describe('ENS', () => {
 
             it('domain owned by user', async () => {

@@ -1,7 +1,7 @@
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid,  getGroupKeyStore } from '../test-utils/utils'
+import { uid, getGroupKeyStore } from '../test-utils/utils'
 import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
@@ -58,15 +58,15 @@ describeRepeats('GroupKeyStore', () => {
         expect(await store.exists()).toBeTruthy()
     })
 
-    it('can set next and use', async () => {
+    it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
-        await store.setNextGroupKey(groupKey)
+        await store.rotate(groupKey)
         expect(await store.exists()).toBeTruthy()
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         const groupKey2 = GroupKey.generate()
-        await store.setNextGroupKey(groupKey2)
+        await store.rotate(groupKey2)
         expect(await store.useGroupKey()).toEqual([groupKey, groupKey2])
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
@@ -80,8 +80,8 @@ describeRepeats('GroupKeyStore', () => {
     it('only keeps the latest unused key', async () => {
         const groupKey = GroupKey.generate()
         const groupKey2 = GroupKey.generate()
-        await store.setNextGroupKey(groupKey)
-        await store.setNextGroupKey(groupKey2)
+        await store.rotate(groupKey)
+        await store.rotate(groupKey2)
         expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
     })
 
@@ -90,9 +90,9 @@ describeRepeats('GroupKeyStore', () => {
         expect(generatedKey).toBeTruthy()
         expect(queuedKey).toEqual(undefined)
 
-        const groupKey = await store.rotateGroupKey()
+        const groupKey = await store.rotate()
         expect(groupKey).toBeTruthy()
-        const groupKey2 = await store.rotateGroupKey()
+        const groupKey2 = await store.rotate()
         expect(await store.useGroupKey()).toEqual([generatedKey, groupKey2])
     })
 
@@ -102,7 +102,7 @@ describeRepeats('GroupKeyStore', () => {
         expect(generatedKey).toBeTruthy()
         expect(queuedKey).toEqual(undefined)
 
-        const rotatedKey = await store.rotateGroupKey()
+        const rotatedKey = await store.rotate()
         expect(rotatedKey).toBeTruthy()
         const rekey = await store.rekey()
         expect(rekey).toBeTruthy()
@@ -117,7 +117,7 @@ describeRepeats('GroupKeyStore', () => {
 
         const rekey = await store.rekey()
         expect(rekey).toBeTruthy()
-        const rotatedKey = await store.rotateGroupKey()
+        const rotatedKey = await store.rotate()
         expect(rotatedKey).toBeTruthy()
         expect(await store.useGroupKey()).toEqual([rekey, rotatedKey])
     })

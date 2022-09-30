@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { createTestStream } from '../test-utils/utils'
+import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
@@ -7,7 +7,6 @@ import { StreamPermission } from '../../src/permission'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { fastPrivateKey } from 'streamr-test-utils'
-import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
 import { StreamMessage } from 'streamr-client-protocol'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 
@@ -94,12 +93,7 @@ describe('Group Key Persistence', () => {
             })
 
             it('works', async () => {
-                // @ts-expect-error private
-                const publisherKeyExchange = publisher2.container.resolve(PublisherKeyExchange)
-                // subscribes to the key exchange stream
-                // TODO: this should probably happen automatically if there are keys
-                // also probably needs to create a connection handle
-                await publisherKeyExchange.useGroupKey(stream.id)
+                await startPublisherKeyExchangeSubscription(publisher2, stream.getStreamParts()[0])
 
                 const received: StreamMessage[] = []
                 const sub = await subscriber.resend(
