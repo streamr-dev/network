@@ -28,32 +28,6 @@ describe('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get and set', async () => {
-        const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
-        expect(await store.get(groupKey.id)).toEqual(groupKey)
-    })
-
-    it('does not exist until write', async () => {
-        const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
-    })
-
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
