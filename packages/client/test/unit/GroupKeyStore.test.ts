@@ -30,9 +30,8 @@ describe('GroupKeyStore', () => {
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
         await store.rotate(groupKey)
-        expect(await store.exists()).toBeTruthy()
+        expect(await store.get(groupKey.id)).toEqual(groupKey)
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         const groupKey2 = GroupKey.generate()

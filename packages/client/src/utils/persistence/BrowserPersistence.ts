@@ -28,13 +28,6 @@ export default class BrowserPersistence implements Persistence<string, string> {
         // noop
     }
 
-    async exists(): Promise<boolean> { // eslint-disable-line class-methods-use-this
-        // always true for browser
-        // can't currently implement without opening db, defeating purpose
-        // waiting for indexedDB.databases() to gain browser support.
-        return true
-    }
-
     get [Symbol.toStringTag](): string {
         return this.constructor.name
     }

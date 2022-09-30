@@ -70,10 +70,6 @@ export class GroupKeyStore implements Context {
         return new GroupKey(id, value)
     }
 
-    async exists(): Promise<boolean> {
-        return this.persistence.exists()
-    }
-
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
