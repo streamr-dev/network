@@ -11,7 +11,7 @@ import { MessageMetadata, PublishMetadata, PublishPipeline } from './PublishPipe
 import { StreamDefinition } from '../types'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import pMemoize from 'p-memoize'
-import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
 
 export type { PublishMetadata }
 
@@ -32,13 +32,12 @@ export class Publisher implements Context {
     constructor(
         context: Context,
         @inject(delay(() => PublishPipeline)) private pipeline: PublishPipeline,
-        groupKeyStoreFactory: GroupKeyStoreFactory
+        groupKeyStore: GroupKeyStore
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.getGroupKeyQueue = pMemoize(async (streamId: StreamID) => {
-            const store = await groupKeyStoreFactory.getStore(streamId)
-            return new GroupKeyQueue(store)
+            return new GroupKeyQueue(streamId, groupKeyStore)
         }, {
             cacheKey: ([streamId]) => streamId
         })
