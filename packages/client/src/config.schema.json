@@ -123,6 +123,9 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
+                },
+                "groupKeyResponseTimeout": {
+                    "type": "number"
                 }
             }
         },
