@@ -38,13 +38,6 @@ export class GroupKeyStore implements Context {
         this.eventEmitter = eventEmitter
     }
 
-    private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
-        this.debug('Store key %s', groupKey.id)
-        await this.persistence.set(groupKey.id, groupKey.hex)
-        this.eventEmitter.emit('addGroupKey', groupKey)
-        return groupKey
-    }
-
     async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
@@ -71,12 +64,15 @@ export class GroupKeyStore implements Context {
     }
 
     async add(groupKey: GroupKey): Promise<GroupKey> {
-        return this.storeKey(groupKey)
+        this.debug('Add key %s', groupKey.id)
+        await this.persistence.set(groupKey.id, groupKey.hex)
+        this.eventEmitter.emit('addGroupKey', groupKey)
+        return groupKey
     }
 
     async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
         this.queuedGroupKey = newKey
-        await this.storeKey(newKey)
+        await this.add(newKey)
         return newKey
     }
 
@@ -85,7 +81,7 @@ export class GroupKeyStore implements Context {
     }
 
     async rekey(newKey = GroupKey.generate()): Promise<GroupKey> {
-        await this.storeKey(newKey)
+        await this.add(newKey)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
