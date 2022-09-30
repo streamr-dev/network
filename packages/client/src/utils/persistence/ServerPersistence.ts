@@ -152,17 +152,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return value?.[this.valueColumnName]
     }
 
-    async has(key: string): Promise<boolean> {
-        if (!this.initCalled) {
-            // can't have if doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
-        await this.init()
-        const value = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
-    }
-
     async set(key: string, value: string): Promise<void> {
         await this.init()
         await this.store!.run(

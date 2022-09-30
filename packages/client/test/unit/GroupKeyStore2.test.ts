@@ -34,12 +34,10 @@ describe('GroupKeyStore', () => {
 
     it('can get and set', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
 
         expect(await store.add(groupKey)).toBe(groupKey)
         expect(await store.add(groupKey)).toEqual(groupKey)
-        expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
@@ -56,17 +54,17 @@ describe('GroupKeyStore', () => {
                 // add key to store1 twice in parallel
                 store.add(groupKey).then(async () => {
                     // immediately check exists in store2
-                    expect(await store2.has(groupKey.id)).toBeTruthy()
+                    expect(await store2.get(groupKey.id)).toBeTruthy()
                 }),
                 store.add(groupKey).then(async () => {
                     // immediately check exists in store2
-                    expect(await store2.has(groupKey.id)).toBeTruthy()
+                    expect(await store2.get(groupKey.id)).toBeTruthy()
                 }),
                 // test adding to another store at same time doesn't break
                 // add to store2 in parallel
                 store2.add(groupKey).then(async () => {
                     // immediately check exists in store1
-                    expect(await store.has(groupKey.id)).toBeTruthy()
+                    expect(await store.get(groupKey.id)).toBeTruthy()
                 }),
             ]
 
@@ -85,7 +83,6 @@ describe('GroupKeyStore', () => {
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
@@ -99,7 +96,6 @@ describe('GroupKeyStore', () => {
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
@@ -113,7 +109,6 @@ describe('GroupKeyStore', () => {
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })

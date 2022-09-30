@@ -23,6 +23,10 @@ describe('ServerPersistence', () => {
         })
     })
 
+    afterEach(async () => {
+        await persistence.destroy()
+    })
+
     it('happy path', async () => {
         await persistence.set('foo', 'bar')
         expect(await persistence.get('foo')).toBe('bar')

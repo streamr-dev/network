@@ -11,11 +11,6 @@ export default class BrowserPersistence implements Persistence<string, string> {
         this.store = createStore(this.dbName, 'GroupKeys')
     }
 
-    async has(key: string): Promise<boolean> {
-        const val = await this.get(key)
-        return val !== undefined
-    }
-
     async get(key: string): Promise<string | undefined> {
         return get(key, this.store)
     }

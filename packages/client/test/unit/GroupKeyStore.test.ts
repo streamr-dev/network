@@ -47,8 +47,6 @@ describeRepeats('GroupKeyStore', () => {
     it('does not exist until write', async () => {
         const groupKey = GroupKey.generate()
         expect(await store.exists()).toBeFalsy()
-        expect(await store.has(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
         expect(await store.exists()).toBeFalsy()
         expect(await store.close()).toBeFalsy()
