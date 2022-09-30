@@ -22,8 +22,7 @@ describe('GroupKeyStore', () => {
     })
 
     afterEach(async () => {
-        if (!store) { return }
-        await store.destroy()
+        await store.close()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -44,7 +43,7 @@ describe('GroupKeyStore', () => {
     it('can add with multiple instances in parallel', async () => {
         const store2 = getGroupKeyStore(streamId, clientId)
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         for (let i = 0; i < 5; i++) {
             const groupKey = GroupKey.generate()
@@ -79,7 +78,7 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId2, clientId)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
@@ -92,7 +91,7 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
@@ -105,7 +104,7 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)

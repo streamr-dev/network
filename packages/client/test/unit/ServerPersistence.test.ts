@@ -24,7 +24,7 @@ describe('ServerPersistence', () => {
     })
 
     afterEach(async () => {
-        await persistence.destroy()
+        await persistence.close()
     })
 
     it('happy path', async () => {

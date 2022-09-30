@@ -19,8 +19,7 @@ describe('GroupKeyStore', () => {
     })
 
     afterEach(async () => {
-        if (!store) { return }
-        await store.destroy()
+        await store.close()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
