@@ -1,13 +1,16 @@
 import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
-import { StreamrNode, Event as StreamrNodeEvent } from '../src/logic/StreamrNode'
+import { Event as StreamrNodeEvent, StreamrNode } from '../src/logic/StreamrNode'
 import { DataMessage, MessageRef } from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
 import { program } from 'commander'
 
 program
-    .option('--id <id>', 'Ethereum address / node id', 'bootstrap')
-    .option('--name <name>', 'Name in published messages', 'bootstrap')
+    .option('--id <id>', 'Ethereum address / node id', 'full-node')
+    .option('--name <name>', 'Name in published messages', 'full-node')
+    .option('--wsPort <wsPort>', 'port for ws server', '23124')
+    .option('--entrypointId <entrypointId>', 'Entrypoints stringId', 'bootstrap')
+    .option('--entrypointIp <entrypointIp>', 'Entrypoints IP address', 'localhost')
     .option('--streamIds <streamIds>', 'streamId to publish',  (value: string) => value.split(','), ['stream-0'])
-    .description('Run bootstrap node')
+    .description('Run full node')
     .parse(process.argv)
 
 async function run(): Promise<void> {
@@ -15,20 +18,24 @@ async function run(): Promise<void> {
     const streamPartId = 'stream#0'
 
     const epPeerDescriptor: PeerDescriptor = {
-        peerId: PeerID.fromString(program.opts().id).value,
+        peerId: PeerID.fromString(program.opts().entrypointId).value,
         type: NodeType.NODEJS,
-        websocket: { ip: 'localhost', port: 23123 }
+        websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
-    const layer0 = new DhtNode({ peerDescriptor: epPeerDescriptor })
+    const peerDescriptor: PeerDescriptor = {
+        peerId: PeerID.fromString(program.opts().id).value,
+        type: NodeType.NODEJS
+    }
+    const layer0 = new DhtNode({ peerDescriptor })
     await layer0.start()
+
     await layer0.joinDht(epPeerDescriptor)
 
     const connectionManager = layer0.getTransport() as ConnectionManager
     const streamrNode = new StreamrNode()
     await streamrNode.start(layer0, connectionManager, connectionManager)
 
-    await streamrNode.joinStream(streamPartId, epPeerDescriptor)
     streamrNode.subscribeToStream(streamPartId, epPeerDescriptor)
 
     streamrNode.on(StreamrNodeEvent.NEW_MESSAGE, (msg: DataMessage, _nodeId: string) => {
@@ -43,14 +50,14 @@ async function run(): Promise<void> {
             timestamp: BigInt(Date.now())
         }
         const message: DataMessage = {
-            content: JSON.stringify({ hello: `from ${program.opts().name}`  }),
+            content: JSON.stringify({ hello: `from ${program.opts().name }` }),
             senderId: PeerID.fromValue(layer0.getPeerDescriptor().peerId).toString(),
             messageRef,
             streamPartId
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++
-    }, 5000)
+    }, 10000)
 }
 
 run()

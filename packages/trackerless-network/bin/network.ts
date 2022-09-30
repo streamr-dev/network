@@ -23,7 +23,7 @@ async function run(): Promise<void> {
     setTimeout(async () => {
         for (let i = 0; i < numOfNodes; i++) {
             const args = [
-                path.resolve('./bin/full-node.ts'),
+                path.resolve('./bin/full-node-websocket.ts'),
                 '--id=full-node' + i,
                 '--name=full-node' + i,
                 '--wsPort=540' + i

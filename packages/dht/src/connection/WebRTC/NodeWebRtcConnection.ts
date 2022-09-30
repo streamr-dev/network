@@ -28,7 +28,15 @@ export interface Params {
 // Re-defined accoring to https://github.com/microsoft/TypeScript/blob/main/src/lib/dom.generated.d.ts
 // because importing single dom definitions in not possible
 
-enum RTCPeerConnectionStateEnum {closed, connected, connecting, disconnected, failed,  new}
+enum RTCPeerConnectionStateEnum {
+    closed = 'closed',
+    connected = 'connected',
+    connecting = 'connecting',
+    disconnected = 'disconnected',
+    failed = 'failed',
+    new = 'new'
+}
+
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
 type Events = WebRtcConnectionEvents | ConnectionEvents
@@ -94,7 +102,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 this.connection!.setRemoteDescription(description, type as DescriptionType)
                 this.remoteDescriptionSet = true
             } catch (err) {
-                console.error(err)
+                logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.peerId.toString()}`)
             }
         } else {
             this.close()
@@ -108,7 +116,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     logger.trace(`Setting remote candidate for peer: ${this.remotePeerDescriptor.peerId.toString()}`)
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
-                    console.error(err)
+                    logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.peerId.toString()}`)
                 }
             } else {
                 this.close()
@@ -122,7 +130,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         if (this.isOpen()) {
             this.dataChannel?.sendMessageBinary(data as Buffer)
         } else {
-            logger.warn('Tried to send data on a non-open connection')
+            logger.warn('Tried to send data on a non-open connection' + this.lastState + " " + !!this.dataChannel)
         }
     }
 
@@ -184,6 +192,12 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
             throw new IllegalRTCPeerConnectionState('NodeWebRtcConnection used an unknown state: ' + state)
         } else {
             this.lastState = state as RTCPeerConnectionState
+        }
+        if (state === RTCPeerConnectionStateEnum.closed
+            || state === RTCPeerConnectionStateEnum.disconnected
+            || state === RTCPeerConnectionStateEnum.failed
+        ) {
+            this.close()
         }
     }
 

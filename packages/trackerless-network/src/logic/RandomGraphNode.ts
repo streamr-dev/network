@@ -6,7 +6,8 @@ import {
     HandshakeResponse,
     InterleaveNotice,
     LeaveNotice,
-    MessageRef, NeighborUpdate
+    MessageRef,
+    NeighborUpdate
 } from '../proto/packages/trackerless-network/protos/NetworkRpc'
 import { PeerList } from './PeerList'
 import { NetworkRpcClient } from '../proto/packages/trackerless-network/protos/NetworkRpc.client'
@@ -187,7 +188,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         })
     }
 
-    getSelectedNeighborIds(): string[] {
+    getTargetNeighborStringIds(): string[] {
         return this.targetNeighbors.getStringIds()
     }
 

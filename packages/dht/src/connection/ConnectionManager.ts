@@ -39,7 +39,7 @@ type ServiceId = string
 
 export type PeerDescriptorGeneratorCallback = (connectivityResponse: ConnectivityResponseMessage) => PeerDescriptor
 
-const DEFAULT_DISCONNECTION_TIMEOUT = 10000
+const DEFAULT_DISCONNECTION_TIMEOUT = 15000
 const logger = new Logger(module)
 
 interface ConnectionManagerEvents {
@@ -105,13 +105,13 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         this.ownPeerDescriptor = ownPeerDescriptor
 
         this.webSocketConnector!.setOwnPeerDescriptor(ownPeerDescriptor)
-        this.webSocketConnector.on('CONNECTED', (connection: ManagedConnection) => {
+        this.webSocketConnector.on('newConnection', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
         this.webrtcConnector.setOwnPeerDescriptor(ownPeerDescriptor)
 
-        this.webrtcConnector.on('CONNECTED', (connection: ManagedConnection) => {
+        this.webrtcConnector.on('newConnection', (connection: ManagedConnection) => {
             this.onNewConnection(connection)
         })
 
@@ -213,6 +213,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     }
 
     private onData = (data: Uint8Array, peerDescriptor: PeerDescriptor) => {
+        if (!this.started || this.stopped) {
+            return
+        }
         try {
             const message = Message.fromBinary(data)
             logger.trace('Received message of type ' + message.messageType)
