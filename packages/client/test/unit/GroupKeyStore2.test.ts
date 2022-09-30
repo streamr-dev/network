@@ -35,8 +35,7 @@ describe('GroupKeyStore', () => {
         const groupKey = GroupKey.generate()
         expect(await store.get(groupKey.id)).toBeFalsy()
 
-        expect(await store.add(groupKey)).toBe(groupKey)
-        expect(await store.add(groupKey)).toEqual(groupKey)
+        await store.add(groupKey)
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 

@@ -63,11 +63,10 @@ export class GroupKeyStore implements Context {
         return new GroupKey(id, value)
     }
 
-    async add(groupKey: GroupKey): Promise<GroupKey> {
+    async add(groupKey: GroupKey): Promise<void> {
         this.debug('Add key %s', groupKey.id)
         await this.persistence.set(groupKey.id, groupKey.hex)
         this.eventEmitter.emit('addGroupKey', groupKey)
-        return groupKey
     }
 
     async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
