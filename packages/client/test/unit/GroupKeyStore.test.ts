@@ -2,11 +2,10 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { uid, getGroupKeyStore } from '../test-utils/utils'
-import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
-describeRepeats('GroupKeyStore', () => {
+describe('GroupKeyStore', () => {
     let clientId: string
     let streamId: StreamID
     let store: GroupKeyStore
