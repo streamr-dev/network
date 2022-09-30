@@ -28,11 +28,6 @@ export default class BrowserPersistence implements Persistence<string, string> {
         // noop
     }
 
-    async destroy(): Promise<void> {
-        await this.clear()
-        await this.close()
-    }
-
     async exists(): Promise<boolean> { // eslint-disable-line class-methods-use-this
         // always true for browser
         // can't currently implement without opening db, defeating purpose
