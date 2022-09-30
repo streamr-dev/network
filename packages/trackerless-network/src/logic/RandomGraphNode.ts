@@ -286,6 +286,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         return Empty
     }
 
+    // INetworkRpc server method
     async neighborUpdate(message: NeighborUpdate, _context: ServerCallContext): Promise<NeighborUpdate> {
         if (this.targetNeighbors.hasPeerWithStringId(message.senderId)) {
             this.targetNeighbors.getNeighborByStringId(message.senderId)!.setLocalNeighbors(message.neighborDescriptors)
