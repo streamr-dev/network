@@ -55,7 +55,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         this.canConnectFunction = fnCanConnect.bind(this)
 
         this.rpcCommunicator = new RoutingRpcCommunicator(WebSocketConnector.WEBSOCKET_CONNECTOR_SERVICE_ID, this.rpcTransport, {
-            rpcRequestTimeout: 10000
+            rpcRequestTimeout: 15000
         })
 
         this.requestConnection = this.requestConnection.bind(this)
@@ -154,7 +154,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
             this.ongoingConnectRequests.get(peerId.toKey())?.attachImplementation(serverWebSocket, peerDescriptor)
             this.ongoingConnectRequests.delete(peerId.toKey())
         } else {
-            this.emit('CONNECTED', managedConnection)
+            this.emit('newConnection', managedConnection)
         }
     }
     public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
@@ -183,7 +183,7 @@ export class WebSocketConnector extends EventEmitter<ManagedConnectionSourceEven
         if (this.canConnectFunction(request.requester!, request.ip, request.port)) {
             setImmediate(() => {
                 const connection = this.connect(request.requester!)
-                this.emit('CONNECTED', connection)
+                this.emit('newConnection', connection)
             })
             const res: WebSocketConnectionResponse = {
                 accepted: true

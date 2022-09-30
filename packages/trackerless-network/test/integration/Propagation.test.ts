@@ -60,7 +60,7 @@ describe('Propagation', () => {
     it('All nodes receive messages', async () => {
         await waitForCondition(
             () => randomGraphNodes.every(
-                (peer) => peer.getSelectedNeighborIds().length >= 3
+                (peer) => peer.getTargetNeighborStringIds().length >= 3
             )
         )
         const messageRef: MessageRef = {

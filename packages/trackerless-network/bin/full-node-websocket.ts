@@ -1,7 +1,6 @@
-import { ConnectionManager, DhtNode, PeerDescriptor, NodeType } from '@streamr/dht'
+import { ConnectionManager, DhtNode, PeerDescriptor, NodeType, PeerID } from '@streamr/dht'
 import { Event as StreamrNodeEvent, StreamrNode } from '../src/logic/StreamrNode'
 import { DataMessage, MessageRef } from '../src/proto/packages/trackerless-network/protos/NetworkRpc'
-import { PeerID } from '@streamr/dht/dist/src'
 import { program } from 'commander'
 
 program
@@ -25,7 +24,7 @@ async function run(): Promise<void> {
         websocket: { ip: program.opts().entrypointIp, port: 23123 }
     }
 
-    const layer0 = new DhtNode({ peerIdString: program.opts().id, webSocketPort: port, entryPoints: [epPeerDescriptor] })
+    const layer0 = new DhtNode({ webSocketPort: port, webSocketHost: 'localhost', peerIdString: program.opts().id })
     await layer0.start()
 
     await layer0.joinDht(epPeerDescriptor)
@@ -56,7 +55,7 @@ async function run(): Promise<void> {
         }
         streamrNode.publishToStream(streamPartId, epPeerDescriptor, message)
         sequenceNumber++
-    }, 5000)
+    }, 10000)
 }
 
 run()

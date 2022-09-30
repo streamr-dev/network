@@ -79,10 +79,10 @@ describe('RandomGraphNode-DhtNode', () => {
 
         await Promise.all([
             waitForCondition(() => graphNodes[0].getContactPoolIds().length === 1),
-            waitForCondition(() => graphNodes[0].getSelectedNeighborIds().length === 1)
+            waitForCondition(() => graphNodes[0].getTargetNeighborStringIds().length === 1)
         ])
         expect(graphNodes[0].getContactPoolIds().length).toEqual(1)
-        expect(graphNodes[0].getSelectedNeighborIds().length).toEqual(1)
+        expect(graphNodes[0].getTargetNeighborStringIds().length).toEqual(1)
     })
 
     it('happy path 4 peers', async () => {
@@ -92,11 +92,11 @@ describe('RandomGraphNode-DhtNode', () => {
             await dhtNodes[i].joinDht(entrypointDescriptor)
         }))
 
-        await waitForCondition(() => graphNodes[3].getSelectedNeighborIds().length >= 4)
+        await waitForCondition(() => graphNodes[3].getTargetNeighborStringIds().length >= 4)
 
         range(4).map((i) => {
             expect(graphNodes[i].getContactPoolIds().length).toBeGreaterThanOrEqual(4)
-            expect(graphNodes[i].getSelectedNeighborIds().length).toBeGreaterThanOrEqual(4)
+            expect(graphNodes[i].getTargetNeighborStringIds().length).toBeGreaterThanOrEqual(4)
         })
 
         // Check bidirectionality
@@ -107,7 +107,7 @@ describe('RandomGraphNode-DhtNode', () => {
                 const neighbor = allNodes.find((peer) => {
                     return peer.getOwnStringId() === stringId
                 })
-                expect(neighbor!.getSelectedNeighborIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
+                expect(neighbor!.getTargetNeighborStringIds().includes(allNodes[i].getOwnStringId())).toEqual(true)
             })
         })
     }, 10000)
@@ -120,19 +120,19 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getContactPoolIds().length >= 8),
-                waitForCondition(() => node.getSelectedNeighborIds().length >= 3)
+                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3)
             ])
         ))
 
         await waitForCondition(() => {
             const avg = graphNodes.reduce((acc, curr) => {
-                return acc + curr.getSelectedNeighborIds().length
+                return acc + curr.getTargetNeighborStringIds().length
             }, 0) / numOfNodes
             return avg >= 3.9
         })
 
         const avg = graphNodes.reduce((acc, curr) => {
-            return acc + curr.getSelectedNeighborIds().length
+            return acc + curr.getTargetNeighborStringIds().length
         }, 0) / numOfNodes
 
         logger.info(`AVG Number of neighbors: ${avg}`)
