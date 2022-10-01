@@ -59,13 +59,10 @@ describe('GroupKeyStore', () => {
     })
 
     it('can read previously persisted data', async () => {
-        const clientId2 = randomEthereumAddress()
-        const store2 = getGroupKeyStore(clientId2)
         const groupKey = GroupKey.generate()
+        await store.add(groupKey, streamId)
 
-        await store2.add(groupKey, streamId)
-
-        const store3 = getGroupKeyStore(clientId2)
-        expect(await store3.get(groupKey.id, streamId)).toEqual(groupKey)
+        const store2 = getGroupKeyStore(clientId)
+        expect(await store2.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 })
