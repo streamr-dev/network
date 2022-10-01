@@ -90,18 +90,6 @@ describe('GroupKeyStore', () => {
         expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 
-    it('does not conflict with other clientIds', async () => {
-        const clientId2 = randomEthereumAddress()
-        const store2 = getGroupKeyStore(clientId2)
-
-        addAfter(() => store2.stop())
-
-        const groupKey = GroupKey.generate()
-        await store.add(groupKey, streamId)
-        expect(await store2.get(groupKey.id, streamId)).toBeFalsy()
-        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
-    })
-
     it('can read previously persisted data', async () => {
         const clientId2 = randomEthereumAddress()
         const store2 = getGroupKeyStore(clientId2)
