@@ -45,12 +45,6 @@ export class GroupKeyStore implements Context {
         return groupKey
     }
 
-    async has(id: GroupKeyId): Promise<boolean> {
-        if (this.currentGroupKey?.id === id) { return true }
-        if (this.queuedGroupKey?.id === id) { return true }
-        return this.persistence.has(id)
-    }
-
     async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
@@ -76,10 +70,6 @@ export class GroupKeyStore implements Context {
         return new GroupKey(id, value)
     }
 
-    async exists(): Promise<boolean> {
-        return this.persistence.exists()
-    }
-
     async add(groupKey: GroupKey): Promise<GroupKey> {
         return this.storeKey(groupKey)
     }
@@ -99,9 +89,5 @@ export class GroupKeyStore implements Context {
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey
-    }
-
-    async destroy(): Promise<void> {
-        return this.persistence.destroy()
     }
 }

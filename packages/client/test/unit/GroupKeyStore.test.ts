@@ -2,11 +2,10 @@ import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { uid, getGroupKeyStore } from '../test-utils/utils'
-import { describeRepeats } from '../test-utils/jest-utils'
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
 
-describeRepeats('GroupKeyStore', () => {
+describe('GroupKeyStore', () => {
     let clientId: string
     let streamId: StreamID
     let store: GroupKeyStore
@@ -20,8 +19,7 @@ describeRepeats('GroupKeyStore', () => {
     })
 
     afterEach(async () => {
-        if (!store) { return }
-        await store.destroy()
+        await store.close()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -30,39 +28,10 @@ describeRepeats('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get and set', async () => {
-        const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
-        expect(await store.get(groupKey.id)).toEqual(groupKey)
-    })
-
-    it('does not exist until write', async () => {
-        const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.has(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
-    })
-
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
         await store.rotate(groupKey)
-        expect(await store.exists()).toBeTruthy()
+        expect(await store.get(groupKey.id)).toEqual(groupKey)
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         expect(await store.useGroupKey()).toEqual([groupKey, undefined])
         const groupKey2 = GroupKey.generate()

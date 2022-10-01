@@ -22,8 +22,7 @@ describe('GroupKeyStore', () => {
     })
 
     afterEach(async () => {
-        if (!store) { return }
-        await store.destroy()
+        await store.close()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -34,19 +33,17 @@ describe('GroupKeyStore', () => {
 
     it('can get and set', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.has(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toBeFalsy()
 
         expect(await store.add(groupKey)).toBe(groupKey)
         expect(await store.add(groupKey)).toEqual(groupKey)
-        expect(await store.has(groupKey.id)).toBeTruthy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
 
     it('can add with multiple instances in parallel', async () => {
         const store2 = getGroupKeyStore(streamId, clientId)
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         for (let i = 0; i < 5; i++) {
             const groupKey = GroupKey.generate()
@@ -56,17 +53,17 @@ describe('GroupKeyStore', () => {
                 // add key to store1 twice in parallel
                 store.add(groupKey).then(async () => {
                     // immediately check exists in store2
-                    expect(await store2.has(groupKey.id)).toBeTruthy()
+                    expect(await store2.get(groupKey.id)).toBeTruthy()
                 }),
                 store.add(groupKey).then(async () => {
                     // immediately check exists in store2
-                    expect(await store2.has(groupKey.id)).toBeTruthy()
+                    expect(await store2.get(groupKey.id)).toBeTruthy()
                 }),
                 // test adding to another store at same time doesn't break
                 // add to store2 in parallel
                 store2.add(groupKey).then(async () => {
                     // immediately check exists in store1
-                    expect(await store.has(groupKey.id)).toBeTruthy()
+                    expect(await store.get(groupKey.id)).toBeTruthy()
                 }),
             ]
 
@@ -81,11 +78,10 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId2, clientId)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
@@ -95,11 +91,10 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })
@@ -109,11 +104,10 @@ describe('GroupKeyStore', () => {
         const store2 = getGroupKeyStore(streamId, clientId2)
 
         // @ts-expect-error private
-        addAfter(() => store2.persistence.destroy())
+        addAfter(() => store2.persistence.close())
 
         const groupKey = GroupKey.generate()
         await store.add(groupKey)
-        expect(await store2.has(groupKey.id)).toBeFalsy()
         expect(await store2.get(groupKey.id)).toBeFalsy()
         expect(await store.get(groupKey.id)).toEqual(groupKey)
     })

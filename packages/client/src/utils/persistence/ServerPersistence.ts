@@ -152,17 +152,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         return value?.[this.valueColumnName]
     }
 
-    async has(key: string): Promise<boolean> {
-        if (!this.initCalled) {
-            // can't have if doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
-        await this.init()
-        const value = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
-    }
-
     async set(key: string, value: string): Promise<void> {
         await this.init()
         await this.store!.run(
@@ -175,17 +164,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         )
     }
 
-    private async clear(): Promise<void> {
-        this.debug('clear')
-        if (!this.initCalled) {
-            // nothing to clear if doesn't exist
-            if (!(await this.exists())) { return }
-        }
-
-        await this.init()
-        await this.store!.run(`DELETE FROM ${this.tableName} WHERE streamId = ?`, this.streamId)
-    }
-
     async close(): Promise<void> {
         this.debug('close')
         if (!this.initCalled) {
@@ -195,18 +173,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
 
         await this.init()
         await this.store!.close()
-    }
-
-    async destroy(): Promise<void> {
-        this.debug('destroy')
-        if (!this.initCalled) {
-            // nothing to destroy if doesn't exist
-            if (!(await this.exists())) { return }
-        }
-
-        await this.clear()
-        await this.close()
-        this.init = pOnce(Object.getPrototypeOf(this).init.bind(this))
     }
 
     get [Symbol.toStringTag](): string {
