@@ -39,38 +39,6 @@ describe('GroupKeyStore', () => {
         expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 
-    it('can add with multiple instances in parallel', async () => {
-        const store2 = getGroupKeyStore(clientId)
-        addAfter(() => store2.stop())
-
-        for (let i = 0; i < 5; i++) {
-            const groupKey = GroupKey.generate()
-            /* eslint-disable no-await-in-loop, no-loop-func, promise/always-return */
-            const tasks = [
-                // test adding to same store in parallel doesn't break
-                // add key to store1 twice in parallel
-                store.add(groupKey, streamId).then(async () => {
-                    // immediately check exists in store2
-                    expect(await store2.get(groupKey.id, streamId)).toBeTruthy()
-                }),
-                store.add(groupKey, streamId).then(async () => {
-                    // immediately check exists in store2
-                    expect(await store2.get(groupKey.id, streamId)).toBeTruthy()
-                }),
-                // test adding to another store at same time doesn't break
-                // add to store2 in parallel
-                store2.add(groupKey, streamId).then(async () => {
-                    // immediately check exists in store1
-                    expect(await store.get(groupKey.id, streamId)).toBeTruthy()
-                }),
-            ]
-
-            await Promise.allSettled(tasks)
-            await Promise.all(tasks)
-            /* eslint-enable no-await-in-loop, no-loop-func, promise/always-return */
-        }
-    })
-
     it('does not conflict with other streamIds', async () => {
         const groupKey = GroupKey.generate()
         await store.add(groupKey, streamId)
