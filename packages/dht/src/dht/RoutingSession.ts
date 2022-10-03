@@ -35,8 +35,14 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
     private contactList: SortedContactList<DhtPeer>
     private stopped = false
 
-    constructor(private ownPeerDescriptor: PeerDescriptor, private messageToRoute: RouteMessageWrapper,
-        private connections: Map<PeerIDKey, DhtPeer>, private parallelism: number, private firstHopTimeout: number) {
+    constructor(
+        private ownPeerDescriptor: PeerDescriptor,
+        private messageToRoute: RouteMessageWrapper,
+        private connections: Map<PeerIDKey, DhtPeer>,
+        private parallelism: number,
+        private firstHopTimeout: number,
+        private forwarding = false
+    ) {
         super()
         this.contactList = new SortedContactList(PeerID.fromValue(this.messageToRoute!.destinationPeer!.peerId),
             10000, true, this.messageToRoute!.previousPeer ? PeerID.fromValue(this.messageToRoute!.previousPeer!.peerId) : undefined)
@@ -73,6 +79,12 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
         this.contactList.setContacted(contact.peerId)
         this.ongoingRequests.add(contact.peerId.toKey())
 
+        if (this.forwarding) {
+            return contact.forwardMessage({
+                ...this.messageToRoute,
+                previousPeer: this.ownPeerDescriptor
+            })
+        }
         return contact.routeMessage({
             ...this.messageToRoute,
             previousPeer: this.ownPeerDescriptor

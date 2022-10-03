@@ -49,11 +49,13 @@ describe('StreamrNode', () => {
         transport2 = new SimulatorTransport(peer2, simulator)
         layer01 = new DhtNode({
             transportLayer: transport1,
-            peerDescriptor: peer1
+            peerDescriptor: peer1,
+            entryPoints: [peer1]
         })
         layer02 = new DhtNode({
             transportLayer: transport2,
-            peerDescriptor: peer2
+            peerDescriptor: peer2,
+            entryPoints: [peer1]
         })
         await Promise.all([
             layer01.start(),

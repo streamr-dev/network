@@ -29,6 +29,7 @@ import { IDhtRpcService } from '../proto/DhtRpc.server'
 import { toProtoRpcClient } from '@streamr/proto-rpc'
 import { runAndRaceEvents3, waitForEvent3 } from '../helpers/waitForEvent3'
 import { RoutingSession, RoutingSessionEvents } from './RoutingSession'
+import { clearTimeout } from 'timers'
 
 export interface DhtNodeEvents {
     newContact: (peerDescriptor: PeerDescriptor, closestPeers: PeerDescriptor[]) => void
@@ -73,10 +74,16 @@ const logger = new Logger(module)
 
 export type Events = TransportEvents & DhtNodeEvents
 
+interface ForwardingTableEntry {
+    timeout: NodeJS.Timeout
+    peerDescriptors: PeerDescriptor[]
+}
+
 export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpcService {
     private readonly config: DhtNodeConfig
     private readonly routerDuplicateDetector: DuplicateDetector = new DuplicateDetector()
     private readonly ongoingClosestPeersRequests: Set<string> = new Set()
+    private readonly forwardingTable: Map<string, ForwardingTableEntry> = new Map()
 
     // noProgressCounter is Increased on every getClosestPeers round in which no new nodes 
     // with an id closer to target id were found.
@@ -296,11 +303,29 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             message: Message.toBinary(msg),
             requestId: v4(),
             destinationPeer: targetPeerDescriptor,
-            sourcePeer: this.ownPeerDescriptor!
+            sourcePeer: this.ownPeerDescriptor!,
+            reachableThrough: this.ongoingJoinOperation ? this.config.entryPoints || [] : []
         }
-        this.doRouteMessage(params).catch((err) => {
-            logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
-        })
+
+        const forwardingEntry = this.forwardingTable.get(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
+        if (forwardingEntry) {
+            const forwardingPeer = forwardingEntry.peerDescriptors[0]
+            const forwardedMessage: RouteMessageWrapper = {
+                message: RouteMessageWrapper.toBinary(params),
+                requestId: v4(),
+                destinationPeer: forwardingPeer,
+                sourcePeer: this.ownPeerDescriptor!,
+                reachableThrough: []
+            }
+            this.doRouteMessage(forwardedMessage, true).catch((err) => {
+                logger.warn(`Failed to send (forwardMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
+            })
+        } else {
+            this.doRouteMessage(params).catch((err) => {
+                console.log(params.sourcePeer, params.destinationPeer, params)
+                logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
+            })
+        }
     }
 
     // Called by an upper layer in case of routeMessage targeted to us
@@ -626,6 +651,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
         this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'routeMessage', this.routeMessage)
+        this.rpcCommunicator!.registerRpcMethod(RouteMessageWrapper, RouteMessageAck, 'forwardMessage', this.forwardMessage)
     }
 
     public getRpcCommunicator(): RoutingRpcCommunicator {
@@ -727,11 +753,18 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ack
     }
 
-    public async doRouteMessage(routedMessage: RouteMessageWrapper): Promise<RouteMessageAck> {
+    public async doRouteMessage(routedMessage: RouteMessageWrapper, forwarding = false): Promise<RouteMessageAck> {
         logger.trace(`Peer ${this.ownPeerId?.value} routing message ${routedMessage.requestId} 
             from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId}`)
 
-        const session = new RoutingSession(this.ownPeerDescriptor!, routedMessage, this.connections, 5, 1000)
+        const session = new RoutingSession(
+            this.ownPeerDescriptor!,
+            routedMessage,
+            this.connections,
+            5,
+            1000,
+            forwarding
+        )
 
         const result = await runAndRaceEvents3<RoutingSessionEvents>([() => {
             session.start()
@@ -762,13 +795,56 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing found message targeted to self ${routedMessage.requestId}`)
-            //this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+            if (routedMessage.reachableThrough.length > 0) {
+                const sourceKey = PeerID.fromValue(routedMessage.sourcePeer!.peerId).toKey()
+                if (this.forwardingTable.has(sourceKey)) {
+                    const oldEntry = this.forwardingTable.get(sourceKey)
+                    clearTimeout(oldEntry!.timeout)
+                    this.forwardingTable.delete(sourceKey)
+                }
+                const forwardingEntry: ForwardingTableEntry = {
+                    peerDescriptors: routedMessage.reachableThrough,
+                    timeout: setTimeout(() => {
+                        this.forwardingTable.delete(sourceKey)
+                    }, 10000)
+                }
+                this.forwardingTable.set(sourceKey, forwardingEntry)
+            }
             this.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             return this.createRouteMessageAck(routedMessage)
         } else {
             return this.doRouteMessage(routedMessage)
         }
     }
+
+    public async forwardMessage(routedMessage: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
+        if (!this.started || this.stopped) {
+            return this.createRouteMessageAck(routedMessage, 'forwardMessage() service is not running')
+        } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
+            logger.trace(`Peer ${this.ownPeerId?.value} forwarding message ${routedMessage.requestId} 
+                from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId} is likely a duplicate`)
+            return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
+        }
+
+        logger.trace(`Processing received forward routeMessage ${routedMessage.requestId}`)
+        this.addNewContact(routedMessage.sourcePeer!, true)
+        this.routerDuplicateDetector.add(routedMessage.requestId)
+
+        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
+            logger.trace(`Peer ${this.ownPeerId?.value} forwarding found message targeted to self ${routedMessage.requestId}`)
+            try {
+                const forwardedMessage = RouteMessageWrapper.fromBinary(routedMessage.message)
+                console.log(routedMessage.destinationPeer!, forwardedMessage.destinationPeer!)
+                return this.doRouteMessage(forwardedMessage)
+            } catch (err) {
+                logger.trace(`Could not forward message`)
+                return this.createRouteMessageAck(routedMessage, `could not route forwarded message ${routedMessage.requestId}`)
+            }
+        } else {
+            return this.doRouteMessage(routedMessage, true)
+        }
+    }
+
     /*
     public async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
         try {

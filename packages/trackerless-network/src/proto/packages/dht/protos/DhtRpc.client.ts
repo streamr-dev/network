@@ -42,6 +42,10 @@ export interface IDhtRpcServiceClient {
      * @generated from protobuf rpc: routeMessage(RouteMessageWrapper) returns (RouteMessageAck);
      */
     routeMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
+    /**
+     * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
+     */
+    forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck>;
 }
 /**
  * @generated from protobuf service DhtRpcService
@@ -71,6 +75,13 @@ export class DhtRpcServiceClient implements IDhtRpcServiceClient, ServiceInfo {
      */
     routeMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: forwardMessage(RouteMessageWrapper) returns (RouteMessageAck);
+     */
+    forwardMessage(input: RouteMessageWrapper, options?: RpcOptions): UnaryCall<RouteMessageWrapper, RouteMessageAck> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<RouteMessageWrapper, RouteMessageAck>("unary", this._transport, method, opt, input);
     }
 }

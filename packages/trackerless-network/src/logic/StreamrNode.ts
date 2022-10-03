@@ -108,7 +108,8 @@ export class StreamrNode extends EventEmitter {
             transportLayer: this.layer0!,
             serviceId: streamPartID,
             peerDescriptor: this.layer0!.getPeerDescriptor(),
-            routeMessageTimeout: 15000
+            routeMessageTimeout: 15000,
+            entryPoints: [entryPoint]
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,

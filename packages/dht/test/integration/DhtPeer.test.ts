@@ -77,6 +77,7 @@ describe('DhtPeer', () => {
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
             destinationPeer: serverPeerDescriptor,
+            reachableThrough: []
         })
         expect(routable).toEqual(true)
     })
@@ -106,7 +107,8 @@ describe('DhtPeer', () => {
             requestId: 'routed',
             message: Message.toBinary(routed),
             sourcePeer: clientPeerDescriptor,
-            destinationPeer: serverPeerDescriptor
+            destinationPeer: serverPeerDescriptor,
+            reachableThrough: []
         })
         expect(routable).toEqual(false)
     })

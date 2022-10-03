@@ -7,6 +7,7 @@ service DhtRpcService {
   rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
   rpc ping (PingRequest) returns (PingResponse);
   rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+  rpc forwardMessage (RouteMessageWrapper) returns (RouteMessageAck);
 }
 
 service WebSocketConnectorService {
@@ -89,6 +90,7 @@ message RouteMessageWrapper {
   PeerDescriptor destinationPeer = 3;
   PeerDescriptor previousPeer = 4;
   bytes message = 5; // Expected to be of type Message
+  repeated PeerDescriptor reachableThrough = 6;
 }
 
 message RouteMessageAck {

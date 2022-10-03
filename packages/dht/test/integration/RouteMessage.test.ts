@@ -69,7 +69,8 @@ describe('Route Message With Mock Connections', () => {
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: 'tsatsa',
-                sourcePeer: sourceNode.getPeerDescriptor()
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
             })
         ])
     })
@@ -117,7 +118,8 @@ describe('Route Message With Mock Connections', () => {
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
                 requestId: 'tsutsu',
-                sourcePeer: sourceNode.getPeerDescriptor()
+                sourcePeer: sourceNode.getPeerDescriptor(),
+                reachableThrough: []
             })
         }
         await waitForCondition(() => receivedMessages >= numOfMessages)
@@ -151,7 +153,8 @@ describe('Route Message With Mock Connections', () => {
                             message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
-                            requestId: 'tsutsu'
+                            requestId: 'tsutsu',
+                            reachableThrough: []
                         })
                     }
                 }))
@@ -166,4 +169,12 @@ describe('Route Message With Mock Connections', () => {
             )
         )
     }, 60000)
+
+    describe('forwarding', () => {
+
+        it('Destination receives forwarded message', async () => {
+
+        })
+
+    })
 })
