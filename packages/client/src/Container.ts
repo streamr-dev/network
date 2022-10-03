@@ -27,7 +27,7 @@ export function initContainer(
     c: DependencyContainer
 ): Context {
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
-    const id = counterId(`StreamrClient:${uid}${config.id ? `:${config.id}` : ''}`)
+    const id = config.id ?? counterId(`client-${uid}`)
     const debug = Debug(id)
     // @ts-expect-error not in types
     if (!debug.inspectOpts) {
@@ -68,7 +68,7 @@ export function initContainer(
         [ConfigInjectionToken.Connection, config],
         [ConfigInjectionToken.Subscribe, config],
         [ConfigInjectionToken.Publish, config],
-        [ConfigInjectionToken.Encryption, config],
+        [ConfigInjectionToken.Decryption, config.decryption],
         [ConfigInjectionToken.Cache, config.cache],
         // eslint-disable-next-line no-underscore-dangle
         [ConfigInjectionToken.Timeouts, config._timeouts],

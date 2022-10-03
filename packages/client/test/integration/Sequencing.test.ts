@@ -1,14 +1,10 @@
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
-
 import { uid, createTestStream } from '../test-utils/utils'
 import { getWaitForStorage } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
-
 import { Stream } from '../../src/Stream'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
-
-jest.setTimeout(30000)
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
 const Msg = (opts?: any) => ({
     value: uid('msg'),
@@ -30,7 +26,7 @@ describe('Sequencing', () => {
     let stream: Stream
 
     beforeEach(async () => {
-        client = createClientFactory().createClient()
+        client = new FakeEnvironment().createClient()
         stream = await createTestStream(client, module)
     })
 
@@ -173,7 +169,6 @@ describe('Sequencing', () => {
         expect(msgsReceieved).toEqual(msgsPublished.filter(({ backdated }) => !backdated))
 
         const seq = toSeq(requests, ts)
-        client.debug(seq)
         expect(seq).toEqual([
             [[0, 0], null],
             [[1, 0], [0, 0]],

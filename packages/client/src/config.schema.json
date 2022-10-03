@@ -85,9 +85,6 @@
                 },
                 "httpFetchTimeout": {
                     "type": "number"
-                },
-                "encryptionKeyRequest": {
-                    "type": "number"
                 }
             }
         },
@@ -107,6 +104,9 @@
         },
         "ethereumNetworks": {
             "type": "object"
+        },
+        "maxConcurrentContractCalls": {
+            "type": "number"
         },
         "orderMessages": {
             "type": "boolean"
@@ -237,6 +237,18 @@
                 },
                 "acceptProxyConnections": {
                     "type": "boolean"
+                }
+            }
+        },
+        "decryption": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "keyRequestTimeout": {
+                    "type": "number"
+                },
+                "maxKeyRequestsPerSecond": {
+                    "type": "number"
                 }
             }
         },

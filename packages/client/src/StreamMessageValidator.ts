@@ -2,7 +2,6 @@ import {
     EthereumAddress,
     GroupKeyRequest,
     GroupKeyMessage,
-    KeyExchangeStreamIDUtils,
     StreamID,
     StreamMessage,
     StreamMessageError,
@@ -97,10 +96,8 @@ export default class StreamMessageValidator {
                 return this.validateMessage(streamMessage)
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST:
                 return this.validateGroupKeyRequest(streamMessage)
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ANNOUNCE:
             case StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE:
-            case StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE:
-                return this.validateGroupKeyResponseOrAnnounce(streamMessage)
+                return this.validateGroupKeyResponse(streamMessage)
             default:
                 throw new StreamMessageError(`Unknown message type: ${streamMessage.messageType}!`, streamMessage)
         }
@@ -170,69 +167,55 @@ export default class StreamMessageValidator {
             throw new StreamMessageError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks).`, streamMessage)
         }
 
-        if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
-            throw new StreamMessageError(
-                `Group key requests can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,
-                streamMessage
-            )
-        }
-
         const groupKeyRequest = GroupKeyRequest.fromStreamMessage(streamMessage)
         const sender = streamMessage.getPublisherId()
-        const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
+        const streamId = streamMessage.getStreamId()
+        const recipient = groupKeyRequest.recipient
 
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
-        const recipientIsPublisher = await this.isPublisher(recipient!, groupKeyRequest.streamId)
+        const recipientIsPublisher = await this.isPublisher(recipient!, streamId)
         if (!recipientIsPublisher) {
-            throw new StreamMessageError(`${recipient} is not a publisher on stream ${groupKeyRequest.streamId}.`, streamMessage)
+            throw new StreamMessageError(`${recipient} is not a publisher on stream ${streamId}.`, streamMessage)
         }
 
         // Check that the sender of the request is a valid subscriber of the stream
-        const senderIsSubscriber = await this.isSubscriber(sender, groupKeyRequest.streamId)
+        const senderIsSubscriber = await this.isSubscriber(sender, streamId)
         if (!senderIsSubscriber) {
-            throw new StreamMessageError(`${sender} is not a subscriber on stream ${groupKeyRequest.streamId}.`, streamMessage)
+            throw new StreamMessageError(`${sender} is not a subscriber on stream ${streamId}.`, streamMessage)
         }
     }
 
-    private async validateGroupKeyResponseOrAnnounce(streamMessage: StreamMessage): Promise<void> {
+    private async validateGroupKeyResponse(streamMessage: StreamMessage): Promise<void> {
         if (!streamMessage.signature) {
             throw new StreamMessageError(`Received unsigned ${streamMessage.messageType} (it must be signed to avoid MitM attacks).`, streamMessage)
         }
 
-        if (!KeyExchangeStreamIDUtils.isKeyExchangeStream(streamMessage.getStreamId())) {
-            throw new StreamMessageError(
-                `${streamMessage.messageType} can only occur on stream ids of form ${`${KeyExchangeStreamIDUtils.STREAM_ID_PREFIX}{address}`}.`,
-                streamMessage
-            )
-        }
-
         await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
-        const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // can be GroupKeyResponse or GroupKeyAnnounce, only streamId is read
+        const groupKeyMessage = GroupKeyMessage.fromStreamMessage(streamMessage) // only streamId is read
         const sender = streamMessage.getPublisherId()
+        const streamId = streamMessage.getStreamId()
+        const recipient = groupKeyMessage.recipient
 
         // Check that the sender of the request is a valid publisher of the stream
-        const senderIsPublisher = await this.isPublisher(sender, groupKeyMessage.streamId)
+        const senderIsPublisher = await this.isPublisher(sender, streamId)
         if (!senderIsPublisher) {
             throw new StreamMessageError(
-                `${sender} is not a publisher on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
+                `${sender} is not a publisher on stream ${streamId}. ${streamMessage.messageType}`,
                 streamMessage
             )
         }
 
-        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-            // permit publishers to send error responses to invalid subscribers
-            const recipient = KeyExchangeStreamIDUtils.getRecipient(streamMessage.getStreamId())
-            // Check that the recipient of the request is a valid subscriber of the stream
-            const recipientIsSubscriber = await this.isSubscriber(recipient!, groupKeyMessage.streamId)
-            if (!recipientIsSubscriber) {
-                throw new StreamMessageError(
-                    `${recipient} is not a subscriber on stream ${groupKeyMessage.streamId}. ${streamMessage.messageType}`,
-                    streamMessage
-                )
-            }
+        // permit publishers to send error responses to invalid subscribers
+        // Check that the recipient of the request is a valid subscriber of the stream
+        const recipientIsSubscriber = await this.isSubscriber(recipient!, streamId)
+        if (!recipientIsSubscriber) {
+            throw new StreamMessageError(
+                `${recipient} is not a subscriber on stream ${streamId}. ${streamMessage.messageType}`,
+                streamMessage
+            )
         }
     }
 }

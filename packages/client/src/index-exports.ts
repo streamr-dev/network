@@ -3,7 +3,7 @@
  */
 export * from './StreamrClient'
 export * from './Stream'
-export { UnableToDecryptError } from './encryption/EncryptionUtil'
+export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
 export { MessageMetadata } from './publish/PublishPipeline'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
@@ -49,12 +49,11 @@ export {
     ChainConnectionInfo,
     EthereumNetworkConfig,
 } from './Ethereum'
-export { EncryptionConfig, GroupKeyId as EncryptionKeyId } from './encryption/KeyExchangeStream'
-export { GroupKey as EncryptionKey } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
+export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
-export { NetworkNodeStub } from './BrubeckNode'
+export { NetworkNodeStub } from './NetworkNodeFacade'
 export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'

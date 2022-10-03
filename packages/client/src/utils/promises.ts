@@ -1,9 +1,8 @@
 import { inspect } from 'util'
 import pLimit from 'p-limit'
+import pThrottle from 'p-throttle'
 import { wait } from '@streamr/utils'
-
 import { MaybeAsync } from '../types'
-
 import { AggregatedError } from './AggregatedError'
 import { Defer } from './Defer'
 
@@ -322,4 +321,13 @@ export async function until(
     } finally {
         clearTimeout(t)
     }
+}
+
+// TODO better type annotations
+export const withThrottling = (fn: (...args: any[]) => Promise<any>, maxInvocationsPerSecond: number): ((...args: any[]) => Promise<any>) => {
+    const throttler = pThrottle({
+        limit: maxInvocationsPerSecond,
+        interval: 1000
+    })
+    return throttler(fn)
 }

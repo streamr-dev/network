@@ -1,15 +1,16 @@
 import 'reflect-metadata'
-import StreamrClient from '../../src'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { createTestStream } from '../test-utils/utils'
 import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
+import { StreamMessage } from 'streamr-client-protocol'
 
 describe('Partition', () => {
 
     let client: StreamrClient
 
     beforeEach(() => {
-        client = createClientFactory().createClient()
+        client = new FakeEnvironment().createClient()
     })
 
     const createStream = (props?: any) => {
@@ -144,7 +145,8 @@ describe('Partition', () => {
         }))
 
         // check messages match
-        expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
+        const actualMessages: StreamMessage[][] = await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))
+        expect(actualMessages.flat().map((m) => m.signature)).toEqual(pubs.flat().map((m) => m.signature))
         // check all published messages have appropriate partition
         // i.e. [[0,0,0], [1,1,1], etc]
         expect(pubs.map((msgs) => msgs.map((msg) => msg.getStreamPartition())))

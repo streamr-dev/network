@@ -2,11 +2,11 @@ import { validateIsArray, validateIsString } from '../../utils/validations'
 
 import GroupKeyMessage from './GroupKeyMessage'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { EthereumAddress } from '../../utils'
 
 interface Options {
     requestId: string
-    streamId: StreamID
+    recipient: EthereumAddress
     rsaPublicKey: string
     groupKeyIds: string[]
 }
@@ -19,8 +19,8 @@ export default class GroupKeyRequest extends GroupKeyMessage {
     rsaPublicKey: string
     groupKeyIds: string[]
 
-    constructor({ requestId, streamId, rsaPublicKey, groupKeyIds }: Options) {
-        super(streamId, StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST)
+    constructor({ requestId, recipient, rsaPublicKey, groupKeyIds }: Options) {
+        super(recipient, StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST)
 
         validateIsString('requestId', requestId)
         this.requestId = requestId
@@ -33,14 +33,14 @@ export default class GroupKeyRequest extends GroupKeyMessage {
     }
 
     toArray(): GroupKeyRequestSerialized {
-        return [this.requestId, this.streamId, this.rsaPublicKey, this.groupKeyIds]
+        return [this.requestId, this.recipient, this.rsaPublicKey, this.groupKeyIds]
     }
 
     static override fromArray(args: GroupKeyRequestSerialized): GroupKeyRequest {
-        const [requestId, streamId, rsaPublicKey, groupKeyIds] = args
+        const [requestId, recipient, rsaPublicKey, groupKeyIds] = args
         return new GroupKeyRequest({
             requestId,
-            streamId: toStreamID(streamId),
+            recipient,
             rsaPublicKey,
             groupKeyIds,
         })

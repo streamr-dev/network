@@ -2,19 +2,18 @@ import assert from 'assert'
 
 import {
     StreamMessage,
-    GroupKeyRequest,
-    toStreamID
+    GroupKeyRequest
 } from '../../../../src/index'
 import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 
 // Message definitions
 const message = new GroupKeyRequest({
     requestId: 'requestId',
-    streamId: toStreamID('streamId'),
+    recipient: '0xaaaaaAAAAA012345678901234567890123456789',
     rsaPublicKey: 'rsaPublicKey',
     groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
 })
-const serializedMessage = JSON.stringify(['requestId', 'streamId', 'rsaPublicKey', ['groupKeyId1', 'groupKeyId2']])
+const serializedMessage = JSON.stringify(['requestId', '0xaaaaaAAAAA012345678901234567890123456789', 'rsaPublicKey', ['groupKeyId1', 'groupKeyId2']])
 
 describe('GroupKeyRequest', () => {
     describe('deserialize', () => {
