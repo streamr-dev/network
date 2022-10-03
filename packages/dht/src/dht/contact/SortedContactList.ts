@@ -1,21 +1,8 @@
 import KBucket from 'k-bucket'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
-import { PeerDescriptor } from '../proto/DhtRpc'
-
-class ContactState<Contact> {
-    public contacted = false
-    public active = false
-    constructor(public contact: Contact) {
-    }
-}
-
-interface IContact { peerId: PeerID, getPeerDescriptor: () => PeerDescriptor }
-
-interface Events {
-    contactRemoved: (removedDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-    newContact: (newDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-}
+import { PeerDescriptor } from '../../proto/DhtRpc'
+import { Events, IContact, ContactState } from './Contact'
 
 export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()

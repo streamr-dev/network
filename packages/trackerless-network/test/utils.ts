@@ -15,7 +15,8 @@ export const createMockRandomGraphNodeAndDhtNode = (
     const mockCm = new SimulatorTransport(ownPeerDescriptor, simulator)
     const dhtNode = new DhtNode({
         transportLayer: mockCm,
-        peerDescriptor: ownPeerDescriptor
+        peerDescriptor: ownPeerDescriptor,
+        numberOfNodesPerKBucket: 4
     })
 
     const randomGraphNode = new RandomGraphNode({

@@ -107,7 +107,8 @@ export class StreamrNode extends EventEmitter {
         const layer1 = new DhtNode({
             transportLayer: this.layer0!,
             serviceId: streamPartID,
-            peerDescriptor: this.layer0!.getPeerDescriptor()
+            peerDescriptor: this.layer0!.getPeerDescriptor(),
+            numberOfNodesPerKBucket: 4
         })
         const layer2 = new RandomGraphNode({
             randomGraphId: streamPartID,
