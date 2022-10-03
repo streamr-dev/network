@@ -21,7 +21,7 @@ import { instanceId } from '../utils/utils'
 import { Validator } from '../Validator'
 import { EncryptionUtil } from './EncryptionUtil'
 import { GroupKey, GroupKeyId } from './GroupKey'
-import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
+import { GroupKeyStore } from './GroupKeyStore'
 
 /*
  * Sends group key responses
@@ -30,7 +30,7 @@ import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
 @scoped(Lifecycle.ContainerScoped)
 export class PublisherKeyExchange {
 
-    private readonly storeFactory: GroupKeyStoreFactory
+    private readonly store: GroupKeyStore
     private readonly networkNodeFacade: NetworkNodeFacade
     private readonly authentication: Authentication
     private readonly validator: Validator
@@ -38,13 +38,13 @@ export class PublisherKeyExchange {
 
     constructor(
         context: Context,
-        storeFactory: GroupKeyStoreFactory,
+        store: GroupKeyStore,
         networkNodeFacade: NetworkNodeFacade,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator
     ) {
         this.debug = context.debug.extend(instanceId(this))
-        this.storeFactory = storeFactory
+        this.store = store
         this.networkNodeFacade = networkNodeFacade
         this.authentication = authentication
         this.validator = validator
@@ -63,9 +63,8 @@ export class PublisherKeyExchange {
                 if (recipient.toLowerCase() === authenticatedUser) {
                     this.debug('Handling group key request %s', requestId)
                     await this.validator.validate(request)
-                    const store = await this.storeFactory.getStore(request.getStreamId())
                     const keys = without(
-                        await Promise.all(groupKeyIds.map((id: GroupKeyId) => store.get(id))),
+                        await Promise.all(groupKeyIds.map((id: GroupKeyId) => this.store.get(id, request.getStreamId()))),
                         undefined) as GroupKey[]
                     if (keys.length > 0) {
                         const response = await this.createResponse(

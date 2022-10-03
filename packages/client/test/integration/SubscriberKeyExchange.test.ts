@@ -104,8 +104,8 @@ describe('SubscriberKeyExchange', () => {
                 messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
             })
             await assertGroupKeyRequest(request!, [groupKey.id])
-            const keyPersistence = getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), subscriberWallet.address)
-            await waitForCondition(async () => (await keyPersistence.get(groupKey.id)) !== undefined)
+            const keyStore = getGroupKeyStore(subscriberWallet.address)
+            await waitForCondition(async () => (await keyStore.get(groupKey.id, StreamPartIDUtils.getStreamID(streamPartId))) !== undefined)
         })
     })
 })

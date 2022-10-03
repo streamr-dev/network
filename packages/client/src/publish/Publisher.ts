@@ -14,7 +14,8 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { pLimitFn } from '../utils/promises'
 import { inspect } from '../utils/log'
-import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { GroupKeyQueue } from './GroupKeyQueue'
 
 export class PublishError extends Error {
 
@@ -71,17 +72,17 @@ export class Publisher implements Context {
     private streamIdBuilder: StreamIDBuilder
     private authentication: Authentication
     private streamRegistryCached: StreamRegistryCached
-    private groupKeyStoreFactory: GroupKeyStoreFactory
     private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
+    getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
 
     constructor(
         context: Context,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
-        groupKeyStoreFactory: GroupKeyStoreFactory,
+        groupKeyStore: GroupKeyStore,
         node: NetworkNodeFacade,
         @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
     ) {
@@ -90,7 +91,6 @@ export class Publisher implements Context {
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
-        this.groupKeyStoreFactory = groupKeyStoreFactory
         this.node = node
         this.cacheConfig = cacheConfig
         this.getMessageFactory = pLimitFn(pMemoize(async (streamId: StreamID) => {  // TODO is it better to use pMemoize or CacheAsyncFn (e.g. after revoked publish permissions?)
@@ -98,6 +98,11 @@ export class Publisher implements Context {
         }, {
             cacheKey: ([streamId]) => streamId
         }))
+        this.getGroupKeyQueue = pMemoize(async (streamId: StreamID) => {
+            return new GroupKeyQueue(streamId, groupKeyStore)
+        }, {
+            cacheKey: ([streamId]) => streamId
+        })
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
@@ -110,14 +115,16 @@ export class Publisher implements Context {
             throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
         }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
-        const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
         return new MessageFactory({
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
             publisherId: authenticatedUser.toLowerCase(),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            useGroupKey: pLimitFn(() => groupKeyStore.useGroupKey(), 1), // if we add concurrency support to GroupKeyStore (used by PublisherKeyExchange), we can remove this pLimit
+            useGroupKey: async () => {
+                const queue = await this.getGroupKeyQueue(streamId)
+                return queue.useGroupKey()
+            },
             cacheConfig: this.cacheConfig
         })
     }

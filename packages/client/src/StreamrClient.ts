@@ -12,7 +12,7 @@ import { ResendOptions, Resends } from './subscribe/Resends'
 import { ResendSubscription } from './subscribe/ResendSubscription'
 import { NetworkNodeFacade, NetworkNodeStub } from './NetworkNodeFacade'
 import { DestroySignal } from './DestroySignal'
-import { GroupKeyStoreFactory, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
+import { GroupKeyStore, UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 import { StorageNodeMetadata, StorageNodeRegistry } from './registry/StorageNodeRegistry'
 import { StreamRegistry } from './registry/StreamRegistry'
 import { StreamDefinition } from './types'
@@ -50,7 +50,7 @@ export class StreamrClient implements Context {
     private publisher: Publisher
     private subscriber: Subscriber
     private proxyPublishSubscribe: ProxyPublishSubscribe
-    private groupKeyStoreFactory: GroupKeyStoreFactory
+    private groupKeyStore: GroupKeyStore
     private destroySignal: DestroySignal
     private streamRegistry: StreamRegistry
     private streamStorageRegistry: StreamStorageRegistry
@@ -70,7 +70,7 @@ export class StreamrClient implements Context {
         this.publisher = container.resolve<Publisher>(Publisher)
         this.subscriber = container.resolve<Subscriber>(Subscriber)
         this.proxyPublishSubscribe = container.resolve<ProxyPublishSubscribe>(ProxyPublishSubscribe)
-        this.groupKeyStoreFactory = container.resolve<GroupKeyStoreFactory>(GroupKeyStoreFactory)
+        this.groupKeyStore = container.resolve<GroupKeyStore>(GroupKeyStore)
         this.destroySignal = container.resolve<DestroySignal>(DestroySignal)
         this.streamRegistry = container.resolve<StreamRegistry>(StreamRegistry)
         this.streamStorageRegistry = container.resolve<StreamStorageRegistry>(StreamStorageRegistry)
@@ -107,13 +107,13 @@ export class StreamrClient implements Context {
             throw new Error('streamId required')
         }
         const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
-        const store = await this.groupKeyStoreFactory.getStore(streamId)
+        const queue = await this.publisher.getGroupKeyQueue(streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {
-                await store.rotate(opts.key)
+                await queue.rotate(opts.key)
             }
         } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
-            await store.rekey(opts.key)
+            await queue.rekey(opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)
         }
@@ -121,8 +121,7 @@ export class StreamrClient implements Context {
 
     async addEncryptionKey(key: GroupKey, streamIdOrPath: string): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
-        const store = await this.groupKeyStoreFactory.getStore(streamId)
-        await store.add(key)
+        await this.groupKeyStore.add(key, streamId)
     }
 
     // --------------------------------------------------------------------------------------------
@@ -362,7 +361,7 @@ export class StreamrClient implements Context {
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
             this.subscriber.stop(),
-            this.groupKeyStoreFactory.stop()
+            this.groupKeyStore.stop()
         ]
 
         await Promise.allSettled(tasks)

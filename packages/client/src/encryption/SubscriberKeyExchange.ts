@@ -21,7 +21,7 @@ import { withThrottling, pOnce } from '../utils/promises'
 import { instanceId, MaxSizedSet } from '../utils/utils'
 import { Validator } from '../Validator'
 import { GroupKey, GroupKeyId } from './GroupKey'
-import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
+import { GroupKeyStore } from './GroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
@@ -35,7 +35,7 @@ export class SubscriberKeyExchange {
 
     private rsaKeyPair: RSAKeyPair | undefined
     private readonly networkNodeFacade: NetworkNodeFacade
-    private readonly groupKeyStoreFactory: GroupKeyStoreFactory
+    private readonly store: GroupKeyStore
     private readonly authentication: Authentication
     private readonly validator: Validator
     private readonly pendingRequests: MaxSizedSet<string> = new MaxSizedSet(MAX_PENDING_REQUEST_COUNT)
@@ -46,14 +46,14 @@ export class SubscriberKeyExchange {
     constructor(
         context: Context,
         networkNodeFacade: NetworkNodeFacade,
-        groupKeyStoreFactory: GroupKeyStoreFactory,
+        store: GroupKeyStore,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         validator: Validator,
         @inject(ConfigInjectionToken.Decryption) decryptionConfig: DecryptionConfig
     ) {
         this.debug = context.debug.extend(instanceId(this))
         this.networkNodeFacade = networkNodeFacade
-        this.groupKeyStoreFactory = groupKeyStoreFactory
+        this.store = store
         this.authentication = authentication
         this.validator = validator
         this.ensureStarted = pOnce(async () => {
@@ -123,10 +123,9 @@ export class SubscriberKeyExchange {
                     this.debug('Handling group key response %s', requestId)
                     this.pendingRequests.delete(requestId)
                     await this.validator.validate(msg)
-                    const store = await this.groupKeyStoreFactory.getStore(msg.getStreamId())
                     await Promise.all(encryptedGroupKeys.map(async (encryptedKey) => {
                         const key = GroupKey.decryptRSAEncrypted(encryptedKey, this.rsaKeyPair!.getPrivateKey())
-                        await store.add(key)
+                        await this.store.add(key, msg.getStreamId())
                     }))
                 }
             } catch (e: any) {

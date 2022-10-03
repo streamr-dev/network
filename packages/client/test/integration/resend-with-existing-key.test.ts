@@ -118,7 +118,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(initialKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(initialKey, stream.id)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -136,7 +136,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rotatedKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(rotatedKey, stream.id)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -151,7 +151,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rekeyedKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(rekeyedKey, stream.id)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

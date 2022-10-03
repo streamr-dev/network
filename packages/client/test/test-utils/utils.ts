@@ -10,7 +10,6 @@ import {
     StreamMessageOptions,
     MessageID,
     EthereumAddress,
-    StreamID,
     EncryptionType
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
@@ -151,13 +150,14 @@ export const createMockMessage = (
     return msg
 }
 
-export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyStore => {
-    return new GroupKeyStore({
-        context: mockContext(),
-        clientId: userAddress.toLowerCase(),
-        streamId,
-        eventEmitter: new StreamrClientEventEmitter()
-    })
+export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
+    return new GroupKeyStore(
+        mockContext(),
+        {
+            getAddress: () => userAddress.toLowerCase()
+        } as any,
+        new StreamrClientEventEmitter()
+    )
 }
 
 export const startPublisherKeyExchangeSubscription = async (

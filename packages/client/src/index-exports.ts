@@ -50,7 +50,7 @@ export {
     EthereumNetworkConfig,
 } from './Ethereum'
 export { GroupKey as EncryptionKey, GroupKeyId as EncryptionKeyId } from './encryption/GroupKey'
-export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStoreFactory'
+export { UpdateEncryptionKeyOptions } from './encryption/GroupKeyStore'
 
 export { ConfigTest } from './ConfigTest'
 export { NetworkNodeStub } from './NetworkNodeFacade'
