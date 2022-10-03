@@ -4,10 +4,10 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 
 export class GroupKeyQueue {
 
-    private currentGroupKey: GroupKey | undefined // current key id if any
+    private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private streamId: StreamID
-    private store: GroupKeyStore
+    private readonly store: GroupKeyStore
 
     constructor(streamId: StreamID, store: GroupKeyStore) {
         this.streamId = streamId
