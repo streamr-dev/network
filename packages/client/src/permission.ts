@@ -88,7 +88,7 @@ export const streamPermissionToSolidityType = (permission: StreamPermission): Bi
 
 /* eslint-disable padding-line-between-statements */
 export const convertChainPermissionsToStreamPermissions = (chainPermissions: ChainPermissions): StreamPermission[] => {
-    const now = Date.now()
+    const now = Math.round(Date.now() / 1000)
     const permissions = []
     if (chainPermissions.canEdit) {
         permissions.push(StreamPermission.EDIT)
