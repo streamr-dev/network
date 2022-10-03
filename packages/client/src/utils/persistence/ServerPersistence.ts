@@ -144,7 +144,11 @@ export default class ServerPersistence implements Persistence<string, string>, C
         }
 
         await this.init()
-        const value = await this.store!.get(`SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, encodeURIComponent(streamId))
+        const value = await this.store!.get(
+            `SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`,
+            key,
+            encodeURIComponent(streamId)
+        )
         return value?.[this.valueColumnName]
     }
 

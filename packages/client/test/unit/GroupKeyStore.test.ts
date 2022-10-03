@@ -71,7 +71,8 @@ describe('GroupKeyStore', () => {
         const assignments = range(10).map((i) => {
             return { key: GroupKey.generate(), streamId: toStreamID(`stream${i}`) }
         })
-        await Promise.all(assignments.map(({key, streamId}) => store.add(key, streamId)))
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        await Promise.all(assignments.map(({ key, streamId }) => store.add(key, streamId)))
         for (const assignment of assignments) {
             expect(await store.get(assignment.key.id, assignment.streamId)).toEqual(assignment.key)
         }
