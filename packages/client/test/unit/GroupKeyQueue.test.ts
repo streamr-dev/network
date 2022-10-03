@@ -1,6 +1,9 @@
+import { toStreamID } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { GroupKeyQueue } from '../../src/publish/GroupKeyQueue'
+
+const streamId = toStreamID('mock-stream')
 
 describe('GroupKeyQueue', () => {
 
@@ -11,14 +14,14 @@ describe('GroupKeyQueue', () => {
         const store: Partial<GroupKeyStore> = {
             add: addToStore
         }
-        queue = new GroupKeyQueue(store as any)
+        queue = new GroupKeyQueue(streamId, store as any)
     })
 
     it('can rotate and use', async () => {
         const groupKey = GroupKey.generate()
         await queue.rotate(groupKey)
         expect(addToStore).toBeCalledTimes(1)
-        expect(addToStore).toBeCalledWith(groupKey)
+        expect(addToStore).toBeCalledWith(groupKey, streamId)
         expect(await queue.useGroupKey()).toEqual([groupKey, undefined])
         expect(await queue.useGroupKey()).toEqual([groupKey, undefined])
         const groupKey2 = GroupKey.generate()

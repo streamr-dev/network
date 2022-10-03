@@ -20,7 +20,7 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Resends } from '../../src/subscribe/Resends'
 import { Publisher } from '../../src/publish/Publisher'
 import { Subscriber } from '../../src/subscribe/Subscriber'
-import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
+import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { DestroySignal } from '../../src/DestroySignal'
 import { Debug } from '../test-utils/utils'
 
@@ -32,7 +32,7 @@ const Dependencies = {
     Resends,
     Publisher,
     Subscriber,
-    GroupKeyStoreFactory,
+    GroupKeyStore,
     DestroySignal
 }
 

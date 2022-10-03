@@ -8,7 +8,7 @@ import { Context } from '../utils/Context'
 import { DestroySignal } from '../DestroySignal'
 import { instanceId } from '../utils/utils'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
-import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { ConfigInjectionToken, DecryptionConfig } from '../Config'
 import { inject } from 'tsyringe'
 import { GroupKey } from '../encryption/GroupKey'
@@ -21,7 +21,7 @@ export class Decrypt<T> implements Context {
 
     constructor(
         context: Context,
-        private groupKeyStoreFactory: GroupKeyStoreFactory,
+        private groupKeyStore: GroupKeyStore,
         private keyExchange: SubscriberKeyExchange,
         private streamRegistryCached: StreamRegistryCached,
         private destroySignal: DestroySignal,
@@ -51,9 +51,8 @@ export class Decrypt<T> implements Context {
 
         try {
             const groupKeyId = streamMessage.groupKeyId!
-            const store = await this.groupKeyStoreFactory.getStore(streamMessage.getStreamId())
 
-            let groupKey = await store.get(groupKeyId)
+            let groupKey = await this.groupKeyStore.get(groupKeyId, streamMessage.getStreamId())
             if (groupKey === undefined) {
                 await this.keyExchange.requestGroupKey(
                     streamMessage.groupKeyId,
@@ -84,7 +83,7 @@ export class Decrypt<T> implements Context {
             EncryptionUtil.decryptStreamMessage(clone, groupKey!)
             if (streamMessage.newGroupKey) {
                 // newGroupKey has been converted into GroupKey
-                await store.add(clone.newGroupKey as unknown as GroupKey)
+                await this.groupKeyStore.add(clone.newGroupKey as unknown as GroupKey, streamMessage.getStreamId())
             }
             return clone as StreamMessage<T>
         } catch (err) {

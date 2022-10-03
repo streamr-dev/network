@@ -1,3 +1,4 @@
+import { StreamID } from 'streamr-client-protocol'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 
@@ -5,9 +6,11 @@ export class GroupKeyQueue {
 
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
+    private readonly streamId: StreamID
     private readonly store: GroupKeyStore
 
-    constructor(store: GroupKeyStore) {
+    constructor(streamId: StreamID, store: GroupKeyStore) {
+        this.streamId = streamId
         this.store = store
     }
 
@@ -32,12 +35,12 @@ export class GroupKeyQueue {
 
     async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
         this.queuedGroupKey = newKey
-        await this.store.add(newKey)
+        await this.store.add(newKey, this.streamId)
         return newKey
     }
 
     async rekey(newKey = GroupKey.generate()): Promise<GroupKey> {
-        await this.store.add(newKey)
+        await this.store.add(newKey, this.streamId)
         this.currentGroupKey = newKey
         this.queuedGroupKey = undefined
         return newKey

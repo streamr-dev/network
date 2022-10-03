@@ -106,7 +106,7 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyStore(StreamPartIDUtils.getStreamID(streamPartId), publisherWallet.address).add(key)
+            await getGroupKeyStore(publisherWallet.address).add(key, StreamPartIDUtils.getStreamID(streamPartId))
 
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publish(request)
