@@ -5,6 +5,7 @@ import { addAfterFn } from '../test-utils/jest-utils'
 import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { randomEthereumAddress } from 'streamr-test-utils'
+import { range } from 'lodash'
 
 describe('GroupKeyStore', () => {
     let clientId: string
@@ -64,5 +65,15 @@ describe('GroupKeyStore', () => {
 
         const store2 = getGroupKeyStore(clientId)
         expect(await store2.get(groupKey.id, streamId)).toEqual(groupKey)
+    })
+
+    it('add keys for multiple streams in parallel', async () => {
+        const assignments = range(10).map((i) => {
+            return { key: GroupKey.generate(), streamId: toStreamID(`stream${i}`) }
+        })
+        await Promise.all(assignments.map(({key, streamId}) => store.add(key, streamId)))
+        for (const assignment of assignments) {
+            expect(await store.get(assignment.key.id, assignment.streamId)).toEqual(assignment.key)
+        }
     })
 })
