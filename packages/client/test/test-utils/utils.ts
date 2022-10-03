@@ -144,7 +144,6 @@ export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore =>
         {
             getAddress: () => userAddress.toLowerCase()
         } as any,
-        undefined as any,
         new StreamrClientEventEmitter()
     )
 }
