@@ -9,10 +9,12 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+## [6.0.10] - 2022-10-03
+
 ### Fixed
 
 - Fix `searchStreams`, `getStreamSubscribers`, and `getStreamPublishers` timestamp filtering behaviour where valid
-entries were not appearing in the result set.
+  entries were not appearing in the result set.
 
 ## [6.0.9] - 2022-06-20
 
@@ -69,7 +71,8 @@ entries were not appearing in the result set.
 ### Fixed
 - Fixed an import so that the client successfully loads in a web browser environment (NET-721)
 
-[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.9...HEAD
+[Unreleased]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.10...HEAD
+[6.0.10]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.9...client/v6.0.10
 [6.0.9]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.8...client/v6.0.9
 [6.0.8]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.7...client/v6.0.8
 [6.0.7]: https://github.com/streamr-dev/network-monorepo/compare/client/v6.0.6...client/v6.0.7
