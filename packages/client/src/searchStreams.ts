@@ -86,7 +86,7 @@ const buildQuery = (
             variables.userAddress_in.push(PUBLIC_PERMISSION_ADDRESS)
         }
         if (permissionFilter.allOf !== undefined) {
-            const now = String(Date.now())
+            const now = String(Math.round(Date.now() / 1000))
             variables.canEdit = permissionFilter.allOf.includes(StreamPermission.EDIT)
             variables.canDelete = permissionFilter.allOf.includes(StreamPermission.DELETE)
             variables.publishExpiration_gt = permissionFilter.allOf.includes(StreamPermission.PUBLISH) ? now : undefined

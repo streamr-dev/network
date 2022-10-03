@@ -9,6 +9,11 @@ Remove this paragraph when content has been added.
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix `searchStreams`, `getStreamSubscribers`, and `getStreamPublishers` timestamp filtering behaviour where valid
+entries were not appearing in the result set.
+
 ## [6.0.9] - 2022-06-20
 
 ### Fixed

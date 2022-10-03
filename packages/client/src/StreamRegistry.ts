@@ -312,7 +312,7 @@ export class StreamRegistry implements Context {
     ): string {
         const query = `
         {
-            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Date.now()}" id_gt: "${lastId}"}) {
+            permissions (first: ${pageSize}, where: {stream: "${streamId}" ${fieldName}_gt: "${Math.round(Date.now() / 1000)}" id_gt: "${lastId}"}) {
                 id
                 userAddress
                 stream {
