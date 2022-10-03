@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
 - Fix timeout issue of method `addToStorageNode` when used with storage node cluster
+- Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
+
 
 ### Security
 
