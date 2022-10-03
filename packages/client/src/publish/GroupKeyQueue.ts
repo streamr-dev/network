@@ -6,7 +6,7 @@ export class GroupKeyQueue {
 
     private currentGroupKey: GroupKey | undefined
     private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
-    private streamId: StreamID
+    private readonly streamId: StreamID
     private readonly store: GroupKeyStore
 
     constructor(streamId: StreamID, store: GroupKeyStore) {
