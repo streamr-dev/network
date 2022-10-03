@@ -3,9 +3,9 @@
  */
 import { StreamMessage } from 'streamr-client-protocol'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { scoped, Lifecycle } from 'tsyringe'
+import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
+import { Publisher } from './Publisher'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Encrypt {
@@ -13,7 +13,7 @@ export class Encrypt {
 
     constructor(
         private streamRegistryCached: StreamRegistryCached,
-        private groupKeyStoreFactory: GroupKeyStoreFactory
+        @inject(delay(() => Publisher)) private publisher: Publisher
     ) {
     }
 
@@ -36,8 +36,8 @@ export class Encrypt {
             return
         }
 
-        const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
-        const [groupKey, nextGroupKey] = await groupKeyStore.useGroupKey()
+        const groupKeyQueue = await this.publisher.getGroupKeyQueue(streamId)
+        const [groupKey, nextGroupKey] = await groupKeyQueue.useGroupKey()
         if (this.isStopped) { return }
 
         if (!groupKey) {

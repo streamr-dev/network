@@ -1,7 +1,7 @@
 /**
  * Public Publishing API
  */
-import { StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { instanceId } from '../utils/utils'
@@ -9,6 +9,9 @@ import { Context } from '../utils/Context'
 
 import { MessageMetadata, PublishMetadata, PublishPipeline } from './PublishPipeline'
 import { StreamDefinition } from '../types'
+import { GroupKeyQueue } from './GroupKeyQueue'
+import pMemoize from 'p-memoize'
+import { GroupKeyStoreFactory } from '../encryption/GroupKeyStoreFactory'
 
 export type { PublishMetadata }
 
@@ -24,13 +27,21 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 export class Publisher implements Context {
     readonly id
     readonly debug
+    getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
 
     constructor(
         context: Context,
-        @inject(delay(() => PublishPipeline)) private pipeline: PublishPipeline
+        @inject(delay(() => PublishPipeline)) private pipeline: PublishPipeline,
+        groupKeyStoreFactory: GroupKeyStoreFactory
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+        this.getGroupKeyQueue = pMemoize(async (streamId: StreamID) => {
+            const store = await groupKeyStoreFactory.getStore(streamId)
+            return new GroupKeyQueue(store)
+        }, {
+            cacheKey: ([streamId]) => streamId
+        })
     }
 
     async publish<T>(streamDefinition: StreamDefinition, content: T, metadata?: MessageMetadata): Promise<StreamMessage<T>> {

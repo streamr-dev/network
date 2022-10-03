@@ -20,8 +20,6 @@ export class GroupKeyStore implements Context {
     readonly id
     readonly debug
     private persistence: Persistence<GroupKeyId, string>
-    private currentGroupKey: GroupKey | undefined // current key id if any
-    private queuedGroupKey: GroupKey | undefined // a group key queued to be rotated into use after the call to useGroupKey
     private eventEmitter: StreamrClientEventEmitter
 
     constructor({ context, clientId, streamId, eventEmitter }: GroupKeyStoreOptions) {
@@ -38,56 +36,19 @@ export class GroupKeyStore implements Context {
         this.eventEmitter = eventEmitter
     }
 
-    private async storeKey(groupKey: GroupKey): Promise<GroupKey> {
-        this.debug('Store key %s', groupKey.id)
-        await this.persistence.set(groupKey.id, groupKey.hex)
-        this.eventEmitter.emit('addGroupKey', groupKey)
-        return groupKey
-    }
-
-    async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
-        // Ensure we have a current key by picking a queued key or generating a new one
-        if (!this.currentGroupKey) {
-            this.currentGroupKey = this.queuedGroupKey || await this.rekey()
-            this.queuedGroupKey = undefined
-        }
-        // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
-        const result: [GroupKey, GroupKey | undefined] = [
-            this.currentGroupKey!,
-            this.queuedGroupKey,
-        ]
-        // Perform the rotate if there's a next key queued
-        if (this.queuedGroupKey) {
-            this.currentGroupKey = this.queuedGroupKey
-            this.queuedGroupKey = undefined
-        }
-        return result
-    }
-
     async get(id: GroupKeyId): Promise<GroupKey | undefined> {
         const value = await this.persistence.get(id)
         if (value === undefined) { return undefined }
         return new GroupKey(id, value)
     }
 
-    async add(groupKey: GroupKey): Promise<GroupKey> {
-        return this.storeKey(groupKey)
-    }
-
-    async rotate(newKey = GroupKey.generate()): Promise<GroupKey> {
-        this.queuedGroupKey = newKey
-        await this.storeKey(newKey)
-        return newKey
+    async add(groupKey: GroupKey): Promise<void> {
+        this.debug('Add key %s', groupKey.id)
+        await this.persistence.set(groupKey.id, groupKey.hex)
+        this.eventEmitter.emit('addGroupKey', groupKey)
     }
 
     async close(): Promise<void> {
         return this.persistence.close()
-    }
-
-    async rekey(newKey = GroupKey.generate()): Promise<GroupKey> {
-        await this.storeKey(newKey)
-        this.currentGroupKey = newKey
-        this.queuedGroupKey = undefined
-        return newKey
     }
 }

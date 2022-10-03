@@ -8,7 +8,6 @@ import { StreamRegistry } from '../../src/registry/StreamRegistry'
 import { DEFAULT_PARTITION } from '../../src/StreamIDBuilder'
 import { FakeStreamRegistry } from '../test-utils/fake/FakeStreamRegistry'
 import { createStrictConfig } from '../../src/Config'
-import { GroupKeyStoreFactory } from '../../src/encryption/GroupKeyStoreFactory'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { createRelativeTestStreamId } from '../test-utils/utils'
 import { StreamPermission } from '../../src/permission'
@@ -26,26 +25,18 @@ const createMockContainer = async (
             privateKey: PRIVATE_KEY
         }
     })
-    const groupKeyStoreFactory = {
-        getStore: () => {
-            return {
-                useGroupKey: async () => [GROUP_KEY, undefined]
-            }
-        }
-    }
     const childContainer = rootContainer.createChildContainer()
     initContainer(config, childContainer)
     return childContainer
         .register(FakeChain, { useValue: new FakeChain() })
         .register(StreamRegistry, FakeStreamRegistry as any)
         .register(NetworkNodeFacade, { useValue: networkNodeFacade as any })
-        .register(GroupKeyStoreFactory, { useValue: groupKeyStoreFactory } as any)
 }
 
 describe('Publisher', () => {
 
     let streamId: StreamID
-    let publisher: Pick<Publisher, 'publish' | 'stop'>
+    let publisher: Pick<Publisher, 'publish' | 'getGroupKeyQueue' | 'stop'>
     let networkNodeFacade: Pick<NetworkNodeFacade, 'publishToNode' | 'getNode'>
     let mockContainer: DependencyContainer
 
@@ -64,6 +55,8 @@ describe('Publisher', () => {
         const streamRegistry = mockContainer.resolve(StreamRegistry)
         const stream = await streamRegistry.createStream(createRelativeTestStreamId(module))
         streamId = stream.id
+        const groupKeyQueue = await publisher.getGroupKeyQueue(streamId)
+        await groupKeyQueue.rekey(GROUP_KEY)
     })
 
     it('happy path', async () => {
