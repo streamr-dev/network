@@ -1,7 +1,8 @@
 import { UUID } from "./UUID"
 import { IllegalArguments } from './errors'
+import { BrandedString } from '@streamr/utils'
 
-export type PeerIDKey = string & { readonly __brand: 'peerIDKey' } // Nominal typing 
+export type PeerIDKey = BrandedString<'PeerIDKey'>
 
 export class PeerID {
     // avoid creating a new instance for every operation
