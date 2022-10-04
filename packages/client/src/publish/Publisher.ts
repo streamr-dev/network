@@ -1,6 +1,7 @@
 import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
+import pLimit from 'p-limit'
 import { InspectOptions } from 'util'
 import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
@@ -16,8 +17,6 @@ import { pLimitFn } from '../utils/promises'
 import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
-import { Gate } from '../utils/Gate'
-import { SequentialTaskManager } from '../utils/SequentialTaskManager'
 
 export class PublishError extends Error {
 
@@ -76,7 +75,7 @@ export class Publisher implements Context {
     private streamRegistryCached: StreamRegistryCached
     private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
-    private sequentialTaskManager: SequentialTaskManager = new SequentialTaskManager()
+    private concurrencyLimit = pLimit(1)
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
     getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
 
@@ -143,12 +142,16 @@ export class Publisher implements Context {
          * - message chaining
          * - consuming a group key from a queue
          * 
-         * These operations block until a possible previous publish operation has completed.
-         * If we want to optimize concurrency, we could have two separate blocking operations:
-         * - message chaining could wait for the previous message chaining to complete, 
-         * - and consuming a group key could wait for the previous group key comsumption
+         * It is also good if messages are published to node in the same sequence, as that can avoid
+         * unnecessary gap fills (if a subscriber would receive messages m1, m2, m3 in order m1, m3, m2
+         * it would try to get m2 via a gap fill resend before it receives it normally).
+         * 
+         * Currently we limit that there can be only one publish task at any given time. That way
+         * message chaining and group keys consuming is done properly. If we want to improve
+         * concurrency, we could maybe offload message encryptions to a separate tasks which 
+         * we'd execute in parallel.
          */
-        return this.sequentialTaskManager.execute(async (previousTask: Gate | undefined) => {
+        return this.concurrencyLimit(async () => {
             const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             try {
                 const messageFactory = await this.getMessageFactory(streamId)
@@ -158,8 +161,7 @@ export class Publisher implements Context {
                         ...metadata,
                         timestamp
                     },
-                    partition,
-                    previousTask
+                    partition
                 )
                 await this.node.publishToNode(message)
                 return message
