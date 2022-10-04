@@ -70,14 +70,14 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 export class Publisher implements Context {
     readonly id
     readonly debug
-    private streamIdBuilder: StreamIDBuilder
-    private authentication: Authentication
-    private streamRegistryCached: StreamRegistryCached
-    private node: NetworkNodeFacade
-    private cacheConfig: CacheConfig
-    private concurrencyLimit = pLimit(1)
-    private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
-    getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
+    private readonly streamIdBuilder: StreamIDBuilder
+    private readonly authentication: Authentication
+    private readonly streamRegistryCached: StreamRegistryCached
+    private readonly node: NetworkNodeFacade
+    private readonly cacheConfig: CacheConfig
+    private readonly concurrencyLimit = pLimit(1)
+    private readonly getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
+    readonly getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
 
     constructor(
         context: Context,

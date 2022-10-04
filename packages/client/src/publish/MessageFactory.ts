@@ -20,15 +20,15 @@ export interface MessageFactoryOptions {
 
 export class MessageFactory {
 
-    private streamId: StreamID
-    private partitionCount: number
-    private selectedDefaultPartition: number
-    private isPublicStream: boolean
-    private publisherId: EthereumAddress
-    private createSignature: (payload: string) => Promise<string>
-    private useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
-    private getStreamPartitionForKey: (partitionKey: string | number) => number
-    private getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
+    private readonly streamId: StreamID
+    private readonly partitionCount: number
+    private readonly selectedDefaultPartition: number
+    private readonly isPublicStream: boolean
+    private readonly publisherId: EthereumAddress
+    private readonly createSignature: (payload: string) => Promise<string>
+    private readonly useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+    private readonly getStreamPartitionForKey: (partitionKey: string | number) => number
+    private readonly getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
     constructor(opts: MessageFactoryOptions) {
         this.streamId = opts.streamId
