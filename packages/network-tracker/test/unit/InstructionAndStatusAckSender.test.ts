@@ -1,5 +1,10 @@
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { Instruction, InstructionAndStatusAckSender, SendInstructionFn } from '../../src/logic/InstructionAndStatusAckSender'
+import {
+    Instruction,
+    InstructionAndStatusAckSender,
+    SendInstructionFn,
+    SendStatusAckFn, StatusAck,
+} from '../../src/logic/InstructionAndStatusAckSender'
 import { MetricsContext } from 'streamr-network'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')
@@ -10,6 +15,7 @@ const DEBOUNCE_WAIT = 100
 const MAX_WAIT = 2000
 
 let mockInstructionIdSuffix = 0
+let mockStatusAckSuffix = 0
 
 const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
     mockInstructionIdSuffix += 1
@@ -21,18 +27,28 @@ const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
     }
 }
 
+const createMockStatusAck = (streamPartId: StreamPartID): StatusAck => {
+    mockStatusAckSuffix += 1
+    return {
+        nodeId: `mock-node-id-${mockStatusAckSuffix}`,
+        streamPartId
+    }
+}
+
 describe('InstructionAndStatusAckSender', () => {
-    let send: jest.Mock<ReturnType<SendInstructionFn>, Parameters<SendInstructionFn>>
+    let sendInstruction: jest.Mock<ReturnType<SendInstructionFn>, Parameters<SendInstructionFn>>
+    let sendStatusAck: jest.Mock<ReturnType<SendStatusAckFn>, Parameters<SendStatusAckFn>>
     let sender: InstructionAndStatusAckSender
 
     beforeEach(() => {
         jest.useFakeTimers()
         jest.setSystemTime(STARTUP_TIME)
-        send = jest.fn().mockResolvedValue(true)
+        sendInstruction = jest.fn().mockResolvedValue(true)
+        sendStatusAck = jest.fn().mockResolvedValue(true)
         sender = new InstructionAndStatusAckSender({
             debounceWait: DEBOUNCE_WAIT,
             maxWait: MAX_WAIT,
-        }, send, undefined as any, new MetricsContext()) // TODO implement sendStatusAck
+        }, sendInstruction, sendStatusAck, new MetricsContext())
     })
 
     afterEach(() => {
@@ -40,20 +56,36 @@ describe('InstructionAndStatusAckSender', () => {
         jest.useRealTimers()
     })
 
-    function assertSendsCalled(instructions: readonly Instruction[]): void {
-        expect(send).toBeCalledTimes(instructions.length)
+    function assertInstructionsSent(instructions: readonly Instruction[]): void {
+        expect(sendInstruction).toBeCalledTimes(instructions.length)
         for (let i = 0; i < instructions.length; ++i) {
             const { nodeId, streamPartId, newNeighbors, counterValue } = instructions[i]
-            expect(send).toHaveBeenNthCalledWith(i + 1, nodeId, streamPartId, newNeighbors, counterValue)
+            expect(sendInstruction).toHaveBeenNthCalledWith(i + 1, nodeId, streamPartId, newNeighbors, counterValue)
         }
     }
 
-    it('wait stabilization', () => {
+    function assertStatusAcksSent(statusAcks: readonly StatusAck[]): void {
+        expect(sendStatusAck).toBeCalledTimes(statusAcks.length)
+        for (let i = 0; i < statusAcks.length; ++i) {
+            const { nodeId, streamPartId } = statusAcks[i]
+            expect(sendStatusAck).toHaveBeenNthCalledWith(i + 1, nodeId, streamPartId)
+        }
+    }
+
+    it('wait stabilization (instruction)', () => {
         const instruction = createMockInstruction(MOCK_STREAM_PART_1)
         sender.addInstruction(instruction)
-        expect(send).not.toBeCalled()
+        expect(sendInstruction).not.toBeCalled()
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
-        assertSendsCalled([instruction])
+        assertInstructionsSent([instruction])
+    })
+
+    it('wait stabilization (statusAck)', () => {
+        const statusAck = createMockStatusAck(MOCK_STREAM_PART_1)
+        sender.addStatusAck(statusAck)
+        expect(sendStatusAck).not.toBeCalled()
+        jest.advanceTimersByTime(DEBOUNCE_WAIT)
+        assertStatusAcksSent([statusAck])
     })
 
     it('add within stabilization wait', () => {
@@ -63,7 +95,7 @@ describe('InstructionAndStatusAckSender', () => {
         const instruction2 = createMockInstruction(MOCK_STREAM_PART_1)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
-        assertSendsCalled([instruction1, instruction2])
+        assertInstructionsSent([instruction1, instruction2])
     })
 
     it('add after stabilization wait', () => {
@@ -73,7 +105,7 @@ describe('InstructionAndStatusAckSender', () => {
         const instruction2 = createMockInstruction(MOCK_STREAM_PART_1)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
-        assertSendsCalled([instruction1, instruction2])
+        assertInstructionsSent([instruction1, instruction2])
     })
 
     it('max wait reached', () => {
@@ -84,7 +116,7 @@ describe('InstructionAndStatusAckSender', () => {
             expected.push(instruction)
             jest.advanceTimersByTime(DEBOUNCE_WAIT / 2)
         }
-        assertSendsCalled(expected)
+        assertInstructionsSent(expected)
     })
 
     it('independent stream buffers', () => {
@@ -94,6 +126,6 @@ describe('InstructionAndStatusAckSender', () => {
         const instruction2 = createMockInstruction(MOCK_STREAM_PART_2)
         sender.addInstruction(instruction2)
         jest.advanceTimersByTime(DEBOUNCE_WAIT)
-        assertSendsCalled([instruction1, instruction2])
+        assertInstructionsSent([instruction1, instruction2])
     })
 })
