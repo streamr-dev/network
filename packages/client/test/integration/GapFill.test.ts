@@ -225,7 +225,8 @@ describe('GapFill', () => {
                     received.push(m)
                     // should not need to explicitly end
                 }
-                expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
+                const expected = published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature)
+                expect(received.map((m) => m.signature)).toEqual(expected)
             }, 20000)
 
             it('rejects resend if no storage assigned', async () => {
