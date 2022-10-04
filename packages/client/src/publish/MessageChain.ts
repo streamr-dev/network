@@ -9,26 +9,7 @@ import {
     StreamPartIDUtils,
     EthereumAddress
 } from 'streamr-client-protocol'
-import { CacheConfig } from '../Config'
-import { CacheFn } from '../utils/caches'
 import { randomString } from '@streamr/utils'
-
-export function getCachedMessageChain(
-    cacheConfig?: CacheConfig
-): (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain {
-    // one chainer per streamId + streamPartition + publisherId + msgChainId
-    return CacheFn(
-        (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => new MessageChain(streamPartId, publisherId, msgChainId),
-        {
-            cacheKey: ([streamPartId, publisherId, msgChainId]) => (
-                // empty msgChainId is fine
-                [streamPartId, publisherId, msgChainId ?? ''].join('|')
-            ),
-            ...cacheConfig,
-            maxAge: Infinity
-        }
-    )
-}
 
 export const createRandomMsgChainId = (): string => randomString(20)
 

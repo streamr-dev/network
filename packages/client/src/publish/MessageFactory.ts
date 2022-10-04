@@ -4,7 +4,7 @@ import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
-import { getCachedMessageChain, MessageChain } from './MessageChain'
+import { MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeySequence } from './GroupKeyQueue'
@@ -45,7 +45,13 @@ export class MessageFactory {
             ...opts.cacheConfig,
             cacheKey: ([partitionKey]) => partitionKey
         })
-        this.getMsgChain = getCachedMessageChain(opts.cacheConfig) // TODO would it ok to just use pMemoize (we don't have many chains)
+        this.getMsgChain = CacheFn((streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => { // TODO would it ok to just use pMemoize (we don't have many chains)
+            return new MessageChain(streamPartId, publisherId, msgChainId)
+        }, {
+            cacheKey: ([streamPartId, publisherId, msgChainId]) => [streamPartId, publisherId, msgChainId ?? ''].join('|'),
+            ...opts.cacheConfig,
+            maxAge: Infinity
+        })
     }
 
     async createMessage<T>(
