@@ -22,7 +22,7 @@ import {
     RateMetric
 } from 'streamr-network'
 import { Logger } from '@streamr/utils'
-import { InstructionSender } from './InstructionSender'
+import { InstructionAndStatusAckSender } from './InstructionAndStatusAckSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 
 export type TrackerId = string
@@ -108,7 +108,7 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
-    private readonly instructionSender: InstructionSender
+    private readonly instructionAndStatusAckSender: InstructionAndStatusAckSender
     private readonly extraMetadatas: Record<NodeId, Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
@@ -167,7 +167,7 @@ export class Tracker extends EventEmitter {
         }
         metricsContext.addMetrics('tracker', this.metrics)
 
-        this.instructionSender = new InstructionSender(
+        this.instructionAndStatusAckSender = new InstructionAndStatusAckSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
             this.trackerServer.sendStatusAck.bind(this.trackerServer),
@@ -213,13 +213,13 @@ export class Tracker extends EventEmitter {
         // update topology
         this.createTopology(streamPartId)
         this.updateNodeOnStream(source, status.streamPart)
-        this.formAndSendInstructions(source, status.streamPart.counter, streamPartId)
+        this.formAndSendInstructions(source, true, streamPartId)
     }
 
     async stop(): Promise<void> {
         this.logger.debug('stopping')
 
-        this.instructionSender.stop()
+        this.instructionAndStatusAckSender.stop()
 
         await this.trackerServer.stop()
         this.stopped = true
@@ -247,7 +247,7 @@ export class Tracker extends EventEmitter {
 
     private formAndSendInstructions(
         node: NodeId,
-        statusCounter: number | undefined,
+        isRespondingToNodeStatus: boolean,
         streamPartId: StreamPartID,
         forceGenerate = false
     ): void {
@@ -261,26 +261,21 @@ export class Tracker extends EventEmitter {
 
             const isAloneInTopology = overlay.hasNode(node) && overlay.getNumberOfNodes() === 1
 
-            // Send empty instruction if and only if the node is alone in the topology
-            if (isAloneInTopology && Object.keys(instructions).length === 0 && statusCounter !== undefined) {
-                //const counterValue = this.instructionCounter.setOrIncrement(node, streamPartId)
-                this.instructionSender.addInstruction({
-                    nodeId: node,
-                    streamPartId,
-                    newNeighbors: [],
-                    counterValue: statusCounter,
-                    ackOnly: true
-                })
-            } else {
+            if (!isAloneInTopology || !isRespondingToNodeStatus || Object.keys(instructions).length > 0) {
                 Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
                     const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
-                    this.instructionSender.addInstruction({
+                    this.instructionAndStatusAckSender.addInstruction({
                         nodeId,
                         streamPartId,
                         newNeighbors,
-                        counterValue,
-                        ackOnly: false
+                        counterValue
                     })
+                })
+            } else {
+                // Send empty instruction if and only if the node is alone in the topology
+                this.instructionAndStatusAckSender.addStatusAck({
+                    nodeId: node,
+                    streamPartId
                 })
             }
         }
@@ -305,7 +300,7 @@ export class Tracker extends EventEmitter {
             delete this.overlayPerStreamPart[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {
-                this.formAndSendInstructions(neighbor, undefined, streamPartId, true)
+                this.formAndSendInstructions(neighbor, false, streamPartId, true)
             })
         }
     }

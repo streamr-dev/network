@@ -1,5 +1,5 @@
 import { StreamPartID, StreamPartIDUtils } from 'streamr-client-protocol'
-import { Instruction, InstructionSender, SendInstructionFn } from '../../src/logic/InstructionSender'
+import { Instruction, InstructionAndStatusAckSender, SendInstructionFn } from '../../src/logic/InstructionAndStatusAckSender'
 import { MetricsContext } from 'streamr-network'
 
 const MOCK_STREAM_PART_1 = StreamPartIDUtils.parse('stream-id#1')
@@ -17,20 +17,19 @@ const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
         nodeId: `mock-node-id-${mockInstructionIdSuffix}`,
         streamPartId,
         newNeighbors: [],
-        counterValue: 0,
-        ackOnly: false
+        counterValue: 0
     }
 }
 
-describe('InstructionSender', () => {
+describe('InstructionAndStatusAckSender', () => {
     let send: jest.Mock<ReturnType<SendInstructionFn>, Parameters<SendInstructionFn>>
-    let sender: InstructionSender
+    let sender: InstructionAndStatusAckSender
 
     beforeEach(() => {
         jest.useFakeTimers()
         jest.setSystemTime(STARTUP_TIME)
         send = jest.fn().mockResolvedValue(true)
-        sender = new InstructionSender({
+        sender = new InstructionAndStatusAckSender({
             debounceWait: DEBOUNCE_WAIT,
             maxWait: MAX_WAIT,
         }, send, undefined as any, new MetricsContext()) // TODO implement sendStatusAck
