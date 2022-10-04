@@ -206,23 +206,6 @@ export const eventsWithArgsToArray = (emitter: EventEmitter, events: ReadonlyArr
 }
 
 /**
- * Convert a function that has as its last argument a callback of the form
- * (err, result) into a Promise.
- *
- * @param fn should be of format (arg1, arg2, ..., argN, (err, res) => {...})
- * @param args arguments to be passed into fn (before callback)
- * @returns {Promise<T>} rejects with `err` if `err` is "true-ish" in cb.
- * Otherwise resolves with `res`.
- */
-export const callbackToPromise = <T>(fn: (...innerArgs: any[]) => any, ...args: unknown[]): Promise<T> => {
-    return new Promise((resolve, reject) => {
-        return fn(...args, (err: Error, result: T) => {
-            return err ? reject(err) : resolve(result)
-        })
-    })
-}
-
-/**
  * Create a {ReadableStream} out of an array of items. Any {Error} items will
  * be emitted as error events instead of pushed to stream.
  * @param args an array of items
