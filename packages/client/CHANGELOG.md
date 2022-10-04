@@ -8,48 +8,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Method `updateEncryptionKey` to update stream encryption key
-- The client publishes metrics to the network at regular intervals (configurable with `metrics` config option)
-- There is a limit for concurrent smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- The client publishes telemetry metrics to the network at regular intervals (enabled by default, configurable with `metrics` config option)
+- You can manually update a stream encryption key with method `updateEncryptionKey`
 
 ### Changed
 
-- Group keys are delivered in-stream, not in a separate key exchange stream
+- Encryption keys are delivered in-stream, not in a separate key exchange stream
   - new optional config options `decryption.keyRequestTimeout` and `decryption.maxKeyRequestsPerSecond`
-- Method signatures of `client.publish` and `stream.publish` have changed: optional `metadata` is given an object instead of positional arguments
+  - notice that key exchange is not backwards compatible with v6 clients
+- Change method signatures of `client.publish` and `stream.publish`
+  - optional metadata is given as an object instead of positional arguments
   - new metadata field: `msgChainId`
-- Method `getStorageNodesOf()` renamed to `getStorageNodes()`
-- Method `getStoredStreamsOf()` renamed to `getStoredStreams()`
-- Method `isStreamStoredInStorageNode()` renamed to `isStoredStream()`
-- Methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` replaced with single method `setStorageNodeMetadata()`
-- Method `stream.update()` now requires a parameter `props`
-- Storage node assignment events:
-  - method `registerStorageEventListeners(listener)` replaced with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
-  - method `unRegisterStorageEventListeners()` replaced with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
-- Resent event:
-  - method `onResent(listener)` replaced with `subscription.once('resendComplete', listener)`
-- Behavior changes:
-  - resends support multiple storage nodes (the data is fetched from a random storage node)
-- Exported classes `GroupKey` and `GroupKeyId` renamed to `EncryptionKey` and `EncryptionKeyId`
-- When a `MessageStream` is returned from `resend()`, it doesn't reject if an encryption key is not available
+- Replace method `subscription.onResent(listener)` with `subscription.once('resendComplete', listener)`
+- Resend supports multiple storage nodes: the data is fetched from a random storage node
+- Enforce concurrency limit for smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- Method `stream.update()` parameter `props` is no longer optional
+- Rename method `getStorageNodesOf()` to `getStorageNodes()`
+- Rename method `getStoredStreamsOf()` to `getStoredStreams()`
+- Rename method `isStreamStoredInStorageNode()` to `isStoredStream()`
+- Replaced methods `createOrUpdateNodeInStorageNodeRegistry()` and `removeNodeFromStorageNodeRegistry()` with single method `setStorageNodeMetadata()`
+- Change storage node assignment event handlers
+  - replace method `registerStorageEventListeners(listener)` with `on('addToStorageNode', listener)` and `on('removeFromStorageNode', listener)`
+  - replace method `unRegisterStorageEventListeners()` with `off('addToStorageNode', listener)` and `off('removeFromStorageNode', listener)`
+- Rename classes `GroupKey` and `GroupKeyId` to `EncryptionKey` and `EncryptionKeyId`
 
 ### Deprecated
 
 ### Removed
 
-- Removed all DataUnion code. New DataUnion client will be released under https://github.com/dataunions/data-unions
-- Remove method `getAllStorageNodes()`, use `getStorageNodes()` without arguments instead
-- Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect` and `maxRetries`
-- Remove method `disconnect()`, use `destroy()` instead
-- Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead
-- Remove client configuration option `client.network.name`
-- Remove `subscription.onMessage`, `onStart` and `onError` methods, use `subscription.on('error', cb)` to add an error listener
+- Remove Data Union functionality
+  - functionality moved to package `@dataunions/client`
+- Remove method `getAllStorageNodes()`
+  - use `getStorageNodes()` without arguments to same effect
+- Remove method `disconnect()`
+  - use `destroy()` instead
+- Remove method `unsubscribeAll()`
+  - use `unsubscribe()` without arguments to same effect
+- Remove properties `subscription.onMessage`, `onStart`, and `onError`
+  - use `subscription.on('error', cb)` to add an error listener
 - Remove configuration option `groupKeys`
-  - use `updateEncryptionKey` and `addEncryptionKey` methods instead
+  - use methods `updateEncryptionKey` and `addEncryptionKey` instead
+- Remove client configuration option `client.network.name`
+- Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
 
 ### Fixed
 
-- Fix stream encryption: messages weren't automatically encrypted if the local database didn't contain pre-existing encryption keys for a stream
+- Promise `MessageStream` returned from `resend()` does not reject in the case of an encryption key being unavailable
 - Fix timeout issue of method `addToStorageNode` when used with storage node cluster
 - Fix concurrency issue when encryption keys are added in parallel for multiple streams (`SQLITE_ERROR: no such table: GroupKeys`)
 
