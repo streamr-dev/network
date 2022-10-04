@@ -35,6 +35,7 @@ export const AuthenticationInjectionToken = Symbol('Authentication')
 
 export interface Authentication {
     isAuthenticated: () => boolean
+    // always in lowercase
     getAddress: () => Promise<EthereumAddress>
     createMessagePayloadSignature: (payload: string) => Promise<string>
     getStreamRegistryChainSigner: () => Promise<Signer>

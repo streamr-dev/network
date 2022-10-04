@@ -34,6 +34,8 @@ Monorepo for Streamr Network packages.
 
 Monorepo is managed using [npm workspaces](https://docs.npmjs.com/cli/v7/using-npm/workspaces).
 
+Installation on an Apple Silicon Mac requires additional steps, see [install-on-apple-silicon.md](/install-on-apple-silicon)
+
 **Important:** Do not use `npm ci` or `npm install` directly in the sub-package directories.
 
 ### Bootstrap all sub-packages

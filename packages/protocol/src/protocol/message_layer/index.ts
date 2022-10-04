@@ -4,7 +4,6 @@ import StreamMessage from "./StreamMessage"
 import { StreamMessageType } from "./StreamMessage"
 import GroupKeyRequest, { GroupKeyRequestSerialized } from "./GroupKeyRequest"
 import GroupKeyResponse, { GroupKeyResponseSerialized } from "./GroupKeyResponse"
-import GroupKeyErrorResponse, { GroupKeyErrorResponseSerialized }  from "./GroupKeyErrorResponse"
 import EncryptedGroupKey from "./EncryptedGroupKey"
 
 export * from './StreamMessage'
@@ -23,7 +22,5 @@ export {
     GroupKeyRequestSerialized,
     GroupKeyResponse,
     GroupKeyResponseSerialized,
-    GroupKeyErrorResponse,
-    GroupKeyErrorResponseSerialized,
     EncryptedGroupKey,
 }

@@ -9,8 +9,7 @@ import {
     StreamPartIDUtils,
     StreamMessageOptions,
     MessageID,
-    EthereumAddress,
-    StreamID
+    EthereumAddress
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -25,7 +24,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { PublisherKeyExchange } from '../../src/encryption/PublisherKeyExchange'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -139,17 +138,19 @@ export const createMockMessage = (
     return msg
 }
 
-export const getGroupKeyStore = (streamId: StreamID, userAddress: EthereumAddress): GroupKeyStore => {
-    return new GroupKeyStore({ 
-        context: mockContext(), 
-        clientId: userAddress.toLowerCase(), 
-        streamId, 
-        groupKeys: []
-    })
+export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {
+    return new GroupKeyStore(
+        mockContext(),
+        {
+            getAddress: () => userAddress.toLowerCase()
+        } as any,
+        new StreamrClientEventEmitter()
+    )
 }
 
-export const startPublisherKeyExchangeSubscription = async (publisherClient: StreamrClient): Promise<void> => {
-    // @ts-expect-error private
-    const publisherKeyExchange = publisherClient.container.resolve(PublisherKeyExchange)
-    await publisherKeyExchange.useGroupKey(`mock-${Date.now()}` as StreamID)
+export const startPublisherKeyExchangeSubscription = async (
+    publisherClient: StreamrClient,
+    streamPartId: StreamPartID): Promise<void> => {
+    const node = await publisherClient.getNode()
+    node.subscribe(streamPartId)
 }

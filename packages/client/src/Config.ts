@@ -7,7 +7,6 @@ import merge from 'lodash/merge'
 
 import type { AuthConfig } from './Authentication'
 import type { EthereumConfig } from './Ethereum'
-import type { EncryptionConfig } from './encryption/KeyExchangeStream'
 
 import CONFIG_SCHEMA from './config.schema.json'
 import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
@@ -34,8 +33,6 @@ export interface TimeoutsConfig {
         timeout: number
         retryInterval: number
     }
-    /** @internal */
-    encryptionKeyRequest?: number
     httpFetchTimeout: number
 }
 
@@ -58,6 +55,11 @@ export interface TrackerRegistrySmartContract { jsonRpcProvider?: ConnectionInfo
 
 export type NetworkConfig = Omit<NetworkNodeOptions, 'trackers' | 'metricsContext'> & {
     trackers: SmartContractRecord[] | TrackerRegistrySmartContract
+}
+
+export interface DecryptionConfig {
+    keyRequestTimeout: number
+    maxKeyRequestsPerSecond: number
 }
 
 export interface DebugConfig {
@@ -85,6 +87,7 @@ export type StrictStreamrClientConfig = {
     */
     auth: AuthConfig
     network: NetworkConfig
+    decryption: DecryptionConfig
     cache: CacheConfig
     /** @internal */
     _timeouts: TimeoutsConfig
@@ -95,11 +98,11 @@ export type StrictStreamrClientConfig = {
     EthereumConfig
     & ConnectionConfig
     & SubscribeConfig
-    & EncryptionConfig
 )
 
-export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'debug'> & {
+export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
     network: Partial<StrictStreamrClientConfig['network']>
+    decryption: Partial<StrictStreamrClientConfig['decryption']>
     /** @internal */
     debug: Partial<StrictStreamrClientConfig['debug']>
 }>
@@ -125,7 +128,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
 
     // Encryption options
     verifySignatures: 'auto',
-    encryptionKeys: {},
 
     // Ethereum related options
     // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
@@ -160,6 +162,11 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
             gasPriceStrategy: (estimatedGasPrice: BigNumber) => estimatedGasPrice.add('10000000000'),
         }
     },
+    decryption: {
+        keyRequestTimeout: 30 * 1000,
+        maxKeyRequestsPerSecond: 20
+    },
+    maxConcurrentContractCalls: 10,
     cache: {
         maxSize: 10000,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -219,6 +226,7 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             ...merge(defaults.network || {}, opts.network),
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
+        decryption: merge(defaults.decryption || {}, opts.decryption),
         debug: merge(defaults.debug || {}, opts.debug),
         cache: {
             ...defaults.cache,
@@ -275,6 +283,6 @@ export const ConfigInjectionToken = {
     Publish: Symbol('Config.Publish'),
     Cache: Symbol('Config.Cache'),
     StorageNodeRegistry: Symbol('Config.StorageNodeRegistry'),
-    Encryption: Symbol('Config.Encryption'),
+    Decryption: Symbol('Config.Decryption'),
     Timeouts: Symbol('Config.Timeouts')
 }

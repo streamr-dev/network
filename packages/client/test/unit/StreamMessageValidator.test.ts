@@ -10,7 +10,6 @@ import {
     EncryptedGroupKey,
     GroupKeyRequest,
     GroupKeyResponse,
-    GroupKeyErrorResponse,
     ValidationError
 } from 'streamr-client-protocol'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
@@ -40,7 +39,6 @@ describe('StreamMessageValidator', () => {
 
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
-    let groupKeyErrorResponse: StreamMessage
 
     const defaultGetStreamResponse = {
         partitions: 10
@@ -90,30 +88,21 @@ describe('StreamMessageValidator', () => {
 
         groupKeyRequest = groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
-            streamId: toStreamID('streamId'),
+            recipient: publisher.toLowerCase(),
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
-        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${publisher.toLowerCase()}`), 0, 0, 0, subscriber, 'msgChainId'), null)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null)
         sign(groupKeyRequest, subscriberPrivateKey)
 
         groupKeyResponse = groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
-            streamId: toStreamID('streamId'),
+            recipient: subscriber.toLowerCase(),
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')
             ],
-        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
+        }), new MessageID(toStreamID('streamId'), 0, 0, 0, publisher, 'msgChainId'), null)
         sign(groupKeyResponse, publisherPrivateKey)
-
-        groupKeyErrorResponse = groupKeyMessageToStreamMessage(new GroupKeyErrorResponse({
-            requestId: 'requestId',
-            streamId: toStreamID('streamId'),
-            errorCode: 'ErrorCode',
-            errorMessage: 'errorMessage',
-            groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
-        }), new MessageID(toStreamID(`SYSTEM/keyexchange/${subscriber.toLowerCase()}`), 0, 0, 0, publisher, 'msgChainId'), null)
-        sign(groupKeyErrorResponse, publisherPrivateKey)
     })
 
     describe('validate(unknown message type)', () => {
@@ -381,76 +370,6 @@ describe('StreamMessageValidator', () => {
                 throw testError
             })
             await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
-    })
-
-    describe('validate(group key error response)', () => {
-        it('accepts valid group key error responses', async () => {
-            await getValidator().validate(groupKeyErrorResponse)
-        })
-
-        it('rejects unsigned group key error responses', async () => {
-            groupKeyErrorResponse.signature = null
-            groupKeyErrorResponse.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
-
-        it('rejects invalid signatures', async () => {
-            groupKeyErrorResponse.signature = groupKeyErrorResponse.signature!.replace('a', 'b')
-
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
-
-        it('rejects group key error responses on unexpected streams', async () => {
-            groupKeyErrorResponse.getStreamId = jest.fn().mockReturnValue('foo')
-
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
-        })
-
-        it('rejects messages from invalid publishers', async () => {
-            isPublisher = jest.fn().mockResolvedValue(false)
-
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(isPublisher).toHaveBeenCalledWith(publisher, 'streamId')
-                return true
-            })
-        })
-
-        it('rejects if isPublisher rejects', async () => {
-            const testError = new Error('test error')
-            isPublisher = jest.fn().mockRejectedValue(testError)
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
-                assert(err === testError)
-                return true
-            })
-        })
-
-        it('does not reject if isSubscriber rejects', async () => {
-            const testError = new Error('test error')
-            isSubscriber = jest.fn().mockRejectedValue(testError)
-            await getValidator().validate(groupKeyErrorResponse)
-        })
-
-        it('rejects with ValidationError if verify throws', async () => {
-            const testError = new Error('test error')
-            verify = jest.fn().mockImplementation(() => {
-                throw testError
-            })
-            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err: ValidationError) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })

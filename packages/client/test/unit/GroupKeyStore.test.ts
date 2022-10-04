@@ -1,33 +1,29 @@
-import LeakDetector from 'jest-leak-detector' // requires weak-napi
-import crypto from 'crypto'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
-import { uid, mockContext } from '../test-utils/utils'
-import { describeRepeats } from '../test-utils/jest-utils'
+import { getGroupKeyStore, uid } from '../test-utils/utils'
+import { addAfterFn } from '../test-utils/jest-utils'
+import LeakDetector from 'jest-leak-detector' // requires weak-napi
 import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { randomEthereumAddress } from 'streamr-test-utils'
+import { range } from 'lodash'
 
-describeRepeats('GroupKeyStore', () => {
+describe('GroupKeyStore', () => {
     let clientId: string
     let streamId: StreamID
     let store: GroupKeyStore
     let leakDetector: LeakDetector
 
-    beforeEach(() => {
-        clientId = `0x${crypto.randomBytes(20).toString('hex')}`
-        streamId = toStreamID(uid('stream'))
-        store = new GroupKeyStore({
-            context: mockContext(),
-            clientId,
-            streamId,
-            groupKeys: [],
-        })
+    const addAfter = addAfterFn()
 
+    beforeEach(() => {
+        clientId = randomEthereumAddress()
+        streamId = toStreamID(uid('stream'))
+        store = getGroupKeyStore(clientId)
         leakDetector = new LeakDetector(store)
     })
 
     afterEach(async () => {
-        if (!store) { return }
-        await store.clear()
+        await store.stop()
         // @ts-expect-error doesn't want us to unassign, but it's ok
         store = undefined // eslint-disable-line require-atomic-updates
     })
@@ -36,104 +32,49 @@ describeRepeats('GroupKeyStore', () => {
         expect(await leakDetector.isLeaking()).toBeFalsy()
     })
 
-    it('can get set and delete', async () => {
+    it('can get and set', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
-        expect(await store.get(groupKey.id)).toEqual(groupKey)
-        expect(await store.clear()).toBeTruthy()
-        expect(await store.clear()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
+        expect(await store.get(groupKey.id, streamId)).toBeFalsy()
+
+        await store.add(groupKey, streamId)
+        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 
-    it('does not exist until write', async () => {
+    it('does not conflict with other streamIds', async () => {
         const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-
-        expect(await store.isEmpty()).toBeTruthy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.has(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.get(groupKey.id)).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.clear()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        expect(await store.close()).toBeFalsy()
-        expect(await store.exists()).toBeFalsy()
-        // should only start existing now
-        expect(await store.add(groupKey)).toBeTruthy()
-        expect(await store.exists()).toBeTruthy()
+        await store.add(groupKey, streamId)
+        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
+        expect(await store.get(groupKey.id, toStreamID('other-stream'))).toBeFalsy()
     })
 
-    it('can set next and use', async () => {
+    it('does not conflict with other clientIds', async () => {
+        const clientId2 = randomEthereumAddress()
+        const store2 = getGroupKeyStore(clientId2)
+
+        addAfter(() => store2.stop())
+
         const groupKey = GroupKey.generate()
-        expect(await store.exists()).toBeFalsy()
-        await store.setNextGroupKey(groupKey)
-        expect(await store.exists()).toBeTruthy()
-        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
-        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
-        const groupKey2 = GroupKey.generate()
-        await store.setNextGroupKey(groupKey2)
-        expect(await store.useGroupKey()).toEqual([groupKey, groupKey2])
-        expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
+        await store.add(groupKey, streamId)
+        expect(await store2.get(groupKey.id, streamId)).toBeFalsy()
+        expect(await store.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 
-    it('generates a new key on first use', async () => {
-        const [generatedKey, nextKey] = await store.useGroupKey()
-        expect(generatedKey).toBeTruthy()
-        expect(nextKey).toBeUndefined()
-    })
-
-    it('only keeps the latest unused key', async () => {
+    it('can read previously persisted data', async () => {
         const groupKey = GroupKey.generate()
-        const groupKey2 = GroupKey.generate()
-        await store.setNextGroupKey(groupKey)
-        await store.setNextGroupKey(groupKey2)
-        expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
+        await store.add(groupKey, streamId)
+
+        const store2 = getGroupKeyStore(clientId)
+        expect(await store2.get(groupKey.id, streamId)).toEqual(groupKey)
     })
 
-    it('replaces unused rotations', async () => {
-        const [generatedKey, queuedKey] = await store.useGroupKey()
-        expect(generatedKey).toBeTruthy()
-        expect(queuedKey).toEqual(undefined)
-
-        const groupKey = await store.rotateGroupKey()
-        expect(groupKey).toBeTruthy()
-        const groupKey2 = await store.rotateGroupKey()
-        expect(await store.useGroupKey()).toEqual([generatedKey, groupKey2])
-    })
-
-    it('handles rotate then rekey', async () => {
-        // Set some initial key
-        const [generatedKey, queuedKey] = await store.useGroupKey()
-        expect(generatedKey).toBeTruthy()
-        expect(queuedKey).toEqual(undefined)
-
-        const rotatedKey = await store.rotateGroupKey()
-        expect(rotatedKey).toBeTruthy()
-        const rekey = await store.rekey()
-        expect(rekey).toBeTruthy()
-        expect(await store.useGroupKey()).toEqual([rekey, undefined])
-    })
-
-    it('handles rekey then rotate', async () => {
-        // Set some initial key
-        const [generatedKey, queuedKey] = await store.useGroupKey()
-        expect(generatedKey).toBeTruthy()
-        expect(queuedKey).toEqual(undefined)
-
-        const rekey = await store.rekey()
-        expect(rekey).toBeTruthy()
-        const rotatedKey = await store.rotateGroupKey()
-        expect(rotatedKey).toBeTruthy()
-        expect(await store.useGroupKey()).toEqual([rekey, rotatedKey])
+    it('add keys for multiple streams in parallel', async () => {
+        const assignments = range(10).map((i) => {
+            return { key: GroupKey.generate(), streamId: toStreamID(`stream${i}`) }
+        })
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        await Promise.all(assignments.map(({ key, streamId }) => store.add(key, streamId)))
+        for (const assignment of assignments) {
+            expect(await store.get(assignment.key.id, assignment.streamId)).toEqual(assignment.key)
+        }
     })
 })

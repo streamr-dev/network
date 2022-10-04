@@ -1,11 +1,11 @@
 import crypto, { CipherKey } from 'crypto'
 import { arrayify, hexlify } from '@ethersproject/bytes'
-import { StreamMessage, EncryptedGroupKey, StreamMessageError } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageError } from 'streamr-client-protocol'
 import { GroupKey } from './GroupKey'
 
-export class UnableToDecryptError extends StreamMessageError {
+export class DecryptError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, message = '') {
-        super(`Unable to decrypt. ${message}`, streamMessage)
+        super(`Decrypt error: ${message}`, streamMessage)
     }
 }
 
@@ -70,7 +70,7 @@ export class EncryptionUtil {
         streamMessage.groupKeyId = groupKey.id
         streamMessage.serializedContent = this.encryptWithAES(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey.data)
         if (nextGroupKey) {
-            streamMessage.newGroupKey = EncryptionUtil.encryptGroupKey(nextGroupKey, groupKey)
+            streamMessage.newGroupKey = groupKey.encryptNextGroupKey(nextGroupKey)
         }
         streamMessage.parsedContent = undefined
         /* eslint-enable no-param-reassign */
@@ -89,7 +89,7 @@ export class EncryptionUtil {
             streamMessage.serializedContent = serializedContent
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError(streamMessage, err.stack)
+            throw new DecryptError(streamMessage, err.stack)
         }
 
         try {
@@ -97,24 +97,13 @@ export class EncryptionUtil {
             if (newGroupKey) {
                 // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
                 // @ts-expect-error expecting EncryptedGroupKey
-                streamMessage.newGroupKey = EncryptionUtil.decryptGroupKey(newGroupKey, groupKey)
+                streamMessage.newGroupKey = groupKey.decryptNextGroupKey(newGroupKey)
             }
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
+            throw new DecryptError(streamMessage, 'Could not decrypt new group key: ' + err.stack)
         }
         /* eslint-enable no-param-reassign */
-    }
-
-    static encryptGroupKey(nextGroupKey: GroupKey, currentGroupKey: GroupKey): EncryptedGroupKey {
-        return new EncryptedGroupKey(nextGroupKey.id, this.encryptWithAES(nextGroupKey.data, currentGroupKey.data))
-    }
-
-    static decryptGroupKey(newGroupKey: EncryptedGroupKey, currentGroupKey: GroupKey): GroupKey {
-        return GroupKey.from([
-            newGroupKey.groupKeyId,
-            this.decryptWithAES(newGroupKey.encryptedGroupKeyHex, currentGroupKey.data)
-        ])
     }
 }
 

@@ -1,3 +1,4 @@
+import LRU from '../../vendor/quick-lru'
 import { SEPARATOR } from './uuid'
 
 import pkg from '../../package.json'
@@ -97,4 +98,25 @@ export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string 
 
 export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
     return toStreamID('/assignments', clusterAddress)
+}
+
+export class MaxSizedSet<T> {
+
+    private readonly delegate: LRU<T, true>
+
+    constructor(maxSize: number) {
+        this.delegate = new LRU<T, true>({ maxSize })
+    }
+
+    add(value: T): void {
+        this.delegate.set(value, true)
+    }
+
+    has(value: T): boolean {
+        return this.delegate.has(value)
+    }
+
+    delete(value: T): void {
+        this.delegate.delete(value)
+    }
 }

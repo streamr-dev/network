@@ -33,6 +33,8 @@ export function getCachedMessageChain(cacheConfig: CacheConfig):
     })
 }
 
+export const createRandomMsgChainId = (): string => randomString(20)
+
 /**
  * Manage sequenceNumber & msgChainId for StreamMessages
  */
@@ -43,7 +45,7 @@ export class MessageChain {
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 
-    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
+    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = createRandomMsgChainId() }: MessageChainOptions) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId

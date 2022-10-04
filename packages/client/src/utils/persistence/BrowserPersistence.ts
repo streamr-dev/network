@@ -1,66 +1,29 @@
-import { get, set, del, clear, keys, createStore, UseStore } from 'idb-keyval'
+import { get, set, createStore, UseStore } from 'idb-keyval'
 import { Persistence } from './Persistence'
 import { StreamID } from 'streamr-client-protocol'
+import { memoize } from 'lodash'
 
 export default class BrowserPersistence implements Persistence<string, string> {
-    private store: UseStore
-    private dbName: string
+    private getStore: (streamId: StreamID) => UseStore
 
-    constructor({ clientId, streamId }: { clientId: string, streamId: StreamID }) {
-        this.dbName = `streamr-client::${clientId}::${streamId}`
-        this.store = createStore(this.dbName, 'GroupKeys')
+    constructor({ clientId }: { clientId: string }) {
+        this.getStore = memoize((streamId: StreamID) => {
+            const dbName = `streamr-client::${clientId}::${streamId}`
+            return createStore(dbName, 'GroupKeys')
+        })
     }
 
-    async has(key: string): Promise<boolean> {
-        const val = await this.get(key)
-        return val == null
+    async get(key: string, streamId: StreamID): Promise<string | undefined> {
+        return get(key, this.getStore(streamId))
     }
 
-    async get(key: string): Promise<string | undefined> {
-        return get(key, this.store)
-    }
-
-    async set(key: string, value: string): Promise<boolean> {
-        const had = await this.has(key)
-        await set(key, value, this.store)
-        return had
-    }
-
-    async delete(key: string): Promise<boolean> {
-        if (!await this.has(key)) {
-            return false
-        }
-
-        await del(key, this.store)
-        return true
-    }
-
-    async clear(): Promise<boolean> {
-        const size = await this.size()
-        await clear(this.store)
-        return !!size
-    }
-
-    async size(): Promise<number> {
-        const allKeys = await keys(this.store)
-        return allKeys.length
+    async set(key: string, value: string, streamId: StreamID): Promise<void> {
+        await set(key, value, this.getStore(streamId))
     }
 
     // eslint-disable-next-line class-methods-use-this
     async close(): Promise<void> {
         // noop
-    }
-
-    async destroy(): Promise<void> {
-        await this.clear()
-        await this.close()
-    }
-
-    async exists(): Promise<boolean> { // eslint-disable-line class-methods-use-this
-        // always true for browser
-        // can't currently implement without opening db, defeating purpose
-        // waiting for indexedDB.databases() to gain browser support.
-        return true
     }
 
     get [Symbol.toStringTag](): string {

@@ -6,7 +6,7 @@ import { Stream } from '../../src/Stream'
 import { fastWallet } from 'streamr-test-utils'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { StreamPermission } from '../../src/permission'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { FakeStorageNode } from '../test-utils/fake/FakeStorageNode'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -32,7 +32,7 @@ describe('resend with existing key', () => {
         const message = createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
-            newGroupKey: (nextGroupKey !== undefined) ? EncryptionUtil.encryptGroupKey(nextGroupKey, currentGroupKey) : null,
+            newGroupKey: (nextGroupKey !== undefined) ? currentGroupKey.encryptNextGroupKey(nextGroupKey) : null,
             stream,
             publisher: publisherWallet,
         })
@@ -67,7 +67,7 @@ describe('resend with existing key', () => {
         await collect(messageStream)
         expect(onError).toBeCalled()
         const error = onError.mock.calls[0][0]
-        expect(error.message).toContain('Unable to decrypt')
+        expect(error).toBeInstanceOf(DecryptError)
     }
 
     beforeEach(async () => {
@@ -77,10 +77,9 @@ describe('resend with existing key', () => {
             auth: {
                 privateKey: subscriberWallet.privateKey
             },
-            // eslint-disable-next-line no-underscore-dangle
-            _timeouts: {
-                encryptionKeyRequest: 50
-            } as any
+            decryption: {
+                keyRequestTimeout: 50
+            }
         })
         stream = await subscriber.createStream({
             id: streamId
@@ -119,7 +118,7 @@ describe('resend with existing key', () => {
 
     describe('initial key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(initialKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(initialKey, stream.id)
         })
         it('can decrypt initial', async () => {
             await assertDecryptable(1000, 2000)
@@ -137,7 +136,7 @@ describe('resend with existing key', () => {
 
     describe('rotated key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rotatedKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(rotatedKey, stream.id)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)
@@ -152,7 +151,7 @@ describe('resend with existing key', () => {
 
     describe('rekeyed key available', () => {
         beforeEach(async () => {
-            await getGroupKeyStore(stream.id, await subscriber.getAddress()).add(rekeyedKey)
+            await getGroupKeyStore(await subscriber.getAddress()).add(rekeyedKey, stream.id)
         })
         it('can\'t decrypt initial', async () => {
             await assertNonDecryptable(1000, 2000)

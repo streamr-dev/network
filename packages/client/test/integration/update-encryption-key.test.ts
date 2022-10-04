@@ -7,6 +7,7 @@ import { GroupKey } from '../../src/encryption/GroupKey'
 import { StreamPermission } from '../../src/permission'
 import { FakeEnvironment } from './../test-utils/fake/FakeEnvironment'
 import { nextValue } from '../../src/utils/iterators'
+import { DecryptError } from '../../src/encryption/EncryptionUtil'
 
 /*
  * Subscriber has subscribed to a stream, and the publisher updates the encryption key for that stream.
@@ -23,7 +24,11 @@ describe('update encryption key', () => {
     beforeEach(async () => {
         environment = new FakeEnvironment()
         publisher = environment.createClient()
-        subscriber = environment.createClient()
+        subscriber = environment.createClient({
+            decryption: {
+                keyRequestTimeout: 200
+            }
+        })
         const stream = await publisher.createStream('/path')
         await stream.grantPermissions({
             user: await subscriber.getAddress(),
@@ -150,8 +155,8 @@ describe('update encryption key', () => {
             })
             const onError = jest.fn()
             sub.on('error', onError)
-            await waitForCondition(() => onError.mock.calls.length > 0)
-            expect(onError.mock.calls[0][0].message).toContain('Unable to decrypt')
-        })
+            await waitForCondition(() => onError.mock.calls.length > 0, 10 * 1000)
+            expect(onError.mock.calls[0][0]).toBeInstanceOf(DecryptError)
+        }, 10 * 1000)
     })
 })

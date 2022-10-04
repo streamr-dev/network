@@ -19,8 +19,6 @@ export interface ServerPersistenceOptions {
     tableName: string
     valueColumnName: string
     clientId: string
-    streamId: StreamID
-    initialData?: Record<string, string> // key -> value
     migrationsPath?: string
     onInit?: (db: Database) => Promise<void>
 }
@@ -32,11 +30,9 @@ export default class ServerPersistence implements Persistence<string, string>, C
     readonly id: string
     private readonly tableName: string
     private readonly valueColumnName: string
-    private readonly streamId: string
     private readonly dbFilePath: string
     private store?: Database
     private error?: Error
-    private readonly initialData
     private initCalled = false
     private readonly migrationsPath?: string
     private readonly onInit?: (db: Database) => Promise<void>
@@ -45,10 +41,8 @@ export default class ServerPersistence implements Persistence<string, string>, C
     constructor({
         context,
         clientId,
-        streamId,
         tableName,
         valueColumnName,
-        initialData = {},
         migrationsPath,
         onInit
     }: ServerPersistenceOptions) {
@@ -56,8 +50,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
         this.tableName = tableName
         this.valueColumnName = valueColumnName
         this.debug = context.debug.extend(this.id)
-        this.streamId = encodeURIComponent(streamId)
-        this.initialData = initialData
         const paths = envPaths('streamr-client')
         const dbFilePath = resolve(paths.data, join('./', clientId, `${tableName}.db`))
         this.dbFilePath = dbFilePath
@@ -142,85 +134,34 @@ export default class ServerPersistence implements Persistence<string, string>, C
             throw this.error
         }
 
-        await Promise.all(Object.entries(this.initialData).map(async ([key, value]) => {
-            return this.setKeyValue(key, value)
-        }))
         this.debug('init')
     }
 
-    async get(key: string): Promise<string | undefined> {
+    async get(key: string, streamId: StreamID): Promise<string | undefined> {
         if (!this.initCalled) {
             // can't have if doesn't exist
             if (!(await this.exists())) { return undefined }
         }
 
         await this.init()
-        const value = await this.store!.get(`SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
+        const value = await this.store!.get(
+            `SELECT ${this.valueColumnName} FROM ${this.tableName} WHERE id = ? AND streamId = ?`,
+            key,
+            encodeURIComponent(streamId)
+        )
         return value?.[this.valueColumnName]
     }
 
-    async has(key: string): Promise<boolean> {
-        if (!this.initCalled) {
-            // can't have if doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
+    async set(key: string, value: string, streamId: StreamID): Promise<void> {
         await this.init()
-        const value = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return !!(value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0)
-    }
-
-    private async setKeyValue(key: string, value: string): Promise<boolean> {
-        // set, but without init so init can insert initialData
-        const result = await this.store!.run(
-            `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`, 
+        await this.store!.run(
+            `INSERT INTO ${this.tableName} VALUES ($id, $${this.valueColumnName}, $streamId) ON CONFLICT DO NOTHING`,
             {
                 $id: key,
                 [`$${this.valueColumnName}`]: value,
-                $streamId: this.streamId,
+                $streamId: encodeURIComponent(streamId),
             }
         )
-
-        return !!result?.changes
-    }
-
-    async set(key: string, value: string): Promise<boolean> {
-        await this.init()
-        return this.setKeyValue(key, value)
-    }
-
-    async delete(key: string): Promise<boolean> {
-        if (!this.initCalled) {
-            // can't delete if if db doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
-        await this.init()
-        const result = await this.store!.run(`DELETE FROM ${this.tableName} WHERE id = ? AND streamId = ?`, key, this.streamId)
-        return !!result?.changes
-    }
-
-    async clear(): Promise<boolean> {
-        this.debug('clear')
-        if (!this.initCalled) {
-            // nothing to clear if doesn't exist
-            if (!(await this.exists())) { return false }
-        }
-
-        await this.init()
-        const result = await this.store!.run(`DELETE FROM ${this.tableName} WHERE streamId = ?`, this.streamId)
-        return !!result?.changes
-    }
-
-    async size(): Promise<number> {
-        if (!this.initCalled) {
-            // can only have size 0 if doesn't exist
-            if (!(await this.exists())) { return 0 }
-        }
-
-        await this.init()
-        const size = await this.store!.get(`SELECT COUNT(*) FROM ${this.tableName} WHERE streamId = ?;`, this.streamId)
-        return size && size['COUNT(*)']
     }
 
     async close(): Promise<void> {
@@ -232,18 +173,6 @@ export default class ServerPersistence implements Persistence<string, string>, C
 
         await this.init()
         await this.store!.close()
-    }
-
-    async destroy(): Promise<void> {
-        this.debug('destroy')
-        if (!this.initCalled) {
-            // nothing to destroy if doesn't exist
-            if (!(await this.exists())) { return }
-        }
-
-        await this.clear()
-        await this.close()
-        this.init = pOnce(Object.getPrototypeOf(this).init.bind(this))
     }
 
     get [Symbol.toStringTag](): string {

@@ -14,6 +14,7 @@ interface Options extends ControlMessageOptions {
     streamId: StreamID
     streamPartition: number
     direction: ProxyDirection
+    userId: string
 }
 
 export default class ProxyConnectionRequest extends ControlMessage {
@@ -21,8 +22,9 @@ export default class ProxyConnectionRequest extends ControlMessage {
     streamId: StreamID
     streamPartition: number
     direction: ProxyDirection
+    userId: string
 
-    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, direction }: Options) {
+    constructor({ version = ControlMessage.LATEST_VERSION, requestId, senderId, streamId, streamPartition, direction, userId }: Options) {
         super(version, ControlMessage.TYPES.ProxyConnectionRequest, requestId)
 
         validateIsNotNullOrUndefined('senderId', senderId)
@@ -36,6 +38,9 @@ export default class ProxyConnectionRequest extends ControlMessage {
 
         validateIsDirection('direction', direction)
         this.direction = direction
+
+        validateIsString('userId', userId)
+        this.userId = userId
     }
 
     getStreamPartID(): StreamPartID {

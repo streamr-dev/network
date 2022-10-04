@@ -73,6 +73,9 @@ describe('revoke permissions', () => {
             auth: {
                 privateKey: subscriberPrivateKey
             },
+            decryption: {
+                keyRequestTimeout: 200
+            },
             ...opts
         })
     }

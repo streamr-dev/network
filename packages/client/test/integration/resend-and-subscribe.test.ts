@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { StreamMessage } from 'streamr-client-protocol'
+import { GroupKeyMessage, GroupKeyRequest, StreamMessage } from 'streamr-client-protocol'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { createMockMessage, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { Stream } from '../../src/Stream'
@@ -48,15 +48,14 @@ describe('resend and subscribe', () => {
         const publisher = environment.createClient({
             auth: {
                 privateKey: publisherWallet.privateKey
-            },
-            encryptionKeys: {
-                [stream.id]: {
-                    [groupKey.id]: groupKey
-                }
             }
         })
-    
-        await startPublisherKeyExchangeSubscription(publisher)
+        await publisher.updateEncryptionKey({
+            key: groupKey,
+            streamId: stream.id,
+            distributionMethod: 'rekey'
+        })
+        await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
 
         const historicalMessage = createMockMessage({
             timestamp: 1000,
@@ -94,5 +93,6 @@ describe('resend and subscribe', () => {
             messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
         })
         expect(groupKeyRequests.length).toBe(1)
+        expect((GroupKeyMessage.fromStreamMessage(groupKeyRequests[0]) as GroupKeyRequest).groupKeyIds).toEqual([groupKey.id])
     })
 })
