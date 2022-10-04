@@ -2,6 +2,7 @@ import { random } from 'lodash'
 import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
+import { GroupKeyId } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
 import { getCachedMessageChain, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
@@ -70,7 +71,7 @@ export class MessageFactory {
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
         const encryptionType = this.isPublicStream ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
-        let groupKeyId: string | undefined
+        let groupKeyId: GroupKeyId | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
         if (encryptionType === EncryptionType.AES) {

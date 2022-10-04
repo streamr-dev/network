@@ -21,7 +21,7 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
-import { GroupKey } from '../../src/encryption/GroupKey'
+import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
@@ -121,7 +121,7 @@ export const createMockMessage = (
     const plainContent = opts.content ?? DEFAULT_CONTENT
     let content: any
     let encryptionType: EncryptionType
-    let groupKeyId: string | null
+    let groupKeyId: GroupKeyId | null
     if (opts.encryptionKey !== undefined) {
         content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(plainContent), 'utf8'), opts.encryptionKey.data)
         encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
