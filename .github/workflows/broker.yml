@@ -1,19 +1,11 @@
 ---
-# Lint, Test and Publish
-name: Broker
+name: Broker – Lint, Test and Publish
 
 on:
   push:
-    tags:
-      - "*"
     branches:
-      - main
-  pull_request:
-    branches:
-      - '*'
-  schedule:
-    # run every day at 00:00
-    - cron: '0 0 * * *'
+      - client/v6
+      - client/v6-miner-stable
   workflow_dispatch:
 
 concurrency:
@@ -25,11 +17,11 @@ defaults:
 
 jobs:
   test-unit:
-    name: Test Unit
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-node@v2.5.1
         with:
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -38,75 +30,45 @@ jobs:
       - name: bootstrap-pkg
         working-directory: './'
         run: |
-          npm run bootstrap-pkg streamr-client
+          npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-broker
       - run: npm run eslint
       - run: npm run test-unit
 
-  test-integration:
-    name: Test Integration
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-          node-version-file: '.nvmrc'
-      - name: bootstrap-pkg
-        working-directory: './'
-        run: |
-          npm run bootstrap-pkg streamr-client
-          npm run bootstrap-pkg streamr-broker
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0
-        with:
-          services-to-start: "cassandra init-keyspace parity-sidechain-node0 graph-deploy-streamregistry-subgraph"
-      - run: npm run test-integration
-        env:
-          CI: true
-          LOG_LEVEL: warn
-      - name: Stop Streamr Docker Stack
-        if: always()
-        run: |
-          docker kill $(docker ps -q)
-          docker rm $(docker ps -a -q)
-
-  test-docker:
-    name: "Docker Image: test"
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      docker_file: ./Dockerfile.broker
-      image_name: streamr/broker-node
-      test_services_to_start: "parity-node0 broker-node-no-storage-1"
-      build_platforms: linux/amd64
-      test_script: |
-        for (( i=0; i < 5; i=i+1 )); do
-            curl -s http://localhost:8791/info;
-            res=$?;
-            if test "$res" != "0"; then
-                echo "Attempting to connect to broker retrying in $wait_time seconds";
-                sleep $wait_time;
-                wait_time=$(( 2*wait_time )) ;
-            else
-                exit 0
-            fi;
-        done;
-        exit 1
-
-
   docker-push:
-    name: "Docker Image: push"
-    needs: [test-unit, test-integration, test-docker]
+    name: Build + Push Docker images
+    needs: [test-unit]
+    runs-on: self-hosted
     # only push for nightly runs and manual triggers
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-    uses: ./.github/workflows/docker-build.yml
-    with:
-      docker_file: ./Dockerfile.broker
-      image_name: streamr/broker-node
-      build_platforms: linux/amd64,linux/arm64
-      push_image: true
-      test_success: ${{ !(needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
-    secrets:
-      dockerhub_username: ${{secrets.DOCKERHUB_USERNAME}}
-      dockerhub_token: ${{secrets.DOCKERHUB_TOKEN}}
+
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.7
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-v1-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-v1-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          driver-opts: |
+            network=host
+      - uses: docker/login-action@v2.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta
+        id: docker_meta_failure
+        uses: docker/metadata-action@v3.6.2
+        # if test steps failed, push sha anyway
+        if: ${{ always() && (needs.test-unit.result == 'failure' || needs.test-integration.result == 'failure' || needs.test-docker.result == 'failure') }}
+        with:
+          images: streamr/broker-node
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=debug

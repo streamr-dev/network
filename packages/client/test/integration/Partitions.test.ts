@@ -1,14 +1,16 @@
 import 'reflect-metadata'
-import StreamrClient from '../../src'
-import { createClientFactory } from '../test-utils/fake/fakeEnvironment'
-import { createTestStream, getPublishTestStreamMessages, Msg } from '../test-utils/utils'
+import { StreamrClient } from '../../src/StreamrClient'
+import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
+import { createTestStream } from '../test-utils/utils'
+import { getPublishTestStreamMessages, Msg } from '../test-utils/publish'
+import { StreamMessage } from 'streamr-client-protocol'
 
 describe('Partition', () => {
 
     let client: StreamrClient
 
     beforeEach(() => {
-        client = createClientFactory().createClient()
+        client = new FakeEnvironment().createClient()
     })
 
     const createStream = (props?: any) => {
@@ -33,51 +35,26 @@ describe('Partition', () => {
         // should use same partition
         expect(published1.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
         expect(published2.map((s) => s.getStreamPartition())).toEqual(published1.map(() => selectedPartition))
-
-        // clear message creator cache and retry should get another
-        // partition unless we're really unlucky and get 100 of the
-        // same partition in a row.
-        const foundPartitions: boolean[] = Array(NUM_PARTITIONS).fill(false)
-        for (let i = 0; i < 100; i++) {
-            // @ts-expect-error private
-            client.publisher.pipeline.messageCreator.streamPartitioner.clear()
-            // eslint-disable-next-line no-await-in-loop
-            const published3 = await publishTestStreamMessages(1)
-            expect(published3).toHaveLength(1)
-            const foundPartition = published3[0].getStreamPartition()
-            foundPartitions[foundPartition] = true
-            if (foundPartitions.every((v) => v)) {
-                break
-            }
-        }
-
-        expect(foundPartitions).toEqual(Array(NUM_PARTITIONS).fill(true))
     })
 
     it('publishing to different streams should get different random partitions', async () => {
         const NUM_PARTITIONS = 3
-        const partitionStream = await createStream({
+        const stream1 = await createStream({
             partitions: NUM_PARTITIONS
         })
-        const partitionStream2 = await createStream({
-            partitions: NUM_PARTITIONS
-        })
-
-        const publishTestStreamMessages = getPublishTestStreamMessages(client, partitionStream)
-        const publishTestStreamMessages2 = getPublishTestStreamMessages(client, partitionStream2)
+        const publishTestStreamMessages = getPublishTestStreamMessages(client, stream1)
+        const published1 = await publishTestStreamMessages(1)
+        const foundPartition1 = published1[0].getStreamPartition()
 
         // publishing to different streams should get different random partitions
-        // clear message creator cache and retry should get another
         let gotDifferentPartitions = false
         for (let i = 0; i < 100; i++) {
-            // @ts-expect-error private
-            client.publisher.pipeline.messageCreator.streamPartitioner.clear()
+            const stream2 = await createStream({
+                partitions: NUM_PARTITIONS
+            })
+            const publishTestStreamMessages2 = getPublishTestStreamMessages(client, stream2)
             // eslint-disable-next-line no-await-in-loop
-            const [published1, published2] = await Promise.all([
-                publishTestStreamMessages(1),
-                publishTestStreamMessages2(1)
-            ])
-            const foundPartition1 = published1[0].getStreamPartition()
+            const published2 = await publishTestStreamMessages2(1)
             const foundPartition2 = published2[0].getStreamPartition()
             if (foundPartition1 !== foundPartition2) {
                 gotDifferentPartitions = true
@@ -129,12 +106,9 @@ describe('Partition', () => {
 
         // publish many times with same key
         // should always be the same
-        // even if cache is cleared
         const targetPartition = published[0].getStreamPartition()
         const foundPartitions: number[] = []
         for (let i = 0; i < 50; i++) {
-            // @ts-expect-error private
-            client.publisher.pipeline.messageCreator.streamPartitioner.clear()
             // eslint-disable-next-line no-await-in-loop
             const published2 = await publishTestStreamMessages(1, {
                 partitionKey,
@@ -171,7 +145,8 @@ describe('Partition', () => {
         }))
 
         // check messages match
-        expect(await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))).toEqual(pubs)
+        const actualMessages: StreamMessage[][] = await Promise.all(subs.map((s) => s.collect(NUM_MESSAGES)))
+        expect(actualMessages.flat().map((m) => m.signature)).toEqual(pubs.flat().map((m) => m.signature))
         // check all published messages have appropriate partition
         // i.e. [[0,0,0], [1,1,1], etc]
         expect(pubs.map((msgs) => msgs.map((msg) => msg.getStreamPartition())))

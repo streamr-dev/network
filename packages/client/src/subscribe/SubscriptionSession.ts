@@ -1,9 +1,10 @@
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
 
-import { Scaffold, instanceId, until } from '../utils'
-import { Stoppable } from '../utils/Stoppable'
+import { Scaffold } from '../utils/Scaffold'
+import { instanceId } from '../utils/utils'
+import { until } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
@@ -11,25 +12,25 @@ import { MessageStream } from './MessageStream'
 import { Subscription } from './Subscription'
 import { SubscribePipeline } from './SubscribePipeline'
 import { BrubeckContainer } from '../Container'
-import { BrubeckNode, NetworkNodeStub } from '../BrubeckNode'
+import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
  * A session contains one or more subscriptions to a single streamId + streamPartition pair.
  */
 
-export class SubscriptionSession<T> implements Context, Stoppable {
+export class SubscriptionSession<T> implements Context {
     readonly id
     readonly debug
     public readonly streamPartId: StreamPartID
     /** active subs */
-    subscriptions: Set<Subscription<T>> = new Set()
-    pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
-    isRetired: boolean = false
-    isStopped = false
-    pipeline
-    node
-    onRetired = Signal.once()
+    private subscriptions: Set<Subscription<T>> = new Set()
+    private pendingRemoval: WeakSet<Subscription<T>> = new WeakSet()
+    private isRetired: boolean = false
+    private isStopped = false
+    private pipeline
+    private node
+    public readonly onRetired = Signal.once()
 
     constructor(
         context: Context,
@@ -40,7 +41,7 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         this.debug = context.debug.extend(this.id)
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
-        this.node = container.resolve<BrubeckNode>(BrubeckNode)
+        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
         this.onError = this.onError.bind(this)
         this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
         this.pipeline.onError.listen(this.onError)
@@ -84,6 +85,10 @@ export class SubscriptionSession<T> implements Context, Stoppable {
         }
 
         if (msg.getStreamPartID() !== this.streamPartId) {
+            return
+        }
+
+        if (msg.messageType !== StreamMessageType.MESSAGE) {
             return
         }
 

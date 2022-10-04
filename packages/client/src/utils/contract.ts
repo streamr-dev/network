@@ -2,12 +2,13 @@ import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/c
 import EventEmitter from 'eventemitter3'
 import debug from 'debug'
 import { NameDirectory } from 'streamr-network'
+import pLimit from 'p-limit'
 
 const log = debug('Streamr:contract')
 
 export interface ContractEvent {
-    onMethodExecute: (methodName: string) => void,
-    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void,
+    onMethodExecute: (methodName: string) => void
+    onTransactionSubmit: (methodName: string, tx: ContractTransaction) => void
     onTransactionConfirm: (methodName: string, tx: ContractTransaction, receipt: ContractReceipt) => void
 }
 
@@ -71,11 +72,12 @@ const withErrorHandling = async <T>(
 const createWrappedContractMethod = (
     originalMethod: (...args: any) => Promise<any>,
     methodName: string,
-    eventEmitter: EventEmitter<ContractEvent>
+    eventEmitter: EventEmitter<ContractEvent>,
+    concurrencyLimit: pLimit.Limit
 ) => {
     return async (...args: any) => {
         eventEmitter.emit('onMethodExecute', methodName)
-        const returnValue = await withErrorHandling(() => originalMethod(...args), methodName)
+        const returnValue = await withErrorHandling(() => concurrencyLimit(() => originalMethod(...args)), methodName)
         if (isTransaction(returnValue)) {
             const tx = returnValue
             const originalWaitMethod = tx.wait
@@ -91,18 +93,22 @@ const createWrappedContractMethod = (
 }
 
 /**
- * You can use the wrapped contract normally, e.g.:
+ * Adds error handling, logging and limits concurrency.
+ * 
+ * You can use the decorated contract normally, e.g.:
  *     const tx = await contract.createFoobar(123)
  *     return await tx.wait()
  * or
  *     await contract.getFoobar(456)
  */
-export const withErrorHandlingAndLogging = <T extends Contract>(
+export const createDecoratedContract = <T extends Contract>(
     contract: Contract,
     contractName: string,
+    maxConcurrentCalls: number
 ): ObservableContract<T> => {
     const eventEmitter = new EventEmitter<ContractEvent>()
     const methods: Record<string, () => Promise<any>> = {}
+    const concurrencyLimit = pLimit(maxConcurrentCalls)
     /*
      * Wrap each contract function. We read the list of functions from contract.functions, but
      * actually delegate each method to contract[methodName]. Those methods are almost identical
@@ -114,7 +120,8 @@ export const withErrorHandlingAndLogging = <T extends Contract>(
         methods[methodName] = createWrappedContractMethod(
             contract[methodName],
             `${contractName}.${methodName}`,
-            eventEmitter
+            eventEmitter,
+            concurrencyLimit
         )
     })
     createLogger(eventEmitter)

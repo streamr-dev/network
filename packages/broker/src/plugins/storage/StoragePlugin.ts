@@ -1,23 +1,24 @@
-import type { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
-import { Plugin, PluginOptions } from '../../Plugin'
+import { Plugin } from '../../Plugin'
 import { Storage, startCassandraStorage } from './Storage'
 import { StorageConfig } from './StorageConfig'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
 import { Schema } from 'ajv'
-import { MetricsContext, Logger } from 'streamr-network'
+import { MetricsContext } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 import { formStorageNodeAssignmentStreamId, Stream } from 'streamr-client'
 
 const logger = new Logger(module)
 
 export interface StoragePluginConfig {
     cassandra: {
-        hosts: string[],
+        hosts: string[]
         username: string
         password: string
-        keyspace: string,
+        keyspace: string
         datacenter: string
     }
     storageConfig: {
@@ -25,20 +26,20 @@ export interface StoragePluginConfig {
     }
     cluster: {
         // If clusterAddress is null, the broker's address will be used
-        clusterAddress: EthereumAddress | null,
-        clusterSize: number,
+        clusterAddress: EthereumAddress | null
+        clusterSize: number
         myIndexInCluster: number
     }
+}
+
+const isStorableMessage = (msg: StreamMessage): boolean => {
+    return msg.messageType === StreamMessageType.MESSAGE
 }
 
 export class StoragePlugin extends Plugin<StoragePluginConfig> {
     private cassandra?: Storage
     private storageConfig?: StorageConfig
     private messageListener?: (msg: StreamMessage) => void
-
-    constructor(options: PluginOptions) {
-        super(options)
-    }
 
     async start(): Promise<void> {
         const clusterId = this.pluginConfig.cluster.clusterAddress || await this.streamrClient.getAddress()
@@ -47,7 +48,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         this.cassandra = await this.startCassandraStorage(metricsContext)
         this.storageConfig = await this.startStorageConfig(clusterId, assignmentStream)
         this.messageListener = (msg) => {
-            if (this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
+            if (isStorableMessage(msg) && this.storageConfig!.hasStreamPart(msg.getStreamPartID())) {
                 this.cassandra!.store(msg)
             }
         }
@@ -70,7 +71,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
         ])
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 
@@ -101,7 +102,9 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 onStreamPartAdded: async (streamPart) => {
                     try {
                         await node.subscribeAndWaitForJoin(streamPart) // best-effort, can time out
-                    } catch (_e) {}
+                    } catch (_e) {
+                        // no-op
+                    }
                     try {
                         await assignmentStream.publish({
                             streamPart

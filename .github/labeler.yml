@@ -19,6 +19,10 @@ tracker:
   - 'packages/network-tracker/*'
   - 'packages/network-tracker/**/*'
   - '.github/workflows/network-tracker.yml'
+dht:
+  - 'packages/dht/*'
+  - 'packages/dht/**/*'
+  - '.github/workflows/dht.yml'
 client:
   - 'packages/client/*'
   - 'packages/client/**/*'
@@ -32,6 +36,10 @@ test-utils:
   - 'packages/test-utils/*'
   - 'packages/test-utils/**/*'
   - '.github/workflows/test-utils.yml'
+utils:
+  - 'packages/utils/*'
+  - 'packages/utils/**/*'
+  - '.github/workflows/utils.yml'
 cli-tools:
   - 'packages/cli-tools/*'
   - 'packages/cli-tools/**/*'

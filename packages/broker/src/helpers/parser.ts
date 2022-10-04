@@ -1,6 +1,6 @@
 import { ParsedQs } from 'qs'
 
-export const parsePositiveInteger = (n: string): number|never => {
+export const parsePositiveInteger = (n: string): number | never => {
     const parsed = parseInt(n)
     if (!Number.isInteger(parsed) || parsed < 0) {
         throw new Error(`${n} is not a valid positive integer`)
@@ -8,7 +8,7 @@ export const parsePositiveInteger = (n: string): number|never => {
     return parsed
 }
 
-export const parseTimestamp = (millisOrString: number|string): number|never => {
+export const parseTimestamp = (millisOrString: number | string): number | never => {
     if (typeof millisOrString === 'number') {
         return millisOrString
     }
@@ -25,7 +25,7 @@ export const parseTimestamp = (millisOrString: number|string): number|never => {
     }
 }
 
-export const parseQueryParameter = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T|undefined => {
+export const parseQueryParameter = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T | undefined => {
     const value = query[name] as string
     if (value !== undefined) {
         return parser(value)
@@ -34,6 +34,6 @@ export const parseQueryParameter = <T>(name: string, query: ParsedQs, parser: (i
     }
 }
 
-export const parseQueryParameterArray = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T[]|undefined => {
+export const parseQueryParameterArray = <T>(name: string, query: ParsedQs, parser: (input: string) => T): T[] | undefined => {
     return parseQueryParameter(name, query, (input) => input.split(',').map((part) => parser(part)))
 }

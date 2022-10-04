@@ -1,9 +1,7 @@
 import { validateIsString } from '../../utils/validations'
-import MessageID from './MessageID'
-import MessageRef from './MessageRef'
 import ValidationError from '../../errors/ValidationError'
 import StreamMessage, { StreamMessageType } from './StreamMessage'
-import { StreamID } from '../../utils/StreamID'
+import { EthereumAddress } from '../../utils'
 
 // TODO refactor deserialization to separate class (Serializer<GroupKeyMessage>)
 //
@@ -11,16 +9,14 @@ type GroupKeyMessageType = Omit<typeof GroupKeyMessage, 'new'> // remove new, do
 
 export default abstract class GroupKeyMessage {
     // messageType -> class mapping
-    static classByMessageType: {
-        [key: number]: GroupKeyMessageType
-    } = {}
+    static classByMessageType: Record<number, GroupKeyMessageType> = {}
 
-    streamId: StreamID
+    recipient: EthereumAddress
     messageType: StreamMessageType
 
-    protected constructor(streamId: StreamID, messageType: StreamMessageType) {
-        validateIsString('streamId', streamId)
-        this.streamId = streamId
+    protected constructor(recipient: EthereumAddress, messageType: StreamMessageType) {
+        validateIsString('recipient', recipient)
+        this.recipient = recipient
 
         StreamMessage.validateMessageType(messageType)
         this.messageType = messageType
@@ -39,15 +35,6 @@ export default abstract class GroupKeyMessage {
 
     static fromStreamMessage(streamMessage: StreamMessage): GroupKeyMessage {
         return GroupKeyMessage.deserialize(streamMessage.getSerializedContent()!, streamMessage.messageType)
-    }
-
-    toStreamMessage(messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage {
-        return new StreamMessage({
-            messageId,
-            prevMsgRef,
-            content: this.serialize(),
-            messageType: this.messageType,
-        })
     }
 
     abstract toArray(): any[]

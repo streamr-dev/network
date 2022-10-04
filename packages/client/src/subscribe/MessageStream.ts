@@ -5,17 +5,12 @@
  */
 import { PipelineTransform } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
 import { Context } from '../utils/Context'
 import { StreamMessage } from 'streamr-client-protocol'
 import * as G from '../utils/GeneratorUtils'
 
 export type MessageStreamOnMessage<T, R = unknown> = (msg: T, streamMessage: StreamMessage<T>) => R | Promise<R>
-
-export type MessageStreamOptions = {
-    bufferSize?: number
-    name?: string
-}
 
 export class MessageStream<
     T = unknown,
@@ -23,9 +18,9 @@ export class MessageStream<
     OutType extends StreamMessage<T> | unknown = InType
 > extends PushPipeline<InType, OutType> {
     /** @internal */
-    constructor(context: Context, { bufferSize, name = '' }: MessageStreamOptions = {}) {
-        super(bufferSize)
-        this.id = instanceId(this, name)
+    constructor(context: Context) {
+        super(undefined)
+        this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
     }
 
@@ -59,100 +54,46 @@ export class MessageStream<
     }
 
     /** @internal */
-    pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
+    override pipe<NewOutType>(fn: PipelineTransform<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         super.pipe(fn)
         return this as MessageStream<T, InType, unknown> as MessageStream<T, InType, NewOutType>
     }
 
     /** @internal */
-    pipeBefore(fn: PipelineTransform<InType, InType>): MessageStream<T, InType, OutType> {
+    override pipeBefore(fn: PipelineTransform<InType, InType>): MessageStream<T, InType, OutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         super.pipeBefore(fn)
         return this
     }
 
     /** @internal */
-    map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
+    override map<NewOutType>(fn: G.GeneratorMap<OutType, NewOutType>): MessageStream<T, InType, NewOutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.map(fn) as MessageStream<T, InType, NewOutType>
     }
 
     /** @internal */
-    filterBefore(fn: G.GeneratorFilter<InType>): MessageStream<T, InType, OutType> {
+    override filterBefore(fn: G.GeneratorFilter<InType>): MessageStream<T, InType, OutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.filterBefore(fn) as MessageStream<T, InType, OutType>
     }
 
     /** @internal */
-    filter(fn: G.GeneratorFilter<OutType>): MessageStream<T, InType, OutType> {
+    override filter(fn: G.GeneratorFilter<OutType>): MessageStream<T, InType, OutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.filter(fn) as MessageStream<T, InType, OutType>
     }
 
     /** @internal */
-    forEach(fn: G.GeneratorForEach<OutType>): MessageStream<T, InType, OutType> {
+    override forEach(fn: G.GeneratorForEach<OutType>): MessageStream<T, InType, OutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.forEach(fn) as MessageStream<T, InType, OutType>
     }
 
     /** @internal */
-    forEachBefore(fn: G.GeneratorForEach<InType>): MessageStream<T, InType, OutType> {
+    override forEachBefore(fn: G.GeneratorForEach<InType>): MessageStream<T, InType, OutType> {
         // this method override just fixes the output type to be MessageStream rather than Pipeline
         return super.forEachBefore(fn) as MessageStream<T, InType, OutType>
     }
-
-    async unsubscribe(): Promise<void> {
-        this.end()
-        await this.return()
-    }
-}
-
-export async function pullManyToOne<T>(
-    context: Context,
-    inputStreams: MessageStream<T>[],
-    onMessage?: MessageStreamOnMessage<T>
-): Promise<MessageStream<T, StreamMessage<T>, StreamMessage<T>>> {
-    if (inputStreams.length === 1) {
-        if (onMessage) {
-            inputStreams[0].useLegacyOnMessageHandler(onMessage)
-        }
-        return inputStreams[0]
-    }
-
-    // output stream
-    const outputStream = new MessageStream<T>(context)
-
-    if (onMessage) {
-        outputStream.useLegacyOnMessageHandler(onMessage)
-    }
-
-    // Should end if output ended or all inputStreams done.
-    function shouldEnd(): boolean {
-        if (outputStream.isDone()) {
-            return true
-        }
-
-        return inputStreams.every((s) => s.isDone())
-    }
-
-    // End output stream and all inputStreams if should end.
-    function maybeEnd(): void {
-        if (!shouldEnd()) { return }
-        inputStreams.forEach((sub) => {
-            if (!sub.isCleaningUp) {
-                sub.end()
-            }
-        })
-        outputStream.end()
-        outputStream.return()
-    }
-
-    // pull inputStreams into output stream
-    for (const sub of inputStreams) {
-        sub.onFinally.listen(() => maybeEnd())
-        sub.onError.listen((err) => outputStream.handleError(err))
-        outputStream.pull(sub, { endDest: false })
-    }
-    return outputStream
 }

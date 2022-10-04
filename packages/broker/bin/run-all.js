@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { fork } = require('child_process')
 const chalk = require('chalk')
 const { Transform } = require('stream')
-const { Logger } = require('streamr-network')
+const { Logger } = require('@streamr/utils')
 
 const processes = new Map()
 

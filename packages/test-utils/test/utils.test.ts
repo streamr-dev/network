@@ -1,9 +1,7 @@
 import {
     waitForStreamToEnd,
     callbackToPromise,
-    wait,
     toReadableStream,
-    waitForEvent,
     waitForCondition,
     eventsToArray, eventsWithArgsToArray
 } from "../src/utils"
@@ -47,39 +45,6 @@ describe(waitForStreamToEnd, () => {
         waitForStreamToEnd(rs).catch((err) => {
             expect(err).toEqual(new Error('error'))
             done()
-        })
-    })
-})
-
-describe(waitForEvent, () => {
-    it("waits for correct event and records the arguments of invocation", async () => {
-        const emitter = new EventEmitter()
-        setTimeout(() => {
-            emitter.emit("wrongEvent", 666, "beast")
-        }, 0)
-        setTimeout(() => {
-            emitter.emit("correctEvent", 1337, "leet")
-        }, 5)
-        const recordedArgs = await waitForEvent(emitter, "correctEvent")
-        expect(recordedArgs).toEqual([1337, "leet"])
-    })
-
-    it("works on events with zero arguments", async () => {
-        const emitter = new EventEmitter()
-        setTimeout(() => {
-            emitter.emit("wrongEvent", 666, "beast")
-        }, 0)
-        setTimeout(() => {
-            emitter.emit("correctEvent")
-        }, 5)
-        const recordedArgs = await waitForEvent(emitter, "correctEvent")
-        expect(recordedArgs).toEqual([])
-    })
-
-    it("rejects if not event occurs within timeout", async () => {
-        const emitter = new EventEmitter()
-        await waitForEvent(emitter, "correctEvent", 20).catch((err) => {
-            expect(err.message).toEqual("Promise timed out after 20 milliseconds")
         })
     })
 })
@@ -158,18 +123,6 @@ describe(waitForCondition, () => {
     })
 })
 
-describe(wait, () => {
-    // https://stackoverflow.com/questions/21097421/what-is-the-reason-javascript-settimeout-is-so-inaccurate
-    const JITTER_FACTOR = 4
-
-    it("waits at least the predetermined time", async () => {
-        const start = Date.now()
-        await wait(20)
-        const end = Date.now()
-        expect(end - start).toBeGreaterThanOrEqual(20 - JITTER_FACTOR)
-    })
-})
-
 describe(eventsToArray, () => {
     it("collects whitelisted events", () => {
         const emitter = new EventEmitter()
@@ -245,7 +198,7 @@ describe(callbackToPromise, () => {
         }
     }
 
-    it("converts a typical callback-pattern function to one that returns a promise",(done) => {
+    it("converts a typical callback-pattern function to one that returns a promise", (done) => {
         const convertedFn = callbackToPromise(sumOfPositives, 1, 5, 10)
         convertedFn.then(
             (value) => {
@@ -258,7 +211,7 @@ describe(callbackToPromise, () => {
             })
     })
 
-    it("callback error causes returned promise to reject",(done) => {
+    it("callback error causes returned promise to reject", (done) => {
         const convertedFn = callbackToPromise(sumOfPositives, 1, 5, -666)
         convertedFn.then(
             (_value) => {

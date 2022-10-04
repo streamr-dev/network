@@ -1,6 +1,6 @@
-import { StreamPartID, Utils } from 'streamr-client-protocol'
-import { TrackerInfo, TrackerId } from '../identifiers'
-import { Logger } from '../helpers/Logger'
+import { SmartContractRecord, StreamPartID, TrackerRegistry } from 'streamr-client-protocol'
+import { TrackerId } from '../identifiers'
+import { Logger } from "@streamr/utils"
 import { PeerInfo } from '../connection/PeerInfo'
 import { NameDirectory } from '../NameDirectory'
 
@@ -19,7 +19,7 @@ export class TrackerConnector {
     private readonly getStreamParts: getStreamPartsFn
     private readonly connectToTracker: ConnectToTrackerFn
     private readonly disconnectFromTracker: DisconnectFromTrackerFn
-    private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
+    private readonly trackerRegistry: TrackerRegistry<SmartContractRecord>
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private connectionStates: Map<TrackerId, ConnectionState>
@@ -29,7 +29,7 @@ export class TrackerConnector {
         getStreamParts: getStreamPartsFn,
         connectToTracker: ConnectToTrackerFn,
         disconnectFromTracker: DisconnectFromTrackerFn,
-        trackerRegistry: Utils.TrackerRegistry<TrackerInfo>,
+        trackerRegistry: TrackerRegistry<SmartContractRecord>,
         maintenanceInterval: number
     ) {
         this.getStreamParts = getStreamParts
@@ -81,7 +81,7 @@ export class TrackerConnector {
         })
     }
 
-    private connectTo({ id, ws }: TrackerInfo): void {
+    private connectTo({ id, ws }: SmartContractRecord): void {
         this.connectToTracker(ws, PeerInfo.newTracker(id))
             .then(() => {
                 if (this.connectionStates.get(id) !== ConnectionState.SUCCESS) {

@@ -1,5 +1,5 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { instanceId } from './index'
+import { instanceId } from './utils'
 import { ConfigInjectionToken, ConnectionConfig } from '../Config'
 import { Context } from './Context'
 import { Debugger } from 'debug'

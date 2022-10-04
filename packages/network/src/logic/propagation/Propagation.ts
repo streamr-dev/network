@@ -2,12 +2,9 @@ import { StreamPartID, StreamMessage } from 'streamr-client-protocol'
 import { NodeId } from '../../identifiers'
 import { PropagationTask, PropagationTaskStore } from './PropagationTaskStore'
 
-type GetNeighborsFn = (streamPartId: StreamPartID) => ReadonlyArray<NodeId>
-
 type SendToNeighborFn = (neighborId: NodeId, msg: StreamMessage) => Promise<void>
 
-type ConstructorOptions = {
-    getNeighbors: GetNeighborsFn
+interface ConstructorOptions {
     sendToNeighbor: SendToNeighborFn
     minPropagationTargets: number
     ttl?: number
@@ -26,19 +23,16 @@ const DEFAULT_TTL = 30 * 1000
  */
 
 export class Propagation {
-    private readonly getNeighbors: GetNeighborsFn
     private readonly sendToNeighbor: SendToNeighborFn
     private readonly minPropagationTargets: number
     private readonly activeTaskStore: PropagationTaskStore
 
     constructor({
-        getNeighbors,
         sendToNeighbor,
         minPropagationTargets,
         ttl = DEFAULT_TTL,
         maxMessages = DEFAULT_MAX_MESSAGES
     }: ConstructorOptions) {
-        this.getNeighbors = getNeighbors
         this.sendToNeighbor = sendToNeighbor
         this.minPropagationTargets = minPropagationTargets
         this.activeTaskStore = new PropagationTaskStore(ttl, maxMessages)
@@ -47,16 +41,15 @@ export class Propagation {
     /**
      * Node should invoke this when it learns about a new message
      */
-    feedUnseenMessage(message: StreamMessage, source: NodeId | null): void {
+    feedUnseenMessage(message: StreamMessage, targets: NodeId[], source: NodeId | null): void {
         const task = {
             message,
             source,
             handledNeighbors: new Set<NodeId>()
         }
         this.activeTaskStore.add(task)
-        const neighbors = this.getNeighbors(message.getStreamPartID())
-        for (const neighborId of neighbors) {
-            this.sendAndAwaitThenMark(task, neighborId)
+        for (const target of targets) {
+            this.sendAndAwaitThenMark(task, target)
         }
     }
 

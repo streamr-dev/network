@@ -5,7 +5,7 @@ import {
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 
 export enum ErrorCode {
-    RTC_UNKNOWN_PEER = 'RTC_UNKNOWN_PEER'
+    UNKNOWN_PEER = 'RTC_UNKNOWN_PEER' // TODO: RTC_ prefix in value for backwards compatibility
 }
 
 export interface Options extends TrackerMessageOptions {

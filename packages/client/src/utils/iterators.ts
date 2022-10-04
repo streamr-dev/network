@@ -2,12 +2,14 @@ import Emitter from 'events'
 import pMemoize from 'p-memoize'
 import { MaybeAsync } from '../types'
 
-import { Defer, pTimeout, AggregatedError } from './index'
+import { AggregatedError } from './AggregatedError'
+import { pTimeout } from './promises'
+import { Defer } from './Defer'
 import { Debug } from './log'
 
 export const debug = Debug('iterators')
 
-export type ICancelable = {
+export interface ICancelable {
     cancel(err?: Error): Promise<void>
     isCancelled: () => boolean
 }
@@ -321,4 +323,20 @@ export function CancelableGenerator<T>(
     })
 
     return cancelableGenerator as Cancelable<typeof cancelableGenerator>
+}
+
+export const nextValue = async <T>(source: AsyncIterator<T>): Promise<T | undefined> => {
+    const item = source.next()
+    return (await item).value
+}
+
+export const collect = async <T>(source: AsyncIterableIterator<T>, maxCount?: number): Promise<T[]> => {
+    const items: T[] = []
+    for await (const item of source) {
+        items.push(item)
+        if ((maxCount !== undefined) && (items.length >= maxCount)) {
+            break
+        }
+    }
+    return items
 }

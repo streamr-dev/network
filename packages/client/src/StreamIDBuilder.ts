@@ -7,9 +7,9 @@ import {
     toStreamID,
     toStreamPartID
 } from 'streamr-client-protocol'
-import { Ethereum } from './Ethereum'
 import { inject, Lifecycle, scoped } from 'tsyringe'
 import { StreamDefinition } from './types'
+import { Authentication, AuthenticationInjectionToken } from './Authentication'
 
 export const DEFAULT_PARTITION = 0
 
@@ -59,12 +59,12 @@ export const formStreamDefinitionDescription = (definition: StreamDefinition): s
 /* eslint-disable no-else-return */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
-    constructor(@inject(Ethereum) private ethereum: Ethereum) {}
+    constructor(@inject(AuthenticationInjectionToken) private authentication: Authentication) {}
 
     async toStreamID(streamIdOrPath: string): Promise<StreamID> {
         let address: EthereumAddress | undefined
-        if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath) && this.ethereum.isAuthenticated()) {
-            address = await this.ethereum.getAddress()
+        if (StreamIDUtils.isPathOnlyFormat(streamIdOrPath) && this.authentication.isAuthenticated()) {
+            address = await this.authentication.getAddress()
         }
         return toStreamID(streamIdOrPath, address)
     }

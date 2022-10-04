@@ -1,216 +1,122 @@
+import { without } from 'lodash'
 import {
-    StreamMessage,
+    EncryptedGroupKey,
+    EthereumAddress,
     GroupKeyRequest,
     GroupKeyResponse,
-    EncryptedGroupKey,
-    GroupKeyErrorResponse,
-    ValidationError,
-    StreamID
+    GroupKeyResponseSerialized,
+    MessageID,
+    StreamMessage,
+    StreamMessageType,
+    StreamPartID,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
-import { Lifecycle, scoped, inject, delay } from 'tsyringe'
-
-import { pOnce, instanceId } from '../utils'
+import { inject, Lifecycle, scoped } from 'tsyringe'
+import { Authentication, AuthenticationInjectionToken } from '../Authentication'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { createRandomMsgChainId } from '../publish/MessageChain'
 import { Context } from '../utils/Context'
-import { Publisher } from '../publish/Publisher'
-import { GroupKeyStoreFactory } from './GroupKeyStoreFactory'
-
-import { GroupKey } from './GroupKey'
-import { EncryptionUtil, StreamMessageProcessingError } from './EncryptionUtil'
-import { KeyExchangeStream } from './KeyExchangeStream'
-
-import { StreamRegistryCached } from '../StreamRegistryCached'
-import { Subscription } from '../subscribe/Subscription'
+import { Debugger } from '../utils/log'
+import { instanceId } from '../utils/utils'
+import { Validator } from '../Validator'
+import { EncryptionUtil } from './EncryptionUtil'
+import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 
-class InvalidGroupKeyRequestError extends ValidationError {
-    constructor(msg: string) {
-        super(msg, 'INVALID_GROUP_KEY_REQUEST')
-    }
-}
+/*
+ * Sends group key responses
+ */
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublisherKeyExchange implements Context {
-    enabled = true
-    readonly id
-    readonly debug
-    getSubscription
+export class PublisherKeyExchange {
+
+    private readonly store: GroupKeyStore
+    private readonly networkNodeFacade: NetworkNodeFacade
+    private readonly authentication: Authentication
+    private readonly validator: Validator
+    private readonly debug: Debugger
 
     constructor(
-        @inject(delay(() => Publisher)) private publisher: Publisher,
-        private groupKeyStoreFactory: GroupKeyStoreFactory,
-        private streamRegistryCached: StreamRegistryCached,
-        @inject(delay(() => KeyExchangeStream)) private keyExchangeStream: KeyExchangeStream,
+        context: Context,
+        store: GroupKeyStore,
+        networkNodeFacade: NetworkNodeFacade,
+        @inject(AuthenticationInjectionToken) authentication: Authentication,
+        validator: Validator
     ) {
-        this.id = instanceId(this)
-        this.debug = this.publisher.debug.extend(this.id)
-        const getSubscription = pOnce(this.subscribe.bind(this))
-        this.getSubscription = getSubscription
-        this.onKeyExchangeMessage = this.onKeyExchangeMessage.bind(this)
-    }
-
-    getWrapError(
-        streamMessage: StreamMessage
-    ): (error: ValidationError) => Promise<StreamMessage<GroupKeyResponse | GroupKeyErrorResponse> | undefined> {
-        return async (error: ValidationError) => {
-            try {
-                const subscriberId = streamMessage.getPublisherId()
-                if (!GroupKeyRequest.is(streamMessage)) {
-                    // ignore weird message
-                    return undefined
-                }
-
-                const msg = streamMessage.getParsedContent()
-                const { streamId, requestId, groupKeyIds } = GroupKeyRequest.fromArray(msg)
-                const response = new GroupKeyErrorResponse({
-                    requestId,
-                    streamId,
-                    errorCode: error.code ?? 'UNEXPECTED_ERROR',
-                    errorMessage: error.message,
-                    groupKeyIds
-                })
-                return await this.keyExchangeStream.response(subscriberId, response)
-            } catch (err) {
-                this.debug('unexpected error responding with error', err)
-                return undefined
-            }
-        }
-    }
-
-    private async onKeyExchangeMessage(streamMessage?: StreamMessage): Promise<void> {
-        if (!streamMessage) { return }
-        const wrapError = this.getWrapError(streamMessage)
-        try {
-            if (!GroupKeyRequest.is(streamMessage)) {
-                return
-            }
-
-            // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-            const { requestId, streamId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
-
-            const subscriberId = streamMessage.getPublisherId()
-
-            const isSubscriber = await this.streamRegistryCached.isStreamSubscriber(streamId, subscriberId)
-            const groupKeyStore = await this.groupKeyStoreFactory.getStore(streamId)
-            const encryptedGroupKeys = (!isSubscriber ? [] : await Promise.all(groupKeyIds.map(async (id) => {
-                const groupKey = await groupKeyStore.get(id)
-                if (!groupKey) {
-                    return null // will be filtered out
-                }
-                const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
-                return new EncryptedGroupKey(id, key)
-            }))).filter(Boolean) as EncryptedGroupKey[]
-
-            this.debug('Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
-                subscriberId,
-                groupKeyIds,
-                responseKeys: encryptedGroupKeys.map(({ groupKeyId }) => groupKeyId),
-            })
-
-            const response = new GroupKeyResponse({
-                streamId,
-                requestId,
-                encryptedGroupKeys,
-            })
-
-            await this.keyExchangeStream.response(subscriberId, response)
-        } catch (err: any) {
-            if (!('streamMessage' in err)) {
-                this.debug('unexpected', err)
-                return // do nothing, supress.
-            }
-
-            await wrapError(err)
-        }
-    }
-
-    private async subscribe(): Promise<Subscription<unknown> | undefined> {
-        if (!this.enabled) { return undefined }
-        const sub = await this.keyExchangeStream.subscribe()
-        if (!sub) { return undefined }
-
-        if (!this.enabled) {
-            await sub.unsubscribe()
-            return undefined
-        }
-
-        sub.consume(this.onKeyExchangeMessage).catch(() => {})
-        sub.onError.listen(async (err: Error | StreamMessageProcessingError) => {
-            if (!('streamMessage' in err)) {
-                this.debug('unexpected', err)
-                return // do nothing, supress.
-            }
-
-            // eslint-disable-next-line promise/no-promise-in-callback
-            await this.getWrapError(err.streamMessage)(new InvalidGroupKeyRequestError(err.message)).catch((error) => {
-                this.debug('unexpected error sending error', error)
-            })
-
+        this.debug = context.debug.extend(instanceId(this))
+        this.store = store
+        this.networkNodeFacade = networkNodeFacade
+        this.authentication = authentication
+        this.validator = validator
+        networkNodeFacade.once('start', async () => {
+            const node = await networkNodeFacade.getNode()
+            this.debug('Started')
+            node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
         })
-
-        return sub
     }
 
-    async getGroupKeyStore(streamId: StreamID): Promise<GroupKeyStore> {
-        return this.groupKeyStoreFactory.getStore(streamId)
-    }
-
-    async rotateGroupKey(streamId: StreamID): Promise<void> {
-        if (!this.enabled) { return }
-        try {
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            await groupKeyStore.rotateGroupKey()
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
+    private async onMessage(request: StreamMessage<any>): Promise<void> {
+        if (GroupKeyRequest.is(request)) {
+            try {
+                const authenticatedUser = await this.authentication.getAddress()
+                const { recipient, requestId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromStreamMessage(request) as GroupKeyRequest
+                if (recipient.toLowerCase() === authenticatedUser) {
+                    this.debug('Handling group key request %s', requestId)
+                    await this.validator.validate(request)
+                    const keys = without(
+                        await Promise.all(groupKeyIds.map((id: GroupKeyId) => this.store.get(id, request.getStreamId()))),
+                        undefined) as GroupKey[]
+                    if (keys.length > 0) {
+                        const response = await this.createResponse(
+                            keys, 
+                            request.getStreamPartID(),
+                            rsaPublicKey, 
+                            request.getPublisherId(), 
+                            requestId)
+                        const node = await this.networkNodeFacade.getNode()
+                        node.publish(response)
+                        this.debug('Sent group keys %s to %s', keys.map((k) => k.id).join(), request.getPublisherId())
+                    } else {
+                        this.debug('No group keys')
+                    }
+                }
+            } catch (e: any) {
+                this.debug('Error in PublisherKeyExchange: %s', e.message)
+            }
         }
     }
 
-    async setNextGroupKey(streamId: StreamID, groupKey: GroupKey): Promise<void> {
-        if (!this.enabled) { return }
-        try {
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            if (!this.enabled) { return }
-
-            await groupKeyStore.setNextGroupKey(groupKey)
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
-        }
-    }
-
-    async useGroupKey(streamId: StreamID): Promise<never[] | [GroupKey | undefined, GroupKey | undefined]> {
-        await this.getSubscription()
-        if (!this.enabled) { return [] }
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return [] }
-        return groupKeyStore.useGroupKey()
-    }
-
-    async hasAnyGroupKey(streamId: StreamID): Promise<boolean> {
-        const groupKeyStore = await this.getGroupKeyStore(streamId)
-        if (!this.enabled) { return false }
-        return !(await groupKeyStore.isEmpty())
-    }
-
-    async rekey(streamId: StreamID): Promise<void> {
-        try {
-            if (!this.enabled) { return }
-            const groupKeyStore = await this.getGroupKeyStore(streamId)
-            if (!this.enabled) { return }
-            await groupKeyStore.rekey()
-            if (!this.enabled) { return }
-            await this.getSubscription()
-        } finally {
-            this.streamRegistryCached.clearStream(streamId)
-        }
-    }
-
-    async start(): Promise<void> {
-        this.enabled = true
-        await this.subscribe()
-    }
-
-    async stop(): Promise<void> {
-        this.enabled = false
-        this.getSubscription.reset()
-        await this.subscribe()
+    private async createResponse(
+        keys: GroupKey[],
+        streamPartId: StreamPartID,
+        rsaPublicKey: string,
+        recipient: EthereumAddress,
+        requestId: string
+    ): Promise<StreamMessage<GroupKeyResponseSerialized>> {
+        const encryptedGroupKeys = await Promise.all(keys.map((key) => {
+            const encryptedGroupKeyHex = EncryptionUtil.encryptWithRSAPublicKey(key.data, rsaPublicKey, true)
+            return new EncryptedGroupKey(key.id, encryptedGroupKeyHex)
+        })) as EncryptedGroupKey[]
+        const responseContent = new GroupKeyResponse({
+            recipient,
+            requestId,
+            encryptedGroupKeys
+        })
+        const response = new StreamMessage({
+            messageId: new MessageID(
+                StreamPartIDUtils.getStreamID(streamPartId),
+                StreamPartIDUtils.getStreamPartition(streamPartId),
+                Date.now(),
+                0,
+                await this.authentication.getAddress(),
+                createRandomMsgChainId()
+            ),
+            messageType: StreamMessageType.GROUP_KEY_RESPONSE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            content: responseContent.toArray(),
+            signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+        })
+        response.signature = await this.authentication.createMessagePayloadSignature(response.getPayloadToSign())
+        return response
     }
 }

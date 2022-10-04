@@ -1,11 +1,12 @@
-import { createTestStream, fetchPrivateKeyWithGas, getCreateClient } from '../test-utils/utils'
+import { createTestStream, getCreateClient } from '../test-utils/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream } from '../../src/Stream'
 import { StreamPermission } from '../../src/permission'
 import { ConfigTest } from '../../src/ConfigTest'
-import { fastPrivateKey, wait } from 'streamr-test-utils'
+import { fastPrivateKey, fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 import { ProxyDirection, toStreamPartID } from 'streamr-client-protocol'
-import { until } from '../../src/utils'
+import { until } from '../../src/utils/promises'
 
 jest.setTimeout(50000)
 const SUBSCRIBE_WAIT_TIME = 2000
@@ -61,8 +62,10 @@ describe('PubSub with proxy connections', () => {
         // @ts-expect-error private
         proxyNodeId2 = await proxyClient2.node.getNodeId()
         stream = await createTestStream(onewayClient, module)
+
         const proxyUser1 = await proxyClient1.getAddress()
         const proxyUser2 = await proxyClient2.getAddress()
+
         await onewayClient.setPermissions({
             streamId: stream.id,
             assignments: [

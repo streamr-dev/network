@@ -5,9 +5,7 @@ const numOfRounds = 10
 const numOfNeighbors = 4
 const numOfNodeConfigurations = [10, 100, 200, 500, 1000, 2000, 5000]
 
-interface Measurements {
-    [key: number]: any[]
-}
+type Measurements = Record<number, any[]>;
 
 // Run topology experiment
 const measurements: Measurements = {}

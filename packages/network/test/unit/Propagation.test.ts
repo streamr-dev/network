@@ -1,7 +1,7 @@
 import { MessageID, StreamPartID, StreamMessage, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Propagation } from '../../src/logic/propagation/Propagation'
 import { NodeId } from '../../src/identifiers'
-import { wait } from 'streamr-test-utils'
+import { wait } from '@streamr/utils'
 
 function makeMsg(streamId: string, partition: number, ts: number, msgNo: number): StreamMessage {
     return new StreamMessage({
@@ -23,7 +23,6 @@ describe(Propagation, () => {
         getNeighbors = jest.fn()
         sendToNeighbor = jest.fn()
         propagation = new Propagation({
-            getNeighbors,
             sendToNeighbor,
             minPropagationTargets: 3,
             ttl: TTL,
@@ -35,7 +34,7 @@ describe(Propagation, () => {
         it('message is propagated to nodes returned by getNeighbors', () => {
             getNeighbors.mockReturnValueOnce(['n1', 'n2', 'n3'])
             const msg = makeMsg('s1', 0, 1000, 1)
-            propagation.feedUnseenMessage(msg, null)
+            propagation.feedUnseenMessage(msg, [...getNeighbors(StreamPartIDUtils.parse('s1#0'))], null)
 
             expect(sendToNeighbor).toHaveBeenCalledTimes(3)
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n1', msg)
@@ -46,7 +45,7 @@ describe(Propagation, () => {
         it('message does not get propagated to source node (if present in getNeighbors)', () => {
             getNeighbors.mockReturnValueOnce(['n1', 'n2', 'n3'])
             const msg = makeMsg('s1', 0, 1000, 1)
-            propagation.feedUnseenMessage(msg, 'n2')
+            propagation.feedUnseenMessage(msg, [...getNeighbors(StreamPartIDUtils.parse('s1#0'))], 'n2')
 
             expect(sendToNeighbor).toHaveBeenCalledTimes(2)
             expect(sendToNeighbor).toHaveBeenNthCalledWith(1, 'n1', msg)
@@ -60,7 +59,7 @@ describe(Propagation, () => {
         async function setUpAndFeed(neighbors: string[]): Promise<void> {
             getNeighbors.mockReturnValueOnce(neighbors)
             msg = makeMsg('s1', 0, 1000, 1)
-            propagation.feedUnseenMessage(msg, 'n2')
+            propagation.feedUnseenMessage(msg, [...getNeighbors(StreamPartIDUtils.parse('s1#0'))], 'n2')
             await wait(0)
             sendToNeighbor.mockClear()
             getNeighbors.mockClear()

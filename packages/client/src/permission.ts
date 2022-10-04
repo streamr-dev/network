@@ -11,14 +11,14 @@ export enum StreamPermission {
 }
 
 export interface UserPermissionQuery {
-    streamId: string,
+    streamId: string
     permission: StreamPermission
     user: EthereumAddress
     allowPublic: boolean
 }
 
 export interface PublicPermissionQuery {
-    streamId: string,
+    streamId: string
     permission: StreamPermission
     public: true
 }
@@ -44,7 +44,7 @@ export type PermissionQueryResult = {
     userAddress: EthereumAddress
 } & ChainPermissions
 
-export type SingleStreamQueryResult = {
+export interface SingleStreamQueryResult {
     stream: {
         id: string
         metadata: string
@@ -52,7 +52,7 @@ export type SingleStreamQueryResult = {
     } | null
 }
 
-export type ChainPermissions = {
+export interface ChainPermissions {
     canEdit: boolean
     canDelete: boolean
     publishExpiration: BigNumber
@@ -88,7 +88,7 @@ export const streamPermissionToSolidityType = (permission: StreamPermission): Bi
 
 /* eslint-disable padding-line-between-statements */
 export const convertChainPermissionsToStreamPermissions = (chainPermissions: ChainPermissions): StreamPermission[] => {
-    const now = Date.now()
+    const now = Math.round(Date.now() / 1000)
     const permissions = []
     if (chainPermissions.canEdit) {
         permissions.push(StreamPermission.EDIT)

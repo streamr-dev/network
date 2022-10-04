@@ -2,21 +2,18 @@
  * Encrypt StreamMessages in-place.
  */
 import { StreamMessage } from 'streamr-client-protocol'
-import { PublisherKeyExchange } from '../encryption/PublisherKeyExchange'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { Ethereum } from '../Ethereum'
-import { Stoppable } from '../utils/Stoppable'
+import { Publisher } from './Publisher'
 
 @scoped(Lifecycle.ContainerScoped)
-export class Encrypt implements Stoppable {
-    isStopped = false
+export class Encrypt {
+    private isStopped = false
 
     constructor(
         private streamRegistryCached: StreamRegistryCached,
-        @inject(delay(() => PublisherKeyExchange)) private keyExchange: PublisherKeyExchange,
-        private ethereum: Ethereum,
+        @inject(delay(() => Publisher)) private publisher: Publisher
     ) {
     }
 
@@ -25,20 +22,6 @@ export class Encrypt implements Stoppable {
 
         if (StreamMessage.isEncrypted(streamMessage)) {
             // already encrypted
-            return
-        }
-
-        if (!this.ethereum.canEncrypt()) {
-            return
-        }
-
-        const { messageType } = streamMessage
-        if (
-            messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
-            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
-            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
-        ) {
-            // never encrypt
             return
         }
 
@@ -53,13 +36,12 @@ export class Encrypt implements Stoppable {
             return
         }
 
-        const stream = await this.streamRegistryCached.getStream(streamId)
-
-        const [groupKey, nextGroupKey] = await this.keyExchange.useGroupKey(stream.id)
+        const groupKeyQueue = await this.publisher.getGroupKeyQueue(streamId)
+        const [groupKey, nextGroupKey] = await groupKeyQueue.useGroupKey()
         if (this.isStopped) { return }
 
         if (!groupKey) {
-            throw new Error(`Tried to use group key but no group key found for stream: ${stream.id}`)
+            throw new Error(`Tried to use group key but no group key found for stream: ${streamId}`)
         }
 
         EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)

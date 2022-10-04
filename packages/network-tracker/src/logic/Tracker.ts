@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events'
 
-import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID, TrackerLayer } from 'streamr-client-protocol'
+import { SmartContractRecord, StatusMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { Event as TrackerServerEvent, TrackerServer } from '../protocol/TrackerServer'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
-import { attachRtcSignalling } from './rtcSignallingHandlers'
+import { attachMessageRelaying } from './attachMessageRelaying'
 import {
     PeerId,
     PeerInfo,
@@ -16,14 +16,13 @@ import {
     DisconnectionCode,
     DisconnectionReason,
     MetricsContext,
-    Logger,
-    COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
     RateMetric
 } from 'streamr-network'
-import { InstructionSender } from './InstructionSender'
+import { Logger } from '@streamr/utils'
+import { InstructionAndStatusAckSender } from './InstructionAndStatusAckSender'
 import { StatusValidator } from '../helpers/SchemaValidators'
 
 export type TrackerId = string
@@ -43,7 +42,7 @@ export interface TrackerOptions {
     protocols: {
         trackerServer: TrackerServer
     }
-    metricsContext?: MetricsContext,
+    metricsContext?: MetricsContext
     topologyStabilization?: TopologyStabilizationOptions
 }
 
@@ -109,7 +108,7 @@ export class Tracker extends EventEmitter {
     private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
-    private readonly instructionSender: InstructionSender
+    private readonly instructionAndStatusAckSender: InstructionAndStatusAckSender
     private readonly extraMetadatas: Record<NodeId, Record<string, unknown>>
     private readonly logger: Logger
     private readonly metrics: Metrics
@@ -160,7 +159,7 @@ export class Tracker extends EventEmitter {
                 )
             }
         })
-        attachRtcSignalling(this.trackerServer)
+        attachMessageRelaying(this.trackerServer)
 
         this.metrics = {
             nodeDisconnected: new RateMetric(),
@@ -168,9 +167,10 @@ export class Tracker extends EventEmitter {
         }
         metricsContext.addMetrics('tracker', this.metrics)
 
-        this.instructionSender = new InstructionSender(
+        this.instructionAndStatusAckSender = new InstructionAndStatusAckSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
+            this.trackerServer.sendStatusAck.bind(this.trackerServer),
             metricsContext
         )
     }
@@ -185,7 +185,7 @@ export class Tracker extends EventEmitter {
         this.removeNode(node)
     }
 
-    processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+    processNodeStatus(statusMessage: StatusMessage, source: NodeId): void {
         if (this.stopped) {
             return
         }
@@ -213,13 +213,13 @@ export class Tracker extends EventEmitter {
         // update topology
         this.createTopology(streamPartId)
         this.updateNodeOnStream(source, status.streamPart)
-        this.formAndSendInstructions(source, streamPartId)
+        this.formAndSendInstructions(source, true, streamPartId)
     }
 
     async stop(): Promise<void> {
         this.logger.debug('stopping')
 
-        this.instructionSender.stop()
+        this.instructionAndStatusAckSender.stop()
 
         await this.trackerServer.stop()
         this.stopped = true
@@ -245,36 +245,39 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    private formAndSendInstructions(node: NodeId, streamPartId: StreamPartID, forceGenerate = false): void {
+    private formAndSendInstructions(
+        node: NodeId,
+        isRespondingToNodeStatus: boolean,
+        streamPartId: StreamPartID,
+        forceGenerate = false
+    ): void {
         if (this.stopped) {
             return
         }
 
-        if (this.overlayPerStreamPart[streamPartId]) {
-            const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
+        const overlay = this.overlayPerStreamPart[streamPartId]
+        if (overlay !== undefined) {
+            const instructions = overlay.formInstructions(node, forceGenerate)
 
-            // Send empty instruction if and only if the node is alone in the topology
-            if (this.overlayPerStreamPart[streamPartId].hasNode(node)
-                && this.overlayPerStreamPart[streamPartId].getNumberOfNodes() === 1
-                && Object.keys(instructions).length === 0) {
-                this.instructionSender.addInstruction({
-                    nodeId: node,
-                    streamPartId,
-                    newNeighbors: [],
-                    counterValue: COUNTER_LONE_NODE
-                })
-            } else {
+            const isAloneInTopology = overlay.hasNode(node) && overlay.getNumberOfNodes() === 1
+
+            if (!isAloneInTopology || !isRespondingToNodeStatus || Object.keys(instructions).length > 0) {
                 Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
                     const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamPartId)
-                    this.instructionSender.addInstruction({
+                    this.instructionAndStatusAckSender.addInstruction({
                         nodeId,
                         streamPartId,
                         newNeighbors,
                         counterValue
                     })
                 })
+            } else {
+                // Send empty instruction if and only if the node is alone in the topology
+                this.instructionAndStatusAckSender.addStatusAck({
+                    nodeId: node,
+                    streamPartId
+                })
             }
-
         }
     }
 
@@ -297,7 +300,7 @@ export class Tracker extends EventEmitter {
             delete this.overlayPerStreamPart[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {
-                this.formAndSendInstructions(neighbor, streamPartId, true)
+                this.formAndSendInstructions(neighbor, false, streamPartId, true)
             })
         }
     }

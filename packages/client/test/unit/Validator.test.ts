@@ -2,8 +2,8 @@ import 'reflect-metadata'
 import { Wallet } from '@ethersproject/wallet'
 import { EthereumAddress, MessageID, SigningUtil, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { Stream } from '../../src/Stream'
-import { StreamRegistry } from '../../src/StreamRegistry'
-import { StreamRegistryCached } from '../../src/StreamRegistryCached'
+import { StreamRegistry } from '../../src/registry/StreamRegistry'
+import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
 import { mockContext } from '../test-utils/utils'
 import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
@@ -12,7 +12,7 @@ const publisherWallet = Wallet.createRandom()
 const PARTITION_COUNT = 3
 
 const createMockValidator = (options: Partial<SubscribeConfig>) => {
-    const streamRegistry: Pick<StreamRegistry,'getStream'|'isStreamPublisher'> = {
+    const streamRegistry: Pick<StreamRegistry, 'getStream' | 'isStreamPublisher'> = {
         getStream: async (): Promise<Stream> => {
             return {
                 partitions: PARTITION_COUNT

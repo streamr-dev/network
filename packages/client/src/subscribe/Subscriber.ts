@@ -1,15 +1,14 @@
 import { DependencyContainer, inject, scoped, delay, Lifecycle } from 'tsyringe'
-import { allSettledValues, instanceId } from '../utils'
+import { instanceId } from '../utils/utils'
+import { allSettledValues } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
-import { StreamID, StreamPartID } from 'streamr-client-protocol'
+import { StreamPartID } from 'streamr-client-protocol'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
-import { StreamRegistryCached } from '../StreamRegistryCached'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { StreamDefinition } from '../types'
-import { MessageStream, pullManyToOne } from './MessageStream'
-import { range } from 'lodash'
 
 /**
  * Public Subscribe APIs
@@ -19,7 +18,7 @@ import { range } from 'lodash'
 export class Subscriber implements Context {
     readonly id
     readonly debug
-    readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
+    private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
 
     constructor(
         context: Context,
@@ -37,24 +36,6 @@ export class Subscriber implements Context {
     ): Promise<Subscription<T>> {
         const streamPartId = await this.streamIdBuilder.toStreamPartID(streamDefinition)
         return this.subscribeTo(streamPartId, onMessage)
-    }
-
-    async subscribeAll<T>(streamId: StreamID, onMessage?: SubscriptionOnMessage<T>): Promise<MessageStream<T>> {
-        const { partitions } = await this.streamRegistryCached.getStream(streamId)
-        if (partitions === 1) {
-            // nothing interesting to do, treat as regular subscription
-            return this.subscribe<T>(streamId, onMessage)
-        }
-
-        // create sub for each partition
-        const subs = await Promise.all(range(partitions).map(async (streamPartition) => {
-            return this.subscribe<T>({
-                streamId,
-                partition: streamPartition,
-            })
-        }))
-
-        return pullManyToOne(this, subs, onMessage)
     }
 
     private async subscribeTo<T>(streamPartId: StreamPartID, onMessage?: SubscriptionOnMessage<T>): Promise<Subscription<T>> {
@@ -156,6 +137,7 @@ export class Subscriber implements Context {
      */
     private getAllSubscriptions(): Subscription<unknown>[] {
         return [...this.subSessions.values()].reduce((o: Subscription<unknown>[], s: SubscriptionSession<unknown>) => {
+            // @ts-expect-error private
             o.push(...s.subscriptions)
             return o
         }, [])
@@ -191,6 +173,7 @@ export class Subscriber implements Context {
         }))
 
         return results.flatMap((subSession) => ([
+            // @ts-expect-error private
             ...subSession.subscriptions
         ]))
     }

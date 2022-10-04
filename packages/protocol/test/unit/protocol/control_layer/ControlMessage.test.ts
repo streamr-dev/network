@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import ControlMessage, { ControlMessageType } from '../../../../src/protocol/control_layer/ControlMessage'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import UnsupportedTypeError from '../../../../src/errors/UnsupportedTypeError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import ValidationError from '../../../../src/errors/ValidationError'
@@ -12,12 +12,7 @@ const VERSION = 123
 const TYPE = 0
 const REQUEST_ID = 'requestId'
 
-class TestControlMessage extends ControlMessage {
-    // eslint-disable-next-line no-useless-constructor
-    constructor(version: number, type: ControlMessageType, requestId: string) {
-        super(version, type, requestId)
-    }
-}
+class TestControlMessage extends ControlMessage {}
 
 const msg = () => {
     return new TestControlMessage(VERSION, TYPE, REQUEST_ID)

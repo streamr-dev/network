@@ -1,4 +1,4 @@
-import { instanceId } from './index'
+import { instanceId } from './utils'
 import { Gate } from './Gate'
 import { Debug, inspect } from './log'
 import { Context, ContextError } from './Context'
@@ -22,7 +22,7 @@ function isError(err: any): err is Error {
     )
 }
 
-export type PushBufferOptions = {
+export interface PushBufferOptions {
     name?: string
 }
 
@@ -44,10 +44,11 @@ export type IPushBuffer<InType, OutType = InType> = {
  */
 export class PushBuffer<T> implements IPushBuffer<T>, Context {
     static Error = PushBufferError
-    id
-    debug
 
-    protected readonly buffer: (T | Error)[] = []
+    readonly id
+    readonly debug
+
+    protected buffer: (T | Error)[] = []
     readonly bufferSize: number
 
     /** open when writable */
@@ -228,7 +229,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
                 throw error
             }
         } finally {
-            this.buffer.length = 0
+            this.buffer = []
             this.lock()
         }
     }
@@ -239,7 +240,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
 
     // clears any pending items in buffer
     clear(): void {
-        this.buffer.length = 0
+        this.buffer = []
     }
 
     // AsyncGenerator implementation
@@ -280,24 +281,16 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
     }
 }
 
-export type PullOptions = {
-    /** end dest when src ends */
-    endDest: boolean
-}
-
 /**
  * Pull from a source into some PushBuffer
  */
 export async function pull<InType, OutType = InType>(
     src: AsyncGenerator<InType>,
     dest: IPushBuffer<InType, OutType>,
-    opts?: PullOptions
 ): Promise<void> {
     if (!src) {
         throw new Error('no source')
     }
-
-    const endDest = opts?.endDest ?? true
 
     try {
         for await (const v of src) {
@@ -309,9 +302,7 @@ export async function pull<InType, OutType = InType>(
     } catch (err) {
         dest.endWrite(err)
     } finally {
-        if (endDest) {
-            dest.endWrite()
-        }
+        dest.endWrite()
     }
 }
 

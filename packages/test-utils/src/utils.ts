@@ -5,8 +5,10 @@ import express from 'express'
 import cors from 'cors'
 import crypto from 'crypto'
 import { Wallet } from '@ethersproject/wallet'
+import { waitForEvent } from '@streamr/utils'
+import fetch from 'node-fetch'
 
-export type Event = string | symbol
+export type Event = string
 
 /**
  * Collect data of a stream into an array. The array is wrapped in a
@@ -24,31 +26,6 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
             .on('data', arr.push.bind(arr))
             .on('error', reject)
             .on('end', () => resolve(arr))
-    })
-}
-
-/**
- * Wait for an event to be emitted on emitter within timeout.
- *
- * @param emitter emitter of event
- * @param event event to wait for
- * @param timeout amount of time in milliseconds to wait for
- * @returns {Promise<unknown[]>} resolves with event arguments if event occurred
- * within timeout. Otherwise rejected.
- */
-export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000): Promise<unknown[]> => {
-    // create error beforehand to capture more usable stack
-    const err = new Error(`Promise timed out after ${timeout} milliseconds`)
-    return new Promise((resolve, reject) => {
-        const eventListenerFn = (...args: unknown[]) => {
-            clearTimeout(timeOut)
-            resolve(args)
-        }
-        const timeOut = setTimeout(() => {
-            emitter.removeListener(event, eventListenerFn)
-            reject(err)
-        }, timeout)
-        emitter.once(event, eventListenerFn)
     })
 }
 
@@ -195,13 +172,6 @@ export const runAndWaitForConditions = async (
     ops.forEach((op) => { op() })
     return promise
 }
-
-/**
- * Wait for a specific time
- * @param ms time to wait for in milliseconds
- * @returns {Promise<void>} resolves when time has passed
- */
-export const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
  * Collect events emitted by an emitter into an array.
@@ -362,5 +332,47 @@ export class KeyServer {
                 }
             })
         })
+    }
+}
+
+export async function fetchPrivateKeyWithGas(): Promise<string> {
+    let response
+    try {
+        response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+            timeout: 5 * 1000
+        })
+    } catch (_e) {
+        try {
+            await KeyServer.startIfNotRunning() // may throw if parallel attempts at starting server
+        } catch (_e2) {
+            // no-op
+        } finally {
+            response = await fetch(`http://localhost:${KeyServer.KEY_SERVER_PORT}/key`, {
+                timeout: 5 * 1000
+            })
+        }
+    }
+
+    if (!response.ok) {
+        throw new Error(`fetchPrivateKeyWithGas failed ${response.status} ${response.statusText}: ${response.text()}`)
+    }
+
+    return response.text()
+}
+
+export class Queue<T> {
+    items: T[] = []
+
+    push(item: T): void {
+        this.items.push(item)
+    }
+
+    async pop(timeout?: number): Promise<T> {
+        await waitForCondition(() => this.items.length > 0, timeout)
+        return this.items.shift()!
+    }
+
+    size(): number {
+        return this.items.length
     }
 }

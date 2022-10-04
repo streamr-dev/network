@@ -2,7 +2,7 @@
  * Client-wide destroy signal.
  */
 import { scoped, Lifecycle } from 'tsyringe'
-import { instanceId } from './utils'
+import { instanceId } from './utils/utils'
 
 import { Context, ContextError } from './utils/Context'
 import { Signal } from './utils/Signal'
@@ -14,8 +14,8 @@ import { Signal } from './utils/Signal'
  */
 @scoped(Lifecycle.ContainerScoped)
 export class DestroySignal implements Context {
-    onDestroy = Signal.once()
-    trigger = this.destroy
+    public onDestroy = Signal.once()
+    public trigger = this.destroy
     readonly id = instanceId(this)
     readonly debug
 
@@ -38,5 +38,14 @@ export class DestroySignal implements Context {
 
     isDestroyed(): boolean {
         return this.onDestroy.triggerCount() > 0
+    }
+
+    createAbortController(): AbortController {
+        const controller = new AbortController()
+        if (this.isDestroyed()) {
+            controller.abort()
+        }
+        this.onDestroy.listen(async () => controller.abort())
+        return controller
     }
 }

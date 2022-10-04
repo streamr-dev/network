@@ -4,23 +4,23 @@ import ValidationError from '../../errors/ValidationError'
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
-import { StreamID, toStreamID } from '../../../src/utils/StreamID'
+import { EthereumAddress } from '../../utils'
 
 interface Options {
     requestId: string
-    streamId: StreamID
+    recipient: EthereumAddress
     encryptedGroupKeys: EncryptedGroupKey[]
 }
 
-type GroupKeyResponseSerialized = [string, string,EncryptedGroupKeySerialized[]]
+export type GroupKeyResponseSerialized = [string, string, EncryptedGroupKeySerialized[]]
 
 export default class GroupKeyResponse extends GroupKeyMessage {
 
     requestId: string
     encryptedGroupKeys: EncryptedGroupKey[]
 
-    constructor({ requestId, streamId, encryptedGroupKeys }: Options) {
-        super(streamId, StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE)
+    constructor({ requestId, recipient, encryptedGroupKeys }: Options) {
+        super(recipient, StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE)
 
         validateIsString('requestId', requestId)
         this.requestId = requestId
@@ -39,14 +39,14 @@ export default class GroupKeyResponse extends GroupKeyMessage {
     }
 
     toArray(): GroupKeyResponseSerialized {
-        return [this.requestId, this.streamId, this.encryptedGroupKeys.map((it: EncryptedGroupKey) => it.toArray())]
+        return [this.requestId, this.recipient, this.encryptedGroupKeys.map((it: EncryptedGroupKey) => it.toArray())]
     }
 
-    static fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
-        const [requestId, streamId, encryptedGroupKeys] = arr
+    static override fromArray(arr: GroupKeyResponseSerialized): GroupKeyResponse {
+        const [requestId, recipient, encryptedGroupKeys] = arr
         return new GroupKeyResponse({
             requestId,
-            streamId: toStreamID(streamId),
+            recipient,
             encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
     }

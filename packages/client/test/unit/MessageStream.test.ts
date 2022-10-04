@@ -1,9 +1,41 @@
-import { wait } from 'streamr-test-utils'
-import { counterId } from '../../src/utils'
+import { wait } from '@streamr/utils'
+import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
-import { Debug, Msg, LeaksDetector } from '../test-utils/utils'
-import { MessageStream } from '../../src/subscribe/MessageStream'
-import { StreamMessage, MessageID, toStreamID } from 'streamr-client-protocol'
+import { Debug } from '../test-utils/utils'
+import { Msg } from '../test-utils/publish'
+import { LeaksDetector } from '../test-utils/LeaksDetector'
+import { MessageStream, MessageStreamOnMessage } from '../../src/subscribe/MessageStream'
+import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-protocol'
+import { Readable } from 'stream'
+import { waitForCondition } from 'streamr-test-utils'
+
+const createMockMessage = (streamId: StreamID) => {
+    return new StreamMessage({
+        messageId: new MessageID(streamId, 0, 0, 0, 'publisherId', 'msgChainId'),
+        content: Msg()
+    })
+}
+
+const fromReadable = async (readable: Readable, context: Context, onMessage?: MessageStreamOnMessage<any>) => {
+    const result = new MessageStream<any>(context)
+    if (onMessage !== undefined) {
+        result.useLegacyOnMessageHandler(onMessage)
+    }
+    result.pull((async function* readStream() {
+        try {
+            yield* readable
+        } finally {
+            readable.destroy()
+        }
+    }()))
+    return result
+}
+
+const waitForCalls = async (onMessage: jest.Mock<any>, n: number) => {
+    await waitForCondition(() => onMessage.mock.calls.length >= n, 1000, 100, () => {
+        return `Timeout while waiting for calls: got ${onMessage.mock.calls.length} out of ${n}`
+    })
+}
 
 describe('MessageStream', () => {
     const streamId = toStreamID('streamId')
@@ -179,47 +211,6 @@ describe('MessageStream', () => {
 
         expect(received).toEqual([streamMessage])
     })
-    /*
-    describe('when not started', () => {
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end with return', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            s.on('end', onEnd)
-            await s.return()
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-        })
-
-        it('emits end + error with throw', async () => {
-            const testMessage = Msg()
-            const s = new MessageStream<typeof testMessage>(context)
-
-            const onEnd = jest.fn()
-            const onMessageStreamError = jest.fn()
-            s.on('end', onEnd)
-            s.on('error', onMessageStreamError)
-            const err = new Error(counterId('expected error'))
-            await expect(async () => {
-                await s.throw(err)
-            }).rejects.toThrow(err)
-
-            expect(onEnd).toHaveBeenCalledTimes(1)
-            expect(onMessageStreamError).toHaveBeenCalledTimes(1)
-        })
-    })
-    */
 
     it('can collect', async () => {
         const testMessage = Msg()
@@ -277,5 +268,30 @@ describe('MessageStream', () => {
         await expect(async () => {
             await collectTask
         }).rejects.toThrow(err)
+    })
+
+    describe('onMessage', () => {
+
+        it('push', async () => {
+            const stream = new MessageStream<any>(context)
+            const onMessage = jest.fn()
+            stream.useLegacyOnMessageHandler(onMessage)
+            const msg = createMockMessage(streamId)
+            stream.push(msg)
+            await waitForCalls(onMessage, 1)
+            expect(onMessage).toBeCalledTimes(1)
+            expect(onMessage).toHaveBeenNthCalledWith(1, msg.getParsedContent(), msg)
+        })
+
+        it('from readable', async () => {
+            const msg1 = createMockMessage(streamId)
+            const msg2 = createMockMessage(streamId)
+            const readable = Readable.from([msg1, msg2], { objectMode: true })
+            const onMessage = jest.fn()
+            fromReadable(readable, context, onMessage)
+            await waitForCalls(onMessage, 2)
+            expect(onMessage).toHaveBeenNthCalledWith(1, msg1.getParsedContent(), msg1)
+            expect(onMessage).toHaveBeenNthCalledWith(2, msg2.getParsedContent(), msg2)
+        })
     })
 })

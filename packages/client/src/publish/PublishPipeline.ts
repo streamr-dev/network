@@ -1,18 +1,18 @@
 /**
  * Organises async Publish steps into a Pipeline
  */
-import { StreamMessage } from 'streamr-client-protocol'
+import { EncryptionType, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
 import { inspect } from '../utils/log'
-import { instanceId, Defer, Deferred } from '../utils'
+import { instanceId } from '../utils/utils'
+import { Defer, Deferred } from '../utils/Defer'
 import { Context, ContextError } from '../utils/Context'
 import { Pipeline } from '../utils/Pipeline'
 import { PushPipeline } from '../utils/PushPipeline'
-import { Stoppable } from '../utils/Stoppable'
 
 import { MessageCreator } from './MessageCreator'
-import { BrubeckNode } from '../BrubeckNode'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { Signer } from './Signer'
 import { Encrypt } from './Encrypt'
 import { Validator } from '../Validator'
@@ -22,8 +22,8 @@ import { StreamDefinition } from '../types'
 import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
-    publishMetadata
-    reason
+    public publishMetadata
+    public reason
     constructor(publishMetadata: PublishMetadataStrict, reason?: Error) {
         // eslint-disable-next-line max-len
         super(`Failed to publish to stream ${formStreamDefinitionDescription(publishMetadata.streamDefinition)} due to: ${reason && reason.stack ? reason.stack : reason}.`)
@@ -45,9 +45,12 @@ export class FailedToPublishError extends Error {
 
 export interface MessageMetadata {
     timestamp?: string | number | Date
-    sequenceNumber?: number
-    partitionKey?: string | number,
+    partitionKey?: string | number
     msgChainId?: string
+    /** @internal */
+    messageType?: StreamMessageType
+    /** @internal */
+    encryptionType?: EncryptionType
 }
 
 // TODO better name? 
@@ -65,20 +68,20 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublishPipeline implements Context, Stoppable {
+export class PublishPipeline implements Context {
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */
-    streamMessageQueue!: PushPipeline<PublishQueueIn, PublishQueueOut>
+    private streamMessageQueue!: PushPipeline<PublishQueueIn, PublishQueueOut>
     /** signs, encrypts then publishes messages */
-    publishQueue!: Pipeline<PublishQueueOut, PublishQueueOut>
-    isStarted = false
-    isStopped = false
-    inProgress = new Set<Deferred<StreamMessage>>()
+    private publishQueue!: Pipeline<PublishQueueOut, PublishQueueOut>
+    private isStarted = false
+    private isStopped = false
+    private inProgress = new Set<Deferred<StreamMessage>>()
 
     constructor(
         context: Context,
-        private node: BrubeckNode,
+        private node: NetworkNodeFacade,
         private messageCreator: MessageCreator,
         private signer: Signer,
         private validator: Validator,

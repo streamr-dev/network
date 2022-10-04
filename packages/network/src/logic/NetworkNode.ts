@@ -1,4 +1,4 @@
-import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection, StreamMessageType } from 'streamr-client-protocol'
 import { Event as NodeEvent, Node, NodeOptions } from './Node'
 import { NodeId } from '../identifiers'
 
@@ -19,14 +19,14 @@ export class NetworkNode extends Node {
 
     publish(streamMessage: StreamMessage): void | never {
         const streamPartId = streamMessage.getStreamPartID()
-        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE)) {
-            throw new Error(`Cannot publish to ${streamPartId} as proxy subscribe connections have been set`)
+        if (this.isProxiedStreamPart(streamPartId, ProxyDirection.SUBSCRIBE) && streamMessage.messageType === StreamMessageType.MESSAGE) {
+            throw new Error(`Cannot publish content data to ${streamPartId} as proxy subscribe connections have been set`)
         }
         this.onDataReceived(streamMessage)
     }
 
-    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
-        await this.addProxyConnection(streamPartId, contactNodeId, direction)
+    async openProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection, userId: string): Promise<void> {
+        await this.addProxyConnection(streamPartId, contactNodeId, direction, userId)
     }
 
     async closeProxyConnection(streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection): Promise<void> {
@@ -89,7 +89,7 @@ export class NetworkNode extends Node {
         }
     }
 
-    getRtt(nodeId: NodeId): number|undefined {
+    getRtt(nodeId: NodeId): number | undefined {
         return this.nodeToNode.getRtts()[nodeId]
     }
 }

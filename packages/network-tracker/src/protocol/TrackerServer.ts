@@ -1,19 +1,26 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
-import { StreamPartID, StreamPartIDUtils, TrackerLayer, TrackerMessageType } from 'streamr-client-protocol'
 import {
-    Logger,
+    ErrorMessage,
+    InstructionMessage,
+    RelayMessage, StatusAckMessage, StatusMessage,
+    StreamPartID,
+    StreamPartIDUtils,
+    TrackerMessage,
+    TrackerMessageType
+} from 'streamr-client-protocol'
+import {
     decode,
-    RtcSubTypes,
-    PeerId,
-    PeerInfo,
-    NameDirectory,
-    ServerWsEndpoint,
     DisconnectionCode,
     DisconnectionReason,
-    WsEndpointEvent,
-    NodeId
+    NameDirectory,
+    NodeId,
+    PeerId,
+    PeerInfo,
+    WsEndpointEvent
 } from 'streamr-network'
+import type { ServerWsEndpoint } from 'streamr-network'
+import { Logger } from '@streamr/utils'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
@@ -22,15 +29,15 @@ export enum Event {
     RELAY_MESSAGE_RECEIVED = 'streamr:tracker:relay-message-received'
 }
 
-const eventPerType: { [key: number]: string } = {}
-eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
-eventPerType[TrackerLayer.TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
+const eventPerType: Record<number, string> = {}
+eventPerType[TrackerMessage.TYPES.StatusMessage] = Event.NODE_STATUS_RECEIVED
+eventPerType[TrackerMessage.TYPES.RelayMessage] = Event.RELAY_MESSAGE_RECEIVED
 
 export interface NodeToTracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
-    on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: TrackerLayer.StatusMessage, nodeId: NodeId) => void): this
-    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: TrackerLayer.RelayMessage, nodeId: NodeId) => void): this
+    on(event: Event.NODE_STATUS_RECEIVED, listener: (msg: StatusMessage, nodeId: NodeId) => void): this
+    on(event: Event.RELAY_MESSAGE_RECEIVED, listener: (msg: RelayMessage, nodeId: NodeId) => void): this
 }
 
 export class TrackerServer extends EventEmitter {
@@ -49,10 +56,11 @@ export class TrackerServer extends EventEmitter {
     async sendInstruction(
         receiverNodeId: NodeId,
         streamPartId: StreamPartID,
-        nodeIds: NodeId[], counter: number
+        nodeIds: NodeId[],
+        counter: number
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
-        await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
+        await this.send(receiverNodeId, new InstructionMessage({
             requestId: uuidv4(),
             streamId,
             streamPartition,
@@ -61,89 +69,27 @@ export class TrackerServer extends EventEmitter {
         }))
     }
 
-    async sendRtcOffer(
+    async sendStatusAck(
         receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
+        streamPartId: StreamPartID
     ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_OFFER,
-            data: {
-                connectionId,
-                description
-            }
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        await this.send(receiverNodeId, new StatusAckMessage({
+            requestId: uuidv4(),
+            streamId,
+            streamPartition
         }))
     }
 
-    async sendRtcAnswer(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        description: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
+    async sendUnknownPeerError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
+        await this.send(receiverNodeId, new ErrorMessage({
             requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_ANSWER,
-            data: {
-                connectionId,
-                description
-            }
-        }))
-    }
-
-    async sendRtcConnect(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.RTC_CONNECT,
-            // eslint-disable-next-line no-new-object
-            data: new Object()
-        }))
-    }
-
-    async sendRtcIceCandidate(
-        receiverNodeId: NodeId,
-        requestId: string,
-        originatorInfo: TrackerLayer.Originator,
-        connectionId: string,
-        candidate: string,
-        mid: string
-    ): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.RelayMessage({
-            requestId,
-            originator: originatorInfo,
-            targetNode: receiverNodeId,
-            subType: RtcSubTypes.ICE_CANDIDATE,
-            data: {
-                connectionId,
-                candidate,
-                mid
-            }
-        }))
-    }
-
-    async sendUnknownPeerRtcError(receiverNodeId: NodeId, requestId: string, targetNode: NodeId): Promise<void> {
-        await this.send(receiverNodeId, new TrackerLayer.ErrorMessage({
-            requestId,
-            errorCode: TrackerLayer.ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+            errorCode: ErrorMessage.ERROR_CODES.UNKNOWN_PEER,
             targetNode
         }))
     }
 
-    async send<T>(receiverNodeId: NodeId, message: T & TrackerLayer.TrackerMessage): Promise<void> {
+    async send<T>(receiverNodeId: NodeId, message: T & TrackerMessage): Promise<void> {
         this.logger.debug(`Send ${TrackerMessageType[message.type]} to ${NameDirectory.getName(receiverNodeId)}`)
         await this.endpoint.send(receiverNodeId, message.serialize())
     }
@@ -184,7 +130,7 @@ export class TrackerServer extends EventEmitter {
 
     onMessageReceived(peerInfo: PeerInfo, rawMessage: string): void {
         if (peerInfo.isNode()) {
-            const message = decode<string, TrackerLayer.TrackerMessage>(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+            const message = decode<TrackerMessage>(rawMessage, TrackerMessage.deserialize)
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {

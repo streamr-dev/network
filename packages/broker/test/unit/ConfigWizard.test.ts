@@ -1,4 +1,3 @@
-import { Wallet } from 'ethers'
 import { mkdtempSync, existsSync } from 'fs'
 import os from 'os'
 import path from 'path'
@@ -17,6 +16,7 @@ import {
 import { readFileSync } from 'fs'
 import { createBroker } from '../../src/broker'
 import { needsMigration } from '../../src/config/migration'
+import { fastPrivateKey } from 'streamr-test-utils'
 
 const MOCK_PRIVATE_KEY = '0x1234567890123456789012345678901234567890123456789012345678901234'
 
@@ -35,19 +35,19 @@ describe('ConfigWizard', () => {
     const portPrompt = PROMPTS.plugins[1]
 
     describe('importPrivateKey validate', () => {
-        it ('happy path, prefixed', () => {
+        it('happy path, prefixed', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = Wallet.createRandom().privateKey
+            const privateKey = `0x${fastPrivateKey()}`
             expect(validate(privateKey)).toBe(true)
         })
 
-        it ('happy path, no prefix', () => {
+        it('happy path, no prefix', () => {
             const validate = importPrivateKeyPrompt.validate!
-            const privateKey = Wallet.createRandom().privateKey.substring(2)
+            const privateKey = fastPrivateKey()
             expect(validate(privateKey)).toBe(true)
         })
 
-        it ('invalid data', () => {
+        it('invalid data', () => {
             const validate = importPrivateKeyPrompt.validate!
             const privateKey = '0xInvalidPrivateKey'
             expect(validate(privateKey)).toBe(`Invalid private key provided.`)
@@ -55,29 +55,29 @@ describe('ConfigWizard', () => {
     })
 
     describe('plugin port validation', () => {
-        it ('happy path: numeric value', () => {
+        it('happy path: numeric value', () => {
             const validate = portPrompt.validate!
             expect(validate(7070)).toBe(true)
         })
 
-        it ('happy path: string value', () => {
+        it('happy path: string value', () => {
             const validate = portPrompt.validate!
             expect(validate('7070')).toBe(true)
         })
 
-        it ('invalid data: out-of-range number', () => {
+        it('invalid data: out-of-range number', () => {
             const validate = portPrompt.validate!
             const port = 10000000000
             expect(validate(port)).toBe(`Out of range port ${port} provided (valid range 1024-49151)`)
         })
 
-        it ('invalid data: float-point number', () => {
+        it('invalid data: float-point number', () => {
             const validate = portPrompt.validate!
             const port = 55.55
             expect(validate(port)).toBe(`Non-integer value provided`)
         })
 
-        it ('invalid data: non-numeric', () => {
+        it('invalid data: non-numeric', () => {
             const validate = portPrompt.validate!
             const port = 'Not A Number!'
             expect(validate(port)).toBe(`Non-numeric value provided`)
@@ -92,7 +92,7 @@ describe('ConfigWizard', () => {
             tmpDataDir = mkdtempSync(path.join(os.tmpdir(), 'broker-test-config-wizard'))
         })
 
-        it ('happy path; create directories if needed', async () => {
+        it('happy path; create directories if needed', async () => {
             const dirPath = tmpDataDir + '/newdir1/newdir2/'
             const configPath = dirPath + 'test-config.json'
             const configFileLocation: string = await createStorageFile(CONFIG, {
@@ -102,7 +102,7 @@ describe('ConfigWizard', () => {
             expect(existsSync(configFileLocation)).toBe(true)
         })
 
-        it ('should throw when no permissions on path', async () => {
+        it('should throw when no permissions on path', async () => {
             const dirPath = '/home/'
             const configPath = dirPath + 'test-config.json'
             await expect(createStorageFile(CONFIG, {
@@ -113,7 +113,7 @@ describe('ConfigWizard', () => {
     })
 
     describe('getPrivateKey', () => {
-        it ('should exercise the `generate` path', () => {
+        it('should exercise the `generate` path', () => {
             const privateKey = getPrivateKey({
                 generateOrImportPrivateKey: 'Generate'
             })
@@ -121,8 +121,8 @@ describe('ConfigWizard', () => {
             expect(privateKey).toMatch(/^0x[0-9a-f]{64}$/)
         })
 
-        it ('should exercise the `import` path', () => {
-            const importPrivateKey = Wallet.createRandom().privateKey
+        it('should exercise the `import` path', () => {
+            const importPrivateKey = fastPrivateKey()
             const answers: PrivateKeyAnswers = {
                 generateOrImportPrivateKey: 'Import',
                 importPrivateKey
@@ -145,15 +145,15 @@ describe('ConfigWizard', () => {
             expect(config.plugins[pluginName].port).toBe(numericPort)
         }
 
-        it ('should exercise the plugin port assignation path with a number', () => {
+        it('should exercise the plugin port assignation path with a number', () => {
             assertValidPort(3737)
         })
 
-        it ('should exercise the plugin port assignation path with a stringified number', () => {
+        it('should exercise the plugin port assignation path with a stringified number', () => {
             assertValidPort('3737')
         })
 
-        it ('should exercise the happy path with default answers', () => {
+        it('should exercise the happy path with default answers', () => {
             const pluginsAnswers: PluginAnswers = {
                 enabledApiPlugins: [ 'websocket', 'mqtt', 'http' ],
                 websocketPort: String(DEFAULT_CONFIG_PORTS.WS),
@@ -196,7 +196,7 @@ describe('ConfigWizard', () => {
     })
 
     describe('identity', () => {
-        it ('happy path', () => {
+        it('happy path', () => {
             const privateKey = '0x9a2f3b058b9b457f9f954e62ea9fd2cefe2978736ffb3ef2c1782ccfad9c411d'
             const identity = getNodeIdentity(privateKey)
             expect(identity.mnemonic).toBe('Mountain Until Gun')

@@ -1,23 +1,11 @@
 {
-    "extends": "@streamr/dev-config/ts/tsconfig.node.json",
+    "extends": "../../tsconfig.node.json",
     "compilerOptions": {
-        "composite": true,
-        "declarationDir": "dist/types",
         "outDir": "dist",
-        "lib": [
-            "ES5",
-            "ES2015",
-            "ES2016",
-            "ES2017",
-            "ES2018",
-            "ES2019",
-            "ES2020",
-            "ESNext",
-            "DOM"
-        ],
+        "declarationDir": "dist/types",
+        "lib": ["es2021", "dom"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "strictBindCallApply": true,
         "resolveJsonModule": true
     },
     "include": [
@@ -30,11 +18,8 @@
     ],
     "exclude": ["src/index-esm.mjs"],
     "references": [
-        {
-            "path": "../network/tsconfig.node.json"
-        },
-        {
-            "path": "../protocol/tsconfig.node.json"
-        }
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../protocol/tsconfig.node.json" },
+        { "path": "../network/tsconfig.node.json" }
     ]
 }

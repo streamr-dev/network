@@ -1,14 +1,12 @@
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import { Contract, ContractInterface, ContractReceipt, ContractTransaction } from '@ethersproject/contracts'
-import { Signer } from '@ethersproject/abstract-signer'
 import { GraphQLClient } from './GraphQLClient'
-import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
-import { ObservableContract, withErrorHandlingAndLogging } from './contract'
-import { EthereumAddress } from 'streamr-client-protocol'
+import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { Gate } from './Gate'
 import { Context } from './Context'
 import { Debugger } from 'debug'
-import { instanceId, wait, withTimeout } from './index'
+import { instanceId } from './utils'
+import { TimeoutError, withTimeout } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 
 /*
  * SynchronizedGraphQLClient is used to query The Graph index. It is very similar to the
@@ -26,23 +24,6 @@ import { instanceId, wait, withTimeout } from './index'
  * We can use the helper method `createWriteContract` to create a contract which automatically
  * updates the client when something is written to the blockchain via that contract.
  */
-
-export const createWriteContract = <T extends Contract>(
-    address: EthereumAddress,
-    contractInterface: ContractInterface,
-    signer: Signer,
-    name: string,
-    graphQLClient: SynchronizedGraphQLClient
-): ObservableContract<T> => {
-    const contract = withErrorHandlingAndLogging<T>(
-        new Contract(address, contractInterface, signer),
-        name
-    )
-    contract.eventEmitter.on('onTransactionConfirm', (_methodName: string, _tx: ContractTransaction, receipt: ContractReceipt) => {
-        graphQLClient.updateRequiredBlockNumber(receipt.blockNumber)
-    })
-    return contract
-}
 
 class BlockNumberGate extends Gate {
     blockNumber: number
@@ -76,12 +57,18 @@ class IndexingState {
     async waitUntilIndexed(blockNumber: number): Promise<void> {
         this.debug(`wait until The Graph is synchronized to block ${blockNumber}`)
         const gate = this.getOrCreateGate(blockNumber)
-        await withTimeout(
-            gate.check(),
-            this.pollTimeout,
-            `timed out while waiting for The Graph to synchronized to block ${blockNumber}`,
-            () => this.gates.delete(gate)
-        )
+        try {
+            await withTimeout(
+                gate.check(),
+                this.pollTimeout,
+                `The Graph did not synchronize to block ${blockNumber}`
+            )
+        } catch (e) {
+            if (e instanceof TimeoutError) {
+                this.gates.delete(gate)
+            }
+            throw e
+        }
     }
 
     private getOrCreateGate(blockNumber: number): BlockNumberGate {
@@ -130,15 +117,13 @@ export class SynchronizedGraphQLClient {
     constructor(
         context: Context,
         @inject(GraphQLClient) delegate: GraphQLClient,
-        @inject(ConfigInjectionToken.Root) clientConfig: StrictStreamrClientConfig
+        @inject(ConfigInjectionToken.Timeouts) timeoutsConfig: TimeoutsConfig
     ) {
         this.delegate = delegate
         this.indexingState = new IndexingState(
             () => this.delegate.getIndexBlockNumber(),
-            // eslint-disable-next-line no-underscore-dangle
-            clientConfig._timeouts.theGraph.timeout,
-            // eslint-disable-next-line no-underscore-dangle
-            clientConfig._timeouts.theGraph.retryInterval,
+            timeoutsConfig.theGraph.timeout,
+            timeoutsConfig.theGraph.retryInterval,
             context.debug.extend(instanceId(this))
         )
     }

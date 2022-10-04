@@ -1,6 +1,6 @@
 import { NodeId } from '../identifiers'
 import { NameDirectory } from '../NameDirectory'
-import { Logger } from '../helpers/Logger'
+import { Logger } from "@streamr/utils"
 
 type GetAllNodesFn = () => ReadonlyArray<NodeId>
 type HasSharedStreamPartsFn = (nodeId: NodeId) => boolean
@@ -9,10 +9,10 @@ type DisconnectFn = (nodeId: NodeId, reason: string) => void
 const logger = new Logger(module)
 
 export interface DisconnectionManagerOptions {
-    getAllNodes: GetAllNodesFn,
-    hasSharedStreamParts: HasSharedStreamPartsFn,
-    disconnect: DisconnectFn,
-    disconnectionDelayInMs: number,
+    getAllNodes: GetAllNodesFn
+    hasSharedStreamParts: HasSharedStreamPartsFn
+    disconnect: DisconnectFn
+    disconnectionDelayInMs: number
     cleanUpIntervalInMs: number
 }
 

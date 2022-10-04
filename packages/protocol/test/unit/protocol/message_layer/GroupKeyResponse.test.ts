@@ -2,31 +2,22 @@ import assert from 'assert'
 
 import {
     StreamMessage,
-    MessageID,
-    MessageRef,
-    GroupKeyMessage,
-    GroupKeyResponse,
-    toStreamID
+    GroupKeyResponse
 } from '../../../../src/index'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
+import GroupKeyMessage from '../../../../src/protocol/message_layer/GroupKeyMessage'
 
 // Message definitions
 const message = new GroupKeyResponse({
     requestId: 'requestId',
-    streamId: toStreamID('streamId'),
+    recipient: '0xaaaaaAAAAA012345678901234567890123456789',
     encryptedGroupKeys: [
         new EncryptedGroupKey('groupKeyId1', 'encryptedGroupKey1'),
         new EncryptedGroupKey('groupKeyId2', 'encryptedGroupKey2'),
     ],
 })
-const serializedMessage = JSON.stringify(['requestId', 'streamId', [['groupKeyId1', 'encryptedGroupKey1'], ['groupKeyId2', 'encryptedGroupKey2']]])
-
-const streamMessage = new StreamMessage({
-    messageId: new MessageID(toStreamID('streamId'), 0, 1, 0, 'publisherId', 'msgChainId'),
-    prevMsgRef: new MessageRef(0, 0),
-    content: serializedMessage,
-    messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-})
+// eslint-disable-next-line max-len
+const serializedMessage = JSON.stringify(['requestId', '0xaaaaaAAAAA012345678901234567890123456789', [['groupKeyId1', 'encryptedGroupKey1'], ['groupKeyId2', 'encryptedGroupKey2']]])
 
 describe('GroupKeyResponse', () => {
     describe('deserialize', () => {
@@ -37,16 +28,6 @@ describe('GroupKeyResponse', () => {
     describe('serialize', () => {
         it('correctly serializes messages', () => {
             assert.deepStrictEqual(message.serialize(), serializedMessage)
-        })
-    })
-    describe('toStreamMessage', () => {
-        it('produces the expected StreamMessage', () => {
-            assert.deepStrictEqual(message.toStreamMessage(streamMessage.getMessageID(), streamMessage.getPreviousMessageRef()!), streamMessage)
-        })
-    })
-    describe('fromStreamMessage', () => {
-        it('produces the expected key exchange message', () => {
-            assert.deepStrictEqual(GroupKeyMessage.fromStreamMessage(streamMessage), message)
         })
     })
 })

@@ -1,9 +1,8 @@
 import fetchNatType from 'nat-type-identifier'
-import { Logger, scheduleAtInterval } from 'streamr-network'
-import { wait } from 'streamr-test-utils'
+import { Logger, scheduleAtInterval, withTimeout } from '@streamr/utils'
+import { wait } from '@streamr/utils'
 import { Plugin, PluginOptions } from '../../Plugin'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { withTimeout } from '../../helpers/withTimeout'
 import { Response } from 'node-fetch'
 import { fetchOrThrow } from '../../helpers/fetchOrThrow'
 import { version as CURRENT_VERSION } from '../../../package.json'
@@ -14,8 +13,7 @@ const REWARD_STREAM_PARTITION = 0
 const LATENCY_POLL_INTERVAL = 30 * 60 * 1000
 const NAT_ANALYSIS_SAMPLE_COUNT = 5
 const NAT_ANALYSIS_TIMEOUT = {
-    maxWaitTime: 60 * 1000,
-    errorCode: 'NAT_ANALYSIS_TIMEOUT'
+    maxWaitTime: 60 * 1000
 }
 const NAT_TYPE_UNKNOWN = 'Unknown'
 
@@ -25,12 +23,13 @@ export interface BrubeckMinerPluginConfig {
     rewardStreamIds: string
     claimServerUrl: string
     maxClaimDelay: number
-    stunServerHost: string|null
+    stunServerHost: string | null
+    beneficiaryAddress: string | null
 }
 
 interface Peer {
     id: string
-    rtt: number|undefined
+    rtt: number | undefined
 }
 
 export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
@@ -48,7 +47,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         this.dummyMessagesReceived = 0
         this.rewardSubscriptionRetryRef = null
         this.subscriptionRetryInterval = 3 * 60 * 1000
-        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random()*this.pluginConfig.rewardStreamIds.length)])
+        this.streamId = toStreamID(this.pluginConfig.rewardStreamIds[Math.floor(Math.random() * this.pluginConfig.rewardStreamIds.length)])
     }
 
     async start(): Promise<void> {
@@ -126,6 +125,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
             clientServerLatency: this.latestLatency,
             waitTime: delay,
             natType: this.natType,
+            beneficiaryAddress: this.pluginConfig.beneficiaryAddress,
             peers
         }
         try {
@@ -146,7 +146,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    private async getLatency(): Promise<number|undefined> {
+    private async getLatency(): Promise<number | undefined> {
         const startTime = Date.now()
         try {
             await fetchOrThrow(`${this.pluginConfig.claimServerUrl}/ping`)
@@ -164,7 +164,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
                 logsEnabled: false,
                 sampleCount: NAT_ANALYSIS_SAMPLE_COUNT,
                 stunHost: this.pluginConfig.stunServerHost!
-            }), NAT_ANALYSIS_TIMEOUT.maxWaitTime, NAT_ANALYSIS_TIMEOUT.errorCode)
+            }), NAT_ANALYSIS_TIMEOUT.maxWaitTime)
             logger.info(`NAT type: ${result}`)
             return result
         } catch (e) {
@@ -181,7 +181,7 @@ export class BrubeckMinerPlugin extends Plugin<BrubeckMinerPluginConfig> {
         }
     }
 
-    getConfigSchema(): Schema {
+    override getConfigSchema(): Schema {
         return PLUGIN_CONFIG_SCHEMA
     }
 }

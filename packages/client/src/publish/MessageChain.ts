@@ -10,16 +10,16 @@ import {
     EthereumAddress
 } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
-import { randomString, CacheFn } from '../utils'
+import { CacheFn } from '../utils/caches'
+import { randomString } from '@streamr/utils'
 
-export type MessageChainOptions = {
+export interface MessageChainOptions {
     publisherId: EthereumAddress
     msgChainId?: string
 }
 
 export function getCachedMessageChain(cacheConfig: CacheConfig):
     ((streamPartId: StreamPartID, msgChainOptions: MessageChainOptions) => MessageChain) & {
-    clear: () => void,
     clearMatching: (matchFn: (key: string) => boolean) => void
 } {
     // one chainer per streamId + streamPartition + publisherId + msgChainId
@@ -33,17 +33,19 @@ export function getCachedMessageChain(cacheConfig: CacheConfig):
     })
 }
 
+export const createRandomMsgChainId = (): string => randomString(20)
+
 /**
  * Manage sequenceNumber & msgChainId for StreamMessages
  */
 export class MessageChain {
     private readonly streamId: StreamID
     private readonly streamPartition: number
-    readonly publisherId
-    readonly msgChainId
-    prevMsgRef?: MessageRef
+    private readonly publisherId: string
+    private readonly msgChainId: string
+    private prevMsgRef?: MessageRef
 
-    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = randomString(20) }: MessageChainOptions) {
+    constructor(streamPartId: StreamPartID, { publisherId, msgChainId = createRandomMsgChainId() }: MessageChainOptions) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
