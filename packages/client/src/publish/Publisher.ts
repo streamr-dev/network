@@ -117,16 +117,14 @@ export class Publisher implements Context {
             throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
         }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
+        const queue = await this.getGroupKeyQueue(streamId)
         return new MessageFactory({
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
             publisherId: authenticatedUser.toLowerCase(),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            useGroupKey: async () => {
-                const queue = await this.getGroupKeyQueue(streamId)
-                return queue.useGroupKey()
-            },
+            useGroupKey: () => queue.useGroupKey(),
             cacheConfig: this.cacheConfig
         })
     }
