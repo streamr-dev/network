@@ -6,6 +6,7 @@ import {
     MessageRef,
     RelayMessage,
     RelayMessageSubType,
+    StatusAckMessage,
     StatusMessage,
     StreamMessage,
     StreamPartIDUtils,
@@ -153,6 +154,18 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.streamPartition).toEqual(10)
         expect(msg.nodeIds).toEqual(['node1'])
         expect(msg.counter).toEqual(15)
+    })
+
+    it('sendStatusAck is delivered', async () => {
+        const messagePromise = waitForEvent(nodeToTracker, NodeToTrackerEvent.STATUS_ACK_RECEIVED)
+        trackerServer.sendStatusAck('node1', StreamPartIDUtils.parse('stream#10'))
+        const [msg, trackerId]: any = await messagePromise
+
+        expect(trackerId).toEqual('trackerServer')
+        expect(msg).toBeInstanceOf(StatusAckMessage)
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
     })
 
     it('sendStatus is delivered', async () => {
