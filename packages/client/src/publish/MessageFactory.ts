@@ -75,9 +75,6 @@ export class MessageFactory {
         let serializedContent = JSON.stringify(content)
         if (encryptionType === EncryptionType.AES) {
             const keySequence = await this.useGroupKey()
-            if (!keySequence.current) {
-                throw new Error(`Tried to use group key but no group key found for stream: ${this.streamId}`)
-            }
             serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), keySequence.current.data)
             groupKeyId = keySequence.current.id
             if (keySequence.next !== undefined) {
