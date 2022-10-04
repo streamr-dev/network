@@ -20,10 +20,10 @@ const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) =>
         isPublicStream: false,
         publisherId: AUTHENTICATED_USER.toLowerCase(),
         createSignature: async () => SIGNATURE,
-        useGroupKey: async () => [GROUP_KEY, undefined]
+        useGroupKey: async () => ({ current: GROUP_KEY })
     }
     return new MessageFactory({
-        ...defaultOpts as any, // TODO refactor PublisherKeyExchange#useGroupKey so that it doesn't return "never" type
+        ...defaultOpts,
         ...overridenOpts
     })
 }
@@ -95,7 +95,7 @@ describe('MessageFactory', () => {
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = createMessageFactory({
-            useGroupKey: async () => [GROUP_KEY, nextGroupKey]
+            useGroupKey: async () => ({ current: GROUP_KEY, next: nextGroupKey })
         })
         const msg = await messageFactory.createMessage(CONTENT, {
             timestamp: TIMESTAMP

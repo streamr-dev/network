@@ -2,11 +2,11 @@ import { random } from 'lodash'
 import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
-import { GroupKey } from '../encryption/GroupKey'
 import { CacheFn } from '../utils/caches'
 import { getCachedMessageChain, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
+import { GroupKeySequence } from './GroupKeyQueue'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -14,7 +14,7 @@ export interface MessageFactoryOptions {
     isPublicStream: boolean
     publisherId: EthereumAddress
     createSignature: (payload: string) => Promise<string>
-    useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+    useGroupKey: () => Promise<GroupKeySequence>
     cacheConfig?: CacheConfig
 }
 
@@ -26,7 +26,7 @@ export class MessageFactory {
     private readonly isPublicStream: boolean
     private readonly publisherId: EthereumAddress
     private readonly createSignature: (payload: string) => Promise<string>
-    private readonly useGroupKey: () => Promise<never[] | [GroupKey | undefined, GroupKey | undefined]>
+    private readonly useGroupKey: () => Promise<GroupKeySequence>
     private readonly getStreamPartitionForKey: (partitionKey: string | number) => number
     private readonly getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
@@ -74,14 +74,14 @@ export class MessageFactory {
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
         if (encryptionType === EncryptionType.AES) {
-            const [groupKey, nextGroupKey] = await this.useGroupKey()
-            if (!groupKey) {
+            const keySequence = await this.useGroupKey()
+            if (!keySequence.current) {
                 throw new Error(`Tried to use group key but no group key found for stream: ${this.streamId}`)
             }
-            serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), groupKey.data)
-            groupKeyId = groupKey.id
-            if (nextGroupKey) {
-                newGroupKey = groupKey.encryptNextGroupKey(nextGroupKey)
+            serializedContent = EncryptionUtil.encryptWithAES(Buffer.from(serializedContent, 'utf8'), keySequence.current.data)
+            groupKeyId = keySequence.current.id
+            if (keySequence.next !== undefined) {
+                newGroupKey = keySequence.current.encryptNextGroupKey(keySequence.next)
             }
         }
 
