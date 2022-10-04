@@ -7,6 +7,7 @@ import { CacheFn } from '../utils/caches'
 import { getCachedMessageChain, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
+import { Gate } from '../utils/Gate'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -50,7 +51,8 @@ export class MessageFactory {
     async createMessage<T>(
         content: T,
         metadata: MessageMetadata & { timestamp: number },
-        explicitPartition?: number
+        explicitPartition?: number,
+        previousTask?: Gate | undefined
     ): Promise<StreamMessage<T>> {
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= this.partitionCount)) {
@@ -66,7 +68,7 @@ export class MessageFactory {
                 : this.selectedDefaultPartition)
         const streamPartId = toStreamPartID(this.streamId, partition)
 
-        // TODO add commenting to highlight that this must be called in the same sequence as the original publish call
+        await previousTask?.check() // could check the return value (but currently it it should always be true as we don't lock the gate)
         const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 

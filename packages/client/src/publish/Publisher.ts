@@ -16,6 +16,8 @@ import { pLimitFn } from '../utils/promises'
 import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
+import { Gate } from '../utils/Gate'
+import { SequentialTaskManager } from '../utils/SequentialTaskManager'
 
 export class PublishError extends Error {
 
@@ -74,6 +76,7 @@ export class Publisher implements Context {
     private streamRegistryCached: StreamRegistryCached
     private node: NetworkNodeFacade
     private cacheConfig: CacheConfig
+    private sequentialTaskManager: SequentialTaskManager = new SequentialTaskManager()
     private getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
     getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
 
@@ -135,21 +138,34 @@ export class Publisher implements Context {
         metadata?: MessageMetadata
     ): Promise<StreamMessage<T>> {
         const timestamp = parseTimestamp(metadata)
-        const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
-        try {
-            const messageFactory = await this.getMessageFactory(streamId)
-            const message = await messageFactory.createMessage(
-                content,
-                {
-                    ...metadata,
-                    timestamp
-                },
-                partition
-            )
-            await this.node.publishToNode(message)
-            return message
-        } catch (e) {
-            throw new PublishError(streamId, timestamp, e)
-        }
+        /*
+         * There are some steps in the publish process which need to be done sequentially:
+         * - message chaining
+         * - consuming a group key from a queue
+         * 
+         * These operations block until a possible previous publish operation has completed.
+         * If we want to optimize concurrency, we could have two separate blocking operations:
+         * - message chaining could wait for the previous message chaining to complete, 
+         * - and consuming a group key could wait for the previous group key comsumption
+         */
+        return this.sequentialTaskManager.execute(async (previousTask: Gate | undefined) => {
+            const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
+            try {
+                const messageFactory = await this.getMessageFactory(streamId)
+                const message = await messageFactory.createMessage(
+                    content,
+                    {
+                        ...metadata,
+                        timestamp
+                    },
+                    partition,
+                    previousTask
+                )
+                await this.node.publishToNode(message)
+                return message
+            } catch (e) {
+                throw new PublishError(streamId, timestamp, e)
+            }    
+        })
     }
 }
