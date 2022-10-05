@@ -161,6 +161,7 @@ describe('Route Message With Mock Connections', () => {
         await Promise.allSettled(
             Object.values(numsOfReceivedMessages).map(async (count) =>
                 await waitForCondition(() => {
+                    console.info(count)
                     return count >= routers.length - 1
                 }, 30000)
             )
