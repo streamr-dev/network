@@ -107,16 +107,15 @@ export class Publisher implements Context {
         })
     }
 
+    /* eslint-disable @typescript-eslint/no-shadow */
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
         const stream = await this.streamRegistryCached.getStream(streamId)
-        const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
         const queue = await this.getGroupKeyQueue(streamId)
         return new MessageFactory({
             publisherId: await this.authentication.getAddress(),
             streamId,
             partitionCount: stream.partitions,
-            isPublicStream,
-            // eslint-disable-next-line @typescript-eslint/no-shadow
+            isPublicStream: (streamId: StreamID) => this.streamRegistryCached.isPublic(streamId),
             isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => this.streamRegistryCached.isStreamPublisher(streamId, publisherId),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
             useGroupKey: () => queue.useGroupKey(),

@@ -18,7 +18,7 @@ const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) =>
         publisherId: AUTHENTICATED_USER.toLowerCase(),
         streamId: STREAM_ID,
         partitionCount: PARTITION_COUNT,
-        isPublicStream: false,
+        isPublicStream: async () => false,
         isPublisher: async () => true,
         createSignature: async () => SIGNATURE,
         useGroupKey: async () => ({ current: GROUP_KEY })
@@ -57,7 +57,7 @@ describe('MessageFactory', () => {
 
     it('public stream', async () => {
         const messageFactory = createMessageFactory({
-            isPublicStream: true,
+            isPublicStream: async () => true,
             useGroupKey: () => Promise.reject()
         })
         const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })

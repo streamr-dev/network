@@ -13,7 +13,7 @@ export interface MessageFactoryOptions {
     publisherId: EthereumAddress
     streamId: StreamID
     partitionCount: number
-    isPublicStream: boolean
+    isPublicStream: (streamId: StreamID) => Promise<boolean>
     isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<GroupKeySequence>
@@ -26,7 +26,7 @@ export class MessageFactory {
     private readonly streamId: StreamID
     private readonly partitionCount: number
     private readonly selectedDefaultPartition: number
-    private readonly isPublicStream: boolean
+    private readonly isPublicStream: (streamId: StreamID) => Promise<boolean>
     private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
@@ -84,7 +84,7 @@ export class MessageFactory {
         const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
-        const encryptionType = this.isPublicStream ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
+        const encryptionType = (await this.isPublicStream(this.streamId)) ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
         let groupKeyId: GroupKeyId | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
