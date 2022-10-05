@@ -6,7 +6,6 @@ import { MessageRef, StreamPartID, StreamPartIDUtils, EthereumAddress, StreamMes
 
 import { instanceId, counterId } from '../utils/utils'
 import { Context, ContextError } from '../utils/Context'
-import { inspect } from '../utils/log'
 
 import { MessageStream, MessageStreamOnMessage } from './MessageStream'
 import { SubscribePipeline } from './SubscribePipeline'
@@ -122,7 +121,7 @@ export class Resends implements Context {
             })
         }
 
-        throw new ContextError(this, `can not resend without valid resend options: ${inspect({ streamPartId, options })}`)
+        throw new ContextError(this, `can not resend without valid resend options: ${JSON.stringify({ streamPartId, options })}`)
     }
 
     private async fetchStream<T>(
@@ -134,7 +133,7 @@ export class Resends implements Context {
         debug('fetching resend %s %s %o', endpointSuffix, streamPartId, query)
         const nodeAddresses = await this.streamStorageRegistry.getStorageNodes(StreamPartIDUtils.getStreamID(streamPartId))
         if (!nodeAddresses.length) {
-            const err = new ContextError(this, `no storage assigned: ${inspect(streamPartId)}`)
+            const err = new ContextError(this, `no storage assigned: ${streamPartId}`)
             err.code = 'NO_STORAGE_NODES'
             throw err
         }
