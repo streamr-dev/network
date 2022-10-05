@@ -1,5 +1,4 @@
 import { DhtNode } from '../src/dht/DhtNode'
-import { SimulatorTransport } from '../src/connection/SimulatorTransport'
 import {
     ClosestPeersRequest, ClosestPeersResponse,
     NodeType,
@@ -10,6 +9,7 @@ import { PeerID } from '../src/helpers/PeerID'
 import { IDhtRpcService, IWebSocketConnectorService } from '../src/proto/DhtRpc.server'
 import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Simulator } from '../src/connection/Simulator'
+import { ConnectionManager } from '../src/exports'
 
 export const generateId = (stringId: string): Uint8Array => {
     return PeerID.fromString(stringId).value
@@ -27,13 +27,12 @@ export const createMockConnectionDhtNode = async (stringId: string, simulator: S
         type: NodeType.NODEJS
     }
 
-    const mockConnectionLayer = new SimulatorTransport(peerDescriptor, simulator)
-
-    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionLayer, 
+    const mockConnectionManager = new ConnectionManager({ ownPeerDescriptor: peerDescriptor, simulator: simulator })
+    
+    const node = new DhtNode({ peerDescriptor: peerDescriptor, transportLayer: mockConnectionManager, 
         nodeName: stringId, numberOfNodesPerKBucket: K })
     await node.start()
 
-    simulator.addConnectionManager(mockConnectionLayer)
     return node
 }
 

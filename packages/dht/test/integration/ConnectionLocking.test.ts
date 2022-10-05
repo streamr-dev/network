@@ -1,5 +1,4 @@
 import { Simulator } from '../../src/connection/Simulator'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { waitForCondition } from 'streamr-test-utils'
@@ -18,15 +17,15 @@ describe('Connection Locking', () => {
 
     const simulator = new Simulator()
 
-    let mockConnectorTransport1: SimulatorTransport
-    let mockConnectorTransport2: SimulatorTransport
+    let mockConnectorTransport1: ConnectionManager
+    let mockConnectorTransport2: ConnectionManager
 
     let connectionManager1: ConnectionManager
     let connectionManager2: ConnectionManager
 
     beforeEach(async () => {
-        mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
-        mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
+        mockConnectorTransport1 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
+        mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator: simulator })
 
         connectionManager1 = new ConnectionManager({
             transportLayer: mockConnectorTransport1,

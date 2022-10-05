@@ -2,7 +2,6 @@ import { ConnectionManager } from "../../src/connection/ConnectionManager"
 import { Message, MessageType, NodeType, PeerDescriptor } from "../../src/proto/DhtRpc"
 import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
 import { ClientWebSocket } from '../../src/connection/WebSocket/ClientWebSocket'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
 import { DhtNode } from "../../src/dht/DhtNode"
@@ -20,9 +19,9 @@ describe('ConnectionManager', () => {
     }
     const simulator = new Simulator()
 
-    const mockTransport = new SimulatorTransport(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport1 = new SimulatorTransport(mockPeerDescriptor1, simulator)
-    const mockConnectorTransport2 = new SimulatorTransport(mockPeerDescriptor2, simulator)
+    const mockTransport = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator: simulator })
+    const mockConnectorTransport1 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor1, simulator })
+    const mockConnectorTransport2 = new ConnectionManager({ ownPeerDescriptor: mockPeerDescriptor2, simulator })
 
     it('Can start alone', async () => {
         const connectionManager = new ConnectionManager({ transportLayer: mockTransport, webSocketHost: 'localhost', webSocketPort: 9991 })
