@@ -13,7 +13,6 @@ import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { CacheConfig, ConfigInjectionToken } from '../Config'
-import { pLimitFn } from '../utils/promises'
 import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
@@ -95,11 +94,11 @@ export class Publisher implements Context {
         this.streamRegistryCached = streamRegistryCached
         this.node = node
         this.cacheConfig = cacheConfig
-        this.getMessageFactory = pLimitFn(pMemoize(async (streamId: StreamID) => {  // TODO is it better to use pMemoize or CacheAsyncFn (e.g. after revoked publish permissions?)
+        this.getMessageFactory = pMemoize(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         }, {
             cacheKey: ([streamId]) => streamId
-        }))
+        })
         this.getGroupKeyQueue = pMemoize(async (streamId: StreamID) => {
             return new GroupKeyQueue(streamId, groupKeyStore)
         }, {
