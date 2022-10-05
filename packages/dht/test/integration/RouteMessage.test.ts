@@ -5,6 +5,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
 import { Simulator } from '../../src/connection/Simulator'
+import { UUID } from '../../src/helpers/UUID'
 
 describe('Route Message With Mock Connections', () => {
     let entryPoint: DhtNode
@@ -129,11 +130,11 @@ describe('Route Message With Mock Connections', () => {
         await entryPoint.joinDht(entryPointDescriptor)
         await Promise.all(
             routers.map((node) => {
-                node.joinDht(entryPointDescriptor)
                 numsOfReceivedMessages[node.getNodeId().toKey()] = 0
                 node.on('data', () => {
                     numsOfReceivedMessages[node.getNodeId().toKey()] = numsOfReceivedMessages[node.getNodeId().toKey()] + 1
                 })
+                return node.joinDht(entryPointDescriptor)
             })
         )
         await Promise.allSettled(
@@ -151,7 +152,7 @@ describe('Route Message With Mock Connections', () => {
                             message: Message.toBinary(message),
                             destinationPeer: receiver.getPeerDescriptor(),
                             sourcePeer: node.getPeerDescriptor(),
-                            requestId: 'tsutsu'
+                            requestId: new UUID().toString()
                         })
                     }
                 }))
