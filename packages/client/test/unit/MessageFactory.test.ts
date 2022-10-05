@@ -19,6 +19,7 @@ const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) =>
         streamId: STREAM_ID,
         partitionCount: PARTITION_COUNT,
         isPublicStream: false,
+        isPublisher: async () => true,
         createSignature: async () => SIGNATURE,
         useGroupKey: async () => ({ current: GROUP_KEY })
     }
@@ -167,5 +168,16 @@ describe('MessageFactory', () => {
             })
             expect(msg!.messageId.streamPartition).toBe(partitionOffset)
         })
+    })
+
+    it('not a publisher', () => {
+        const messageFactory = createMessageFactory({
+            isPublisher: async () => false
+        })
+        return expect(async () => {
+            await messageFactory.createMessage(CONTENT, {
+                timestamp: TIMESTAMP
+            })
+        }).rejects.toThrow(/is not a publisher on stream/)
     })
 })

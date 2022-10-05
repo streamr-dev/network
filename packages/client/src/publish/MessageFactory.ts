@@ -14,6 +14,7 @@ export interface MessageFactoryOptions {
     streamId: StreamID
     partitionCount: number
     isPublicStream: boolean
+    isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<GroupKeySequence>
     cacheConfig?: CacheConfig
@@ -26,6 +27,7 @@ export class MessageFactory {
     private readonly partitionCount: number
     private readonly selectedDefaultPartition: number
     private readonly isPublicStream: boolean
+    private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
     private readonly getStreamPartitionForKey: (partitionKey: string | number) => number
@@ -37,6 +39,7 @@ export class MessageFactory {
         this.partitionCount = opts.partitionCount
         this.selectedDefaultPartition = random(opts.partitionCount - 1)
         this.isPublicStream = opts.isPublicStream
+        this.isPublisher = opts.isPublisher
         this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
         this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
@@ -54,25 +57,30 @@ export class MessageFactory {
         })
     }
 
+    /* eslint-disable padding-line-between-statements */
     async createMessage<T>(
         content: T,
         metadata: MessageMetadata & { timestamp: number },
         explicitPartition?: number
     ): Promise<StreamMessage<T>> {
+        const isPublisher = await this.isPublisher(this.streamId, this.publisherId)
+        if (!isPublisher) {
+            throw new Error(`${this.publisherId} is not a publisher on stream ${this.streamId}`)
+        }
         if (explicitPartition !== undefined) {
             if ((explicitPartition < 0 || explicitPartition >= this.partitionCount)) {
                 throw new Error(`Partition ${explicitPartition} is out of range (0..${this.partitionCount - 1})`)
             }
-            if (metadata?.partitionKey !== undefined) { // eslint-disable-line padding-line-between-statements
+            if (metadata?.partitionKey !== undefined) {
                 throw new Error('Invalid combination of "partition" and "partitionKey"')
             }
         }
+
         const partition = explicitPartition
             ?? ((metadata.partitionKey !== undefined)
                 ? this.getStreamPartitionForKey(metadata.partitionKey!)
                 : this.selectedDefaultPartition)
         const streamPartId = toStreamPartID(this.streamId, partition)
-
         const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 

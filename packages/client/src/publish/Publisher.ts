@@ -1,4 +1,4 @@
-import { StreamID, StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
@@ -112,10 +112,6 @@ export class Publisher implements Context {
             this.streamRegistryCached.getStream(streamId),
             this.authentication.getAddress()
         ])
-        const isPublisher = await this.streamRegistryCached.isStreamPublisher(streamId, authenticatedUser)
-        if (!isPublisher) {
-            throw new Error(`${authenticatedUser} is not a publisher on stream ${streamId}`)
-        }
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
         const queue = await this.getGroupKeyQueue(streamId)
         return new MessageFactory({
@@ -123,6 +119,8 @@ export class Publisher implements Context {
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => this.streamRegistryCached.isStreamPublisher(streamId, publisherId),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
             useGroupKey: () => queue.useGroupKey(),
             cacheConfig: this.cacheConfig
