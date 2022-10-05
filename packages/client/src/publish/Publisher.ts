@@ -108,14 +108,11 @@ export class Publisher implements Context {
     }
 
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
-        const [ stream, authenticatedUser ] = await Promise.all([
-            this.streamRegistryCached.getStream(streamId),
-            this.authentication.getAddress()
-        ])
+        const stream = await this.streamRegistryCached.getStream(streamId)
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
         const queue = await this.getGroupKeyQueue(streamId)
         return new MessageFactory({
-            publisherId: authenticatedUser.toLowerCase(),
+            publisherId: await this.authentication.getAddress(),
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
