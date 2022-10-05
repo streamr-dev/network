@@ -56,7 +56,7 @@ export class DhtNodeConfig {
     numberOfNodesPerKBucket = 1
     joinNoProgressLimit = 4
     routeMessageTimeout = 4000
-    dhtJoinTimeout = 60000
+    dhtJoinTimeout = 120000
 
     constructor(conf: Partial<DhtNodeConfig>) {
         // assign given non-undefined config vars over defaults
@@ -308,7 +308,11 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
 
         const forwardingEntry = this.forwardingTable.get(PeerID.fromValue(targetPeerDescriptor.peerId).toKey())
-        if (forwardingEntry) {
+        if (
+            forwardingEntry
+            && forwardingEntry.peerDescriptors.length > 0
+            // && PeerID.fromValue(forwardingEntry.peerDescriptors[0].peerId).equals(PeerID.fromValue(targetPeerDescriptor.peerId))
+        ) {
             const forwardingPeer = forwardingEntry.peerDescriptors[0]
             const forwardedMessage: RouteMessageWrapper = {
                 message: RouteMessageWrapper.toBinary(params),
@@ -322,7 +326,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             })
         } else {
             this.doRouteMessage(params).catch((err) => {
-                console.log(params.sourcePeer, params.destinationPeer, params)
                 logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
             })
         }
@@ -564,6 +567,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return
         }
 
+        // this.config.entryPoints = [entryPointDescriptor]
+
         if (this.connectionManager) {
             this.connectionManager.lockConnection(entryPointDescriptor, `${this.config.serviceId}::joinDht`)
         }
@@ -593,6 +598,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 this.getClosestPeersFromContact(nextPeer!)
                     .then((contacts) => this.onClosestPeersRequestSucceeded(nextPeer!.peerId, contacts))
                     .catch((err) => this.onClosestPeersRequestFailed(nextPeer!.peerId, err))
+                    .finally(() => {
+                        this.outgoingClosestPeersRequestsCounter--
+                        if (this.outgoingClosestPeersRequestsCounter === 0 && this.ongoingJoinOperation) {
+                            if (this.isJoinCompleted()) {
+                                this.emit('joinCompleted')
+                                this.ongoingJoinOperation = false
+                            } else {
+
+                            }
+                        }
+                    })
             }
         }
     }
@@ -647,6 +663,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.getClosestPeers = this.getClosestPeers.bind(this)
         this.ping = this.ping.bind(this)
         this.routeMessage = this.routeMessage.bind(this)
+        this.forwardMessage = this.forwardMessage.bind(this)
 
         this.rpcCommunicator!.registerRpcMethod(ClosestPeersRequest, ClosestPeersResponse, 'getClosestPeers', this.getClosestPeers)
         this.rpcCommunicator!.registerRpcMethod(PingRequest, PingResponse, 'ping', this.ping)
@@ -720,6 +737,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.ongoingJoinOperation = false
         this.bucket!.removeAllListeners()
         this.rpcCommunicator?.stop()
+        this.forwardingTable.forEach((entry) => {
+            clearTimeout(entry.timeout)
+        })
+        this.forwardingTable.clear()
         this.removeAllListeners()
         await this.connectionManager?.stop()
     }
@@ -822,8 +843,8 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.createRouteMessageAck(routedMessage, 'forwardMessage() service is not running')
         } else if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
             logger.trace(`Peer ${this.ownPeerId?.value} forwarding message ${routedMessage.requestId} 
-                from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId} is likely a duplicate`)
-            return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
+        from ${routedMessage.sourcePeer?.peerId} to ${routedMessage.destinationPeer?.peerId} is likely a duplicate`)
+            return this.createRouteMessageAck(routedMessage, 'message given to forwardMessage() service is likely a duplicate')
         }
 
         logger.trace(`Processing received forward routeMessage ${routedMessage.requestId}`)
@@ -834,8 +855,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.trace(`Peer ${this.ownPeerId?.value} forwarding found message targeted to self ${routedMessage.requestId}`)
             try {
                 const forwardedMessage = RouteMessageWrapper.fromBinary(routedMessage.message)
-                console.log(routedMessage.destinationPeer!, forwardedMessage.destinationPeer!)
-                return this.doRouteMessage(forwardedMessage)
+                if (this.ownPeerId!.equals(PeerID.fromValue(forwardedMessage.destinationPeer!.peerId))) {
+                    this.handleIncomingData(forwardedMessage.message, forwardedMessage.sourcePeer!)
+                    return this.createRouteMessageAck(routedMessage)
+                }
+                this.doRouteMessage(forwardedMessage).catch((err) => {
+                    logger.warn(`Failed to send (forwardMessage: ${this.config.serviceId}) to ${PeerID.fromValue(forwardedMessage.destinationPeer!.peerId).toKey()}: ${err}`)
+                })
+                return this.createRouteMessageAck(routedMessage)
             } catch (err) {
                 logger.trace(`Could not forward message`)
                 return this.createRouteMessageAck(routedMessage, `could not route forwarded message ${routedMessage.requestId}`)

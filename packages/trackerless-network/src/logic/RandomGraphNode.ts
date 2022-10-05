@@ -51,6 +51,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private readonly duplicateDetector: DuplicateMessageDetector
     private findNeighborsIntervalRef: NodeJS.Timeout | null = null
     private neighborUpdateIntervalRef: NodeJS.Timeout | null = null
+    private ongoingFindNeighbors = false
 
     constructor(params: RandomGraphNodeParams) {
         super()
@@ -117,6 +118,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private async findNeighbors(excluded?: string[]): Promise<void> {
         logger.trace(`Finding new neighbors...`)
         const excludedIds = excluded ? excluded : []
+        this.ongoingFindNeighbors = true
 
         // Handshake with two contacts if there is room
         if (this.targetNeighbors.size() < this.N - 2) {
@@ -185,6 +187,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
             this.findNeighborsIntervalRef = setTimeout(() => {
                 this.findNeighbors(excludedIds).catch(() => {})
             }, 250)
+        } else {
+            this.ongoingFindNeighbors = false
         }
     }
 
@@ -247,6 +251,10 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.targetNeighbors.hasPeer(peerDescriptor)) {
             this.targetNeighbors.remove(peerDescriptor)
             this.connectionLocker.unlockConnection(peerDescriptor, this.randomGraphId)
+            if (this.ongoingFindNeighbors === false) {
+                this.findNeighbors().catch(() => {})
+            }
+
             logger.info("on Peer Disconnected")
         }
     }

@@ -105,6 +105,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 this.remoteDescriptionSet = true
             } catch (err) {
                 logger.warn(`Failed to set remote descriptor for peer ${this.remotePeerDescriptor.peerId.toString()}`)
+                this.close()
             }
         } else {
             this.close(`Tried to set description for non-existent connection`)
@@ -119,7 +120,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                     this.connection!.addRemoteCandidate(candidate, mid)
                 } catch (err) {
                     logger.warn(`Failed to set remote candidate for peer ${this.remotePeerDescriptor.peerId.toString()}`)
-                    // this.close()
+                    this.close()
                 }
             } else {
                 this.close(`Tried to set candidate before description`)
@@ -138,13 +139,13 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
                 // this.close()
             }
         } else {
-            // if (this.lastState === 'closed'
-            //     || this.lastState === RTCPeerConnectionStateEnum.disconnected
-            //     || this.lastState === RTCPeerConnectionStateEnum.failed
-            // ) {
-            //     this.close()
-            // }
-            logger.warn(
+            if (this.lastState === 'closed'
+                || this.lastState === RTCPeerConnectionStateEnum.disconnected
+                || this.lastState === RTCPeerConnectionStateEnum.failed
+            ) {
+                this.close()
+            }
+            logger.trace(
                 `Tried to send data on a non-open connection (${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}) `
                 + `last connection states: ${this.lastState} ${!!this.dataChannel} ${this.closed}`)
 
@@ -153,7 +154,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
 
     close(reason?: string): void {
         if (this.closed === false) {
-            logger.info(
+            logger.trace(
                 `Closing Node WebRTC Connection to ${PeerID.fromValue(this.remotePeerDescriptor.peerId).toKey()}`
                 + `${reason ? `, reason: ${reason}` : ''}`
             )

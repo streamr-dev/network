@@ -117,6 +117,9 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         this.rpcCommunicator.registerRpcMethod(LockRequest, LockResponse, 'lockRequest', this.lockRequest)
         this.rpcCommunicator.registerRpcNotification(UnlockRequest, 'unlockRequest', this.unlockRequest)
+        // setInterval(() => {
+        //     console.log(this.ownPeerDescriptor!.peerId.toString(), this.connections.size, this.remoteLockedConnections.size, this.localLockedConnections.size)
+        // }, 30000)
     }
 
     public async stop(): Promise<void> {
@@ -232,7 +235,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private onConnected = (connection: ManagedConnection) => {
         this.emit('connected', connection.getPeerDescriptor()!)
-        logger.info('connectedPeerId: ' + connection.getPeerDescriptor()!.peerId)
+        logger.trace('connectedPeerId: ' + connection.getPeerDescriptor()!.peerId)
     }
 
     private onDisconnected = (connection: ManagedConnection) => {
