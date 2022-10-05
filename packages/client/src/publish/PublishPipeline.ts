@@ -4,7 +4,6 @@
 import { EncryptionType, StreamMessage, StreamMessageType } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 
-import { inspect } from '../utils/log'
 import { instanceId } from '../utils/utils'
 import { Defer, Deferred } from '../utils/Defer'
 import { Context, ContextError } from '../utils/Context'
@@ -19,7 +18,6 @@ import { Validator } from '../Validator'
 import { DestroySignal } from '../DestroySignal'
 import { formStreamDefinitionDescription, StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { InspectOptions } from 'util'
 
 export class FailedToPublishError extends Error {
     public publishMetadata
@@ -32,14 +30,6 @@ export class FailedToPublishError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
-    }
-
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
-        return inspect(this, {
-            ...options,
-            customInspect: false,
-            depth,
-        })
     }
 }
 
