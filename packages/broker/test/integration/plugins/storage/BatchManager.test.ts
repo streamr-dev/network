@@ -4,18 +4,22 @@ import { BatchManager } from '../../../../src/plugins/storage/BatchManager'
 import { BucketId } from '../../../../src/plugins/storage/Bucket'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { MessageID, StreamMessage, toStreamID } from "streamr-client-protocol"
+import { toEthereumAddress } from '@streamr/utils'
 const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
+const defaultPublisherId = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const publisherOne = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+
 function buildMsg(
     streamId: string,
     streamPartition: number,
     timestamp: number,
     sequenceNumber: number,
-    publisherId = 'publisher',
+    publisherId = defaultPublisherId,
     msgChainId = '1',
     content: any = {}
 ) {
@@ -69,14 +73,14 @@ describe('BatchManager', () => {
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
 
         let i = 0
-        let msg = buildMsg(streamId, 0, (i + 1) * 1000, i, 'publisher1')
+        let msg = buildMsg(streamId, 0, (i + 1) * 1000, i, publisherOne)
         batchManager.store(bucketId, msg)
 
         expect(Object.values(batchManager.batches)).toHaveLength(1)
         expect(Object.values(batchManager.pendingBatches)).toHaveLength(0)
 
         for (i = 1; i < 11; i++) {
-            msg = buildMsg(streamId, 0, (i + 1) * 1000, i, 'publisher1')
+            msg = buildMsg(streamId, 0, (i + 1) * 1000, i, publisherOne)
             batchManager.store(bucketId, msg)
         }
 
@@ -88,7 +92,7 @@ describe('BatchManager', () => {
     })
 
     test('pendingBatches are inserted', (done) => {
-        const msg = buildMsg(streamId, 0, 1000, 0, 'publisher1')
+        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
@@ -111,7 +115,7 @@ describe('BatchManager', () => {
     })
 
     test('batch emits states: locked => pending => inserted', (done) => {
-        const msg = buildMsg(streamId, 0, 1000, 0, 'publisher1')
+        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
@@ -126,7 +130,7 @@ describe('BatchManager', () => {
     })
 
     test('when failed to insert, increase retry and try again after timeout', async () => {
-        const msg = buildMsg(streamId, 0, 1000, 0, 'publisher1')
+        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]
@@ -148,7 +152,7 @@ describe('BatchManager', () => {
     test('drops batch after batch reached maximum retires', async () => {
         batchManager.opts.batchMaxRetries = 2
 
-        const msg = buildMsg(streamId, 0, 1000, 0, 'publisher1')
+        const msg = buildMsg(streamId, 0, 1000, 0, publisherOne)
         batchManager.store(bucketId, msg)
 
         const batch = batchManager.batches[bucketId]

@@ -1,14 +1,15 @@
 import 'reflect-metadata'
-import { EthereumAddress, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { Authentication } from '../../src/Authentication'
 import { MessageCreateOptions, MessageCreator } from '../../src/publish/MessageCreator'
 import { StreamPartitioner } from '../../src/publish/StreamPartitioner'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const MOCK_STREAM_ID = toStreamID('mock-stream-id')
 const MOCK_STREAM_PARTITION = 50
 const MOCK_CONTENT = { foo: 'bar' }
 const MOCK_TIMESTAMP = 1234567890
-const MOCK_USER_ADDRESS = '0xAbcdeabCDE123456789012345678901234567890'
+const MOCK_USER_ADDRESS = toEthereumAddress('0xAbcdeabCDE123456789012345678901234567890')
 
 describe('MessageCreator', () => {
 

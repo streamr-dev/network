@@ -9,11 +9,12 @@ import { instanceId } from './utils/utils'
 import { pOnce } from './utils/promises'
 import { Context } from './utils/Context'
 import { NetworkConfig, ConfigInjectionToken, TrackerRegistrySmartContract } from './Config'
-import { StreamMessage, StreamPartID, ProxyDirection, } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, ProxyDirection } from 'streamr-client-protocol'
 import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { toEthereumAddress } from '@streamr/utils'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -100,7 +101,7 @@ export class NetworkNodeFacade implements Context {
     private async getNormalizedNetworkOptions(): Promise<NetworkNodeOptions> {
         if ((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress) {
             const trackerRegistry = await getTrackerRegistryFromContract({
-                contractAddress: (this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress,
+                contractAddress: toEthereumAddress((this.networkConfig.trackers as TrackerRegistrySmartContract).contractAddress),
                 jsonRpcProvider: getMainnetProvider(this.ethereumConfig)
             })
             return {

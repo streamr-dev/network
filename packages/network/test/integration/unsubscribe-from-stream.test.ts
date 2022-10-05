@@ -1,11 +1,19 @@
 import { Tracker, startTracker } from '@streamr/network-tracker'
 import { NetworkNode } from '../../src/logic/NetworkNode'
 
-import { StreamPartID, toStreamID, StreamPartIDUtils, StreamMessage, MessageID } from 'streamr-client-protocol'
-import { waitForEvent } from '@streamr/utils'
+import {
+    StreamPartID,
+    toStreamID,
+    StreamPartIDUtils,
+    StreamMessage,
+    MessageID
+} from 'streamr-client-protocol'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 
 import { createNetworkNode } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 const streamPartOne = StreamPartIDUtils.parse('s#1')
 const streamPartTwo = StreamPartIDUtils.parse('s#2')
@@ -71,11 +79,11 @@ describe('node unsubscribing from a stream', () => {
         await waitForEvent(nodeA, NodeEvent.NODE_UNSUBSCRIBED)
 
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('s'), 2, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 2, 0, 0, PUBLISHER_ID, 'msgChainId'),
             content: {},
         }))
         nodeA.publish(new StreamMessage({
-            messageId: new MessageID(toStreamID('s'), 1, 0, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(toStreamID('s'), 1, 0, 0, PUBLISHER_ID, 'msgChainId'),
             content: {},
         }))
         await waitForEvent(nodeB, NodeEvent.UNSEEN_MESSAGE_RECEIVED)

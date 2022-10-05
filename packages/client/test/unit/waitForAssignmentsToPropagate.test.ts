@@ -1,12 +1,21 @@
 import { waitForAssignmentsToPropagate } from '../../src/utils/waitForAssignmentsToPropagate'
-import { MessageID, StreamID, StreamMessage, StreamPartID, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import {
+    MessageID,
+    StreamID,
+    StreamMessage,
+    StreamPartID,
+    toStreamID,
+    toStreamPartID
+} from 'streamr-client-protocol'
 import { PushPipeline } from '../../src/utils/PushPipeline'
 import { range, shuffle } from 'lodash'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
+
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 function makeMsg<T>(ts: number, content: T): StreamMessage<T> {
     return new StreamMessage({
-        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, 'publisher', 'msgChain'),
+        messageId: new MessageID(toStreamID('assignmentStreamId'), 0, ts, 0, PUBLISHER_ID, 'msgChain'),
         content
     })
 }

@@ -9,7 +9,6 @@ import { StreamRegistry } from './registry/StreamRegistry'
 import { BrubeckContainer } from './Container'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import {
-    EthereumAddress,
     StreamID,
     StreamMessage,
     StreamPartID,
@@ -23,7 +22,7 @@ import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { withTimeout } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
 
 export interface StreamProperties {
@@ -178,12 +177,13 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async addToStorageNode(nodeAddress: EthereumAddress, waitOptions: { timeout?: number } = {}): Promise<void> {
+    async addToStorageNode(nodeAddress: string, waitOptions: { timeout?: number } = {}): Promise<void> {
         let assignmentSubscription
+        const normalizedNodeAddress = toEthereumAddress(nodeAddress)
         try {
-            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(nodeAddress))
+            assignmentSubscription = await this._subscriber.subscribe(formStorageNodeAssignmentStreamId(normalizedNodeAddress))
             const propagationPromise = waitForAssignmentsToPropagate(assignmentSubscription, this)
-            await this._streamStorageRegistry.addStreamToStorageNode(this.id, nodeAddress)
+            await this._streamStorageRegistry.addStreamToStorageNode(this.id, normalizedNodeAddress)
             await withTimeout(
                 propagationPromise,
                 // eslint-disable-next-line no-underscore-dangle

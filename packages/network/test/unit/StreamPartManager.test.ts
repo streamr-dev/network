@@ -1,9 +1,13 @@
 import { MessageID, MessageRef, toStreamID, toStreamPartID } from 'streamr-client-protocol'
 import { StreamPartManager } from '../../src/logic/StreamPartManager'
+import { toEthereumAddress } from '@streamr/utils'
 
 const streamOne = toStreamID('stream-1')
 const streamTwo = toStreamID('stream-2')
 const streamThree = toStreamID('stream-3')
+
+const publisherOne = toEthereumAddress('0x0000000000000000000000000000000000000001')
+const publisherTwo = toEthereumAddress('0x0000000000000000000000000000000000000002')
 
 describe('StreamPartManager', () => {
     let manager: StreamPartManager
@@ -46,7 +50,7 @@ describe('StreamPartManager', () => {
 
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-id', 'session-id'),
+                new MessageID(toStreamID(streamThree), 0, 10, 0, publisherOne, 'session-id'),
                 new MessageRef(5, 0)
             )
         }).not.toThrowError()
@@ -55,7 +59,7 @@ describe('StreamPartManager', () => {
     test('cannot duplicate detect on non-existing stream', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-id', 'session-id'),
+                new MessageID(toStreamID(streamThree), 0, 10, 0, publisherOne, 'session-id'),
                 new MessageRef(5, 0)
             )
         }).toThrowError('Stream part stream-3#0 is not set up')
@@ -64,27 +68,27 @@ describe('StreamPartManager', () => {
     test('duplicate detection is per publisher, msgChainId', () => {
         manager.setUpStreamPart(toStreamPartID(streamThree, 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-1'),
+            new MessageID(toStreamID(streamThree), 0, 10, 0, publisherOne, 'session-1'),
             new MessageRef(5, 0)
         )
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-1'),
+            new MessageID(toStreamID(streamThree), 0, 10, 0, publisherOne, 'session-1'),
             new MessageRef(5, 0)
         )).toEqual(false)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-2', 'session-1'),
+            new MessageID(toStreamID(streamThree), 0, 10, 0, publisherTwo, 'session-1'),
             new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-1', 'session-2'),
+            new MessageID(toStreamID(streamThree), 0, 10, 0, publisherOne, 'session-2'),
             new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(toStreamID(streamThree), 0, 10, 0, 'publisher-2', 'session-2'),
+            new MessageID(toStreamID(streamThree), 0, 10, 0, publisherTwo, 'session-2'),
             new MessageRef(5, 0)
         )).toEqual(true)
     })

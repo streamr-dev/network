@@ -6,12 +6,11 @@ import {
     MessageID,
     StreamPartID,
     StreamID,
-    StreamPartIDUtils,
-    EthereumAddress
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
 import { CacheFn } from '../utils/caches'
-import { randomString } from '@streamr/utils'
+import { EthereumAddress, randomString } from '@streamr/utils'
 
 export interface MessageChainOptions {
     publisherId: EthereumAddress
@@ -41,7 +40,7 @@ export const createRandomMsgChainId = (): string => randomString(20)
 export class MessageChain {
     private readonly streamId: StreamID
     private readonly streamPartition: number
-    private readonly publisherId: string
+    private readonly publisherId: EthereumAddress
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 

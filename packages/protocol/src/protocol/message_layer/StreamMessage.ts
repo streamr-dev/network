@@ -10,6 +10,7 @@ import EncryptedGroupKey from './EncryptedGroupKey'
 import { Serializer } from '../../Serializer'
 import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
+import { EthereumAddress } from '@streamr/utils'
 
 const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
 const LATEST_VERSION = 32
@@ -221,7 +222,7 @@ export default class StreamMessage<T = unknown> {
         return this.messageId.sequenceNumber
     }
 
-    getPublisherId(): string {
+    getPublisherId(): EthereumAddress {
         return this.messageId.publisherId
     }
 

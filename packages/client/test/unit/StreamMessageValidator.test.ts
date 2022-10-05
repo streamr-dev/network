@@ -2,7 +2,6 @@ import assert from 'assert'
 
 import {
     toStreamID,
-    EthereumAddress,
     StreamMessage,
     MessageID,
     GroupKeyMessage,
@@ -14,6 +13,7 @@ import {
 } from 'streamr-client-protocol'
 import StreamMessageValidator, { StreamMetadata } from '../../src/StreamMessageValidator'
 import { sign as nonWrappedSign } from '../../src/utils/signingUtils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const groupKeyMessageToStreamMessage = (groupKeyMessage: GroupKeyMessage, messageId: MessageID, prevMsgRef: MessageRef | null): StreamMessage => {
     return new StreamMessage({
@@ -33,9 +33,9 @@ describe('StreamMessageValidator', () => {
     let msgWithNewGroupKey: StreamMessage
 
     const publisherPrivateKey = 'd462a6f2ccd995a346a841d110e8c6954930a1c22851c0032d3116d8ccd2296a'
-    const publisher = '0x6807295093ac5da6fb2a10f7dedc5edd620804fb'
+    const publisher = toEthereumAddress('0x6807295093ac5da6fb2a10f7dedc5edd620804fb')
     const subscriberPrivateKey = '81fe39ed83c4ab997f64564d0c5a630e34c621ad9bbe51ad2754fac575fc0c46'
-    const subscriber = '0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527'
+    const subscriber = toEthereumAddress('0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527')
 
     let groupKeyRequest: StreamMessage
     let groupKeyResponse: StreamMessage
@@ -88,7 +88,7 @@ describe('StreamMessageValidator', () => {
 
         groupKeyRequest = groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
-            recipient: publisher.toLowerCase(),
+            recipient: publisher,
             rsaPublicKey: 'rsaPublicKey',
             groupKeyIds: ['groupKeyId1', 'groupKeyId2'],
         }), new MessageID(toStreamID('streamId'), 0, 0, 0, subscriber, 'msgChainId'), null)
@@ -96,7 +96,7 @@ describe('StreamMessageValidator', () => {
 
         groupKeyResponse = groupKeyMessageToStreamMessage(new GroupKeyResponse({
             requestId: 'requestId',
-            recipient: subscriber.toLowerCase(),
+            recipient: subscriber,
             encryptedGroupKeys: [
                 new EncryptedGroupKey('groupKeyId1', 'encryptedKey1'),
                 new EncryptedGroupKey('groupKeyId2', 'encryptedKey2')

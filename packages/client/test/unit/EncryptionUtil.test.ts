@@ -1,10 +1,18 @@
 import { ethers } from 'ethers'
-import { EncryptedGroupKey, MessageID, StreamMessage, toStreamID, toStreamPartID } from 'streamr-client-protocol'
+import {
+    EncryptedGroupKey,
+    MessageID,
+    StreamMessage,
+    toStreamID,
+    toStreamPartID
+} from 'streamr-client-protocol'
 import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
+import { toEthereumAddress } from '@streamr/utils'
 
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {
@@ -37,7 +45,7 @@ describe('EncryptionUtil', () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(STREAM_ID, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: {
                 foo: 'bar',
             },
@@ -60,7 +68,7 @@ describe('EncryptionUtil', () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(STREAM_ID, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(STREAM_ID, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: {
                 foo: 'bar',
             },

@@ -1,15 +1,14 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
     StreamMessageOptions,
-    MessageID,
-    EthereumAddress
+    MessageID
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -39,8 +38,6 @@ export function mockContext(): Context {
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
-
-export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
 
 // eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule): string => {
@@ -123,7 +120,7 @@ export const createMockMessage = (
             partition,
             opts.timestamp ?? Date.now(),
             opts.sequenceNumber ?? 0,
-            opts.publisher.address,
+            opts.publisher.address as EthereumAddress,
             opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
         ),
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,

@@ -4,7 +4,7 @@ import ValidationError from '../../errors/ValidationError'
 import StreamMessage from './StreamMessage'
 import GroupKeyMessage from './GroupKeyMessage'
 import EncryptedGroupKey, { EncryptedGroupKeySerialized } from './EncryptedGroupKey'
-import { EthereumAddress } from '../../utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 interface Options {
     requestId: string
@@ -46,7 +46,7 @@ export default class GroupKeyResponse extends GroupKeyMessage {
         const [requestId, recipient, encryptedGroupKeys] = arr
         return new GroupKeyResponse({
             requestId,
-            recipient,
+            recipient: toEthereumAddress(recipient),
             encryptedGroupKeys: encryptedGroupKeys.map((it) => EncryptedGroupKey.fromArray(it)),
         })
     }

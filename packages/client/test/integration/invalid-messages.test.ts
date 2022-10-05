@@ -3,7 +3,7 @@ import { StreamPermission } from '../../src/permission'
 import { sign } from '../../src/utils/signingUtils'
 import { createTestStream } from '../test-utils/utils'
 import { fastWallet } from 'streamr-test-utils'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { MessageID, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 
@@ -59,9 +59,10 @@ describe('client behaviour on invalid message', () => {
             throw new Error('should not get here')
         })
         const publisherWallet = fastWallet()
-        const networkNode = environment.startNode(publisherWallet.address)
+        const publisherAddress = toEthereumAddress(publisherWallet.address)
+        const networkNode = environment.startNode(publisherAddress)
         const msg = new StreamMessage({
-            messageId: new MessageID(streamId, 0, Date.now(), 0, publisherWallet.address, ''),
+            messageId: new MessageID(streamId, 0, Date.now(), 0, publisherAddress, ''),
             prevMsgRef: null,
             content: { not: 'allowed' }
         })

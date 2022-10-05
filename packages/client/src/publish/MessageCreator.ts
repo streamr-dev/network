@@ -57,13 +57,12 @@ export class MessageCreator {
         // streamId as queue key
         return this.queue(streamId, async () => {
             // load cached stream + publisher details
-            const [streamPartition, publisherIdChecksumCase] = await Promise.all([
+            const [streamPartition, publisherId] = await Promise.all([
                 this.streamPartitioner.compute(streamId, partitionKey),
                 this.authentication.getAddress(),
             ])
 
             const streamPartId = toStreamPartID(streamId, streamPartition)
-            const publisherId = publisherIdChecksumCase.toLowerCase()
 
             // chain messages
             const chain = this.getMsgChain(streamPartId, {

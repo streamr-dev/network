@@ -1,12 +1,10 @@
-import { randomBytes } from 'crypto'
 import { generateMnemonicFromAddress } from '../../../src/helpers/generateMnemonicFromAddress'
+import { randomEthereumAddress } from 'streamr-test-utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
-function randomAddress() {
-    return `0x${randomBytes(32).toString('hex').slice(0, 40)}`
-}
 describe(generateMnemonicFromAddress, () => {
     it('always returns same mnemonic for the same address', () => {
-        const address = randomAddress()
+        const address = randomEthereumAddress()
         const result1 = generateMnemonicFromAddress(address)
         const result2 = generateMnemonicFromAddress(address)
         expect(result1).toEqual(result2)
@@ -15,20 +13,20 @@ describe(generateMnemonicFromAddress, () => {
     })
 
     it('ignores address case', () => {
-        const address = randomAddress()
-        const result1 = generateMnemonicFromAddress(address.toLowerCase())
+        const address = randomEthereumAddress()
+        const result1 = generateMnemonicFromAddress(address.toLowerCase() as EthereumAddress)
         const result2 = generateMnemonicFromAddress(address)
         expect(result1).toEqual(result2)
     })
 
     it('can append 0x if needed', () => {
-        const address = randomAddress().slice(2)
-        const result1 = generateMnemonicFromAddress(address.toLowerCase())
-        const result2 = generateMnemonicFromAddress(address)
-        expect(result1).toEqual(result2)
+        const address = randomEthereumAddress().slice(2)
+        const result = generateMnemonicFromAddress(address as EthereumAddress)
+        expect(result).toEqual(result)
     })
 
     it('matches hardcoded value i.e. algorithm has not changed', () => {
-        expect(generateMnemonicFromAddress('0xC983de43c5d22186F1e051c6da419c5a17F19544')).toEqual('Sister Bus Movie')
+        const actual = generateMnemonicFromAddress(toEthereumAddress('0xC983de43c5d22186F1e051c6da419c5a17F19544'))
+        expect(actual).toEqual('Sister Bus Movie')
     })
 })

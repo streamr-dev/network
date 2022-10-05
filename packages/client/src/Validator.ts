@@ -6,7 +6,6 @@ import {
     StreamMessage,
     StreamMessageError,
     StreamID,
-    EthereumAddress
 } from 'streamr-client-protocol'
 
 import { instanceId } from './utils/utils'
@@ -17,6 +16,7 @@ import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
 import StreamMessageValidator from './StreamMessageValidator'
 import { verify } from './utils/signingUtils'
+import { EthereumAddress } from '@streamr/utils'
 
 export class SignatureRequiredError extends StreamMessageError {
     constructor(streamMessage: StreamMessage, code?: string) {

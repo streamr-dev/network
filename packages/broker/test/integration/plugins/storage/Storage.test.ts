@@ -6,18 +6,24 @@ import { Storage } from '../../../../src/plugins/storage/Storage'
 import { startCassandraStorage } from '../../../../src/plugins/storage/Storage'
 import { STREAMR_DOCKER_DEV_HOST } from '../../../utils'
 import { toStreamID, StreamMessage, MessageID } from "streamr-client-protocol"
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 const MAX_BUCKET_MESSAGE_COUNT = 20
 
+const publisherZero = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+const publisherOne = toEthereumAddress('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+const publisherTwo = toEthereumAddress('0xcccccccccccccccccccccccccccccccccccccccc')
+const publisherThree = toEthereumAddress('0xdddddddddddddddddddddddddddddddddddddddd')
+
 export function buildMsg({
     streamId,
     streamPartition,
     timestamp,
     sequenceNumber,
-    publisherId = 'publisher',
+    publisherId = publisherZero,
     msgChainId = '1',
     content = {}
 }: {
@@ -25,7 +31,7 @@ export function buildMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: string
+    publisherId?: EthereumAddress
     msgChainId?: string
     content?: any
 }): StreamMessage {
@@ -40,7 +46,7 @@ function buildEncryptedMsg({
     streamPartition,
     timestamp,
     sequenceNumber,
-    publisherId = 'publisher',
+    publisherId = publisherZero,
     msgChainId = '1',
     content = 'ab3516983712fa4eb216a898ddd'
 }: {
@@ -48,7 +54,7 @@ function buildEncryptedMsg({
     streamPartition: number
     timestamp: number
     sequenceNumber: number
-    publisherId?: string
+    publisherId?: EthereumAddress
     msgChainId?: string
     content?: string
 }) {
@@ -77,7 +83,7 @@ async function storeMockMessages({
     const storePromises = []
     for (let i = 0; i < count; i++) {
         const timestamp = minTimestamp + Math.floor((i / (count - 1)) * (maxTimestamp - minTimestamp))
-        const msg = buildMsg({ streamId, streamPartition, timestamp, sequenceNumber: 0, publisherId: 'publisher1' })
+        const msg = buildMsg({ streamId, streamPartition, timestamp, sequenceNumber: 0, publisherId: publisherOne })
         storePromises.push(storage.store(msg))
     }
     return Promise.all(storePromises)
@@ -136,7 +142,7 @@ describe('Storage', () => {
             streamPartition: 10,
             timestamp: 1545144750494,
             sequenceNumber: 0,
-            publisherId: 'publisher',
+            publisherId: publisherZero,
             msgChainId: '1',
             content: data
         })
@@ -159,14 +165,14 @@ describe('Storage', () => {
             partition: 10,
             ts: new Date(1545144750494),
             sequence_no: 0,
-            publisher_id: 'publisher',
+            publisher_id: publisherZero,
             msg_chain_id: '1',
             payload: Buffer.from(msg.serialize()),
         })
     })
 
     test('fetch last messages', async () => {
-        const msg1 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: 'publisher2' })
+        const msg1 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: publisherTwo })
         const msg2 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 3 })
         const msg3 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 4000, sequenceNumber: 0 })
 
@@ -195,7 +201,7 @@ describe('Storage', () => {
             const msg1 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 6 })
             const msg2 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 7 })
             const msg3 = buildEncryptedMsg({
-                streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 8, publisherId: 'publisher', msgChainId: '2'
+                streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 8, publisherId: publisherZero, msgChainId: '2'
             })
             const msg4 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 9 })
             const msg5 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 4000, sequenceNumber: 0 })
@@ -227,7 +233,7 @@ describe('Storage', () => {
             const msg1 = buildMsg({ streamId, streamPartition: 10, timestamp: 1500, sequenceNumber: 5 })
             const msg2 = buildMsg({ streamId, streamPartition: 10, timestamp: 1500, sequenceNumber: 6 })
             const msg3 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 2500, sequenceNumber: 1 })
-            const msg4 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 2500, sequenceNumber: 2, publisherId: 'publisher2' })
+            const msg4 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 2500, sequenceNumber: 2, publisherId: publisherTwo })
             const msg5 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3500, sequenceNumber: 4 })
 
             await Promise.all([
@@ -260,30 +266,30 @@ describe('Storage', () => {
         })
 
         test('with sequenceNo, publisher and msgChainId', async () => {
-            const msg1 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 2000, sequenceNumber: 0, publisherId: 'publisher1' })
-            const msg2 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 0, publisherId: 'publisher1' })
-            const msg3 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 1, publisherId: 'publisher1' })
-            const msg4 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: 'publisher1' })
+            const msg1 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 2000, sequenceNumber: 0, publisherId: publisherOne })
+            const msg2 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 0, publisherId: publisherOne })
+            const msg3 = buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 1, publisherId: publisherOne })
+            const msg4 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: publisherOne })
 
             await Promise.all([
-                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 0, sequenceNumber: 0, publisherId: 'publisher1' })),
-                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 1500, sequenceNumber: 0, publisherId: 'publisher1' })),
+                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 0, sequenceNumber: 0, publisherId: publisherOne })),
+                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 1500, sequenceNumber: 0, publisherId: publisherOne })),
                 storage.store(msg1),
-                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 2500, sequenceNumber: 0, publisherId: 'publisher3' })),
+                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 2500, sequenceNumber: 0, publisherId: publisherThree })),
                 storage.store(msg2),
                 storage.store(buildMsg({
-                    streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 0, publisherId: 'publisher1', msgChainId: '2'
+                    streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 0, publisherId: publisherOne, msgChainId: '2'
                 })),
-                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 3, publisherId: 'publisher1' })),
+                storage.store(buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 3, publisherId: publisherOne })),
                 storage.store(msg4),
                 storage.store(msg3),
-                storage.store(buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 8000, sequenceNumber: 0, publisherId: 'publisher1' })),
+                storage.store(buildEncryptedMsg({ streamId, streamPartition: 10, timestamp: 8000, sequenceNumber: 0, publisherId: publisherOne })),
                 storage.store(buildMsg({
-                    streamId: `${streamId}-wrong`, streamPartition: 10, timestamp: 8000, sequenceNumber: 0, publisherId: 'publisher1'
+                    streamId: `${streamId}-wrong`, streamPartition: 10, timestamp: 8000, sequenceNumber: 0, publisherId: publisherOne
                 }))
             ])
 
-            const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1', '1')
+            const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, publisherOne, '1')
             const results = await toArray(streamingResults)
 
             expect(results).toEqual([msg1, msg2, msg3, msg4])
@@ -330,7 +336,7 @@ describe('Storage', () => {
                     streamPartition: 0,
                     timestamp: (i + 1) * 1000,
                     sequenceNumber: i,
-                    publisherId: 'publisher1',
+                    publisherId: publisherOne,
                     content: randomBuffer.toString('hex')
                 })
                 messages.push(msg)
@@ -372,7 +378,7 @@ describe('Storage', () => {
         beforeAll(async () => {
             streamId = `stream-id-details-${Date.now()}-${streamIdx}`
             const msg1 = buildMsg({ streamId, streamPartition: 10, timestamp: 2000, sequenceNumber: 3 })
-            const msg2 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: 'publisher2' })
+            const msg2 = buildMsg({ streamId, streamPartition: 10, timestamp: 3000, sequenceNumber: 2, publisherId: publisherTwo })
             const msg3 = buildMsg({ streamId, streamPartition: 10, timestamp: 4000, sequenceNumber: 0 })
             await storage.store(msg1)
             await storage.store(msg2)

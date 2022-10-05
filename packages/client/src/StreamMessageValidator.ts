@@ -1,5 +1,5 @@
+import { EthereumAddress } from "@streamr/utils"
 import {
-    EthereumAddress,
     GroupKeyRequest,
     GroupKeyMessage,
     StreamID,

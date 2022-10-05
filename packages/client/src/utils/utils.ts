@@ -4,7 +4,8 @@ import { SEPARATOR } from './uuid'
 import pkg from '../../package.json'
 
 import { Debug } from './log'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress } from '@streamr/utils'
 
 export const debug = Debug('utils')
 

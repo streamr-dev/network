@@ -57,7 +57,7 @@ export { NotFoundError, ErrorCode } from './HttpUtil'
 export * from './types'
 export { formStorageNodeAssignmentStreamId } from './utils/utils'
 
-export { EthereumAddress, StreamPartID } from 'streamr-client-protocol'
+export { StreamPartID } from 'streamr-client-protocol'
 
 export { BigNumber } from '@ethersproject/bignumber'
 export type { ConnectionInfo } from '@ethersproject/web'

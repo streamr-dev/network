@@ -1,5 +1,5 @@
 import { entropyToMnemonic } from '@ethersproject/hdnode'
-import { EthereumAddress } from 'streamr-client-protocol'
+import { EthereumAddress } from '@streamr/utils'
 
 /**
  * @param address - valid eth address with leading 0x

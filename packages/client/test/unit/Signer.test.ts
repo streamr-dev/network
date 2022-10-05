@@ -6,6 +6,7 @@ import { getAddress } from '@ethersproject/address'
 import { Signer } from '../../src/publish/Signer'
 import { createAuthentication } from '../../src/Authentication'
 import { sign } from '../../src/utils/signingUtils'
+import { toEthereumAddress } from '@streamr/utils'
 
 /*
  * The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
@@ -37,7 +38,7 @@ describe('Signer', () => {
         })
 
         it('should sign with null previous ref correctly', async () => {
-            const address = getAddress(computeAddress(privateKey)).toLowerCase()
+            const address = toEthereumAddress(getAddress(computeAddress(privateKey)))
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: null,
@@ -58,7 +59,7 @@ describe('Signer', () => {
         })
 
         it('should sign with non-null previous ref correctly', async () => {
-            const address = getAddress(computeAddress(privateKey)).toLowerCase()
+            const address = toEthereumAddress(getAddress(computeAddress(privateKey)).toLowerCase())
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
@@ -82,7 +83,7 @@ describe('Signer', () => {
 
         it('signing should throw when constructed with no auth', async () => {
             signer = new Signer(createAuthentication({}, undefined as any))
-            const address = getAddress(computeAddress(privateKey)).toLowerCase()
+            const address = toEthereumAddress(getAddress(computeAddress(privateKey)).toLowerCase())
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),

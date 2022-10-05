@@ -1,4 +1,4 @@
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { counterId } from '../../src/utils/utils'
 import { Context } from '../../src/utils/Context'
 import { Debug } from '../test-utils/utils'
@@ -9,9 +9,11 @@ import { StreamMessage, MessageID, toStreamID, StreamID } from 'streamr-client-p
 import { Readable } from 'stream'
 import { waitForCondition } from 'streamr-test-utils'
 
+const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+
 const createMockMessage = (streamId: StreamID) => {
     return new StreamMessage({
-        messageId: new MessageID(streamId, 0, 0, 0, 'publisherId', 'msgChainId'),
+        messageId: new MessageID(streamId, 0, 0, 0, PUBLISHER_ID, 'msgChainId'),
         content: Msg()
     })
 }
@@ -61,7 +63,7 @@ describe('MessageStream', () => {
         const testMessage = Msg()
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -82,7 +84,7 @@ describe('MessageStream', () => {
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -111,7 +113,7 @@ describe('MessageStream', () => {
         leaksDetector.add('err', err)
         leaksDetector.add('testMessage', testMessage)
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -143,7 +145,7 @@ describe('MessageStream', () => {
         leaksDetector.add(s.id, s)
         const err = new Error(counterId('expected error'))
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         s.push(streamMessage)
@@ -167,7 +169,7 @@ describe('MessageStream', () => {
         leaksDetector.add(s.id, s)
         const err = new Error(counterId('expected error'))
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -195,7 +197,7 @@ describe('MessageStream', () => {
         const err = new Error(counterId('expected error'))
 
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -217,7 +219,7 @@ describe('MessageStream', () => {
         const s = new MessageStream<typeof testMessage>(context)
 
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         s.push(streamMessage)
@@ -233,7 +235,7 @@ describe('MessageStream', () => {
         leaksDetector.add(s.id, s)
 
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)
@@ -255,7 +257,7 @@ describe('MessageStream', () => {
         leaksDetector.add('err', err)
 
         const streamMessage = new StreamMessage({
-            messageId: new MessageID(streamId, 0, 1, 0, 'publisherId', 'msgChainId'),
+            messageId: new MessageID(streamId, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
             content: testMessage,
         })
         leaksDetector.add('streamMessage', streamMessage)

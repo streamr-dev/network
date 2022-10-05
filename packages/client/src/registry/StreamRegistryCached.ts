@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamID } from 'streamr-client-protocol'
+import { StreamID } from 'streamr-client-protocol'
 import { Lifecycle, scoped, inject, delay } from 'tsyringe'
 import { instanceId } from '../utils/utils'
 import { CacheAsyncFn } from '../utils/caches'
@@ -7,6 +7,7 @@ import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { StreamRegistry } from './StreamRegistry'
 import { StreamPermission } from '../permission'
 import { Stream } from '../Stream'
+import { EthereumAddress } from '@streamr/utils'
 
 const SEPARATOR = '|' // always use SEPARATOR for cache key
 

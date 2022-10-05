@@ -2,7 +2,7 @@
  * Public Resends API
  */
 import { DependencyContainer, inject, Lifecycle, scoped, delay } from 'tsyringe'
-import { MessageRef, StreamPartID, StreamPartIDUtils, EthereumAddress, StreamMessage } from 'streamr-client-protocol'
+import { MessageRef, StreamPartID, StreamPartIDUtils, StreamMessage } from 'streamr-client-protocol'
 
 import { instanceId, counterId } from '../utils/utils'
 import { Context, ContextError } from '../utils/Context'
@@ -19,7 +19,7 @@ import { random } from 'lodash'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
 import { StreamStorageRegistry } from '../registry/StreamStorageRegistry'
-import { wait } from '@streamr/utils'
+import { EthereumAddress, wait } from '@streamr/utils'
 
 const MIN_SEQUENCE_NUMBER_VALUE = 0
 

@@ -7,13 +7,14 @@ import { BrubeckContainer } from '../Container'
 import { ConfigInjectionToken } from '../Config'
 import { Stream, StreamProperties } from '../Stream'
 import { EthereumConfig, getStreamRegistryChainProvider, getStreamRegistryOverrides } from '../Ethereum'
-import { EthereumAddress, StreamID, toStreamID } from 'streamr-client-protocol'
+import { StreamID, toStreamID } from 'streamr-client-protocol'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { waitForTx } from '../utils/contract'
 import { SynchronizedGraphQLClient } from '../utils/SynchronizedGraphQLClient'
 import { StreamrClientEventEmitter, StreamrClientEvents, initEventGateway } from '../events'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
 import { ContractFactory } from '../ContractFactory'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 /**
  * Stores storage node assignments (mapping of streamIds <-> storage nodes addresses)
@@ -76,7 +77,7 @@ export class StreamStorageRegistry {
     ) {
         const chainProvider = getStreamRegistryChainProvider(ethereumConfig)
         this.streamStorageRegistryContractReadonly = this.contractFactory.createReadContract(
-            this.ethereumConfig.streamStorageRegistryChainAddress,
+            toEthereumAddress(this.ethereumConfig.streamStorageRegistryChainAddress),
             StreamStorageRegistryArtifact,
             chainProvider,
             'streamStorageRegistry'
@@ -97,7 +98,7 @@ export class StreamStorageRegistry {
                 const listener = (streamId: string, nodeAddress: string, extra: any) => {
                     emit({
                         streamId,
-                        nodeAddress,
+                        nodeAddress: toEthereumAddress(nodeAddress),
                         blockNumber: extra.blockNumber
                     })
                 }
@@ -115,7 +116,7 @@ export class StreamStorageRegistry {
         if (!this.streamStorageRegistryContract) {
             const chainSigner = await this.authentication.getStreamRegistryChainSigner()
             this.streamStorageRegistryContract = this.contractFactory.createWriteContract<StreamStorageRegistryContract>(
-                this.ethereumConfig.streamStorageRegistryChainAddress,
+                toEthereumAddress(this.ethereumConfig.streamStorageRegistryChainAddress),
                 StreamStorageRegistryArtifact,
                 chainSigner,
                 'streamStorageRegistry'
@@ -142,12 +143,12 @@ export class StreamStorageRegistry {
     async isStoredStream(streamIdOrPath: string, nodeAddress: EthereumAddress): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         log('Checking if stream %s is stored in storage node %s', streamId, nodeAddress)
-        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress.toLowerCase())
+        return this.streamStorageRegistryContractReadonly.isStorageNodeOf(streamId, nodeAddress)
     }
 
     async getStoredStreams(nodeAddress: EthereumAddress): Promise<{ streams: Stream[], blockNumber: number }> {
         log('Getting stored streams of node %s', nodeAddress)
-        const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress.toLowerCase())
+        const query = StreamStorageRegistry.buildStorageNodeQuery(nodeAddress)
         const res = await this.graphQLClient.sendQuery(query) as StorageNodeQueryResult
         const streams = res.node.storedStreams.map((stream) => {
             const props: StreamProperties = Stream.parsePropertiesFromMetadata(stream.metadata)
@@ -169,13 +170,13 @@ export class StreamStorageRegistry {
             if (res.stream === null) {
                 return []
             }
-            return res.stream.storageNodes.map((node) => node.id)
+            return res.stream.storageNodes.map((node) => toEthereumAddress(node.id))
             // eslint-disable-next-line no-else-return
         } else {
             log('Getting all storage nodes')
             const query = StreamStorageRegistry.buildAllNodesQuery()
             const res = await this.graphQLClient.sendQuery(query) as AllNodesQueryResult
-            return res.nodes.map((node) => node.id)
+            return res.nodes.map((node) => toEthereumAddress(node.id))
         }
     }
 

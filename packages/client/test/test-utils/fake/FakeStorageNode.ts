@@ -1,6 +1,5 @@
 import { range } from 'lodash'
 import {
-    EthereumAddress,
     MessageID,
     StreamID,
     StreamMessage,
@@ -13,7 +12,7 @@ import { FakeNetworkNode } from './FakeNetworkNode'
 import { FakeNetwork } from './FakeNetwork'
 import { formStorageNodeAssignmentStreamId } from '../../../src/utils/utils'
 import { sign } from '../../../src/utils/signingUtils'
-import { Multimap } from '@streamr/utils'
+import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
 import { FakeChain } from './FakeChain'
 import { StreamPermission } from '../../../src/permission'
 import { Wallet } from 'ethers'
@@ -25,7 +24,7 @@ const createStorageNodeUrl = (address: EthereumAddress): string => `${URL_SCHEME
 export const parseNodeIdFromStorageNodeUrl = (url: string): EthereumAddress => {
     const groups = url.match(new RegExp('(.*)://([^/]*)(/.*)?'))
     if ((groups !== null) && (groups[1] === URL_SCHEME)) {
-        return groups[2]
+        return toEthereumAddress(groups[2])
     } else {
         throw new Error(`unknown storage node url: ${url}`)
     }
@@ -39,24 +38,25 @@ export class FakeStorageNode extends FakeNetworkNode {
 
     private readonly streamPartMessages: Multimap<StreamPartID, StreamMessage> = new Multimap()
     private readonly privateKey: string
+    private readonly address: EthereumAddress
     private readonly chain: FakeChain
 
     constructor(wallet: Wallet, network: FakeNetwork, chain: FakeChain) {
         super({
-            id: wallet.address
+            id: toEthereumAddress(wallet.address)
         } as any, network)
         this.privateKey = wallet.privateKey
         this.chain = chain
-        chain.storageNodeMetadatas.set(wallet.address.toLowerCase(), {
-            http: createStorageNodeUrl(wallet.address)
+        this.address = toEthereumAddress(wallet.address)
+        chain.storageNodeMetadatas.set(this.address, {
+            http: createStorageNodeUrl(this.address)
         })
-        const storageNodeAssignmentStreamPermissions = new Multimap<string, StreamPermission>()
-        storageNodeAssignmentStreamPermissions.add(wallet.address.toLowerCase(), StreamPermission.PUBLISH)
-        this.chain.streams.set(formStorageNodeAssignmentStreamId(wallet.address), {
+        const storageNodeAssignmentStreamPermissions = new Multimap<EthereumAddress, StreamPermission>()
+        storageNodeAssignmentStreamPermissions.add(this.address, StreamPermission.PUBLISH)
+        this.chain.streams.set(formStorageNodeAssignmentStreamId(this.address), {
             metadata: {},
             permissions: storageNodeAssignmentStreamPermissions
         })
-    
     }
 
     async addAssignment(streamId: StreamID): Promise<void> {
@@ -72,11 +72,11 @@ export class FakeStorageNode extends FakeNetworkNode {
                 this.subscribe(streamPartId)
                 const assignmentMessage = new StreamMessage({
                     messageId: new MessageID(
-                        toStreamID(formStorageNodeAssignmentStreamId(this.id)),
+                        toStreamID(formStorageNodeAssignmentStreamId(this.address)),
                         0,
                         Date.now(),
                         idx,
-                        this.id,
+                        this.address,
                         ''
                     ),
                     content: {

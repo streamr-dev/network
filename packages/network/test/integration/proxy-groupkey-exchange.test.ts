@@ -2,13 +2,16 @@ import { NetworkNode } from '../../src/logic/NetworkNode'
 import { startTracker, Tracker } from '@streamr/network-tracker'
 import { createNetworkNode } from '../../src/createNetworkNode'
 import {
-    GroupKeyRequest, GroupKeyResponse, MessageID,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    MessageID,
     ProxyDirection,
     SmartContractRecord,
-    StreamMessage, StreamMessageType,
-    StreamPartIDUtils
+    StreamMessage,
+    StreamMessageType,
+    StreamPartIDUtils,
 } from 'streamr-client-protocol'
-import { waitForEvent } from '@streamr/utils'
+import { toEthereumAddress, waitForEvent } from '@streamr/utils'
 import { Event as NodeEvent } from '../../src/logic/Node'
 
 describe('GroupKey exchange via proxy connections', () => {
@@ -18,8 +21,8 @@ describe('GroupKey exchange via proxy connections', () => {
     let tracker: Tracker
     let trackerInfo: SmartContractRecord
 
-    const publisherUserId = 'publisher-ethereum-address'
-    const subscriberUserId = 'subscriber-ethereum-address'
+    const publisherUserId = toEthereumAddress('0x823A026e226EB47980c88616e01E1D3305Ef8Ecb')
+    const subscriberUserId = toEthereumAddress('0x73E6183bf9b79D30533bEC7B28e982e9Af649B23')
 
     const streamPartId = StreamPartIDUtils.parse('stream-0#0')
 

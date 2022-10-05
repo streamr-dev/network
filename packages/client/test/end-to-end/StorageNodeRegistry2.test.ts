@@ -3,8 +3,8 @@ import { ConfigTest, Stream } from '../../src'
 import { StreamrClient } from '../../src/StreamrClient'
 import { createEthereumAddress, createTestStream } from '../test-utils/utils'
 import { DOCKER_DEV_STORAGE_NODE } from '../../src/ConfigTest'
-import { EthereumAddress } from 'streamr-client-protocol'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 jest.setTimeout(30000)
 
@@ -32,7 +32,7 @@ describe('StorageNodeRegistry2', () => {
                 privateKey: storageNodeWallet.privateKey
             }
         })
-        storageNodeAddress = storageNodeWallet.address
+        storageNodeAddress = toEthereumAddress(storageNodeWallet.address)
         createdStream = await createTestStream(client, module)
     })
 

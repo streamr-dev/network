@@ -13,6 +13,7 @@ import { Broker, createBroker } from '../src/broker'
 import { ApiAuthenticationConfig, Config } from '../src/config/config'
 import { StreamPartID } from 'streamr-client-protocol'
 import { CURRENT_CONFIGURATION_VERSION, formSchemaUrl } from '../src/config/migration'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 
@@ -63,7 +64,7 @@ export const formConfig = ({
                 privateKey
             },
             network: {
-                id: new Wallet(privateKey).address,
+                id: toEthereumAddress(new Wallet(privateKey).address),
                 trackers: [
                     {
                         id: createEthereumAddress(trackerPort),
@@ -106,8 +107,8 @@ export const startBroker = async (testConfig: TestConfig): Promise<Broker> => {
     return broker
 }
 
-export const createEthereumAddress = (id: number): string => {
-    return '0x' + _.padEnd(String(id), 40, '0')
+export const createEthereumAddress = (id: number): EthereumAddress => {
+    return toEthereumAddress('0x' + _.padEnd(String(id), 40, '0'))
 }
 
 export const createClient = async (

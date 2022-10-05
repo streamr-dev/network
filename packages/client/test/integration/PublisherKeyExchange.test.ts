@@ -4,7 +4,7 @@ import {
     GroupKeyResponse,
     StreamMessage,
     StreamPartID,
-    StreamPartIDUtils,
+    StreamPartIDUtils
 } from 'streamr-client-protocol'
 import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
@@ -20,6 +20,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
 
@@ -106,7 +107,8 @@ describe('PublisherKeyExchange', () => {
          */
         it('happy path', async () => {
             const key = GroupKey.generate()
-            await getGroupKeyStore(publisherWallet.address).add(key, StreamPartIDUtils.getStreamID(streamPartId))
+            await getGroupKeyStore(toEthereumAddress(publisherWallet.address))
+                .add(key, StreamPartIDUtils.getStreamID(streamPartId))
 
             const request = createGroupKeyRequest(key.id)
             subscriberNode.publish(request)

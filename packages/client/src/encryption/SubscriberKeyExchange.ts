@@ -1,5 +1,4 @@
 import {
-    EthereumAddress,
     GroupKeyRequest,
     GroupKeyRequestSerialized,
     GroupKeyResponse,
@@ -23,6 +22,7 @@ import { Validator } from '../Validator'
 import { GroupKey, GroupKeyId } from './GroupKey'
 import { GroupKeyStore } from './GroupKeyStore'
 import { RSAKeyPair } from './RSAKeyPair'
+import { EthereumAddress } from '@streamr/utils'
 
 const MAX_PENDING_REQUEST_COUNT = 50000 // just some limit, we can tweak the number if needed 
 

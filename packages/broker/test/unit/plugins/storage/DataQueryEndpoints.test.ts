@@ -10,6 +10,7 @@ import {
 import { Storage } from '../../../../src/plugins/storage/Storage'
 import { PassThrough } from 'stream'
 import { MessageID, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { toEthereumAddress } from '@streamr/utils'
 
 const createEmptyStream = () => {
     const stream = new PassThrough()
@@ -35,7 +36,7 @@ describe('DataQueryEndpoints', () => {
                 0,
                 new Date(2017, 3, 1, 12, 0, 0).getTime(),
                 0,
-                'publisherId',
+                toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
                 'msgChainId'
             ),
             content,
