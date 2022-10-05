@@ -233,7 +233,7 @@ export class Resends implements Context {
         messageMatchFn?: (msgTarget: StreamMessage, msgGot: StreamMessage) => boolean
     } = {}): Promise<void> {
         if (!streamMessage) {
-            throw new ContextError(this, 'waitForStorage requires a StreamMessage, got:', streamMessage)
+            throw new ContextError(this, 'waitForStorage requires a StreamMessage')
         }
 
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
@@ -254,7 +254,7 @@ export class Resends implements Context {
                     streamMessage,
                     last: last!.map((l: any) => l.content),
                 })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(streamMessage)}`)
+                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
                 err.streamMessage = streamMessage
                 throw err
             }
