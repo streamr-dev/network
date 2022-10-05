@@ -1,4 +1,4 @@
-import { StreamMessage } from 'streamr-client-protocol'
+import { EthereumAddress, StreamMessage } from 'streamr-client-protocol'
 import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
 
 export default class OrderingUtil extends MsgChainEmitter {
@@ -30,7 +30,7 @@ export default class OrderingUtil extends MsgChainEmitter {
         chain.add(unorderedStreamMessage)
     }
 
-    private getChain(publisherId: string, msgChainId: string): OrderedMsgChain {
+    private getChain(publisherId: EthereumAddress, msgChainId: string): OrderedMsgChain {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
             const chain = new OrderedMsgChain(

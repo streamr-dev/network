@@ -19,7 +19,7 @@ export const createRandomMsgChainId = (): string => randomString(20)
 export class MessageChain {
     private readonly streamId: StreamID
     private readonly streamPartition: number
-    private readonly publisherId: string
+    private readonly publisherId: EthereumAddress
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 

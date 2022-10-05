@@ -1,4 +1,4 @@
-import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import shuffle from 'array-shuffle'
 import { waitForCondition } from 'streamr-test-utils'
 import { wait } from '@streamr/utils'
@@ -23,7 +23,7 @@ enum Delivery {
 }
 
 interface MessageInfo {
-    publisherId: string
+    publisherId: EthereumAddress
     timestamp: number
     delivery: Delivery
 }
@@ -44,7 +44,7 @@ function intoChunks<T>(arr: readonly T[], chunkSize: number): T[][] {
     return chunks
 }
 
-function formChainOfMessages(publisherId: string): Array<MessageInfo> {
+function formChainOfMessages(publisherId: EthereumAddress): Array<MessageInfo> {
     const chainOfMessages: MessageInfo[] = [{
         publisherId,
         timestamp: 1,
@@ -116,7 +116,7 @@ describe.skip(OrderingUtil, () => {
             actual[msg.getPublisherId()].push(msg.getTimestamp())
         }
 
-        const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: string) => {
+        const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
             const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from.timestamp && timestamp <= to.timestamp)
             })
