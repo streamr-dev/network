@@ -42,13 +42,16 @@ export class ManagedConnection extends EventEmitter<Events> {
 
         logger.trace('creating ManagedConnection of type: ' + connectionType + ' objectId: ' + this.objectId)
         if (connectedConnection && connectingConnection) {
-            throw new Err.IllegalArguments('Managed connection constructor only accepts either a conncting connection OR a connected connection')
+            throw new Err.IllegalArguments('Managed connection constructor only accepts either a connecting connection OR a connected connection')
         }
 
         if (connectingConnection) {
             connectingConnection.once('connected', () => {
                 this.attachImplementation(connectingConnection)
                 this.emit('connected')
+            })
+            connectingConnection.once('disconnected', () => {
+                this.emit('disconnected')
             })
         } else {
             if (connectedConnection) {
@@ -141,6 +144,9 @@ export class ManagedConnection extends EventEmitter<Events> {
         })
         impl.on('connected', () => {
             this.emit('connected')
+        })
+        impl.off('disconnected', () => {
+            this.emit('disconnected')
         })
         impl.on('disconnected', (code?: number, reason?: string) => {
             this.emit('disconnected', code, reason)

@@ -738,6 +738,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }], session, ['noCandidatesFound', 'candidatesFound'], 1000)
 
         if (result.winnerName == 'noCandidatesFound') {
+            if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
+                throw new Error(`Could not perform initial routing`)
+            }
             return this.createRouteMessageAck(routedMessage, 'No routing candidates found')
         } else {
             return this.createRouteMessageAck(routedMessage)

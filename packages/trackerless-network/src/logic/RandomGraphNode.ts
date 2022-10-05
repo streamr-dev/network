@@ -71,6 +71,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
         this.layer1.on('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.on('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.on('disconnected', (peerDescriptor) => this.onPeerDisconnected(peerDescriptor))
         this.registerDefaultServerMethods()
         const candidates = this.getNewNeighborCandidates()
         if (candidates.length) {
@@ -240,6 +241,14 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
 
     getContactPoolIds(): string[] {
         return this.contactPool.getStringIds()
+    }
+
+    private onPeerDisconnected(peerDescriptor: PeerDescriptor): void {
+        if (this.targetNeighbors.hasPeer(peerDescriptor)) {
+            this.targetNeighbors.remove(peerDescriptor)
+            this.connectionLocker.unlockConnection(peerDescriptor, this.randomGraphId)
+            logger.info("on Peer Disconnected")
+        }
     }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
