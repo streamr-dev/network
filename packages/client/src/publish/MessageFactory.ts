@@ -10,10 +10,10 @@ import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeySequence } from './GroupKeyQueue'
 
 export interface MessageFactoryOptions {
+    publisherId: EthereumAddress
     streamId: StreamID
     partitionCount: number
     isPublicStream: boolean
-    publisherId: EthereumAddress
     createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<GroupKeySequence>
     cacheConfig?: CacheConfig
@@ -21,22 +21,22 @@ export interface MessageFactoryOptions {
 
 export class MessageFactory {
 
+    private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
     private readonly partitionCount: number
     private readonly selectedDefaultPartition: number
     private readonly isPublicStream: boolean
-    private readonly publisherId: EthereumAddress
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
     private readonly getStreamPartitionForKey: (partitionKey: string | number) => number
     private readonly getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
     constructor(opts: MessageFactoryOptions) {
+        this.publisherId = opts.publisherId
         this.streamId = opts.streamId
         this.partitionCount = opts.partitionCount
         this.selectedDefaultPartition = random(opts.partitionCount - 1)
         this.isPublicStream = opts.isPublicStream
-        this.publisherId = opts.publisherId
         this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
         this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {

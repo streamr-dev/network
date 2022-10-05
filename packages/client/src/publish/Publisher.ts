@@ -119,10 +119,10 @@ export class Publisher implements Context {
         const isPublicStream = await this.streamRegistryCached.isPublic(streamId)
         const queue = await this.getGroupKeyQueue(streamId)
         return new MessageFactory({
+            publisherId: authenticatedUser.toLowerCase(),
             streamId,
             partitionCount: stream.partitions,
             isPublicStream,
-            publisherId: authenticatedUser.toLowerCase(),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
             useGroupKey: () => queue.useGroupKey(),
             cacheConfig: this.cacheConfig

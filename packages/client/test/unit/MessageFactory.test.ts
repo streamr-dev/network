@@ -15,10 +15,10 @@ const GROUP_KEY = GroupKey.generate()
 
 const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) => {
     const defaultOpts = {
+        publisherId: AUTHENTICATED_USER.toLowerCase(),
         streamId: STREAM_ID,
         partitionCount: PARTITION_COUNT,
         isPublicStream: false,
-        publisherId: AUTHENTICATED_USER.toLowerCase(),
         createSignature: async () => SIGNATURE,
         useGroupKey: async () => ({ current: GROUP_KEY })
     }
