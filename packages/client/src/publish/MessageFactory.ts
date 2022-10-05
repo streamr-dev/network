@@ -3,7 +3,7 @@ import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMes
 import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { CacheFn } from '../utils/caches'
+import { CacheAsyncFn, CacheFn } from '../utils/caches'
 import { MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
@@ -12,7 +12,7 @@ import { GroupKeySequence } from './GroupKeyQueue'
 export interface MessageFactoryOptions {
     publisherId: EthereumAddress
     streamId: StreamID
-    partitionCount: number
+    getPartitionCount: (streamId: StreamID) => Promise<number>
     isPublicStream: (streamId: StreamID) => Promise<boolean>
     isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     createSignature: (payload: string) => Promise<string>
@@ -24,26 +24,25 @@ export class MessageFactory {
 
     private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
-    private readonly partitionCount: number
-    private readonly selectedDefaultPartition: number
+    private selectedDefaultPartition: number | undefined
+    private readonly getPartitionCount: (streamId: StreamID) => Promise<number>
     private readonly isPublicStream: (streamId: StreamID) => Promise<boolean>
     private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
-    private readonly getStreamPartitionForKey: (partitionKey: string | number) => number
+    private readonly getStreamPartitionForKey: (partitionKey: string | number) => Promise<number>
     private readonly getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
     constructor(opts: MessageFactoryOptions) {
         this.publisherId = opts.publisherId
         this.streamId = opts.streamId
-        this.partitionCount = opts.partitionCount
-        this.selectedDefaultPartition = random(opts.partitionCount - 1)
+        this.getPartitionCount = opts.getPartitionCount
         this.isPublicStream = opts.isPublicStream
         this.isPublisher = opts.isPublisher
         this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
-        this.getStreamPartitionForKey = CacheFn((partitionKey: string | number) => {
-            return keyToArrayIndex(opts.partitionCount, partitionKey)
+        this.getStreamPartitionForKey = CacheAsyncFn(async (partitionKey: string | number) => {
+            return keyToArrayIndex(await opts.getPartitionCount(opts.streamId), partitionKey)
         }, {
             ...opts.cacheConfig,
             cacheKey: ([partitionKey]) => partitionKey
@@ -67,19 +66,22 @@ export class MessageFactory {
         if (!isPublisher) {
             throw new Error(`${this.publisherId} is not a publisher on stream ${this.streamId}`)
         }
+        const partitionCount = await this.getPartitionCount(this.streamId)
+        let partition
         if (explicitPartition !== undefined) {
-            if ((explicitPartition < 0 || explicitPartition >= this.partitionCount)) {
-                throw new Error(`Partition ${explicitPartition} is out of range (0..${this.partitionCount - 1})`)
+            if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
+                throw new Error(`Partition ${explicitPartition} is out of range (0..${partitionCount - 1})`)
             }
             if (metadata?.partitionKey !== undefined) {
                 throw new Error('Invalid combination of "partition" and "partitionKey"')
             }
+            partition = explicitPartition
+        } else {
+            partition = (metadata.partitionKey !== undefined)
+                ? await this.getStreamPartitionForKey(metadata.partitionKey!)
+                : await this.getSelectedDefaultPartition(partitionCount)
         }
 
-        const partition = explicitPartition
-            ?? ((metadata.partitionKey !== undefined)
-                ? this.getStreamPartitionForKey(metadata.partitionKey!)
-                : this.selectedDefaultPartition)
         const streamPartId = toStreamPartID(this.streamId, partition)
         const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
@@ -109,5 +111,16 @@ export class MessageFactory {
         message.signature = await this.createSignature(message.getPayloadToSign())
 
         return message
+    }
+
+    private async getSelectedDefaultPartition(partitionCount: number): Promise<number> {
+        // we want to (re-)select a random partition in these two situations
+        // 1) this is the first publish, and we have not yet selected any partition (the most typical case)
+        // 2) the partition count may have decreased since we initially selected a random partitions, and it
+        //    is now out-of-range (very rare case)
+        if ((this.selectedDefaultPartition === undefined) || (this.selectedDefaultPartition >= partitionCount)) {
+            this.selectedDefaultPartition = random(partitionCount - 1)
+        }
+        return this.selectedDefaultPartition
     }
 }

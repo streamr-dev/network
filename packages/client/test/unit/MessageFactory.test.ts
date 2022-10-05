@@ -1,5 +1,5 @@
 import { random } from 'lodash'
-import { StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
@@ -17,7 +17,7 @@ const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) =>
     const defaultOpts = {
         publisherId: AUTHENTICATED_USER.toLowerCase(),
         streamId: STREAM_ID,
-        partitionCount: PARTITION_COUNT,
+        getPartitionCount: async () => PARTITION_COUNT,
         isPublicStream: async () => false,
         isPublisher: async () => true,
         createSignature: async () => SIGNATURE,
@@ -167,6 +167,21 @@ describe('MessageFactory', () => {
                 partitionKey: PARTITION_COUNT + partitionOffset
             })
             expect(msg!.messageId.streamPartition).toBe(partitionOffset)
+        })
+
+        it('selected random partition in range when partition count decreases', async () => {
+            let partitionCount: number = MAX_PARTITION_COUNT - 1
+            const messageFactory = createMessageFactory({
+                getPartitionCount: async () => partitionCount
+            })
+            while (partitionCount > 0) {
+                const msg = await messageFactory.createMessage(CONTENT, {
+                    timestamp: TIMESTAMP
+                })
+                expect(msg.messageId.streamPartition).toBeLessThan(partitionCount)
+                // eslint-disable-next-line no-plusplus
+                partitionCount--
+            }
         })
     })
 
