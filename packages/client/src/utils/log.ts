@@ -59,14 +59,6 @@ export {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function inspect(value: any, inspectOptions: Parameters<typeof util.inspect>[1] = {}): string {
-    return util.inspect(value, {
-        ...DEFAULT_INSPECT_OPTS,
-        ...inspectOptions,
-    })
-}
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function formatWithOptions(inspectOptions: Parameters<typeof util.formatWithOptions>[0], msgFormat?: any, ...param: any[]): string {
     if (typeof util.formatWithOptions !== 'function') {
         // util.formatWithOptions is not browserified, use util.format instead
