@@ -2,7 +2,6 @@
 
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { waitForCondition } from 'streamr-test-utils'
@@ -37,8 +36,8 @@ describe('WebSocket Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new SimulatorTransport(wsServerConnectorPeerDescriptor, simulator)
-        connectorTransport2 = new SimulatorTransport(noWsServerConnectorPeerDescriptor, simulator)
+        connectorTransport1 = new ConnectionManager({ ownPeerDescriptor: wsServerConnectorPeerDescriptor, simulator: simulator })
+        connectorTransport2 = new ConnectionManager({ ownPeerDescriptor: noWsServerConnectorPeerDescriptor, simulator: simulator })
 
         const config1 = {
             transportLayer: connectorTransport1,

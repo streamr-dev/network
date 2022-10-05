@@ -1,25 +1,25 @@
+import EventEmitter from "eventemitter3"
 import { PeerID, PeerIDKey } from "../helpers/PeerID"
-import { Message, PeerDescriptor } from "../proto/DhtRpc"
-import { SimulatorTransport } from "./SimulatorTransport"
+import { PeerDescriptor } from "../proto/DhtRpc"
+import { ConnectionSourceEvents } from "./IConnectionSource"
+import { SimulatorConnector } from "./SimulatorConnector"
 
-export class Simulator {
-
-    private connectionManagers: Map<PeerIDKey, SimulatorTransport> = new Map()
-    
+export class Simulator extends EventEmitter<ConnectionSourceEvents> {
+    private connectors: Map<PeerIDKey, SimulatorConnector> = new Map()
     private latenciesEnabled = false
 
-    addConnectionManager(manager: SimulatorTransport): void {
-        this.connectionManagers.set(PeerID.fromValue(manager.getPeerDescriptor().peerId).toKey(), manager)
+    addConnector(connector: SimulatorConnector): void {
+        this.connectors.set(PeerID.fromValue(connector.getPeerDescriptor().peerId).toKey(), connector)
     }
 
-    send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, msg: Message): void {
+    send(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor, data: Uint8Array ): void {
         if (this.latenciesEnabled) {
             setTimeout(() => {
-                this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
+                this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingData(sourceDescriptor, data)
             }
             , Math.random() * (250 - 5) + 5)
         } else {
-            this.connectionManagers.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingMessage(sourceDescriptor, msg)
+            this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())!.handleIncomingData(sourceDescriptor, data)
         }
     }
 
@@ -27,4 +27,8 @@ export class Simulator {
         this.latenciesEnabled = true
     }
 
+    connect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void  {
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+        target!.handleIncomingConnection(sourceDescriptor)
+    }
 }

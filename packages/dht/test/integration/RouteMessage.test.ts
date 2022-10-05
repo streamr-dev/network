@@ -49,7 +49,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it('Happy path', async () => {
+    it.only('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(

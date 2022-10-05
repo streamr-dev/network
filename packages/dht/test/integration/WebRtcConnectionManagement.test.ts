@@ -1,6 +1,5 @@
 import { ConnectionManager } from '../../src/connection/ConnectionManager'
 import { Simulator } from '../../src/connection/Simulator'
-import { SimulatorTransport } from '../../src/connection/SimulatorTransport'
 import { Message, MessageType, NodeType, PeerDescriptor } from '../../src/proto/DhtRpc'
 import { PeerID } from '../../src/helpers/PeerID'
 import { ConnectionType } from '../../src/connection/IConnection'
@@ -29,10 +28,10 @@ describe('WebRTC Connection Management', () => {
 
     beforeEach(async () => {
 
-        connectorTransport1 = new SimulatorTransport(peerDescriptor1, simulator)
+        connectorTransport1 = new ConnectionManager({ ownPeerDescriptor: peerDescriptor1, simulator })
         manager1 = new ConnectionManager({ transportLayer: connectorTransport1 })
 
-        connectorTransport2 = new SimulatorTransport(peerDescriptor2, simulator)
+        connectorTransport2 = new ConnectionManager({ ownPeerDescriptor: peerDescriptor2, simulator })
         manager2 = new ConnectionManager({ transportLayer: connectorTransport2 })
 
         await manager1.start((_msg) => peerDescriptor1)
