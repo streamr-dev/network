@@ -1,6 +1,6 @@
 import { DhtNode, Events as DhtNodeEvents } from '../../src/dht/DhtNode'
 import { Message, MessageType, PeerDescriptor, RpcMessage } from '../../src/proto/DhtRpc'
-import { waitForEvent3 } from '../../src/helpers/waitForEvent3'
+import { runAndWaitForEvents3 } from '../../src/helpers/waitForEvent3'
 import { waitForCondition } from 'streamr-test-utils'
 import { createMockConnectionDhtNode, createWrappedClosestPeersRequest } from '../utils'
 import { PeerID } from '../../src/helpers/PeerID'
@@ -11,7 +11,7 @@ describe('Route Message With Mock Connections', () => {
     let sourceNode: DhtNode
     let destinationNode: DhtNode
     let routerNodes: DhtNode[]
-    const simulator = new Simulator()
+    let simulator: Simulator
     let entryPointDescriptor: PeerDescriptor
 
     const entryPointId = '0'
@@ -21,7 +21,7 @@ describe('Route Message With Mock Connections', () => {
 
     beforeEach(async () => {
         routerNodes = []
-
+        simulator = new Simulator()
         entryPoint = await createMockConnectionDhtNode(entryPointId, simulator)
 
         entryPointDescriptor = {
@@ -31,7 +31,7 @@ describe('Route Message With Mock Connections', () => {
 
         sourceNode = await createMockConnectionDhtNode(sourceId, simulator)
         destinationNode = await createMockConnectionDhtNode(destinationId, simulator)
-        
+
         for (let i = 1; i < 50; i++) {
             const nodeId = `${i}`
             const node = await createMockConnectionDhtNode(nodeId, simulator)
@@ -49,7 +49,7 @@ describe('Route Message With Mock Connections', () => {
         })
     })
 
-    it.only('Happy path', async () => {
+    it('Happy path', async () => {
         await destinationNode.joinDht(entryPointDescriptor)
         await sourceNode.joinDht(entryPointDescriptor)
         await Promise.all(
@@ -63,8 +63,8 @@ describe('Route Message With Mock Connections', () => {
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
         }
-        await Promise.all([
-            waitForEvent3<DhtNodeEvents>(destinationNode, 'data'),
+
+        runAndWaitForEvents3<DhtNodeEvents>([() => {
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
@@ -72,7 +72,7 @@ describe('Route Message With Mock Connections', () => {
                 sourcePeer: sourceNode.getPeerDescriptor(),
                 reachableThrough: []
             })
-        ])
+        }], [[destinationNode, 'data']])
     })
     /* ToDo: replace this with a case where no candidates
     can be found 
@@ -113,7 +113,7 @@ describe('Route Message With Mock Connections', () => {
             messageType: MessageType.RPC,
             body: RpcMessage.toBinary(rpcWrapper)
         }
-        for (let i = 0; i < numOfMessages; i++ ) {
+        for (let i = 0; i < numOfMessages; i++) {
             sourceNode.doRouteMessage({
                 message: Message.toBinary(message),
                 destinationPeer: destinationNode.getPeerDescriptor(),
