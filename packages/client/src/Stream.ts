@@ -199,9 +199,9 @@ class StreamrStream implements StreamMetadata {
     /**
      * @category Important
      */
-    async removeFromStorageNode(nodeAddress: EthereumAddress): Promise<void> {
+    async removeFromStorageNode(nodeAddress: string): Promise<void> {
         try {
-            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, nodeAddress)
+            return this._streamStorageRegistry.removeStreamFromStorageNode(this.id, toEthereumAddress(nodeAddress))
         } finally {
             this._streamRegistryCached.clearStream(this.id)
         }
