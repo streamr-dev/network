@@ -12,7 +12,6 @@ import { StreamID } from '../../utils/StreamID'
 import { StreamPartID } from "../../utils/StreamPartID"
 
 const serializerByVersion: Record<string, Serializer<StreamMessage>> = {}
-const BYE_KEY = '_bye'
 const LATEST_VERSION = 32
 
 export enum StreamMessageType {
@@ -288,10 +287,6 @@ export default class StreamMessage<T = unknown> {
 
     getNewGroupKey(): EncryptedGroupKey | null {
         return this.newGroupKey
-    }
-
-    isByeMessage(): boolean {
-        return !!((this.getParsedContent() as any)[BYE_KEY])
     }
 
     /**

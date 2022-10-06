@@ -1,7 +1,6 @@
 import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
-import { InspectOptions } from 'util'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -9,7 +8,6 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
@@ -33,14 +31,6 @@ export class PublishError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
-    }
-
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
-        return inspect(this, {
-            ...options,
-            customInspect: false,
-            depth,
-        })
     }
 }
 

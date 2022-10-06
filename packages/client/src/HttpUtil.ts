@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch'
-import { Debug, Debugger, inspect } from './utils/log'
+import { Debug, Debugger } from './utils/log'
 
 import { getVersionString, counterId } from './utils/utils'
 import { Readable } from 'stream'
@@ -28,8 +28,7 @@ export class HttpError extends Error {
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
-        const bodyMessage = body ? ` ${inspect(body)}` : ''
-        super(typePrefix + message + bodyMessage)
+        super(typePrefix + message)
         this.response = response
         this.body = body
         this.code = errorCode || ErrorCode.UNKNOWN

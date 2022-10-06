@@ -252,15 +252,6 @@
                 }
             }
         },
-        "debug": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-                "inspectOpts": {
-                    "type": "object"
-                }
-            }
-        },
         "theGraphUrl": {
             "type": "string",
             "format": "uri"

@@ -29,17 +29,6 @@ export function initContainer(
     uid = uid || `${uuid().slice(-4)}${uuid().slice(0, 4)}`
     const id = config.id ?? counterId(`client-${uid}`)
     const debug = Debug(id)
-    // @ts-expect-error not in types
-    if (!debug.inspectOpts) {
-        // @ts-expect-error not in types
-        debug.inspectOpts = {}
-    }
-    // @ts-expect-error not in types
-    Object.assign(debug.inspectOpts, {
-        // @ts-expect-error not in types
-        ...debug.inspectOpts,
-        ...config.debug.inspectOpts
-    })
     debug('create')
 
     const rootContext = {
