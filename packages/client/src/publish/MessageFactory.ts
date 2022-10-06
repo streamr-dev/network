@@ -63,7 +63,7 @@ export class MessageFactory {
             if ((explicitPartition < 0 || explicitPartition >= partitionCount)) {
                 throw new Error(`Partition ${explicitPartition} is out of range (0..${partitionCount - 1})`)
             }
-            if (metadata?.partitionKey !== undefined) {
+            if (metadata.partitionKey !== undefined) {
                 throw new Error('Invalid combination of "partition" and "partitionKey"')
             }
             partition = explicitPartition
