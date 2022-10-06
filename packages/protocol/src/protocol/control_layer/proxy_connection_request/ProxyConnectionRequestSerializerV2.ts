@@ -24,7 +24,7 @@ export default class ProxyConnectionRequestSerializerV2 extends Serializer<Proxy
     fromArray(arr: any[]): ProxyConnectionRequest {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            __type,
             requestId,
             streamId,
             streamPartition,

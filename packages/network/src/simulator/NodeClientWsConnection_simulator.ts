@@ -23,8 +23,9 @@ export class NodeClientWsConnection extends AbstractWsConnection {
     constructor(private ownAddress: string, 
         private ownPeerInfo: PeerInfo, 
         private remoteAddress: string, 
-        private remotePeerInfo: PeerInfo,
-        private endpoint: NodeClientWsEndpoint) {
+        remotePeerInfo: PeerInfo,
+        private endpoint: NodeClientWsEndpoint
+    ) {
         super(remotePeerInfo)
     }
 

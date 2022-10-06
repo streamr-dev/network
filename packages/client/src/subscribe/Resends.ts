@@ -14,7 +14,6 @@ import { StorageNodeRegistry } from '../registry/StorageNodeRegistry'
 import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
-import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { random } from 'lodash'
 import { ConfigInjectionToken, TimeoutsConfig } from '../Config'
 import { HttpUtil } from '../HttpUtil'
@@ -70,7 +69,6 @@ export class Resends implements Context {
         @inject(StreamStorageRegistry) private streamStorageRegistry: StreamStorageRegistry,
         @inject(delay(() => StorageNodeRegistry)) private storageNodeRegistry: StorageNodeRegistry,
         @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(delay(() => StreamRegistryCached)) private streamRegistryCached: StreamRegistryCached,
         @inject(BrubeckContainer) private container: DependencyContainer,
         @inject(HttpUtil) private httpUtil: HttpUtil,
         @inject(ConfigInjectionToken.Timeouts) private timeoutsConfig: TimeoutsConfig

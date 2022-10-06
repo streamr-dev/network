@@ -20,7 +20,7 @@ export default class ErrorMessageSerializerV2 extends Serializer<ErrorMessage> {
     fromArray(arr: any[]): ErrorMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             errorCode,
             targetNode

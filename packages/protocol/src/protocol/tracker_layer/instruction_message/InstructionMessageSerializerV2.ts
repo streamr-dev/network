@@ -23,7 +23,7 @@ export default class InstructionMessageSerializerV2 extends Serializer<Instructi
     fromArray(arr: any[]): InstructionMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             streamId,
             streamPartition,

@@ -81,7 +81,6 @@ function offeringHash(idPair: string): number {
  *
  */
 export abstract class WebRtcConnection extends ConnectionEmitter {
-    private readonly routerId: string
     private readonly maxPingPongAttempts: number
     private readonly pingInterval: number
     private readonly flushRetryTimeout: number
@@ -114,7 +113,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
     constructor({
         selfId,
         targetPeerId,
-        routerId,
         stunUrls,
         messageQueue,
         deferredConnectionAttempt,
@@ -132,7 +130,6 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         this.id = `Connection${ID}`
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
-        this.routerId = routerId
         this.stunUrls = stunUrls
         this.bufferThresholdHigh = bufferThresholdHigh
         this.bufferThresholdLow = bufferThresholdLow
