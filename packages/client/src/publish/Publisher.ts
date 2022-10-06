@@ -11,7 +11,6 @@ import { NetworkNodeFacade } from '../NetworkNodeFacade'
 import { MessageFactory } from './MessageFactory'
 import { isString } from 'lodash'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
-import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
@@ -73,7 +72,6 @@ export class Publisher implements Context {
     private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
-    private readonly cacheConfig: CacheConfig
     private readonly concurrencyLimit = pLimit(1)
     private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
@@ -84,8 +82,7 @@ export class Publisher implements Context {
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
         groupKeyStore: GroupKeyStore,
-        node: NetworkNodeFacade,
-        @inject(ConfigInjectionToken.Cache) cacheConfig: CacheConfig
+        node: NetworkNodeFacade
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
@@ -93,7 +90,6 @@ export class Publisher implements Context {
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
         this.node = node
-        this.cacheConfig = cacheConfig
         this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
         })
@@ -115,8 +111,7 @@ export class Publisher implements Context {
             isPublicStream: (streamId: StreamID) => this.streamRegistryCached.isPublic(streamId),
             isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => this.streamRegistryCached.isStreamPublisher(streamId, publisherId),
             createSignature: (payload: string) => this.authentication.createMessagePayloadSignature(payload),
-            useGroupKey: () => queue.useGroupKey(),
-            cacheConfig: this.cacheConfig
+            useGroupKey: () => queue.useGroupKey()
         })
     }
 

@@ -1,9 +1,7 @@
 import { random } from 'lodash'
 import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, toStreamPartID } from 'streamr-client-protocol'
-import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { CacheAsyncFn } from '../utils/caches'
 import { createRandomMsgChainId, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
@@ -18,7 +16,6 @@ export interface MessageFactoryOptions {
     isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<GroupKeySequence>
-    cacheConfig?: CacheConfig
 }
 
 export class MessageFactory {
@@ -33,7 +30,6 @@ export class MessageFactory {
     private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
-    private readonly getStreamPartitionForKey: (partitionKey: string | number) => Promise<number>
 
     constructor(opts: MessageFactoryOptions) {
         this.publisherId = opts.publisherId
@@ -43,12 +39,6 @@ export class MessageFactory {
         this.isPublisher = opts.isPublisher
         this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
-        this.getStreamPartitionForKey = CacheAsyncFn(async (partitionKey: string | number) => {
-            return keyToArrayIndex(await opts.getPartitionCount(opts.streamId), partitionKey)
-        }, {
-            ...opts.cacheConfig,
-            cacheKey: ([partitionKey]) => partitionKey
-        })
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
         })
@@ -79,7 +69,7 @@ export class MessageFactory {
             partition = explicitPartition
         } else {
             partition = (metadata.partitionKey !== undefined)
-                ? await this.getStreamPartitionForKey(metadata.partitionKey!)
+                ? keyToArrayIndex(partitionCount, metadata.partitionKey)
                 : await this.getSelectedDefaultPartition(partitionCount)
         }
 
