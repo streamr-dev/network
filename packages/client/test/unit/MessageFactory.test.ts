@@ -85,14 +85,6 @@ describe('MessageFactory', () => {
         })
     })
 
-    it('chaining', async () => {
-        const messageFactory = createMessageFactory()
-        const msg1 = await messageFactory.createMessage({ foo: 'bar ' }, { timestamp: 1000 })
-        const msg2 = await messageFactory.createMessage({ lorem: 'ipsum' }, { timestamp: 1000 })
-        expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
-        expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
-    })
-
     it('next group key', async () => {
         const nextGroupKey = GroupKey.generate()
         const messageFactory = createMessageFactory({
@@ -107,6 +99,17 @@ describe('MessageFactory', () => {
             encryptedGroupKeyHex: expect.any(String)
         })
         expect(GROUP_KEY.decryptNextGroupKey(msg.newGroupKey!)).toEqual(nextGroupKey)
+    })
+
+    it('not a publisher', () => {
+        const messageFactory = createMessageFactory({
+            isPublisher: async () => false
+        })
+        return expect(async () => {
+            await messageFactory.createMessage(CONTENT, {
+                timestamp: TIMESTAMP
+            })
+        }).rejects.toThrow(/is not a publisher on stream/)
     })
 
     describe('partitions', () => {
@@ -185,14 +188,33 @@ describe('MessageFactory', () => {
         })
     })
 
-    it('not a publisher', () => {
-        const messageFactory = createMessageFactory({
-            isPublisher: async () => false
+    describe('message chains', () => {
+        it('happy path', async () => {
+            const messageFactory = createMessageFactory()
+            const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
+            const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
+            expect(msg1.getMessageID().msgChainId).toBe(msg2.getMessageID().msgChainId)
+            expect(msg2.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
         })
-        return expect(async () => {
-            await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP
-            })
-        }).rejects.toThrow(/is not a publisher on stream/)
+
+        it('partitions have separate chains', async () => {
+            const messageFactory = createMessageFactory()
+            const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
+            const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey: 'mock-key' })
+            expect(msg1.getMessageID().msgChainId).not.toBe(msg2.getMessageID().msgChainId)
+            expect(msg2.getPreviousMessageRef()).toBe(null)
+        })
+
+        it('explicit msgChainId', async () => {
+            const messageFactory = createMessageFactory()
+            const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, msgChainId: 'mock-id' })
+            const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
+            const msg3 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, msgChainId: 'mock-id' })
+            expect(msg1.getMessageID().msgChainId).toBe('mock-id')
+            expect(msg2.getMessageID().msgChainId).not.toBe(msg1.getMessageID().msgChainId)
+            expect(msg2.getPreviousMessageRef()).toBe(null)
+            expect(msg3.getMessageID().msgChainId).toBe('mock-id')
+            expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
+        })
     })
 })
