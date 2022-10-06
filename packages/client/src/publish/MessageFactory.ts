@@ -1,13 +1,14 @@
 import { random } from 'lodash'
-import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, StreamPartID, toStreamPartID } from 'streamr-client-protocol'
+import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, toStreamPartID } from 'streamr-client-protocol'
 import { CacheConfig } from '../Config'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { CacheAsyncFn, CacheFn } from '../utils/caches'
-import { MessageChain } from './MessageChain'
+import { CacheAsyncFn } from '../utils/caches'
+import { createRandomMsgChainId, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeySequence } from './GroupKeyQueue'
+import { Mapping } from '../utils/Mapping'
 
 export interface MessageFactoryOptions {
     publisherId: EthereumAddress
@@ -25,13 +26,14 @@ export class MessageFactory {
     private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
     private selectedDefaultPartition: number | undefined
+    private readonly defaultMessageChainIds: Mapping<[partition: number], string>
+    private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
     private readonly getPartitionCount: (streamId: StreamID) => Promise<number>
     private readonly isPublicStream: (streamId: StreamID) => Promise<boolean>
     private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
     private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
     private readonly getStreamPartitionForKey: (partitionKey: string | number) => Promise<number>
-    private readonly getMsgChain: (streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => MessageChain
 
     constructor(opts: MessageFactoryOptions) {
         this.publisherId = opts.publisherId
@@ -47,12 +49,11 @@ export class MessageFactory {
             ...opts.cacheConfig,
             cacheKey: ([partitionKey]) => partitionKey
         })
-        this.getMsgChain = CacheFn((streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId?: string) => { // TODO would it ok to just use pMemoize (we don't have many chains)
-            return new MessageChain(streamPartId, publisherId, msgChainId)
-        }, {
-            cacheKey: ([streamPartId, publisherId, msgChainId]) => [streamPartId, publisherId, msgChainId ?? ''].join('|'),
-            ...opts.cacheConfig,
-            maxAge: Infinity
+        this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
+            return createRandomMsgChainId()
+        })
+        this.messageChains = new Mapping(async (partition: number, msgChainId: string) => {
+            return new MessageChain(toStreamPartID(this.streamId, partition), this.publisherId, msgChainId)
         })
     }
 
@@ -82,8 +83,10 @@ export class MessageFactory {
                 : await this.getSelectedDefaultPartition(partitionCount)
         }
 
-        const streamPartId = toStreamPartID(this.streamId, partition)
-        const chain = this.getMsgChain(streamPartId, this.publisherId, metadata?.msgChainId)
+        const chain = await this.messageChains.get(
+            partition,
+            metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
+        )
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
         const encryptionType = (await this.isPublicStream(this.streamId)) ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
