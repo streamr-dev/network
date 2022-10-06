@@ -1,6 +1,5 @@
 import {
     waitForStreamToEnd,
-    callbackToPromise,
     toReadableStream,
     waitForCondition,
     eventsToArray, eventsWithArgsToArray
@@ -181,55 +180,6 @@ describe(eventsWithArgsToArray, () => {
             ["eventB", "world"],
             ["eventA", 256, 512, "!"],
         ])
-    })
-})
-
-describe(callbackToPromise, () => {
-    function sumOfPositives(
-        a: number,
-        b: number,
-        c: number,
-        cb: (err: Error | null, result: number | null) => void
-    ): void {
-        if (a < 0 || b < 0 || c < 0) {
-            cb(new Error("one of inputs was negative!"), null)
-        } else {
-            cb(null, a + b + c)
-        }
-    }
-
-    it("converts a typical callback-pattern function to one that returns a promise", (done) => {
-        const convertedFn = callbackToPromise(sumOfPositives, 1, 5, 10)
-        convertedFn.then(
-            (value) => {
-                expect(value).toEqual(16)
-                done()
-                return true
-            },
-            (err) => {
-                fail(`Errored ${err}`)
-            })
-    })
-
-    it("callback error causes returned promise to reject", (done) => {
-        const convertedFn = callbackToPromise(sumOfPositives, 1, 5, -666)
-        convertedFn.then(
-            (_value) => {
-                fail("should have rejected")
-                return true
-            },
-            (err) => {
-                expect(err).toEqual(new Error("one of inputs was negative!"))
-                done()
-            })
-    })
-
-    it('zero-argument case', async () => {
-        function doSomething(cb: (err: null, result: number | null) => void): void {
-            setTimeout(() => cb(null, 1337), 0)
-        }
-        const result = await callbackToPromise(doSomething)
-        expect(result).toEqual(1337)
     })
 })
 
