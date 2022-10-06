@@ -71,6 +71,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 /**
  * @category Important
  */
+/* eslint-disable no-underscore-dangle */
 class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string
