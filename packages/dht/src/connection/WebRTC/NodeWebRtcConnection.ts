@@ -1,6 +1,6 @@
 import { IWebRtcConnection, WebRtcConnectionEvents } from './IWebRtcConnection'
 import { ConnectionType, IConnection, ConnectionID, ConnectionEvents } from '../IConnection'
-import { PeerDescriptor } from '../../proto/DhtRpc'
+import { Candidate, PeerDescriptor } from '../../proto/DhtRpc'
 import EventEmitter from 'eventemitter3'
 import nodeDatachannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
 import { PeerID } from '../../helpers/PeerID'
@@ -47,6 +47,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private connection?: PeerConnection
     private dataChannel?: DataChannel
     private lastState: RTCPeerConnectionState = 'connecting'
+    private lastGatheringState = ''
     private remoteDescriptionSet = false
     private connectingTimeoutRef?: NodeJS.Timeout
 
@@ -56,6 +57,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
     private readonly bufferThresholdLow: number
     private readonly connectingTimeout: number
     private readonly remotePeerDescriptor: PeerDescriptor
+
+    private readonly localCandidates: Candidate[] = []
+    private candidatesEmitted = false
 
     constructor(params: Params) {
         super()
@@ -80,12 +84,22 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IConne
         }, this.connectingTimeout)
 
         this.connection.onStateChange((state) => this.onStateChange(state))
-        this.connection.onGatheringStateChange((_state) => {})
+        this.connection.onGatheringStateChange((state) => {
+            this.lastGatheringState = state
+            if (state === 'complete' && this.localCandidates.length > 0) {
+                this.emit('localCandidate', this.localCandidates)
+                this.candidatesEmitted = true
+            }
+        })
         this.connection.onLocalDescription((description: string, type: DescriptionType) => {
             this.emit('localDescription', description, type.toString())
         })
         this.connection.onLocalCandidate((candidate: string, mid: string) => {
-            this.emit('localCandidate', candidate, mid)
+            this.localCandidates.push({ candidate, mid })
+            if (this.lastGatheringState === 'complete' && !this.candidatesEmitted) {
+                this.emit('localCandidate', this.localCandidates)
+            }
+
         })
         if (isOffering) {
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')

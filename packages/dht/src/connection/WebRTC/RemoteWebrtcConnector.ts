@@ -1,5 +1,6 @@
 import 'setimmediate'
 import {
+    Candidate,
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
@@ -59,13 +60,12 @@ export class RemoteWebrtcConnector {
         this.client.rtcAnswer(request, options)
     }
 
-    sendIceCandidate(sourceDescriptor: PeerDescriptor, candidate: string, mid: string, connectionId: string): void {
+    sendIceCandidates(sourceDescriptor: PeerDescriptor, iceCandidates: Candidate[], connectionId: string): void {
         const request: IceCandidate = {
             target: this.peerDescriptor,
             requester: sourceDescriptor,
             connectionId,
-            mid,
-            candidate
+            candidates: iceCandidates
         }
         const options: DhtRpcOptions = {
             sourceDescriptor: sourceDescriptor as PeerDescriptor,

@@ -133,8 +133,7 @@ describe('WebRTC rpc messages', () => {
             requester: peerDescriptor1,
             target: peerDescriptor2,
             connectionId: 'rtcOffer',
-            candidate: 'aaaaaa',
-            mid: 'asdasdasdasdasd'
+            candidates: [{ candidate: 'aaaaaa', mid: '0' }]
         },
         { targetDescriptor: peerDescriptor2, notification: true }
         )

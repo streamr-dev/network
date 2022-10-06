@@ -182,12 +182,16 @@ message RtcAnswer {
   string connectionId = 4;
 }
 
-message IceCandidate {
+message Candidate {
   string candidate = 1;
   string mid = 2;
-  string connectionId = 3;
-  PeerDescriptor requester = 4;
-  PeerDescriptor target = 5;
+}
+
+message IceCandidate {
+  repeated Candidate candidates = 1;
+  string connectionId = 2;
+  PeerDescriptor requester = 3;
+  PeerDescriptor target = 4;
 }
 
 message LockRequest {

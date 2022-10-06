@@ -2,6 +2,7 @@ import 'setimmediate'
 import EventEmitter from 'eventemitter3'
 import { ManagedConnectionSourceEvent } from '../IManagedConnectionSource'
 import {
+    Candidate,
     IceCandidate,
     PeerDescriptor,
     RtcAnswer,
@@ -138,8 +139,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     private onRemoteCandidate(
         remotePeerDescriptor: PeerDescriptor,
         targetPeerDescriptor: PeerDescriptor,
-        candidate: string,
-        mid: string,
+        candidates: Candidate[],
         connectionId: string
     ): void {
         if (this.stopped ||
@@ -155,7 +155,9 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
             logger.trace(`Ignoring remote candidate due to connectionId mismatch`)
             return
         }
-        connection.addRemoteCandidate(candidate, mid)
+        candidates.forEach((candidate) => {
+            connection.addRemoteCandidate(candidate.candidate, candidate.mid)
+        })
     }
 
     stop(): void {
@@ -182,8 +184,8 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
                 remoteConnector.sendRtcAnswer(this.ownPeerDescriptor!, description, connection.connectionId.toString())
             })
         }
-        connection.on('localCandidate', (candidate: string, mid: string) => {
-            remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
+        connection.on('localCandidate', (iceCandidates: Candidate[]) => {
+            remoteConnector.sendIceCandidates(this.ownPeerDescriptor!, iceCandidates, connection.connectionId.toString())
         })
         connection.on('connected', () => {
             // Sending Connected event is now handled by ManagedConnection
@@ -224,7 +226,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
     }
 
     async iceCandidate(request: IceCandidate, _context: ServerCallContext): Promise<Empty> {
-        this.onRemoteCandidate(request.requester!, request.target!, request.candidate, request.mid, request.connectionId)
+        this.onRemoteCandidate(request.requester!, request.target!, request.candidates, request.connectionId)
         return {}
     }
 }
