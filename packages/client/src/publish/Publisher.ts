@@ -119,15 +119,16 @@ export class Publisher {
          * There are some steps in the publish process which need to be done sequentially:
          * - message chaining
          * - consuming a group key from a queue
-         * 
-         * It is also good if messages are published to node in the same sequence, as that can avoid
-         * unnecessary gap fills (if a subscriber would receive messages m1, m2, m3 in order m1, m3, m2
-         * it would try to get m2 via a gap fill resend before it receives it normally).
-         * 
-         * Currently we limit that there can be only one publish task at any given time. That way
-         * message chaining and group keys consuming is done properly. If we want to improve
-         * concurrency, we could maybe offload message encryptions to a separate tasks which 
-         * we'd execute in parallel.
+         *
+         * It is also good if messages are published to node in the same sequence (within
+         * a message chain), as that can avoid unnecessary gap fills: if a subscriber would
+         * receive messages m1, m2, m3 in order m1, m3, m2 it would try to get m2 via
+         * a gap fill resend before it receives it normally).
+         *
+         * Currently we limit that there can be only one publish task at any given time.
+         * That way message chaining and group keys consuming is done properly. If we want
+         * to improve concurrency, we could maybe offload message encryptions to a separate
+         * tasks which we'd execute in parallel.
          */
         return this.concurrencyLimit(async () => {
             const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
