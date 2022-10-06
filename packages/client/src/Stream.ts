@@ -3,8 +3,6 @@
  */
 import { DependencyContainer, inject } from 'tsyringe'
 
-import { inspect } from './utils/log'
-
 import { Resends } from './subscribe/Resends'
 import { Publisher } from './publish/Publisher'
 import { StreamRegistry } from './registry/StreamRegistry'
@@ -23,7 +21,6 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { InspectOptions } from 'util'
 import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { withTimeout } from '@streamr/utils'
@@ -261,13 +258,6 @@ class StreamrStream implements StreamMetadata {
         return this._streamRegistry.revokePermissions(this.id, ...assignments)
     }
 
-    [Symbol.for('nodejs.util.inspect.custom')](depth: number, options: InspectOptions): string {
-        return inspect(this.toObject(), {
-            ...options,
-            customInspect: false,
-            depth,
-        })
-    }
 }
 
 export {

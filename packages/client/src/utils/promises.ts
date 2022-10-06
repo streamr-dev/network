@@ -1,4 +1,3 @@
-import { inspect } from 'util'
 import pLimit from 'p-limit'
 import pThrottle from 'p-throttle'
 import { wait } from '@streamr/utils'
@@ -226,7 +225,7 @@ export async function pTimeout<T>(promise: Promise<T>, ...args: pTimeoutArgs): P
     const { timeout = 0, message = '', rejectOnTimeout = true } = opts
 
     if (typeof timeout !== 'number') {
-        throw new Error(`timeout must be a number, got ${inspect(timeout)}`)
+        throw new Error(`timeout must be a number, got ${timeout}`)
     }
 
     let timedOut = false

@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove configuration option `groupKeys`
   - use methods `updateEncryptionKey` and `addEncryptionKey` instead
 - Remove client configuration option `client.network.name`
+- Remove client configuration option `client.debug`
 - Remove (non-functional) client configuration options `autoConnect`, `autoDisconnect`, and `maxRetries`
 
 ### Fixed
