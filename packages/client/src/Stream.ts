@@ -22,7 +22,7 @@ import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
 import { MessageMetadata } from './index-exports'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
-import { EthereumAddress, toEthereumAddress, withTimeout } from '@streamr/utils'
+import { toEthereumAddress, withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
 
 export interface StreamProperties {
