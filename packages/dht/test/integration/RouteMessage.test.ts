@@ -124,7 +124,7 @@ describe('Route Message With Mock Connections', () => {
         await waitForCondition(() => receivedMessages >= numOfMessages)
     })
 
-    it('From all to all', async () => {
+    it.only('From all to all', async () => {
         const routers = routerNodes.splice(0, 30)
         const numsOfReceivedMessages: Record<string, number> = {}
         await entryPoint.joinDht(entryPointDescriptor)
@@ -137,7 +137,7 @@ describe('Route Message With Mock Connections', () => {
                 return node.joinDht(entryPointDescriptor)
             })
         )
-        await Promise.allSettled(
+        await Promise.all(
             routers.map(async (node) =>
                 await Promise.all(routers.map(async (receiver) => {
                     if (!node.getNodeId().equals(receiver.getNodeId())) {

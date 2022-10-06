@@ -143,9 +143,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer)
 
-        this.transportLayer.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
-            this.emit('data', message, peerDescriptor)
-        })
+        // this.transportLayer.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
+        //     this.emit('data', message, peerDescriptor)
+        // })
 
         this.bindDefaultServerMethods()
         this.initKBuckets(this.ownPeerId!)
@@ -292,15 +292,20 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (!this.started || this.stopped) {
             return
         }
-        const params: RouteMessageWrapper = {
-            message: Message.toBinary(msg),
-            requestId: v4(),
-            destinationPeer: targetPeerDescriptor,
-            sourcePeer: this.ownPeerDescriptor!
+        if (this.connectionManager) {
+            const params: RouteMessageWrapper = {
+                message: Message.toBinary(msg),
+                requestId: v4(),
+                destinationPeer: targetPeerDescriptor,
+                sourcePeer: this.ownPeerDescriptor!
+            }
+            this.doRouteMessage(params).catch((err) => {
+                logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
+            })
+        } else {
+            this.transportLayer!.send(msg, targetPeerDescriptor)
         }
-        this.doRouteMessage(params).catch((err) => {
-            logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
-        })
+
     }
 
     // Called by an upper layer in case of routeMessage targeted to us
@@ -308,16 +313,17 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
     public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
         try {
             const message = Message.fromBinary(data)
-            logger.trace('Received message of type ' + message.messageType)
-            if (message.messageType === MessageType.RPC) {
-                if (message.serviceId != this.config.serviceId) {
-                    this.emit('data', message, peerDescriptor)
-                } else {
-                    this.rpcCommunicator?.handleIncomingData(message, peerDescriptor)
-                }
-            } else {
-                logger.trace('Filtered out message of type ' + message.messageType)
-            }
+            this.emit('data', message, peerDescriptor)
+            // logger.trace('Received message of type ' + message.messageType)
+            // if (message.messageType === MessageType.RPC) {
+            //     if (message.serviceId != this.config.serviceId) {
+            //         this.emit('data', message, peerDescriptor)
+            //     } else {
+            //         this.rpcCommunicator?.handleIncomingData(message, peerDescriptor)
+            //     }
+            // } else {
+            //     logger.trace('Filtered out message of type ' + message.messageType)
+            // }
         } catch (e) {
             logger.error('Parsing "Message" from protobuf failed')
         }
@@ -403,7 +409,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             })
         }
     }
-    
+
     private getRoutingCandidates(destinationPeer: PeerDescriptor, sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): DhtPeer[] {
 
         const routingSortedContacts = new SortedContactList(PeerID.fromValue(destinationPeer.peerId), this.config.parallelism, true)
@@ -739,6 +745,10 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
 
         if (result.winnerName == 'noCandidatesFound') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
+                // @ts-expect-error private
+                console.log(this.connections, [...(this.transportLayer as ConnectionManager).connections.values()].map((mc) =>
+                    mc.isHandshakeCompleted()
+                ))
                 throw new Error(`Could not perform initial routing`)
             }
             return this.createRouteMessageAck(routedMessage, 'No routing candidates found')
@@ -756,13 +766,12 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             return this.createRouteMessageAck(routedMessage, 'message given to routeMessage() service is likely a duplicate')
         }
 
-        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
+        logger.trace(`Processing received routeMessage ${routedMessage.requestId} ${this.ownPeerId}`)
         this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.requestId)
 
         if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
             logger.trace(`Peer ${this.ownPeerId?.value} routing found message targeted to self ${routedMessage.requestId}`)
-            //this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             this.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
             return this.createRouteMessageAck(routedMessage)
         } else {
