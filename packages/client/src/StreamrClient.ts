@@ -103,10 +103,10 @@ export class StreamrClient implements Context {
     }
 
     async updateEncryptionKey(opts: UpdateEncryptionKeyOptions): Promise<void> {
-        if (opts.streamId === undefined) {
+        if (opts.streamIdOrPath === undefined) {
             throw new Error('streamId required')
         }
-        const streamId = await this.streamIdBuilder.toStreamID(opts.streamId)
+        const streamId = await this.streamIdBuilder.toStreamID(opts.streamIdOrPath)
         const queue = await this.publisher.getGroupKeyQueue(streamId)
         if (opts.distributionMethod === 'rotate') {
             if (opts.key === undefined) {

@@ -88,7 +88,7 @@ describe('revoke permissions', () => {
         revokeAfter?: number
     } = {}) {
         await publisher.updateEncryptionKey({
-            streamId: stream.id,
+            streamIdOrPath: stream.id,
             distributionMethod: 'rotate'
         })
         await stream.grantPermissions({
@@ -121,7 +121,7 @@ describe('revoke permissions', () => {
                         permissions: [StreamPermission.SUBSCRIBE]
                     })
                     await publisher.updateEncryptionKey({
-                        streamId: stream.id,
+                        streamIdOrPath: stream.id,
                         distributionMethod: 'rekey'
                     })
                 }

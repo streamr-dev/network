@@ -21,7 +21,7 @@ describe('pre-agreed encryption key', () => {
         const key = GroupKey.generate()
         await publisher.updateEncryptionKey({
             key,
-            streamId: stream.id,
+            streamIdOrPath: stream.id,
             distributionMethod: 'rekey'
         })
         await subscriber.addEncryptionKey(key, stream.id)

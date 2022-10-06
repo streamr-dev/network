@@ -15,7 +15,7 @@ import { pOnce } from '../utils/promises'
 // and methods to use the term EncryptionKey (except protocol-classes, which
 // should use the protocol level term GroupKey)
 export interface UpdateEncryptionKeyOptions {
-    streamId: string
+    streamIdOrPath: string
     distributionMethod: 'rotate' | 'rekey'
     key?: GroupKey
 }

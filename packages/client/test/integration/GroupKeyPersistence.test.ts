@@ -59,7 +59,7 @@ describe('Group Key Persistence', () => {
             })
             const groupKey = GroupKey.generate()
             await publisher.updateEncryptionKey({
-                streamId: stream.id,
+                streamIdOrPath: stream.id,
                 key: groupKey,
                 distributionMethod: 'rotate'
             })

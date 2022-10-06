@@ -52,7 +52,7 @@ describe('resend and subscribe', () => {
         })
         await publisher.updateEncryptionKey({
             key: groupKey,
-            streamId: stream.id,
+            streamIdOrPath: stream.id,
             distributionMethod: 'rekey'
         })
         await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])

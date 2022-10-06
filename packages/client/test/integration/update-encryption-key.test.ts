@@ -55,7 +55,7 @@ describe('update encryption key', () => {
         await publisher.updateEncryptionKey({
             key: rotatedKey,
             distributionMethod: 'rotate',
-            streamId: StreamPartIDUtils.getStreamID(streamPartId)
+            streamIdOrPath: StreamPartIDUtils.getStreamID(streamPartId)
         })
 
         await publisher.publish(streamPartId, {
@@ -88,7 +88,7 @@ describe('update encryption key', () => {
         await publisher.updateEncryptionKey({
             key: rekeyedKey,
             distributionMethod: 'rekey',
-            streamId: StreamPartIDUtils.getStreamID(streamPartId)
+            streamIdOrPath: StreamPartIDUtils.getStreamID(streamPartId)
         })
 
         await publisher.publish(streamPartId, {
@@ -119,7 +119,7 @@ describe('update encryption key', () => {
             await publisher.updateEncryptionKey({
                 key: rotatedKey,
                 distributionMethod: 'rotate',
-                streamId: StreamPartIDUtils.getStreamID(streamPartId)
+                streamIdOrPath: StreamPartIDUtils.getStreamID(streamPartId)
             })
 
             await publisher.publish(streamPartId, {
@@ -147,7 +147,7 @@ describe('update encryption key', () => {
             await publisher.updateEncryptionKey({
                 key: GroupKey.generate(),
                 distributionMethod: 'rekey',
-                streamId: StreamPartIDUtils.getStreamID(streamPartId)
+                streamIdOrPath: StreamPartIDUtils.getStreamID(streamPartId)
             })
 
             await publisher.publish(streamPartId, {
