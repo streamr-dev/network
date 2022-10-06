@@ -1,6 +1,8 @@
 import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
+import { instanceId } from '../utils/utils'
+import { Context } from '../utils/Context'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -11,6 +13,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { Debugger } from '../utils/log'
 
 export class PublishError extends Error {
 
@@ -62,14 +65,19 @@ export class Publisher {
     private readonly streamRegistryCached: StreamRegistryCached
     private readonly node: NetworkNodeFacade
     private readonly concurrencyLimit = pLimit(1)
+    private readonly debug: Debugger
 
     constructor(
+        context: Context,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
         groupKeyStore: GroupKeyStore,
         node: NetworkNodeFacade
     ) {
+        this.debug = context.debug.extend(instanceId(this))
+        this.streamIdBuilder = streamIdBuilder
+    
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
@@ -104,6 +112,7 @@ export class Publisher {
         content: T,
         metadata?: MessageMetadata
     ): Promise<StreamMessage<T>> {
+        this.debug('Publish')
         const timestamp = parseTimestamp(metadata)
         /*
          * There are some steps in the publish process which need to be done sequentially:
