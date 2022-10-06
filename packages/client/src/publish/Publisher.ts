@@ -2,8 +2,6 @@ import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protoco
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
 import { InspectOptions } from 'util'
-import { instanceId } from '../utils/utils'
-import { Context } from '../utils/Context'
 import { StreamDefinition } from '../types'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { Authentication, AuthenticationInjectionToken } from '../Authentication'
@@ -65,9 +63,8 @@ const parseTimestamp = (metadata?: MessageMetadata): number => {
 }
 
 @scoped(Lifecycle.ContainerScoped)
-export class Publisher implements Context {
-    readonly id
-    readonly debug
+export class Publisher {
+
     private readonly streamIdBuilder: StreamIDBuilder
     private readonly authentication: Authentication
     private readonly streamRegistryCached: StreamRegistryCached
@@ -77,15 +74,12 @@ export class Publisher implements Context {
     private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
 
     constructor(
-        context: Context,
         streamIdBuilder: StreamIDBuilder,
         @inject(AuthenticationInjectionToken) authentication: Authentication,
         streamRegistryCached: StreamRegistryCached,
         groupKeyStore: GroupKeyStore,
         node: NetworkNodeFacade
     ) {
-        this.id = instanceId(this)
-        this.debug = context.debug.extend(this.id)
         this.streamIdBuilder = streamIdBuilder
         this.authentication = authentication
         this.streamRegistryCached = streamRegistryCached
