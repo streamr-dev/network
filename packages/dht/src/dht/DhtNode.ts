@@ -10,7 +10,6 @@ import {
     ClosestPeersResponse,
     ConnectivityResponseMessage,
     Message,
-    MessageType,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -300,7 +299,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
                 sourcePeer: this.ownPeerDescriptor!
             }
             this.doRouteMessage(params).catch((err) => {
-                logger.warn(`Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`)
+                logger.warn(
+                    `Failed to send (routeMessage: ${this.config.serviceId}) to ${PeerID.fromValue(targetPeerDescriptor.peerId).toKey()}: ${err}`
+                )
             })
         } else {
             this.transportLayer!.send(msg, targetPeerDescriptor)
@@ -746,7 +747,7 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         if (result.winnerName == 'noCandidatesFound') {
             if (PeerID.fromValue(routedMessage.sourcePeer!.peerId).equals(this.ownPeerId!)) {
                 // @ts-expect-error private
-                console.log(this.connections, [...(this.transportLayer as ConnectionManager).connections.values()].map((mc) =>
+                console.error(this.connections, [...(this.transportLayer as ConnectionManager).connections.values()].map((mc) =>
                     mc.isHandshakeCompleted()
                 ))
                 throw new Error(`Could not perform initial routing`)
