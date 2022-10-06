@@ -1,6 +1,5 @@
 import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
-import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { InspectOptions } from 'util'
 import { instanceId } from '../utils/utils'
@@ -16,6 +15,7 @@ import { CacheConfig, ConfigInjectionToken } from '../Config'
 import { inspect } from '../utils/log'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
+import { Mapping } from '../utils/Mapping'
 
 export class PublishError extends Error {
 
@@ -75,8 +75,8 @@ export class Publisher implements Context {
     private readonly node: NetworkNodeFacade
     private readonly cacheConfig: CacheConfig
     private readonly concurrencyLimit = pLimit(1)
-    private readonly getMessageFactory: (streamId: StreamID) => Promise<MessageFactory>
-    readonly getGroupKeyQueue: (streamId: StreamID) => Promise<GroupKeyQueue>
+    private readonly messageFactories: Mapping<[streamId: StreamID], MessageFactory>
+    private readonly groupKeyQueues: Mapping<[streamId: StreamID], GroupKeyQueue>
 
     constructor(
         context: Context,
@@ -94,21 +94,17 @@ export class Publisher implements Context {
         this.streamRegistryCached = streamRegistryCached
         this.node = node
         this.cacheConfig = cacheConfig
-        this.getMessageFactory = pMemoize(async (streamId: StreamID) => {
+        this.messageFactories = new Mapping(async (streamId: StreamID) => {
             return this.createMessageFactory(streamId)
-        }, {
-            cacheKey: ([streamId]) => streamId
         })
-        this.getGroupKeyQueue = pMemoize(async (streamId: StreamID) => {
+        this.groupKeyQueues = new Mapping(async (streamId: StreamID) => {
             return new GroupKeyQueue(streamId, groupKeyStore)
-        }, {
-            cacheKey: ([streamId]) => streamId
         })
     }
 
     /* eslint-disable @typescript-eslint/no-shadow */
     private async createMessageFactory(streamId: StreamID): Promise<MessageFactory> {
-        const queue = await this.getGroupKeyQueue(streamId)
+        const queue = await this.groupKeyQueues.get(streamId)
         return new MessageFactory({
             publisherId: await this.authentication.getAddress(),
             streamId,
@@ -147,7 +143,7 @@ export class Publisher implements Context {
         return this.concurrencyLimit(async () => {
             const [ streamId, partition ] = await this.streamIdBuilder.toStreamPartElements(streamDefinition)
             try {
-                const messageFactory = await this.getMessageFactory(streamId)
+                const messageFactory = await this.messageFactories.get(streamId)
                 const message = await messageFactory.createMessage(
                     content,
                     {
@@ -160,7 +156,11 @@ export class Publisher implements Context {
                 return message
             } catch (e) {
                 throw new PublishError(streamId, timestamp, e)
-            }    
+            }
         })
+    }
+
+    getGroupKeyQueue(streamId: StreamID): Promise<GroupKeyQueue> {
+        return this.groupKeyQueues.get(streamId)
     }
 }
