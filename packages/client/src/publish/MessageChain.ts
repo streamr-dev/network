@@ -23,7 +23,7 @@ export class MessageChain {
     private readonly msgChainId: string
     private prevMsgRef?: MessageRef
 
-    constructor(streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId = createRandomMsgChainId()) {
+    constructor(streamPartId: StreamPartID, publisherId: EthereumAddress, msgChainId: string) {
         [this.streamId, this.streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
