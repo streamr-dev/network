@@ -22,7 +22,7 @@ export class MessageFactory {
 
     private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
-    private selectedDefaultPartition: number | undefined
+    private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
     private readonly getPartitionCount: (streamId: StreamID) => Promise<number>
@@ -70,7 +70,7 @@ export class MessageFactory {
         } else {
             partition = (metadata.partitionKey !== undefined)
                 ? keyToArrayIndex(partitionCount, metadata.partitionKey)
-                : await this.getSelectedDefaultPartition(partitionCount)
+                : await this.getDefaultPartition(partitionCount)
         }
 
         const chain = await this.messageChains.get(
@@ -106,14 +106,14 @@ export class MessageFactory {
         return message
     }
 
-    private async getSelectedDefaultPartition(partitionCount: number): Promise<number> {
+    private async getDefaultPartition(partitionCount: number): Promise<number> {
         // we want to (re-)select a random partition in these two situations
         // 1) this is the first publish, and we have not yet selected any partition (the most typical case)
         // 2) the partition count may have decreased since we initially selected a random partitions, and it
         //    is now out-of-range (very rare case)
-        if ((this.selectedDefaultPartition === undefined) || (this.selectedDefaultPartition >= partitionCount)) {
-            this.selectedDefaultPartition = random(partitionCount - 1)
+        if ((this.defaultPartition === undefined) || (this.defaultPartition >= partitionCount)) {
+            this.defaultPartition = random(partitionCount - 1)
         }
-        return this.selectedDefaultPartition
+        return this.defaultPartition
     }
 }
