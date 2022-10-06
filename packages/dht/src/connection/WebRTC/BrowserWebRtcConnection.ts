@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3"
 import { WebRtcConnectionEvents, IWebRtcConnection, RtcDescription } from "./IWebRtcConnection"
 import { IConnection, ConnectionID, ConnectionEvents, ConnectionType } from "../IConnection"
 import { Logger } from '@streamr/utils'
+import { Candidate } from '../../proto/DhtRpc'
 
 const logger = new Logger(module)
 
@@ -27,6 +28,7 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     private dataChannel?: RTCDataChannel
     private makingOffer = false
     private isOffering = false
+    private readonly localCandidates: Candidate[] = []
 
     start(isOffering: boolean): void {
         this.isOffering = isOffering
@@ -35,7 +37,9 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
 
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate && event.candidate.sdpMid) {
-                this.emit('localCandidate', event.candidate.candidate, event.candidate.sdpMid)
+                this.localCandidates.push({ candidate: event.candidate.candidate, mid: event.candidate.sdpMid })
+            } else if (event.candidate === null) {
+                this.emit('localCandidate', this.localCandidates)
             }
         }
 
