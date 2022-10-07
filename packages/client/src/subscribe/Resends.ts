@@ -262,10 +262,8 @@ export class Resends implements Context {
         const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(streamMessage.getStreamPartID())
         const streamDefinition = { streamId, partition }
 
-        /* eslint-disable no-await-in-loop */
         const start = Date.now()
         let last: StreamMessage[]
-        // eslint-disable-next-line no-constant-condition
         let found = false
         while (!found) {
             const duration = Date.now() - start

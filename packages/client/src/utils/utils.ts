@@ -94,8 +94,6 @@ export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string 
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
-/* eslint-disable object-curly-newline */
-
 export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
     return toStreamID('/assignments', clusterAddress)
 }

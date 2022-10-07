@@ -1,4 +1,3 @@
-/* eslint-disable padding-line-between-statements */
 import { fastPrivateKey } from 'streamr-test-utils'
 import { StreamMessage } from 'streamr-client-protocol'
 import {

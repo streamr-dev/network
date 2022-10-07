@@ -91,7 +91,7 @@ export class Validator extends StreamMessageValidator implements Context {
             if (this.isStopped) { return }
 
             if (!err.streamMessage) {
-                err.streamMessage = msg // eslint-disable-line no-param-reassign
+                err.streamMessage = msg
             }
             throw err
         })

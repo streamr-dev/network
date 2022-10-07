@@ -173,19 +173,19 @@ describe.skip('PushBuffer', () => {
 
         it('errors on bad buffer size', async () => {
             expect(() => {
-                new PushBuffer(0) // eslint-disable-line no-new
+                new PushBuffer(0)
             }).toThrow('bufferSize')
             expect(() => {
-                new PushBuffer(-1) // eslint-disable-line no-new
+                new PushBuffer(-1)
             }).toThrow('bufferSize')
             expect(() => {
-                new PushBuffer(Number.MAX_SAFE_INTEGER + 10) // eslint-disable-line no-new
+                new PushBuffer(Number.MAX_SAFE_INTEGER + 10)
             }).toThrow('bufferSize')
             expect(() => {
-                new PushBuffer(1.5) // eslint-disable-line no-new
+                new PushBuffer(1.5)
             }).toThrow('bufferSize')
             expect(() => {
-                new PushBuffer(0.5) // eslint-disable-line no-new
+                new PushBuffer(0.5)
             }).toThrow('bufferSize')
         })
 

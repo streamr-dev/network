@@ -60,7 +60,6 @@ export function recover(
     const payloadBuffer = Buffer.from(payload, 'utf-8')
 
     if (!publicKeyBuffer) {
-        // eslint-disable-next-line no-param-reassign
         publicKeyBuffer = recoverPublicKey(signatureBuffer, payloadBuffer)
     }
     const pubKeyWithoutFirstByte = publicKeyBuffer.subarray(1, publicKeyBuffer.length)

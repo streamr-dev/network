@@ -12,7 +12,6 @@ describe('Mapping', () => {
         let evaluationIndex = 0
         const mapping = new Mapping(async (_p: string) => {
             const result = evaluationIndex
-            // eslint-disable-next-line no-plusplus
             evaluationIndex++
             return result
         })

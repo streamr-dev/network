@@ -113,7 +113,6 @@ export class RSAKeyPair {
     }
 
     private async keyPairBrowser(): Promise<void> {
-        // eslint-disable-next-line
         const { publicKey, privateKey } = await getSubtle().generateKey({
             name: 'RSA-OAEP',
             modulusLength: 4096,
