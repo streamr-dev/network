@@ -51,7 +51,7 @@ describe('RandomContactList', () => {
     const peer4 = new DhtPeer(descriptor4, toProtoRpcClient(new MockRpcClient()))
 
     it('adds contacts correctly', () => {
-        const list = new RandomContactList(id0, 5)
+        const list = new RandomContactList(id0, 5, 1)
         list.addContact(peer1)
         list.addContact(peer2)
         list.addContact(peer3)
@@ -62,7 +62,7 @@ describe('RandomContactList', () => {
     })
 
     it('removes contacts correctly', () => {
-        const list = new RandomContactList(id0, 5)
+        const list = new RandomContactList(id0, 5, 1)
         list.addContact(peer1)
         list.addContact(peer2)
         list.removeContact(id2)

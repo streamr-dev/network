@@ -515,7 +515,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             const peerId = PeerID.fromValue(contact.peerId)
             this.neighborList!.addContact(dhtPeer)
             this.randomPeers!.addContact(dhtPeer)
-            this.openInternetPeers!.addContact(dhtPeer)
+            if (contact.openInternet) {
+                this.openInternetPeers!.addContact(dhtPeer)
+            }
             if (setActive) {
                 this.neighborList!.setActive(peerId)
                 this.openInternetPeers!.setActive(peerId)

@@ -6,7 +6,7 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number) {
+    constructor(private ownId: PeerID, private maxSize: number, private randomness = 0.20) {
         super()
         this.ownId = ownId
     }
@@ -16,20 +16,15 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             return
         }
         if (!this.contactsById.has(contact.peerId.toKey())) {
-            if (this.contactIds.length < this.maxSize) {
-
-                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.contactIds.push(contact.peerId)
-            } else if (Math.random() < 0.20) {
-                const toRemove = this.contactIds.shift()
-                this.contactsById.delete(toRemove!.toKey())
+            if (Math.random() < this.randomness) {
+                if (this.getSize() === this.maxSize && this.getSize() > 0) {
+                    const toRemove = this.contactIds[0]
+                    this.removeContact(toRemove)
+                }
                 this.contactIds.push(contact.peerId)
                 this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-                this.emit('contactRemoved',
-                    contact.getPeerDescriptor(),
-                    this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
-                )
             }
+
             this.emit(
                 'newContact',
                 contact.getPeerDescriptor(),
