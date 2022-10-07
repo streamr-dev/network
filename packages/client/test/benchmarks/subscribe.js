@@ -97,7 +97,6 @@ async function run() {
             const sub = await client.subscribe(stream.id, (msg) => {
                 received.push(msg)
                 if (msgs && received.length === msgs.length) {
-                    // eslint-disable-next-line promise/catch-or-return
                     sub.unsubscribe().then(() => deferred.resolve(), () => deferred.resolve())
                 }
             })

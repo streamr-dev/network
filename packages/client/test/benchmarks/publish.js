@@ -92,7 +92,6 @@ async function run() {
             defer: true,
             fn(deferred) {
                 this.BATCH_SIZE = batchSize
-                // eslint-disable-next-line promise/catch-or-return
                 return publish(stream1, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
             }
         })
@@ -101,7 +100,6 @@ async function run() {
             defer: true,
             fn(deferred) {
                 this.BATCH_SIZE = batchSize
-                // eslint-disable-next-line promise/catch-or-return
                 return publish(stream2, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
             }
         })
@@ -110,7 +108,6 @@ async function run() {
             defer: true,
             fn(deferred) {
                 this.BATCH_SIZE = batchSize
-                // eslint-disable-next-line promise/catch-or-return
                 return publish(stream3, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
             }
         })
