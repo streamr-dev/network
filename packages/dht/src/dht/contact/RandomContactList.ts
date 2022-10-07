@@ -13,8 +13,24 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
     }
 
     addContact(contact: IContact): void {
-        
+        if (this.ownId.equals(contact.peerId)) {
+            return
+        }
+        if (!this.contactsById.has(contact.peerId.toKey())) {
+            this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
+            this.contactIds.push(contact.peerId)
+        } else if (Math.random() < 0.20) {
+            const toRemove = this.contactIds.shift()
+            this.contactsById.delete(toRemove!.toKey())
+            this.contactIds.push(contact.peerId)
+            this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
+            this.emit('contactRemoved',
+                contact.getPeerDescriptor(),
+
+        }
     }
+
+    getClosest()
 
     addContacts(contacts: IContact[]): void {
         contacts.forEach((contact) => this.addContact(contact))
