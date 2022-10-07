@@ -211,7 +211,7 @@ describe('MessageFactory', () => {
             const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
             const msg3 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, msgChainId: 'mock-id' })
             expect(msg1.getMessageID().msgChainId).toBe('mock-id')
-            expect(msg2.getMessageID().msgChainId).not.toBe(msg1.getMessageID().msgChainId)
+            expect(msg2.getMessageID().msgChainId).not.toBe('mock-id')
             expect(msg2.getPreviousMessageRef()).toBe(null)
             expect(msg3.getMessageID().msgChainId).toBe('mock-id')
             expect(msg3.getPreviousMessageRef()).toEqual(msg1.getMessageRef())
