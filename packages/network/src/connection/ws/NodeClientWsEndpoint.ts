@@ -58,10 +58,12 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
         return connection
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeResponse(uuid: string, peerId: PeerId, ws: WebSocket): void {
         ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 
+    // eslint-disable-next-line class-methods-use-this
     protected doHandshakeParse(message: string | Buffer | Buffer[]): HandshakeValues {
         const { uuid, peerId } = JSON.parse(message.toString())
         return {

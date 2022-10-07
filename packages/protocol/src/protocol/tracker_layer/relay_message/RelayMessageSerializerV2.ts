@@ -6,6 +6,7 @@ import { Serializer } from '../../../Serializer'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class RelayMessageSerializerV2 extends Serializer<RelayMessage> {
     toArray(relayMessage: RelayMessage): any[] {
         return [

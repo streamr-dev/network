@@ -7,6 +7,7 @@ import { Serializer } from '../../../Serializer'
 
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class BroadcastMessageSerializerV2 extends Serializer<BroadcastMessage> {
     toArray(broadcastMessage: BroadcastMessage, streamMessageVersion = StreamMessage.LATEST_VERSION): any[] {
         return [

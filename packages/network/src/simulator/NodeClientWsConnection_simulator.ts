@@ -41,6 +41,7 @@ export class NodeClientWsConnection extends AbstractWsConnection {
         this.endpoint.doOnClose(this, DisconnectionCode.DEAD_CONNECTION, '')
     }
 
+    // eslint-disable-next-line class-methods-use-this
     getBufferedAmount(): number {
         return 0
     }

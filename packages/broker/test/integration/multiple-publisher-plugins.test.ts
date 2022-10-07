@@ -57,6 +57,7 @@ class WebsocketPluginPublisher implements PluginPublisher {
     }
 }
 
+/* eslint-disable class-methods-use-this */
 class HttpPluginPublisher implements PluginPublisher {
     async connect(): Promise<void> {
     }

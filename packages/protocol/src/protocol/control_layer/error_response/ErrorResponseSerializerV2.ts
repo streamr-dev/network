@@ -5,6 +5,7 @@ import ErrorResponse from './ErrorResponse'
 import { Serializer } from '../../../Serializer'
 const VERSION = 2
 
+/* eslint-disable class-methods-use-this */
 export default class ErrorResponseSerializerV2 extends Serializer<ErrorResponse> {
     toArray(errorResponse: ErrorResponse): any[] {
         return [

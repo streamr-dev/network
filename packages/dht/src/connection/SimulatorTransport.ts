@@ -13,6 +13,7 @@ export class SimulatorTransport extends EventEmitter<TransportEvents> implements
         this.simulator.send(this.ownPeerDescriptor, peerDescriptor, msg)
     }
 
+    // eslint-disable-next-line class-methods-use-this
     disconnect(_peerDescriptor: PeerDescriptor): void { }
 
     getPeerDescriptor(): PeerDescriptor {
