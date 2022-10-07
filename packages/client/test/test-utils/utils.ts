@@ -41,8 +41,6 @@ export function mockContext(): Context {
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
-export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
-
 // eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule): string => {
     const fileNamePattern = new RegExp('.*/(.*).test\\...')

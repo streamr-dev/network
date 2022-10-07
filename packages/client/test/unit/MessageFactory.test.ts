@@ -1,12 +1,12 @@
 import { random } from 'lodash'
 import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { randomEthereumAddress } from 'streamr-test-utils'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
-import { createMockAddress } from '../test-utils/utils'
 import { MessageMetadata } from '../../src'
 
-const AUTHENTICATED_USER = createMockAddress()
+const AUTHENTICATED_USER = randomEthereumAddress()
 const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
