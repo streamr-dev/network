@@ -2,6 +2,11 @@ import { StreamID } from 'streamr-client-protocol'
 import { GroupKey } from '../encryption/GroupKey'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 
+export interface GroupKeySequence {
+    current: GroupKey
+    next?: GroupKey
+}
+
 export class GroupKeyQueue {
 
     private currentGroupKey: GroupKey | undefined
@@ -14,17 +19,17 @@ export class GroupKeyQueue {
         this.store = store
     }
 
-    async useGroupKey(): Promise<[GroupKey, GroupKey | undefined]> {
+    async useGroupKey(): Promise<GroupKeySequence> {
         // Ensure we have a current key by picking a queued key or generating a new one
         if (!this.currentGroupKey) {
             this.currentGroupKey = this.queuedGroupKey || await this.rekey()
             this.queuedGroupKey = undefined
         }
         // Always return an array consisting of currentGroupKey and queuedGroupKey (latter may be undefined)
-        const result: [GroupKey, GroupKey | undefined] = [
-            this.currentGroupKey!,
-            this.queuedGroupKey,
-        ]
+        const result: GroupKeySequence = {
+            current: this.currentGroupKey!,
+            next: this.queuedGroupKey,
+        }
         // Perform the rotate if there's a next key queued
         if (this.queuedGroupKey) {
             this.currentGroupKey = this.queuedGroupKey

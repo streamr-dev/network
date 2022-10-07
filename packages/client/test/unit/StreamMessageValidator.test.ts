@@ -31,6 +31,7 @@ describe('StreamMessageValidator', () => {
     let verify: ((address: EthereumAddress, payload: string, signature: string) => boolean) | undefined
     let msg: StreamMessage
     let msgWithNewGroupKey: StreamMessage
+    let msgWithPrevMsgRef: StreamMessage
 
     const publisherPrivateKey = 'd462a6f2ccd995a346a841d110e8c6954930a1c22851c0032d3116d8ccd2296a'
     const publisher = '0x6807295093ac5da6fb2a10f7dedc5edd620804fb'
@@ -86,6 +87,14 @@ describe('StreamMessageValidator', () => {
         sign(msgWithNewGroupKey, publisherPrivateKey)
         assert.notStrictEqual(msg.signature, msgWithNewGroupKey.signature)
 
+        msgWithPrevMsgRef = new StreamMessage({
+            messageId: new MessageID(toStreamID('streamId'), 0, 2000, 0, publisher, 'msgChainId'),
+            content: '{}',
+            prevMsgRef: new MessageRef(1000, 0)
+        })
+        sign(msgWithPrevMsgRef, publisherPrivateKey)
+        assert.notStrictEqual(msg.signature, msgWithPrevMsgRef.signature)
+
         groupKeyRequest = groupKeyMessageToStreamMessage(new GroupKeyRequest({
             requestId: 'requestId',
             recipient: publisher.toLowerCase(),
@@ -122,6 +131,10 @@ describe('StreamMessageValidator', () => {
 
         it('accepts valid messages with a new group key', async () => {
             await getValidator().validate(msgWithNewGroupKey)
+        })
+
+        it('accepts valid messages with previous message reference', async () => {
+            await getValidator().validate(msgWithPrevMsgRef)
         })
 
         it('rejects unsigned messages', async () => {

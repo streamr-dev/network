@@ -62,7 +62,7 @@ export function SubscribePipeline<T = unknown>(
         container.resolve(StreamRegistryCached),
         container.resolve(DestroySignal),
         container.resolve(StreamrClientEventEmitter),
-        container.resolve(ConfigInjectionToken.Timeouts),
+        container.resolve(ConfigInjectionToken.Decryption),
     )
 
     const msgChainUtil = new MsgChainUtil<T>(async (msg) => {

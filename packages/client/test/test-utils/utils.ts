@@ -7,9 +7,8 @@ import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
-    StreamMessageOptions,
-    MessageID,
-    EthereumAddress
+    EthereumAddress,
+    MAX_PARTITION_COUNT
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -21,10 +20,10 @@ import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
 import { GroupKey } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -39,8 +38,6 @@ export function mockContext(): Context {
 }
 
 export const uid = (prefix?: string): string => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
-
-export const createMockAddress = (): string => '0x000000000000000000000000000' + Date.now()
 
 // eslint-disable-next-line no-undef
 const getTestName = (module: NodeModule): string => {
@@ -101,41 +98,40 @@ export const createEthereumAddress = (id: number): string => {
     return '0x' + padEnd(String(id), 40, '0')
 }
 
-type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
+type CreateMockMessageOptions = {
     publisher: Wallet
+    content?: any
     msgChainId?: string
     timestamp?: number
-    sequenceNumber?: number
     encryptionKey?: GroupKey
-}
+    nextEncryptionKey?: GroupKey
+} & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 
 export const createMockMessage = (
-    opts: CreateMockMessageOptionsBase
-    & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
-): StreamMessage<any> => {
-    const DEFAULT_CONTENT = {}
+    opts: CreateMockMessageOptions
+): Promise<StreamMessage<any>> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
-    const msg = new StreamMessage({
-        messageId: new MessageID(
-            streamId,
-            partition,
-            opts.timestamp ?? Date.now(),
-            opts.sequenceNumber ?? 0,
-            opts.publisher.address,
-            opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
-        ),
-        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content: DEFAULT_CONTENT,
-        prevMsgRef: opts.prevMsgRef,
-        ...opts
+    const factory = new MessageFactory({
+        publisherId: opts.publisher.address.toLowerCase(),
+        streamId,
+        getPartitionCount: async () => MAX_PARTITION_COUNT,
+        isPublicStream: async () => (opts.encryptionKey === undefined),
+        isPublisher: async () => true,
+        createSignature: async (payload: string) => sign(payload, opts.publisher.privateKey),
+        useGroupKey: async () => {
+            return (opts.encryptionKey !== undefined)
+                ? ({ current: opts.encryptionKey, next: opts.nextEncryptionKey })
+                : Promise.reject()
+        }
     })
-    if (opts.encryptionKey !== undefined) {
-        EncryptionUtil.encryptStreamMessage(msg, opts.encryptionKey)
-    }
-    msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), opts.publisher.privateKey)
-    return msg
+    const DEFAULT_CONTENT = {}
+    const plainContent = opts.content ?? DEFAULT_CONTENT
+    return factory.createMessage(plainContent, {
+        timestamp: opts.timestamp ?? Date.now(),
+        msgChainId: opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
+    }, partition)
 }
 
 export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {

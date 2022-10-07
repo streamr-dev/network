@@ -31,7 +31,7 @@ describe('Decrypt', () => {
             } as any
         )
         const groupKey = GroupKey.generate()
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             publisher: fastWallet(),
             encryptionKey: groupKey

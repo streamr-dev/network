@@ -21,7 +21,7 @@ import { PermissionAssignment, PublicPermissionQuery, UserPermissionQuery } from
 import { Subscriber } from './subscribe/Subscriber'
 import { formStorageNodeAssignmentStreamId } from './utils/utils'
 import { waitForAssignmentsToPropagate } from './utils/waitForAssignmentsToPropagate'
-import { MessageMetadata } from './index-exports'
+import { MessageMetadata } from '../src/publish/Publisher'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
 import { withTimeout } from '@streamr/utils'
 import { StreamMetadata } from './StreamMessageValidator'
@@ -71,6 +71,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 /**
  * @category Important
  */
+/* eslint-disable no-underscore-dangle */
 class StreamrStream implements StreamMetadata {
     id: StreamID
     description?: string

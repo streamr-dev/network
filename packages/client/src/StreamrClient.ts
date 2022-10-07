@@ -25,7 +25,7 @@ import { Stream, StreamProperties } from './Stream'
 import { SearchStreamsPermissionFilter } from './registry/searchStreams'
 import { PermissionAssignment, PermissionQuery } from './permission'
 import { MetricsPublisher } from './MetricsPublisher'
-import { MessageMetadata } from './index-exports'
+import { MessageMetadata } from '../src/publish/Publisher'
 import { initContainer } from './Container'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
 import { StreamStorageRegistry } from './registry/StreamStorageRegistry'
@@ -353,12 +353,6 @@ export class StreamrClient implements Context {
 
     connect = pOnce(async () => {
         await this.node.startNode()
-        const tasks = [
-            this.publisher.start(),
-        ]
-
-        await Promise.allSettled(tasks)
-        await Promise.all(tasks)
     })
 
     destroy = pOnce(async () => {
@@ -366,7 +360,6 @@ export class StreamrClient implements Context {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.publisher.stop(),
             this.subscriber.stop(),
             this.groupKeyStore.stop()
         ]
