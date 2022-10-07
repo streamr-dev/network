@@ -50,7 +50,14 @@ describe('PublisherKeyExchange', () => {
     ): StreamMessage => {
         const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         const msg = new StreamMessage({
-            messageId: new MessageID(streamId, partition, 0, Date.now(), publisher.address, createRandomMsgChainId()),
+            messageId: new MessageID(
+                streamId,
+                partition,
+                0,
+                Date.now(),
+                toEthereumAddress(publisher.address),
+                createRandomMsgChainId()
+            ),
             content: JSON.stringify([
                 uuid(),
                 publisherWallet.address,

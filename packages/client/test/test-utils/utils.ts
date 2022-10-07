@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { DependencyContainer } from 'tsyringe'
 import { fetchPrivateKeyWithGas } from 'streamr-test-utils'
-import { EthereumAddress, wait } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress, wait } from '@streamr/utils'
 import { Wallet } from 'ethers'
 import {
     StreamMessage,
@@ -113,7 +113,7 @@ export const createMockMessage = (
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
     const factory = new MessageFactory({
-        publisherId: opts.publisher.address.toLowerCase(),
+        publisherId: toEthereumAddress(opts.publisher.address),
         streamId,
         getPartitionCount: async () => MAX_PARTITION_COUNT,
         isPublicStream: async () => (opts.encryptionKey === undefined),

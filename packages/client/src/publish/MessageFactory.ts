@@ -1,10 +1,10 @@
 import { random } from 'lodash'
-import { EncryptedGroupKey, EncryptionType, EthereumAddress, StreamID, StreamMessage, toStreamPartID } from 'streamr-client-protocol'
+import { EncryptedGroupKey, EncryptionType, StreamID, StreamMessage, toStreamPartID } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
 import { createRandomMsgChainId, MessageChain } from './MessageChain'
 import { MessageMetadata } from './Publisher'
-import { keyToArrayIndex } from '@streamr/utils'
+import { EthereumAddress, keyToArrayIndex } from '@streamr/utils'
 import { GroupKeySequence } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 

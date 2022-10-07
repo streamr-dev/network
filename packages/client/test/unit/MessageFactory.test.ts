@@ -16,7 +16,7 @@ const GROUP_KEY = GroupKey.generate()
 
 const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) => {
     const defaultOpts = {
-        publisherId: AUTHENTICATED_USER.toLowerCase(),
+        publisherId: AUTHENTICATED_USER,
         streamId: STREAM_ID,
         getPartitionCount: async () => PARTITION_COUNT,
         isPublicStream: async () => false,

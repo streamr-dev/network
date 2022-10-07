@@ -2,7 +2,6 @@ import assert from 'assert'
 
 import shuffle from 'array-shuffle'
 import {
-    EthereumAddress,
     MessageID,
     MessageRef,
     StreamMessage,

@@ -1,9 +1,9 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
-import { toEthereumAddress } from '@streamr/utils'
+import { EthereumAddress, toEthereumAddress } from '@streamr/utils'
 
 const defaultPublisherId = toEthereumAddress('0x0000000000000000000000000000000000000001')
 const publisherId1 = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')

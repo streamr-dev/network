@@ -7,7 +7,7 @@ import { Stream } from '../../src/Stream'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamMessage } from 'streamr-client-protocol'
-import { wait } from '@streamr/utils'
+import { toEthereumAddress, wait } from '@streamr/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageFactory } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
@@ -58,7 +58,7 @@ describe('parallel key exchange', () => {
                 privateKey: publisher.wallet.privateKey
             }, undefined as any)
             const messageFactory = new MessageFactory({
-                publisherId: publisher.wallet.address,
+                publisherId: toEthereumAddress(publisher.wallet.address),
                 streamId: stream.id,
                 getPartitionCount: async () => 1,
                 isPublicStream: async () => false,

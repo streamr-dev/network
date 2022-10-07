@@ -1,4 +1,4 @@
-import { EthereumAddress, StreamID, StreamMessage } from 'streamr-client-protocol'
+import { StreamID, StreamMessage } from 'streamr-client-protocol'
 import { scoped, Lifecycle, inject } from 'tsyringe'
 import pLimit from 'p-limit'
 import { instanceId } from '../utils/utils'
@@ -14,6 +14,7 @@ import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Debugger } from '../utils/log'
+import { EthereumAddress } from '@streamr/utils'
 
 export class PublishError extends Error {
 
