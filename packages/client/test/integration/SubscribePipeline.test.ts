@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { GroupKey } from './../../src/encryption/GroupKey'
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { StreamPermission } from './../../src/permission'
 import { createMockMessage } from './../test-utils/utils'
@@ -12,6 +12,7 @@ import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
+import { sign } from '../../src/utils/signingUtils'
 
 const CONTENT = {
     foo: 'bar'
@@ -52,7 +53,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('happy path', async () => {
-        await input.push(createMockMessage({
+        await input.push(await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT
@@ -64,7 +65,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid signature', async () => {
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT
@@ -82,11 +83,12 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid content', async () => {
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher,
-            streamPartId,
-            content: '{ invalid-json'
+            streamPartId
         })
+        msg.serializedContent = '{ invalid-json'
+        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
         await input.push(msg)
         input.endWrite()
         const onError = jest.fn()
@@ -100,7 +102,7 @@ describe('SubscribePipeline', () => {
 
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
-        await input.push(createMockMessage({
+        await input.push(await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT,
