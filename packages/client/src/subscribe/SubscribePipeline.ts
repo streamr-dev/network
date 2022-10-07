@@ -36,7 +36,7 @@ export function SubscribePipeline<T = unknown>(
 
     const gapFillMessages = new OrderMessages<T>(
         container.resolve(ConfigInjectionToken.Subscribe),
-        container.resolve(Context as any),
+        context,
         container.resolve(Resends),
         streamPartId,
     )
