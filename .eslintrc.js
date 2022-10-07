@@ -52,7 +52,12 @@ module.exports = {
             'named': 'never',
             'asyncArrow': 'always'
         }],
-        '@typescript-eslint/space-infix-ops': ['error']
+        '@typescript-eslint/space-infix-ops': ['error'],
+        'class-methods-use-this': ['error'],
+        'prefer-arrow-callback': ['error'],
+        'promise/no-promise-in-callback': ['error'],
+        'promise/catch-or-return': ['error'],
+        'promise/always-return': ['error'],
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }
