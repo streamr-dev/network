@@ -83,6 +83,7 @@ export class RSAKeyPair {
         return this.privateKey
     }
 
+    /* eslint-disable no-underscore-dangle */
     private async generateKeyPair(): Promise<void> {
         if (!this._generateKeyPairPromise) {
             this._generateKeyPairPromise = (typeof window !== 'undefined')

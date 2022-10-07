@@ -36,14 +36,14 @@ describe('EncryptionUtil', () => {
     it('StreamMessage decryption: happy path', async () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
-        const streamMessage = createMockMessage({
+        const streamMessage = await createMockMessage({
             streamPartId: StreamPartIDUtils.parse('stream#0'),
             publisher: fastWallet(),
             content: {
                 foo: 'bar'
             },
             encryptionKey: key,
-            newGroupKey: key.encryptNextGroupKey(nextKey)
+            nextEncryptionKey: nextKey
         })
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
@@ -52,9 +52,9 @@ describe('EncryptionUtil', () => {
         expect(streamMessage.newGroupKey).toEqual(nextKey)
     })
 
-    it('StreamMessage decryption throws if newGroupKey invalid', () => {
+    it('StreamMessage decryption throws if newGroupKey invalid', async () => {
         const key = GroupKey.generate()
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher: fastWallet(),
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key

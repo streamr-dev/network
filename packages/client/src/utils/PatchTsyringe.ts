@@ -9,7 +9,7 @@
 // @ts-nocheck
 import { container } from 'tsyringe'
 // `dist` import below are intentional. Will not work properly if imported directly.
-// eslint-disable-next-line import/no-unresolved,no-restricted-imports
+// eslint-disable-next-line no-restricted-imports
 import { isTokenDescriptor, isTransformDescriptor } from 'tsyringe/dist/cjs/providers/injection-token'
 // eslint-disable-next-line no-restricted-imports
 import { formatErrorCtor } from 'tsyringe/dist/cjs/error-helpers'

@@ -7,10 +7,8 @@ import {
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
-    StreamMessageOptions,
-    MessageID,
     EthereumAddress,
-    EncryptionType
+    MAX_PARTITION_COUNT
 } from 'streamr-client-protocol'
 import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -21,11 +19,11 @@ import { ConfigTest } from '../../src/ConfigTest'
 import { padEnd } from 'lodash'
 import { Context } from '../../src/utils/Context'
 import { StreamrClientConfig } from '../../src/Config'
-import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
-import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
+import { GroupKey } from '../../src/encryption/GroupKey'
 import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
+import { MessageFactory } from '../../src/publish/MessageFactory'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -100,52 +98,40 @@ export const createEthereumAddress = (id: number): string => {
     return '0x' + padEnd(String(id), 40, '0')
 }
 
-type CreateMockMessageOptionsBase = Omit<Partial<StreamMessageOptions<any>>, 'messageId' | 'signatureType'> & {
+type CreateMockMessageOptions = {
     publisher: Wallet
+    content?: any
     msgChainId?: string
     timestamp?: number
-    sequenceNumber?: number
     encryptionKey?: GroupKey
-}
+    nextEncryptionKey?: GroupKey
+} & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
 
 export const createMockMessage = (
-    opts: CreateMockMessageOptionsBase
-        & ({ streamPartId: StreamPartID, stream?: never } | { stream: Stream, streamPartId?: never })
-): StreamMessage<any> => {
+    opts: CreateMockMessageOptions
+): Promise<StreamMessage<any>> => {
     const [streamId, partition] = StreamPartIDUtils.getStreamIDAndPartition(
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
+    const factory = new MessageFactory({
+        publisherId: opts.publisher.address.toLowerCase(),
+        streamId,
+        getPartitionCount: async () => MAX_PARTITION_COUNT,
+        isPublicStream: async () => (opts.encryptionKey === undefined),
+        isPublisher: async () => true,
+        createSignature: async (payload: string) => sign(payload, opts.publisher.privateKey),
+        useGroupKey: async () => {
+            return (opts.encryptionKey !== undefined)
+                ? ({ current: opts.encryptionKey, next: opts.nextEncryptionKey })
+                : Promise.reject()
+        }
+    })
     const DEFAULT_CONTENT = {}
     const plainContent = opts.content ?? DEFAULT_CONTENT
-    let content: any
-    let encryptionType: EncryptionType
-    let groupKeyId: GroupKeyId | null
-    if (opts.encryptionKey !== undefined) {
-        content = EncryptionUtil.encryptWithAES(Buffer.from(JSON.stringify(plainContent), 'utf8'), opts.encryptionKey.data)
-        encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-        groupKeyId = opts.encryptionKey.id
-    } else {
-        content = plainContent
-        encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-        groupKeyId = null
-    }
-    const msg = new StreamMessage({
-        ...opts,
-        messageId: new MessageID(
-            streamId,
-            partition,
-            opts.timestamp ?? Date.now(),
-            opts.sequenceNumber ?? 0,
-            opts.publisher.address,
-            opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
-        ),
-        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
-        content,
-        encryptionType,
-        groupKeyId
-    })
-    msg.signature = sign(msg.getPayloadToSign(), opts.publisher.privateKey)
-    return msg
+    return factory.createMessage(plainContent, {
+        timestamp: opts.timestamp ?? Date.now(),
+        msgChainId: opts.msgChainId ?? `mockMsgChainId-${opts.publisher.address}`
+    }, partition)
 }
 
 export const getGroupKeyStore = (userAddress: EthereumAddress): GroupKeyStore => {

@@ -1,9 +1,6 @@
 import 'reflect-metadata'
-// eslint-disable-next-line import/no-unresolved
 import { finished } from 'stream/promises'
-// eslint-disable-next-line import/no-unresolved
 import { WebStreamToNodeStream } from '../../src/utils/WebStreamToNodeStream'
-// eslint-disable-next-line import/no-unresolved
 import { Msg } from '../test-utils/publish'
 
 const version = process.version.slice(1).split('.').map((v) => Number.parseInt(v, 10))
@@ -15,9 +12,7 @@ describe('WebStreamToNodeStream', () => {
     }
 
     it('works', async () => {
-        // eslint-disable-next-line import/no-unresolved
         const WebStream: any = await import('node:stream/web')
-        // eslint-disable-next-line import/no-unresolved
         const Timers = await import('node:timers/promises')
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
@@ -45,9 +40,7 @@ describe('WebStreamToNodeStream', () => {
     })
 
     it('can work with small buffer', async () => {
-        // eslint-disable-next-line import/no-unresolved
         const WebStream: any = await import('node:stream/web')
-        // eslint-disable-next-line import/no-unresolved
         const Timers = await import('node:timers/promises')
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({
@@ -75,9 +68,7 @@ describe('WebStreamToNodeStream', () => {
     })
 
     it('can work with errors', async () => {
-        // eslint-disable-next-line import/no-unresolved
         const WebStream: any = await import('node:stream/web')
-        // eslint-disable-next-line import/no-unresolved
         const Timers = await import('node:timers/promises')
         const published: ReturnType<typeof Msg>[] = []
         const webStream = new WebStream.ReadableStream({

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { GroupKey } from './../../src/encryption/GroupKey'
-import { StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
+import { StreamMessage, StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
 import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
@@ -11,6 +11,7 @@ import { collect } from '../../src/utils/GeneratorUtils'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
 import { Stream } from '../../src'
 import { DestroySignal } from '../../src/DestroySignal'
+import { sign } from '../../src/utils/signingUtils'
 
 const CONTENT = {
     foo: 'bar'
@@ -61,7 +62,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('happy path', async () => {
-        await input.push(createMockMessage({
+        await input.push(await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT
@@ -73,7 +74,7 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid signature', async () => {
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT
@@ -91,11 +92,12 @@ describe('SubscribePipeline', () => {
     })
 
     it('error: invalid content', async () => {
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher,
-            streamPartId,
-            content: '{ invalid-json'
+            streamPartId
         })
+        msg.serializedContent = '{ invalid-json'
+        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
         await input.push(msg)
         input.endWrite()
         const onError = jest.fn()
@@ -109,7 +111,7 @@ describe('SubscribePipeline', () => {
 
     it('error: no encryption key available', async () => {
         const encryptionKey = GroupKey.generate()
-        await input.push(createMockMessage({
+        await input.push(await createMockMessage({
             publisher,
             streamPartId,
             content: CONTENT,

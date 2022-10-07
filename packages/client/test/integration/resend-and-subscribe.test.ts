@@ -57,7 +57,7 @@ describe('resend and subscribe', () => {
         })
         await startPublisherKeyExchangeSubscription(publisher, stream.getStreamParts()[0])
 
-        const historicalMessage = createMockMessage({
+        const historicalMessage = await createMockMessage({
             timestamp: 1000,
             encryptionKey: groupKey,
             stream,
