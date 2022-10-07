@@ -84,7 +84,6 @@ class IndexingState {
         return gate
     }
 
-    /* eslint-disable no-constant-condition, no-await-in-loop, padding-line-between-statements */
     private async startPolling(): Promise<void> {
         this.debug('start polling')
         while (this.gates.size > 0) {

@@ -147,7 +147,6 @@ export class NetworkNodeFacade implements Context {
         if (this.authentication.isAuthenticated()) {
             const address = await this.authentication.getAddress()
             return `${address}#${uuid()}`
-            // eslint-disable-next-line no-else-return
         } else {
             return generateEthereumAccount().address
         }

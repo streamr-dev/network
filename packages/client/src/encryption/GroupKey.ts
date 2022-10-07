@@ -6,7 +6,6 @@ import { EncryptionUtil } from './EncryptionUtil'
 export type GroupKeyId = string
 
 export class GroupKeyError extends Error {
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     constructor(message: string, public groupKey?: GroupKey) {
         super(message)
     }
