@@ -113,9 +113,9 @@ describe('MessageFactory', () => {
         const messageFactory = createMessageFactory({
             isPublisher: async () => false
         })
-        return expect(async () => {
-            await createMessage({}, messageFactory)
-        }).rejects.toThrow(/is not a publisher on stream/)
+        return expect(() => 
+            createMessage({}, messageFactory)
+        ).rejects.toThrow(/is not a publisher on stream/)
     })
 
     describe('partitions', () => {
