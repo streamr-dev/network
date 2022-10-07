@@ -3,7 +3,7 @@ import { Events, IContact, ContactState } from './Contact'
 
 import EventEmitter from 'eventemitter3'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
-export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {
+export class RandomContactList<Contact extends IContact> extends EventEmitter<Events> {
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
@@ -12,7 +12,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         this.ownId = ownId
     }
 
-    addContact(contact: IContact): void {
+    addContact(contact: Contact): void {
         if (this.ownId.equals(contact.peerId)) {
             return
         }
@@ -26,18 +26,26 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
             this.emit('contactRemoved',
                 contact.getPeerDescriptor(),
+                this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
+            )
 
         }
     }
 
-    getClosest()
-
-    addContacts(contacts: IContact[]): void {
+    addContacts(contacts: Contact[]): void {
         contacts.forEach((contact) => this.addContact(contact))
     }
 
     removeContact(id: PeerID): boolean {
-        return true
+        if (this.contactsById.has(id.toKey())) {
+            const removedDescriptor = this.contactsById.get(id.toKey())!.contact.getPeerDescriptor()
+            const index = this.contactIds.indexOf(id)
+            this.contactIds.splice(index, 1)
+            this.contactsById.delete(id.toKey())
+            this.emit('contactRemoved', removedDescriptor, this.getContacts().map((contact: Contact) => contact.getPeerDescriptor()))
+            return true
+        }
+        return false
     }
 
     public getSize(): number {
@@ -46,5 +54,16 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
 
     public getContact(id: PeerID): ContactState<Contact> {
         return this.contactsById.get(id.toKey())!
+    }
+
+    public getContacts(limit = this.maxSize) {
+        const ret: Contact[] = []
+        this.contactIds.forEach((contactId) => {
+            const contact = this.contactsById.get(contactId.toKey())
+            if (contact) {
+                ret.push(contact.contact)
+            }
+        })
+        return ret.splice(0, limit)
     }
 }

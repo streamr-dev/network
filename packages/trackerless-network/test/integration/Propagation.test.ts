@@ -1,4 +1,4 @@
-import { DhtNode, PeerDescriptor, Simulator, PeerID } from '@streamr/dht'
+import { DhtNode, PeerDescriptor, Simulator, PeerID, UUID } from '@streamr/dht'
 import { Event, RandomGraphNode } from '../../src/logic/RandomGraphNode'
 import { createMockRandomGraphNodeAndDhtNode } from '../utils'
 import { range } from 'lodash'
@@ -16,7 +16,7 @@ describe('Propagation', () => {
     const STREAM_ID = 'testingtesting'
     let totalReceived: number
 
-    const NUM_OF_NODES = 256
+    const NUM_OF_NODES = 512
 
     beforeEach(async () => {
         totalReceived = 0
@@ -34,7 +34,7 @@ describe('Propagation', () => {
 
         range(NUM_OF_NODES).map(async (i) => {
             const descriptor: PeerDescriptor = {
-                peerId: PeerID.fromString(`peer-${i}`).value,
+                peerId: PeerID.fromString(new UUID().toString()).value,
                 type: 1
             }
             const [dht, graph] = createMockRandomGraphNodeAndDhtNode(

@@ -44,7 +44,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 )
             }
         }
-        this.emit('newContact', contact.getPeerDescriptor(), this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
+        this.emit('newContact', contact.getPeerDescriptor(), this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor()))
 
     }
 
@@ -124,7 +124,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit('contactRemoved', removedDescriptor, this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
+            this.emit('contactRemoved', removedDescriptor, this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor()))
             return true
         }
         return false
