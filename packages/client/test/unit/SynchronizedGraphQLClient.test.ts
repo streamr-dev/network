@@ -15,7 +15,6 @@ interface IndexState {
 class EmulatedTheGraphIndex {
 
     private states: IndexState[]
-    // eslint-disable-next-line no-undef
     private timer: NodeJS.Timer | undefined
 
     constructor(states: IndexState[]) {

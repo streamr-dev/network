@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import { createTestStream, startPublisherKeyExchangeSubscription } from '../test-utils/utils'
 import { getPublishTestStreamMessages } from '../test-utils/publish'
 import { StreamrClient } from '../../src/StreamrClient'
@@ -261,7 +260,6 @@ describe('Group Key Persistence', () => {
                 })
 
                 for (let i = 0; i < NUM_STREAMS; i++) {
-                    // eslint-disable-next-line no-await-in-loop
                     const s = await createTestStream(publisher, module)
                     streams.push(s)
                 }
@@ -304,7 +302,6 @@ describe('Group Key Persistence', () => {
 
                     const s = await createTestStream(publisher, module)
                     await s.addToStorageNode(storageNode.id)
-                    // eslint-disable-next-line no-loop-func
                     streams.push(s)
                 }
             })
@@ -343,7 +340,6 @@ describe('Group Key Persistence', () => {
                 },
             })
             for (let i = 0; i < NUM_STREAMS; i++) {
-                // eslint-disable-next-line no-await-in-loop
                 const stream = await createTestStream(publisher, module)
                 await stream.grantPermissions({
                     public: true,

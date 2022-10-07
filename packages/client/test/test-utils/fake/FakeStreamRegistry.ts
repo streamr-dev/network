@@ -74,7 +74,6 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         const registryItem = this.chain.streams.get(id)
         if (registryItem !== undefined) {
             return this.createFakeStream({ ...registryItem.metadata, id })
-            // eslint-disable-next-line no-else-return
         } else {
             throw new NotFoundError('Stream not found: id=' + id)
         }
@@ -95,7 +94,6 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         }, this.container)
     }
 
-    /* eslint-disable padding-line-between-statements */
     async hasPermission(query: PermissionQuery): Promise<boolean> {
         const streamId = await this.streamIdBuilder.toStreamID(query.streamId)
         const registryItem = this.chain.streams.get(streamId)
