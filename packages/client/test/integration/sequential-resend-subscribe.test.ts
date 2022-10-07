@@ -83,7 +83,7 @@ describe('sequential resend subscribe', () => {
             })
             const msgs = await sub.collect(expectedMessageCount)
             expect(msgs).toHaveLength(expectedMessageCount)
-            expect(msgs).toEqual(published)
+            expect(msgs.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
         })
     }
 })
