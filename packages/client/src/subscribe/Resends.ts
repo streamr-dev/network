@@ -144,7 +144,7 @@ export class Resends implements Context {
         const messageStream = SubscribePipeline<T>(
             new MessageStream<T>(this),
             streamPartId,
-            this.container.resolve<Context>(Context as any),
+            this,
             this.container
         )
 
