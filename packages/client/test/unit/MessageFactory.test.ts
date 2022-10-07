@@ -174,7 +174,6 @@ describe('MessageFactory', () => {
             while (partitionCount > 0) {
                 const msg = await createMessage({}, messageFactory)
                 expect(msg.messageId.streamPartition).toBeLessThan(partitionCount)
-                // eslint-disable-next-line no-plusplus
                 partitionCount--
             }
         })

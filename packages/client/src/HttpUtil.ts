@@ -122,7 +122,7 @@ async function fetchResponse(
 ): Promise<Response> {
     if (!debug) {
         const id = counterId('httpResponse')
-        debug = Debug('utils').extend(id) // eslint-disable-line no-param-reassign
+        debug = Debug('utils').extend(id)
     }
 
     const timeStart = Date.now()

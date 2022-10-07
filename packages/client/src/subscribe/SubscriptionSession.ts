@@ -1,4 +1,4 @@
-import { DependencyContainer, inject } from 'tsyringe'
+import { inject } from 'tsyringe'
 
 import { StreamMessage, StreamMessageType, StreamPartID } from 'streamr-client-protocol'
 
@@ -10,9 +10,15 @@ import { Signal } from '../utils/Signal'
 import { MessageStream } from './MessageStream'
 
 import { Subscription } from './Subscription'
-import { SubscribePipeline } from './SubscribePipeline'
-import { BrubeckContainer } from '../Container'
+import { createSubscribePipeline } from './SubscribePipeline'
 import { NetworkNodeFacade, NetworkNodeStub } from '../NetworkNodeFacade'
+import { Resends } from './Resends'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { StreamrClientEventEmitter } from '../events'
+import { DestroySignal } from '../DestroySignal'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
 
 /**
  * Manages adding & removing subscriptions to node as needed.
@@ -35,15 +41,33 @@ export class SubscriptionSession<T> implements Context {
     constructor(
         context: Context,
         streamPartId: StreamPartID,
-        @inject(BrubeckContainer) container: DependencyContainer
+        resends: Resends,
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        streamRegistryCached: StreamRegistryCached,
+        node: NetworkNodeFacade,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
         this.streamPartId = streamPartId
         this.distributeMessage = this.distributeMessage.bind(this)
-        this.node = container.resolve<NetworkNodeFacade>(NetworkNodeFacade)
+        this.node = node
         this.onError = this.onError.bind(this)
-        this.pipeline = SubscribePipeline<T>(new MessageStream<T>(this), this.streamPartId, this, container)
+        this.pipeline = createSubscribePipeline<T>({
+            messageStream: new MessageStream<T>(this),
+            streamPartId,
+            context: this,
+            resends,
+            groupKeyStore,
+            subscriberKeyExchange,
+            streamRegistryCached,
+            streamrClientEventEmitter,
+            destroySignal,
+            rootConfig
+        })
         this.pipeline.onError.listen(this.onError)
         this.pipeline
             .pipe(this.distributeMessage)

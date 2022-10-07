@@ -104,7 +104,6 @@ export class FakeStorageNode extends FakeNetworkNode {
                 const serialized = msg.serialize()
                 return StreamMessage.deserialize(serialized)
             })
-            // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []
@@ -130,7 +129,6 @@ export class FakeStorageNode extends FakeNetworkNode {
                         || ((msg.getTimestamp() === opts.toTimestamp) && (msg.getSequenceNumber() <= opts.toSequenceNumber))
                     )
             })
-            // eslint-disable-next-line no-else-return
         } else {
             // TODO throw an error if this storage node doesn't isn't configured to store the stream?
             return []

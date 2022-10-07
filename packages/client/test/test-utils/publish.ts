@@ -39,7 +39,6 @@ export async function* createTestMessages(
         }
 
         if (delay) {
-            // eslint-disable-next-line no-await-in-loop
             await wait(delay)
         }
     }

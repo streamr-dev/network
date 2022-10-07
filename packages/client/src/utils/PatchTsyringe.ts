@@ -30,13 +30,11 @@ container.constructor.prototype.resolveParams = function resolveParams(context, 
                             this.resolve(param.token, context),
                             ...param.transformArgs
                         )
-                // eslint-disable-next-line no-else-return
                 } else {
                     return param.multiple
                         ? this.resolveAll(param.token)
                         : this.resolve(param.token, context)
                 }
-            // eslint-disable-next-line no-else-return
             } else if (isTransformDescriptor(param)) {
                 return this.resolve(param.transform, context).transform(
                     this.resolve(param.token, context),

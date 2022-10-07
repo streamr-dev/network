@@ -112,7 +112,7 @@ export class StreamrClient implements Context {
             if (opts.key === undefined) {
                 await queue.rotate(opts.key)
             }
-        } else if (opts.distributionMethod === 'rekey') { // eslint-disable-line no-else-return
+        } else if (opts.distributionMethod === 'rekey') {
             await queue.rekey(opts.key)
         } else {
             throw new Error(`assertion failed: distribution method ${opts.distributionMethod}`)

@@ -14,7 +14,6 @@ const MAX_MESSAGES = 10
 
 function monkeypatchMessageHandler<T = any>(sub: Subscription<T>, fn: ((msg: StreamMessage<T>, count: number) => undefined | null)) {
     let count = 0
-    // eslint-disable-next-line no-param-reassign
     // @ts-expect-error private
     sub.context.pipeline.pipeBefore(async function* DropMessages(src: AsyncGenerator<any>) {
         for await (const msg of src) {
@@ -37,7 +36,6 @@ describe('GapFill', () => {
     let environment: FakeEnvironment
 
     async function setupClient(opts: StreamrClientConfig) {
-        // eslint-disable-next-line require-atomic-updates
         client = environment.createClient({
             maxGapRequests: 20,
             gapFillTimeout: 500,

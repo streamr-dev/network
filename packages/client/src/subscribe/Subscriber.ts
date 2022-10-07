@@ -1,13 +1,20 @@
-import { DependencyContainer, inject, scoped, Lifecycle } from 'tsyringe'
+import { inject, scoped, Lifecycle, delay } from 'tsyringe'
 import { instanceId } from '../utils/utils'
 import { allSettledValues } from '../utils/promises'
 import { Context } from '../utils/Context'
 import { SubscriptionSession } from './SubscriptionSession'
 import { Subscription, SubscriptionOnMessage } from './Subscription'
 import { StreamPartID } from 'streamr-client-protocol'
-import { BrubeckContainer } from '../Container'
 import { StreamIDBuilder } from '../StreamIDBuilder'
 import { StreamDefinition } from '../types'
+import { Resends } from './Resends'
+import { GroupKeyStore } from '../encryption/GroupKeyStore'
+import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
+import { NetworkNodeFacade } from '../NetworkNodeFacade'
+import { StreamrClientEventEmitter } from '../events'
+import { DestroySignal } from '../DestroySignal'
+import { ConfigInjectionToken, StrictStreamrClientConfig } from '../Config'
+import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 
 /**
  * Public Subscribe APIs
@@ -15,17 +22,43 @@ import { StreamDefinition } from '../types'
 
 @scoped(Lifecycle.ContainerScoped)
 export class Subscriber implements Context {
+
     readonly id
     readonly debug
     private readonly subSessions: Map<StreamPartID, SubscriptionSession<unknown>> = new Map()
+    private streamIdBuilder: StreamIDBuilder
+    private resends: Resends
+    private groupKeyStore: GroupKeyStore
+    private subscriberKeyExchange: SubscriberKeyExchange
+    private streamRegistryCached: StreamRegistryCached
+    private node: NetworkNodeFacade
+    private streamrClientEventEmitter: StreamrClientEventEmitter
+    private destroySignal: DestroySignal
+    private rootConfig: StrictStreamrClientConfig
 
     constructor(
         context: Context,
-        @inject(StreamIDBuilder) private streamIdBuilder: StreamIDBuilder,
-        @inject(BrubeckContainer) private container: DependencyContainer
+        streamIdBuilder: StreamIDBuilder,
+        resends: Resends,
+        groupKeyStore: GroupKeyStore,
+        subscriberKeyExchange: SubscriberKeyExchange,
+        @inject(delay(() => StreamRegistryCached)) streamRegistryCached: StreamRegistryCached,
+        node: NetworkNodeFacade,
+        streamrClientEventEmitter: StreamrClientEventEmitter,
+        destroySignal: DestroySignal,
+        @inject(ConfigInjectionToken.Root) rootConfig: StrictStreamrClientConfig
     ) {
         this.id = instanceId(this)
         this.debug = context.debug.extend(this.id)
+        this.streamIdBuilder = streamIdBuilder
+        this.resends = resends
+        this.groupKeyStore = groupKeyStore
+        this.subscriberKeyExchange = subscriberKeyExchange
+        this.streamRegistryCached = streamRegistryCached
+        this.node = node
+        this.streamrClientEventEmitter = streamrClientEventEmitter
+        this.destroySignal = destroySignal
+        this.rootConfig = rootConfig
     }
 
     async subscribe<T>(
@@ -49,7 +82,19 @@ export class Subscriber implements Context {
             return this.getSubscriptionSession<T>(streamPartId)!
         }
         this.debug('creating new SubscriptionSession: %s', streamPartId)
-        const subSession = new SubscriptionSession<T>(this, streamPartId, this.container)
+        const subSession = new SubscriptionSession<T>(
+            this,
+            streamPartId,
+            this.resends,
+            this.groupKeyStore,
+            this.subscriberKeyExchange,
+            this.streamRegistryCached,
+            this.node,
+            this.streamrClientEventEmitter,
+            this.destroySignal,
+            this.rootConfig
+        )
+        
         this.subSessions.set(streamPartId, subSession as SubscriptionSession<unknown>)
         subSession.onRetired.listen(() => {
             this.subSessions.delete(streamPartId)

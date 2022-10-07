@@ -59,7 +59,6 @@ describe('sequential resend subscribe', () => {
         // publish messages with timestamps like 222222, 333333, etc so the
         // sequencing is clearly visible in logs
         const id = (i + 2) * 111111 // start at 222222
-        // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
             const sub = await subscriber.subscribe({
                 streamId: stream.id,
@@ -74,7 +73,6 @@ describe('sequential resend subscribe', () => {
             const expectedMessageCount = published.length + 1 // the realtime message which we publish next
             setImmediate(async () => {
                 const message = Msg()
-                // eslint-disable-next-line no-await-in-loop
                 const streamMessage = await publisher.publish(stream.id, message, { // should be realtime
                     timestamp: id
                 })

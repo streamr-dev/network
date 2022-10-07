@@ -71,7 +71,7 @@ describe('pOrderedResolve', () => {
                 }
                 return index
             } finally {
-                active -= 1 // eslint-disable-line require-atomic-updates
+                active -= 1
             }
         })
 
@@ -107,7 +107,6 @@ describe('pOrderedResolve', () => {
         // @ts-expect-error wrong argument type
         await orderedFn(3)
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await orderedFn('abc')
         expect(c).toEqual(3)
         orderedFn.clear()
@@ -133,7 +132,6 @@ describe('pLimitFn', () => {
         await limitedFn(3)
 
         // @ts-expect-error wrong return type
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await limitedFn('abc')
         expect(c).toEqual(3)
         limitedFn.clear()
@@ -184,7 +182,6 @@ describe('CacheAsyncFn', () => {
         await cachedFn(3)
 
         // @ts-expect-error wrong return type
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await cachedFn('abc')
         expect(c).toEqual(3)
         cachedFn.clearMatching((_d: string) => true)
@@ -295,7 +292,6 @@ describe('cacheFn', () => {
         cachedFn(3)
 
         // @ts-expect-error wrong return type
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = cachedFn('abc')
         expect(c).toEqual(3)
         cachedFn.clearMatching((_d: string) => true)
@@ -464,7 +460,6 @@ describe('pOnce', () => {
         await wrappedFn(3)
 
         // @ts-expect-error wrong return type
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const c: string = await wrappedFn('abc')
         expect(c).toEqual(3)
     })
