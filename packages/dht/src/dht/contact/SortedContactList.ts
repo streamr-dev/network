@@ -1,7 +1,6 @@
 import KBucket from 'k-bucket'
 import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
-import { PeerDescriptor } from '../../proto/DhtRpc'
 import { Events, IContact, ContactState } from './Contact'
 
 export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {

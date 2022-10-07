@@ -1,6 +1,5 @@
 import { PeerID } from '../../helpers/PeerID'
 import { PeerDescriptor } from '../../proto/DhtRpc'
-import KBucket from 'k-bucket'
 
 export class ContactState<Contact> {
     public contacted = false

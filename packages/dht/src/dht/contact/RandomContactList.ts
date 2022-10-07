@@ -1,4 +1,3 @@
-import { PeerDescriptor } from '../../proto/DhtRpc'
 import { Events, IContact, ContactState } from './Contact'
 
 import EventEmitter from 'eventemitter3'
@@ -63,7 +62,7 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
         return this.contactsById.get(id.toKey())!
     }
 
-    public getContacts(limit = this.maxSize) {
+    public getContacts(limit = this.maxSize): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
