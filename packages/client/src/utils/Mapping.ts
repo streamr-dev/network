@@ -1,10 +1,3 @@
-/*
- * A map data structure which lazily evaluates values. A factory function
- * is called to create a value when when an item is queried for the first time.
- * The map stores the value and any subsequent call to get() returns
- * the same value.
- */
-
 // an wrapper object is used so that we can store undefined values
 interface ValueWrapper<V> {
     value: V
@@ -12,6 +5,12 @@ interface ValueWrapper<V> {
 
 const KEY_SEPARATOR = '|'
 
+/*
+ * A map data structure which lazily evaluates values. A factory function
+ * is called to create a value when when an item is queried for the first time.
+ * The map stores the value and any subsequent call to get() returns
+ * the same value.
+ */
 export class Mapping<K extends (string | number)[], V> {
 
     private delegate: Map<string, ValueWrapper<V>> = new Map()
