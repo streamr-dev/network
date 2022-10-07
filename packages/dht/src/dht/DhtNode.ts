@@ -513,12 +513,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             logger.trace(`Adding new contact ${contact.peerId.toString()}`)
             const dhtPeer = new DhtPeer(contact, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
             const peerId = PeerID.fromValue(contact.peerId)
-            if (!this.neighborList!.hasContact(peerId)) {
-                this.neighborList!.addContact(dhtPeer)
-            }
-            if (contact.openInternet && !this.openInternetPeers!.hasContact(peerId)) {
-                this.openInternetPeers!.addContact(dhtPeer)
-            }
+            this.neighborList!.addContact(dhtPeer)
+            this.randomPeers!.addContact(dhtPeer)
+            this.openInternetPeers!.addContact(dhtPeer)
             if (setActive) {
                 this.neighborList!.setActive(peerId)
                 this.openInternetPeers!.setActive(peerId)

@@ -32,7 +32,7 @@ describe('Propagation', () => {
         dhtNodes.push(entryPoint)
         randomGraphNodes.push(node1)
 
-        range(NUM_OF_NODES).map(async (i) => {
+        range(NUM_OF_NODES).map(async (_i) => {
             const descriptor: PeerDescriptor = {
                 peerId: PeerID.fromString(new UUID().toString()).value,
                 type: 1
@@ -75,7 +75,6 @@ describe('Propagation', () => {
         }
         randomGraphNodes[0].broadcast(message)
         await waitForCondition(() => {
-            console.log(totalReceived)
             return totalReceived >= NUM_OF_NODES
         })
     }, 25000)

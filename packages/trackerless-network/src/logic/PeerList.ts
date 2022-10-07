@@ -60,8 +60,8 @@ export class PeerList {
         return this.peers.size
     }
 
-    getRandom(): RemoteRandomGraphNode | undefined {
-        const keys = [...this.peers.keys()]
+    getRandom(exclude: string[]): RemoteRandomGraphNode | undefined {
+        const keys = [...this.peers.keys()].filter((key) => !exclude.includes(key))
         const shuffled = shuffle(keys)
         if (shuffled.length) {
             return this.peers.get(shuffled[0])

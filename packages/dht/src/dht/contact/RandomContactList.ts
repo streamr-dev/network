@@ -17,18 +17,25 @@ export class RandomContactList<Contact extends IContact> extends EventEmitter<Ev
             return
         }
         if (!this.contactsById.has(contact.peerId.toKey())) {
-            this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-            this.contactIds.push(contact.peerId)
-        } else if (Math.random() < 0.20) {
-            const toRemove = this.contactIds.shift()
-            this.contactsById.delete(toRemove!.toKey())
-            this.contactIds.push(contact.peerId)
-            this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
-            this.emit('contactRemoved',
-                contact.getPeerDescriptor(),
-                this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
-            )
+            if (this.contactIds.length < this.maxSize) {
 
+                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
+                this.contactIds.push(contact.peerId)
+            } else if (Math.random() < 0.20) {
+                const toRemove = this.contactIds.shift()
+                this.contactsById.delete(toRemove!.toKey())
+                this.contactIds.push(contact.peerId)
+                this.contactsById.set(contact.peerId.toKey(), new ContactState(contact))
+                this.emit('contactRemoved',
+                    contact.getPeerDescriptor(),
+                    this.getContacts().map((contact: Contact) => contact.getPeerDescriptor())
+                )
+            }
+            this.emit(
+                'newContact',
+                contact.getPeerDescriptor(),
+                this.getContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
+            )
         }
     }
 

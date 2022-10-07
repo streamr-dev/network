@@ -43,9 +43,12 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                     this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
                 )
             }
+            this.emit(
+                'newContact',
+                contact.getPeerDescriptor(),
+                this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor())
+            )
         }
-        this.emit('newContact', contact.getPeerDescriptor(), this.getClosestContacts(25).map((contact: Contact) => contact.getPeerDescriptor()))
-
     }
 
     public addContacts(contacts: Contact[]): void {

@@ -80,7 +80,8 @@ describe('Handshakes', () => {
         handshaker = new Handshaker({
             ownPeerDescriptor: peerDescriptor2,
             randomGraphId: randomGraphId,
-            contactPool: contactPool,
+            nearbyContactPool: contactPool,
+            randomContactPool: contactPool,
             targetNeighbors: targetNeighbors,
             connectionLocker: mockConnectionLocker,
             protoRpcClient: toProtoRpcClient(new NetworkRpcClient(rpcCommunicator2.getRpcClientTransport()))

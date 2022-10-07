@@ -22,7 +22,7 @@ describe('RandomGraphNode-DhtNode', () => {
 
     const peerDescriptors: PeerDescriptor[] = range(numOfNodes).map((i) => {
         return {
-            peerId: PeerID.fromString(`peer${i}`).value,
+            peerId: PeerID.fromString(`${i}`).value,
             type: 0
         }
     })
@@ -120,7 +120,9 @@ describe('RandomGraphNode-DhtNode', () => {
         await Promise.all(graphNodes.map((node) =>
             Promise.all([
                 waitForCondition(() => node.getContactPoolIds().length >= 8),
-                waitForCondition(() => node.getTargetNeighborStringIds().length >= 3)
+                waitForCondition(() => {
+                    return node.getTargetNeighborStringIds().length >= 3
+                })
             ])
         ))
 
