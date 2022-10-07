@@ -71,7 +71,7 @@ export class MessageFactory {
         } else {
             partition = (metadata.partitionKey !== undefined)
                 ? keyToArrayIndex(partitionCount, metadata.partitionKey)
-                : await this.getDefaultPartition(partitionCount)
+                : this.getDefaultPartition(partitionCount)
         }
 
         const chain = await this.messageChains.get(
@@ -107,7 +107,7 @@ export class MessageFactory {
         return message
     }
 
-    private async getDefaultPartition(partitionCount: number): Promise<number> {
+    private getDefaultPartition(partitionCount: number): number {
         // we want to (re-)select a random partition in these two situations
         // 1) this is the first publish, and we have not yet selected any partition (the most typical case)
         // 2) the partition count may have decreased since we initially selected a random partitions, and it
