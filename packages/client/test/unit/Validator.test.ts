@@ -7,8 +7,9 @@ import { StreamRegistryCached } from '../../src/registry/StreamRegistryCached'
 import { Validator } from '../../src/Validator'
 import { createMockMessage, mockContext } from '../test-utils/utils'
 import { STREAM_CLIENT_DEFAULTS, SubscribeConfig } from '../../src/Config'
+import { fastWallet } from 'streamr-test-utils'
 
-const publisherWallet = Wallet.createRandom()
+const publisherWallet = fastWallet()
 const PARTITION_COUNT = 3
 
 const createMockValidator = (options: Partial<SubscribeConfig>) => {
