@@ -1,17 +1,16 @@
 import 'reflect-metadata'
 import { GroupKey } from './../../src/encryption/GroupKey'
-import { StreamPartID } from 'streamr-client-protocol'
+import { StreamPartID, StreamPartIDUtils, toStreamID } from 'streamr-client-protocol'
 import { Wallet } from '@ethersproject/wallet'
-import { StreamPermission } from './../../src/permission'
 import { createMockMessage } from './../test-utils/utils'
 import { MessageStream } from './../../src/subscribe/MessageStream'
-import { fastWallet } from "streamr-test-utils"
-import { SubscribePipeline } from "../../src/subscribe/SubscribePipeline"
-import { FakeEnvironment } from "../test-utils/fake/FakeEnvironment"
+import { fastWallet, randomEthereumAddress } from "streamr-test-utils"
+import { createSubscribePipeline } from "../../src/subscribe/SubscribePipeline"
 import { mockContext } from '../test-utils/utils'
 import { collect } from '../../src/utils/GeneratorUtils'
-import { StreamrClient } from '../../src/StreamrClient'
 import { DecryptError } from '../../src/encryption/EncryptionUtil'
+import { Stream } from '../../src'
+import { DestroySignal } from '../../src/DestroySignal'
 
 const CONTENT = {
     foo: 'bar'
@@ -23,32 +22,42 @@ describe('SubscribePipeline', () => {
     let input: MessageStream
     let streamPartId: StreamPartID
     let publisher: Wallet
-    let subscriber: StreamrClient
-    let environment: FakeEnvironment
 
     beforeEach(async () => {
-        environment = new FakeEnvironment()
-        subscriber = environment.createClient({
-            decryption: {
-                keyRequestTimeout: 50
-            }
-        })
-        const stream = await subscriber.createStream('/path')
-        streamPartId = stream.getStreamParts()[0]
+        streamPartId = StreamPartIDUtils.parse(`${randomEthereumAddress()}/path#0`)
         publisher = fastWallet()
-        await stream.grantPermissions({
-            user: publisher.address,
-            permissions: [StreamPermission.PUBLISH]
-        })
+        const stream = new Stream({
+            id: toStreamID(streamPartId),
+            partitions: 1
+        }, {
+            resolve: () => {}
+        } as any)
         const context = mockContext()
         input = new MessageStream(context)
-        pipeline = SubscribePipeline(
-            input,
+        pipeline = createSubscribePipeline({
+            messageStream: input,
             streamPartId,
             context,
-            // @ts-expect-error private
-            subscriber.container
-        )
+            resends: undefined as any,
+            groupKeyStore: {
+                get: async () => undefined
+            } as any,
+            subscriberKeyExchange: {
+                requestGroupKey: async () => {}
+            } as any,
+            streamRegistryCached: {
+                getStream: async () => stream,
+                isStreamPublisher: async () => true,
+                clearStream: () => {}
+            } as any,
+            streamrClientEventEmitter: undefined as any,
+            destroySignal: new DestroySignal(context),
+            rootConfig: {
+                decryption: {
+                    keyRequestTimeout: 50
+                } as any
+            } as any
+        })
     })
 
     it('happy path', async () => {
