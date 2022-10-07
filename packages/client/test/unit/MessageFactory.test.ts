@@ -113,62 +113,50 @@ describe('MessageFactory', () => {
     })
 
     describe('partitions', () => {
+
+        it('out of range', async () => {
+            const messageFactory = createMessageFactory()
+            await expect(() => 
+                messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP }, -1)
+            ).rejects.toThrow(/out of range/)
+            await expect(() => 
+                messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP }, PARTITION_COUNT)
+            ).rejects.toThrow(/out of range/)
+        })
+
         it('partition and partitionKey', async () => {
             const messageFactory = createMessageFactory()
-            return expect(() => {
-                return messageFactory.createMessage(
-                    CONTENT,
-                    {
-                        timestamp: TIMESTAMP,
-                        partitionKey: 'mockPartitionKey'
-                    },
-                    0
-                )
-            }).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
+            return expect(() => 
+                messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey: 'mockPartitionKey' }, 0)
+            ).rejects.toThrow('Invalid combination of "partition" and "partitionKey"')
         })
 
         it('no partition key: uses same partition for all messages', async () => {
             const messageFactory = createMessageFactory()
-            const msg1 = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP
-            })
-            const msg2 = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP
-            })
+            const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
+            const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
             expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
         })
 
         it('same partition key maps to same partition', async () => {
             const messageFactory = createMessageFactory()
             const partitionKey = `mock-partition-key-${random(Number.MAX_SAFE_INTEGER)}`
-            const msg1 = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP,
-                partitionKey
-            })
-            const msg2 = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP,
-                partitionKey
-            })
+            const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey })
+            const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey })
             expect(msg1!.messageId.streamPartition).toBe(msg2!.messageId.streamPartition)
         })
 
         it('numeric partition key maps to the partition if in range', async () => {
             const messageFactory = createMessageFactory()
             const partitionKey = 10
-            const msg = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP,
-                partitionKey
-            })
+            const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey })
             expect(msg!.messageId.streamPartition).toBe(partitionKey)
         })
 
         it('numeric partition key maps to partition range', async () => {
             const messageFactory = createMessageFactory()
             const partitionOffset = 20
-            const msg = await messageFactory.createMessage(CONTENT, {
-                timestamp: TIMESTAMP,
-                partitionKey: PARTITION_COUNT + partitionOffset
-            })
+            const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey: PARTITION_COUNT + partitionOffset })
             expect(msg!.messageId.streamPartition).toBe(partitionOffset)
         })
 
@@ -178,9 +166,7 @@ describe('MessageFactory', () => {
                 getPartitionCount: async () => partitionCount
             })
             while (partitionCount > 0) {
-                const msg = await messageFactory.createMessage(CONTENT, {
-                    timestamp: TIMESTAMP
-                })
+                const msg = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
                 expect(msg.messageId.streamPartition).toBeLessThan(partitionCount)
                 // eslint-disable-next-line no-plusplus
                 partitionCount--
@@ -201,8 +187,10 @@ describe('MessageFactory', () => {
             const messageFactory = createMessageFactory()
             const msg1 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP })
             const msg2 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, partitionKey: 'mock-key' })
+            const msg3 = await messageFactory.createMessage(CONTENT, { timestamp: TIMESTAMP, msgChainId: msg2.getMsgChainId() }, 10)
             expect(msg1.getMessageID().msgChainId).not.toBe(msg2.getMessageID().msgChainId)
             expect(msg2.getPreviousMessageRef()).toBe(null)
+            expect(msg3.getPreviousMessageRef()).toBe(null)
         })
 
         it('explicit msgChainId', async () => {
