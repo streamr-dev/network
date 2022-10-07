@@ -80,7 +80,7 @@ export class MessageFactory {
         )
         const [messageId, prevMsgRef] = chain.add(metadata.timestamp)
 
-        const encryptionType = (await this.isPublicStream(this.streamId)) ? StreamMessage.ENCRYPTION_TYPES.NONE : StreamMessage.ENCRYPTION_TYPES.AES
+        const encryptionType = (await this.isPublicStream(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
         let groupKeyId: GroupKeyId | undefined
         let newGroupKey: EncryptedGroupKey | undefined
         let serializedContent = JSON.stringify(content)
