@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import { v4 as uuid } from 'uuid'
 import {
     GroupKeyResponse,
+    MessageID,
     StreamMessage,
     StreamPartID,
     StreamPartIDUtils
@@ -10,8 +11,7 @@ import { GroupKey, GroupKeyId } from '../../src/encryption/GroupKey'
 import { Wallet } from 'ethers'
 import { RSAKeyPair } from '../../src/encryption/RSAKeyPair'
 import { StreamPermission } from '../../src/permission'
-import { 
-    createMockMessage,
+import {
     createRelativeTestStreamId,
     getGroupKeyStore,
     startPublisherKeyExchangeSubscription
@@ -20,6 +20,8 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { createRandomMsgChainId } from '../../src/publish/MessageChain'
+import { sign } from '../../src/utils/signingUtils'
 import { toEthereumAddress } from '@streamr/utils'
 
 describe('PublisherKeyExchange', () => {
@@ -46,9 +48,9 @@ describe('PublisherKeyExchange', () => {
         publisher = subscriberWallet,
         rsaPublicKey = subscriberRSAKeyPair.getPublicKey()
     ): StreamMessage => {
-        return createMockMessage({
-            streamPartId,
-            publisher,
+        const [ streamId, partition ] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        const msg = new StreamMessage({
+            messageId: new MessageID(streamId, partition, 0, Date.now(), publisher.address, createRandomMsgChainId()),
             content: JSON.stringify([
                 uuid(),
                 publisherWallet.address,
@@ -59,6 +61,8 @@ describe('PublisherKeyExchange', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
         })
+        msg.signature = sign(msg.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), publisher.privateKey)
+        return msg
     }
 
     const testSuccessResponse = async (actualResponse: StreamMessage, expectedGroupKeys: GroupKey[]): Promise<void> => {

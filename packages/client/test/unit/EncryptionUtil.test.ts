@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
 import {
     EncryptedGroupKey,
-    MessageID,
     StreamMessage,
+    StreamPartIDUtils,
     toStreamID,
     toStreamPartID
 } from 'streamr-client-protocol'
@@ -10,9 +10,7 @@ import { fastWallet } from 'streamr-test-utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { EncryptionUtil } from '../../src/encryption/EncryptionUtil'
 import { createMockMessage } from '../test-utils/utils'
-import { toEthereumAddress } from '@streamr/utils'
 
-const PUBLISHER_ID = toEthereumAddress('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 const STREAM_ID = toStreamID('streamId')
 
 describe('EncryptionUtil', () => {
@@ -41,43 +39,18 @@ describe('EncryptionUtil', () => {
         expect(ciphertext1.slice(32)).not.toStrictEqual(ciphertext2.slice(32))
     })
 
-    it('StreamMessage gets encrypted', () => {
+    it('StreamMessage decryption: happy path', async () => {
         const key = GroupKey.generate()
         const nextKey = GroupKey.generate()
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(STREAM_ID, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
+        const streamMessage = await createMockMessage({
+            streamPartId: StreamPartIDUtils.parse('stream#0'),
+            publisher: fastWallet(),
             content: {
-                foo: 'bar',
+                foo: 'bar'
             },
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-            signature: null,
+            encryptionKey: key,
+            nextEncryptionKey: nextKey
         })
-        EncryptionUtil.encryptStreamMessage(streamMessage, key, nextKey)
-        expect(streamMessage.getSerializedContent()).not.toStrictEqual('{"foo":"bar"}')
-        expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.AES)
-        expect(streamMessage.groupKeyId).toBe(key.id)
-        expect(streamMessage.newGroupKey).toMatchObject({
-            groupKeyId: nextKey.id,
-            encryptedGroupKeyHex: expect.any(String)
-        })
-    })
-
-    it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
-        const key = GroupKey.generate()
-        const nextKey = GroupKey.generate()
-        const streamMessage = new StreamMessage({
-            messageId: new MessageID(STREAM_ID, 0, 1, 0, PUBLISHER_ID, 'msgChainId'),
-            content: {
-                foo: 'bar',
-            },
-            contentType: StreamMessage.CONTENT_TYPES.JSON,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-            signature: null,
-        })
-        EncryptionUtil.encryptStreamMessage(streamMessage, key, nextKey)
         EncryptionUtil.decryptStreamMessage(streamMessage, key)
         expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
         expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
@@ -85,9 +58,9 @@ describe('EncryptionUtil', () => {
         expect(streamMessage.newGroupKey).toEqual(nextKey)
     })
 
-    it('StreamMessage decryption throws if newGroupKey invalid', () => {
+    it('StreamMessage decryption throws if newGroupKey invalid', async () => {
         const key = GroupKey.generate()
-        const msg = createMockMessage({
+        const msg = await createMockMessage({
             publisher: fastWallet(),
             streamPartId: toStreamPartID(STREAM_ID, 0),
             encryptionKey: key

@@ -125,7 +125,7 @@ describe.skip(OrderingUtil, () => {
             actual[msg.getPublisherId()].push(msg.getTimestamp())
         }
 
-        const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: string) => {
+        const gapHandler = async (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
             const requestedMessages = groundTruthMessages[publisherId].filter(({ delivery, timestamp }) => {
                 return delivery === Delivery.GAP_FILL && (timestamp > from.timestamp && timestamp <= to.timestamp)
             })

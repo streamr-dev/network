@@ -2,6 +2,7 @@ import assert from 'assert'
 
 import shuffle from 'array-shuffle'
 import {
+    EthereumAddress,
     MessageID,
     MessageRef,
     StreamMessage,
@@ -232,7 +233,7 @@ describe('OrderedMsgChain', () => {
         const received: StreamMessage[] = []
         util = new OrderedMsgChain(PUBLISHER_ID, 'msgChainId', (msg: StreamMessage) => {
             received.push(msg)
-        }, (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => {
+        }, (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => {
             assert.deepStrictEqual(received, [msg1, msg2])
             assert.strictEqual(from.timestamp, msg2.getMessageRef().timestamp)
             assert.strictEqual(from.sequenceNumber, msg2.getMessageRef().sequenceNumber + 1)
@@ -554,10 +555,10 @@ describe('OrderedMsgChain', () => {
         it('call the gap handler maxGapRequests times and then fails with GapFillFailedError', (done) => {
             let counter = 0
             util = new OrderedMsgChain(
-                PUBLISHER_ID, 
+                PUBLISHER_ID,
                 'msgChainId', 
                 () => {}, 
-                (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => {
+                (from: MessageRef, to: MessageRef, publisherId: EthereumAddress, msgChainId: string) => {
                     assert.strictEqual(from.timestamp, msg1.getMessageRef().timestamp)
                     assert.strictEqual(from.sequenceNumber, msg1.getMessageRef().sequenceNumber + 1)
                     assert.deepStrictEqual(to, msg3.prevMsgRef)

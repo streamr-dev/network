@@ -29,11 +29,11 @@ describe('resend with existing key', () => {
     let allMessages: { timestamp: number, groupKey: GroupKey, nextGroupKey?: GroupKey }[]
     let environment: FakeEnvironment
 
-    const storeMessage = (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
-        const message = createMockMessage({
+    const storeMessage = async (timestamp: number, currentGroupKey: GroupKey, nextGroupKey: GroupKey | undefined, storageNode: FakeStorageNode) => {
+        const message = await createMockMessage({
             timestamp,
             encryptionKey: currentGroupKey,
-            newGroupKey: (nextGroupKey !== undefined) ? currentGroupKey.encryptNextGroupKey(nextGroupKey) : null,
+            nextEncryptionKey: nextGroupKey,
             stream,
             publisher: publisherWallet,
         })

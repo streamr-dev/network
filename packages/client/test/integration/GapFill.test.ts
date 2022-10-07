@@ -107,7 +107,7 @@ describe('GapFill', () => {
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
                 // might be > 1, depends whether messages in storage by time gap is requested.
                 // message pipeline is processed as soon as messages arrive,
                 // not when sub starts iterating
@@ -132,7 +132,7 @@ describe('GapFill', () => {
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can fill multiple gaps', async () => {
@@ -154,7 +154,7 @@ describe('GapFill', () => {
                         break
                     }
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
         })
 
@@ -187,7 +187,7 @@ describe('GapFill', () => {
                     received.push(m)
                     // should not need to explicitly end
                 }
-                expect(received).toEqual(published)
+                expect(received.map((m) => m.signature)).toEqual(published.map((m) => m.signature))
             })
 
             it('can fill gaps in resends even if gap cannot be filled (ignores missing)', async () => {
@@ -225,8 +225,9 @@ describe('GapFill', () => {
                     received.push(m)
                     // should not need to explicitly end
                 }
-                expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
-            })
+                const expected = published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature)
+                expect(received.map((m) => m.signature)).toEqual(expected)
+            }, 20000)
 
             it('rejects resend if no storage assigned', async () => {
                 // new stream, assign to storage node not called
@@ -282,7 +283,7 @@ describe('GapFill', () => {
                 }
             }
             const published = await publishedTask
-            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
             expect(calledResend).toHaveBeenCalledTimes(0)
         })
 
@@ -325,7 +326,7 @@ describe('GapFill', () => {
                     break
                 }
             }
-            expect(received).toEqual(published.filter((_value: any, index: number) => index !== 2))
+            expect(received.map((m) => m.signature)).toEqual(published.filter((_value: any, index: number) => index !== 2).map((m) => m.signature))
             expect(calledResend).toHaveBeenCalledTimes(2 * 3) // another 3 come from resend done in publishTestMessages
         })
     })

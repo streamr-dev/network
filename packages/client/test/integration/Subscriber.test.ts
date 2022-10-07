@@ -43,7 +43,7 @@ describe('Subscriber', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         const publisherNode = environment.startNode(publisherWallet.address)
-        publisherNode.publish(createMockMessage({
+        publisherNode.publish(await createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT
@@ -70,7 +70,7 @@ describe('Subscriber', () => {
         const sub = await subscriber.subscribe(stream.id)
 
         const publisherNode = await publisher.getNode()
-        publisherNode.publish(createMockMessage({
+        publisherNode.publish(await createMockMessage({
             stream,
             publisher: publisherWallet,
             content: MOCK_CONTENT,

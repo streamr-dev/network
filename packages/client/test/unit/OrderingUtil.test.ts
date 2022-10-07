@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import shuffle from 'array-shuffle'
-import { MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
+import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
 import { toEthereumAddress } from '@streamr/utils'
 
@@ -43,7 +43,7 @@ describe('OrderingUtil', () => {
         util.add(msg)
     })
     it('calls the gap handler if a gap is detected', (done) => {
-        const gapHandler = (from: MessageRef, to: MessageRef, publisherId: string) => {
+        const gapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
             assert.equal(from.timestamp, 1)
             assert.equal(from.sequenceNumber, 1)
             assert.equal(to.timestamp, 3)
