@@ -5,7 +5,7 @@ export * from './StreamrClient'
 export * from './Stream'
 export { DecryptError } from './encryption/EncryptionUtil'
 export { StreamrClientEvents } from './events'
-export { MessageMetadata } from './publish/PublishPipeline'
+export { MessageMetadata } from './publish/Publisher'
 export { Subscription, SubscriptionOnMessage } from './subscribe/Subscription'
 export { MessageStreamOnMessage } from './subscribe/MessageStream'
 export type { MessageStream } from './subscribe/MessageStream'
@@ -30,7 +30,6 @@ export {
     ConnectionConfig,
     TrackerRegistrySmartContract,
     NetworkConfig,
-    DebugConfig,
     CacheConfig,
     STREAMR_STORAGE_NODE_GERMANY,
     STREAM_CLIENT_DEFAULTS,

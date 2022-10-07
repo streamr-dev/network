@@ -12,7 +12,6 @@ import CONFIG_SCHEMA from './config.schema.json'
 import { EthereumAddress, SmartContractRecord } from 'streamr-client-protocol'
 
 import type { NetworkNodeOptions } from 'streamr-network'
-import type { InspectOptions } from 'util'
 import type { ConnectionInfo } from '@ethersproject/web'
 
 export interface CacheConfig {
@@ -61,10 +60,6 @@ export interface DecryptionConfig {
     maxKeyRequestsPerSecond: number
 }
 
-export interface DebugConfig {
-    inspectOpts: InspectOptions
-}
-
 export interface MetricsPeriodConfig {
     streamId: string
     duration: number
@@ -91,7 +86,6 @@ export type StrictStreamrClientConfig = {
     /** @internal */
     _timeouts: TimeoutsConfig
     /** @internal */
-    debug: DebugConfig
     metrics: MetricsConfig
 } & (
     EthereumConfig
@@ -102,8 +96,6 @@ export type StrictStreamrClientConfig = {
 export type StreamrClientConfig = Partial<Omit<StrictStreamrClientConfig, 'network' | 'decryption' | 'debug'> & {
     network: Partial<StrictStreamrClientConfig['network']>
     decryption: Partial<StrictStreamrClientConfig['decryption']>
-    /** @internal */
-    debug: Partial<StrictStreamrClientConfig['debug']>
 }>
 
 export const STREAMR_STORAGE_NODE_GERMANY = '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916'
@@ -182,12 +174,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
         },
         httpFetchTimeout: 30 * 1000
     },
-    debug: {
-        inspectOpts: {
-            depth: 5,
-            maxStringLength: 512
-        }
-    },
     metrics: {
         periods: [
             {
@@ -223,7 +209,6 @@ export const createStrictConfig = (inputOptions: StreamrClientConfig = {}): Stri
             trackers: opts.network?.trackers ?? defaults.network.trackers,
         },
         decryption: merge(defaults.decryption || {}, opts.decryption),
-        debug: merge(defaults.debug || {}, opts.debug),
         cache: {
             ...defaults.cache,
             ...opts.cache,

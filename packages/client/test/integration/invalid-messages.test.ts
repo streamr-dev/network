@@ -12,7 +12,6 @@ const PROPAGATION_WAIT_TIME = 2000
 describe('client behaviour on invalid message', () => {
     let streamId: StreamID
     let subscriberClient: StreamrClient
-    let publisherClient: StreamrClient
     let environment: FakeEnvironment
 
     beforeAll(async () => {
@@ -32,24 +31,10 @@ describe('client behaviour on invalid message', () => {
 
     beforeEach(async () => {
         subscriberClient = environment.createClient()
-        publisherClient = environment.createClient()
     })
 
     afterEach(async () => {
         await environment.destroy()
-    })
-
-    it('publishing with insufficient permissions prevents message from being sent to network (NET-773)', async () => {
-        const onMessage = jest.fn()
-        const onError = jest.fn()
-        const subscription = await subscriberClient.subscribe(streamId, onMessage)
-        subscription.onError.listen(onError)
-        await expect(publisherClient.publish(streamId, { not: 'allowed' }))
-            .rejects
-            .toThrow(/is not a publisher on stream/)
-        await wait(PROPAGATION_WAIT_TIME)
-        expect(onMessage).not.toHaveBeenCalled()
-        expect(onError).not.toHaveBeenCalled()
     })
 
     it('invalid messages received by subscriber do not cause unhandled promise rejection (NET-774)', async () => {

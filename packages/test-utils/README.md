@@ -177,23 +177,6 @@ test('test', () => {
 })
 ```
 
-### callbackToPromise
-```
-callbackToPromise(fn, ...args)
-```
-
-Convert a function that has as its last parameter a callback of the form `(err, result)` into a Promise.
-
-Example:
-```js
-const fs = require('fs')
-
-callbackToPromise(fs.readFile, 'README.md')
-    .then((res) => {
-        ...
-    })
-``` 
-
 ## Best Practices
 
 It would seem like the best order in which to use the control flow utilities is something like

@@ -117,42 +117,6 @@ describe('Config', () => {
             expect(clientOverrides.network.trackers).not.toBe(trackers)
             expect((clientOverrides.network.trackers as SmartContractRecord[])[0]).not.toBe(trackers[0])
         })
-
-        it('can override debug settings', () => {
-            const debugPartial = {
-                inspectOpts: {
-                    depth: 99,
-                }
-            }
-            const debugFull = {
-                inspectOpts: {
-                    depth: 88,
-                    maxStringLength: 3
-                }
-            }
-
-            const clientDefaults = createStrictConfig()
-            const clientOverrides1 = createStrictConfig({
-                debug: debugPartial,
-            })
-            const clientOverrides2 = createStrictConfig({
-                debug: debugFull,
-            })
-            expect(clientOverrides1.debug).toEqual({
-                ...clientDefaults.debug,
-                inspectOpts: {
-                    ...clientDefaults.debug.inspectOpts,
-                    ...debugPartial.inspectOpts,
-                }
-            })
-            expect(clientOverrides2.debug).toEqual({
-                ...clientDefaults.debug,
-                inspectOpts: {
-                    ...clientDefaults.debug.inspectOpts,
-                    ...debugFull.inspectOpts,
-                }
-            })
-        })
-
+        
     })
 })

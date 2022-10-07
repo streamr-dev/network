@@ -1,6 +1,6 @@
 import { instanceId } from './utils'
 import { Gate } from './Gate'
-import { Debug, inspect } from './log'
+import { Debug } from './log'
 import { Context, ContextError } from './Context'
 import * as G from './GeneratorUtils'
 
@@ -65,7 +65,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
         this.debug = Debug(this.id)
 
         if (!(bufferSize > 0 && Number.isSafeInteger(bufferSize))) {
-            throw new PushBufferError(this, `bufferSize must be a safe positive integer, got: ${inspect(bufferSize)}`)
+            throw new PushBufferError(this, `bufferSize must be a safe positive integer, got: ${bufferSize}`)
         }
 
         this.bufferSize = bufferSize
