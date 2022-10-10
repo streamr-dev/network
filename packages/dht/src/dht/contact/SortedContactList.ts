@@ -1,27 +1,13 @@
 import KBucket from 'k-bucket'
-import { PeerID, PeerIDKey } from '../helpers/PeerID'
+import { PeerID, PeerIDKey } from '../../helpers/PeerID'
 import EventEmitter from 'eventemitter3'
-import { PeerDescriptor } from '../proto/DhtRpc'
-
-class ContactState<Contact> {
-    public contacted = false
-    public active = false
-    constructor(public contact: Contact) {
-    }
-}
-
-interface IContact { peerId: PeerID, getPeerDescriptor: () => PeerDescriptor }
-
-interface Events {
-    contactRemoved: (removedDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-    newContact: (newDescriptor: PeerDescriptor, closestDescriptors: PeerDescriptor[]) => void
-}
+import { Events, IContact, ContactState } from './Contact'
 
 export class SortedContactList<Contact extends IContact> extends EventEmitter<Events> {
     private contactsById: Map<PeerIDKey, ContactState<Contact>> = new Map()
     private contactIds: PeerID[] = []
 
-    constructor(private ownId: PeerID, private maxSize: number) {
+    constructor(private ownId: PeerID, private maxSize: number, private getContactsLimit = 20) {
         super()
         this.compareIds = this.compareIds.bind(this)
         this.ownId = ownId
@@ -53,12 +39,15 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
                 this.emit(
                     'contactRemoved',
                     contact.getPeerDescriptor(),
-                    this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor())
+                    this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
                 )
             }
+            this.emit(
+                'newContact',
+                contact.getPeerDescriptor(),
+                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+            )
         }
-        this.emit('newContact', contact.getPeerDescriptor(), this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
-
     }
 
     public addContacts(contacts: Contact[]): void {
@@ -77,7 +66,7 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
         }
     }
 
-    public getClosestContacts(limit = this.maxSize): Contact[] {
+    public getClosestContacts(limit = this.getContactsLimit): Contact[] {
         const ret: Contact[] = []
         this.contactIds.forEach((contactId) => {
             const contact = this.contactsById.get(contactId.toKey())
@@ -137,7 +126,11 @@ export class SortedContactList<Contact extends IContact> extends EventEmitter<Ev
             const index = this.contactIds.indexOf(id)
             this.contactIds.splice(index, 1)
             this.contactsById.delete(id.toKey())
-            this.emit('contactRemoved', removedDescriptor, this.getClosestContacts(10).map((contact: Contact) => contact.getPeerDescriptor()))
+            this.emit(
+                'contactRemoved',
+                removedDescriptor,
+                this.getClosestContacts().map((contact: Contact) => contact.getPeerDescriptor())
+            )
             return true
         }
         return false

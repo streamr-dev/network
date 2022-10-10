@@ -10,7 +10,8 @@ interface HandshakerParams {
     randomGraphId: string
     connectionLocker: ConnectionLocker
     targetNeighbors: PeerList
-    contactPool: PeerList
+    nearbyContactPool: PeerList
+    randomContactPool: PeerList
     protoRpcClient: ProtoRpcClient<NetworkRpcClient>
 }
 
@@ -20,12 +21,14 @@ export class Handshaker {
     private readonly randomGraphId: string
     private readonly connectionLocker: ConnectionLocker
     private readonly targetNeighbors: PeerList
-    private readonly contactPool: PeerList
+    private readonly nearbyContactPool: PeerList
+    private readonly randomContactPool: PeerList
     private readonly ongoingHandshakes: Set<string> = new Set()
     private readonly protoRpcClient: ProtoRpcClient<NetworkRpcClient>
 
     constructor(params: HandshakerParams) {
-        this.contactPool = params.contactPool
+        this.nearbyContactPool = params.nearbyContactPool
+        this.randomContactPool = params.randomContactPool
         this.targetNeighbors = params.targetNeighbors
         this.ownPeerDescriptor = params.ownPeerDescriptor
         this.connectionLocker = params.connectionLocker
@@ -35,7 +38,15 @@ export class Handshaker {
 
     public async findParallelTargetsAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
-        const targetNeighbors = this.contactPool.getClosestAndFurthest(exclude)
+        const targetNeighbors = this.nearbyContactPool.getClosestAndFurthest(exclude)
+        while (targetNeighbors.length < 2 && this.randomContactPool.size(exclude) > 0) {
+            const random = this.randomContactPool.getRandom(exclude)
+            if (random) {
+                targetNeighbors.push(random)
+                const id = PeerID.fromValue(random!.getPeerDescriptor().peerId).toKey()
+                exclude.push(id)
+            }
+        }
         targetNeighbors.forEach((contact) => this.ongoingHandshakes.add(PeerID.fromValue(contact.getPeerDescriptor().peerId).toKey()))
 
         const promises = [...targetNeighbors.values()].map(async (target: RemoteRandomGraphNode, i) => {
@@ -54,7 +65,10 @@ export class Handshaker {
 
     public async findNewTargetAndHandshake(excludedIds: string[]): Promise<string[]> {
         const exclude = excludedIds.concat(this.targetNeighbors.getStringIds())
-        const targetNeighbor = this.contactPool.getClosest(exclude)
+        let targetNeighbor = this.nearbyContactPool.getClosest(exclude)
+        if (!targetNeighbor) {
+            targetNeighbor = this.randomContactPool.getRandom(exclude)
+        }
         if (targetNeighbor) {
             const accepted = await this.handshakeWithTarget(targetNeighbor)
             if (!accepted) {
@@ -71,7 +85,7 @@ export class Handshaker {
         const result = await targetNeighbor.handshake(
             this.ownPeerDescriptor,
             this.targetNeighbors.getStringIds(),
-            this.contactPool.getStringIds(),
+            this.nearbyContactPool.getStringIds(),
             concurrentStringId
         )
         if (result.accepted) {
@@ -97,7 +111,7 @@ export class Handshaker {
         const result = await targetNeighbor.handshake(
             this.ownPeerDescriptor,
             this.targetNeighbors.getStringIds(),
-            this.contactPool.getStringIds(),
+            this.nearbyContactPool.getStringIds(),
             undefined,
             true
         )

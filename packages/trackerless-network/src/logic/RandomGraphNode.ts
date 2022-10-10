@@ -41,10 +41,11 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     private stopped = false
     private started = false
     private readonly N = 4
-    private readonly PEER_VIEW_SIZE = 10
+    private readonly PEER_VIEW_SIZE = 20
     private readonly randomGraphId: string // StreamPartID
     private readonly layer1: DhtNode
-    private readonly contactPool: PeerList
+    private readonly nearbyContactPool: PeerList
+    private readonly randomContactPool: PeerList
     private readonly targetNeighbors: PeerList = new PeerList(4)
     private rpcCommunicator: RoutingRpcCommunicator | null = null
     private readonly P2PTransport: ITransport
@@ -61,7 +62,8 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.P2PTransport = params.P2PTransport
         this.connectionLocker = params.connectionLocker
 
-        this.contactPool = new PeerList(this.PEER_VIEW_SIZE)
+        this.nearbyContactPool = new PeerList(this.PEER_VIEW_SIZE)
+        this.randomContactPool = new PeerList(this.PEER_VIEW_SIZE)
         this.targetNeighbors = new PeerList(this.N)
         this.duplicateDetector = new DuplicateMessageDetector(10000)
     }
@@ -71,12 +73,16 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.started = true
 
         this.rpcCommunicator = new RoutingRpcCommunicator(`layer2-${ this.randomGraphId }`, this.P2PTransport)
-        this.layer1.on('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
-        this.layer1.on('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
+        this.layer1.on('newContact', (peerDescriptor, closestPeers) => this.newContact(peerDescriptor, closestPeers))
+        this.layer1.on('contactRemoved', (peerDescriptor, closestPeers) => this.removedContact(peerDescriptor, closestPeers))
+        this.layer1.on('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
+        this.layer1.on('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+
         this.handshaker = new Handshaker({
             ownPeerDescriptor: this.layer1.getPeerDescriptor(),
             randomGraphId: this.randomGraphId,
-            contactPool: this.contactPool,
+            nearbyContactPool: this.nearbyContactPool,
+            randomContactPool: this.randomContactPool,
             targetNeighbors: this.targetNeighbors,
             connectionLocker: this.connectionLocker,
             protoRpcClient: toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
@@ -103,7 +109,9 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         this.removeAllListeners()
         this.layer1.off('newContact', (peerDescriptor, closestTen) => this.newContact(peerDescriptor, closestTen))
         this.layer1.off('contactRemoved', (peerDescriptor, closestTen) => this.removedContact(peerDescriptor, closestTen))
-        this.contactPool.clear()
+        this.layer1.off('newRandomContact', (peerDescriptor, randomPeers) => this.newRandomContact(peerDescriptor, randomPeers))
+        this.layer1.off('randomContactRemoved', (peerDescriptor, randomPeers) => this.removedRandomContact(peerDescriptor, randomPeers))
+        this.nearbyContactPool.clear()
         this.targetNeighbors.clear()
         if (this.findNeighborsIntervalRef) {
             clearInterval(this.findNeighborsIntervalRef)
@@ -159,7 +167,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.stopped) {
             return
         }
-        this.contactPool.replaceAll(closestTen.map((descriptor) =>
+        this.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.randomGraphId,
@@ -173,7 +181,35 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
         if (this.stopped) {
             return
         }
-        this.contactPool.replaceAll(closestTen.map((descriptor) =>
+        this.nearbyContactPool.replaceAll(closestTen.map((descriptor) =>
+            new RemoteRandomGraphNode(
+                descriptor,
+                this.randomGraphId,
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            )
+        ))
+    }
+
+    private newRandomContact(_newDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]): void {
+        logger.trace(`New nearby contact found`)
+        if (this.stopped) {
+            return
+        }
+        this.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
+            new RemoteRandomGraphNode(
+                descriptor,
+                this.randomGraphId,
+                toProtoRpcClient(new NetworkRpcClient(this.rpcCommunicator!.getRpcClientTransport()))
+            )
+        ))
+    }
+
+    private removedRandomContact(_removedDescriptor: PeerDescriptor, randomPeers: PeerDescriptor[]): void {
+        logger.trace(`New nearby contact found`)
+        if (this.stopped) {
+            return
+        }
+        this.randomContactPool.replaceAll(randomPeers.map((descriptor) =>
             new RemoteRandomGraphNode(
                 descriptor,
                 this.randomGraphId,
@@ -193,7 +229,7 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     }
 
     getContactPoolIds(): string[] {
-        return this.contactPool.getStringIds()
+        return this.nearbyContactPool.getStringIds()
     }
 
     private markAndCheckDuplicate(currentMessageRef: MessageRef, previousMessageRef?: MessageRef): boolean {
@@ -256,12 +292,12 @@ export class RandomGraphNode extends EventEmitter implements INetworkRpc {
     // INetworkRpc server method
     async leaveNotice(message: LeaveNotice, _context: ServerCallContext): Promise<Empty> {
         if (message.randomGraphId === this.randomGraphId) {
-            const contact = this.contactPool.getNeighborWithId(message.senderId)
+            const contact = this.nearbyContactPool.getNeighborWithId(message.senderId)
             // TODO: check integrity of notifier?
             if (contact) {
                 this.layer1!.removeContact(contact.getPeerDescriptor(), true)
                 this.targetNeighbors.remove(contact.getPeerDescriptor())
-                this.contactPool.remove(contact.getPeerDescriptor())
+                this.nearbyContactPool.remove(contact.getPeerDescriptor())
                 this.connectionLocker.unlockConnection(contact.getPeerDescriptor(), this.randomGraphId)
             }
         }
