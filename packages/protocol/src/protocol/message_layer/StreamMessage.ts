@@ -273,28 +273,6 @@ export default class StreamMessage<T = unknown> {
         return this.newGroupKey
     }
 
-    /**
-     * Gets appropriate payload to sign for this signature type.
-     * Optionally sets new signature type at same time, which allows typesafe
-     * signing without messages needing to be in a partially signed state.
-     * e.g.
-     * ```
-     * const signedMessage: StreamMessageSigned = Object.assign(unsigedMessage, {
-     *     signature: unsigedMessage.getPayloadToSign(),
-     * })
-     * ```
-     */
-    getPayloadToSign(): string {
-        if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            // Nullable fields
-            const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
-            const newGroupKey = (this.newGroupKey ? this.newGroupKey.serialize() : '')
-            return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
-                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
-        }
-        throw new ValidationError(`Unrecognized signature type: ${this.signatureType}`)
-    }
-
     static registerSerializer(version: number, serializer: Serializer<StreamMessage<unknown>>): void {
         // Check the serializer interface
         if (!serializer.fromArray) {
