@@ -320,7 +320,6 @@ describe('Subscriber', () => {
                 for await (const m of sub) {
                     received.push(m)
                     if (received.length === published.length - 1) {
-                        // eslint-disable-next-line no-loop-func
                         t = setTimeout(() => {
                             // give it a moment to incorrectly get messages
                             sub.unsubscribe()
@@ -390,7 +389,6 @@ describe('Subscriber', () => {
                     received.push(m)
                     // after first message schedule end
                     if (received.length === 1) {
-                        // eslint-disable-next-line no-loop-func
                         t = setTimeout(() => {
                             expectedLength = received.length
                             // should not see any more messages after end

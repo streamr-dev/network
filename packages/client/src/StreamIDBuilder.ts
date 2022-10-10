@@ -13,7 +13,6 @@ import { EthereumAddress } from '@streamr/utils'
 
 export const DEFAULT_PARTITION = 0
 
-/* eslint-disable no-else-return */
 function pickStreamId(definition: { id: string } | { stream: string } | { streamId: string }): StreamID {
     const obj = definition as any
     if (obj.id !== undefined) {
@@ -37,7 +36,6 @@ function parseRawDefinition(definition: StreamDefinition): [string, number | und
     }
 }
 
-/* eslint-disable no-else-return */
 @scoped(Lifecycle.ContainerScoped)
 export class StreamIDBuilder {
     constructor(@inject(AuthenticationInjectionToken) private authentication: Authentication) {}

@@ -22,7 +22,6 @@ export class EncryptionUtil {
     /**
      * Returns a Buffer or a hex String
      */
-    /* eslint-disable no-dupe-class-members */
     static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex: true): string
     // These overrides tell ts outputInHex returns string
     static encryptWithRSAPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike): string
@@ -35,7 +34,6 @@ export class EncryptionUtil {
         }
         return ciphertextBuffer
     }
-    /* eslint-disable no-dupe-class-members */
 
     // Returns a Buffer
     static decryptWithRSAPrivateKey(ciphertext: string | Uint8Array, privateKey: crypto.KeyLike, isHexString = false): Buffer {
@@ -66,7 +64,6 @@ export class EncryptionUtil {
             return
         }
 
-        /* eslint-disable no-param-reassign */
         try {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
             const serializedContent = this.decryptWithAES(streamMessage.getSerializedContent(), groupKey.data).toString()

@@ -216,7 +216,7 @@ export class PushBuffer<T> implements IPushBuffer<T>, Context {
                 // buffer must be empty, close readGate until more writes.
                 this.readGate.close()
                 // wait for something to be written
-                const ok = await this.readGate.check() // eslint-disable-line no-await-in-loop
+                const ok = await this.readGate.check()
                 if (!ok) {
                     // no more reading
                     break

@@ -81,7 +81,6 @@ export class FakeHttpUtil implements HttpUtil {
                 streamPartId,
                 query: (queryParams !== undefined) ? new URLSearchParams(queryParams.substring(1)) : undefined
             }
-            // eslint-disable-next-line no-else-return
         } else {
             return undefined
         }

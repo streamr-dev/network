@@ -55,11 +55,9 @@ describe('StreamMessageValidator', () => {
         }
     }
 
-    /* eslint-disable */
     const sign = (msgToSign: StreamMessage, privateKey: string) => {
         msgToSign.signature = nonWrappedSign(msgToSign.getPayloadToSign(StreamMessage.SIGNATURE_TYPES.ETH), privateKey)
     }
-    /* eslint-enable */
 
     beforeEach(async () => {
         // Default stubs

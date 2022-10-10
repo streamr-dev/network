@@ -96,7 +96,7 @@ export class OrderMessages<T> implements Context {
             if (err.code === 'NO_STORAGE_NODES') {
                 // ignore NO_STORAGE_NODES errors
                 // if stream has no storage we can't do resends
-                this.enabled = false // eslint-disable-line require-atomic-updates
+                this.enabled = false
                 this.orderingUtil.disable()
             } else {
                 this.outBuffer.endWrite(err)

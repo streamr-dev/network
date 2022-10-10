@@ -35,7 +35,6 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
         if (streamIdOrPath !== undefined) {
             const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
             return this.chain.storageAssignments.get(streamId)
-            // eslint-disable-next-line no-else-return
         } else {
             throw new Error('not implemented')
         }
@@ -48,7 +47,6 @@ export class FakeStreamStorageRegistry implements Methods<StreamStorageRegistry>
             const storageNode = this.network.getNode(chosenAddress)
             if (storageNode !== undefined) {
                 return storageNode as FakeStorageNode
-                // eslint-disable-next-line no-else-return
             } else {
                 throw new Error('no storage node online: ' + chosenAddress)
             }

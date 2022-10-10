@@ -62,7 +62,6 @@ export class SubscriberKeyExchange {
             node.addMessageListener((msg: StreamMessage) => this.onMessage(msg))
             this.debug('Started')
         })
-        // eslint-disable-next-line max-len
         this.requestGroupKey = withThrottling((groupKeyId: GroupKeyId, publisherId: EthereumAddress, streamPartId: StreamPartID) => { 
             return this.doRequestGroupKey(groupKeyId, publisherId, streamPartId)
         }, decryptionConfig.maxKeyRequestsPerSecond)

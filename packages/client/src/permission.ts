@@ -86,7 +86,6 @@ export const streamPermissionToSolidityType = (permission: StreamPermission): Bi
     return BigNumber.from(0)
 }
 
-/* eslint-disable padding-line-between-statements */
 export const convertChainPermissionsToStreamPermissions = (chainPermissions: ChainPermissions): StreamPermission[] => {
     const now = Math.round(Date.now() / 1000)
     const permissions = []

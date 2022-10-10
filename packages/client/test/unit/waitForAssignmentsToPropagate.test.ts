@@ -38,7 +38,6 @@ const TARGET_STREAM = Object.freeze({
     partitions: 5
 })
 
-/* eslint-disable no-await-in-loop */
 describe(waitForAssignmentsToPropagate, () => {
     let pushPipeline: PushPipeline<StreamMessage<any>>
     let propagatePromiseState: 'rejected' | 'resolved' | 'pending'
