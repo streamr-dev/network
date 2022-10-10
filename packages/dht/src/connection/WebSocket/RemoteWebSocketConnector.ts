@@ -3,7 +3,6 @@ import {
     WebSocketConnectionRequest
 } from '../../proto/DhtRpc'
 import { IWebSocketConnectorServiceClient } from '../../proto/DhtRpc.client'
-import { PeerID } from '../../helpers/PeerID'
 import { DhtRpcOptions } from '../../rpc-protocol/DhtRpcOptions'
 import { Logger } from '@streamr/utils'
 import * as Err from '../../helpers/errors'
@@ -12,9 +11,7 @@ import { ProtoRpcClient } from '@streamr/proto-rpc'
 const logger = new Logger(module)
 
 export class RemoteWebSocketConnector {
-    private peerId: PeerID
     constructor(private peerDescriptor: PeerDescriptor, private client: ProtoRpcClient<IWebSocketConnectorServiceClient>) {
-        this.peerId = PeerID.fromValue(peerDescriptor.peerId)
     }
 
     async requestConnection(sourceDescriptor: PeerDescriptor, ip: string, port: number): Promise<boolean> {

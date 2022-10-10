@@ -20,7 +20,7 @@ export default class BroadcastMessageSerializerV2 extends Serializer<BroadcastMe
     fromArray(arr: any[]): BroadcastMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             serializedStreamMsg,
         ] = arr
