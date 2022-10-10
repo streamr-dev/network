@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events'
 import { ConstructorOptions, WebRtcConnection } from '../connection/webrtc/WebRtcConnection'
 import { Logger } from "@streamr/utils"
 import { NameDirectory } from "../NameDirectory"
@@ -23,8 +22,6 @@ export class NodeWebRtcConnection extends WebRtcConnection {
     //private connection: PeerConnection | null
     //private dataChannel: DataChannel | null
     
-    private dataChannelEmitter?: EventEmitter
-    private connectionEmitter?: EventEmitter
     private lastState?: string = 'connecting'
     private lastGatheringState?: string
     private open = false

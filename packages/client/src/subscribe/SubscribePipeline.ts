@@ -11,34 +11,41 @@ import { MessageStream } from './MessageStream'
 import { Validator } from '../Validator'
 import { Decrypt } from './Decrypt'
 import { Context } from '../utils/Context'
-import { ConfigInjectionToken } from '../Config'
+import { StrictStreamrClientConfig } from '../Config'
 import { Resends } from './Resends'
 import { DestroySignal } from '../DestroySignal'
-import { DependencyContainer } from 'tsyringe'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 import { MsgChainUtil } from './MsgChainUtil'
 import { GroupKeyStore } from '../encryption/GroupKeyStore'
 import { SubscriberKeyExchange } from '../encryption/SubscriberKeyExchange'
 import { StreamrClientEventEmitter } from '../events'
 
-export function SubscribePipeline<T = unknown>(
-    messageStream: MessageStream<T>,
-    streamPartId: StreamPartID,
-    context: Context,
-    container: DependencyContainer
-): MessageStream<T> {
+export interface SubscriptionPipelineOptions<T> {
+    messageStream: MessageStream<T>
+    streamPartId: StreamPartID
+    context: Context
+    resends: Resends
+    groupKeyStore: GroupKeyStore
+    subscriberKeyExchange: SubscriberKeyExchange
+    streamRegistryCached: StreamRegistryCached
+    streamrClientEventEmitter: StreamrClientEventEmitter
+    destroySignal: DestroySignal
+    rootConfig: StrictStreamrClientConfig
+}
+
+export const createSubscribePipeline = <T = unknown>(opts: SubscriptionPipelineOptions<T>): MessageStream<T> => {
     const validate = new Validator(
-        context,
-        container.resolve(StreamRegistryCached),
-        container.resolve(ConfigInjectionToken.Subscribe),
-        container.resolve(ConfigInjectionToken.Cache)
+        opts.context,
+        opts.streamRegistryCached,
+        opts.rootConfig,
+        opts.rootConfig.cache
     )
 
     const gapFillMessages = new OrderMessages<T>(
-        container.resolve(ConfigInjectionToken.Subscribe),
-        container.resolve(Context as any),
-        container.resolve(Resends),
-        streamPartId,
+        opts.rootConfig,
+        opts.context,
+        opts.resends,
+        opts.streamPartId,
     )
 
     /* eslint-enable object-curly-newline */
@@ -56,26 +63,26 @@ export function SubscribePipeline<T = unknown>(
     }
 
     const decrypt = new Decrypt<T>(
-        context,
-        container.resolve(GroupKeyStore),
-        container.resolve(SubscriberKeyExchange),
-        container.resolve(StreamRegistryCached),
-        container.resolve(DestroySignal),
-        container.resolve(StreamrClientEventEmitter),
-        container.resolve(ConfigInjectionToken.Decryption),
+        opts.context,
+        opts.groupKeyStore,
+        opts.subscriberKeyExchange,
+        opts.streamRegistryCached,
+        opts.destroySignal,
+        opts.streamrClientEventEmitter,
+        opts.rootConfig.decryption,
     )
 
     const msgChainUtil = new MsgChainUtil<T>(async (msg) => {
         await validate.validate(msg)
         return decrypt.decrypt(msg)
-    }, messageStream.onError)
+    }, opts.messageStream.onError)
 
     // collect messages that fail validation/parsixng, do not push out of pipeline
     // NOTE: we let failed messages be processed and only removed at end so they don't
     // end up acting as gaps that we repeatedly try to fill.
     const ignoreMessages = new WeakSet()
-    messageStream.onError.listen(onError)
-    messageStream
+    opts.messageStream.onError.listen(onError)
+    opts.messageStream
         // order messages (fill gaps)
         .pipe(gapFillMessages.transform())
         // validate & decrypt
@@ -104,5 +111,5 @@ export function SubscribePipeline<T = unknown>(
             ]
             await Promise.allSettled(tasks)
         })
-    return messageStream
+    return opts.messageStream
 }

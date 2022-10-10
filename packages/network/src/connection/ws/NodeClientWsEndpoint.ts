@@ -59,7 +59,7 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
     }
 
     // eslint-disable-next-line class-methods-use-this
-    protected doHandshakeResponse(uuid: string, peerId: PeerId, ws: WebSocket): void {
+    protected doHandshakeResponse(uuid: string, _peerId: PeerId, ws: WebSocket): void {
         ws.send(JSON.stringify({ uuid, peerId: this.peerInfo.peerId }))
     }
 

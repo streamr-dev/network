@@ -22,7 +22,7 @@ export default class StatusAckMessageSerializerV2 extends Serializer<StatusAckMe
     fromArray(arr: any[]): StatusAckMessage {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             streamId,
             streamPartition

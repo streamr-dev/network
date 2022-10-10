@@ -13,7 +13,8 @@ export class ServerWsConnection extends AbstractWsConnection {
     constructor(private ownAddress: string,
         private ownPeerInfo: PeerInfo,
         private remoteAddress: string,
-        private remotePeerInfo: PeerInfo) {
+        remotePeerInfo: PeerInfo
+    ) {
         super(remotePeerInfo)
     }
 

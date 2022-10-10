@@ -53,9 +53,11 @@ module.exports = {
             'asyncArrow': 'always'
         }],
         '@typescript-eslint/space-infix-ops': ['error'],
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': ['error', { 'vars': 'all', 'args': 'all', 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_', 'caughtErrorsIgnorePattern': '^_' }],
         'class-methods-use-this': ['error'],
         'prefer-arrow-callback': ['error'],
-        'promise/no-promise-in-callback': ['error'],
+        'promise/no-promise-in-callback': ['error']
         //'@typescript-eslint/no-empty-function': 'error',
     }
 }

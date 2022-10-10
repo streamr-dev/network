@@ -1,6 +1,5 @@
 import { lookup, Lookup } from 'geoip-lite'
 import { Location, NodeId } from 'streamr-network'
-import { Logger } from '@streamr/utils'
 
 function isValidNodeLocation(location?: Location) {
     return (location !== undefined) && (location.country || location.city || location.latitude || location.longitude)
@@ -8,11 +7,9 @@ function isValidNodeLocation(location?: Location) {
 
 export class LocationManager {
     private readonly nodeLocations: Record<NodeId, Location>
-    private readonly logger: Logger
 
     constructor() {
         this.nodeLocations = {}
-        this.logger = new Logger(module)
     }
 
     getAllNodeLocations(): Readonly<Record<NodeId, Location>> {

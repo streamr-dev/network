@@ -20,7 +20,7 @@ export default class ErrorResponseSerializerV2 extends Serializer<ErrorResponse>
     fromArray(arr: any[]): ErrorResponse {
         const [
             version,
-            type, // eslint-disable-line @typescript-eslint/no-unused-vars
+            _type,
             requestId,
             errorMessage,
             errorCode,
