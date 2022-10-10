@@ -58,12 +58,11 @@ describe('parallel key exchange', () => {
                 privateKey: publisher.wallet.privateKey
             }, undefined as any)
             const messageFactory = new MessageFactory({
-                publisherId: publisher.wallet.address,
                 streamId: stream.id,
+                authentication,
                 getPartitionCount: async () => 1,
                 isPublicStream: async () => false,
                 isPublisher: async () => true,
-                createSignature: async (payload: string) => authentication.createMessagePayloadSignature(payload),
                 useGroupKey: async () => ({ current: publisher.groupKey })
             })
             for (let i = 0; i < MESSAGE_COUNT_PER_PUBLISHER; i++) {

@@ -7,43 +7,42 @@ import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeySequence } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
+import { Authentication } from '../Authentication'
 
 export interface MessageFactoryOptions {
-    publisherId: EthereumAddress
     streamId: StreamID
+    authentication: Authentication
     getPartitionCount: (streamId: StreamID) => Promise<number>
     isPublicStream: (streamId: StreamID) => Promise<boolean>
     isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
-    createSignature: (payload: string) => Promise<string>
     useGroupKey: () => Promise<GroupKeySequence>
 }
 
 export class MessageFactory {
 
-    private readonly publisherId: EthereumAddress
     private readonly streamId: StreamID
+    private readonly authentication: Authentication
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
     private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
     private readonly getPartitionCount: (streamId: StreamID) => Promise<number>
     private readonly isPublicStream: (streamId: StreamID) => Promise<boolean>
     private readonly isPublisher: (streamId: StreamID, publisherId: EthereumAddress) => Promise<boolean>
-    private readonly createSignature: (payload: string) => Promise<string>
     private readonly useGroupKey: () => Promise<GroupKeySequence>
 
     constructor(opts: MessageFactoryOptions) {
-        this.publisherId = opts.publisherId
         this.streamId = opts.streamId
+        this.authentication = opts.authentication
         this.getPartitionCount = opts.getPartitionCount
         this.isPublicStream = opts.isPublicStream
         this.isPublisher = opts.isPublisher
-        this.createSignature = opts.createSignature
         this.useGroupKey = opts.useGroupKey
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
         })
         this.messageChains = new Mapping(async (partition: number, msgChainId: string) => {
-            return new MessageChain(toStreamPartID(this.streamId, partition), this.publisherId, msgChainId)
+            const publisherId = await this.authentication.getAddress()
+            return new MessageChain(toStreamPartID(this.streamId, partition), publisherId, msgChainId)
         })
     }
 
@@ -53,9 +52,10 @@ export class MessageFactory {
         metadata: MessageMetadata & { timestamp: number },
         explicitPartition?: number
     ): Promise<StreamMessage<T>> {
-        const isPublisher = await this.isPublisher(this.streamId, this.publisherId)
+        const publisherId = await this.authentication.getAddress()
+        const isPublisher = await this.isPublisher(this.streamId, publisherId)
         if (!isPublisher) {
-            throw new Error(`${this.publisherId} is not a publisher on stream ${this.streamId}`)
+            throw new Error(`${publisherId} is not a publisher on stream ${this.streamId}`)
         }
 
         const partitionCount = await this.getPartitionCount(this.streamId)
@@ -102,7 +102,7 @@ export class MessageFactory {
             newGroupKey,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH
         })
-        message.signature = await this.createSignature(message.getPayloadToSign())
+        message.signature = await this.authentication.createMessagePayloadSignature(message.getPayloadToSign())
 
         return message
     }

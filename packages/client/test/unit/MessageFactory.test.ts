@@ -1,27 +1,28 @@
 import { random } from 'lodash'
 import { MAX_PARTITION_COUNT, StreamMessage, toStreamID } from 'streamr-client-protocol'
-import { randomEthereumAddress } from 'streamr-test-utils'
+import { fastWallet } from 'streamr-test-utils'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKey } from '../../src/encryption/GroupKey'
 import { MessageFactory, MessageFactoryOptions } from '../../src/publish/MessageFactory'
 import { MessageMetadata } from '../../src'
+import { createAuthentication } from '../../src/Authentication'
 
-const AUTHENTICATED_USER = randomEthereumAddress()
-const STREAM_ID = toStreamID('/path', AUTHENTICATED_USER)
+const WALLET = fastWallet()
+const STREAM_ID = toStreamID('/path', WALLET.address)
 const CONTENT = { foo: 'bar' }
 const TIMESTAMP = Date.parse('2001-02-03T04:05:06Z')
 const PARTITION_COUNT = 50
-const SIGNATURE = 'mock-signature'
 const GROUP_KEY = GroupKey.generate()
 
 const createMessageFactory = (overridenOpts?: Partial<MessageFactoryOptions>) => {
     const defaultOpts = {
-        publisherId: AUTHENTICATED_USER.toLowerCase(),
         streamId: STREAM_ID,
+        authentication: createAuthentication({ 
+            privateKey: WALLET.privateKey
+        }, undefined as any),
         getPartitionCount: async () => PARTITION_COUNT,
         isPublicStream: async () => false,
         isPublisher: async () => true,
-        createSignature: async () => SIGNATURE,
         useGroupKey: async () => ({ current: GROUP_KEY })
     }
     return new MessageFactory({
@@ -48,7 +49,7 @@ describe('MessageFactory', () => {
         expect(msg).toMatchObject({
             messageId: {
                 msgChainId: expect.any(String),
-                publisherId: AUTHENTICATED_USER.toLowerCase(),
+                publisherId: WALLET.address.toLowerCase(),
                 sequenceNumber: 0,
                 streamId: STREAM_ID,
                 streamPartition: expect.toBeWithin(0, PARTITION_COUNT),
@@ -59,10 +60,10 @@ describe('MessageFactory', () => {
             encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
             groupKeyId: GROUP_KEY.id,
             newGroupKey: null,
-            signature: SIGNATURE,
+            signature: expect.stringMatching(/^0x[0-9a-f]+$/),
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             contentType: StreamMessage.CONTENT_TYPES.JSON,
-            serializedContent: expect.stringMatching(/^[0-9a-f]+$/),
+            serializedContent: expect.stringMatching(/^[0-9a-f]+$/)
         })
     })
 

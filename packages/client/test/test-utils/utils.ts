@@ -10,7 +10,6 @@ import {
     EthereumAddress,
     MAX_PARTITION_COUNT
 } from 'streamr-client-protocol'
-import { sign } from '../../src/utils/signingUtils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { Debug } from '../../src/utils/log'
@@ -24,6 +23,7 @@ import { addAfterFn } from './jest-utils'
 import { GroupKeyStore } from '../../src/encryption/GroupKeyStore'
 import { StreamrClientEventEmitter } from '../../src/events'
 import { MessageFactory } from '../../src/publish/MessageFactory'
+import { createAuthentication } from '../../src/Authentication'
 
 const testDebugRoot = Debug('test')
 const testDebug = testDebugRoot.extend.bind(testDebugRoot)
@@ -113,12 +113,13 @@ export const createMockMessage = (
         opts.streamPartId ?? opts.stream.getStreamParts()[0]
     )
     const factory = new MessageFactory({
-        publisherId: opts.publisher.address.toLowerCase(),
+        authentication: createAuthentication({
+            privateKey: opts.publisher.privateKey
+        }, undefined as any),
         streamId,
         getPartitionCount: async () => MAX_PARTITION_COUNT,
         isPublicStream: async () => (opts.encryptionKey === undefined),
         isPublisher: async () => true,
-        createSignature: async (payload: string) => sign(payload, opts.publisher.privateKey),
         useGroupKey: async () => {
             return (opts.encryptionKey !== undefined)
                 ? ({ current: opts.encryptionKey, next: opts.nextEncryptionKey })
