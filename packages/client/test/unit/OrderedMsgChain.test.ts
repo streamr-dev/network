@@ -747,6 +747,6 @@ describe('OrderedMsgChain', () => {
         util.add(msg1)
 
         next()
-        return await done
+        await done
     }, 10000)
 })
