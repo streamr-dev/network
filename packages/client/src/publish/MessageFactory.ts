@@ -19,6 +19,7 @@ import { GroupKeyQueue } from './GroupKeyQueue'
 import { Mapping } from '../utils/Mapping'
 import { Authentication } from '../Authentication'
 import { StreamRegistryCached } from '../registry/StreamRegistryCached'
+import { formLookupKey } from '../utils/utils'
 
 export interface MessageFactoryOptions {
     streamId: StreamID
@@ -95,7 +96,7 @@ export class MessageFactory {
         }
 
         const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
-        const msgChainKey = `${partition}|${msgChainId}`
+        const msgChainKey = formLookupKey(partition, msgChainId)
         const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
         const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
         const isBackdated = (prevMsgRef !== undefined) && (prevMsgRef.timestamp > metadata.timestamp)
