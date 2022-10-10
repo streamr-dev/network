@@ -30,7 +30,7 @@ export const createSignedMessage = async <T>(
     opts: Omit<StreamMessageOptions<T>, 'signature' | 'signatureType' | 'content'> 
     & { serializedContent: string, authentication: Authentication }
 ): Promise<StreamMessage<T>> => {
-    const signature = await opts.authentication.createMessagePayloadSignature(createSignaturePayload({
+    const signature = await opts.authentication.createMessageSignature(createSignaturePayload({
         signatureType: SignatureType.ETH,
         messageId: opts.messageId,
         serializedContent: opts.serializedContent,
