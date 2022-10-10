@@ -12,6 +12,7 @@ import { Stream } from '../../src'
 import { DestroySignal } from '../../src/DestroySignal'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
+import { StreamrClientEventEmitter } from '../../src/events'
 
 const CONTENT = {
     foo: 'bar'
@@ -74,7 +75,7 @@ describe('SubscribePipeline', () => {
                 isStreamPublisher: async () => true,
                 clearStream: () => {}
             } as any,
-            streamrClientEventEmitter: undefined as any,
+            streamrClientEventEmitter: new StreamrClientEventEmitter(),
             destroySignal: new DestroySignal(context),
             rootConfig: {
                 decryption: {
@@ -137,6 +138,7 @@ describe('SubscribePipeline', () => {
         expect(onError).toBeCalledTimes(1)
         const error = onError.mock.calls[0][0]
         expect(error).toBeInstanceOf(DecryptError)
+        expect(error.message).toMatch(/timed out/)
         expect(output).toEqual([])
     })
 })
