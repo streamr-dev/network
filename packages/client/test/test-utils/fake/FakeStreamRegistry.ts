@@ -16,7 +16,7 @@ import { StreamRegistryCached } from '../../../src/registry/StreamRegistryCached
 import { Authentication, AuthenticationInjectionToken } from '../../../src/Authentication'
 import { Methods } from '../types'
 import { EthereumAddress, Multimap, toEthereumAddress } from '@streamr/utils'
-import { FakeChain, PUBLIC_PERMISSION_TARGET, StreamRegistryItem } from './FakeChain'
+import { FakeChain, PUBLIC_PERMISSION_TARGET, PublicPermissionTarget, StreamRegistryItem } from './FakeChain'
 
 @scoped(Lifecycle.ContainerScoped)
 export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'> {
@@ -137,7 +137,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: EthereumAddress | 'public', permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 const nonExistingPermissions = permissions.filter((p) => !registryItem.permissions.has(target, p))
                 registryItem.permissions.addAll(target, nonExistingPermissions)
             }
@@ -148,7 +148,7 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
         return this.updatePermissions(
             streamIdOrPath,
             assignments,
-            (registryItem: StreamRegistryItem, target: EthereumAddress | 'public', permissions: StreamPermission[]) => {
+            (registryItem: StreamRegistryItem, target: EthereumAddress | PublicPermissionTarget, permissions: StreamPermission[]) => {
                 registryItem.permissions.removeAll(target, permissions)
             }
         )
@@ -157,7 +157,11 @@ export class FakeStreamRegistry implements Omit<Methods<StreamRegistry>, 'debug'
     async updatePermissions(
         streamIdOrPath: string,
         assignments: PermissionAssignment[],
-        modifyRegistryItem: (registryItem: StreamRegistryItem, target: EthereumAddress | 'public', permissions: StreamPermission[]) => void
+        modifyRegistryItem: (
+            registryItem: StreamRegistryItem,
+            target: EthereumAddress | PublicPermissionTarget,
+            permissions: StreamPermission[]
+        ) => void
     ): Promise<void> {
         const streamId = await this.streamIdBuilder.toStreamID(streamIdOrPath)
         this.streamRegistryCached.clearStream(streamId)
