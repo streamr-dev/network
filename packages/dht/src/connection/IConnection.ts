@@ -12,6 +12,8 @@ export enum ConnectionType {
     WEBSOCKET_CLIENT = 'websocket-client',
     DEFERRED = 'deferred',
     WEBRTC = 'webrtc',
+    SIMULATOR_SERVER = 'simulator-server',
+    SIMULATOR_CLIENT = 'simulator-client',
 }
 
 export type ConnectionIDKey = string & { readonly __brand: 'connectionIDKey' } // Nominal typing 

@@ -10,7 +10,6 @@ import {
     ClosestPeersResponse,
     ConnectivityResponseMessage,
     Message,
-    MessageType,
     NodeType,
     PeerDescriptor,
     PingRequest,
@@ -41,6 +40,7 @@ export interface DhtNodeEvents {
 }
 
 export class DhtNodeConfig {
+    connectionManager?: ConnectionManager
     transportLayer?: ITransport
     peerDescriptor?: PeerDescriptor
     entryPoints?: PeerDescriptor[]
@@ -114,8 +114,13 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         }
         logger.info(`Starting new Streamr Network DHT Node with serviceId ${this.config.serviceId}`)
         this.started = true
-        // If transportLayer is given, do not create a ConnectionManager
-        if (this.config.transportLayer) {
+        // If connectionmanager or transportLayer is given, do not create a ConnectionManager
+
+        if (this.config.connectionManager) {
+            this.transportLayer = this.config.connectionManager
+            this.connectionManager = this.config.connectionManager
+            this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
+        } else if (this.config.transportLayer) {
             this.transportLayer = this.config.transportLayer
             this.ownPeerDescriptor = this.transportLayer.getPeerDescriptor()
         } else {
@@ -141,14 +146,22 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
             this.transportLayer = connectionManager
         }
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer)
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.config.serviceId, this.transportLayer.send)
 
-        this.transportLayer.on('data', (message: Message, peerDescriptor: PeerDescriptor) => {
-            this.emit('data', message, peerDescriptor)
+        this.transportLayer.on('message', (message: Message) => {
+            this.handleMessage(message)
         })
 
         this.bindDefaultServerMethods()
         this.initKBuckets(this.ownPeerId!)
+    }
+
+    public handleMessage(message: Message): void {
+        if (message.serviceId == this.config.serviceId) {
+            this.rpcCommunicator?.handleMessageFromPeer(message)
+        } else {
+            this.emit('message', message)
+        }
     }
 
     private generatePeerDescriptorCallBack = (connectivityResponse: ConnectivityResponseMessage) => {
@@ -288,9 +301,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         return ret
     }
 
-    public send(msg: Message, targetPeerDescriptor: PeerDescriptor): void {
+    public send = (msg: Message): void => {
         if (!this.started || this.stopped) {
             return
+        }
+        const targetPeerDescriptor = msg.targetDescriptor!
+
+        if (!targetPeerDescriptor) {
+            logger.error('virhe')
         }
         const params: RouteMessageWrapper = {
             message: Message.toBinary(msg),
@@ -303,175 +321,6 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         })
     }
 
-    // Called by an upper layer in case of routeMessage targeted to us
-
-    public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
-        try {
-            const message = Message.fromBinary(data)
-            logger.trace('Received message of type ' + message.messageType)
-            if (message.messageType === MessageType.RPC) {
-                if (message.serviceId != this.config.serviceId) {
-                    this.emit('data', message, peerDescriptor)
-                } else {
-                    this.rpcCommunicator?.handleIncomingData(message, peerDescriptor)
-                }
-            } else {
-                logger.trace('Filtered out message of type ' + message.messageType)
-            }
-        } catch (e) {
-            logger.error('Parsing "Message" from protobuf failed')
-        }
-    }
-
-    /*
-    public async doRouteMessage(params: RouteMessageParams): Promise<void> {
-        if (!this.started
-            || this.stopped
-            || this.ownPeerId!.equals(PeerID.fromValue(params.destinationPeer.peerId))) {
-            return
-        }
-        logger.trace(`Routing message ${params.messageId}`)
-        let successAcks = 0
-        const queue = new PQueue({ concurrency: 2, timeout: this.config.routeMessageTimeout })
-
-        const routingTargets = this.getRoutingCandidates(params.destinationPeer, params.sourcePeer, params.previousPeer)
-        const targetPeerDescriptors = routingTargets.map((target) => target.getPeerDescriptor())
-
-        if (this.cleanUpHandleForConnectionManager) {
-            targetPeerDescriptors.map((peerDescriptor) => {
-                this.cleanUpHandleForConnectionManager!.lockConnection(peerDescriptor, this.config.serviceId + '::RouteMessage::' + params.messageId)
-            })
-        }
-
-        const initialLength = targetPeerDescriptors.length
-        while (successAcks < 2 && successAcks < initialLength && routingTargets.length > 0) {
-            if (this.stopped) {
-                break
-            }
-            const next = routingTargets.shift()
-
-            queue.add(
-                (async () => {
-                    const success = await next!.routeMessage({
-                        ...params,
-                        previousPeer: this.getPeerDescriptor()
-                    })
-                    if (success) {
-                        successAcks += 1
-                    }
-
-                })
-            )
-        }
-        await queue.onIdle()
-        queue.removeAllListeners()
-        if (this.cleanUpHandleForConnectionManager) {
-            targetPeerDescriptors.map((peerDescriptor) => {
-                this.cleanUpHandleForConnectionManager!.unlockConnection(
-                    peerDescriptor,
-                    this.config.serviceId + '::RouteMessage::' + params.messageId
-                )
-            })
-        }
-        // Only throw if originator
-        if (successAcks === 0 && this.ownPeerId!.equals(PeerID.fromValue(params.sourcePeer.peerId))) {
-            throw new Err.CouldNotRoute(
-                `Routing message to peer: ${PeerID.fromValue(params.destinationPeer.peerId).toKey()}`
-                + ` from ${this.ownPeerId!.toKey()} failed.`
-            )
-        }
-    }
-
-    public async onRoutedMessage(routedMessage: RouteMessageWrapper): Promise<void> {
-        if (!this.started || this.stopped || this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            return
-        }
-        logger.trace(`Processing received routeMessage ${routedMessage.requestId}`)
-        this.addNewContact(routedMessage.sourcePeer!, true)
-        this.routerDuplicateDetector.add(routedMessage.requestId)
-        const message = Message.fromBinary(routedMessage.message)
-        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            this.emit('data', message, routedMessage.sourcePeer!)
-        } else {
-            await this.doRouteMessage({
-                message: routedMessage.message,
-                previousPeer: routedMessage.previousPeer as PeerDescriptor,
-                destinationPeer: routedMessage.destinationPeer as PeerDescriptor,
-                sourcePeer: routedMessage.sourcePeer as PeerDescriptor,
-                serviceId: message.serviceId,
-                messageId: routedMessage.requestId
-            })
-        }
-    }
-    
-    private getRoutingCandidates(destinationPeer: PeerDescriptor, sourcePeer: PeerDescriptor, previousPeer?: PeerDescriptor): DhtPeer[] {
-
-        const routingSortedContacts = new SortedContactList(PeerID.fromValue(destinationPeer.peerId), this.config.parallelism, true)
-
-        if (this.cleanUpHandleForConnectionManager) {
-            const closestConnections = this.cleanUpHandleForConnectionManager.getAllConnectionPeerDescriptors()
-                .filter((peerDescriptor) => this.routeCheck(peerDescriptor, sourcePeer, destinationPeer, previousPeer))
-                .map((peerDescriptor) =>
-                    new DhtPeer(peerDescriptor, toProtoRpcClient(new DhtRpcServiceClient(this.rpcCommunicator!.getRpcClientTransport())))
-                )
-            routingSortedContacts.addContacts(closestConnections)
-        } else if (routingSortedContacts.getSize() === 0) {
-            const closestFromKBucket = this.bucket!.closest(destinationPeer.peerId, this.config.parallelism).filter((dhtPeer: DhtPeer) =>
-                this.routeCheck(dhtPeer.getPeerDescriptor(), sourcePeer, destinationPeer, previousPeer)
-            )
-            routingSortedContacts.addContacts(closestFromKBucket)
-        }
-        return routingSortedContacts.getAllContacts().map((contact) => contact as DhtPeer)
-    }
-
-    public canRoute(routedMessage: RouteMessageWrapper): boolean {
-        if (!this.started || this.stopped) {
-            return false
-        }
-        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            return true
-        }
-        if (this.routerDuplicateDetector.isMostLikelyDuplicate(routedMessage.requestId)) {
-            logger.trace(`Message ${routedMessage.requestId} is not routable due to being a duplicate`)
-            return false
-        }
-        const closestPeers = this.getRoutingCandidates(routedMessage.destinationPeer!, routedMessage.sourcePeer!, routedMessage.previousPeer)
-        const notRoutableCount = this.notRoutableCount(
-            closestPeers,
-            routedMessage.sourcePeer!,
-            routedMessage.destinationPeer!,
-            routedMessage.previousPeer
-        )
-        return (closestPeers.length - notRoutableCount) > 0
-    }
-
-    private notRoutableCount(peers: DhtPeer[], sourcePeer: PeerDescriptor, destinationPeer: PeerDescriptor, previousPeer?: PeerDescriptor): number {
-        return peers.reduce((acc: number, curr: DhtPeer) => {
-            if (!this.routeCheck(curr.getPeerDescriptor(), sourcePeer, destinationPeer, previousPeer)) {
-                return acc + 1
-            }
-            return acc
-        }, 0)
-    }
-
-    private routeCheck(
-        peerToRoute: PeerDescriptor,
-        originatorPeer: PeerDescriptor,
-        destinationPeer: PeerDescriptor,
-        previousPeer?: PeerDescriptor
-    ): boolean {
-        const peerIdToRoute = PeerID.fromValue(peerToRoute.peerId)
-        const originatorPeerId = PeerID.fromValue(originatorPeer.peerId)
-
-        const previousPeerChecks = previousPeer ?
-            !PeerID.fromValue(previousPeer.peerId).equals(peerIdToRoute)
-            && KBucket.distance(destinationPeer.peerId, previousPeer.peerId) > KBucket.distance(destinationPeer.peerId, peerToRoute.peerId)
-            : true
-        return !peerIdToRoute.equals(this.ownPeerId!)
-            && !peerIdToRoute.equals(originatorPeerId)
-            && previousPeerChecks
-    }
-    */
     private async getClosestPeersFromContact(contact: DhtPeer): Promise<PeerDescriptor[]> {
         if (!this.started || this.stopped) {
             return []
@@ -695,7 +544,9 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.bucket!.removeAllListeners()
         this.rpcCommunicator?.stop()
         this.removeAllListeners()
-        await this.connectionManager?.stop()
+        if (this.connectionManager && !this.config.connectionManager) {
+            await this.connectionManager.stop()
+        }
     }
 
     // IDHTRpcService implementation
@@ -760,52 +611,14 @@ export class DhtNode extends EventEmitter<Events> implements ITransport, IDhtRpc
         this.addNewContact(routedMessage.sourcePeer!, true)
         this.routerDuplicateDetector.add(routedMessage.requestId)
 
-        if (this.ownPeerId!.equals(PeerID.fromValue(routedMessage.destinationPeer!.peerId))) {
-            logger.trace(`Peer ${this.ownPeerId?.value} routing found message targeted to self ${routedMessage.requestId}`)
-            //this.transportLayer!.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
-            this.handleIncomingData(routedMessage.message, routedMessage.sourcePeer!)
+        if (PeerID.fromValue(routedMessage.destinationPeer!.peerId).equals(
+            PeerID.fromValue(this.ownPeerDescriptor!.peerId))) {
+            if (this.connectionManager) {
+                this.connectionManager.onData(routedMessage.message, routedMessage.sourcePeer!)
+            }
             return this.createRouteMessageAck(routedMessage)
         } else {
             return this.doRouteMessage(routedMessage)
         }
     }
-    /*
-    public async routeMessage(routed: RouteMessageWrapper, _context: ServerCallContext): Promise<RouteMessageAck> {
-        try {
-            const converted = {
-                ...routed,
-                destinationPeer: routed.destinationPeer!,
-                sourcePeer: routed.sourcePeer!
-            }
-            const routable = this.canRoute(converted)
-            const response: RouteMessageAck = {
-                requestId: routed.requestId,
-                destinationPeer: routed.sourcePeer,
-                sourcePeer: routed.destinationPeer,
-                error: routable ? '' : 'Could not forward the message'
-            }
-            if (routable) {
-                setImmediate(async () => {
-                    try {
-                        await this.onRoutedMessage(converted)
-                    } catch (err) {
-                        // no-op
-                    }
-                })
-            } else {
-                // logger.info(`could not route forward for ${routed.previousPeer?.peerId} from ${this.getPeerDescriptor().peerId}`)
-            }
-            return response
-        } catch (err) {
-            console.error(err)
-            const response: RouteMessageAck = {
-                requestId: routed.requestId,
-                destinationPeer: routed.sourcePeer,
-                sourcePeer: routed.destinationPeer,
-                error: 'Could not forward the message'
-            }
-            return response
-        }
-    }
-    */
 }

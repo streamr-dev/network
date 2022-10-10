@@ -23,6 +23,7 @@ import { ServerCallContext } from '@protobuf-ts/runtime-rpc'
 import { Empty } from '../proto/google/protobuf/empty'
 import { Simulator } from './Simulator'
 import { SimulatorConnector } from './SimulatorConnector'
+import { DuplicateDetector } from '../dht/DuplicateDetector'
 
 export interface ConnectionManagerConfig {
     transportLayer?: ITransport
@@ -65,6 +66,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
     private ownPeerDescriptor?: PeerDescriptor
     private connections: Map<PeerIDKey, ManagedConnection> = new Map()
+    private readonly messageDuplicateDetector: DuplicateDetector = new DuplicateDetector()
 
     private disconnectionTimeouts: Map<PeerIDKey, NodeJS.Timeout> = new Map()
 
@@ -75,6 +77,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
     private localLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
     private remoteLockedConnections: Map<PeerIDKey, Set<ServiceId>> = new Map()
 
+    private serviceId: string
     private rpcCommunicator?: RoutingRpcCommunicator
 
     constructor(private config: ConnectionManagerConfig) {
@@ -82,7 +85,7 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
 
         if (this.config.simulator) {
             logger.trace(`Creating SimulatorConnector`)
-            this.simulatorConnector = new SimulatorConnector(ConnectionManager.PROTOCOL_VERSION, 
+            this.simulatorConnector = new SimulatorConnector(ConnectionManager.PROTOCOL_VERSION,
                 this.config.ownPeerDescriptor!, this.config.simulator)
             this.config.simulator.addConnector(this.simulatorConnector)
             this.ownPeerDescriptor = this.config.ownPeerDescriptor
@@ -104,8 +107,8 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             })
         }
 
-        const serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
-        this.rpcCommunicator = new RoutingRpcCommunicator(serviceId, this, {
+        this.serviceId = (this.config.serviceIdPrefix ? this.config.serviceIdPrefix : '') + 'ConnectionManager'
+        this.rpcCommunicator = new RoutingRpcCommunicator(this.serviceId, this.send, {
             rpcRequestTimeout: 10000
         })
 
@@ -165,15 +168,25 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         WEB_RTC_CLEANUP.cleanUp()
     }
 
-    public async send(message: Message, peerDescriptor: PeerDescriptor): Promise<void> {
+    public send = async (message: Message): Promise<void> => {
         if (!this.started || this.stopped) {
             return
         }
+        const peerDescriptor = message.targetDescriptor!
+
         const hexId = PeerID.fromValue(peerDescriptor.peerId).toKey()
         if (PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals(PeerID.fromValue(peerDescriptor.peerId))) {
             throw new Err.CannotConnectToSelf('Cannot send to self')
         }
         logger.trace(`Sending message to: ${peerDescriptor.peerId.toString()}`)
+
+        if (!(message.targetDescriptor)) {
+            message = ({ ...message, targetDescriptor: peerDescriptor })
+        }
+
+        if (!(message.sourceDescriptor)) {
+            message = ({ ...message, sourceDescriptor: this.ownPeerDescriptor })
+        }
 
         if (this.connections.has(hexId)) {
             this.connections.get(hexId)!.send(Message.toBinary(message))
@@ -191,10 +204,6 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
             this.onNewConnection(connection)
             connection.send(Message.toBinary(message))
         }
-    }
-
-    public handleIncomingData(data: Uint8Array, peerDescriptor: PeerDescriptor): void {
-        this.onData(data, peerDescriptor)
     }
 
     public disconnect(peerDescriptor: PeerDescriptor, reason?: string, timeout = DEFAULT_DISCONNECTION_TIMEOUT): void {
@@ -245,26 +254,65 @@ export class ConnectionManager extends EventEmitter<Events> implements ITranspor
         return !this.hasConnection(peerDescriptor) // TODO: Add port range check
     }
 
-    private onData = (data: Uint8Array, peerDescriptor: PeerDescriptor) => {
+    private handleMessage(message: Message) {
+        logger.trace('Received message of type ' + message!.messageType)
+        
+        if (message!.messageType !== MessageType.RPC) {
+            logger.trace('Filtered out non-RPC message of type ' + message!.messageType)
+            return
+        }
+
+        /*
+        if (!PeerID.fromValue(this.ownPeerDescriptor!.peerId).equals
+            (PeerID.fromValue(message.targetDescriptor!.peerId))) {
+            logger.error('Node ' + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() +
+                ' received message meant for node ' + PeerID.fromValue(message.targetDescriptor!.peerId).toString())
+            return
+        }
+        */
+
+        if (this.messageDuplicateDetector.isMostLikelyDuplicate(message.messageId)) {
+            //logger.error('Node ' + PeerID.fromValue(this.ownPeerDescriptor!.peerId).toString() +
+            //    ' filtered out duplicate Message with messageId ' + message.messageId)
+            return
+        }
+
+        this.messageDuplicateDetector.add(message.messageId)
+
+        if (message.serviceId == this.serviceId) {
+            this.rpcCommunicator?.handleMessageFromPeer(message)
+        } else {
+            this.emit('message', message)
+        }
+    }
+
+    public onData = (data: Uint8Array, peerDescriptor: PeerDescriptor): void => {
+        // This method parsed incoming data to Messages
+        // and ensures they are meant to us
+        // ToDo: add signature checking and decryption here 
+
         if (!this.started || this.stopped) {
             return
         }
         try {
-            const message = Message.fromBinary(data)
-            logger.trace('Received message of type ' + message.messageType)
-            if (message.messageType === MessageType.RPC) {
-                this.emit('data', message, peerDescriptor)
-            } else {
-                logger.trace('Filtered out message of type ' + message.messageType)
+            let message: Message | undefined
+            try {
+                message = Message.fromBinary(data)
+            } catch (e1) {
+                logger.error('Parsing incoming data into Message failed' + e1)
+                return
             }
+            message.sourceDescriptor = peerDescriptor
+            this.handleMessage(message)
+
         } catch (e) {
-            logger.error('Parsing "Message" from protobuf failed')
+            logger.error('Handling incoming data failed ' + e)
         }
     }
 
     private onConnected = (connection: ManagedConnection) => {
         this.emit('connected', connection.getPeerDescriptor()!)
-        logger.info('connectedPeerId: ' + connection.getPeerDescriptor()!.peerId)
+        //logger.info('connectedPeerId: ' + connection.getPeerDescriptor()!.peerId)
     }
 
     private onDisconnected = (connection: ManagedConnection) => {

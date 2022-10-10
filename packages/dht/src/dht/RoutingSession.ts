@@ -102,6 +102,7 @@ export class RoutingSession extends EventEmitter<RoutingSessionEvents> {
                     } else {
                         this.onRequestFailed(nextPeer!.peerId)
                     }
+                    return nextPeer
                 }).catch((_e) => { })
         }
     }

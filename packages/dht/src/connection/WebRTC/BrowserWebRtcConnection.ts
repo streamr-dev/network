@@ -119,6 +119,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
     close(): void {
         this.lastState = 'closed'
 
+        this.emit('disconnected')
+
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
@@ -136,8 +138,8 @@ export class NodeWebRtcConnection extends EventEmitter<Events> implements IWebRt
                 logger.warn('conn.close() errored: %s', e)
             }
         }
-
         this.peerConnection = undefined
+        this.removeAllListeners()
     }
 
     send(data: Uint8Array): void {

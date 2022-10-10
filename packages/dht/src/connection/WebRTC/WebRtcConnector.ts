@@ -3,6 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { ManagedConnectionSourceEvent } from '../IManagedConnectionSource'
 import {
     IceCandidate,
+    Message,
     PeerDescriptor,
     RtcAnswer,
     RtcOffer, WebRtcConnectionRequest
@@ -43,7 +44,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         super()
         this.rpcTransport = config.rpcTransport
 
-        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport, {
+        this.rpcCommunicator = new RoutingRpcCommunicator(WebRtcConnector.WEBRTC_CONNECTOR_SERVICE_ID, this.rpcTransport.send, {
             rpcRequestTimeout: 15000
         })
 
@@ -56,6 +57,10 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         this.rpcCommunicator.registerRpcNotification(RtcAnswer, 'rtcAnswer', this.rtcAnswer)
         this.rpcCommunicator.registerRpcNotification(IceCandidate, 'iceCandidate', this.iceCandidate)
         this.rpcCommunicator.registerRpcNotification(WebRtcConnectionRequest, 'requestConnection', this.requestConnection)
+    
+        this.rpcTransport.on('message', (msg: Message) => {
+            this.rpcCommunicator.handleMessageFromPeer(msg)
+        })
     }
 
     connect(targetPeerDescriptor: PeerDescriptor): ManagedConnection {
@@ -185,7 +190,7 @@ export class WebRtcConnector extends EventEmitter<ManagedConnectionSourceEvent> 
         connection.on('localCandidate', (candidate: string, mid: string) => {
             remoteConnector.sendIceCandidate(this.ownPeerDescriptor!, candidate, mid, connection.connectionId.toString())
         })
-        
+
         connection.start(offering)
         if (offering === false && sendRequest) {
             remoteConnector.requestConnection(this.ownPeerDescriptor!, connection.connectionId.toString())

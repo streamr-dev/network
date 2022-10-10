@@ -84,12 +84,12 @@ describe('Layer 1 on Layer 0 with mocked connections', () => {
             layer0Node4.joinDht(entryPoint0Descriptor)
         ])
 
-        //await Promise.all([
-        await layer1Node1.joinDht(entryPoint1Descriptor)
-        await layer1Node2.joinDht(entryPoint1Descriptor)
-        await layer1Node3.joinDht(entryPoint1Descriptor)
-        await layer1Node4.joinDht(entryPoint1Descriptor)
-        //])
+        await Promise.all([
+            layer1Node1.joinDht(entryPoint1Descriptor),
+            layer1Node2.joinDht(entryPoint1Descriptor),
+            layer1Node3.joinDht(entryPoint1Descriptor),
+            layer1Node4.joinDht(entryPoint1Descriptor)
+        ])
 
         expect(layer1Node1.getBucketSize()).toBeGreaterThanOrEqual(2)
         expect(layer1Node2.getBucketSize()).toBeGreaterThanOrEqual(2)

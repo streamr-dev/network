@@ -31,4 +31,9 @@ export class Simulator extends EventEmitter<ConnectionSourceEvents> {
         const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
         target!.handleIncomingConnection(sourceDescriptor)
     }
+
+    disconnect(sourceDescriptor: PeerDescriptor, targetDescriptor: PeerDescriptor): void  {
+        const target = this.connectors.get(PeerID.fromValue(targetDescriptor.peerId).toKey())
+        target!.handleIncomingDisconnection(sourceDescriptor)
+    }
 }

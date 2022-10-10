@@ -39,7 +39,7 @@ enum RTCPeerConnectionStateEnum {
 
 type RTCPeerConnectionState = keyof typeof RTCPeerConnectionStateEnum
 
-type Events = WebRtcConnectionEvents | ConnectionEvents
+type Events = WebRtcConnectionEvents & ConnectionEvents
 
 export class NodeWebRtcConnection extends EventEmitter<Events> implements IConnection, IWebRtcConnection {
 

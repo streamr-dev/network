@@ -38,17 +38,13 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         this.simulatorConnections.set(PeerID.fromValue(targetPeerDescriptor.peerId).toKey(), connection)
 
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-            ConnectionType.WEBSOCKET_CLIENT, connection, undefined)
+            ConnectionType.SIMULATOR_CLIENT, connection, undefined)
         managedConnection.setPeerDescriptor(targetPeerDescriptor!)
 
         connection.connect()
 
         return managedConnection
     }
-
-    //public setOwnPeerDescriptor(ownPeerDescriptor: PeerDescriptor): void {
-    //    this.ownPeerDescriptor = ownPeerDescriptor
-    //}
 
     public getPeerDescriptor(): PeerDescriptor {
         return this.ownPeerDescriptor
@@ -59,12 +55,18 @@ export class SimulatorConnector extends EventEmitter<ManagedConnectionSourceEven
         this.simulatorConnections.set(PeerID.fromValue(source.peerId).toKey(), connection)
 
         const managedConnection = new ManagedConnection(this.ownPeerDescriptor!, this.protocolVersion,
-            ConnectionType.WEBSOCKET_SERVER, undefined, connection)
+            ConnectionType.SIMULATOR_SERVER, undefined, connection)
         logger.trace('connected, objectId: ' + managedConnection.objectId)
         managedConnection.once('handshakeCompleted', (_peerDescriptor: PeerDescriptor) => {
             logger.trace('handshake completed objectId: ' + managedConnection.objectId)
             this.emit('newConnection', managedConnection)
         })
+    }
+
+    public handleIncomingDisconnection(source: PeerDescriptor): void {
+        const connection = this.simulatorConnections.get(PeerID.fromValue(source.peerId).toKey())
+        connection!.handleIncomingDisconnection()
+        this.simulatorConnections.delete(PeerID.fromValue(source.peerId).toKey())
     }
 
     public handleIncomingData(from: PeerDescriptor, data: Uint8Array): void {
