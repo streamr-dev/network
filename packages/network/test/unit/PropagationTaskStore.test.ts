@@ -14,7 +14,8 @@ function makeTask(streamId: string, partition: number, ts: number, neighbors: st
             messageId: new MessageID(toStreamID(streamId), partition, ts, 0, '', ''),
             content: {
                 message: `${streamId}-${partition}-${ts}`
-            }
+            },
+            signature: 'signature'
         }),
         source: null,
         handledNeighbors: new Set<NodeId>(neighbors)
