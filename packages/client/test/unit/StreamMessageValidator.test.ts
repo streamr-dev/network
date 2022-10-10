@@ -135,17 +135,6 @@ describe('StreamMessageValidator', () => {
             await getValidator().validate(msgWithPrevMsgRef)
         })
 
-        it('rejects unsigned messages', async () => {
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(msg), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                expect(getStream).toHaveBeenCalledWith(msg.getStreamId())
-                return true
-            })
-        })
-
         it('rejects invalid signatures', async () => {
             msg.signature = msg.signature!.replace('a', 'b')
 
@@ -189,8 +178,6 @@ describe('StreamMessageValidator', () => {
         })
 
         it('rejects if getStream rejects', async () => {
-            msg.signature = null
-            msg.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
             const testError = new Error('test error')
             getStream = jest.fn().mockRejectedValue(testError)
 
@@ -224,16 +211,6 @@ describe('StreamMessageValidator', () => {
     describe('validate(group key request)', () => {
         it('accepts valid group key requests', async () => {
             await getValidator().validate(groupKeyRequest)
-        })
-
-        it('rejects unsigned group key requests', async () => {
-            groupKeyRequest.signature = null
-            groupKeyRequest.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(groupKeyRequest), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
         })
 
         it('rejects group key requests on unexpected streams', async () => {
@@ -309,16 +286,6 @@ describe('StreamMessageValidator', () => {
     describe('validate(group key response)', () => {
         it('accepts valid group key responses', async () => {
             await getValidator().validate(groupKeyResponse)
-        })
-
-        it('rejects unsigned group key responses', async () => {
-            groupKeyResponse.signature = null
-            groupKeyResponse.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
-
-            await assert.rejects(getValidator().validate(groupKeyResponse), (err: Error) => {
-                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
-                return true
-            })
         })
 
         it('rejects invalid signatures', async () => {
