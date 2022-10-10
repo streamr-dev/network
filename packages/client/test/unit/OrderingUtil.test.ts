@@ -3,37 +3,27 @@ import assert from 'assert'
 import shuffle from 'array-shuffle'
 import { EthereumAddress, MessageID, MessageRef, StreamMessage, toStreamID } from 'streamr-client-protocol'
 import OrderingUtil from '../../src/subscribe/ordering/OrderingUtil'
-import { createSignedMessage } from '../../src/publish/MessageFactory'
-import { createRandomAuthentication } from '../test-utils/utils'
-import { Defer } from '../../src/utils/Defer'
 
-const authentication = createRandomAuthentication()
-
-const createMsg = async (
+const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp: number | null = null,
     prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = '1',
 ) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
-    return createSignedMessage({
+    return new StreamMessage({
         messageId: new MessageID(toStreamID('streamId'), 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
-        serializedContent: JSON.stringify(content),
-        authentication
+        content,
+        signature: 'signature'
     })
 }
 
+const msg = createMsg()
+
 describe('OrderingUtil', () => {
     let util: OrderingUtil
-    let msg: StreamMessage
-
-    beforeEach(async () => {
-        msg = await createMsg()
-    })
-
     afterEach(() => {
         util.clearGaps()
     })
-
     it('calls the message handler when a message is received', (done) => {
         const handler = (streamMessage: StreamMessage) => {
             assert.deepStrictEqual(streamMessage.serialize(), msg.serialize())
@@ -42,60 +32,53 @@ describe('OrderingUtil', () => {
         util = new OrderingUtil(handler, () => {})
         util.add(msg)
     })
-
-    it('calls the gap handler if a gap is detected', async () => {
-        const done = Defer()
+    it('calls the gap handler if a gap is detected', (done) => {
         const gapHandler = (from: MessageRef, to: MessageRef, publisherId: EthereumAddress) => {
             assert.equal(from.timestamp, 1)
             assert.equal(from.sequenceNumber, 1)
             assert.equal(to.timestamp, 3)
             assert.equal(to.sequenceNumber, 0)
             assert.equal(publisherId, 'publisherId')
-            done.resolve(undefined)
+            done()
         }
         util = new OrderingUtil( () => {}, gapHandler, 50, 50)
         const msg1 = msg
-        const msg4 = await createMsg(4, undefined, 3)
+        const msg4 = createMsg(4, undefined, 3)
         util.add(msg1)
         util.add(msg4)
-        await done
     })
-
-    it('does not call gap handler if gap detected but resolved before request should be sent', async () => {
-        const done = Defer()
+    it('does not call gap handler if gap detected but resolved before request should be sent', (done) => {
         const gapHandler = () => {
             throw new Error('The gap handler should not be called.')
         }
         util = new OrderingUtil(() => {}, gapHandler, 5000, 5000)
         const msg1 = msg
-        const msg2 = await createMsg(2, undefined, 1)
-        const msg3 = await createMsg(3, undefined, 2)
-        const msg4 = await createMsg(4, undefined, 3)
+        const msg2 = createMsg(2, undefined, 1)
+        const msg3 = createMsg(3, undefined, 2)
+        const msg4 = createMsg(4, undefined, 3)
         util.add(msg1)
         util.add(msg4)
         setTimeout(() => {
             util.add(msg2)
             util.add(msg3)
-            done.resolve(undefined)
+            done()
         }, 500)
-        await done
     })
-
-    it('handles unordered messages in order (large randomized test)', async () => {
-        const msg1Pub1 = await createMsg(1, 0, null, 0, {}, 'publisherId1')
-        const msg1Pub2 = await createMsg(1, 0, null, 0, {}, 'publisherId2')
-        const msg1Pub3 = await createMsg(1, 0, null, 0, {}, 'publisherId3')
+    it('handles unordered messages in order (large randomized test)', () => {
+        const msg1Pub1 = createMsg(1, 0, null, 0, {}, 'publisherId1')
+        const msg1Pub2 = createMsg(1, 0, null, 0, {}, 'publisherId2')
+        const msg1Pub3 = createMsg(1, 0, null, 0, {}, 'publisherId3')
         const expected1 = [msg1Pub1]
         const expected2 = [msg1Pub2]
         const expected3 = [msg1Pub3]
-        for (let i = 2; i <= 100; i++) {
-            expected1.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId1'))
+        for (let i = 2; i <= 100000; i++) {
+            expected1.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId1'))
         }
-        for (let i = 2; i <= 100; i++) {
-            expected2.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId2'))
+        for (let i = 2; i <= 100000; i++) {
+            expected2.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId2'))
         }
-        for (let i = 2; i <= 100; i++) {
-            expected3.push(await createMsg(i, 0, i - 1, 0, {}, 'publisherId3'))
+        for (let i = 2; i <= 100000; i++) {
+            expected3.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId3'))
         }
         const shuffled = shuffle(expected1.concat(expected2).concat(expected3))
         const received1: StreamMessage[] = []
