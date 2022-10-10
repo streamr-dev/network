@@ -74,7 +74,7 @@ describe('Full node network with WebRTC connections', () => {
         ])
     })
 
-    it('happy path', async () => {
+    it.skip('happy path', async () => {
 
         await waitForCondition(() => streamrNodes.length === NUM_OF_NODES, 120000)
         await Promise.all([...streamrNodes.map((streamrNode) =>
