@@ -4,6 +4,7 @@ import {
     EncryptedGroupKey,
     EncryptionType,
     MessageID,
+    MessageRef,
     SignatureType,
     StreamID,
     StreamMessage,
@@ -11,7 +12,7 @@ import {
 } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { createRandomMsgChainId, MessageChain } from './MessageChain'
+import { createMessageRef, createRandomMsgChainId } from './MessageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
@@ -51,7 +52,7 @@ export class MessageFactory {
     private readonly authentication: Authentication
     private defaultPartition: number | undefined
     private readonly defaultMessageChainIds: Mapping<[partition: number], string>
-    private readonly messageChains: Mapping<[partition: number, msgChainId: string], MessageChain>
+    private readonly prevMsgRefs: Map<string, MessageRef> = new Map()
     private readonly streamRegistry: Pick<StreamRegistryCached, 'getStream' | 'isPublic' | 'isStreamPublisher'>
     private readonly groupKeyQueue: GroupKeyQueue
 
@@ -62,9 +63,6 @@ export class MessageFactory {
         this.groupKeyQueue = opts.groupKeyQueue
         this.defaultMessageChainIds = new Mapping(async (_partition: number) => {
             return createRandomMsgChainId()
-        })
-        this.messageChains = new Mapping(async (_partition: number, _msgChainId: string) => {
-            return new MessageChain()
         })
     }
 
@@ -97,11 +95,13 @@ export class MessageFactory {
         }
 
         const msgChainId = metadata.msgChainId ?? await this.defaultMessageChainIds.get(partition)
-        const chain = await this.messageChains.get(
-            partition,
-            msgChainId
-        )
-        const [msgRef, prevMsgRef] = chain.add(metadata.timestamp)
+        const msgChainKey = `${partition}|${msgChainId}`
+        const prevMsgRef = this.prevMsgRefs.get(msgChainKey)
+        const msgRef = createMessageRef(metadata.timestamp, prevMsgRef)
+        const isBackdated = (prevMsgRef !== undefined) && (prevMsgRef.timestamp > metadata.timestamp)
+        if (!isBackdated) {
+            this.prevMsgRefs.set(msgChainKey, msgRef)
+        }
         const messageId = new MessageID(this.streamId, partition, msgRef.timestamp, msgRef.sequenceNumber, publisherId, msgChainId)
 
         const encryptionType = (await this.streamRegistry.isPublic(this.streamId)) ? EncryptionType.NONE : EncryptionType.AES
