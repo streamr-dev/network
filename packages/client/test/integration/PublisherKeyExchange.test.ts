@@ -20,7 +20,7 @@ import { FakeEnvironment } from '../test-utils/fake/FakeEnvironment'
 import { FakeNetworkNode } from '../test-utils/fake/FakeNetworkNode'
 import { fastWallet } from 'streamr-test-utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { createRandomMsgChainId } from '../../src/publish/MessageChain'
+import { createRandomMsgChainId } from '../../src/publish/messageChain'
 import { createSignedMessage } from '../../src/publish/MessageFactory'
 import { createAuthentication } from '../../src/Authentication'
 

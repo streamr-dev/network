@@ -12,7 +12,7 @@ import {
 } from 'streamr-client-protocol'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 import { GroupKeyId } from '../encryption/GroupKey'
-import { createMessageRef, createRandomMsgChainId } from './MessageChain'
+import { createMessageRef, createRandomMsgChainId } from './messageChain'
 import { MessageMetadata } from './Publisher'
 import { keyToArrayIndex } from '@streamr/utils'
 import { GroupKeyQueue } from './GroupKeyQueue'
