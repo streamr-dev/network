@@ -19,12 +19,6 @@ describe(generateMnemonicFromAddress, () => {
         expect(result1).toEqual(result2)
     })
 
-    it('can append 0x if needed', () => {
-        const address = randomEthereumAddress().slice(2)
-        const result = generateMnemonicFromAddress(address as EthereumAddress)
-        expect(result).toEqual(result)
-    })
-
     it('matches hardcoded value i.e. algorithm has not changed', () => {
         const actual = generateMnemonicFromAddress(toEthereumAddress('0xC983de43c5d22186F1e051c6da419c5a17F19544'))
         expect(actual).toEqual('Sister Bus Movie')
