@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace method `subscription.onResent(listener)` with `subscription.once('resendComplete', listener)`
 - Resend supports multiple storage nodes: the data is fetched from a random storage node
 - Enforce concurrency limit for smart contract calls (per contract, configurable with `maxConcurrentContractCalls` config option)
+- Enforce messages to be signed
+  - a client ignores all non-signed messages it receives
 - Method `stream.update()` parameter `props` is no longer optional
 - Rename method `getStorageNodesOf()` to `getStorageNodes()`
 - Rename method `getStoredStreamsOf()` to `getStoredStreams()`
